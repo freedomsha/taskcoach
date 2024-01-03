@@ -31,6 +31,9 @@ import wx
 import calendar
 import re
 import threading
+# 2 ajouts de futurize : map et object
+from builtins import map
+from builtins import object
 
 
 class RedirectedOutput(object):
