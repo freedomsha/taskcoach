@@ -157,14 +157,36 @@ class Application(object):
         wxreactor.install()
 
         # Monkey-patching older versions because of https://twistedmatrix.com/trac/ticket/3948
+        # J'ai deux alternatives à :
+        #         if map(int, twisted.__version__.split('.')) < (11,):
+        #             from twisted.internet import reactor
+        #             if wxreactor.WxReactor.callFromThread is not None:
+        #                 oldStop = wxreactor.WxReactor.stop
+        #                 def stopFromThread(self):
+        #                     self.callFromThread(oldStop, self)
+        #                 wxreactor.WxReactor.stop = stopFromThread
+        # celle généré par futurize:
         import twisted
-        if map(int, twisted.__version__.split('.')) < (11,):
+        if list(map(int, twisted.__version__.split('.'))) < (11,):
             from twisted.internet import reactor
             if wxreactor.WxReactor.callFromThread is not None:
                 oldStop = wxreactor.WxReactor.stop
                 def stopFromThread(self):
                     self.callFromThread(oldStop, self)
                 wxreactor.WxReactor.stop = stopFromThread
+        # ou
+        # import twisted
+        # print(list(twisted.__version__.split('.')))
+        # if list(twisted.__version__.split('.')) < ['11', '0']:
+        #    # essayer list seul sinon list(map())
+        #    # from twisted.internet import reactor  # doublon soit-disant déjà installé
+        #    if wxreactor.WxReactor.callFromThread is not None:
+        #        oldStop = wxreactor.WxReactor.stop
+        #        def stopFromThread(self):
+        #            self.callFromThread(oldStop, self)
+        #        wxreactor.WxReactor.stop = stopFromThread
+        #        # ou essayer avec https://www.programcreek.com/python/example/117947/twisted.internet.error
+        #        # .ReactorAlreadyInstalledError
 
     def stopTwisted(self):
         from twisted.internet import reactor, error
@@ -175,7 +197,7 @@ class Application(object):
             pass
 
     def registerApp(self):
-        from twisted.internet import reactor
+        from twisted.internet import reactor  # voir peut-etre aussi twisted.internet.wxreactor.WxReactor !
         reactor.registerWxApp(self.__wx_app)
 
     def start(self):
@@ -192,6 +214,10 @@ class Application(object):
         self.mainwindow.Show()
         from twisted.internet import reactor
         reactor.run()
+        # ou essayer :
+        # from twisted.internet.interfaces import IReactorCore   
+        # IReactorCore.run()
+        # ou avec twisted.internet.wxreactor.WxReactor.run !?
         
     def __copy_default_templates(self):
         ''' Copy default templates that don't exist yet in the user's
@@ -203,6 +229,7 @@ class Application(object):
                 filename = os.path.join(template_dir, name + '.tsktmpl')
                 if not os.path.exists(filename):
                     file(filename, 'wb').write(template)
+                    # try open(filename, 'wb').write(template)
         
     def init(self, loadSettings=True, loadTaskFile=True):
         ''' Initialize the application. Needs to be called before 
@@ -263,6 +290,7 @@ class Application(object):
         if not language:
             # Use the user's locale
             language = locale.getdefaultlocale()[0]
+            # try language = locale.getlocale()[0]
             if language == 'C':
                 language = None
         if not language:
@@ -382,7 +410,7 @@ class Application(object):
             self.mainwindow.bonjourRegister.stop()
         from taskcoachlib.domain import date 
         date.Scheduler().shutdown()
-        self.__wx_app.ProcessIdle()
+        self.__wx_app.ProcessIdle()  # Def ProcessIdle is not in application.py but used in tests !
 
         # For PowerStateMixin
         self.mainwindow.OnQuit()
