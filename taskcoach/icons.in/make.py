@@ -18,8 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import wxversion, sys
-wxversion.ensureMinimal("2.8")
+# import wxversion, sys
+# wxversion.ensureMinimal("2.8")
+import sys
+try:
+    import wxversion  # in python 3 try with wx.__version__ ?
+    wxversion.ensureMinimal("2.8")
+except ImportError:
+    pass
 
 import os
 from wx.tools import img2py
