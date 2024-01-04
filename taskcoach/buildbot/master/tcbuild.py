@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 # pylint: disable=F0401,E1101
+# +1 ligne futurize :
+from builtins import object
 from buildbot.steps.shell import Compile, ShellCommand, WithProperties
 from buildbot.steps.master import MasterShellCommand
 from buildbot.steps.transfer import FileUpload, DirectoryUpload
