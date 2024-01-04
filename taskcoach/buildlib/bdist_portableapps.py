@@ -15,7 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+# Futurize ajoute 2 lignes :
+from __future__ import absolute_import
 
+from future.utils import raise_
 import os
 from distutils import errors
 import bdist_portable_base
@@ -52,8 +55,10 @@ class bdist_portableapps(bdist_portable_base.bdist_portable_base):
                             ('date', 'the release date')]
         for option, description in mandatoryOptions:
             if not getattr(self, option):
-                raise errors.DistutilsOptionError, \
+                # raise errors.DistutilsOptionError, \
                     'you must provide %s (--%s)'%(description, option)
+                raise_(errors.DistutilsOptionError, \
+                    'you must provide %s (--%s)'%(description, option))
 
     def run(self):
         self.create_portableapps_paths()
