@@ -15,7 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+# futurize ajoute 1 ligne:
+from future.utils import raise_
 from distutils import log, errors
 from distutils.core import Command
 from distutils.file_util import copy_file, move_file
