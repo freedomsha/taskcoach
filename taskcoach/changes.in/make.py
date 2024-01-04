@@ -15,7 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+# futurize ajoute 2 lignes: 
+from __future__ import print_function
 
+from future.utils import raise_
 import converter, changes, sys
 
 numberOfReleases = int(sys.argv[2]) if len(sys.argv) >= 3 else sys.maxint
@@ -29,9 +32,11 @@ elif sys.argv[1] == 'debian':
     converter = converter.ReleaseToDebianConverter()
     numberOfReleases = 1
 else:
-    raise ValueError, 'Unknown target format (%s)'%sys.argv[1]
+    # raise ValueError, 'Unknown target format (%s)'%sys.argv[1]
+    raise_(ValueError, 'Unknown target format (%s)'%sys.argv[1])
     
 releases = changes.releases[:numberOfReleases]
 for release in releases:
-    print converter.convert(release)
+    # print converter.convert(release)
+    print(converter.convert(release))
 
