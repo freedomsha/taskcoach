@@ -15,10 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+# futurize ajoute 1 ligne :
+from builtins import object
 import textwrap
 
-class Release:
+class Release(object):
     def __init__(self, number, date, bugsFixed=None, featuresAdded=None,
             featuresRemoved=None, featuresChanged=None, 
             dependenciesChanged=None, implementationChanged=None,
