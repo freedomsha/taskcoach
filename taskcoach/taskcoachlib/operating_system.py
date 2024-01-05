@@ -15,7 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+# futurize ajoute 1 ligne :
+from builtins import map
 import wx, sys, platform
 
 # This module is meant to be imported like this: 
@@ -79,7 +80,8 @@ def defaultEncodingName():
     return wx.Locale.GetSystemEncodingName() or 'utf-8'
 
 def decodeSystemString(s):
-    if isinstance(s, unicode):
+    # if isinstance(s, unicode):
+    if isinstance(s, str):
         return s
     encoding = defaultEncodingName()
     # Python does not define the windows_XXX aliases for every code page...
