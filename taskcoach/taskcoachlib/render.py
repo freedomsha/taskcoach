@@ -20,7 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ''' render.py - functions to render various objects, like date, time, 
 etc. '''  # pylint: disable=W0105
-
+# Futurize ajoute 2 lignes:
+from builtins import zip
+from builtins import str
 from taskcoachlib.domain import date as datemodule
 from taskcoachlib.thirdparty import desktop
 from taskcoachlib.i18n import _
@@ -98,7 +100,8 @@ def recurrence(recurrence):
                   _('Every other month'), _('Every other year')]
     else:
         labels = [_('Daily'), _('Weekly'), _('Monthly'), _('Yearly')] 
-    mapping = dict(zip(['daily', 'weekly', 'monthly', 'yearly'], labels))
+    # mapping = dict(zip(['daily', 'weekly', 'monthly', 'yearly'], labels))
+    mapping = dict(list(zip(['daily', 'weekly', 'monthly', 'yearly'], labels)))
     return mapping.get(recurrence.unit) % dict(frequency=recurrence.amount)
 
 
@@ -181,8 +184,10 @@ elif operating_system.isMac():
     # setting alone, so parse the format string instead.
     # See http://www.unicode.org/reports/tr35/tr35-25.html#Date_Format_Patterns
     _state = 0
-    _hourFormat = u''
-    _ampmFormat = u''
+    # _hourFormat = u''
+    _hourFormat = ''
+    # _ampmFormat = u''
+    _ampmFormat = ''
     for c in _mediumFormatter.dateFormat():
         if _state == 0:
             if c == u"'":
@@ -238,6 +243,7 @@ elif desktop.get_desktop() == 'KDE4':
             qtdt = QTime(dt.hour, dt.minute, dt.second)
             if minutes:
                 return unicode(KGlobal.locale().formatTime(qtdt, seconds))
+                
             return unicode(_localeCopy.formatTime(qtdt))
 
         def rawDateFunc(dt):
