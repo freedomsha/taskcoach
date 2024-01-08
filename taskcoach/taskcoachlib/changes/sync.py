@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+from builtins import object
 import wx # For ArtProvider
 
 from taskcoachlib.changes import ChangeMonitor
@@ -59,7 +59,8 @@ class ChangeSynchronizer(object):
         self.diskMap = dict()
         self.diskOwnerMap = dict()
 
-        for devGUID, changes in self._allChanges.items():
+        # for devGUID, changes in self._allChanges.items():
+        for devGUID, changes in list(self._allChanges.items()):
             if devGUID == self._monitor.guid():
                 self.diskChanges = changes
                 break
@@ -75,7 +76,8 @@ class ChangeSynchronizer(object):
                 self._monitor.resetChanges(obj)
 
         # Merge conflict changes
-        for devGUID, changes in self._allChanges.items():
+        # for devGUID, changes in self._allChanges.items():
+        for devGUID, changes in list(self._allChanges.items()):
             if devGUID != self._monitor.guid():
                 changes.merge(self.conflictChanges)
 
