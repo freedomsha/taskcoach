@@ -51,7 +51,8 @@ class RedirectedOutput(object):
                 return
 
         if self.__handle is None:
-            self.__handle = file(self.__path, 'a+')
+            # self.__handle = file(self.__path, 'a+')
+            self.__handle = open(self.__path, 'a+')
             self.__handle.write('============= %s\n' % time.ctime())
         self.__handle.write(bf)
 
@@ -231,8 +232,9 @@ class Application(object):
             for name, template in getDefaultTemplates():
                 filename = os.path.join(template_dir, name + '.tsktmpl')
                 if not os.path.exists(filename):
-                    file(filename, 'wb').write(template)
-                    # try open(filename, 'wb').write(template)
+                    # file(filename, 'wb').write(template)
+                    # try :
+                    open(filename, 'wb').write(template)
         
     def init(self, loadSettings=True, loadTaskFile=True):
         ''' Initialize the application. Needs to be called before 
