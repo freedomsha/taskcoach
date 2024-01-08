@@ -190,19 +190,23 @@ elif operating_system.isMac():
     _ampmFormat = ''
     for c in _mediumFormatter.dateFormat():
         if _state == 0:
-            if c == u"'":
-                _state = 1 # After single quote
-            elif c in [u'h', u'H', u'k', u'K', u'j']:
+            # if c == u"'":
+            if c == "'":
+                _state = 1  # After single quote
+            # elif c in [u'h', u'H', u'k', u'K', u'j']:
+            elif c in ['h', 'H', 'k', 'K', 'j']:
                 _hourFormat += c
             elif c == 'a':
                 _ampmFormat = c
         elif _state == 1:
-            if c == u"'":
+            # if c == u"'":
+            if c == "'":
                 _state = 0
             else:
                 _state = 2 # Escaped string
         elif _state == 2:
-            if c == u"'":
+            # if c == u"'":
+            if c == "'":
                 _state = 0
     _hourFormatter = Cocoa.NSDateFormatter.alloc().init()
     _hourFormatter.setFormatterBehavior_(Cocoa.NSDateFormatterBehavior10_4)
@@ -242,13 +246,16 @@ elif desktop.get_desktop() == 'KDE4':
         def rawTimeFunc(dt, minutes=True, seconds=False):
             qtdt = QTime(dt.hour, dt.minute, dt.second)
             if minutes:
-                return unicode(KGlobal.locale().formatTime(qtdt, seconds))
+                # return unicode(KGlobal.locale().formatTime(qtdt, seconds))
+                return str(KGlobal.locale().formatTime(qtdt, seconds))
                 
-            return unicode(_localeCopy.formatTime(qtdt))
+            # return unicode(_localeCopy.formatTime(qtdt))
+            return str(_localeCopy.formatTime(qtdt))
 
         def rawDateFunc(dt):
             qtdt = QDate(dt.year, dt.month, dt.day)
-            return unicode(KGlobal.locale().formatDate(qtdt, 0))
+            # return unicode(KGlobal.locale().formatDate(qtdt, 0))
+            return str(KGlobal.locale().formatDate(qtdt, 0))
 
 
 timeFunc = lambda dt, minutes=True, seconds=False: operating_system.decodeSystemString(rawTimeFunc(dt, minutes=minutes, seconds=seconds))
