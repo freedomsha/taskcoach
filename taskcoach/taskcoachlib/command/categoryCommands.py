@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import zip
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import category
@@ -31,7 +32,7 @@ class NewCategoryCommand(base.NewItemCommand):
         attachments = kwargs.pop('attachments', [])
         super(NewCategoryCommand, self).__init__(*args, **kwargs)
         self.items = self.createNewCategories(subject=subject, 
-            description=description, attachments=attachments)
+                                              description=description, attachments=attachments)
 
     def createNewCategories(self, **kwargs):
         return [category.Category(**kwargs)]
