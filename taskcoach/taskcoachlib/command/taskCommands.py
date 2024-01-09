@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
+from builtins import zip
 from taskcoachlib import patterns
 from taskcoachlib.domain import task, effort, date
 from taskcoachlib.i18n import _
@@ -64,7 +64,7 @@ class DragAndDropTaskCommand(base.OrderingDragAndDropCommand):
         toSave = super(DragAndDropTaskCommand, self).getItemsToSave()
         if self.part != 0:
             toSave.extend(self.getSiblings())
-        return list(set(toSave)) # Because parent may have added siblings as well
+        return list(set(toSave))  # Because parent may have added siblings as well
 
     def do_command(self):
         if self.part == 0 or self.isOrdering():
