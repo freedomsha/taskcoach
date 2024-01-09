@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import zip
+from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.domain import date
 from taskcoachlib.i18n import _
@@ -25,7 +27,7 @@ from .clipboard import Clipboard
  
 
 class BaseCommand(patterns.Command):
-    def __init__(self, list=None, items=None, *args, **kwargs): # pylint: disable=W0622
+    def __init__(self, list=None, items=None, *args, **kwargs):  # pylint: disable=W0622
         super(BaseCommand, self).__init__(*args, **kwargs)
         self.list = list
         self.items = [item for item in items] if items else []
@@ -39,11 +41,11 @@ class BaseCommand(patterns.Command):
     def __str__(self):
         return self.name()
 
-    singular_name = 'Do something with %s' # Override in subclass
-    plural_name = 'Do something'           # Override in subclass
+    singular_name = 'Do something with %s'  # Override in subclass
+    plural_name = 'Do something'            # Override in subclass
     
     def name(self):
-        return self.singular_name%self.name_subject(self.items[0]) if len(self.items) == 1 else self.plural_name
+        return self.singular_name % self.name_subject(self.items[0]) if len(self.items) == 1 else self.plural_name
 
     def name_subject(self, item):
         subject = item.subject()
@@ -80,7 +82,7 @@ class BaseCommand(patterns.Command):
         try:
             method = getattr(super(BaseCommand, self), methodName)
         except AttributeError:
-            return # no 'method' in any super class
+            return  # no 'method' in any super class
         return method(*args, **kwargs)
         
     def do_command(self):
@@ -245,7 +247,7 @@ class CutCommandMixin(object):
 
     def __putItemsOnClipboard(self):
         cb = Clipboard()
-        self.__previousClipboardContents = cb.get() # pylint: disable=W0201
+        self.__previousClipboardContents = cb.get()  # pylint: disable=W0201
         cb.put(self.itemsToCut(), self.sourceOfItemsToCut())
 
     def __removeItemsFromClipboard(self):
@@ -313,7 +315,7 @@ class PasteAsSubItemCommand(PasteCommand, CompositeMixin):
     plural_name = _('Paste as subitem')
     singular_name = _('Paste as subitem of "%s"')
 
-    def setParentOfPastedItems(self): # pylint: disable=W0221
+    def setParentOfPastedItems(self):  # pylint: disable=W0221
         newParent = self.items[0]
         super(PasteAsSubItemCommand, self).setParentOfPastedItems(newParent)
 
@@ -397,7 +399,7 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
 
     def canDo(self):
         if self.isOrdering():
-            return True # Already checked when drag and droppin
+            return True  # Already checked when drag and droppin
         return super(OrderingDragAndDropCommand, self).canDo()
 
     def do_command(self):
