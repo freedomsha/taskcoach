@@ -16,11 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import str
 from taskcoachlib import meta, patterns, operating_system
 from taskcoachlib.i18n import _
 from taskcoachlib.thirdparty.pubsub import pub
 from taskcoachlib.workarounds import ExceptionAsUnicode
-import ConfigParser
+import configparser
 import os
 import sys
 import wx
@@ -28,14 +29,14 @@ import shutil
 from . import defaults
 
 
-class UnicodeAwareConfigParser(ConfigParser.RawConfigParser):
+class UnicodeAwareConfigParser(configparser.RawConfigParser):
     def set(self, section, setting, value):  # pylint: disable=W0222
         if type(value) == type(u''):
             value = value.encode('utf-8')
-        ConfigParser.RawConfigParser.set(self, section, setting, value)
+        configparser.RawConfigParser.set(self, section, setting, value)
 
     def get(self, section, setting):  # pylint: disable=W0221
-        value = ConfigParser.RawConfigParser.get(self, section, setting)
+        value = configparser.RawConfigParser.get(self, section, setting)
         return value.decode('utf-8')  # pylint: disable=E1103
 
 
