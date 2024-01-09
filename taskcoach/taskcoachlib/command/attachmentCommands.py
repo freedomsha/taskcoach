@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import zip
+from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import attachment
