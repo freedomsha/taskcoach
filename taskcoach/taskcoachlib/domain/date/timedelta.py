@@ -16,7 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from past.utils import old_div
 import datetime, math
+
 
 class TimeDelta(datetime.timedelta):
     millisecondsPerSecond = 1000
@@ -62,6 +66,9 @@ class TimeDelta(datetime.timedelta):
         return int(round((self.days * self.millisecondsPerDay) + \
                          (self.seconds * self.millisecondsPerSecond) + \
                          (self.microseconds * self.millisecondsPerMicroSecond)))
+        # return int(legacy_round((self.days * self.millisecondsPerDay) + \
+        #                 (self.seconds * self.millisecondsPerSecond) + \
+        #                 (self.microseconds * self.millisecondsPerMicroSecond)))
         
     def round(self, hours=0, minutes=0, seconds=0, alwaysUp=False):
         ''' Round the timedelta to the nearest x units. '''
