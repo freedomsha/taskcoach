@@ -16,6 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from past.utils import old_div
 import datetime, re, time
 from . import timedelta
 from .date import Date
@@ -31,7 +34,7 @@ class DateTime(StrftimeFix, datetime.datetime):
 
     def __new__(class_, *args, **kwargs):
         if not args and not kwargs:
-            max = datetime.datetime.max # pylint: disable=W0622
+            max = datetime.datetime.max  # pylint: disable=W0622
             args = (max.year, max.month, max.day, 
                     max.hour, max.minute, max.second, max.microsecond)
         return datetime.datetime.__new__(class_, *args, **kwargs)
@@ -49,7 +52,7 @@ class DateTime(StrftimeFix, datetime.datetime):
         return self.isocalendar()[1]
 
     def weekday(self):
-        return self.isoweekday() # Sunday = 7, Monday = 1, etc.
+        return self.isoweekday()  # Sunday = 7, Monday = 1, etc.
     
     def toordinal(self):
         ''' Return the ordinal number of the day, plus a fraction between 0 and
@@ -107,7 +110,7 @@ class DateTime(StrftimeFix, datetime.datetime):
     def __sub__(self, other):
         ''' Make sure substraction returns instances of the right classes. '''
         if self == DateTime() and isinstance(other, datetime.datetime):
-            max = timedelta.TimeDelta.max # pylint: disable=W0622
+            max = timedelta.TimeDelta.max  # pylint: disable=W0622
             return timedelta.TimeDelta(max.days, max.seconds, max.microseconds)
         result = super(DateTime, self).__sub__(other)
         if isinstance(result, datetime.timedelta):
