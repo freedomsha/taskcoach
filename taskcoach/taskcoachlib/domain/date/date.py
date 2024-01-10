@@ -16,7 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import time, string, datetime, re, timedelta # pylint: disable=W0402
+import time, string, datetime, re  #, timedelta  # pylint: disable=W0402
+from . import timedelta
 from taskcoachlib import patterns
 from .fix import StrftimeFix
 
@@ -36,9 +37,7 @@ class RealDate(StrftimeFix, datetime.date):
             return RealDate(newdate.year, newdate.month, newdate.day)
 
 
-class InfiniteDate(datetime.date):
-    __metaclass__ = patterns.Singleton
-
+class InfiniteDate(datetime.date, metaclass=patterns.Singleton):
     def __new__(self):
         return super(InfiniteDate, self).__new__(InfiniteDate, infinite.year,
             infinite.month, infinite.day)
