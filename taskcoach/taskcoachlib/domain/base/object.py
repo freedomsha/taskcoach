@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import str
+from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.domain.attribute import icon
 from taskcoachlib.domain.date import DateTime, Now
@@ -304,7 +306,7 @@ class Object(SynchronizedObject):
 
     @classmethod
     def orderingChangedEventType(class_):
-        return '%s.ordering'%class_
+        return '%s.ordering' % class_
 
     @staticmethod
     def orderingSortFunction(**kwargs):
@@ -328,7 +330,7 @@ class Object(SynchronizedObject):
             
     @classmethod    
     def descriptionChangedEventType(class_):
-        return '%s.description'%class_
+        return '%s.description' % class_
 
     @staticmethod
     def descriptionSortFunction(**kwargs):
@@ -348,7 +350,7 @@ class Object(SynchronizedObject):
     def setForegroundColor(self, color, event=None):
         self.__fgColor.set(color, event=event)
     
-    def foregroundColor(self, recursive=False): # pylint: disable=W0613
+    def foregroundColor(self, recursive=False):  # pylint: disable=W0613
         # The 'recursive' argument isn't actually used here, but some
         # code assumes composite objects where there aren't. This is
         # the simplest workaround.
@@ -357,7 +359,7 @@ class Object(SynchronizedObject):
     def setBackgroundColor(self, color, event=None):
         self.__bgColor.set(color, event=event)
         
-    def backgroundColor(self, recursive=False): # pylint: disable=W0613
+    def backgroundColor(self, recursive=False):  # pylint: disable=W0613
         # The 'recursive' argument isn't actually used here, but some
         # code assumes composite objects where there aren't. This is
         # the simplest workaround.
@@ -365,7 +367,7 @@ class Object(SynchronizedObject):
     
     # Font:
     
-    def font(self, recursive=False): # pylint: disable=W0613
+    def font(self, recursive=False):  # pylint: disable=W0613
         # The 'recursive' argument isn't actually used here, but some
         # code assumes composite objects where there aren't. This is
         # the simplest workaround.
@@ -392,7 +394,7 @@ class Object(SynchronizedObject):
     
     @classmethod
     def appearanceChangedEventType(class_):
-        return '%s.appearance'%class_
+        return '%s.appearance' % class_
     
     def appearanceChangedEvent(self, event):
         event.addSource(self, type=self.appearanceChangedEventType())
@@ -425,10 +427,10 @@ class CompositeObject(Object, patterns.ObservableComposite):
 
     # Subject:
 
-    def subject(self, recursive=False): # pylint: disable=W0221
+    def subject(self, recursive=False):  # pylint: disable=W0221
         subject = super(CompositeObject, self).subject()
         if recursive and self.parent():
-            subject = u'%s -> %s'%(self.parent().subject(recursive=True), subject)
+            subject = u'%s -> %s' % (self.parent().subject(recursive=True), subject)
         return subject
 
     def subjectChangedEvent(self, event):
@@ -447,7 +449,7 @@ class CompositeObject(Object, patterns.ObservableComposite):
         
     # Description:
         
-    def description(self, recursive=False): # pylint: disable=W0221,W0613
+    def description(self, recursive=False):  # pylint: disable=W0221,W0613
         # Allow for the recursive flag, but ignore it
         return super(CompositeObject, self).description()
         
