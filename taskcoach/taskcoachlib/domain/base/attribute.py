@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from taskcoachlib import patterns
 import weakref
 from taskcoachlib.thirdparty._weakrefset import WeakSet
@@ -69,9 +70,9 @@ class SetAttribute(object):
             removed = set(self.__set) - values
             self.__set = self.__setClass(values)
             if added:
-                self.__addEvent(owner, event, *added) # pylint: disable=W0142
+                self.__addEvent(owner, event, *added)  # pylint: disable=W0142
             if removed:
-                self.__removeEvent(owner, event, *removed) # pylint: disable=W0142
+                self.__removeEvent(owner, event, *removed)  # pylint: disable=W0142
             if added or removed:
                 self.__changeEvent(owner, event, *set(self.__set))
             return True
@@ -83,7 +84,7 @@ class SetAttribute(object):
             if values <= set(self.__set):
                 return False
             self.__set = self.__setClass(set(self.__set) | values)
-            self.__addEvent(owner, event, *values) # pylint: disable=W0142
+            self.__addEvent(owner, event, *values)  # pylint: disable=W0142
             self.__changeEvent(owner, event, *set(self.__set))
             return True
     
@@ -94,7 +95,7 @@ class SetAttribute(object):
             if values & set(self.__set) == set():
                 return False
             self.__set = self.__setClass(set(self.__set) - values)
-            self.__removeEvent(owner, event, *values) # pylint: disable=W0142
+            self.__removeEvent(owner, event, *values)  # pylint: disable=W0142
             self.__changeEvent(owner, event, *set(self.__set))
             return True
 
