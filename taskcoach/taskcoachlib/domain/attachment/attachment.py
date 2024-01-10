@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-import urlparse
+from urllib.parse import urlparse
 from taskcoachlib import patterns, mailer
 from taskcoachlib.domain import base
 from taskcoachlib.tools import openfile
@@ -192,7 +192,8 @@ class MailAttachment(Attachment):
 
     def data(self):
         try:
-            return file(self.location(), 'rb').read()
+            # return file(self.location(), 'rb').read()
+            return io.open(self.location(), 'rb').read()
         except IOError:
             return None
 
