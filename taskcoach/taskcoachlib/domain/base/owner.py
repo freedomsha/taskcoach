@@ -42,7 +42,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
 
     def constructor(instance, *args, **kwargs):
         # NB: we use a simple list here. Maybe we should use a container type.
-        setattr(instance,'_%s__%ss' % (name, klass.__ownedType__.lower()),
+        setattr(instance, '_%s__%ss' % (name, klass.__ownedType__.lower()),
                 kwargs.pop(klass.__ownedType__.lower() + 's', []))
         super(klass, instance).__init__(*args, **kwargs)
 
