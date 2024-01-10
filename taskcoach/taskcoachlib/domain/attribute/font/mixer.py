@@ -16,6 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from builtins import object
+from past.utils import old_div
 import wx
 
 
@@ -39,7 +43,8 @@ class FontMixer(object):
         size = 0
         for font in fonts:
             size += font.GetPointSize()
-        return size/len(fonts)
+        # return size/len(fonts)
+        return old_div(size,len(fonts))
 
     allFamilies = (wx.FONTFAMILY_SWISS, wx.FONTFAMILY_DECORATIVE,
                    wx.FONTFAMILY_ROMAN, wx.FONTFAMILY_SCRIPT, 
