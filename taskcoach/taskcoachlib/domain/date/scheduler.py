@@ -16,6 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from past.utils import old_div
+from builtins import object
 from taskcoachlib import patterns
 from . import dateandtime, timedelta
 import logging
