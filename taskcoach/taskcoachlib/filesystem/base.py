@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
+from builtins import object
 import os, atexit
 
 
@@ -34,7 +34,7 @@ class NotifierBase(object):
         self.stop()
 
     def stop(self):
-        pass # Should be overloaded if needed
+        pass  # Should be overloaded if needed
 
     def _check(self, filename):
         return self.stamp is None or \
