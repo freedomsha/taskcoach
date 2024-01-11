@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from taskcoachlib import patterns 
 from taskcoachlib.i18n import _                   
 from taskcoachlib import help
@@ -41,7 +42,7 @@ class EffortList(patterns.SetDecorator, MaxDateTimeMixin,
     ''' EffortList observes a TaskList and contains all effort records of
         all tasks in the underlying TaskList. '''
 
-    def  __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(EffortList, self).__init__(*args, **kwargs)
         pub.subscribe(self.onAddEffortToOrRemoveEffortFromTask, 
                       task.Task.effortsChangedEventType())
