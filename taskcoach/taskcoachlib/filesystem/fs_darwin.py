@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from ctypes import *
 import os, tempfile, threading
 from taskcoachlib.filesystem import base
@@ -89,8 +90,9 @@ class FileMonitor(object):
 
         self.callback = callback
 
-        if isinstance(filename, unicode):
-            filename = filename.encode('UTF-8') # Not sure...
+        # if isinstance(filename, unicode):
+        if isinstance(filename, str):
+            filename = filename.encode('UTF-8')  # Not sure...
 
         self._filename = filename
         path, name = os.path.split(filename)
