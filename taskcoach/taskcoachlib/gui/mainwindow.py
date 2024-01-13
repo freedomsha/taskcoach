@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import str
 from taskcoachlib import application, meta, widgets, \
     operating_system # pylint: disable=W0622
 from taskcoachlib.gui import viewer, toolbar, uicommand, remindercontroller, \
