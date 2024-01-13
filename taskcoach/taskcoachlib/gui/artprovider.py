@@ -16,6 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from builtins import chr
+from builtins import range
+from past.utils import old_div
 from taskcoachlib import patterns, operating_system
 from taskcoachlib.i18n import _
 import wx
@@ -230,7 +235,7 @@ chooseableItemImages = dict( \
     weather_sunny_icon=_('Partly sunny'),
     wrench_icon=_('Wrench'))
 
-itemImages = chooseableItemImages.keys() + ['folder_blue_open_icon',
+itemImages = list(chooseableItemImages.keys()) + ['folder_blue_open_icon',
     'folder_green_open_icon', 'folder_grey_open_icon',
     'folder_orange_open_icon', 'folder_red_open_icon',
     'folder_purple_open_icon', 'folder_yellow_open_icon',
