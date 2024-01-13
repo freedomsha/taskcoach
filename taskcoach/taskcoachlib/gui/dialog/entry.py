@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import range
 from taskcoachlib import widgets, operating_system
 from taskcoachlib.domain import date
 from taskcoachlib.gui import artprovider
