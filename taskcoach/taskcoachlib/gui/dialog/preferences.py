@@ -20,6 +20,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 from taskcoachlib import meta, widgets, notify, operating_system, render
 from taskcoachlib.domain import date, task
 from taskcoachlib.gui import artprovider
@@ -82,6 +86,7 @@ class SettingsPageBase(widgets.BookPage):
         choiceCtrls = []
         currentValue = self.gettext(section, setting)
         sep = kwargs.pop('sep', '_')
+        # zip ? => list(zip()) ?
         for choices, currentValuePart in zip(listsOfChoices, 
                                              currentValue.split(sep)):
             choiceCtrl = wx.Choice(self)
@@ -471,7 +476,7 @@ class LanguagePage(SettingsPage):
              ('uk_UA', u'украї́нська мо́ва (Ukranian)'),
              ('vi_VI', u'tiếng Việt (Vietnamese)')]
         choices = [('', _('Let the system determine the language'))]
-        allLanguages = dict(data.languages.values())
+        allLanguages = dict(list(data.languages.values()))
         for code, label in languages:
             if code == 'en_US':
                 label = 'English (US)'
