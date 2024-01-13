@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import str
 from taskcoachlib import meta, patterns, command, render, operating_system, \
     speak
 from taskcoachlib.domain import date
@@ -128,7 +129,7 @@ class ReminderDialog(patterns.Observer, sized_controls.SizedDialog):
         command.MarkCompletedCommand(self.taskList, [self.task]).do()
     
     def onTaskRemoved(self, event):
-        if self.task in event.values():
+        if self.task in list(event.values()):
             self.Close()
             
     def onTaskCompletionDateChanged(self, newValue, sender):  # pylint: disable=W0613
