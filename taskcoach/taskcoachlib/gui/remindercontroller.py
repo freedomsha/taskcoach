@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from taskcoachlib import patterns, meta, notify
 from taskcoachlib.domain import date, task
 from taskcoachlib.gui.dialog import reminder, editor
@@ -50,10 +51,10 @@ class ReminderController(object):
         self.effortList = effortList
 
     def onAddTask(self, event):
-        self.__registerRemindersForTasks(event.values())
+        self.__registerRemindersForTasks(list(event.values()))
                 
     def onRemoveTask(self, event):
-        self.__removeRemindersForTasks(event.values())
+        self.__removeRemindersForTasks(list(event.values()))
                 
     def onSetReminder(self, newValue, sender):  # pylint: disable=W0613
         self.__removeRemindersForTasks([sender])
