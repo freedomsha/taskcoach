@@ -21,6 +21,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import str
+from builtins import range
 from taskcoachlib import widgets, patterns, command, operating_system, render
 from taskcoachlib.domain import task, date, note, attachment
 from taskcoachlib.gui import viewer, uicommand, windowdimensionstracker
@@ -89,7 +91,7 @@ class Page(patterns.Observer, widgets.BookPage):
 
     def close(self):
         self.removeInstance()
-        for entry in self.entries().values():
+        for entry in list(self.entries().values()):
             if isinstance(entry, widgets.DateTimeCtrl):
                 entry.Cleanup()
         
@@ -1085,8 +1087,8 @@ class EditBook(widgets.Notebook):
     def __create_settings_section(self, section):
         ''' Create the section and initialize the options in the section. '''
         self.settings.add_section(section)
-        for option, value in dict(perspective='', 
-                                  pages=str(self.__pages_to_create()),
+        for option, value in list(dict(perspective='', 
+                                  pages=str(self.__pages_to_create())),
                                   size='(-1, -1)', position='(-1, -1)',
                                   maximized='False').items():
             self.settings.init(section, option, value)
@@ -1456,7 +1458,7 @@ class Editor(BalloonTipManager, widgets.Dialog):
             of the item involved and close the whole editor if there are no 
             tabs left. '''
         if self:  # Prevent _wxPyDeadObject TypeError
-            self.__call_after(self.__close_if_item_is_deleted, event.values())
+            self.__call_after(self.__close_if_item_is_deleted, list(event.values()))
         
     def __close_if_item_is_deleted(self, items):
         for item in items:
