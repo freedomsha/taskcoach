@@ -16,11 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import print_function
 import wx
 from taskcoachlib import i18n
 try:
     from . import icons
-except ImportError: # pragma: no cover   
+except ImportError:  # pragma: no cover   
     print "ERROR: couldn't import icons.py."
     print 'You need to generate the icons file.'
     print 'Run "make prepare" in the Task Coach root folder.'
