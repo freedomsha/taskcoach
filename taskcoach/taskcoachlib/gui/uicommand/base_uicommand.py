@@ -17,9 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 import wx
-from taskcoachlib import operating_system
-from taskcoachlib.gui.newid import IdProvider
+from ....taskcoachlib import operating_system
+from ....taskcoachlib.gui.newid import IdProvider
 
 
 ''' User interface commands (subclasses of UICommand) are actions that can
