@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import wx
-from taskcoachlib.i18n import _
-from taskcoachlib.widgets import dialog
+from ....taskcoachlib.i18n import _
+from ....taskcoachlib.widgets import dialog
 
 
 class XFCE4WarningDialog(dialog.Dialog):
