@@ -19,24 +19,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import patterns, meta, command, help, widgets, persistence, \
+from builtins import str
+from builtins import object
+from ....taskcoachlib import patterns, meta, command, help, widgets, persistence, \
     thirdparty, render, operating_system  # pylint: disable=W0622
-from taskcoachlib.domain import base, task, note, category, attachment, \
+from ....taskcoachlib.domain import base, task, note, category, attachment, \
     effort, date
-from taskcoachlib.gui import dialog, printer
-from taskcoachlib.gui.wizard import CSVImportWizard
-from taskcoachlib.i18n import _
-from taskcoachlib.mailer import sendMail
-from taskcoachlib.thirdparty import hypertreelist
-from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib.thirdparty.wxScheduler import wxSCHEDULER_NEXT, \
+from ....taskcoachlib.gui import dialog, printer
+from ....taskcoachlib.gui.wizard import CSVImportWizard
+from ....taskcoachlib.i18n import _
+from ....taskcoachlib.mailer import sendMail
+from ....taskcoachlib.thirdparty import hypertreelist
+from ....taskcoachlib.thirdparty.pubsub import pub
+from ....taskcoachlib.thirdparty.wxScheduler import wxSCHEDULER_NEXT, \
     wxSCHEDULER_PREV, wxSCHEDULER_TODAY
-from taskcoachlib.tools import anonymize, openfile
-from taskcoachlib.workarounds import ExceptionAsUnicode
+from ....taskcoachlib.tools import anonymize, openfile
+from ....taskcoachlib.workarounds import ExceptionAsUnicode
 import wx, re, operator
 from . import base_uicommand
 from . import mixin_uicommand
 from . import settings_uicommand
+from functools import reduce
 
 
 class IOCommand(base_uicommand.UICommand):  # pylint: disable=W0223
@@ -1213,6 +1216,7 @@ class TaskNewFromTemplate(TaskNew):
         self.menuText = '&' + templateTask.subject().replace('&', '&&')  # pylint: disable=E1103
 
     def __readTemplate(self):
+	# file -> open !!!?
         return persistence.TemplateXMLReader(file(self.__filename,
                                                   'rU')).read()
 
@@ -1237,7 +1241,7 @@ class TaskNewFromTemplateButton(mixin_uicommand.PopupButtonMixin,
                                 TaskListCommand, 
                                 settings_uicommand.SettingsCommand):
     def createPopupMenu(self):
-        from taskcoachlib.gui import menu
+        from ....taskcoachlib.gui import menu
         return menu.TaskTemplateMenu(self.mainWindow(), self.taskList, 
                                      self.settings)
 
@@ -1715,7 +1719,7 @@ class EffortStartButton(mixin_uicommand.PopupButtonMixin, TaskListCommand):
             *args, **kwargs)
 
     def createPopupMenu(self):
-        from taskcoachlib.gui import menu
+        from ....taskcoachlib.gui import menu
         return menu.StartEffortForTaskMenu(self.mainWindow(), self.taskList)
 
     def enabled(self, event):
