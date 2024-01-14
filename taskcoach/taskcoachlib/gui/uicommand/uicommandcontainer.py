@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 
+from builtins import object
 import wx
 
 
@@ -28,12 +29,12 @@ class UICommandContainerMixin(object):
         for uiCommand in uiCommands:
             if uiCommand is None:
                 self.AppendSeparator()
-            elif isinstance(uiCommand, int): # Toolbars only
+            elif isinstance(uiCommand, int):  # Toolbars only
                 self.AppendStretchSpacer(uiCommand)
             elif isinstance(uiCommand, (str, unicode)):
                 label = wx.MenuItem(self, text=uiCommand)
-                #must append item before disable to insure
-                #that internal object exists
+                # must append item before disable to insure
+                # that internal object exists
                 self.AppendItem(label)
                 label.Enable(False)
             elif type(uiCommand) == type(()):  # This only works for menu's
@@ -43,7 +44,7 @@ class UICommandContainerMixin(object):
                 self.appendUICommand(uiCommand)
 
     def appendSubMenuWithUICommands(self, menuTitle, uiCommands):
-        from taskcoachlib.gui import menu
+        from ....taskcoachlib.gui import menu
         subMenu = menu.Menu(self._window)
         self.appendMenu(menuTitle, subMenu)
         subMenu.appendUICommands(*uiCommands)  # pylint: disable=W0142
