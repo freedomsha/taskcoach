@@ -30,7 +30,7 @@ from ..menu import *
 from . import base, mixin
 
 
-class AttachmentViewer(mixin.AttachmentDropTargetMixin, # pylint: disable=W0223
+class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
                        base.SortableViewerWithColumns,
                        mixin.SortableViewerForAttachmentsMixin, 
                        mixin.SearchableViewerMixin, mixin.NoteColumnMixin,
