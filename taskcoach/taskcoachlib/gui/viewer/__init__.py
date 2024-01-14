@@ -25,7 +25,7 @@ from .attachment import AttachmentViewer
 from .container import ViewerContainer
 from .factory import viewerTypes, addViewers, addOneViewer
 
-from taskcoachlib import operating_system
+from ....taskcoachlib import operating_system
 try:
     import igraph
 except ImportError:
