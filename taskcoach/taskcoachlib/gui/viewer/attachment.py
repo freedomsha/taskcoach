@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, wx
 from ....taskcoachlib import command, widgets
-from ....taskcoachlib.domain import attachment
+from ...domain import attachment
 from ...i18n import _
 from .. import uicommand, dialog
 # import taskcoachlib.gui.menu
