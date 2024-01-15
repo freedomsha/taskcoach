@@ -20,12 +20,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import command
-from taskcoachlib.domain import base, task, category, attachment
-from taskcoachlib.gui import uicommand
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
+from ... import command
+from ...domain import base, task, category, attachment
+from ...gui import uicommand
+from ...i18n import _
+from ...thirdparty.pubsub import pub
 import wx
+
 
 
 class SearchableViewerMixin(object):
