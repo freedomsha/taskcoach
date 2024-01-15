@@ -20,10 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 In place editors for viewers.
 ''' # pylint: disable=W0105
 
+from builtins import str
+from builtins import object
 import wx
-from taskcoachlib.thirdparty import hypertreelist
-from taskcoachlib import widgets
-from taskcoachlib.domain import date
+from ...thirdparty import hypertreelist
+from ... import widgets
+from ...domain import date
 
 
 class KillFocusAcceptsEditsMixin(object):
@@ -106,7 +108,7 @@ class PercentageCtrl(_SpinCtrl):
 
 class Panel(wx.Panel):
     ''' Panel class for inline controls that need to be put into a panel. '''
-    def __init__(self, parent, wxId, value, *args, **kwargs): # pylint: disable=W0613
+    def __init__(self, parent, wxId, value, *args, **kwargs):  # pylint: disable=W0613
         # Don't pass the value argument to the wx.Panel since it doesn't take 
         # a value argument
         super(Panel, self).__init__(parent, wxId, *args, **kwargs)      
