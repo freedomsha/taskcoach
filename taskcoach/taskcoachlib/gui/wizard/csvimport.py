@@ -16,10 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
-from taskcoachlib import meta
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty import chardet
+from builtins import zip
+from builtins import next
+from builtins import range
+from ... import meta
+from ...i18n import _
+from ...thirdparty import chardet
 import wx
 import csv
 import tempfile
@@ -124,6 +126,7 @@ class CSVImportOptionsPage(wiz.WizardPageSimple):
         self.headers = None
 
         self.filename = filename
+        # file = open ?
         self.encoding = chardet.detect(file(filename, 'rb').read())['encoding']
         self.OnOptionChanged(None)
 
@@ -157,6 +160,7 @@ class CSVImportOptionsPage(wiz.WizardPageSimple):
 
             fp = tempfile.TemporaryFile()
             try:
+                # file -> open ?
                 fp.write(file(self.filename, 'rU').read().decode(self.encoding).encode('UTF-8'))
                 fp.seek(0)
 
