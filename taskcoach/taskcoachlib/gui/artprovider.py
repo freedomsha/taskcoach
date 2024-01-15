@@ -21,8 +21,8 @@ from __future__ import division
 from builtins import chr
 from builtins import range
 from past.utils import old_div
-from taskcoachlib import patterns, operating_system
-from taskcoachlib.i18n import _
+from ... import patterns, operating_system
+from ...i18n import _
 import wx
 from . import icons
 
