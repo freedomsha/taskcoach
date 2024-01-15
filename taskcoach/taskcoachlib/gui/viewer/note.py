@@ -20,11 +20,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import command, widgets, domain
-from taskcoachlib.domain import note
-from taskcoachlib.gui import uicommand, dialog
-import taskcoachlib.gui.menu
-from taskcoachlib.i18n import _
+from ... import command, widgets, domain
+from ...domain import note
+from ...gui import uicommand, dialog
+from ...gui.menu import *
+from ...i18n import _
 from . import base
 from . import mixin
 from . import inplace_editor
