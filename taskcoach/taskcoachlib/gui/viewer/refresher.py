@@ -22,10 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     viewers. '''  # pylint: disable=W0105
 
 
-from taskcoachlib import patterns
-from taskcoachlib.domain import date
-from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib.gui.newid import IdProvider
+from builtins import object
+from ... import patterns
+from ...domain import date
+from ...thirdparty.pubsub import pub
+from ...gui.newid import IdProvider
 import wx
 
 
