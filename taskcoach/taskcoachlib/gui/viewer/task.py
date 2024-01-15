@@ -20,18 +20,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import zip
+from builtins import str
+from past.utils import old_div
+from builtins import object
 import math
 import wx.lib.agw.piectrl
-from taskcoachlib import operating_system
-from taskcoachlib import command, widgets, domain, render
-from taskcoachlib.domain import task, date
-from taskcoachlib.gui import uicommand, dialog
-import taskcoachlib.gui.menu
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib.thirdparty.wxScheduler import wxSCHEDULER_TODAY, wxFancyDrawer
-from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
-from taskcoachlib.widgets import CalendarConfigDialog, HierarchicalCalendarConfigDialog
+from ... import operating_system
+from ... import command, widgets, domain, render
+from ...domain import task, date
+from ...gui import uicommand, dialog
+from ...gui.menu import *
+from ...i18n import _
+from ...thirdparty.pubsub import pub
+from ...thirdparty.wxScheduler import wxSCHEDULER_TODAY, wxFancyDrawer
+from ...thirdparty import smartdatetimectrl as sdtc
+from ...widgets import CalendarConfigDialog, HierarchicalCalendarConfigDialog
 from twisted.internet.threads import deferToThread
 from twisted.internet.defer import inlineCallbacks
 from . import base
