@@ -16,10 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import operating_system
-import taskcoachlib.gui.menu
-from taskcoachlib.thirdparty.pubsub import pub
-import taskcoachlib.thirdparty.aui as aui
+from builtins import range
+from builtins import object
+from ... import operating_system
+from ...gui.menu import *
+from ...thirdparty.pubsub import pub
+from ...thirdparty import aui as aui
 import wx
 
 
