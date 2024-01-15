@@ -20,12 +20,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from future import standard_library
+standard_library.install_aliases()
 import wx
-from taskcoachlib import command, widgets
-from taskcoachlib.domain import category 
-from taskcoachlib.i18n import _
-from taskcoachlib.gui import uicommand, dialog
-import taskcoachlib.gui.menu
+from ... import command, widgets
+from ...domain import category
+from ...i18n import _
+from ...gui import uicommand, dialog
+from ...gui.menu import *
 from . import base
 from . import mixin
 from . import inplace_editor
