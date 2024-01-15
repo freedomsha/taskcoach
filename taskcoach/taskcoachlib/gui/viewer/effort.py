@@ -20,13 +20,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import command, widgets, domain, render
-from taskcoachlib.domain import effort, date
-from taskcoachlib.domain.base import filter  # pylint: disable=W0622
-from taskcoachlib.gui import uicommand, dialog
-import taskcoachlib.gui.menu
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
+from builtins import zip
+from ... import command, widgets, domain, render
+from ...domain import effort, date
+from ...domain.base import filter  # pylint: disable=W0622
+from ...gui import uicommand, dialog
+from ...gui.menu import *
+from ...i18n import _
+from ...thirdparty.pubsub import pub
 from . import base
 from . import mixin
 from . import refresher
