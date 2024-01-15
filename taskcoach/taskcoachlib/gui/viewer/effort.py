@@ -213,14 +213,14 @@ class EffortViewer(base.ListViewer,
                 sortCallback=sortCallback,
                 width=self.getColumnWidth(name), **kwargs) \
             for name, columnHeader, eventType, renderCallback, sortCallback in \
-            ('period', _('Period'), effort.Effort.durationChangedEventType(), 
+            (('period', _('Period'), effort.Effort.durationChangedEventType(), 
              self.__renderPeriod, 
              uicommand.ViewerSortByCommand(viewer=self, value='period')),
             ('task', _('Task'), effort.Effort.taskChangedEventType(), 
              lambda effort: effort.task().subject(recursive=True), None),
             ('description', _('Description'), 
              effort.Effort.descriptionChangedEventType(), 
-             lambda effort: effort.description(), None)] + \
+             lambda effort: effort.description(), None))] + \
             [widgets.Column('categories', _('Categories'),
              width=self.getColumnWidth('categories'),
              renderCallback=self.renderCategories, **kwargs)] + \
@@ -229,7 +229,7 @@ class EffortViewer(base.ListViewer,
              renderCallback=renderCallback, alignment=wx.LIST_FORMAT_RIGHT,
              **kwargs) \
             for name, columnHeader, eventType, renderCallback in \
-            ('timeSpent', _('Time spent'), 
+            (('timeSpent', _('Time spent'), 
              effort.Effort.durationChangedEventType(), self.__renderTimeSpent),
             ('totalTimeSpent', _('Total time spent'), 
              effort.Effort.durationChangedEventType(), 
@@ -237,12 +237,12 @@ class EffortViewer(base.ListViewer,
             ('revenue', _('Revenue'), effort.Effort.revenueChangedEventType(), 
              self.__renderRevenue),
             ('totalRevenue', _('Total revenue'), 
-             effort.Effort.revenueChangedEventType(), self.__renderTotalRevenue)] + \
+             effort.Effort.revenueChangedEventType(), self.__renderTotalRevenue))] + \
              [widgets.Column(name, columnHeader, eventType, 
               renderCallback=renderCallback, alignment=wx.LIST_FORMAT_RIGHT,
               width=self.getColumnWidth(name), **kwargs) \
              for name, columnHeader, eventType, renderCallback in \
-                ('monday', _('Monday'), 
+                (('monday', _('Monday'), 
                  effort.Effort.durationChangedEventType(),  
                  lambda effort: self.__renderTimeSpentOnDay(effort, 0)),
                 ('tuesday', _('Tuesday'), 
@@ -262,7 +262,7 @@ class EffortViewer(base.ListViewer,
                  lambda effort: self.__renderTimeSpentOnDay(effort, 5)),
                 ('sunday', _('Sunday'), 
                  effort.Effort.durationChangedEventType(),  
-                 lambda effort: self.__renderTimeSpentOnDay(effort, 6))      
+                 lambda effort: self.__renderTimeSpentOnDay(effort, 6)))      
              ]
 
     def _showWeekdayColumns(self, show=True):
@@ -429,7 +429,7 @@ class EffortViewer(base.ListViewer,
         if not selectedTasks:
             subjectDecoratedTaskList = [(task.subject(recursive=True), task) \
                                         for task in self.tasksToShowEffortFor()]
-            subjectDecoratedTaskList.sort() # Sort by subject
+            subjectDecoratedTaskList.sort()  # Sort by subject
             selectedTasks = [subjectDecoratedTaskList[0][1]]
         return super(EffortViewer, self).newItemDialog(selectedTasks, 
                                                        bitmap=bitmap)
