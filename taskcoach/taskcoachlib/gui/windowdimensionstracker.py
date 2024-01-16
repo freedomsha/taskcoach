@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from builtins import object
 import wx
-from taskcoachlib import operating_system
+from .. import operating_system
 
 
 class _Tracker(object):
