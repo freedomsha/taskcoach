@@ -33,7 +33,7 @@ import codecs
 import traceback
 
 try:
-    from taskcoachlib.syncml import sync
+    from ..syncml import sync
 except ImportError:  # pragma: no cover
     # Unsupported platform.
     pass
