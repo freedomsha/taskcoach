@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.i18n import _
-from taskcoachlib import meta
+from ..i18n import _
+from .. import meta
 
 # Help texts for menu items and toolbar buttons (so called uicommands). 
 # At the moment this lists mostly the uicommands that have a keyboard shortcut 
@@ -38,12 +38,12 @@ effortNew = _('Add an effort period to the selected task(s)')
 effortStart = _('Start tracking effort for the selected task(s)')
 effortStopOrResume = _('Stop tracking effort or resume tracking effort')
 fileClose = _('Close the current file')
-fileQuit = _('Exit %s')%meta.name
-fileOpen = _('Open a %s file')%meta.name
+fileQuit = _('Exit %s') % meta.name
+fileOpen = _('Open a %s file') % meta.name
 fileSave = _('Save the current file')
 fileMergeDiskChanges = _('Load what has changed on disk')
 fileSaveAs = _('Save the current file under a new name')
-help = _('Help about the program') # pylint: disable=W0622
+help = _('Help about the program')  # pylint: disable=W0622
 mailItem = _('Mail the selected item(s), using your default mailer')
 noteNew = _('Insert a new note')
 openAllAttachments = _('Open all attachments of the selected item(s)')
