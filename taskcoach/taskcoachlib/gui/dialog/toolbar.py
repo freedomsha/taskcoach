@@ -16,11 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import widgets
-from taskcoachlib.help.balloontips import BalloonTipManager
-from taskcoachlib.gui import uicommand
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty import hypertreelist as htl
+from ... import widgets
+from ...help.balloontips import BalloonTipManager
+from ...gui import uicommand
+from ...i18n import _
+from ...thirdparty import hypertreelist as htl
 import wx
 
 
