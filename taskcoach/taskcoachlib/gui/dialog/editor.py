@@ -1088,9 +1088,9 @@ class EditBook(widgets.Notebook):
         ''' Create the section and initialize the options in the section. '''
         self.settings.add_section(section)
         for option, value in list(dict(perspective='', 
-                                  pages=str(self.__pages_to_create())),
+                                  pages=str(self.__pages_to_create()),
                                   size='(-1, -1)', position='(-1, -1)',
-                                  maximized='False').items():
+                                  maximized='False').items()):
             self.settings.init(section, option, value)
         
     def close_edit_book(self):
