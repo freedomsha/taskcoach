@@ -24,12 +24,13 @@ from builtins import zip
 from builtins import str
 from builtins import range
 from builtins import object
-from taskcoachlib import meta, widgets, notify, operating_system, render
-from taskcoachlib.domain import date, task
-from taskcoachlib.gui import artprovider
-from taskcoachlib.meta import data
-from taskcoachlib.i18n import _
-import wx, calendar
+from ... import meta, widgets, notify, operating_system, render
+from ...domain import date, task
+from ...gui import artprovider
+from ...meta import data
+from ...i18n import _
+import wx
+import calendar
 
 
 class FontColorSyncer(object):
