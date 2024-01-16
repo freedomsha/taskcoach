@@ -23,15 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from builtins import str
 from builtins import range
-from taskcoachlib import widgets, patterns, command, operating_system, render
-from taskcoachlib.domain import task, date, note, attachment
-from taskcoachlib.gui import viewer, uicommand, windowdimensionstracker
-from taskcoachlib.gui.dialog import entry, attributesync
-from taskcoachlib.gui.newid import IdProvider
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
-from taskcoachlib.help.balloontips import BalloonTipManager
+from ... import widgets, patterns, command, operating_system, render
+from ...domain import task, date, note, attachment
+from ...gui import viewer, uicommand, windowdimensionstracker
+from ...gui.dialog import entry, attributesync
+from ...gui.newid import IdProvider
+from ...i18n import _
+from ...thirdparty.pubsub import pub
+from ...thirdparty import smartdatetimectrl as sdtc
+from ...help.balloontips import BalloonTipManager
 import os.path
 import wx
 
