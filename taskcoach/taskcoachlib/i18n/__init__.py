@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import wx, os, sys, imp, tempfile, locale, gettext
-from taskcoachlib import patterns, operating_system
-import po2dict
+from .. import patterns, operating_system
+from . import po2dict
 
 
 class Translator:
