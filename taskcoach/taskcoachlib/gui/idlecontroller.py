@@ -16,14 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.command import NewEffortCommand, EditEffortStopDateTimeCommand
-from taskcoachlib.domain import effort, date
-from taskcoachlib.i18n import _
-from taskcoachlib.notify import NotificationFrameBase, NotificationCenter
-from taskcoachlib.patterns import Observer
-from taskcoachlib.powermgt import IdleNotifier
-from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib import render
+from ..command import NewEffortCommand, EditEffortStopDateTimeCommand
+from ..domain import effort, date
+from ..i18n import _
+from ..notify import NotificationFrameBase, NotificationCenter
+from ..patterns import Observer
+from ..powermgt import IdleNotifier
+from ..thirdparty.pubsub import pub
+from .. import render
 import wx
 
 
