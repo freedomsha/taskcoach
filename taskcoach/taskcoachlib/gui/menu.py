@@ -16,15 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+
 from builtins import object
-from taskcoachlib import operating_system
-from taskcoachlib import patterns, persistence, help  # pylint: disable=W0622
-from taskcoachlib.domain import task, base, category
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib.gui.newid import IdProvider
+from .. import operating_system
+from .. import patterns, persistence, help  # pylint: disable=W0622
+from ..domain import task, base, category
+from ..i18n import _
+from ..thirdparty.pubsub import pub
+from ..gui.newid import IdProvider
 from . import uicommand
-import taskcoachlib.gui.viewer
+from .viewer import *
 import wx
 import os
 
