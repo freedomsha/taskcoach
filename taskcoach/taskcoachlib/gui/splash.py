@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 import wx
-from taskcoachlib import i18n
+from .. import i18n
 try:
     from . import icons
 except ImportError:  # pragma: no cover   
