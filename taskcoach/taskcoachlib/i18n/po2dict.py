@@ -6,10 +6,10 @@
 This program converts a textual Uniforum-style message catalog (.po file) into
 a python dictionary 
 
-Based on msgfmt.py by Martin v. Löwis <loewis@informatik.hu-berlin.de>
+Based on msgfmt.py by Martin v. LÃ¶wis <loewis@informatik.hu-berlin.de>
 
 """
-
+from __future__ import print_function
 import sys, re, os
 
 MESSAGES = {}
@@ -31,7 +31,7 @@ def generateDict():
     metadata = MESSAGES['']
     del MESSAGES['']
     encoding = re.search(r'charset=(\S*)\n', metadata).group(1)
-    return "# -*- coding: %s -*-\n#This is generated code - do not edit\nencoding = '%s'\ndict = %s"%(encoding, encoding, MESSAGES)
+    return "# -*- coding: %s -*-\n#This is generated code - do not edit\nencoding = '%s'\ndict = %s" % (encoding, encoding, MESSAGES)
 
 
 def make(filename, outfile=None):
@@ -63,7 +63,7 @@ def make(filename, outfile=None):
         lno += 1
         # If we get a comment line after a msgstr, this is a new entry
         if l[0] == '#' and section == STR:
-            add(msgid, msgstr, fuzzy) # pylint: disable=E0601
+            add(msgid, msgstr, fuzzy)  # pylint: disable=E0601
             section = None
             fuzzy = 0
         # Record a fuzzy mark
@@ -94,9 +94,12 @@ def make(filename, outfile=None):
         elif section == STR:
             msgstr += l
         else:
-            print >> sys.stderr, 'Syntax error on %s:%d' % (infile, lno), \
-                  'before:'
-            print >> sys.stderr, l
+            # print >> sys.stderr, 'Syntax error on %s:%d' % (infile, lno),
+            #      'before:'
+            # print >> sys.stderr, l
+            print('Syntax error on %s:%d' % (infile, lno),
+                  'before:', file=sys.stderr)
+            print(l, file=sys.stderr)
             sys.exit(1)
     # Add last entry
     if section == STR:
