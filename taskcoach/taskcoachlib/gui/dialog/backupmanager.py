@@ -16,10 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import wx, os
-from taskcoachlib.persistence import BackupManifest
-from taskcoachlib.i18n import _
-from taskcoachlib import render
+import wx
+import os
+from ...persistence import BackupManifest
+from ...i18n import _
+from ... import render
 
 
 class BackupManagerDialog(wx.Dialog):
