@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from builtins import object
-from taskcoachlib import patterns, meta, notify
-from taskcoachlib.domain import date, task
-from taskcoachlib.gui.dialog import reminder, editor
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
+from .. import patterns, meta, notify
+from ..domain import date, task
+from ..gui.dialog import reminder, editor
+from ..i18n import _
+from ..thirdparty.pubsub import pub
 import wx
 
 
