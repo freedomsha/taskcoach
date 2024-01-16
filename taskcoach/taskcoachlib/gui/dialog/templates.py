@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import wx
-from taskcoachlib.domain.task import Task
-from taskcoachlib import persistence, operating_system
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
+from ...domain.task import Task
+from ... import persistence, operating_system
+from ...i18n import _
+from ...thirdparty.deltaTime import nlTimeExpression
 from wx.lib import sized_controls
 
 
