@@ -19,12 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from builtins import object
-from taskcoachlib import meta, persistence, patterns, operating_system
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty import lockfile
-from taskcoachlib.widgets import GetPassword
-from taskcoachlib.workarounds import ExceptionAsUnicode
-from taskcoachlib.gui.dialog import BackupManagerDialog
+from .. import meta, persistence, patterns, operating_system
+from ..i18n import _
+from ..thirdparty import lockfile
+from ..widgets import GetPassword
+from ..workarounds import ExceptionAsUnicode
+from ..gui.dialog import BackupManagerDialog
 import wx
 import os
 import gc
