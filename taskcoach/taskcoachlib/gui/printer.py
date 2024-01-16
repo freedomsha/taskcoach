@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from builtins import str
-from taskcoachlib import persistence, patterns, operating_system
-from taskcoachlib.i18n import _
+from .. import persistence, patterns, operating_system
+from ..i18n import _
 import wx
 
 
