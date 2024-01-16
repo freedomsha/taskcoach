@@ -19,20 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from builtins import str
-from taskcoachlib import application, meta, widgets, \
+from . import application, meta, widgets, \
     operating_system # pylint: disable=W0622
-from taskcoachlib.gui import viewer, toolbar, uicommand, remindercontroller, \
+from ..gui import viewer, toolbar, uicommand, remindercontroller, \
     artprovider, windowdimensionstracker, idlecontroller
-from taskcoachlib.gui.dialog.iphone import IPhoneSyncTypeDialog
-from taskcoachlib.gui.dialog.xfce4warning import XFCE4WarningDialog
-from taskcoachlib.gui.dialog.editor import Editor
-from taskcoachlib.gui.iphone import IPhoneSyncFrame
-from taskcoachlib.i18n import _
-from taskcoachlib.powermgt import PowerStateMixin
-from taskcoachlib.help.balloontips import BalloonTipManager
-from taskcoachlib.thirdparty.pubsub import pub
-import taskcoachlib.thirdparty.aui as aui
-import wx, ctypes
+from ..gui.dialog.iphone import IPhoneSyncTypeDialog
+from ..gui.dialog.xfce4warning import XFCE4WarningDialog
+from ..gui.dialog.editor import Editor
+from ..gui.iphone import IPhoneSyncFrame
+from ..i18n import _
+from ..powermgt import PowerStateMixin
+from ..help.balloontips import BalloonTipManager
+from ..thirdparty.pubsub import pub
+from ..thirdparty import aui
+import wx
+import ctypes
 
 
 def turn_on_double_buffering_on_windows(window):
