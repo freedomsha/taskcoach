@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from builtins import str
-from taskcoachlib import meta, patterns, command, render, operating_system, \
+from ... import meta, patterns, command, render, operating_system, \
     speak
-from taskcoachlib.domain import date
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.pubsub import pub
+from ...domain import date
+from ...i18n import _
+from ...thirdparty.pubsub import pub
 from wx.lib import sized_controls
 import subprocess
 import wx
