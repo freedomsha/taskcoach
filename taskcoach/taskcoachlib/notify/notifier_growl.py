@@ -22,8 +22,8 @@ import sys
 import tempfile
 import wx
 
-import taskcoachlib.thirdparty.gntp.notifier as Growl
-from taskcoachlib import meta
+from ..thirdparty.gntp import notifier as Growl
+from .. import meta
 from .notifier import AbstractNotifier
 
 
