@@ -37,7 +37,7 @@ def log_call(traceback_depth):
             write = sys.stdout.write
             for frame in inspect.stack(context=2)[traceback_depth:0:-1]:
                 write(format_traceback(frame))
-            write('%s\n'%signature(func, args, kwargs, result))
+            write('%s\n' % signature(func, args, kwargs, result))
             write('===\n')
             return result
         return inner
@@ -53,8 +53,8 @@ def time_call(func):
         start = time.time() 
         result = func(*args, **kwargs)
         stop = time.time()
-        sys.stdout.write('%s took %f seconds\n'%\
-            (signature(func, args, kwargs, result), stop-start))
+        sys.stdout.write('%s took %f seconds\n' %
+                         (signature(func, args, kwargs, result), stop-start))
         return result
     return inner
 
@@ -77,13 +77,13 @@ def signature(func, args, kwargs, result):
     try:
         return '%s(%s, %s) -> %s'%(func, unicode(args), unicode(kwargs), result)
     except:
-        return '%s(...) -> %s'%(func, result) # pylint: disable=W0702
+        return '%s(...) -> %s'%(func, result)  # pylint: disable=W0702
                                
                                
 def format_traceback(frame):
     result = []
     filename, lineno, caller, context = frame[1:5]
-    result.append('  File "%s", line %s, in %s'%(filename, lineno, caller))
+    result.append('  File "%s", line %s, in %s' % (filename, lineno, caller))
     for line in context:
         result.append(line[:-1])
     return '\n'.join(result) + '\n'   
