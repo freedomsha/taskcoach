@@ -16,12 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os, stat, codecs
-from taskcoachlib import persistence
+from builtins import range
+import os
+import stat
+import codecs
+from .. import persistence
 
 
 if os.name == 'nt':
-    from win32com.client import GetActiveObject # pylint: disable=F0401
+    from win32com.client import GetActiveObject  # pylint: disable=F0401
 
     def getCurrentSelection():
         selection = GetActiveObject('Outlook.Application').ActiveExplorer().Selection
