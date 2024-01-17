@@ -21,7 +21,7 @@ STRINGS = set()
 
 
 def add(id_, string, fuzzy):
-    "Add a non-fuzzy translation to the dictionary."
+    """Add a non-fuzzy translation to the dictionary."""
     global MESSAGES
     if not fuzzy and string:
         MESSAGES[id_] = string
@@ -29,7 +29,7 @@ def add(id_, string, fuzzy):
 
 
 def generateDict():
-    "Return the generated dictionary"
+    """Return the generated dictionary"""
     global MESSAGES
     metadata = MESSAGES['']
     del MESSAGES['']
