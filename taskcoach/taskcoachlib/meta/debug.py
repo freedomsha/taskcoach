@@ -76,9 +76,9 @@ def signature(func, args, kwargs, result):
     func = func.__name__
     result = unicode(result)
     try:
-        return '%s(%s, %s) -> %s'%(func, unicode(args), unicode(kwargs), result)
+        return '%s(%s, %s) -> %s' % (func, unicode(args), unicode(kwargs), result)
     except:
-        return '%s(...) -> %s'%(func, result)  # pylint: disable=W0702
+        return '%s(...) -> %s' % (func, result)  # pylint: disable=W0702
                                
                                
 def format_traceback(frame):
