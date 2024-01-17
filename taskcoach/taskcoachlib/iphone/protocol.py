@@ -18,19 +18,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # pylint: disable=W0201,E1101
  
-from taskcoachlib.domain.date import Date, parseDate, DateTime, parseDateTime, Recurrence
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import map
+from builtins import filter
+from builtins import range
+from builtins import object
+from ..domain.date import Date, parseDate, DateTime, parseDateTime, Recurrence
 
-from taskcoachlib.domain.category import Category
-from taskcoachlib.domain.task import Task
-from taskcoachlib.domain.effort import Effort
+from ..domain.category import Category
+from ..domain.task import Task
+from ..domain.effort import Effort
 
-from taskcoachlib.i18n import _
+from ..i18n import _
 
 from twisted.internet.protocol import Protocol, ServerFactory
 from twisted.internet.error import CannotListenError
 
-import wx, struct, \
-    random, time, hashlib, cStringIO, socket, os
+import wx
+import struct
+import random
+import time
+import hashlib
+import io
+import socket
+import os
 
 # Default port is 8001.
 #
