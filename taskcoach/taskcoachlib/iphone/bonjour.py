@@ -16,7 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.thirdparty import pybonjour
+from builtins import object
+from ..thirdparty import pybonjour
 from twisted.internet.interfaces import IReadDescriptor
 from twisted.internet.defer import Deferred, AlreadyCalledError
 from twisted.python.failure import Failure
