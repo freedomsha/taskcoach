@@ -10,12 +10,15 @@ Based on msgfmt.py by Martin v. Löwis <loewis@informatik.hu-berlin.de>
 
 """
 from __future__ import print_function
-import sys, re, os
+import sys
+import re
+import os
 
 MESSAGES = {}
 STRINGS = set()
 
 # pylint: disable=W0602,W0603
+
 
 def add(id_, string, fuzzy):
     "Add a non-fuzzy translation to the dictionary."
