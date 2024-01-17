@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from builtins import str
 import sys
 
+
 def log_call(traceback_depth):
     ''' Decorator for function calls that prints the function name,
         arguments and result to stdout. Usage:
