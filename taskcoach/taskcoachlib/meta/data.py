@@ -31,9 +31,12 @@ release_status = 'stable'  # One of 'alpha', 'beta', 'stable'
 
 # No editing needed below this line for doing a release.
 
-import re, datetime
+from builtins import str
+from builtins import map
+import re
+import datetime
 try:
-    from taskcoachlib.meta.revision import revision  # pylint: disable=F0401,W0611
+    from .revision import revision  # pylint: disable=F0401,W0611
 except ImportError:
     revision = None 
 
@@ -68,13 +71,13 @@ date = release_month + ' ' + release_day + ', ' + release_year
 name = 'Task Coach'
 description = 'Your friendly task manager'
 long_description = '%(name)s is a free open source todo manager. It grew ' \
-'out of frustration about other programs not handling composite tasks well. ' \
-'In addition to flexible composite tasks, %(name)s has grown to include ' \
-'prerequisites, prioritizing, effort tracking, category tags, budgets, ' \
-'notes, and many other features. However, users are not forced to use all ' \
-'these features; %(name)s can be as simple or complex as you need it to be. ' \
-'%(name)s is available for Windows, Mac OS X, and GNU/Linux; and there is a ' \
-'companion iOS app.' % dict(name=name)
+                    'out of frustration about other programs not handling composite tasks well. ' \
+                    'In addition to flexible composite tasks, %(name)s has grown to include ' \
+                    'prerequisites, prioritizing, effort tracking, category tags, budgets, ' \
+                    'notes, and many other features. However, users are not forced to use all ' \
+                    'these features; %(name)s can be as simple or complex as you need it to be. ' \
+                    '%(name)s is available for Windows, Mac OS X, and GNU/Linux; and there is a ' \
+                    'companion iOS app.' % dict(name=name)
 keywords = 'task manager, todo list, pim, time registration, track effort'
 author_first, author_last = 'Frank', 'Niessink'  # Needed for PAD file
 author = '%s %s, Jerome Laheurte, and Aaron Wolf' % (author_first, author_last)
