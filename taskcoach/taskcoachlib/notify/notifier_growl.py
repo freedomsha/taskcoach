@@ -51,8 +51,11 @@ class GrowlNotifier(AbstractNotifier):
         os.close(fd)
         try:
             bitmap.SaveFile(filename, wx.BITMAP_TYPE_PNG)
-            self._notifier.notify(noteType=u'Reminder', icon=file(filename, 'rb').read(), title=title, description=summary,
-                                  sticky=True)
+            # self._notifier.notify(noteType=u'Reminder', icon=file(filename, 'rb').read(), title=title,
+            # description=summary, sticky=True)
+            self._notifier.notify(noteType=u'Reminder', icon=open(filename, 'rb').read(), title=title,
+                                  description=summary, sticky=True)
+
         finally:
             os.remove(filename)
 
