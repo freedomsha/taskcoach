@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import data
 import threading
-import urllib.request as urllib2
+from urllib import request as urllib2
 
 
 class DeveloperMessageChecker(threading.Thread):
