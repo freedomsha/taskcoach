@@ -16,10 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import persistence, operating_system
-from taskcoachlib.thirdparty.ntlm import IMAPNtlmAuthHandler
-from taskcoachlib.widgets.password import GetPassword
-from taskcoachlib.i18n import _
+from builtins import chr
+from builtins import str
+from builtins import range
+from builtins import object
+from .. import persistence, operating_system
+from ..thirdparty.ntlm import IMAPNtlmAuthHandler
+from ..widgets.password import GetPassword
+from ..i18n import _
 import os
 import stat
 import re
@@ -67,7 +71,8 @@ def loadPreferences():
     def user_pref(key, value):
         config[key] = value
 
-    for line in file(os.path.join(getDefaultProfileDir(), 'prefs.js'), 'r'):
+    # for line in file(os.path.join(getDefaultProfileDir(), 'prefs.js'), 'r'):
+    for line in open(os.path.join(getDefaultProfileDir(), 'prefs.js'), 'r'):
         if line.startswith('user_pref('):
             # pylint: disable=W0122
             exec line in {'user_pref': user_pref, 'true': True, 'false': False}
@@ -115,7 +120,7 @@ def getDefaultProfileDir():
         if _PORTABLECACHE is not None:
             return _PORTABLECACHE
 
-        from taskcoachlib.thirdparty import wmi  # pylint: disable=W0404
+        from ..thirdparty import wmi  # pylint: disable=W0404
 
         for process in wmi.WMI().Win32_Process():
             if process.ExecutablePath and process.ExecutablePath.lower().endswith('thunderbirdportable.exe'):
@@ -188,7 +193,8 @@ class ThunderbirdMailboxReader(object):
         else:
             raise ThunderbirdError(_('Could not find directory for ID\n%s.\nPlease file a bug report.') % url)
 
-        self.fp = file(self.filename, 'rb')
+        # self.fp = file(self.filename, 'rb')
+        self.fp = open(self.filename, 'rb')
         if self.offset >= 0:
             self.fp.seek(self.offset)
         else:
@@ -376,13 +382,15 @@ class ThunderbirdLocalMailboxReader(object):
         # rather an offset in the mbox file.
         offset = int(match.group(2))
         # So we skip the first offset bytes before reading the contents:
-        with file(path, 'rb') as mbox:
+        # with file(path, 'rb') as mbox:
+        with open(path, 'rb') as mbox:
             mbox.seek(offset)
             contents = mbox.read(4 * 1024 * 1024)  # Assume message size <= 4MB
         # Then we get a filename for a temporary file...
         filename = persistence.get_temp_file()
         # And save the remaining contents of the original mbox file: 
-        with file(filename, 'wb') as tmpmbox:
+        # with file(filename, 'wb') as tmpmbox:
+        with open(filename, 'wb') as tmpmbox:
             tmpmbox.write(contents)
         # Now we can open the temporary mbox file...
         mb = mailbox.mbox(filename)
@@ -404,7 +412,8 @@ def getMail(id_):
         raise TypeError('Not supported: %s' % id_)
 
     filename = persistence.get_temp_file(suffix='.eml')
-    reader.saveToFile(file(filename, 'wb'))
+    # reader.saveToFile(file(filename, 'wb'))
+    reader.saveToFile(open(filename, 'wb'))
 
     if os.name == 'nt':
         os.chmod(filename, stat.S_IREAD)
