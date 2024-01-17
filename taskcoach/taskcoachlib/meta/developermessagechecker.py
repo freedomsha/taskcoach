@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import data
 import threading
-import urllib2
+import urllib.request as urllib2
 
 
 class DeveloperMessageChecker(threading.Thread):
@@ -73,7 +73,7 @@ class DeveloperMessageChecker(threading.Thread):
     def __create_dialog(self, message, url):
         ''' Create the message dialog. '''
         import wx
-        from taskcoachlib.gui.dialog import developer_message
+        from ..gui.dialog import developer_message
         return developer_message.MessageDialog(wx.GetApp().GetTopWindow(),
                                                message=message, url=url,
                                                settings=self.__settings)
