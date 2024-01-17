@@ -16,9 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.i18n import _
-from taskcoachlib import operating_system
-import wx, subprocess, threading, time
+from future import standard_library
+standard_library.install_aliases()
+from ..i18n import _
+from .. import operating_system
+import wx
+import subprocess
+import threading
+import time
 
 
 class MailAppInfoLoader(wx.ProgressDialog):
