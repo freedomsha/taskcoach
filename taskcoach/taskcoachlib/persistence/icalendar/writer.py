@@ -16,9 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.persistence.icalendar import ical
-from taskcoachlib.domain import task
-from taskcoachlib import meta
+from builtins import object
+from . import ical
+from ...domain import task
+from ... import meta
 
 
 def extendedWithAncestors(selection):
@@ -34,7 +35,7 @@ class iCalendarWriter(object):
     def __init__(self, fd, filename=None):
         self.__fd = fd
 
-    def write(self, viewer, settings, selectionOnly=False): # pylint: disable=W0613
+    def write(self, viewer, settings, selectionOnly=False):  # pylint: disable=W0613
         items = viewer.visibleItems()
         if selectionOnly:
             selection = viewer.curselection()
@@ -57,6 +58,6 @@ class iCalendarWriter(object):
     def _writeMetaData(self):
         self.__fd.write('VERSION:2.0\r\n')
         domain = meta.url[len('http://'):].strip('/')
-        self.__fd.write('PRODID:-//%s//NONSGML %s V%s//EN\r\n'%(domain, 
-                                                                meta.name, 
-                                                                meta.version))
+        self.__fd.write('PRODID:-//%s//NONSGML %s V%s//EN\r\n' % (domain, 
+                                                                  meta.name, 
+                                                                  meta.version))
