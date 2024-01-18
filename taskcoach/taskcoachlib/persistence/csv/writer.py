@@ -16,7 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import csv, cStringIO
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import object
+import csv
+import io as cStringIO
 from . import generator
 
 
@@ -24,6 +29,7 @@ class UnicodeCSVWriter:
     ''' A CSV writer that writes rows to a CSV file encoded in utf-8. 
         Based on http://docs.python.org/lib/csv-examples.html.
     '''
+    
     def __init__(self, fd, *args, **kwargs):
         # Redirect output to a queue
         self.queue = cStringIO.StringIO()
@@ -48,8 +54,8 @@ class CSVWriter(object):
         self.__fd = fd
 
     def write(self, viewer, settings, selectionOnly=False, 
-              separateDateAndTimeColumns=False, columns=None): # pylint: disable=W0613
+              separateDateAndTimeColumns=False, columns=None):  # pylint: disable=W0613
         csvRows = generator.viewer2csv(viewer, selectionOnly, 
                                        separateDateAndTimeColumns, columns)
         UnicodeCSVWriter(self.__fd).writerows(csvRows)
-        return len(csvRows) - 1 # Don't count header row
+        return len(csvRows) - 1  # Don't count header row
