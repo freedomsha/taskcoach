@@ -17,8 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from .notifier import AbstractNotifier
-import tempfile, os, wx
-from taskcoachlib.thirdparty import snarl
+import tempfile
+import os
+import wx
+from ..thirdparty import snarl
 
 
 class SnarlNotifier(AbstractNotifier):
