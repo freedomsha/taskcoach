@@ -16,14 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.domain.category import Category
-from taskcoachlib.domain.date import DateTime, TimeDelta
-from taskcoachlib.domain.task import Task
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.dateutil import parser as dparser
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import next
+from builtins import map
+from builtins import object
+from ...domain.category import Category
+from ...domain.date import DateTime, TimeDelta
+from ...domain.task import Task
+from ...i18n import _
+from ...thirdparty.dateutil import parser as dparser
 import csv
 import tempfile
-import StringIO
+import io as StringIO
 import re
 import math
 
@@ -41,6 +47,7 @@ class CSVReader(object):
         
     def read(self, **kwargs):
         fp = tempfile.TemporaryFile()
+        # file -> open ?
         fp.write(file(kwargs['filename'], 'rU').read().decode(kwargs['encoding']).encode('UTF-8'))
         fp.seek(0)
         
