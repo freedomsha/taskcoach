@@ -16,9 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from builtins import object
+from past.utils import old_div
 import wx
 from .notifier import AbstractNotifier
-from taskcoachlib import operating_system
+from .. import operating_system
 
 
 #==============================================================================
