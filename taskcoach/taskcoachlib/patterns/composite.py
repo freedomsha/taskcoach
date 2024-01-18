@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from . import observer
 import weakref
 
@@ -106,7 +107,7 @@ class Composite(object):
 
 class ObservableComposite(Composite):
     @observer.eventSource
-    def __setstate__(self, state, event=None): # pylint: disable=W0221
+    def __setstate__(self, state, event=None):  # pylint: disable=W0221
         oldChildren = set(self.children())
         super(ObservableComposite, self).__setstate__(state)
         newChildren = set(self.children())
@@ -119,7 +120,7 @@ class ObservableComposite(Composite):
             self.addChildEvent(event, *childrenAdded)
 
     @observer.eventSource
-    def addChild(self, child, event=None): # pylint: disable=W0221
+    def addChild(self, child, event=None):  # pylint: disable=W0221
         super(ObservableComposite, self).addChild(child)
         self.addChildEvent(event, child)
 
@@ -128,10 +129,10 @@ class ObservableComposite(Composite):
 
     @classmethod
     def addChildEventType(class_):
-        return 'composite(%s).child.add'%class_
+        return 'composite(%s).child.add' % class_
 
     @observer.eventSource
-    def removeChild(self, child, event=None): # pylint: disable=W0221
+    def removeChild(self, child, event=None):  # pylint: disable=W0221
         super(ObservableComposite, self).removeChild(child)
         self.removeChildEvent(event, child)
 
@@ -140,7 +141,7 @@ class ObservableComposite(Composite):
 
     @classmethod
     def removeChildEventType(class_):
-        return 'composite(%s).child.remove'%class_
+        return 'composite(%s).child.remove' % class_
     
     @classmethod
     def modificationEventTypes(class_):
