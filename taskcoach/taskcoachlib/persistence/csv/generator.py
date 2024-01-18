@@ -16,10 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.i18n import _
-from taskcoachlib import render
-from taskcoachlib.domain import date
-import StringIO
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import object
+from ...i18n import _
+from ... import render
+from ...domain import date
+import io as StringIO
 
 
 def extendedWithAncestors(selection):
