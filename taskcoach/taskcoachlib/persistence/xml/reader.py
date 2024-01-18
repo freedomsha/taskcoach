@@ -18,15 +18,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 from .. import sessiontempfile  # pylint: disable=F0401
-from taskcoachlib import meta, patterns
-from taskcoachlib.changes import ChangeMonitor
-from taskcoachlib.domain import base, date, effort, task, category, categorizable, note, attachment
-from taskcoachlib.i18n import translate
-from taskcoachlib.syncml.config import SyncMLConfigNode, createDefaultSyncConfig
-from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
-from taskcoachlib.thirdparty.guid import generate
-import StringIO
+from ... import meta, patterns
+from ...changes import ChangeMonitor
+from ...domain import base, date, effort, task, category, categorizable, note, attachment
+from ...i18n import translate
+from ...syncml.config import SyncMLConfigNode, createDefaultSyncConfig
+from ...thirdparty.deltaTime import nlTimeExpression
+from ...thirdparty.guid import generate
+import io as StringIO
 import os
 import re
 import stat
@@ -109,6 +114,7 @@ class XMLReader(object):
 
         changesName = self.__fd.name + '.delta'
         if os.path.exists(changesName):
+            # file -> open ?
             changes = ChangesXMLReader(file(self.__fd.name + '.delta', 'rU')).read()
         else:
             changes = dict()
@@ -238,7 +244,7 @@ class XMLReader(object):
             categorizable_ids = category_node.attrib.get('categorizables', '')
         if self.__tskversion > 20:
             kwargs['attachments'] = self.__parse_attachments(category_node)
-        theCategory = category.Category(**kwargs) # pylint: disable=W0142
+        theCategory = category.Category(**kwargs)  # pylint: disable=W0142
         self.__categorizables.setdefault(theCategory.id(), list()).extend(categorizable_ids.split(' '))
         return self.__save_modification_datetime(theCategory)
                       
@@ -500,6 +506,7 @@ class XMLReader(object):
                 ext = data_node.attrib['extension']
 
                 location = sessiontempfile.get_temp_file(suffix=ext)
+                # file -> open ?
                 file(location, 'wb').write(data.decode('base64'))
 
                 if os.name == 'nt':
