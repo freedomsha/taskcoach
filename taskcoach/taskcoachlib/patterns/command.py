@@ -16,12 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from . import singleton as patterns
 
 
 class Command(object):
     def __init__(self, *args, **kwargs):
-        super(Command, self).__init__() # object.__init__ takes no arguments
+        super(Command, self).__init__()  # object.__init__ takes no arguments
         
     def do(self):
         CommandHistory().append(self)
@@ -77,7 +78,7 @@ class CommandHistory(object):
         
     def _extendLabel(self, label, commandList):
         if commandList:
-            commandName = u' %s'%commandList[-1]
+            commandName = u' %s' % commandList[-1]
             label += commandName.lower()
         return label
 
