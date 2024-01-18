@@ -16,9 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import re, os, codecs
-from taskcoachlib.domain import task, category, date
-from taskcoachlib import patterns
+from builtins import object
+import re
+import os
+import codecs
+from ...domain import task, category, date
+from ... import patterns
 
 
 class TodoTxtReader(object):
@@ -51,7 +54,7 @@ class TodoTxtReader(object):
                           self.__processLine(line, todoTxtRE, keyValueRE, date.Now, None)
                         self.__deletedTasks.add(taskId)
                     except:
-                        pass # Err
+                        pass  # Err
                     metaLines['->'.join(subjects) if self.__version == 0 else taskId] = line
         with codecs.open(filename, 'r', 'utf-8') as fp:
             self.readFile(fp, metaLines=metaLines)
@@ -79,7 +82,7 @@ class TodoTxtReader(object):
                 dueDateTime = self.dateTime(value)
             elif key == 'tcid':
                 taskId = value
-        line = re.sub(keyValueRE, '', line) # Remove all key:value pairs
+        line = re.sub(keyValueRE, '', line)  # Remove all key:value pairs
         
         # Now, process the "official" todo.txt format using a RE that should 
         # match the line completely.
@@ -103,13 +106,13 @@ class TodoTxtReader(object):
             self.__deletedTasks.remove(taskId)
 
         if (self.__version == 0 and metaLines and metaLines.get('->'.join(subjects), None) == line) or \
-          (self.__version == 1 and metaLines and taskId and metaLines.get(taskId, None) == line):
+           (self.__version == 1 and metaLines and taskId and metaLines.get(taskId, None) == line):
             # Not modified. Don't read it or we'll overwrite local changes
             # in case we're importing just before saving...
             return
 
         if taskId is not None and taskId not in self.__tasksById:
-            return # Deleted on desktop, changed on device. Keep deleted.
+            return  # Deleted on desktop, changed on device. Keep deleted.
 
         if self.__version == 0:
             newTask = None
