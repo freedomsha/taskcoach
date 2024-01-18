@@ -16,10 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import wx, cgi, StringIO
-from taskcoachlib.domain import task
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import map
+from builtins import object
+import wx
+import cgi
+import io as StringIO
+from ...domain import task
 
 # pylint: disable=W0142
+
 
 css = '''
 body {
@@ -101,13 +109,13 @@ class Viewer2HTMLConverter(object):
     def html(self, cssFilename, columns, selectionOnly, level=0):
         ''' Returns all HTML, consisting of header and body. '''
         printing = not cssFilename
-        htmlContent = self.htmlHeader(cssFilename, level+1) + \
-                      self.htmlBody(columns, selectionOnly, printing, level+1)
+        htmlContent = self.htmlHeader(cssFilename, level + 1) + \
+                      self.htmlBody(columns, selectionOnly, printing, level + 1)
         return self.wrap(htmlContent, 'html', level)
     
     def htmlHeader(self, cssFilename, level):
         ''' Return the HTML header <head>. '''
-        htmlHeaderContent = self.htmlHeaderContent(cssFilename, level+1)
+        htmlHeaderContent = self.htmlHeaderContent(cssFilename, level + 1)
         return self.wrap(htmlHeaderContent, 'head', level)
         
     def htmlHeaderContent(self, cssFilename, level):
@@ -117,7 +125,7 @@ class Viewer2HTMLConverter(object):
                              self.wrap(self.viewer.title(), 'title', level, oneLine=True)] + \
                             self.style(level, not cssFilename)
         if cssFilename:
-            htmlHeaderContent.append(self.indent(self.cssLink%cssFilename, level))
+            htmlHeaderContent.append(self.indent(self.cssLink % cssFilename, level))
         return htmlHeaderContent
     
     def style(self, level, includeAllCSS):
@@ -131,16 +139,16 @@ class Viewer2HTMLConverter(object):
                              for column in visibleColumns]
         styleContent = []
         for column, alignment in zip(visibleColumns, columnAlignments):
-            columnStyle = self.indent('.%s {text-align: %s}'%(column.name(), alignment), level+1)
+            columnStyle = self.indent('.%s {text-align: %s}' % (column.name(), alignment), level + 1)
             styleContent.append(columnStyle)
         if self.viewer.isShowingTasks():
             for status in task.Task.possibleStatuses():
                 statusColor = task.Task.fgColorForStatus(status)
                 statusColor = self.cssColorSyntax(statusColor)
-                statusStyle = '.%s {color: %s}'%(status, statusColor)
-                styleContent.append(self.indent(statusStyle, level+1))
+                statusStyle = '.%s {color: %s}' % (status, statusColor)
+                styleContent.append(self.indent(statusStyle, level + 1))
         if includeAllCSS:
-            styleContent.extend([self.indent(line, level+1) for line in css.split('\n')])
+            styleContent.extend([self.indent(line, level + 1) for line in css.split('\n')])
         return self.wrap(styleContent, 'style', level, type='text/css')
     
     def htmlBody(self, columns, selectionOnly, printing, level):
@@ -150,16 +158,16 @@ class Viewer2HTMLConverter(object):
         if printing:
             htmlBodyContent.append(self.wrap(self.viewer.title(), 'h1', level, 
                                              oneLine=True))
-        htmlBodyContent.extend(self.table(columns, selectionOnly, printing, level+1))
+        htmlBodyContent.extend(self.table(columns, selectionOnly, printing, level + 1))
         return self.wrap(htmlBodyContent, 'body', level)
     
     def table(self, columns, selectionOnly, printing, level):
         ''' Returns the table, consisting of caption, table header and table 
             body. '''
-        tableContent = [] if printing else [self.tableCaption(level+1)]
-        tableContent.extend(self.tableHeader(columns, printing, level+1) + \
+        tableContent = [] if printing else [self.tableCaption(level + 1)]
+        tableContent.extend(self.tableHeader(columns, printing, level + 1) + \
                             self.tableBody(columns, selectionOnly, 
-                                           printing, level+1))
+                                           printing, level + 1))
         attributes = dict(id='table')
         if printing: 
             attributes['border'] = '1'
@@ -172,14 +180,14 @@ class Viewer2HTMLConverter(object):
     def tableHeader(self, columns, printing, level):
         ''' Returns the table header section <thead> containing the header
             row with the column headers. '''
-        tableHeaderContent = self.headerRow(columns, printing, level+1)
+        tableHeaderContent = self.headerRow(columns, printing, level + 1)
         return self.wrap(tableHeaderContent, 'thead', level)
         
     def headerRow(self, columns, printing, level):
         ''' Returns the header row <tr> for the table. '''
         headerRowContent = []
         for column in columns:
-            headerRowContent.append(self.headerCell(column, printing, level+1))
+            headerRowContent.append(self.headerCell(column, printing, level + 1))
         return self.wrap(headerRowContent, 'tr', level, **{'class': 'header'})
         
     def headerCell(self, column, printing, level):
@@ -190,7 +198,7 @@ class Viewer2HTMLConverter(object):
         if self.viewer.isSortable() and self.viewer.isSortedBy(name):
             attributes['id'] = 'sorted'
             if printing:
-                header = self.wrap(header, 'u', level+1, oneLine=True) 
+                header = self.wrap(header, 'u', level + 1, oneLine=True) 
         return self.wrap(header, 'th', level, oneLine=True, **attributes)
     
     def tableBody(self, columns, selectionOnly, printing, level):
@@ -203,7 +211,7 @@ class Viewer2HTMLConverter(object):
                 continue
             self.count += 1
             tableBodyContent.extend(self.bodyRow(item, columns, tree, 
-                                                 printing, level+1))
+                                                 printing, level + 1))
         return self.wrap(tableBodyContent, 'tbody', level)
     
     def bodyRow(self, item, columns, tree, printing, level):
@@ -217,9 +225,9 @@ class Viewer2HTMLConverter(object):
                 itemColor = item.foregroundColor(recursive=True)
                 if itemColor:
                     itemColor = self.cssColorSyntax(itemColor)
-                    renderedItem = self.wrap(renderedItem, 'font', level+1, 
+                    renderedItem = self.wrap(renderedItem, 'font', level + 1, 
                                              color=itemColor, oneLine=True)
-            bodyRowContent.append(self.bodyCell(renderedItem, column, printing, level+1))
+            bodyRowContent.append(self.bodyCell(renderedItem, column, printing, level + 1))
         attributes.update(self.bodyRowBgColor(item, printing))
         if not printing:
             attributes.update(self.bodyRowFgColor(item))
@@ -234,7 +242,7 @@ class Viewer2HTMLConverter(object):
         else:
             return dict()
         return dict(bgcolor=bgColor) if printing else \
-               dict(style='background: %s'%bgColor)
+               dict(style='background: %s' % bgColor)
                
     def bodyRowFgColor(self, item):
         ''' Determine the foreground color for the item. Returns a CSS style
@@ -256,11 +264,11 @@ class Viewer2HTMLConverter(object):
         ''' Wrap one or more lines with <tagName [optional attributes]> and 
             </tagName>. '''
         if attributes:
-            attributes = ' ' + ' '.join(sorted('%s="%s"'%(key, value) for key, value in attributes.iteritems()))
+            attributes = ' ' + ' '.join(sorted('%s="%s"' % (key, value) for key, value in attributes.iteritems()))
         else:
             attributes = ''
-        openTag = '<%s%s>'%(tagName, attributes)
-        closeTag = '</%s>'%tagName
+        openTag = '<%s%s>' % (tagName, attributes)
+        closeTag = '</%s>' % tagName
         if oneLine:
             return class_.indent(openTag + lines + closeTag, level)
         else:
@@ -280,7 +288,7 @@ class Viewer2HTMLConverter(object):
             into CSS syntax. ''' 
         try:
             return wxColor.GetAsString(wx.C2S_CSS_SYNTAX)
-        except AttributeError: # color is a tuple
+        except AttributeError:  # color is a tuple
             return class_.cssColorSyntax(wx.Colour(*wxColor))
 
     @staticmethod
