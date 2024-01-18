@@ -19,15 +19,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 This module defines classes and functions to handle the VCalendar
 format.
-''' # pylint: disable=W0105
+''' 
+# pylint: disable=W0105
 
-from taskcoachlib.domain.base import Object
-from taskcoachlib.domain import date
-from taskcoachlib.i18n import _
+from builtins import str
+from builtins import object
+from ...domain.base import Object
+from ...domain import date
+from ...i18n import _
 
-import time, calendar, datetime
+import time
+import calendar
+import datetime
 
-#{ Utility functions
+# { Utility functions
+
 
 def parseDateTime(fulldate):
     ''' Parses a datetime as seen in iCalendar files into a 
@@ -47,12 +53,14 @@ def parseDateTime(fulldate):
 
     return date.DateTime(year, month, day, hour, minute, second)
 
+
 def fmtDateTime(dt):
     ''' Formats a L{taskcoachlib.domain.date.DateTime} object to a string
     suitable for inclusion in an iCalendar file. '''
     dt = dt.utcfromtimestamp(time.mktime(dt.timetuple()))
     return '%04d%02d%02dT%02d%02d%02dZ' % (dt.year, dt.month, dt.day,
                                            dt.hour, dt.minute, dt.second)
+
 
 def quoteString(s):
     ''' The 'quoted-printable' codec doesn't encode \n, but tries to
@@ -67,9 +75,10 @@ def quoteString(s):
     s = s.replace('\n', '=0A')
     return s
 
-#}
+# }
 
-#{ Parsing iCalendar files
+# { Parsing iCalendar files
+
 
 class VCalendarParser(object):
     ''' Base parser class for iCalendar files. This uses the State
@@ -83,20 +92,20 @@ class VCalendarParser(object):
         domain object creation for the current (parsed) object.
     @ivar tasks: A list of dictionaries suitable to use as
         keyword arguments for task creation, representing all
-        VTODO object in the parsed file. ''' # pylint: disable=W0511
+        VTODO object in the parsed file. '''  # pylint: disable=W0511
 
     def __init__(self, *args, **kwargs):
         super(VCalendarParser, self).__init__(*args, **kwargs)
-        self.stateMap = { 'VCALENDAR': VCalendarParser,
-                          'VTODO':     VTodoParser,
-                          'VNOTE':     VNoteParser }
+        self.stateMap = {'VCALENDAR': VCalendarParser,
+                         'VTODO':     VTodoParser,
+                         'VNOTE':     VNoteParser}
         self.tasks = []
         self.notes = []
         self.init()
 
     def init(self):
         ''' Called after a state change. '''
-        self.kwargs = {} # pylint: disable=W0201
+        self.kwargs = {}  # pylint: disable=W0201
 
     def setState(self, state):
         ''' Sets the state (class) of the parser object. '''
@@ -200,7 +209,7 @@ class VCalendarParser(object):
 
 
 class VTodoParser(VCalendarParser):
-    ''' This is the state responsible for parsing VTODO objects. ''' # pylint: disable=W0511
+    ''' This is the state responsible for parsing VTODO objects. '''  # pylint: disable=W0511
 
     def onFinish(self):
         if not self.kwargs.has_key('plannedStartDateTime'):
@@ -265,10 +274,11 @@ class VNoteParser(VCalendarParser):
         else:
             super(VNoteParser, self).acceptItem(name, value)
 
-#}
+# }
 
-#==============================================================================
-#{ Generating iCalendar files.
+# ==============================================================================
+# { Generating iCalendar files.
+
 
 def VCalFromTask(task, encoding=True, doFold=True):
     ''' This function returns a string representing the task in
@@ -278,7 +288,7 @@ def VCalFromTask(task, encoding=True, doFold=True):
     quote = quoteString if encoding else lambda s: s
 
     components = []
-    components.append('BEGIN:VTODO') # pylint: disable=W0511
+    components.append('BEGIN:VTODO')  # pylint: disable=W0511
     components.append('UID:%s' % task.id().encode('UTF-8'))
     
     if task.creationDateTime() > date.DateTime.min:
@@ -305,7 +315,7 @@ def VCalFromTask(task, encoding=True, doFold=True):
     elif task.active():
         components.append('STATUS:NEEDS-ACTION')
     else:
-        components.append('STATUS:CANCELLED') # Hum...
+        components.append('STATUS:CANCELLED')  # Hum...
 
     components.append('DESCRIPTION%s:%s' % (encoding, quote(task.description())))
     components.append('PRIORITY:%d' % min(3, task.priority() + 1))
@@ -323,11 +333,11 @@ def VCalFromEffort(effort, encoding=True, doFold=True):
     components = []
     components.append('BEGIN:VEVENT')
     components.append('UID:%s' % effort.id().encode('UTF-8'))
-    components.append('SUMMARY%s:%s'%(encoding, quote(effort.subject())))
-    components.append('DESCRIPTION%s:%s'%(encoding, quote(effort.description())))
-    components.append('DTSTART:%s'%fmtDateTime(effort.getStart()))
+    components.append('SUMMARY%s:%s' % (encoding, quote(effort.subject())))
+    components.append('DESCRIPTION%s:%s' % (encoding, quote(effort.description())))
+    components.append('DTSTART:%s' % fmtDateTime(effort.getStart()))
     if effort.getStop():
-        components.append('DTEND:%s'%fmtDateTime(effort.getStop()))
+        components.append('DTEND:%s' % fmtDateTime(effort.getStop()))
     components.append('END:VEVENT')
     if doFold:
         return fold(components)
@@ -345,12 +355,13 @@ def VNoteFromNote(note, encoding=True, doFold=True):
     components.append('END:VNOTE')
     if note.categories(recursive=True, upwards=True):
         categories = ','.join([quote(unicode(c)) for c in note.categories(recursive=True, upwards=True)])
-        components.append('CATEGORIES%s:%s'%(encoding, categories))
+        components.append('CATEGORIES%s:%s' % (encoding, categories))
     if doFold:
         return fold(components)
     return '\r\n'.join(components) + '\r\n'
 
-#}
+# }
+
 
 def fold(components, linewidth=75, eol='\r\n', indent=' '):
     lines = []
