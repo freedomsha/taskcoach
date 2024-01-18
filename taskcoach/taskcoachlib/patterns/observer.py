@@ -16,14 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 from . import singleton
 import functools
-from taskcoachlib.thirdparty.pubsub import pub
+from ..thirdparty.pubsub import pub
 
 # Ignore these pylint messages:
 # - W0142: * or ** magic
 # - W0622: Redefining builtin types
 # pylint: disable=W0142,W0622
+
 
 class List(list):
     def __eq__(self, other):
@@ -79,8 +81,8 @@ class Event(object):
         self.__sourcesAndValuesByType = {} if type is None else \
             {type: {} if source is None else {source: values}}
 
-    def __repr__(self): # pragma: no cover
-        return 'Event(%s)'%(self.__sourcesAndValuesByType)
+    def __repr__(self):  # pragma: no cover
+        return 'Event(%s)' % (self.__sourcesAndValuesByType)
 
     def __eq__(self, other):
         ''' Events compare equal when all their data is equal. '''
@@ -146,9 +148,9 @@ class Event(object):
             if source is not None:
                 # Make sure source is actually in self.sources(type):
                 sourcesToAdd &= set([source])
-            kwargs = dict(type=type) # Python doesn't allow type=type after *values 
+            kwargs = dict(type=type)  # Python doesn't allow type=type after *values 
             for eachSource in sourcesToAdd:
-                subEvent.addSource(eachSource, *self.values(eachSource, type), **kwargs) # pylint: disable=W0142
+                subEvent.addSource(eachSource, *self.values(eachSource, type), **kwargs)  # pylint: disable=W0142
         return subEvent
     
     def send(self):
@@ -163,7 +165,7 @@ def eventSource(f):
     @functools.wraps(f)
     def decorator(*args, **kwargs):
         event = kwargs.pop('event', None)
-        notify = event is None # We only notify if we're the event creator
+        notify = event is None  # We only notify if we're the event creator
         kwargs['event'] = event = event if event else Event()
         result = f(*args, **kwargs)
         if notify:
@@ -183,7 +185,7 @@ class MethodProxy(object):
         self.method = method
         
     def __repr__(self):
-        return 'MethodProxy(%s)'%self.method # pragma: no cover
+        return 'MethodProxy(%s)'%self.method  # pragma: no cover
         
     def __call__(self, *args, **kwargs):
         return self.method(*args, **kwargs)
@@ -211,6 +213,7 @@ class MethodProxy(object):
 def wrapObserver(decoratedMethod):
     ''' Wrap the observer argument (assumed to be the first after self) in
         a MethodProxy class. ''' 
+    
     def decorator(self, observer, *args, **kwargs):
         assert hasattr(observer, '__self__')
         observer = MethodProxy(observer)
@@ -249,7 +252,7 @@ class Publisher(object):
     def clear(self):
         ''' Clear the registry of observers. Mainly for testing purposes. '''
         # observers = {(eventType, eventSource): set(callbacks)}
-        self.__observers = {} # pylint: disable=W0201
+        self.__observers = {}  # pylint: disable=W0201
     
     @wrapObserver
     def registerObserver(self, observer, eventType, eventSource=None):
@@ -403,6 +406,10 @@ class ObservableSet(ObservableCollection, Set):
             result = list(self) == other
         return result
 
+    # Defining __eq__ in Python3 removes __hash__
+    # def __hash__(self):
+    # return super().__hash__()
+    
     @eventSource
     def append(self, item, event=None):
         self.add(item)
