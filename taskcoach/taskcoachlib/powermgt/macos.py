@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 if not hasattr(sys, 'frozen'):
-    import struct, os
+    import struct
+    import os
 
     _subdir = 'ia64' if struct.calcsize('L') == 8 else 'ia32'
     
@@ -30,7 +31,7 @@ if not hasattr(sys, 'frozen'):
 import _powermgt  # pylint: disable=F0401
 import threading
 import wx
-from taskcoachlib.powermgt.base import PowerStateMixinBase
+from .base import PowerStateMixinBase
 
 
 class PowerStateMixin(PowerStateMixinBase):
