@@ -16,21 +16,32 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os, select, time, threading
+from __future__ import print_function
 
+import os
+import select
+import threading
+import time
+from builtins import chr
+from builtins import input
+from builtins import object
+from builtins import str
 from ctypes import *
 
 _libSM = CDLL('libSM.so.6')
 _libICE = CDLL('libICE.so.6')
 
-#==============================================================================
+# ==============================================================================
 # ICE stuff...
+
 
 Bool   = c_int
 Status = c_int
 
+
 class _IceConn(Structure):
     pass
+
 
 IceConn = POINTER(_IceConn)
 
@@ -47,7 +58,7 @@ IceIOErrorHandler        = CFUNCTYPE(None, IceConn)
 
 IceSetIOErrorHandler     = CFUNCTYPE(IceIOErrorHandler, IceIOErrorHandler)(('IceSetIOErrorHandler', _libICE))
 
-#==============================================================================
+# ==============================================================================
 # Constants
 
 # Callback masks
@@ -102,11 +113,13 @@ SmRestartStyleHint	= "RestartStyleHint"
 SmShutdownCommand	= "ShutdownCommand"
 SmUserID		= "UserID"
 
-#==============================================================================
+# ==============================================================================
 # Types and structures
+
 
 class _SmcConn(Structure):
     pass
+
 
 SmcConn = POINTER(_SmcConn)
 
@@ -115,21 +128,26 @@ SmcDieProc               = CFUNCTYPE(None, SmcConn, c_void_p)
 SmcSaveCompleteProc      = CFUNCTYPE(None, SmcConn, c_void_p)
 SmcShutdownCancelledProc = CFUNCTYPE(None, SmcConn, c_void_p)
 
+
 class SmcSaveYourselfCallback(Structure):
     _fields_ = [('callback', SmcSaveYourselfProc),
                 ('client_data', c_void_p)]
+
 
 class SmcDieCallback(Structure):
     _fields_ = [('callback', SmcDieProc),
                 ('client_data', c_void_p)]
 
+
 class SmcSaveCompleteCallback(Structure):
     _fields_ = [('callback', SmcSaveCompleteProc),
                 ('client_data', c_void_p)]
 
+
 class SmcShutdownCancelledCallback(Structure):
     _fields_ = [('callback', SmcShutdownCancelledProc),
                 ('client_data', c_void_p)]
+
 
 class SmcCallbacks(Structure):
     _fields_ = [('save_yourself', SmcSaveYourselfCallback),
@@ -137,9 +155,11 @@ class SmcCallbacks(Structure):
                 ('save_complete', SmcSaveCompleteCallback),
                 ('shutdown_cancelled', SmcShutdownCancelledCallback)]
 
+
 class SmPropValue(Structure):
     _fields_ = [('length', c_int),
                 ('value', c_void_p)]
+
 
 class SmProp(Structure):
     _fields_ = [('name', c_char_p),
@@ -147,7 +167,8 @@ class SmProp(Structure):
                 ('num_vals', c_int),
                 ('values', POINTER(SmPropValue))]
 
-#==============================================================================
+
+# ==============================================================================
 # Functions
 
 SmcOpenConnection = CFUNCTYPE(SmcConn,
@@ -193,7 +214,8 @@ SmcSetProperties = CFUNCTYPE(None,
                              c_int,
                              POINTER(POINTER(SmProp)))(('SmcSetProperties', _libSM))
 
-#==============================================================================
+
+# ==============================================================================
 # Higher-level stuff
 
 class ICELoop(threading.Thread):
@@ -386,11 +408,11 @@ class SessionMonitor(ICELoop):
 
     @property
     def vendor(self):
-        return SmcVendor(self.conn) if self.isValid() else None # Leak
+        return SmcVendor(self.conn) if self.isValid() else None  # Leak
 
     @property
     def release(self):
-        return SmcRelease(self.conn) if self.isValid() else None # Leak
+        return SmcRelease(self.conn) if self.isValid() else None  # Leak
 
 #==============================================================================
 # Testing
@@ -408,6 +430,7 @@ if __name__ == '__main__':
             print 'Client ID:', self.clientID
 
         def log(self, msg):
+            # file -> open ?
             file('session.txt', 'a+').write('==== %s\n' % msg)
             print msg
 
@@ -425,6 +448,7 @@ if __name__ == '__main__':
             self.log('Shutdown cancelled')
 
     monitor = TestMonitor()
-    raw_input('')
+    # raw_input('')
+    input('')
     monitor.stop()
     monitor.join()
