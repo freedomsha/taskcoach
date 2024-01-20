@@ -16,16 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 import os
 from . import xml
-from taskcoachlib import patterns, operating_system
-from taskcoachlib.domain import base, task, category, note, effort, attachment
-from taskcoachlib.syncml.config import createDefaultSyncConfig
-from taskcoachlib.thirdparty.guid import generate
-from taskcoachlib.thirdparty import lockfile
-from taskcoachlib.changes import ChangeMonitor, ChangeSynchronizer
-from taskcoachlib.filesystem import FilesystemNotifier, FilesystemPollerNotifier
-from taskcoachlib.thirdparty.pubsub import pub
+from .. import patterns, operating_system
+from ..domain import base, task, category, note, effort, attachment
+from ..syncml.config import createDefaultSyncConfig
+from ..thirdparty.guid import generate
+from ..thirdparty import lockfile
+from ..changes import ChangeMonitor, ChangeSynchronizer
+from ..filesystem import FilesystemNotifier, FilesystemPollerNotifier
+from ..thirdparty.pubsub import pub
 
 
 def _isCloud(path):
@@ -63,6 +64,7 @@ class SafeWriteFile(object):
         if self._isCloud():
             # Ideally we should create a temporary file on the same filesystem (so that
             # os.rename works) but outside the Dropbox folder...
+            # file -> open ?
             self.__fd = file(self.__filename, 'w')
         else:
             self.__tempFilename = self._getTemporaryFileName(os.path.dirname(filename))
@@ -334,7 +336,7 @@ class TaskFile(patterns.Observer):
 
     def onFileChanged(self):
         if not self.__saving:
-            import wx # Not really clean but we're in another thread...
+            import wx  # Not really clean but we're in another thread...
             self.__changedOnDisk = True
             wx.CallAfter(pub.sendMessage, 'taskfile.changed', taskFile=self)
 
@@ -355,6 +357,7 @@ class TaskFile(patterns.Observer):
         if os.path.exists(self.filename()):
             changes = xml.ChangesXMLReader(self.filename() + '.delta').read()
             del changes[self.__monitor.guid()]
+            # file -> open ?
             xml.ChangesXMLWriter(file(self.filename() + '.delta', 'wb')).write(changes)
 
         self.setFilename('')
@@ -377,6 +380,7 @@ class TaskFile(patterns.Observer):
         return SafeWriteFile(self.__filename + suffix)
 
     def _openForRead(self):
+        # file -> open ?
         return file(self.__filename, 'rU')
     
     def load(self, filename=None):
@@ -428,6 +432,7 @@ class TaskFile(patterns.Observer):
 
             if os.path.exists(self.filename()):
                 # We need to reset the changes on disk because we're up to date.
+                # file -> open ?
                 xml.ChangesXMLWriter(file(self.filename() + '.delta', 'wb')).write(self.__changes)
         except:
             self.setFilename('')
@@ -604,6 +609,7 @@ class LockedTaskFile(TaskFile):
 
     def __isFuse(self, path):
         if operating_system.isGTK() and os.path.exists('/proc/mounts'):
+            # file -> open ?
             for line in file('/proc/mounts', 'rb'):
                 try:
                     location, mountPoint, fsType, options, a, b = line.strip().split()
