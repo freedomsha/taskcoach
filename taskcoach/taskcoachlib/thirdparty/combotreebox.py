@@ -11,8 +11,8 @@ example:
 
 >>> from wx.lib.combotreebox import ComboTreeBox
 >>> combo = ComboTreeBox(parent)
->>> item1 = combo.Append('Item 1') # Add a root item
->>> item1a = combo.Append('Item 1a', parent=item1) # Add a child to item1
+>>> item1 = combo.Append('Item 1')  # Add a root item
+>>> item1a = combo.Append('Item 1a', parent=item1)  # Add a child to item1
 
 You can also add client data to each of the items like this:
 
@@ -45,6 +45,7 @@ Version: 1.2
 Date: August 21, 2012
 """
 
+from builtins import object
 import wx
 
 __all__ = ['ComboTreeBox']  # Export only the ComboTreeBox widget
