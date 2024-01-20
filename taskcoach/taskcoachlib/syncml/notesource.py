@@ -16,14 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.domain.note import Note
-from taskcoachlib.domain.category import Category
-from taskcoachlib.syncml.basesource import BaseSource
-from taskcoachlib.persistence.icalendar import ical
+from ..domain.note import Note
+from ..domain.category import Category
+from ..syncml.basesource import BaseSource
+from ..persistence.icalendar import ical
 
-from taskcoachlib.i18n import _
+from ..i18n import _
 
-import wx, inspect
+import wx
+import inspect
+
 
 class NoteSource(BaseSource):
     def __init__(self, callback, noteList, categoryList, dataType, *args, **kwargs):
