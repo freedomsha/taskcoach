@@ -16,11 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import sys, time, wx
-from taskcoachlib import operating_system
+from __future__ import division
+
+import sys
+import time
+import wx
+from builtins import object
 from ctypes import *
 
-
+from past.utils import old_div
+from .. import operating_system
+
+
 #==============================================================================
 # Linux/BSD
 
