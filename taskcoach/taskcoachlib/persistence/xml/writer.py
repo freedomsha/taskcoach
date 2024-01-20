@@ -18,9 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from xml.etree import ElementTree as ET
-from taskcoachlib import meta
-from taskcoachlib.domain import date, task, note, category
+from builtins import str
+from builtins import object
+from ... import meta
+from ...domain import date, task, note, category
 from xml.etree import ElementTree as ET
 import os
 import sys
@@ -93,8 +94,8 @@ class XMLWriter(object):
 
         flatten(root)
         PIElementTree('<?taskcoach release="%s" tskversion="%d"?>\n' % (meta.data.version,
-                                                                         self.__versionnr),
-                                                root).write(self.__fd, 'utf-8')
+                                                                        self.__versionnr),
+                                                                        root).write(self.__fd, 'utf-8')
     
     def notesOwnedByNoteOwners(self, *collectionOfNoteOwners):
         notes = []
