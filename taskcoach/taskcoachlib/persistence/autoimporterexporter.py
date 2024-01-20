@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from builtins import object
 import codecs
 import os
-from ...thirdparty.pubsub import pub
+from ..thirdparty.pubsub import pub
 from . import todotxt
 
 
