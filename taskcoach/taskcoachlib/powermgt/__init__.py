@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 
 if sys.platform == 'win32':
-    from taskcoachlib.powermgt.win32 import PowerStateMixin
+    from .win32 import PowerStateMixin
 elif sys.platform == 'darwin':
-    from taskcoachlib.powermgt.macos import PowerStateMixin
+    from .macos import PowerStateMixin
 else:
     # No way to know yet
-    from taskcoachlib.powermgt.base import PowerStateMixinBase as PowerStateMixin
+    from .base import PowerStateMixinBase as PowerStateMixin
 
-from taskcoachlib.powermgt.idle import IdleNotifier
+from .idle import IdleNotifier
