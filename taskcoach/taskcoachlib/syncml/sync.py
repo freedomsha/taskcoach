@@ -16,15 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.syncml.tasksource import TaskSource
-from taskcoachlib.syncml.notesource import NoteSource
-from taskcoachlib.syncml.config import SyncMLConfigNode
-from taskcoachlib.syncml.core import *
+import sys
+import wx
 
-from taskcoachlib.i18n import _
-from taskcoachlib.meta import data
+from ..i18n import _
+from ..meta import data
+from ..syncml.config import SyncMLConfigNode
+from ..syncml.core import *
+from ..syncml.notesource import NoteSource
 
-import sys, wx
+from ..syncml.tasksource import TaskSource
 
 
 class AuthenticationFailure(Exception):
