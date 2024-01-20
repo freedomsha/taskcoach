@@ -73,6 +73,9 @@
 # November 21, 2005  Added better IP-finding code.  It finds IP address better now.
 # January 5, 2006    Fixed a small bug caused in old versions of python (random module use)
 
+from __future__ import print_function
+from builtins import str
+from builtins import range
 import math
 import socket
 import random
@@ -81,12 +84,11 @@ import time
 import threading
 
 
-
 #############################
-###   global module variables
+# ##   global module variables
 
 #Makes a hex IP from a decimal dot-separated ip (eg: 127.0.0.1)
-make_hexip = lambda ip: ''.join(["%04x" % long(i) for i in ip.split('.')]) # leave space for ip v6 (65K in each sub)
+make_hexip = lambda ip: ''.join(["%04x" % long(i) for i in ip.split('.')])  # leave space for ip v6 (65K in each sub)
 
 MAX_COUNTER = 0xfffffffe
 counter = 0L
@@ -97,7 +99,7 @@ lock = threading.RLock()
 try:  # only need to get the IP addresss once
     ip = socket.getaddrinfo(socket.gethostname(),0)[-1][-1][0]
     hexip = make_hexip(ip)
-except: # if we don't have an ip, default to someting in the 10.x.x.x private range
+except:  # if we don't have an ip, default to someting in the 10.x.x.x private range
     ip = '10'
     rand = random.Random()
     for i in range(3):
@@ -106,7 +108,7 @@ except: # if we don't have an ip, default to someting in the 10.x.x.x private ra
 
 
 #################################
-###   Public module functions
+# ##   Public module functions
 
 def generate(ip=None):
     '''Generates a new guid.  A guid is unique in space and time because it combines
@@ -115,7 +117,7 @@ def generate(ip=None):
        the same IP address that is created on another machine.
     '''
     global counter, firstcounter, lasttime
-    lock.acquire() # can't generate two guids at the same time
+    lock.acquire()  # can't generate two guids at the same time
     try:
         parts = []
 
@@ -136,7 +138,7 @@ def generate(ip=None):
         if counter > MAX_COUNTER:
             counter = 0
         lasttime = now
-        parts.append("%08x" % (counter))
+        parts.append("%08x" % counter)
 
         # ip part
         parts.append(hexip)
