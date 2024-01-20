@@ -1,5 +1,14 @@
 #! /usr/bin/env python
-import wx, wx.lib
+from __future__ import division
+from __future__ import print_function
+
+from builtins import object
+from builtins import range
+from builtins import zip
+
+import wx
+import wx.lib
+from past.utils import old_div
 
 
 TimeLineSelectionEvent, EVT_TIMELINE_SELECTED = wx.lib.newevent.NewEvent()
@@ -26,7 +35,8 @@ class HotMap(object):
     
     def findNodeAtPosition(self, position, parent=None):
         ''' Retrieve the node at the given position. '''
-        for node, rect in self.rects.items():
+        # for node, rect in self.rects.items():
+        for node, rect in list(self.rects.items()):
             if rect.Contains(position):
                 return self[node].findNodeAtPosition(position, node)
         return parent
@@ -75,7 +85,7 @@ class TimeLine(wx.Panel):
         self.adapter = kwargs.pop('adapter', DefaultAdapter())
         self.selectedNode = None
         self.backgroundColour = wx.WHITE
-        self._buffer = wx.EmptyBitmap(20, 20) # Have a default buffer ready
+        self._buffer = wx.EmptyBitmap(20, 20)  # Have a default buffer ready
         self.DEFAULT_PEN = wx.Pen(wx.BLACK, 1, wx.SOLID)
         self.SELECTED_PEN = wx.Pen(wx.WHITE, 2, wx.SOLID)
         kwargs['style'] = wx.TAB_TRAVERSAL|wx.NO_BORDER|wx.FULL_REPAINT_ON_RESIZE|wx.WANTS_CHARS
@@ -183,7 +193,7 @@ class TimeLine(wx.Panel):
                 self.max_stop += 100 
             self.length = self.max_stop - self.min_start
             self.width, self.height = dc.GetSize()
-            labelHeight = dc.GetTextExtent('ABC')[1] + 2 # Leave room for time labels
+            labelHeight = dc.GetTextExtent('ABC')[1] + 2  # Leave room for time labels
             self.DrawParallelChildren(dc, self.model, labelHeight, self.height-labelHeight, self.hot_map)
             self.DrawNow(dc)
         dc.EndDrawing()
@@ -203,7 +213,7 @@ class TimeLine(wx.Panel):
             start = self.min_start - 10
         if stop is None:
             stop = self.max_stop + 10
-        start, stop = min(start, stop), max(start, stop) # Sanitize input
+        start, stop = min(start, stop), max(start, stop)  # Sanitize input
         x = self.scaleX(start) + 2*depth
         w = self.scaleWidth(stop - start) - 4*depth
         hot_map.append(node, (wx.Rect(int(x), int(y), int(w), int(h))))
@@ -247,7 +257,7 @@ class TimeLine(wx.Panel):
         if not children:
             return
         childY = y
-        h -= len(children) # vertical space between children
+        h -= len(children)  # vertical space between children
         recursiveChildrenList = [self.adapter.parallel_children(child, recursive=True) \
                                  for child in children]
         recursiveChildrenCounts = [len(recursiveChildren) for recursiveChildren in recursiveChildrenList]
