@@ -16,8 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os, stat, atexit, tempfile
-from taskcoachlib import patterns
+import atexit
+import os
+import stat
+import tempfile
+
+from .. import patterns
 
 
 class TempFiles(object):
@@ -37,7 +41,7 @@ class TempFiles(object):
                     os.chmod(name, stat.S_IREAD|stat.S_IWRITE)
                 os.remove(name)
             except:
-                pass # pylint: disable=W0702
+                pass  # pylint: disable=W0702
 
 
 def get_temp_file(**kwargs):
@@ -48,4 +52,3 @@ def get_temp_file(**kwargs):
     os.close(fd)
     TempFiles().register(filename)
     return filename
-
