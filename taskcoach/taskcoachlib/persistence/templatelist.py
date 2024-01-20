@@ -16,12 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import os, pickle, tempfile, shutil
-from taskcoachlib.thirdparty.pubsub import pub
+import os
+import pickle
+import shutil
+import tempfile
+from builtins import object
+from ..thirdparty.pubsub import pub
 from .xml import TemplateXMLWriter, TemplateXMLReader
 
 
 class TemplateList(object):
+    # file -> open ?
     def __init__(self, path, TemplateReader=TemplateXMLReader, openFile=file):
         self._path = path
         self._templates = self._readTemplates(TemplateReader, openFile)
@@ -55,15 +60,18 @@ class TemplateList(object):
         listName = os.path.join(self._path, 'list.pickle')
         if os.path.exists(listName):
             try:
+                # file -> open ?
                 filenames = pickle.load(file(listName, 'rb'))
             except:
                 pass
         return filenames
     
     def save(self):
+        # file -> open ?
         pickle.dump([name for task, name in self._templates], file(os.path.join(self._path, 'list.pickle'), 'wb'))
 
         for task, name in self._templates:
+            # file -> open ?
             templateFile = file(os.path.join(self._path, name), 'w')
             writer = TemplateXMLWriter(templateFile)
             writer.write(task)
@@ -77,10 +85,12 @@ class TemplateList(object):
     def addTemplate(self, task):
         handle, filename = tempfile.mkstemp('.tsktmpl', dir=self._path)
         os.close(handle)
+        # file -> open ?
         templateFile = file(filename, 'w')
         writer = TemplateXMLWriter(templateFile)
         writer.write(task.copy())
         templateFile.close()
+        # file -> open ?
         theTask = TemplateXMLReader(file(filename, 'rU')).read()
         self._templates.append((theTask, os.path.split(filename)[-1]))
         return theTask
