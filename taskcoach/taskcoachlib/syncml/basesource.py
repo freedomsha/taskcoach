@@ -16,9 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import print_function
+
 import wx
-from taskcoachlib.syncml.core import *
-from taskcoachlib.i18n import _
+from .core import *
+from ..i18n import _
 
 
 class BaseSource(SyncSource):
@@ -41,7 +43,7 @@ class BaseSource(SyncSource):
                                  _('will be a refresh from server. All local items will\n' \
                                    'be deleted. Do you wish to continue?'),
                                  _('Refresh from server'), wx.YES_NO) != wx.YES:
-                    return 514 # Not sure of this
+                    return 514  # Not sure of this
                 self.objectList.clear()
                 self.allObjectsList = []
                 self.newObjectsList = []
@@ -53,7 +55,7 @@ class BaseSource(SyncSource):
                              _('will be a refresh from client. All remote items will\n' \
                                'be deleted. Do you wish to continue?'),
                              _('Refresh from server'), wx.YES_NO) != wx.YES:
-                return 514 # Not sure of this
+                return 514  # Not sure of this
 
     def endSync(self):
         pass
