@@ -1,12 +1,20 @@
-#Python Snarl bindings version 0.2a
-#Hacked together by Alexander Lash in the wee hours of 2/27.
-#Contact him at alexander.lash@gmail.com
-#0.1a: Initial release
-#0.2a: Added basic command line functions
-#LARGELY UNTESTED REFERENCE IMPLEMENTATION
-import win32gui, win32api, win32con
-import struct, array
+# Python Snarl bindings version 0.2a
+# Hacked together by Alexander Lash in the wee hours of 2/27.
+# Contact him at alexander.lash@gmail.com
+# 0.1a: Initial release
+# 0.2a: Added basic command line functions
+# LARGELY UNTESTED REFERENCE IMPLEMENTATION
+from __future__ import print_function
+
+import array
+import struct
+from builtins import object
 from ctypes import cast, POINTER, c_byte
+
+import win32api
+import win32con
+import win32gui
+
 
 class SNARL_COMMANDS:
     SNARL_SHOW = 1
@@ -26,13 +34,13 @@ class SNARL_COMMANDS:
                       extra=None, extra2=None, reserved1=None, reserved2=None):
         if extra is None and extra2 is None and reserved1 is None and reserved2 is None:
             command = struct.pack("ILLL1024s1024s1024s",
-                              command,
-                              id,
-                              timeout,
-                              longdata, #LngData2
-                              array.array('B', title).tostring(),
-                              array.array('B', text).tostring(),
-                              array.array('B', icon).tostring())
+                                  command,
+                                  id,
+                                  timeout,
+                                  longdata,  # LngData2
+                                  array.array('B', title).tostring(),
+                                  array.array('B', text).tostring(),
+                                  array.array('B', icon).tostring())
         else:
             if reserved1 is None:
                 reserved1 = 0
@@ -46,7 +54,7 @@ class SNARL_COMMANDS:
                                   command,
                                   id,
                                   timeout,
-                                  longdata, #LngData2
+                                  longdata,  # LngData2
                                   array.array('B', title).tostring(),
                                   array.array('B', text).tostring(),
                                   array.array('B', icon).tostring(),
@@ -61,7 +69,6 @@ class SNARL_COMMANDS:
         cd_pack = array.array("B", cd)
         cd_info = cd_pack.buffer_info()
         
-        
         hwnd = win32gui.FindWindow(None, 'Snarl')
         if hwnd:
             return win32api.SendMessage(hwnd, win32con.WM_COPYDATA, 0, cd_info[0])
@@ -69,7 +76,7 @@ class SNARL_COMMANDS:
             return False
 
 
-#deviation from spec: Python doesn't do references.
+# deviation from spec: Python doesn't do references.
 def snGetVersion():
     hr = SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_GET_VERSION)
     if hr:
@@ -77,15 +84,17 @@ def snGetVersion():
         return (ver[0], ver[1])
     return False
 
-#deviation from spec: sound is an optional parameter.
+
+# deviation from spec: sound is an optional parameter.
 def snShowMessage(title, text, timeout=0, iconPath="", reply=0, reply_msg=0, sound=None):
     if title is None or text is None:
         return False
     if sound is None:
         return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_SHOW, reply, timeout, reply_msg,
-                        title,text,iconPath)
+                        title, text, iconPath)
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_SHOW, reply, timeout, reply_msg,
-                        title,text,iconPath,sound)
+                        title, text, iconPath, sound)
+
 
 def snUpdateMessage(id, title, text):
     if id is None or title is None or text is None:
@@ -98,30 +107,30 @@ def snHideMessage(id):
         return False
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_HIDE, id=id) == -1
 
-#For some reason this ALWAYS returns -1 for all messages that were once displayed.
+# For some reason this ALWAYS returns -1 for all messages that were once displayed.
 def snIsMessageVisible(id):
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_IS_VISIBLE, id=id) == -1
 
-#Untested
+# Untested
 def snRegisterConfig(hwnd, appname, reply_msg, icon=None):
     if icon is None:
         return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_REGISTER_CONFIG_WINDOW,
-                            longdata=hwnd, title=appname, id = reply_msg)
+                                          longdata=hwnd, title=appname, id = reply_msg)
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_REGISTER_CONFIG_WINDOW,
-                            longdata=hwnd, title=appname, id = reply_msg,
-                            icon=icon)
+                                      longdata=hwnd, title=appname, id = reply_msg,
+                                      icon=icon)
 
-#Untested
+# Untested
 def snRevokeConfig(hwnd):
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_REVOKE_CONFIG_WINDOW,
-                        longdata=hwnd)
+                                      longdata=hwnd)
 
-#Reference implementation - seems to do nothing?
+# Reference implementation - seems to do nothing?
 def snRegisterAlert(title, text):
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_REGISTER_ALERT,
-                        title=title, text=text)
+                                      title=title, text=text)
 
-#Reference implementation - seems to do nothing?
+# Reference implementation - seems to do nothing?
 def snRevokeAlert():
     return SNARL_COMMANDS.sendCommand(SNARL_COMMANDS.SNARL_REVOKE_ALERT)
 
@@ -151,7 +160,7 @@ if __name__=='__main__':
     parser.add_option("-S", "--sound", dest="sound",
                       help="Sound to use for the show.")
     if snGetVersion == False:
-        print "Snarl not running!"
+        print("Snarl not running!")
         sys.exit(1)
     (options, args) = parser.parse_args(sys.argv[1:])
     if options.cmd is None:
@@ -163,5 +172,5 @@ if __name__=='__main__':
             del d[key]
         elif d[key] is None:
             del d[key]
-    print cmd(**d)
+    print(cmd(**d))
     sys.exit(0)
