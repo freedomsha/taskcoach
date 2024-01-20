@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib.powermgt.base import PowerStateMixinBase
+from .base import PowerStateMixinBase
 # pylint: disable=F0401
 import win32api
 import win32gui
