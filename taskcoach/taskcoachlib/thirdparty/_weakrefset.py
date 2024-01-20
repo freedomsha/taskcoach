@@ -2,6 +2,7 @@
 # This code is separated-out because it is needed
 # by abc.py to load everything else at startup.
 
+from builtins import object
 from _weakref import ref
 
 __all__ = ['WeakSet']
@@ -35,6 +36,7 @@ class _IterationGuard(object):
 class WeakSet(object):
     def __init__(self, data=None):
         self.data = set()
+        
         def _remove(item, selfref=ref(self)):
             self = selfref()
             if self is not None:
@@ -42,6 +44,7 @@ class WeakSet(object):
                     self._pending_removals.append(item)
                 else:
                     self.data.discard(item)
+                    
         self._remove = _remove
         # A list of keys to be removed
         self._pending_removals = []
@@ -137,6 +140,7 @@ class WeakSet(object):
 
     def difference(self, other):
         return self._apply(other, self.data.difference)
+        
     __sub__ = difference
 
     def difference_update(self, other):
@@ -146,6 +150,7 @@ class WeakSet(object):
             self.data.clear()
         else:
             self.data.difference_update(ref(item) for item in other)
+            
     def __isub__(self, other):
         if self._pending_removals:
             self._commit_removals()
@@ -157,12 +162,14 @@ class WeakSet(object):
 
     def intersection(self, other):
         return self._apply(other, self.data.intersection)
+        
     __and__ = intersection
 
     def intersection_update(self, other):
         if self._pending_removals:
             self._commit_removals()
         self.data.intersection_update(ref(item) for item in other)
+        
     def __iand__(self, other):
         if self._pending_removals:
             self._commit_removals()
@@ -171,6 +178,7 @@ class WeakSet(object):
 
     def issubset(self, other):
         return self.data.issubset(ref(item) for item in other)
+        
     __lt__ = issubset
 
     def __le__(self, other):
@@ -178,6 +186,7 @@ class WeakSet(object):
 
     def issuperset(self, other):
         return self.data.issuperset(ref(item) for item in other)
+        
     __gt__ = issuperset
 
     def __ge__(self, other):
@@ -190,6 +199,7 @@ class WeakSet(object):
 
     def symmetric_difference(self, other):
         return self._apply(other, self.data.symmetric_difference)
+        
     __xor__ = symmetric_difference
 
     def symmetric_difference_update(self, other):
@@ -199,6 +209,7 @@ class WeakSet(object):
             self.data.clear()
         else:
             self.data.symmetric_difference_update(ref(item) for item in other)
+            
     def __ixor__(self, other):
         if self._pending_removals:
             self._commit_removals()
@@ -210,6 +221,7 @@ class WeakSet(object):
 
     def union(self, other):
         return self._apply(other, self.data.union)
+        
     __or__ = union
 
     def isdisjoint(self, other):
