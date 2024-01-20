@@ -22,6 +22,9 @@ Classes for storing Funambol client configuration
 
 """
 
+from builtins import object
+
+
 class SyncMLConfigNode(object):
     def __init__(self, name):
         super(SyncMLConfigNode, self).__init__()
