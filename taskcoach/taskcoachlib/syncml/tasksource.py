@@ -17,10 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import inspect
-from taskcoachlib.syncml import basesource
-from taskcoachlib.domain.task import Task
-from taskcoachlib.domain.category import Category
-from taskcoachlib.persistence.icalendar import ical
+from ..syncml import basesource
+from ..domain.task import Task
+from ..domain.category import Category
+from ..persistence.icalendar import ical
 
 
 class TaskSource(basesource.BaseSource):
@@ -76,4 +76,4 @@ class TaskSource(basesource.BaseSource):
 
         super(TaskSource, self).doUpdateItem(task, local)
 
-        return 200 # FIXME
+        return 200  # FIXME
