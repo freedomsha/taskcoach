@@ -16,7 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import sys, os, struct
+import os
+import struct
+import sys
+from builtins import map
+
 
 _BINBASE = os.path.join(os.path.split(__file__)[0], '..', 'bin.in')
 
