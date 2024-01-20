@@ -16,12 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from __future__ import absolute_import # For xml...
+from __future__ import absolute_import  # For xml...
 
-import os, shutil, glob, math, re
-from taskcoachlib.domain import date
-from taskcoachlib.thirdparty.pubsub import pub
-import bz2, hashlib
+from builtins import map
+from builtins import range
+from builtins import object
+import os
+import shutil
+import glob
+import math
+import re
+from ..domain import date
+from ..thirdparty.pubsub import pub
+import bz2
+import hashlib
 
 # Hack: indirect 
 from xml.etree import ElementTree as ET
@@ -32,6 +40,7 @@ def SHA(filename):
 
 
 def compressFile(srcName, dstName):
+    # file -> open ?
     with file(srcName, 'rb') as src:
         dst = bz2.BZ2File(dstName, 'w')
         try:
@@ -46,6 +55,7 @@ class BackupManifest(object):
 
         xmlName = os.path.join(settings.pathToBackupsDir(), 'backups.xml')
         if os.path.exists(xmlName):
+            # file -> open ?
             with file(xmlName, 'rb') as fp:
                 root = ET.parse(fp).getroot()
                 self.__files = dict([(node.attrib['sha'], node.text) for node in root.findall('file')])
@@ -58,6 +68,7 @@ class BackupManifest(object):
             node = ET.SubElement(root, 'file')
             node.attrib['sha'] = sha
             node.text = filename
+        # file -> open ?
         with file(os.path.join(self.__settings.pathToBackupsDir(), 'backups.xml'), 'wb') as fp:
             ET.ElementTree(root).write(fp)
 
@@ -97,6 +108,7 @@ class BackupManifest(object):
         sha = SHA(filename)
         src = bz2.BZ2File(os.path.join(self.__settings.pathToBackupsDir(), sha, dateTime.strftime('%Y%m%d%H%M%S.bak')), 'r')
         try:
+            # file -> open ?
             with file(dstName, 'wb') as dst:
                 shutil.copyfileobj(src, dst)
         finally:
@@ -108,8 +120,8 @@ class AutoBackup(object):
         file before it is overwritten. To prevent the number of backups growing
         indefinitely, AutoBackup removes older backups. '''
 
-    minNrOfBackupFiles = 3 # Keep at least three backup files.
-    maxNrOfBackupFilesToRemoveAtOnce = 3 # Slowly reduce the number of backups
+    minNrOfBackupFiles = 3  # Keep at least three backup files.
+    maxNrOfBackupFilesToRemoveAtOnce = 3  # Slowly reduce the number of backups
 
     def __init__(self, settings, copyfile=compressFile):
         super(AutoBackup, self).__init__()
@@ -151,6 +163,7 @@ class AutoBackup(object):
                 dstName = os.path.join(man.backupPath(taskFile.filename()), '%s%s.bak' % (mt.group(1), mt.group(2)))
                 if os.path.exists(dstName):
                     os.remove(dstName)
+                # file -> open ?
                 with file(srcName, 'rb') as src:
                     dst = bz2.BZ2File(dstName, 'w')
                     try:
@@ -174,14 +187,14 @@ class AutoBackup(object):
         self.__copyfile(taskFile.filename(), filename)
 
     def removeExtraneousBackupFiles(self, taskFile, remove=os.remove,
-                                    glob=glob.glob): # pylint: disable=W0621
+                                    glob=glob.glob):  # pylint: disable=W0621
         backupFiles = self.backupFiles(taskFile, glob)
         for _ in range(min(self.maxNrOfBackupFilesToRemoveAtOnce,
                            self.numberOfExtraneousBackupFiles(backupFiles))):
             try:
                 remove(self.leastUniqueBackupFile(backupFiles))
             except OSError:
-                pass # Ignore errors
+                pass  # Ignore errors
 
     def numberOfExtraneousBackupFiles(self, backupFiles):
         return max(0, len(backupFiles) - self.maxNrOfBackupFiles(backupFiles))
@@ -227,4 +240,4 @@ class AutoBackup(object):
         dt = os.path.split(backupFilename)[-1][:-4]
         parts = (int(part) for part in (dt[0:4], dt[4:6], dt[6:8],
                                         dt[8:10], dt[10:12], dt[12:14]))
-        return date.DateTime(*parts) # pylint: disable=W0142
+        return date.DateTime(*parts)  # pylint: disable=W0142
