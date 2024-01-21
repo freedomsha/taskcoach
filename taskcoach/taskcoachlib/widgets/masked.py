@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,9 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import operating_system
+from builtins import object
+from .. import operating_system
 from wx.lib import masked
 import wx
 import locale
@@ -66,10 +67,10 @@ class AmountCtrl(FixOverwriteSelectionMixin, masked.NumCtrl):
         
 
 class TimeDeltaCtrl(TextCtrl):
-    ''' Masked edit control for entering or displaying time deltas of the
+    """ Masked edit control for entering or displaying time deltas of the
         form <hour>:<minute>:<second>. Entering negative time deltas is not
         allowed, displaying negative time deltas is allowed if the control
-        is read only. '''
+        is read only. """
     def __init__(self, parent, hours, minutes, seconds, readonly=False, 
                  negative_value=False, *args, **kwargs):
         # If the control is read only (meaning it could potentially have to 
@@ -93,8 +94,8 @@ class TimeDeltaCtrl(TextCtrl):
         
     @staticmethod
     def __hour_string(hours, negative_value):
-        ''' If the value is negative (e.g. over budget), place a minus sign 
+        """ If the value is negative (e.g. over budget), place a minus sign 
             before the hours number and make sure the field has the appropriate
-            width. '''
+            width. """
         return '%9s' % ('-' + '%d' % hours) if negative_value else \
                '%9d' % hours
