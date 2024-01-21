@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,33 +14,39 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-''' Base classes for controls with items, such as ListCtrl, TreeCtrl, 
-    and TreeListCtrl. ''' # pylint: disable=W0105
+""" Base classes for controls with items, such as ListCtrl, TreeCtrl, 
+    and TreeListCtrl. """  # pylint: disable=W0105
 
-
-import wx, draganddrop, autowidth, tooltip, inspect
-from taskcoachlib.thirdparty import hypertreelist
+from builtins import str
+from builtins import range
+from builtins import object
+import wx
+import draganddrop
+import autowidth
+import tooltip
+import inspect
+from ..thirdparty import hypertreelist
 
 
 class _CtrlWithItemsMixin(object):
-    ''' Base class for controls with items, such as ListCtrl, TreeCtrl,
-        TreeListCtrl, etc. '''
+    """ Base class for controls with items, such as ListCtrl, TreeCtrl,
+        TreeListCtrl, etc. """
 
     def _itemIsOk(self, item):
         try:
-            return item.IsOk()          # for Tree(List)Ctrl
+            return item.IsOk()           # for Tree(List)Ctrl
         except AttributeError:
-            return item != wx.NOT_FOUND # for ListCtrl
+            return item != wx.NOT_FOUND  # for ListCtrl
         
     def _objectBelongingTo(self, item):
         if not self._itemIsOk(item):
             return None
         try:
-            return self.GetItemPyData(item) # TreeListCtrl
+            return self.GetItemPyData(item)     # TreeListCtrl
         except AttributeError:
-            return self.getItemWithIndex(item) # ListCtrl
+            return self.getItemWithIndex(item)  # ListCtrl
 
     def SelectItem(self, item, *args, **kwargs):
         try:
@@ -56,7 +62,7 @@ class _CtrlWithItemsMixin(object):
 
 
 class _CtrlWithPopupMenuMixin(_CtrlWithItemsMixin):
-    ''' Base class for controls with popupmenu's. '''
+    """ Base class for controls with popupmenu's. """
     
     @staticmethod
     def _attachPopupMenu(eventSource, eventTypes, eventHandler):
@@ -65,7 +71,7 @@ class _CtrlWithPopupMenuMixin(_CtrlWithItemsMixin):
 
 
 class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
-    ''' Popupmenu's on items. '''
+    """ Popupmenu's on items. """
 
     def __init__(self, *args, **kwargs):
         self.__popupMenu = kwargs.pop('itemPopupMenu')
@@ -96,10 +102,10 @@ class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
 
 
 class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
-    ''' This class enables a right-click popup menu on column headers. The 
+    """ This class enables a right-click popup menu on column headers. The 
         popup menu should expect a public property columnIndex to be set so 
         that the control can tell the menu which column the user clicked to
-        popup the menu. '''
+        popup the menu. """
     
     def __init__(self, *args, **kwargs):
         self.__popupMenu = kwargs.pop('columnPopupMenu')
@@ -170,7 +176,7 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
 
 
 class CtrlWithToolTipMixin(_CtrlWithItemsMixin, tooltip.ToolTipMixin):
-    ''' Control that has a different tooltip for each item '''
+    """ Control that has a different tooltip for each item """
     def __init__(self, *args, **kwargs):
         super(CtrlWithToolTipMixin, self).__init__(*args, **kwargs)
         self.__tip = tooltip.SimpleToolTip(self)
@@ -213,7 +219,7 @@ class Column(object):
         self.__editCallback = kwargs.get('editCallback', None)
         self.__editControlClass = kwargs.get('editControl', None)
         self.__parse = kwargs.get('parse', lambda value: value)
-        self.__settings = kwargs.get('settings', None) # FIXME: Column shouldn't need to know about settings
+        self.__settings = kwargs.get('settings', None)  # FIXME: Column shouldn't need to know about settings
         
     def name(self):
         return self.__name
@@ -244,13 +250,13 @@ class Column(object):
     def render(self, *args, **kwargs):
         return self.__renderCallback(*args, **self.__filterArgs(self.__renderCallback, kwargs))
 
-    def defaultRenderer(self, *args, **kwargs): # pylint: disable=W0613
+    def defaultRenderer(self, *args, **kwargs):  # pylint: disable=W0613
         return unicode(args[0])
 
     def alignment(self):
         return self.__alignment
     
-    def defaultImageIndices(self, *args, **kwargs): # pylint: disable=W0613
+    def defaultImageIndices(self, *args, **kwargs):  # pylint: disable=W0613
         return {wx.TreeItemIcon_Normal: -1}
         
     def imageIndices(self, *args, **kwargs):
@@ -283,9 +289,9 @@ class Column(object):
         
 
 class _BaseCtrlWithColumnsMixin(object):
-    ''' A base class for all controls with columns. Note that this class and 
+    """ A base class for all controls with columns. Note that this class and 
         its subclasses do not support addition or deletion of columns after 
-        the initial setting of columns. '''
+        the initial setting of columns. """
 
     def __init__(self, *args, **kwargs):
         self.__allColumns = kwargs.pop('columns')
@@ -338,26 +344,26 @@ class _BaseCtrlWithColumnsMixin(object):
         raise IndexError
    
     def _getColumnHeader(self, columnIndex):
-        ''' The currently displayed column header in the column with index 
-            columnIndex. '''
+        """ The currently displayed column header in the column with index 
+            columnIndex. """
         return self.GetColumn(columnIndex).GetText()
 
     def _getColumnIndex(self, column):
-        ''' The current column index of the column 'column'. '''
+        """ The current column index of the column 'column'. """
         try:
-            return self.__allColumns.index(column) # Uses overriden __eq__
+            return self.__allColumns.index(column)  # Uses overriden __eq__
         except ValueError:
             raise ValueError('%s: unknown column' % column.name())
 
         
 class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):        
-    ''' This class supports hiding columns. '''
+    """ This class supports hiding columns. """
     
     def showColumn(self, column, show=True):
-        ''' showColumn shows or hides the column for column. 
+        """ showColumn shows or hides the column for column. 
             The column is actually removed or inserted into the control because 
             although TreeListCtrl supports hiding columns, ListCtrl does not. 
-            '''
+            """
         columnIndex = self._getColumnIndex(column)
         if show and not self.isColumnVisible(column):
             self._insertColumn(columnIndex, column)
@@ -368,8 +374,8 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
         return column in self._visibleColumns()
 
     def _getColumnIndex(self, column):
-        ''' _getColumnIndex returns the actual columnIndex of the column if it 
-            is visible, or the position it would have if it were visible. '''
+        """ _getColumnIndex returns the actual columnIndex of the column if it 
+            is visible, or the position it would have if it were visible. """
         columnIndexWhenAllColumnsVisible = super(_CtrlWithHideableColumnsMixin, self)._getColumnIndex(column)
         for columnIndex, visibleColumn in enumerate(self._visibleColumns()):
             if super(_CtrlWithHideableColumnsMixin, self)._getColumnIndex(visibleColumn) >= columnIndexWhenAllColumnsVisible:
@@ -381,8 +387,8 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
 
 
 class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
-    ''' This class adds sort indicators and clickable column headers that 
-        trigger callbacks to (re)sort the contents of the control. '''
+    """ This class adds sort indicators and clickable column headers that 
+        trigger callbacks to (re)sort the contents of the control. """
     
     def __init__(self, *args, **kwargs):
         super(_CtrlWithSortableColumnsMixin, self).__init__(*args, **kwargs)
@@ -450,9 +456,9 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
                            _CtrlWithHideableColumnsMixin,
                            _CtrlWithSortableColumnsMixin, 
                            _CtrlWithColumnPopupMenuMixin):
-    ''' CtrlWithColumnsMixin combines the functionality of its four parent 
+    """ CtrlWithColumnsMixin combines the functionality of its four parent 
         classes: automatic resizing of columns, hideable columns, columns with 
-        sort indicators, and column popup menu's. '''
+        sort indicators, and column popup menu's. """
         
     def showColumn(self, column, show=True):
         super(CtrlWithColumnsMixin, self).showColumn(column, show)
