@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 Copyright (C) 2008 Rob McMullen <rob.mcmullen@gmail.com>
@@ -16,8 +16,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import str
 import wx
 
 
@@ -26,17 +27,17 @@ import wx
 # doesn't have this disadvantage.
     
 class SpinCtrl(wx.Panel):
-    maxRange = 2147483647 # 2^31
+    maxRange = 2147483647  # 2^31
     
     def __init__(self, parent, wxId=wx.ID_ANY, value=0, pos=wx.DefaultPosition, size=wx.DefaultSize, 
-                 style=0, name='wx.SpinCtrl', **kwargs): # pylint: disable=W0613
+                 style=0, name='wx.SpinCtrl', **kwargs):  # pylint: disable=W0613
         super(SpinCtrl, self).__init__(parent, wxId, pos=pos, size=size, name=name)
         minValue = kwargs['min'] if 'min' in kwargs else -self.maxRange
         maxValue = kwargs['max'] if 'max' in kwargs else self.maxRange
         value = min(maxValue, max(int(value), minValue))
         self._textCtrl = wx.TextCtrl(self, value=str(value))
         self._spinButton = wx.SpinButton(self, size=(-1, self._textCtrl.GetSize()[1]), 
-                                         style=wx.SP_VERTICAL|wx.SP_ARROW_KEYS)
+                                         style=wx.SP_VERTICAL | wx.SP_ARROW_KEYS)
         self._spinButton.SetRange(minValue, maxValue)
         self._spinButton.SetValue(value)
         self._textCtrl.SetMinSize((size[0]-self._spinButton.GetSize()[0], -1))
@@ -74,7 +75,7 @@ class SpinCtrl(wx.Panel):
         self._textCtrl.SelectAll()
         event.Skip()
             
-    def onSpin(self, event): # pylint: disable=W0613
+    def onSpin(self, event):  # pylint: disable=W0613
         self._textCtrl.SetValue(str(self._spinButton.GetValue()))
         self.__postEvent()
 
