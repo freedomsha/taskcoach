@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import codecs
 
+
 def encalias(oldname, newname):
     old = codecs.lookup(oldname)
     new = codecs.CodecInfo(old.encode, old.decode, 
@@ -26,11 +27,13 @@ def encalias(oldname, newname):
                            incrementalencoder=old.incrementalencoder,
                            incrementaldecoder=old.incrementaldecoder,
                            name=newname)
+    
     def searcher(aname):
         if aname == newname:
             return new
         else:
             return None
     codecs.register(searcher)
+
 
 encalias('mac_roman', 'western-(mac-os-roman)')
