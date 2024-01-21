@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,25 +14,24 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import wx
-import taskcoachlib.thirdparty.aui as aui
-from taskcoachlib import operating_system
+from ..thirdparty import aui
+from .. import operating_system
 
 
 class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
     def __init__(self, *args, **kwargs):
-        super(AuiManagedFrameWithDynamicCenterPane, self).__init__(*args, 
-                                                                   **kwargs)
+        super(AuiManagedFrameWithDynamicCenterPane, self).__init__(*args, **kwargs)
         agwStyle = aui.AUI_MGR_DEFAULT | aui.AUI_MGR_ALLOW_ACTIVE_PANE
         if not operating_system.isWindows():
             # With this style on Windows, you can't dock back floating frames
             agwStyle |= aui.AUI_MGR_USE_NATIVE_MINIFRAMES
         self.manager = aui.AuiManager(self, agwStyle)
-        self.manager.SetAutoNotebookStyle(aui.AUI_NB_TOP | \
-                                          aui.AUI_NB_CLOSE_BUTTON | \
-                                          aui.AUI_NB_SUB_NOTEBOOK | \
+        self.manager.SetAutoNotebookStyle(aui.AUI_NB_TOP | 
+                                          aui.AUI_NB_CLOSE_BUTTON | 
+                                          aui.AUI_NB_SUB_NOTEBOOK | 
                                           aui.AUI_NB_SCROLL_BUTTONS)
         self.bindEvents()
 
@@ -72,8 +71,8 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         self.manager.GetPane(window).Caption(title)
        
     def dockedPanes(self):
-        return [pane for pane in self.manager.GetAllPanes() \
-                if not pane.IsToolbar() and not pane.IsFloating() \
+        return [pane for pane in self.manager.GetAllPanes() 
+                if not pane.IsToolbar() and not pane.IsFloating() 
                 and not pane.IsNotebookPage()]
         
     def float(self, window):
