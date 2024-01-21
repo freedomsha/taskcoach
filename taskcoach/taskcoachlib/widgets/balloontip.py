@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Not using agw.balloontip because it doesn't position properly and
 # lacks events
 
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
 
@@ -31,7 +34,7 @@ class BalloonTip(wx.Frame):
         """Baloon tip."""
 
         super(BalloonTip, self).__init__(parent,
-            style=wx.NO_BORDER|wx.FRAME_FLOAT_ON_PARENT|wx.FRAME_NO_TASKBAR|wx.FRAME_SHAPED|wx.POPUP_WINDOW)
+                                         style=wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT | wx.FRAME_NO_TASKBAR | wx.FRAME_SHAPED | wx.POPUP_WINDOW)
 
         wheat = wx.ColourDatabase().Find('WHEAT')
         self.SetBackgroundColour(wheat)
@@ -44,16 +47,16 @@ class BalloonTip(wx.Frame):
         vsizer = wx.BoxSizer(wx.VERTICAL)
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         if bitmap is not None:
-            hsizer.Add(wx.StaticBitmap(self._interior, wx.ID_ANY, bitmap), 0, wx.ALIGN_CENTRE|wx.ALL, 3)
+            hsizer.Add(wx.StaticBitmap(self._interior, wx.ID_ANY, bitmap), 0, wx.ALIGN_CENTRE | wx.ALL, 3)
         if title is not None:
             titleCtrl = wx.StaticText(self._interior, wx.ID_ANY, title)
-            hsizer.Add(titleCtrl, 1, wx.ALL|wx.ALIGN_CENTRE, 3)
+            hsizer.Add(titleCtrl, 1, wx.ALL | wx.ALIGN_CENTRE, 3)
             titleCtrl.Bind(wx.EVT_LEFT_DOWN, self.DoClose)
         vsizer.Add(hsizer, 0, wx.EXPAND)
         if message is not None:
             msg = wx.StaticText(self._interior, wx.ID_ANY, message)
             msg.Wrap(self.MAXWIDTH)
-            vsizer.Add(msg, 1, wx.EXPAND|wx.ALL, 3)
+            vsizer.Add(msg, 1, wx.EXPAND | wx.ALL, 3)
             msg.Bind(wx.EVT_LEFT_DOWN, self.DoClose)
 
         self._interior.SetSizer(vsizer)
@@ -112,7 +115,8 @@ class BalloonTip(wx.Frame):
         dpyIndex = max(0, wx.Display.GetFromPoint(wx.Point(tx, ty)) or 0)
         rect = wx.Display(dpyIndex).GetClientArea()
 
-        x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw / 2 - w / 2)))
+        # x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw / 2 - w / 2)))
+        x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + old_div(tw, 2) - old_div(w, 2))))
         y = ty - h
         direction = 'bottom'
         if y < rect.GetTop():
@@ -133,15 +137,21 @@ class BalloonTip(wx.Frame):
                 memDC.DrawPolygon([(0, 0),
                                    (w, 0),
                                    (w, h - self.ARROWSIZE),
-                                   (tx + int(tw / 2) - x + int(self.ARROWSIZE / 2), h - self.ARROWSIZE),
-                                   (tx + int(tw / 2) - x, h),
-                                   (tx + int(tw / 2) - x - int(self.ARROWSIZE / 2), h - self.ARROWSIZE),
+                                   # (tx + int(tw / 2) - x + int(self.ARROWSIZE / 2), h - self.ARROWSIZE),
+                                   # (tx + int(tw / 2) - x, h),
+                                   # (tx + int(tw / 2) - x - int(self.ARROWSIZE / 2), h - self.ARROWSIZE),
+                                   (tx + int(old_div(tw, 2)) - x + int(old_div(self.ARROWSIZE, 2)), h - self.ARROWSIZE),
+                                   (tx + int(old_div(tw, 2)) - x, h),
+                                   (tx + int(old_div(tw, 2)) - x - int(old_div(self.ARROWSIZE, 2)), h - self.ARROWSIZE),
                                    (0, h - self.ARROWSIZE)])
             else:
                 memDC.DrawPolygon([(0, self.ARROWSIZE),
-                                   (tx + int(tw / 2) - x - int(self.ARROWSIZE / 2), self.ARROWSIZE),
-                                   (tx + int(tw / 2) - x, 0),
-                                   (tx + int(tw / 2) - x + int(self.ARROWSIZE / 2), self.ARROWSIZE),
+                                   # (tx + int(tw / 2) - x - int(self.ARROWSIZE / 2), self.ARROWSIZE),
+                                   # (tx + int(tw / 2) - x, 0),
+                                   # (tx + int(tw / 2) - x + int(self.ARROWSIZE / 2), self.ARROWSIZE),
+                                   (tx + int(old_div(tw, 2)) - x - int(old_div(self.ARROWSIZE, 2)), self.ARROWSIZE),
+                                   (tx + int(old_div(tw, 2)) - x, 0),
+                                   (tx + int(old_div(tw, 2)) - x + int(old_div(self.ARROWSIZE, 2)), self.ARROWSIZE),
                                    (w, self.ARROWSIZE),
                                    (w, h),
                                    (0, h)])
