@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import operating_system
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty import aui
+from .. import operating_system
+from ..i18n import _
+from ..thirdparty import aui
 from . import notebook
 import wx
 import wx.html
@@ -31,9 +31,9 @@ class Dialog(sized_controls.SizedDialog):
                  direction=None, *args, **kwargs):
         self._buttonTypes = kwargs.get('buttonTypes', wx.OK | wx.CANCEL)
         super(Dialog, self).__init__(parent, -1, title,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX)
+                                     style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX)
         self.SetIcon(wx.ArtProvider_GetIcon(bitmap, wx.ART_FRAME_ICON,
-            (16, 16)))
+                                            (16, 16)))
 
         if operating_system.isWindows7_OrNewer():
             # Without this the window has no taskbar icon on Windows, and the focus comes back to the main
@@ -41,7 +41,7 @@ class Dialog(sized_controls.SizedDialog):
             # what we want.
             import win32gui, win32con
             exStyle = win32gui.GetWindowLong(self.GetHandle(), win32con.GWL_EXSTYLE)
-            win32gui.SetWindowLong(self.GetHandle(), win32con.GWL_EXSTYLE, exStyle|win32con.WS_EX_APPWINDOW)
+            win32gui.SetWindowLong(self.GetHandle(), win32con.GWL_EXSTYLE, exStyle | win32con.WS_EX_APPWINDOW)
 
         self._panel = self.GetContentsPane()
         self._panel.SetSizerType('vertical')
@@ -104,8 +104,8 @@ class Dialog(sized_controls.SizedDialog):
 class NotebookDialog(Dialog):    
     def createInterior(self):
         return notebook.Notebook(self._panel, 
-            agwStyle=aui.AUI_NB_DEFAULT_STYLE & ~aui.AUI_NB_TAB_SPLIT & \
-                     ~aui.AUI_NB_TAB_MOVE & ~aui.AUI_NB_DRAW_DND_TAB)
+                                 agwStyle=aui.AUI_NB_DEFAULT_STYLE & ~aui.AUI_NB_TAB_SPLIT & 
+                                 ~aui.AUI_NB_TAB_MOVE & ~aui.AUI_NB_DRAW_DND_TAB)
 
     def fillInterior(self):
         self.addPages()
@@ -148,7 +148,7 @@ class HTMLDialog(Dialog):
         
     def createInterior(self):
         interior = HtmlWindowThatUsesWebBrowserForExternalLinks(self._panel, 
-            -1, size=(550, 400))
+                                                                -1, size=(550, 400))
         if self._direction:
             interior.SetLayoutDirection(self._direction)
         return interior
