@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 Copyright (C) 2011 Tobias Gradl <https://sourceforge.net/users/greentomato>
@@ -15,12 +15,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 import wx
-import urllib
-from taskcoachlib.mailer import thunderbird, outlook
-from taskcoachlib.i18n import _
+import urllib.request, urllib.parse, urllib.error
+from ..mailer import thunderbird, outlook
+from ..i18n import _
 
 
 class FileDropTarget(wx.FileDropTarget):
@@ -142,9 +147,9 @@ class DropTarget(wx.DropTarget):
 
     @staticmethod
     def __tmp_mail_file_url(url):
-        ''' Return whether the url is a dropped mail message. '''
+        """ Return whether the url is a dropped mail message. """
         return url.startswith('file:') and \
-            ('/.cache/evolution/tmp/drag-n-drop' in url or \
+            ('/.cache/evolution/tmp/drag-n-drop' in url or 
              '/.claws-mail/tmp/' in url)
     
     def onThunderbirdDrop(self, x, y):
@@ -235,19 +240,19 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         self._dragItems = []
 
     def OnDrop(self, dropItem, dragItems, part, column):
-        ''' This function must be overloaded in the derived class. dragItems 
+        """ This function must be overloaded in the derived class. dragItems 
         are the items being dragged by the user. dropItem is the item the 
         dragItems are dropped on. If the user doesn't drop the dragItems
         on another item, dropItem equals the (hidden) root item of the
         tree control. `part` is 0 if the items were dropped on the middle third
         of the dropItem, -1 if they were dropped on the upper third and 1 for
-        the lower third.'''
+        the lower third."""
         raise NotImplementedError
 
     def OnBeginDrag(self, event):
-        ''' This method is called when the drag starts. It either allows the
+        """ This method is called when the drag starts. It either allows the
         drag and starts it or it vetoes the drag when the the root item is one
-        of the dragged items. '''
+        of the dragged items. """
         column = self._ColumnHitTest(self._dragStartPos)
         selections = self.GetSelections()
         self._dragItems = selections[:] if selections else [event.GetItem()] if event.GetItem() else []
@@ -267,11 +272,11 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         # Aaaand HitTest() returns -1 too often...
         hwin = self.GetHeaderWindow()
         x = 0
-        for j in xrange(self.GetColumnCount()):
+        for j in range(self.GetColumnCount()):
             if not hwin.IsColumnShown(j):
                 continue
             w = hwin.GetColumnWidth(j)
-            if point.x >= x and point.x < x+w:
+            if x <= point.x < x + w:
                 return j
             x += w
         return -1
@@ -347,7 +352,8 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     def IsValidDropTarget(self, dropTarget):
         if self._validateDragCallback is not None:
             isValid = self._validateDragCallback(self.GetItemPyData(dropTarget),
-                                                 [self.GetItemPyData(item) for item in self._dragItems], self._dragColumn)
+                                                 [self.GetItemPyData(item) for item in self._dragItems], 
+                                                 self._dragColumn)
             if isValid is not None:
                 return isValid
 
