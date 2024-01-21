@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,17 +14,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from __future__ import division
+from past.utils import old_div
 import wx
-from taskcoachlib.thirdparty.wxScheduler import wxScheduler, wxSchedule, \
+from ..thirdparty.wxScheduler import wxScheduler, wxSchedule, \
     EVT_SCHEDULE_ACTIVATED, EVT_SCHEDULE_RIGHT_CLICK, \
     EVT_SCHEDULE_DCLICK, EVT_PERIODWIDTH_CHANGED, wxReportScheduler, wxTimeFormat
-from taskcoachlib.thirdparty.wxScheduler.wxSchedulerConstants import wxSCHEDULER_WEEKSTART_MONDAY,\
+from ..thirdparty.wxScheduler.wxSchedulerConstants import wxSCHEDULER_WEEKSTART_MONDAY,\
     wxSCHEDULER_WEEKSTART_SUNDAY
-from taskcoachlib.domain import date
-from taskcoachlib.widgets import draganddrop
-from taskcoachlib import command, render
+from ..domain import date
+from ..widgets import draganddrop
+from . import command, render
 from . import tooltip
 
 
@@ -41,8 +43,7 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
                                                  self.OnDropFiles,
                                                  self.OnDropMail)
 
-        super(_CalendarContent, self).__init__(parent, wx.ID_ANY, 
-                                               *args, **kwargs)
+        super(_CalendarContent, self).__init__(parent, wx.ID_ANY, *args, **kwargs)
 
         self.SetDropTarget(self.dropTarget)
 
@@ -451,7 +452,7 @@ class TaskSchedule(wxSchedule):
         args = default if dateTime == date.DateTime() else \
             (dateTime.day, dateTime.month - 1, dateTime.year,
              dateTime.hour, dateTime.minute, dateTime.second)
-        return wx.DateTimeFromDMY(*args) # pylint: disable=W0142
+        return wx.DateTimeFromDMY(*args)  # pylint: disable=W0142
 
     @staticmethod
     def tcDateTime(dateTime):
@@ -461,4 +462,3 @@ class TaskSchedule(wxSchedule):
                              dateTime.GetHour(),
                              dateTime.GetMinute(),
                              dateTime.GetSecond())
-
