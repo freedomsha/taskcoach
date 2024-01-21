@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import wx, operator
-from taskcoachlib.thirdparty.squaremap import squaremap
+from builtins import map
+import wx
+import operator
+from ..thirdparty.squaremap import squaremap
 from . import tooltip
+from functools import reduce
 
 
 class SquareMap(tooltip.ToolTipMixin, squaremap.SquareMap):
@@ -36,10 +39,10 @@ class SquareMap(tooltip.ToolTipMixin, squaremap.SquareMap):
         self.popupMenu = popupMenu
         self.Bind(wx.EVT_RIGHT_DOWN, self.onPopup)
         
-    def RefreshAllItems(self, count): # pylint: disable=W0613
+    def RefreshAllItems(self, count):  # pylint: disable=W0613
         self.UpdateDrawing()
         
-    def RefreshItems(self, *args): # pylint: disable=W0613
+    def RefreshItems(self, *args):  # pylint: disable=W0613
         self.UpdateDrawing()
         
     def onSelect(self, event):
@@ -58,7 +61,7 @@ class SquareMap(tooltip.ToolTipMixin, squaremap.SquareMap):
         event.Skip()
         
     def OnBeforeShowToolTip(self, x, y):
-        item = squaremap.HotMapNavigator.findNodeAtPosition(self.hot_map, (x,y))
+        item = squaremap.HotMapNavigator.findNodeAtPosition(self.hot_map, (x, y))
         if item is None or item == self.model:
             return None
         tooltipData = self.getItemTooltipData(item)
@@ -72,7 +75,7 @@ class SquareMap(tooltip.ToolTipMixin, squaremap.SquareMap):
             return None
         
     def onPopup(self, event):
-        self.OnClickRelease(event) # Make sure the node is selected
+        self.OnClickRelease(event)  # Make sure the node is selected
         self.SetFocus()
         self.PopupMenu(self.popupMenu)
     
