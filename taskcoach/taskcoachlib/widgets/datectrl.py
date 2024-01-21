@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 Copyright (C) 2008 Rob McMullen <rob.mcmullen@gmail.com>
@@ -15,14 +15,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import taskcoachlib.i18n
-from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
-from taskcoachlib.domain import date
-from taskcoachlib import render, operating_system
+from .. import i18n
+from ..thirdparty import smartdatetimectrl as sdtc
+from ..domain import date
+from .. import render, operating_system
 
-import wx, datetime
+import wx
+import datetime
 
 
 class _SmartDateTimeCtrl(sdtc.SmartDateTimeCtrl):
