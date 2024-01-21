@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2014 Task Coach developers <developers@taskcoach.org>
 
@@ -14,13 +14,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from __future__ import division
+from builtins import str
+from builtins import map
+from past.utils import old_div
 import wx
 import wx.lib.colourselect as csel
 from wx.lib import sized_controls
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.wxScheduler import wxSCHEDULER_DAILY, \
+from ..i18n import _
+from ..thirdparty.wxScheduler import wxSCHEDULER_DAILY, \
     wxSCHEDULER_WEEKLY, wxSCHEDULER_MONTHLY, wxSCHEDULER_HORIZONTAL, \
     wxSCHEDULER_VERTICAL
 
@@ -33,7 +37,7 @@ class HierarchicalCalendarConfigDialog(sized_controls.SizedDialog):
         pane = self.GetContentsPane()
         pane.SetSizerType('form')
         self.createInterior(pane)
-        buttonSizer = self.CreateStdDialogButtonSizer(wx.OK|wx.CANCEL)
+        buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(buttonSizer)
         self.Fit()
         buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.ok)
@@ -72,7 +76,7 @@ class HierarchicalCalendarConfigDialog(sized_controls.SizedDialog):
         label = wx.StaticText(pane,
                               label=_('Draw a line showing the current time'))
         label.SetSizerProps(valign='center')
-        self._shownow = wx.CheckBox(pane) # pylint: disable=W0201
+        self._shownow = wx.CheckBox(pane)  # pylint: disable=W0201
         self._shownow.SetSizerProps(valign='center')
         self._shownow.SetValue(self._settings.getboolean(self._settingsSection,
                                                          'drawnow'))
@@ -83,10 +87,13 @@ class HierarchicalCalendarConfigDialog(sized_controls.SizedDialog):
         hcolor = self._settings.get(self._settingsSection, 'todaycolor')
         if not hcolor:
             # The highlight color is too dark
-            color = wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT )
-            color = wx.Colour(int((color.Red() + 255) / 2),
-                              int((color.Green() + 255) / 2),
-                              int((color.Blue() + 255) / 2))
+            color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+            # color = wx.Colour(int((color.Red() + 255) / 2),
+            #                  int((color.Green() + 255) / 2),
+            #                  int((color.Blue() + 255) / 2))
+            color = wx.Colour(int(old_div((color.Red() + 255), 2)),
+                              int(old_div((color.Green() + 255), 2)),
+                              int(old_div((color.Blue() + 255), 2)))
         else:
             color = wx.Colour(*tuple(map(int, hcolor.split(','))))  # pylint: disable=W0141
         self._highlight = csel.ColourSelect(pane, size=(100, 20))  # pylint: disable=W0201
