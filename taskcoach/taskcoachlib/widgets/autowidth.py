@@ -16,9 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import division
+
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import wx
-from taskcoachlib.thirdparty import hypertreelist
-from taskcoachlib import operating_system
+from ..thirdparty import hypertreelist
+from .. import operating_system
 
 
 class AutoColumnWidthMixin(object):
@@ -90,13 +95,13 @@ class AutoColumnWidthMixin(object):
 
     def DoResize(self):
         if not self:
-            return # Avoid a potential PyDeadObject error
+            return  # Avoid a potential PyDeadObject error
         if not self.IsAutoResizing():
             return
         if self.GetSize().height < 32:
-            return # Avoid an endless update bug when the height is small.
+            return  # Avoid an endless update bug when the height is small.
         if self.GetColumnCount() <= self.ResizeColumn:
-            return # Nothing to resize.
+            return  # Nothing to resize.
 
         unused_width = max(self.AvailableWidth - self.NecessaryWidth, 0)
         resize_column_width = self.ResizeColumnMinWidth + unused_width
