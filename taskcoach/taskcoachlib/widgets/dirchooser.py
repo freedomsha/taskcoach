@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import wx
-from taskcoachlib.i18n import _
+from ..i18n import _
 
 
 class DirectoryChooser(wx.Panel):
@@ -53,4 +53,4 @@ class DirectoryChooser(wx.Panel):
 
     def OnCheck(self, evt):
         self.chooser.Enable(not evt.IsChecked())
-        self.chooser.SetPath('/') # Workaround for a wx bug
+        self.chooser.SetPath('/')  # Workaround for a wx bug
