@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2011 Task Coach developers <developers@taskcoach.org>
 
@@ -14,14 +14,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import object
 import wx
-from taskcoachlib import operating_system
+from .. import operating_system
 
 
 if operating_system.isWindows():
-    import win32api # pylint: disable=F0401
+    import win32api  # pylint: disable=F0401
 
     class Display(object):
         """
@@ -37,7 +38,8 @@ if operating_system.isWindows():
         @staticmethod
         def GetFromPoint(p):
             for idx, (_, _, (x1, y1, x2, y2)) in enumerate(win32api.EnumDisplayMonitors(None, None)):
-                if p.x >= x1 and p.x < x2 and p.y >= y1 and p.y < y2:
+                # if p.x >= x1 and p.x < x2 and p.y >= y1 and p.y < y2:
+                if x1 <= p.x < x2 and y1 <= p.y < y2:
                     return idx
             return wx.NOT_FOUND
 
