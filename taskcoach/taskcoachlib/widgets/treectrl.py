@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import operating_system
-from taskcoachlib.thirdparty import customtreectrl as customtree, hypertreelist
-from taskcoachlib.widgets import itemctrl, draganddrop
+from builtins import range
+from .. import operating_system
+from ..thirdparty import customtreectrl as customtree, hypertreelist
+from ..widgets import itemctrl, draganddrop
 import wx
 
 
@@ -41,9 +42,9 @@ class HyperTreeList(draganddrop.TreeCtrlDragAndDropMixin,
         wx.CallAfter(self.MainWindow.Refresh) 
 
     def GetSelections(self):  # pylint: disable=C0103
-        ''' If the root item is hidden, it should never be selected. 
+        """ If the root item is hidden, it should never be selected. 
             Unfortunately, CustomTreeCtrl and HyperTreeList allow it to be 
-            selected. Override GetSelections to fix that. '''
+            selected. Override GetSelections to fix that. """
         selections = super(HyperTreeList, self).GetSelections()
         if self.HasFlag(wx.TR_HIDE_ROOT):
             root_item = self.GetRootItem()
@@ -52,14 +53,14 @@ class HyperTreeList(draganddrop.TreeCtrlDragAndDropMixin,
         return selections
 
     def GetMainWindow(self, *args, **kwargs):  # pylint: disable=C0103
-        ''' Have a local GetMainWindow so we can create a MainWindow 
-        property. '''
+        """ Have a local GetMainWindow so we can create a MainWindow 
+        property. """
         return super(HyperTreeList, self).GetMainWindow(*args, **kwargs)
     
     MainWindow = property(fget=GetMainWindow)
     
-    def HitTest(self, point): # pylint: disable=W0221, C0103
-        ''' Always return a three-tuple (item, flags, column). '''
+    def HitTest(self, point):  # pylint: disable=W0221, C0103
+        """ Always return a three-tuple (item, flags, column). """
         if type(point) == type(()):
             point = wx.Point(point[0], point[1])
         hit_test_result = super(HyperTreeList, self).HitTest(point)
@@ -70,8 +71,8 @@ class HyperTreeList(draganddrop.TreeCtrlDragAndDropMixin,
         return hit_test_result
     
     def isClickablePartOfNodeClicked(self, event):
-        ''' Return whether the user double clicked some part of the node that
-            can also receive regular mouse clicks. '''
+        """ Return whether the user double clicked some part of the node that
+            can also receive regular mouse clicks. """
         return self.__is_collapse_expand_button_clicked(event)
     
     def __is_collapse_expand_button_clicked(self, event):
@@ -176,13 +177,13 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
     def getItemTooltipData(self, item):
         return self.__adapter.getItemTooltipData(item)
     
-    def getItemCTType(self, item): # pylint: disable=W0613
+    def getItemCTType(self, item):  # pylint: disable=W0613
         return self.ct_type
     
     def curselection(self):
         return [self.GetItemPyData(item) for item in self.GetSelections()]
     
-    def RefreshAllItems(self, count=0): # pylint: disable=W0613
+    def RefreshAllItems(self, count=0):  # pylint: disable=W0613
         self.Freeze()
         self.StopEditing()
         self.__selection = self.curselection()
@@ -213,7 +214,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             
     def _refreshObjectCompletely(self, item, *args):
         self.__refresh_aspects(('ItemType', 'Columns', 'Font', 'Colors',
-                              'Selection'), item, check=True, *args)
+                                'Selection'), item, check=True, *args)
         self.GetMainWindow().RefreshLine(item)
         
     def _addObjectRecursively(self, parent_item, parent_object=None):
@@ -235,7 +236,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
 
     def _refreshObjectMinimally(self, *args, **kwargs):
         self.__refresh_aspects(('Columns', 'Colors', 'Font', 'Selection'), 
-                             *args, **kwargs)
+                               *args, **kwargs)
 
     def __refresh_aspects(self, aspects, *args, **kwargs):
         for aspect in aspects:
@@ -254,7 +255,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
     def _refreshColumn(self, item, domain_object, column_index, check=False):
         aspects = ('Text', 'Image') if column_index in self.__columns_with_images else ('Text',)
         self.__refresh_aspects(aspects, item, domain_object, column_index, 
-                             check=check)
+                               check=check)
             
     def _refreshText(self, item, domain_object, column_index, check=False):
         text = self.__adapter.getItemText(domain_object, column_index)
@@ -326,8 +327,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             self.onItemActivated(event)
         
     def onItemActivated(self, event):
-        ''' Attach the column clicked on to the event so we can use it 
-            elsewhere. '''
+        """ Attach the column clicked on to the event so we can use it 
+            elsewhere. """
         column_index = self.__column_under_mouse()
         if column_index >= 0:
             event.columnName = self._getColumn(column_index).name()
@@ -341,7 +342,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             # Only get the column name if the hittest returned an item,
             # otherwise the item was activated from the menu or by double 
             # clicking on a portion of the tree view not containing an item.
-            return max(0, column) # FIXME: Why can the column be -1?
+            return max(0, column)  # FIXME: Why can the column be -1?
         else:
             return -1
         
@@ -416,8 +417,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                                self._getColumn(column_index).isEditable())
 
     def showColumn(self, *args, **kwargs):
-        ''' Stop editing before we hide or show a column to prevent problems
-            redrawing the tree list control contents. '''
+        """ Stop editing before we hide or show a column to prevent problems
+            redrawing the tree list control contents. """
         self.StopEditing()
         super(TreeListCtrl, self).showColumn(*args, **kwargs)
 
@@ -428,8 +429,8 @@ class CheckTreeCtrl(TreeListCtrl):
                  *args, **kwargs):
         self.__checking = False
         super(CheckTreeCtrl, self).__init__(parent, columns,
-            selectCommand, editCommand, dragAndDropCommand, 
-            itemPopupMenu, *args, **kwargs)
+                                            selectCommand, editCommand, dragAndDropCommand, 
+                                            itemPopupMenu, *args, **kwargs)
         self.checkCommand = checkCommand
         self.Bind(customtree.EVT_TREE_ITEM_CHECKED, self.onItemChecked)
         self.GetMainWindow().Bind(wx.EVT_LEFT_DOWN, self.onMouseLeftDown)
@@ -438,9 +439,9 @@ class CheckTreeCtrl(TreeListCtrl):
         self.getItemParentHasExclusiveChildren = parent.getItemParentHasExclusiveChildren
         
     def getItemCTType(self, domain_object):
-        ''' Use radio buttons (ct_type == 2) when the object has "exclusive" 
+        """ Use radio buttons (ct_type == 2) when the object has "exclusive" 
             children, meaning that only one child can be checked at a time. Use
-            check boxes (ct_type == 1) otherwise. '''
+            check boxes (ct_type == 1) otherwise. """
         if self.getIsItemCheckable(domain_object):
             return 2 if self.getItemParentHasExclusiveChildren(domain_object) else 1
         else:
@@ -455,11 +456,11 @@ class CheckTreeCtrl(TreeListCtrl):
             super(CheckTreeCtrl, self).CheckItem(item, checked)
             
     def onMouseLeftDown(self, event):
-        ''' By default, the HyperTreeList widget doesn't allow for unchecking
+        """ By default, the HyperTreeList widget doesn't allow for unchecking
             a radio item. Since we do want to support unchecking a radio 
             item, we look for mouse left down and uncheck the item and all of
             its children if the user clicks on an already selected radio 
-            item. '''
+            item. """
         position = self.GetMainWindow().CalcUnscrolledPosition(event.GetPosition())
         item, flags, dummy_column = self.HitTest(position)
         if item and item.GetType() == 2 and \
