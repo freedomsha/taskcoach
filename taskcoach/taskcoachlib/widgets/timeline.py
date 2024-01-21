@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import wx, operator
-from taskcoachlib.thirdparty.timeline import timeline
+from builtins import map
+import wx
+import operator
+from ..thirdparty.timeline import timeline
 from . import tooltip
+from functools import reduce
 
 
 class Timeline(tooltip.ToolTipMixin, timeline.TimeLine):
@@ -56,12 +59,13 @@ class Timeline(tooltip.ToolTipMixin, timeline.TimeLine):
         event.Skip()
         
     def OnBeforeShowToolTip(self, x, y):
-        item = self.hot_map.findNodeAtPosition((x,y))
+        item = self.hot_map.findNodeAtPosition((x, y))
         if item is None or item == self.model:
             return None
         tooltipData = self.getItemTooltipData(item)
         doShow = reduce(operator.__or__,
-                        map(bool, [data[1] for data in tooltipData]),
+                        # map(bool, [data[1] for data in tooltipData]),
+                        list(map(bool, [data[1] for data in tooltipData])),
                         False)
         if doShow:
             self.__tip.SetData(tooltipData)
@@ -70,9 +74,9 @@ class Timeline(tooltip.ToolTipMixin, timeline.TimeLine):
             return None
         
     def onPopup(self, event):
-        self.OnClickRelease(event) # Make sure the node is selected
+        self.OnClickRelease(event)  # Make sure the node is selected
         self.SetFocus()
-        wx.CallAfter(self.PopupMenu, self.popupMenu) # Make sure the select event has been processed
+        wx.CallAfter(self.PopupMenu, self.popupMenu)  # Make sure the select event has been processed
     
     def curselection(self):
         return self.__selection
