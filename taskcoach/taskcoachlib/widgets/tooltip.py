@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,16 +14,18 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import operating_system
+from builtins import range
+from builtins import object
+from .. import operating_system
 import wx
 import textwrap
 
 
 class ToolTipMixin(object):
-    """Subclass this and override OnBeforeShowToolTip to provide
-    dynamic tooltip over a control."""
+    """ Subclass this and override OnBeforeShowToolTip to provide
+    dynamic tooltip over a control. """
 
     def __init__(self, *args, **kwargs):
         self.__enabled = kwargs.pop('tooltipsEnabled', True)
@@ -280,5 +282,5 @@ class SimpleToolTip(ToolTipBase):
         return y + textHeight + 1
     
     def _drawIconSeparator(self, dc, x, top, bottom):
-        ''' Draw a vertical line between the icon and the text. '''
+        """ Draw a vertical line between the icon and the text. """
         dc.DrawLine(x, top, x, bottom)
