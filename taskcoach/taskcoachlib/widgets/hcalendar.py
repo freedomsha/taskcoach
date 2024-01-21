@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2014 Task Coach developers <developers@taskcoach.org>
 
@@ -14,14 +14,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from wxevents import CalendarCanvas, CalendarPrintout, EVT_EVENT_SELECTION_CHANGED, EVT_EVENT_DATES_CHANGED
-from taskcoachlib.domain import date
-from taskcoachlib.widgets import draganddrop
-from taskcoachlib import command, render
+from __future__ import absolute_import
+from __future__ import division
+
+from past.utils import old_div
+from .wxevents import CalendarCanvas, CalendarPrintout, EVT_EVENT_SELECTION_CHANGED, EVT_EVENT_DATES_CHANGED
+from ..domain import date
+from ..widgets import draganddrop
+from .. import command, render
 from . import tooltip
-import wx, datetime
+import wx
+import datetime
 
 
 class HierarchicalCalendar(tooltip.ToolTipMixin, CalendarCanvas):
@@ -49,7 +54,7 @@ class HierarchicalCalendar(tooltip.ToolTipMixin, CalendarCanvas):
         self.__adapter = parent
         self.getItemTooltipData = parent.getItemTooltipData
         super(HierarchicalCalendar, self).__init__(parent, **kwargs)
-        self.SetCalendarFormat(self.__calFormat) # This calls _Invalidate() so no need to call SetHeaderFormat
+        self.SetCalendarFormat(self.__calFormat)  # This calls _Invalidate() so no need to call SetHeaderFormat
 
         self.__tip = tooltip.SimpleToolTip(self)
         self.__dropTarget = draganddrop.DropTarget(self.OnDropURL, self.OnDropFiles, self.OnDropMail)
