@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import wx, re, sre_constants
-from taskcoachlib.widgets import tooltip
-from taskcoachlib.i18n import _
+from builtins import range
+import wx
+import re
+# import sre_constants
+from ..widgets import tooltip
+from ..i18n import _
 
 
 class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
@@ -57,23 +60,23 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         # pylint: disable=W0201
         menu = wx.Menu()
         self.__matchCaseMenuItem = menu.AppendCheckItem(wx.ID_ANY, 
-            _('&Match case'), _('Match case when filtering'))
+                                                        _('&Match case'), _('Match case when filtering'))
         self.__matchCaseMenuItem.Check(self.__matchCase)
         self.__includeSubItemsMenuItem = menu.AppendCheckItem(wx.ID_ANY, 
-            _('&Include sub items'), 
-            _('Include sub items of matching items in the search results'))
+                                                              _('&Include sub items'), 
+                                                              _('Include sub items of matching items in the search results'))
         self.__includeSubItemsMenuItem.Check(self.__includeSubItems)
         self.__searchDescriptionMenuItem = menu.AppendCheckItem(wx.ID_ANY,
-            _('&Search description too'),
-            _('Search both subject and description'))
+                                                                _('&Search description too'),
+                                                                _('Search both subject and description'))
         self.__searchDescriptionMenuItem.Check(self.__searchDescription)
         self.__regularExpressionMenuItem = menu.AppendCheckItem(wx.ID_ANY,
-            _('&Regular Expression'),
-            _('Consider search text as a regular expression'))
+                                                                _('&Regular Expression'),
+                                                                _('Consider search text as a regular expression'))
         self.__regularExpressionMenuItem.Check(self.__regularExpression)
         self.SetMenu(menu)
         
-    def PopupMenu(self): # pylint: disable=W0221
+    def PopupMenu(self):  # pylint: disable=W0221
         rect = self.GetClientRect()
         x, y = rect[0], rect[1] + rect[3] + 3
         self.PopupMenuXY(self.GetMenu(), x, y)
@@ -85,13 +88,13 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
                      (wx.EVT_TEXT, self.onFindLater),
                      (wx.EVT_SEARCHCTRL_CANCEL_BTN, self.onCancel),
                      (wx.EVT_MENU, self.onMatchCaseMenuItem, 
-                         self.__matchCaseMenuItem),
+                      self.__matchCaseMenuItem),
                      (wx.EVT_MENU, self.onIncludeSubItemsMenuItem, 
-                         self.__includeSubItemsMenuItem),
+                      self.__includeSubItemsMenuItem),
                      (wx.EVT_MENU, self.onSearchDescriptionMenuItem,
-                         self.__searchDescriptionMenuItem),
+                      self.__searchDescriptionMenuItem),
                      (wx.EVT_MENU, self.onRegularExpressionMenuItem,
-                         self.__regularExpressionMenuItem)]:
+                      self.__regularExpressionMenuItem)]:
             self.Bind(*args) 
         # Precreate menu item ids for the recent searches and bind the event
         # handler for those menu item ids. It's no problem that the actual menu
@@ -99,8 +102,8 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         self.__recentSearchMenuItemIds = \
             [wx.NewId() for dummy in range(self.__maxRecentSearches)]
         self.Bind(wx.EVT_MENU_RANGE, self.onRecentSearchMenuItem, 
-            id=self.__recentSearchMenuItemIds[0], 
-            id2=self.__recentSearchMenuItemIds[-1])
+                  id=self.__recentSearchMenuItemIds[0], 
+                  id2=self.__recentSearchMenuItemIds[-1])
 
     def setMatchCase(self, matchCase):
         self.__matchCase = matchCase
@@ -122,24 +125,25 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         if self.__regularExpression:
             try:
                 re.compile(self.GetValue())
-            except sre_constants.error:
+            # except sre_constants.error:
+            except re.error:
                 return False
         return True
 
-    def onFindLater(self, event): # pylint: disable=W0613
+    def onFindLater(self, event):  # pylint: disable=W0613
         # Start the timer so that the actual filtering will be done
         # only when the user pauses typing (at least 0.5 second)
         self.__timer.Start(500, oneShot=True)
 
-    def onFind(self, event): # pylint: disable=W0613
+    def onFind(self, event):  # pylint: disable=W0613
         if self.__timer.IsRunning():
             self.__timer.Stop()
         if not self.IsEnabled():
             return
         if not self.isValid():
             self.__tooltip.SetData([(None, 
-                [_('This is an invalid regular expression.'), 
-                 _('Defaulting to substring search.')])])
+                                   [_('This is an invalid regular expression.'), 
+                                    _('Defaulting to substring search.')])])
             x, y = self.GetParent().ClientToScreenXY(*self.GetPosition())
             height = self.GetClientSizeTuple()[1]
             self.DoShowTip(x + 3, y + height + 4, self.__tooltip)
@@ -209,9 +213,9 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         for index, searchString in enumerate(self.__recentSearches):
             menu.Append(self.__recentSearchMenuItemIds[index], searchString)
             
-    def Enable(self, enable=True): # pylint: disable=W0221
-        ''' When wx.SearchCtrl is disabled it doesn't grey out the buttons,
-            so we remove those. '''
+    def Enable(self, enable=True):  # pylint: disable=W0221
+        """ When wx.SearchCtrl is disabled it doesn't grey out the buttons,
+            so we remove those. """
         self.SetValue('' if enable else _('Viewer not searchable'))
         super(SearchCtrl, self).Enable(enable)
         self.ShowCancelButton(enable and bool(self.GetValue()))
