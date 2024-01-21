@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,21 +14,24 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import taskcoachlib.thirdparty.aui as aui
+from builtins import zip
+from builtins import range
+from builtins import object
+from ..thirdparty import aui
 import wx
 
 
 class GridCursor:
-    ''' Utility class to help when adding controls to a GridBagSizer. '''
+    """ Utility class to help when adding controls to a GridBagSizer. """
     
     def __init__(self, columns):
         self.__columns = columns
         self.__nextPosition = (0, 0)
     
     def __updatePosition(self, colspan):
-        ''' Update the position of the cursor, taking colspan into account. '''
+        """ Update the position of the cursor, taking colspan into account. """
         row, column = self.__nextPosition
         if column == self.__columns - colspan:
             row += 1
@@ -48,10 +51,10 @@ class GridCursor:
 
 
 class BookPage(wx.Panel):
-    ''' A page in a notebook. '''
+    """ A page in a notebook. """
     def __init__(self, parent, columns, growableColumn=None, *args, **kwargs):
         super(BookPage, self).__init__(parent, style=wx.TAB_TRAVERSAL, 
-            *args, **kwargs)
+                                       *args, **kwargs)
         self._sizer = wx.GridBagSizer(vgap=5, hgap=5)
         self._columns = columns
         self._position = GridCursor(columns)
@@ -65,7 +68,7 @@ class BookPage(wx.Panel):
         self.SetSizerAndFit(self._sizer)
 
     def __defaultFlags(self, controls):
-        ''' Return the default flags for placing a list of controls. '''
+        """ Return the default flags for placing a list of controls. """
         labelInFirstColumn = type(controls[0]) in [type(''), type(u'')]
         flags = []
         for columnIndex in range(len(controls)):
@@ -78,15 +81,15 @@ class BookPage(wx.Panel):
         return flags
 
     def __determineFlags(self, controls, flagsPassed):
-        ''' Return a merged list of flags by overriding the default
-            flags with flags passed by the caller. '''
+        """ Return a merged list of flags by overriding the default
+            flags with flags passed by the caller. """
         flagsPassed = flagsPassed or [None] * len(controls)
         defaultFlags = self.__defaultFlags(controls)
         return [defaultFlag if flagPassed is None else flagPassed 
                 for flagPassed, defaultFlag in zip(flagsPassed, defaultFlags)]
  
     def addEntry(self, *controls, **kwargs):
-        ''' Add a number of controls to the page. All controls are
+        """ Add a number of controls to the page. All controls are
             placed on one row, and together they form one entry. E.g. a
             label, a text field and an explanatory label. The default
             flags for placing the controls can be overridden by
@@ -97,9 +100,9 @@ class BookPage(wx.Panel):
             controls it is extended with as much 'None's as needed.
             So, addEntry(aLabel, aTextCtrl, flags=[None, wx.ALIGN_LEFT]) 
             will place the label with the default flag and will place the 
-            textCtrl left aligned. '''
+            textCtrl left aligned. """
         flags = self.__determineFlags(controls, kwargs.get('flags', None))
-        controls = [self.__createStaticTextControlIfNeeded(control) \
+        controls = [self.__createStaticTextControlIfNeeded(control) 
                     for control in controls if control is not None]
         lastColumnIndex = len(controls) - 1
         for columnIndex, control in enumerate(controls):
@@ -116,8 +119,7 @@ class BookPage(wx.Panel):
                self._growableColumn >= lastColumnIndex:
             self._sizer.AddGrowableCol(self._growableColumn)
             self._growableColumn = -1
-
-            
+    
     def addLine(self):
         line = wx.StaticLine(self)
         self.__addControl(0, line, flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL, 
@@ -135,7 +137,7 @@ class BookPage(wx.Panel):
         
 
 class BookMixin(object):
-    ''' Mixin class for *book '''
+    """ Mixin class for *book """
     
     _bitmapSize = (16, 16)
     pageChangedEvent = 'Subclass responsibility'
@@ -145,19 +147,19 @@ class BookMixin(object):
         self.Bind(self.pageChangedEvent, self.onPageChanged)
         
     def __getitem__(self, index):
-        ''' More pythonic way to get a specific page, also useful for iterating
-            over all pages, e.g: for page in notebook: ... '''
+        """ More pythonic way to get a specific page, also useful for iterating
+            over all pages, e.g: for page in notebook: ... """
         if index < self.GetPageCount():
             return self.GetPage(index)
         else:
             raise IndexError
     
     def onPageChanged(self, event):
-        ''' Can be overridden in a subclass to do something useful. '''
+        """ Can be overridden in a subclass to do something useful. """
         event.Skip()    
 
     def AddPage(self, page, name, bitmap=None):
-        ''' Override AddPage to allow for simply specifying the bitmap name. '''
+        """ Override AddPage to allow for simply specifying the bitmap name. """
         bitmap = wx.ArtProvider_GetBitmap(bitmap, wx.ART_MENU, self._bitmapSize)
         super(BookMixin, self).AddPage(page, name, bitmap=bitmap)
 
