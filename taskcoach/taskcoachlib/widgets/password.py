@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2011 Task Coach developers <developers@taskcoach.org>
 
@@ -14,7 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from future import standard_library
 standard_library.install_aliases()
@@ -33,29 +33,29 @@ class KeychainPasswordWidget(wx.Dialog):
         hsz = wx.BoxSizer(wx.HORIZONTAL)
         hsz.Add(wx.StaticText(pnl, wx.ID_ANY, _('Password:')), 0, wx.ALL, 3)
 
-        from taskcoachlib.thirdparty.keyring import get_password
+        from ..thirdparty.keyring import get_password
         password = get_password(self.domain, self.username)
         self.password = (password or '').decode('UTF-8')
         self.passwordField = wx.TextCtrl(pnl, wx.ID_ANY, self.password, style=wx.TE_PASSWORD)
         hsz.Add(self.passwordField, 1, wx.ALL, 3)
 
         vsz = wx.BoxSizer(wx.VERTICAL)
-        vsz.Add(hsz, 0, wx.ALL|wx.EXPAND, 3)
+        vsz.Add(hsz, 0, wx.ALL | wx.EXPAND, 3)
         self.keepInKeychain = wx.CheckBox(pnl, wx.ID_ANY, _('Store in keychain'))
         self.keepInKeychain.SetValue(bool(password))
-        vsz.Add(self.keepInKeychain, 0, wx.ALL|wx.EXPAND, 3)
+        vsz.Add(self.keepInKeychain, 0, wx.ALL | wx.EXPAND, 3)
 
         hsz = wx.BoxSizer(wx.HORIZONTAL)
         btnOK = wx.Button(pnl, wx.ID_ANY, _('OK'))
         hsz.Add(btnOK, 0, wx.ALL, 3)
         btnCancel = wx.Button(pnl, wx.ID_ANY, _('Cancel'))
         hsz.Add(btnCancel, 0, wx.ALL, 3)
-        vsz.Add(hsz, 0, wx.ALL|wx.ALIGN_CENTRE, 3)
+        vsz.Add(hsz, 0, wx.ALL | wx.ALIGN_CENTRE, 3)
 
         pnl.SetSizer(vsz)
 
         sz = wx.BoxSizer(wx.HORIZONTAL)
-        sz.Add(pnl, 1, wx.EXPAND|wx.ALL, 3)
+        sz.Add(pnl, 1, wx.EXPAND | wx.ALL, 3)
         self.SetSizer(sz)
         self.Fit()
 
@@ -67,7 +67,7 @@ class KeychainPasswordWidget(wx.Dialog):
 
     def OnOK(self, event):
         self.password = self.passwordField.GetValue()
-        from taskcoachlib.thirdparty.keyring import set_password
+        from ..thirdparty.keyring import set_password
         if self.keepInKeychain.GetValue():
             set_password(self.domain, self.username, self.password.encode('UTF-8'))
         else:
@@ -80,11 +80,13 @@ class KeychainPasswordWidget(wx.Dialog):
 
 _PASSWORDCACHE = None
 
+
 def _GetCachedPassword(domain, username, reset):
     global _PASSWORDCACHE
 
     if _PASSWORDCACHE is None:
-        import StringIO, traceback
+        import io as StringIO
+        import traceback
         bf = StringIO.StringIO()
         traceback.print_exc(file=bf)
         wx.MessageBox(_('There was a problem trying to find out your system\'s keychain.\nPlease file a bug report (see the Help menu) and attach a screenshot of this message.\nError was:\n\n%s') % bf.getvalue(), _('Error'), wx.OK)
@@ -98,9 +100,10 @@ def _GetCachedPassword(domain, username, reset):
         _PASSWORDCACHE[(domain, username)] = pwd
     return _PASSWORDCACHE[(domain, username)]
 
+
 def GetPassword(domain, username, reset=False):
     try:
-        from taskcoachlib.thirdparty.keyring import set_password, get_password
+        from ..thirdparty.keyring import set_password, get_password
     except:
         # Keychain unavailable.
         return _GetCachedPassword(domain, username, reset)
@@ -116,7 +119,7 @@ def GetPassword(domain, username, reset=False):
         # Bug seen on Ubuntu 13.10: secretstorage cannot import ._gi
         return _GetCachedPassword(domain, username, reset)
 
-    dlg = KeychainPasswordWidget(domain, username, None, wx.ID_ANY, _('Please enter your password'), style=wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP)
+    dlg = KeychainPasswordWidget(domain, username, None, wx.ID_ANY, _('Please enter your password'), style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
     try:
         dlg.CentreOnScreen()
         if dlg.ShowModal() == wx.ID_OK:
