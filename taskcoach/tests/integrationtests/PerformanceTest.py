@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,20 +14,27 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import time, os
-import test, mock
-from taskcoachlib import persistence, config
-from taskcoachlib.domain import task, category, note
-from taskcoachlib.syncml.config import createDefaultSyncConfig
+from __future__ import division
+
+from builtins import range
+from past.utils import old_div
+import time
+import os
+import test
+import mock
+from ...taskcoachlib import persistence, config
+from ...taskcoachlib.domain import task, category, note
+from ...taskcoachlib.syncml.config import createDefaultSyncConfig
 
 
 class PerformanceTest(test.TestCase):
     def createTestFile(self):
         task.Task.settings = config.Settings(load=False)
         taskList = task.TaskList([task.Task('test') for _ in range(self.nrTasks)])
-        taskfile = file(self.taskfilename, 'w')
+        # file -> open
+        taskfile = open(self.taskfilename, 'w')
         taskWriter = persistence.XMLWriter(taskfile)
         taskWriter.write(taskList, category.CategoryList(), note.NoteContainer(),
                          createDefaultSyncConfig('fake'), 'fake')
@@ -48,5 +55,6 @@ class PerformanceTest(test.TestCase):
         mockApp.iocontroller.open(self.taskfilename)
         end = time.time()
         self.assertEqual(self.nrTasks, len(mockApp.taskFile.tasks()))
-        self.failUnless(end-start < self.nrTasks/10)
+        # self.failUnless(end-start < self.nrTasks/10)
+        self.failUnless(end-start < old_div(self.nrTasks, 10))
         mockApp.quitApplication()
