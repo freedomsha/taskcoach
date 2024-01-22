@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2013 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import weakref
-import test, mock, os
+import test
+import mock
+import os
 
 
 class LeakTest(test.TestCase):
