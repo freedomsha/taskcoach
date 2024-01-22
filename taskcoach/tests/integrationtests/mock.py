@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import application
-from taskcoachlib.domain import task
+from builtins import object
+from ...taskcoachlib import application
+from ...taskcoachlib.domain import task
 
 
 class MockWxApp(object):
@@ -41,7 +42,7 @@ class MockWxApp(object):
     
     
 class App(application.Application):
-    def __init__(self, args=None): # pylint: disable=W0231
+    def __init__(self, args=None):  # pylint: disable=W0231
         self._options = None
         self._args = args or []
         self._Application__wx_app = MockWxApp()
@@ -58,7 +59,7 @@ class App(application.Application):
     def registerApp(self):
         pass
 
-    def init(self): # pylint: disable=W0221
+    def init(self):  # pylint: disable=W0221
         super(App, self).init(loadSettings=False, loadTaskFile=False)
 
     def addTask(self):
@@ -71,5 +72,3 @@ class App(application.Application):
         self.child = task.Task('Child')
         self.parent.addChild(self.child)
         self.taskFile.tasks().extend([self.parent])
-
-
