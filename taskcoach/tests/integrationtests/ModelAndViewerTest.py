@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, mock
-from taskcoachlib.domain import task, category
+import test
+import mock
+from ...taskcoachlib.domain import task, category
 
 
 class TaskViewerAndCategoryFilterIntegrationTestFixture(test.wxTestCase):
@@ -39,7 +40,7 @@ class TaskViewerAndCategoryFilterIntegrationTestFixture(test.wxTestCase):
         super(TaskViewerAndCategoryFilterIntegrationTestFixture, self).tearDown()
         
 
-class TaskListViewerAndCategoryFilterIntegrationTest( \
+class TaskListViewerAndCategoryFilterIntegrationTest(
         TaskViewerAndCategoryFilterIntegrationTestFixture):
             
     def testFilterOnCategoryChildDoesHideParent(self):
@@ -49,7 +50,7 @@ class TaskListViewerAndCategoryFilterIntegrationTest( \
             self.assertEqual(1, self.taskViewer.widget.GetItemCount())
 
 
-class TaskTreeViewerAndCategoryFilterIntegrationTest( \
+class TaskTreeViewerAndCategoryFilterIntegrationTest(
         TaskViewerAndCategoryFilterIntegrationTestFixture):
             
     def testFilterOnCategoryChildDoesNotHideParent(self):
@@ -57,4 +58,3 @@ class TaskTreeViewerAndCategoryFilterIntegrationTest( \
         self.taskViewer.expandAll()
         self.assertEqual(2, self.taskViewer.widget.GetItemCount())
         
-    
