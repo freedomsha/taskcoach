@@ -42,7 +42,7 @@ class EmptFileTest(test.TestCase):
     def testNoSourcePyFilesAreEmpty(self):
         self.assertEqual([], self.emptyPyFiles('taskcoachlib'))
 
-    '''
+    """
     def testAllUnittestPyFilesAreInManifest(self):
         self.assertEqual([], self.missingPyFiles('tests', 'unittests'))
     
@@ -51,4 +51,4 @@ class EmptFileTest(test.TestCase):
 
     def testAllIntegrationtestPyFilesAreInManifest(self):
         self.assertEqual([], self.missingPyFiles('tests', 'integrationtests'))
-    '''
+    """
