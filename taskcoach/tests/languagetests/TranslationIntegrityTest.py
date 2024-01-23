@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,18 +16,23 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import meta
+from __future__ import division
+
+from past.utils import old_div
+from builtins import object
+from ...taskcoachlib import meta
 import string  # pylint: disable=W0402
-import re  
+import re
 import test
-import shutil, os
+import shutil
+import os
 
 
 class TranslationIntegrityTestsMixin(object):
-    ''' Unittests for translations. This class is subclassed below for each
-        translated string in each language. '''
+    """ Unittests for translations. This class is subclassed below for each
+        translated string in each language. """
     
     conversionSpecificationRE = re.compile('%\(\w+\)[sd]')
     
@@ -47,9 +52,9 @@ class TranslationIntegrityTestsMixin(object):
     def testMatchingNonLiterals(self):
         for symbol in '\t', '|', '%s', '%d', '%.2f':
             self.assertEqual(self.englishString.count(symbol), 
-                self.translatedString.count(symbol),
-                "Symbol ('%s') doesn't match for '%s' and '%s'" % (symbol,
-                    self.englishString, self.translatedString))
+                             self.translatedString.count(symbol),
+                             "Symbol ('%s') doesn't match for '%s' and '%s'" % 
+                             (symbol, self.englishString, self.translatedString))
             
     def testMatchingAmpersands(self):
         # If the original string contains zero or one ampersands, it may be 
@@ -64,11 +69,11 @@ class TranslationIntegrityTestsMixin(object):
         nrTranslatedAmpersand = translatedString.count('&')
         if nrEnglishAmpersand <= 1 and not '\n' in self.englishString:
             self.failUnless(nrTranslatedAmpersand in [0, 1], 
-                "'%s' has more than one '&'" % self.translatedString)
+                            "'%s' has more than one '&'" % self.translatedString)
         else:
             self.assertEqual(nrEnglishAmpersand, nrTranslatedAmpersand,
-                "'%s' has more or less '&'s than '%s'" % (self.translatedString,
-                self.englishString))
+                             "'%s' has more or less '&'s than '%s'" % 
+                             (self.translatedString, self.englishString))
 
     usedShortcuts = dict()
     # Some keyboard shortcuts are used more than once, list those here:
@@ -95,7 +100,7 @@ class TranslationIntegrityTestsMixin(object):
                                            self.translatedString))
             
     def testShortCutIsAscii(self):
-        ''' Test that the translated short cut key is using ASCII only. '''
+        """ Test that the translated short cut key is using ASCII only. """
         if '\t' in self.translatedString:
             shortcut = set(self.translatedString.split('\t')[1])
             self.failUnless(shortcut & set(string.ascii_letters + string.digits))
@@ -107,7 +112,7 @@ class TranslationIntegrityTestsMixin(object):
     def testMatchingEllipses(self):
         self.assertEqual(self.ellipsisCount(self.englishString),
                          self.ellipsisCount(self.translatedString),
-                         "Ellipses ('...') don't match for '%s' and '%s'" % \
+                         "Ellipses ('...') don't match for '%s' and '%s'" %
                          (self.englishString, self.translatedString))
 
     umlautRE = re.compile(r'&[A-Za-z]uml;')
@@ -120,18 +125,20 @@ class TranslationIntegrityTestsMixin(object):
 class TranslationCoverageTestsMixin(object):
     def testNotComplete(self):
         if self.enabled:
-            percentDone = 100.0 * len(self.translation) / len(self.strings)
+            # percentDone = 100.0 * len(self.translation) / len(self.strings)
+            percentDone = old_div(100.0 * len(self.translation), len(self.strings))
             self.assertGreaterEqual(percentDone, 90.0, 'Translation for %s is only %.2f%% complete' % (self.language, percentDone))
 
     def testComplete(self):
         if not self.enabled:
-            percentDone = 100.0 * len(self.translation) / len(self.strings)
+            # percentDone = 100.0 * len(self.translation) / len(self.strings)
+            percentDone = old_div(100.0 * len(self.translation), len(self.strings))
             self.assertLess(percentDone, 90.0, 'Translation for %s is %.2f%% complete but disabled' % (self.language, percentDone))
 
 
 def installAllTestCaseClasses():
     shutil.copyfile(os.path.join(os.path.dirname(__file__), '../../i18n.in/messages.pot'), 'messages.po')
-    from taskcoachlib.i18n import po2dict
+    from ...taskcoachlib.i18n import po2dict
     po2dict.make('messages')
     allStrings = set(po2dict.STRINGS)
     for language, enabled in getLanguages():
@@ -139,39 +146,43 @@ def installAllTestCaseClasses():
 
 
 def getLanguages():
-    return [(language, enabled) for language, enabled in meta.data.languages.values() \
+    # return [(language, enabled) for language, enabled in meta.data.languages.values() \
+    return [(language, enabled) for language, enabled in list(meta.data.languages.values())
             if language is not None]
 
 
 def installTestCaseClasses(language, enabled, allStrings):
     translation = __import__('taskcoachlib.i18n.%s' % language, 
                              fromlist=['dict'])
-    for englishString, translatedString in translation.dict.iteritems():        
+    # for englishString, translatedString in translation.dict.iteritems():
+    for englishString, translatedString in list(translation.dict.items()):
         installTranslationTestCaseClass(language, englishString, 
-                                              translatedString)
+                                        translatedString)
     installLanguageTestCaseClass(language, enabled, translation, allStrings)
 
 
 def installTranslationTestCaseClass(language, englishString, 
-                                          translatedString):
+                                    translatedString):
     testCaseClassName = translationTestCaseClassName(language, englishString)
     testCaseClass = translationTestCaseClass(testCaseClassName, 
-        language, englishString, translatedString)
+                                             language, englishString, translatedString)
     globals()[testCaseClassName] = testCaseClass
+
 
 def installLanguageTestCaseClass(language, enabled, translation, allStrings):
     testCaseClassName = languageTestCaseClassName(language)
     testCaseClass = languageTestCaseClass(testCaseClassName, language, enabled, translation, allStrings)
     globals()[testCaseClassName] = testCaseClass
 
+
 def translationTestCaseClassName(language, englishString, 
                                  prefix='TranslationIntegrityTest'):
-    ''' Generate a class name for the test case class based on the language
-        and the English string. '''
+    """ Generate a class name for the test case class based on the language
+        and the English string. """
     # Make sure we only use characters allowed in Python identifiers:
     englishString = englishString.replace(' ', '_')
     allowableCharacters = string.ascii_letters + string.digits + '_'
-    englishString = ''.join([char for char in englishString \
+    englishString = ''.join([char for char in englishString 
                              if char in allowableCharacters])
     className = '%s_%s_%s' % (prefix, language, englishString)
     count = 0
@@ -179,6 +190,7 @@ def translationTestCaseClassName(language, englishString,
         count += 1
         className = '%s_%s_%s_%d' % (prefix, language, englishString, count)
     return className
+
 
 def languageTestCaseClassName(language, prefix='TranslationCoverageTests'):
     className = '%s_%s' % (prefix, language)
@@ -188,6 +200,7 @@ def languageTestCaseClassName(language, prefix='TranslationCoverageTests'):
         className = '%s_%s_%s' % (prefix, language, count)
     return className
 
+
 def translationTestCaseClass(className, language, englishString, translatedString):
     class_ = type(className, (TranslationIntegrityTestsMixin, test.TestCase), 
                   {})
@@ -195,6 +208,7 @@ def translationTestCaseClass(className, language, englishString, translatedStrin
     class_.englishString = englishString
     class_.translatedString = translatedString
     return class_
+
 
 def languageTestCaseClass(className, language, enabled, translation, allStrings):
     class_ = type(className, (TranslationCoverageTestsMixin, test.TestCase), dict())
