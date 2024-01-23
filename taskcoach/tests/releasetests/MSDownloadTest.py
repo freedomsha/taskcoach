@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, urllib2, re
-from taskcoachlib import help # pylint: disable=W0622
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+import test
+from urllib import request as urllib2
+import urllib.error
+import urllib.parse
+import re
+from ...taskcoachlib import help  # pylint: disable=W0622
 
 
 class MSDownloadTest(test.TestCase):
@@ -26,7 +33,7 @@ class MSDownloadTest(test.TestCase):
         req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36')
         try:
             content = urllib2.build_opener().open(req).read()
-        except Exception as message: # pylint: disable=W0703
+        except Exception as message:  # pylint: disable=W0703
             self.fail('Could not download page: %s' % str(message))
 
         self.failUnless(re.search('vcredist[a-zA-Z0-9_-]*\.exe', content))
