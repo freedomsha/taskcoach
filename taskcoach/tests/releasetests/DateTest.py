@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import test
 
+
 class DateTest(test.TestCase):
     def testNoQuestionMarkInMetaDataDate(self):
         from ...taskcoachlib import meta
