@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,7 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import os
 import test
@@ -22,7 +22,8 @@ import test
 
 class ManifestTest(test.TestCase):
     def setUp(self):
-        manifestFile = file(os.path.join(test.projectRoot, 'MANIFEST'))
+        # manifestFile = file(os.path.join(test.projectRoot, 'MANIFEST'))
+        manifestFile = open(os.path.join(test.projectRoot, 'MANIFEST'))
         manifestLines = manifestFile.readlines()
         manifestFile.close()
         self.manifest = [os.path.join(test.projectRoot, filename[:-1]) 
@@ -57,4 +58,3 @@ class ManifestTest(test.TestCase):
 
     def testAllIntegrationtestPyFilesAreInManifest(self):
         self.assertEqual([], self.missingPyFiles('tests', 'integrationtests'))
-
