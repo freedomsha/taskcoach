@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,14 +14,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import patterns, command
-from taskcoachlib.domain import task, date
-from CommandTestCase import CommandTestCase
+from __future__ import absolute_import
+
+from ....taskcoachlib import patterns, command
+from ....taskcoachlib.domain import task, date
+from .CommandTestCase import CommandTestCase
 
 
-    
 class DeleteCommandTest(CommandTestCase):
     def setUp(self):
         super(DeleteCommandTest, self).setUp()
@@ -69,9 +70,9 @@ class EditSubjectTestCase(CommandTestCase):
     def testEditMultipleSubjects(self):
         self.editSubject('new', self.item1, self.item2)
         self.assertDoUndoRedo(lambda: self.assertEqual('newnew', 
-                                      self.item1.subject() + self.item2.subject()),
+                                                       self.item1.subject() + self.item2.subject()),
                               lambda: self.assertEqual('item1item2', 
-                                      self.item1.subject() + self.item2.subject()))
+                                                       self.item1.subject() + self.item2.subject()))
 
     def testItemsAreNotNew(self):
         self.failIf(command.EditSubjectCommand(self.container, [], 
@@ -106,13 +107,13 @@ class EditDescriptionTestCase(CommandTestCase):
     def testEditMultipleDescriptions(self):
         self.edit_description('new', self.item1, self.item2)
         self.assertDoUndoRedo(lambda: self.assertEqual('newnew', 
-                                      self.item1.description() + self.item2.description()),
+                                                       self.item1.description() + self.item2.description()),
                               lambda: self.assertEqual('item1item2', 
-                                      self.item1.description() + self.item2.description()))
+                                                       self.item1.description() + self.item2.description()))
 
     def testItemsAreNotNew(self):
         self.failIf(command.EditDescriptionCommand(self.container, [], 
-                    newValue='New description').items_are_new())
+                                                   newValue='New description').items_are_new())
 
     def testModificationDateTime(self):
         self.edit_description('new', self.item1)
