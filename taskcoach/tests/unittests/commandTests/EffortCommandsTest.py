@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from unittests import asserts
-from CommandTestCase import CommandTestCase
-from taskcoachlib import command, config
-from taskcoachlib.domain import task, effort, date
+from __future__ import absolute_import
+
+from ...unittests import asserts
+from .CommandTestCase import CommandTestCase
+from ....taskcoachlib import command, config
+from ....taskcoachlib.domain import task, effort, date
 
 
 class EffortCommandTestCase(CommandTestCase, asserts.CommandAssertsMixin):
@@ -65,10 +67,10 @@ class NewEffortCommandTest(EffortCommandTestCase):
         newEffort.setTask(secondTask)
         newEffortCommand.do()
         self.assertDoUndoRedo(
-            lambda: self.failUnless(newEffort in secondTask.efforts() and \
-                    newEffort not in self.originalTask.efforts()),
-            lambda: self.failUnless(newEffort not in secondTask.efforts() and \
-                    newEffort not in self.originalTask.efforts()))
+            lambda: self.failUnless(newEffort in secondTask.efforts() and 
+                                    newEffort not in self.originalTask.efforts()),
+            lambda: self.failUnless(newEffort not in secondTask.efforts() and 
+                                    newEffort not in self.originalTask.efforts()))
         
 
 class StartAndStopEffortCommandTest(EffortCommandTestCase):
