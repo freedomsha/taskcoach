@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from unittests import asserts
-from CommandTestCase import CommandTestCase
-from taskcoachlib import command, patterns
-from taskcoachlib.domain import base, note, category, task
+from __future__ import absolute_import
+
+from ...unittests import asserts
+from .CommandTestCase import CommandTestCase
+from ....taskcoachlib import command, patterns
+from ....taskcoachlib.domain import base, note, category, task
 
 
 class NoteOwnerUnderTest(note.NoteOwner, base.Object):
@@ -50,7 +52,8 @@ class NewNoteCommandTest(NoteCommandTestCase):
         cat = category.Category('cat')
         newNote = self.new(categories=[cat])
         self.assertDoUndoRedo(
-            lambda: self.assertEqual(set([cat]), newNote.categories()),
+            # lambda: self.assertEqual(set([cat]), newNote.categories()),
+            lambda: self.assertEqual({cat}, newNote.categories()),
             lambda: self.assertEqual([], self.notes))
 
 
@@ -58,7 +61,7 @@ class AddNoteCommandTest(NoteCommandTestCase):
     def testAddedNoteIsRootItem(self):
         owner = NoteOwnerUnderTest()
         command.AddNoteCommand([owner], [owner]).do()
-        self.failUnless(owner.notes()[0].parent() is None) # pylint: disable=E1101
+        self.failUnless(owner.notes()[0].parent() is None)  # pylint: disable=E1101
         
 
 class NewSubNoteCommandTest(NoteCommandTestCase):
@@ -81,7 +84,7 @@ class NewSubNoteCommandTest(NoteCommandTestCase):
         newSubNote = self.note.children()[0]
         self.assertDoUndoRedo(lambda: self.assertEqual([newSubNote], 
                                                        self.note.children()),
-            lambda: self.assertEqual([self.note], self.notes))
+                              lambda: self.assertEqual([self.note], self.notes))
 
 
 class DragAndDropNoteCommand(NoteCommandTestCase):
@@ -113,5 +116,5 @@ class DragAndDropNoteCommand(NoteCommandTestCase):
     def testDropAsRootTask(self):
         self.dragAndDrop([], [self.grandchild])
         self.assertDoUndoRedo(lambda: self.assertEqual(None, 
-            self.grandchild.parent()), lambda:
-            self.assertEqual(self.child, self.grandchild.parent()))
+                              self.grandchild.parent()), lambda:
+                              self.assertEqual(self.child, self.grandchild.parent()))
