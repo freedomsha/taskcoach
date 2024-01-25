@@ -109,7 +109,8 @@ class NoteTest(test.TestCase):
             parent=None, children=[], status=42, attachments=[], categories=[],
             fgColor=(1, 1, 1, 1), bgColor=(0, 0, 0, 255), font=wx.SWISS_FONT,
             icon='icon', selectedIcon='selected', creationDateTime=date.Now(),
-            modificationDateTime=date.Now(), ordering=42L))
+            # modificationDateTime=date.Now(), ordering=42L))
+            modificationDateTime=date.Now(), ordering=42))
         self.assertEqual('new', self.note.description())
 
 
