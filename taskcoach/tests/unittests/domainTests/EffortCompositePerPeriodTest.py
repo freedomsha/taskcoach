@@ -16,10 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from taskcoachlib import config
-from taskcoachlib.domain import task, effort, date
-from taskcoachlib.thirdparty.pubsub import pub
-import EffortCompositeTest
+from __future__ import absolute_import
+
+from ....taskcoachlib import config
+from ....taskcoachlib.domain import task, effort, date
+from ....taskcoachlib.thirdparty.pubsub import pub
+from . import EffortCompositeTest
 import test
 
 
