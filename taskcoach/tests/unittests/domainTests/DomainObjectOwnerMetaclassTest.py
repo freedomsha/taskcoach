@@ -16,12 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 import test
-from taskcoachlib.domain import base
+from ....taskcoachlib.domain import base
+from future.utils import with_metaclass
 
 
-class OwnerUnderTest(object):
-    __metaclass__ = base.DomainObjectOwnerMetaclass
+# class OwnerUnderTest(object):
+#    __metaclass__ = base.DomainObjectOwnerMetaclass
+class OwnerUnderTest(with_metaclass(base.DomainObjectOwnerMetaclass, object)):
     __ownedType__ = 'foo'
 
 
