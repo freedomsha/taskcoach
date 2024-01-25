@@ -16,10 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test, wx
-from taskcoachlib import patterns
-from taskcoachlib.domain import category, categorizable, date
+from __future__ import division
 
+from past.utils import old_div
+import test
+import wx
+from ....taskcoachlib import patterns
+from ....taskcoachlib.domain import category, categorizable, date
 
 
 class CategorizableCompositeObjectTest(test.TestCase):
@@ -558,7 +561,8 @@ class CategorizableCompositeObjectTest(test.TestCase):
         biggerFont = wx.Font(font.GetPointSize() + 2, font.GetFamily(),
                              font.GetStyle(), font.GetWeight())
         anotherCategory.setFont(biggerFont)
-        expectedFontSize = (biggerFont.GetPointSize() + font.GetPointSize()) / 2
+        # expectedFontSize = (biggerFont.GetPointSize() + font.GetPointSize()) / 2
+        expectedFontSize = old_div((biggerFont.GetPointSize() + font.GetPointSize()), 2)
         self.assertEqual(expectedFontSize, 
                          self.categorizable.font(recursive=True).GetPointSize())
 
