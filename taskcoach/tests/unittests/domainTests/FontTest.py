@@ -16,8 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test, wx
-from taskcoachlib.domain.attribute import font
+from __future__ import division
+
+from past.utils import old_div
+import test
+import wx
+from ....taskcoachlib.domain.attribute import font
 
 
 class MixFontsTest(test.TestCase):
@@ -59,7 +63,8 @@ class MixFontsTest(test.TestCase):
     def testFontSize(self):
         biggerFont = wx.Font(self.font.GetPointSize() + 2, self.font.GetFamily(),
                              self.font.GetStyle(), self.font.GetWeight())
-        expectedFontSize = (biggerFont.GetPointSize() + self.font.GetPointSize()) / 2
+        # expectedFontSize = (biggerFont.GetPointSize() + self.font.GetPointSize()) / 2
+        expectedFontSize = old_div((biggerFont.GetPointSize() + self.font.GetPointSize()), 2)
         self.assertEqual(expectedFontSize, 
                          self.mixFonts(self.font, biggerFont).GetPointSize())
 
