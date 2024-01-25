@@ -16,7 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test, time, datetime
+from builtins import str
+import test
+import time
+import datetime
 from taskcoachlib.domain import date
 
 
