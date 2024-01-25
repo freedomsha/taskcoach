@@ -61,7 +61,8 @@ class CategoryTest(test.TestCase):
                         icon='icon', selectedIcon='selected',
                         creationDateTime=date.Now(), 
                         modificationDateTime=date.Now(),
-                        ordering=42L)
+                        # ordering=42L)
+                        ordering=42)
         for eventType in self.category.modificationEventTypes():
             self.registerObserver(eventType)
         self.category.__setstate__(newState)
