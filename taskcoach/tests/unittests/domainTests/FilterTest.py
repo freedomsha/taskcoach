@@ -16,9 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test, weakref
-from taskcoachlib import patterns, config
-from taskcoachlib.domain import task, base
+from builtins import object
+import test
+import weakref
+from ....taskcoachlib import patterns, config
+from ....taskcoachlib.domain import task, base
+
 
 
 class TestFilter(base.Filter):
