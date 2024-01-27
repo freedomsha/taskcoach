@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, wx, time
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import task, date, effort
+from builtins import object
+import test
+import wx
+import time
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import task, date, effort
 
 
 class ReminderControllerUnderTest(gui.ReminderController):
@@ -27,12 +30,14 @@ class ReminderControllerUnderTest(gui.ReminderController):
         self.userAttentionRequested = False
         super(ReminderControllerUnderTest, self).__init__(*args, **kwargs)
         
-    def showReminderMessage(self, message): # pylint: disable=W0221
+    def showReminderMessage(self, message):  # pylint: disable=W0221
         class DummyDialog(object):
             def __init__(self, *args, **kwargs):
                 pass
+                
             def Bind(self, *args, **kwargs):
                 pass
+                
             def Show(self):
                 pass
         super(ReminderControllerUnderTest, self).showReminderMessage(message, DummyDialog)
@@ -55,7 +60,7 @@ class ReminderControllerTestCase(test.TestCase):
         self.effortList = effort.EffortList(self.taskList)
         self.dummyWindow = DummyWindow()
         self.reminderController = ReminderControllerUnderTest(self.dummyWindow, 
-            self.taskList, self.effortList, settings)
+                                                              self.taskList, self.effortList, settings)
         self.nowDateTime = date.DateTime.now()
         self.reminderDateTime = self.nowDateTime + date.ONE_HOUR
         
@@ -114,17 +119,22 @@ class ReminderControllerTest(ReminderControllerTestCase):
     def dummyCloseEvent(self, snoozeTimeDelta=None, openAfterClose=False):
         class DummySnoozeOptions(object):
             Selection = 0
-            def GetClientData(self, *args): # pylint: disable=W0613
+            
+            def GetClientData(self, *args):  # pylint: disable=W0613
                 return snoozeTimeDelta
+                
         class DummyDialog(object):
             task = self.task
             openTaskAfterClose = openAfterClose
             ignoreSnoozeOption = False
             snoozeOptions = DummySnoozeOptions()
+            
             def Destroy(self):
                 pass
+                
         class DummyEvent(object):
             EventObject = DummyDialog()
+            
             def Skip(self):
                 pass
         return DummyEvent()
@@ -132,19 +142,19 @@ class ReminderControllerTest(ReminderControllerTestCase):
     def testOnCloseReminderResetsReminder(self):
         self.task.setReminder(self.reminderDateTime)
         self.reminderController.onCloseReminderDialog(self.dummyCloseEvent(), 
-                                                     show=False)
+                                                      show=False)
         self.assertEqual(None, self.task.reminder())
 
     def testOnCloseReminderSetsReminder(self):
         self.task.setReminder(self.reminderDateTime)
-        self.reminderController.onCloseReminderDialog(\
+        self.reminderController.onCloseReminderDialog(
             self.dummyCloseEvent(date.ONE_HOUR), show=False)
-        self.failUnless(abs(self.nowDateTime + date.ONE_HOUR - self.task.reminder()) \
+        self.failUnless(abs(self.nowDateTime + date.ONE_HOUR - self.task.reminder()) 
                         < date.TimeDelta(seconds=5))
 
     def testOnCloseMayOpenTask(self):
         self.task.setReminder(self.reminderDateTime)
-        frame = self.reminderController.onCloseReminderDialog(\
+        frame = self.reminderController.onCloseReminderDialog(
             self.dummyCloseEvent(openAfterClose=True), show=False)
         self.failUnless(frame)
         
