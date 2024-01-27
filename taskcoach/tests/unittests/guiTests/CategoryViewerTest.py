@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, wx
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import category
+from builtins import zip
+import test
+import wx
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import category
  
 
 class CategoryViewerTest(test.wxTestCase):
