@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,14 +16,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import str
+from builtins import object
 import wx
 import test
-from taskcoachlib import gui, config
-from taskcoachlib.gui import uicommand
-from taskcoachlib.domain import task, category, date
-from taskcoachlib.thirdparty.pubsub import pub
+from ....taskcoachlib import gui, config
+from ....taskcoachlib.gui import uicommand
+from ....taskcoachlib.domain import task, category, date
+from ....taskcoachlib.thirdparty.pubsub import pub
 
 
 class MockViewerContainer(object):
@@ -69,9 +71,9 @@ class MockViewerContainer(object):
                 uicommand.ViewerSortByTaskStatusFirst(viewer=self), 
                 None, 
                 uicommand.ViewerSortByCommand(viewer=self, value='subject',
-                    menuText='Sub&ject', helpText='help'), 
+                                              menuText='Sub&ject', helpText='help'), 
                 uicommand.ViewerSortByCommand(viewer=self, value='description',
-                    menuText='&Description', helpText='help')]
+                                              menuText='&Description', helpText='help')]
         
 
 class MenuTestCase(test.wxTestCase):
@@ -132,7 +134,7 @@ class MenuWithRadioItemsTest(MenuWithBooleanMenuItemsTestCase):
     def createCommands(self):
         return [uicommand.UIRadioCommand(settings=self.settings, 
                                          section='view', setting='toolbar', 
-                                         value=value) \
+                                         value=value) 
                 for value in [None, (16, 16)]]
 
     def testRadioItem_FirstChecked(self):
