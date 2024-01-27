@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from builtins import object
 from ....taskcoachlib import patterns, config
@@ -66,11 +66,11 @@ class TaskTestCase(test.TestCase):
     def createTasks(self):
         def createAttachments(kwargs):
             if 'attachments' in kwargs:
-                kwargs['attachments'] = [attachment.FileAttachment(filename) \
+                kwargs['attachments'] = [attachment.FileAttachment(filename) 
                                          for filename in kwargs['attachments']]
             return kwargs
 
-        return [task.Task(**createAttachments(kwargs)) for kwargs in \
+        return [task.Task(**createAttachments(kwargs)) for kwargs in 
                 self.taskCreationKeywordArguments()]
 
     def taskCreationKeywordArguments(self):  # pylint: disable=R0201
@@ -93,7 +93,8 @@ class TaskTestCase(test.TestCase):
 
         
 class CommonTaskTestsMixin(asserts.TaskAssertsMixin):
-    ''' These tests should succeed for all tasks, regardless of state. '''
+    """ These tests should succeed for all tasks, regardless of state. """
+    
     def testCopy(self):
         copy = self.task.copy()
         self.assertTaskCopy(copy, self.task)
@@ -109,7 +110,8 @@ class CommonTaskTestsMixin(asserts.TaskAssertsMixin):
 
 
 class NoBudgetTestsMixin(object):
-    ''' These tests should succeed for all tasks without budget. '''
+    """ These tests should succeed for all tasks without budget. """
+    
     def testTaskHasNoBudget(self):
         self.assertEqual(date.TimeDelta(), self.task.budget())
         
@@ -860,12 +862,14 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
     # Prerequisites
     
     def testAddOnePrerequisite(self):
-        prerequisites = set([task.Task()])
+        # prerequisites = set([task.Task()])
+        prerequisites = {task.Task()}
         self.task.addPrerequisites(prerequisites)
         self.assertEqual(prerequisites, self.task.prerequisites())
 
     def testAddTwoPrerequisites(self):
-        prerequisites = set([task.Task(), task.Task()])
+        # prerequisites = set([task.Task(), task.Task()])
+        prerequisites = {task.Task(), task.Task()}
         self.task.addPrerequisites(prerequisites)
         self.assertEqual(prerequisites, self.task.prerequisites())
         
@@ -878,7 +882,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         pub.subscribe(onEvent, task.Task.prerequisitesChangedEventType())
         prerequisite = task.Task()
         self.task.addPrerequisites([prerequisite])
-        self.assertEqual([(set([prerequisite]), self.task)], events)
+        # self.assertEqual([(set([prerequisite]), self.task)], events)
+        self.assertEqual([({prerequisite}, self.task)], events)
          
     def testRemovePrerequisiteThatHasNotBeenAdded(self):
         prerequisite = task.Task()
@@ -886,7 +891,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.failIf(self.task.prerequisites())
         
     def testAddPrerequisiteKeepsTaskInactive(self):
-        prerequisites = set([task.Task()])
+        # prerequisites = set([task.Task()])
+        prerequisites = {task.Task()}
         self.task.addPrerequisites(prerequisites)
         self.failUnless(self.task.inactive())
         
@@ -898,7 +904,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
     # Dependencies
 
     def testAddOneDependency(self):
-        dependencies = set([task.Task()])
+        # dependencies = set([task.Task()])
+        dependencies = {task.Task()}
         self.task.addDependencies(dependencies)
         self.assertEqual(dependencies, self.task.dependencies())
 
@@ -916,7 +923,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         pub.subscribe(onEvent, task.Task.dependenciesChangedEventType())
         dependency = task.Task()
         self.task.addDependencies([dependency])
-        self.assertEqual([(set([dependency]), self.task)], events)
+        # self.assertEqual([(set([dependency]), self.task)], events)
+        self.assertEqual([({dependency}, self.task)], events)
         
     def testRemoveDependencyThatHasNotBeenAdded(self):
         dependency = task.Task()
@@ -996,7 +1004,7 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.assertEqual(previousDependencies, self.task.dependencies())
 
     def testModificationEventTypes(self):  # pylint: disable=E1003
-        self.assertEqual(super(task.Task, self.task).modificationEventTypes() +\
+        self.assertEqual(super(task.Task, self.task).modificationEventTypes() +
              [task.Task.plannedStartDateTimeChangedEventType(),
               task.Task.dueDateTimeChangedEventType(),
               task.Task.actualStartDateTimeChangedEventType(),
@@ -1123,7 +1131,7 @@ class OverdueTaskTest(TaskTestCase, CommonTaskTestsMixin):
         self.failIf(self.task.overdue())
 
     def testDueDateTime(self):
-        self.assertAlmostEqual(\
+        self.assertAlmostEqual(
             self.taskCreationKeywordArguments()[0]['dueDateTime'].toordinal(),
             self.task.dueDateTime().toordinal())
 
@@ -1393,7 +1401,7 @@ class TaskWithoutPlannedStartDateTimeTest(TaskTestCase, CommonTaskTestsMixin):
     def testNoAppearanceNotificationWhenUncompletedPrerequisiteIsCompleted(self):
         # pylint: disable=E1101
         self.task.addPrerequisites([self.task2])
-        self.task2.addDependencies([self.task])
+        self.task2.addDependencies([self.task])set(events))
         self.registerObserver(self.task.appearanceChangedEventType(), eventSource=self.task)
         self.task2.setCompletionDateTime()
         self.failIf(self.events)
@@ -1510,7 +1518,7 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         self.failIf(self.events)
 
     def testRemoveChildWithBudgetCausesBudgetNotification(self):
-        self.task1_1.setBudget(date.TimeDelta(hours=100))
+        self.task1_1.setBudget(date.TimeDelta(hours=100))set(events))
         events = []
         
         def onEvent(newValue, sender):
@@ -1612,7 +1620,7 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         def onEvent(newValue, sender):
             events.append((newValue, sender))
         
-        self.task1_1.setPriority(-10)
+        self.task1_1.setPriority(-10)set(events))
         pub.subscribe(onEvent, task.Task.priorityChangedEventType())
         self.task1.removeChild(self.task1_1)
         self.failIf(events)
@@ -1693,7 +1701,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         pub.subscribe(onEvent, task.Task.dueDateTimeChangedEventType())
         now = date.Now()
         self.task1_1.setDueDateTime(now)
-        self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        # self.assertEqual(set([(now, self.task1), (now, self.task1_1)]),
+        self.assertEqual({(now, self.task1), (now, self.task1_1)},  
                          set(events))
         
     def testRecursiveDueDateTimeWhenChildDueTodayAndCompleted(self):
@@ -1733,7 +1742,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         pub.subscribe(onEvent, task.Task.plannedStartDateTimeChangedEventType())
         now = date.Now()
         self.task1_1.setPlannedStartDateTime(now)
-        self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        # self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        self.assertEqual({(now, self.task1), (now, self.task1_1)},
                          set(events))
         
     def testRecursivePlannedStartDateTimeWhenChildStartsYesterday(self):
@@ -1754,7 +1764,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         pub.subscribe(onEvent, task.Task.actualStartDateTimeChangedEventType())
         now = date.Now()
         self.task1_1.setActualStartDateTime(now)
-        self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        # self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        self.assertEqual({(now, self.task1), (now, self.task1_1)},
                          set(events))
 
     def testRecursiveActualStartDateTimeWhenChildStartsYesterday(self):
@@ -1780,7 +1791,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         pub.subscribe(onEvent, task.Task.completionDateTimeChangedEventType())
         now = date.Now()
         self.task1_1.setCompletionDateTime(now)
-        self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        # self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        self.assertEqual({(now, self.task1), (now, self.task1_1)},
                          set(events))
         
     def testRecursiveCompletionDateTimeWhenChildIsCompletedYesterday(self):
@@ -1798,7 +1810,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         pub.subscribe(onEvent, task.Task.reminderChangedEventType())
         now = date.Now()
         self.task1_1.setReminder(now)
-        self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        # self.assertEqual(set([(now, self.task1), (now, self.task1_1)]), 
+        self.assertEqual({(now, self.task1), (now, self.task1_1)},
                          set(events))
         
     def testNotAllChildrenAreCompleted(self):
@@ -1971,7 +1984,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
         pub.subscribe(onEvent, self.task1.trackingChangedEventType())
         activeEffort = effort.Effort(self.task1_1)
         self.task1_1.addEffort(activeEffort)
-        self.assertEqual(set([(True, self.task1), (True, self.task1_1)]), 
+        # self.assertEqual(set([(True, self.task1), (True, self.task1_1)]),
+        self.assertEqual({(True, self.task1), (True, self.task1_1)},
                          set(events))
 
     def testNotificationWhenChildTrackingStops(self):
@@ -1984,7 +1998,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
             
         pub.subscribe(onEvent, task.Task.trackingChangedEventType())
         activeEffort.setStop()
-        self.assertEqual(set([(False, self.task), (False, self.task1_1)]), 
+        # self.assertEqual(set([(False, self.task), (False, self.task1_1)]), 
+        self.assertEqual({(False, self.task), (False, self.task1_1)},
                          set(events))
 
     def testSetFixedFeeOfChild(self):
@@ -2311,8 +2326,8 @@ class TaskWithOneEffortTest(TaskTestCase, CommonTaskTestsMixin):
 class TaskWithTwoEffortsTest(TaskTestCase, CommonTaskTestsMixin):
     def taskCreationKeywordArguments(self):
         return [{'efforts': [effort.Effort(None, date.DateTime(2005, 1, 1),
-            date.DateTime(2005, 1, 2)), effort.Effort(None, 
-            date.DateTime(2005, 2, 1), date.DateTime(2005, 2, 2))]}]
+                                           date.DateTime(2005, 1, 2)), effort.Effort(None, 
+                                           date.DateTime(2005, 2, 1), date.DateTime(2005, 2, 2))]}]
     
     def setUp(self):
         super(TaskWithTwoEffortsTest, self).setUp()
@@ -2440,7 +2455,7 @@ class TaskWithChildAndEffortTest(TaskTestCase, CommonTaskTestsMixin):
 
 class TaskWithGrandChildAndEffortTest(TaskTestCase, CommonTaskTestsMixin):
     def taskCreationKeywordArguments(self):
-        return [{'children': [task.Task(children=[task.Task( \
+        return [{'children': [task.Task(children=[task.Task( 
             efforts=[effort.Effort(None, date.DateTime(2005, 3, 1), 
             date.DateTime(2005, 3, 2))])], efforts=[effort.Effort(None, 
             date.DateTime(2005, 2, 1), date.DateTime(2005, 2, 2))])], 
@@ -2448,8 +2463,8 @@ class TaskWithGrandChildAndEffortTest(TaskTestCase, CommonTaskTestsMixin):
             date.DateTime(2005, 1, 2))]}]
 
     def testTimeSpentRecursivelyOnTaskEqualsTotalEffortDuration(self):
-        self.assertEqual(self.task1effort1.duration() + \
-                         self.task1_1effort1.duration() + \
+        self.assertEqual(self.task1effort1.duration() + 
+                         self.task1_1effort1.duration() + 
                          self.task1_1_1effort1.duration(), 
                          self.task1.timeSpent(recursive=True))
 
@@ -2878,14 +2893,16 @@ class TaskWithHourlyFeeFixture(TaskTestCase, CommonTaskTestsMixin):
 class TaskWithCategoryTestCase(TaskTestCase):
     def taskCreationKeywordArguments(self):
         self.category = category.Category('category')  # pylint: disable=W0201
-        return [dict(categories=set([self.category]))]
+        # return [dict(categories=set([self.category]))]
+        return [dict(categories={self.category})]
 
     def setUp(self):
         super(TaskWithCategoryTestCase, self).setUp()
         self.category.addCategorizable(self.task)
 
     def testCategory(self):
-        self.assertEqual(set([self.category]), self.task.categories())
+        # self.assertEqual(set([self.category]), self.task.categories())
+        self.assertEqual({self.category}, self.task.categories())
 
     def testCategoryIcon(self):
         self.category.setIcon('icon')
@@ -2966,7 +2983,8 @@ class TaskWithPrerequisite(TaskTestCase):
         self.assertEqual([(set([]), self.task)], events)
         
     def testSetPrerequisitesRemovesOldPrerequisites(self):
-        newPrerequisites = set([task.Task()])
+        # newPrerequisites = set([task.Task()])
+        newPrerequisites = {task.Task()}
         self.task.setPrerequisites(newPrerequisites)
         self.assertEqual(newPrerequisites, self.task.prerequisites())
         
@@ -2982,7 +3000,8 @@ class TaskWithPrerequisite(TaskTestCase):
             
         pub.subscribe(onEvent, task.Task.prerequisitesChangedEventType())
         self.prerequisite.setSubject('New subject')
-        self.assertEqual([(set([self.prerequisite]), self.task)], events)
+        # self.assertEqual([(set([self.prerequisite]), self.task)], events)
+        self.assertEqual([({self.prerequisite}, self.task)], events)
                
     def testAppearanceNotificationAfterMarkingPrerequisiteCompleted(self):
         self.prerequisite.addDependencies([self.task])
@@ -3022,7 +3041,8 @@ class TaskWithDependency(TaskTestCase):
         self.assertEqual([(set(), self.task)], events)
         
     def testSetDependenciesRemovesOldDependencies(self):
-        newDependencies = set([task.Task()])
+        # newDependencies = set([task.Task()])
+        newDependencies = {task.Task()}
         self.task.setDependencies(newDependencies)
         self.assertEqual(newDependencies, self.task.dependencies())
         
@@ -3038,7 +3058,8 @@ class TaskWithDependency(TaskTestCase):
             
         pub.subscribe(onEvent, task.Task.dependenciesChangedEventType())
         self.dependency.setSubject('New subject')
-        self.assertEqual([(set([self.dependency]), self.task)], events)
+        # self.assertEqual([(set([self.dependency]), self.task)], events)
+        self.assertEqual([({self.dependency}, self.task)], events)
 
 
 class TaskSuggestedDateTimeBaseSetupAndTests(object):
@@ -3151,12 +3172,12 @@ class TaskSuggestedDateTimeBaseSetupAndTests(object):
                              task.Task.suggestedReminderDateTime(lambda: self.now))
 
 
-class TaskSuggestedDateTimeTestWithDefaultStartAndEndOfWorkingDay( \
+class TaskSuggestedDateTimeTestWithDefaultStartAndEndOfWorkingDay( 
         TaskSuggestedDateTimeBaseSetupAndTests, test.TestCase):
     pass
 
 
-class TaskSuggestedDateTimeTestWithStartAndEndOfWorkingDayEqualToDay( \
+class TaskSuggestedDateTimeTestWithStartAndEndOfWorkingDayEqualToDay( 
         TaskSuggestedDateTimeBaseSetupAndTests, test.TestCase):
     def changeSettings(self):
         self.settings.setint('view', 'efforthourstart', 0)
