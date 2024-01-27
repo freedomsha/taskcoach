@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import str
 import wx
 import test
-from taskcoachlib import gui, config
-
+from ....taskcoachlib import gui, config
 
 
 class PrinterTest(test.TestCase):
@@ -35,7 +35,7 @@ class PrinterTest(test.TestCase):
         self.resetPrinterSettings()
         
     def resetPrinterSettings(self):
-        gui.printer.PrinterSettings.deleteInstance() # pylint: disable=E1101
+        gui.printer.PrinterSettings.deleteInstance()  # pylint: disable=E1101
  
     def testInitialSettings(self):
         printerSettings = self.printerSettings
