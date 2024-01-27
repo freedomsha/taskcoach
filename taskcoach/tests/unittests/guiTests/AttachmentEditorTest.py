@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,15 +14,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import object
 import test
-from taskcoachlib import gui, config, persistence, operating_system
-from taskcoachlib.domain import attachment
+from ....taskcoachlib import gui, config, persistence, operating_system
+from ....taskcoachlib.domain import attachment
 
 
 class DummyEvent(object):
-    def Skip(self): # pragma: no cover
+    def Skip(self):  # pragma: no cover
         pass
 
 
@@ -35,7 +36,8 @@ class AttachmentEditorTest(test.wxTestCase):
         self.attachments = attachment.AttachmentList()
         self.attachments.append(self.attachment)
         self.editor = gui.dialog.editor.AttachmentEditor(self.frame, 
-            self.attachments, self.settings, self.attachments, self.taskFile)
+                                                         self.attachments, self.settings, self.attachments, 
+                                                         self.taskFile)
 
     def tearDown(self):
         super(AttachmentEditorTest, self).tearDown()
@@ -46,18 +48,18 @@ class AttachmentEditorTest(test.wxTestCase):
         page = self.editor._interior[0]
         page._subjectEntry.SetFocus()
         page._subjectEntry.SetValue(newSubject)
-        if operating_system.isGTK(): # pragma: no cover
+        if operating_system.isGTK():  # pragma: no cover
             page._subjectSync.onAttributeEdited(DummyEvent())
-        else: # pragma: no cover
+        else:  # pragma: no cover
             page._descriptionEntry.SetFocus()
         
     def setDescription(self, newDescription):
         page = self.editor._interior[0]
         page._descriptionEntry.SetFocus()
         page._descriptionEntry.SetValue(newDescription)
-        if operating_system.isGTK(): # pragma: no cover
+        if operating_system.isGTK():  # pragma: no cover
             page._descriptionSync.onAttributeEdited(DummyEvent())
-        else: # pragma: no cover
+        else:  # pragma: no cover
             page._subjectEntry.SetFocus()
         
     def testCreate(self):
@@ -75,4 +77,4 @@ class AttachmentEditorTest(test.wxTestCase):
     def testAddNote(self):
         viewer = self.editor._interior[1].viewer
         viewer.newItemCommand(viewer.presentation()).do()
-        self.assertEqual(1, len(self.attachment.notes())) # pylint: disable=E1101
+        self.assertEqual(1, len(self.attachment.notes()))  # pylint: disable=E1101
