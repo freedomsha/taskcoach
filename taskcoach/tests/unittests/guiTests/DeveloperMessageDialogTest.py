@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import config
-from taskcoachlib.gui.dialog import developer_message
+from ....taskcoachlib import config
+from ....taskcoachlib.gui.dialog import developer_message
 import test
 
 
@@ -30,8 +30,8 @@ class DeveloperMessageDialogTest(test.TestCase):
         
     def testDialogContainsMessage(self):
         self.assertEqual('Message', 
-            self.dialog.GetChildren()[0].GetChildren()[0].GetLabel())
+                         self.dialog.GetChildren()[0].GetChildren()[0].GetLabel())
 
     def testDialogContainsURL(self):
-        self.assertEqual('http://a.b', self.dialog.GetChildren()[0]. \
+        self.assertEqual('http://a.b', self.dialog.GetChildren()[0]. 
                          GetChildren()[1].GetChildren()[1].GetURL())
