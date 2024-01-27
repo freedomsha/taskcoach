@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import task, note, category
-from taskcoachlib.thirdparty import lockfile
-from unittests import dummy
+from builtins import str
+from builtins import range
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import task, note, category
+from ....taskcoachlib.thirdparty import lockfile
+from ...unittests import dummy
 import os
 import shutil
 import wx
@@ -31,7 +33,7 @@ class IOControllerTest(test.TestCase):
         task.Task.settings = self.settings = config.Settings(load=False)
         self.taskFile = dummy.TaskFile()
         self.iocontroller = gui.IOController(self.taskFile, 
-            lambda *args: None, self.settings)
+                                             lambda *args: None, self.settings)
         self.filename1 = 'whatever.tsk'
         self.filename2 = 'another.tsk' 
 
@@ -48,14 +50,14 @@ class IOControllerTest(test.TestCase):
         super(IOControllerTest, self).tearDown()
         
     def doIOAndCheckRecentFiles(self, open=None, saveas=None,  # pylint: disable=W0622
-            saveselection=None, merge=None, expectedFilenames=None):
+                                saveselection=None, merge=None, expectedFilenames=None):
         open = open or []
         saveas = saveas or []
         saveselection = saveselection or []
         merge = merge or []
         self.doIO(open, saveas, saveselection, merge)
-        self.checkRecentFiles(expectedFilenames or \
-            open + saveas + saveselection + merge)
+        self.checkRecentFiles(expectedFilenames or 
+                              open + saveas + saveselection + merge)
     
     def doIO(self, open, saveas, saveselection, merge):  # pylint: disable=W0622
         for filename in open:
@@ -96,7 +98,7 @@ class IOControllerTest(test.TestCase):
     def testMaximumNumberOfRecentFiles(self):
         maximumNumberOfRecentFiles = self.settings.getint('file', 
                                                           'maxrecentfiles')
-        filenames = ['filename %d' % index for index in \
+        filenames = ['filename %d' % index for index in 
                      range(maximumNumberOfRecentFiles + 1)]
         self.doIOAndCheckRecentFiles(filenames, 
                                      expectedFilenames=filenames[1:])
@@ -310,7 +312,7 @@ class IOControllerOverwriteExistingFileTest(test.TestCase):
         task.Task.settings = self.settings = config.Settings(load=False)
         self.taskFile = dummy.TaskFile()
         self.iocontroller = gui.IOController(self.taskFile, 
-            lambda *args: None, self.settings)
+                                             lambda *args: None, self.settings)
 
     def tearDown(self):
         self.taskFile.close()
