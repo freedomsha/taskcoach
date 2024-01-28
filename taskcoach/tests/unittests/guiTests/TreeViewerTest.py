@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import test
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import task
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import task
 
        
 class TreeViewerTest(test.wxTestCase):
@@ -27,7 +27,7 @@ class TreeViewerTest(test.wxTestCase):
         task.Task.settings = self.settings = config.Settings(load=False)
         self.taskFile = persistence.TaskFile()
         self.viewer = gui.viewer.TaskViewer(self.frame, self.taskFile,
-            self.settings)
+                                            self.settings)
         self.expansionContext = self.viewer.settingsSection()
         self.parent = task.Task('parent')
         self.child = task.Task('child')
