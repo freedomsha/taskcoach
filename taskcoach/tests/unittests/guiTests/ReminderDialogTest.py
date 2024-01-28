@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import object
 import test
-from taskcoachlib.gui import dialog
-from taskcoachlib import config
-from taskcoachlib.domain import task, effort
+from ....taskcoachlib.gui import dialog
+from ....taskcoachlib import config
+from ....taskcoachlib.domain import task, effort
 
 
 class DummyEvent(object):
@@ -37,7 +38,7 @@ class ReminderDialogTest(test.TestCase):
 
     def createReminderDialog(self):
         return dialog.reminder.ReminderDialog(self.aTask,
-            self.taskList, self.effortList, self.settings, None)
+                                              self.taskList, self.effortList, self.settings, None)
 
     @test.skipOnPlatform('__WXGTK__') # Causes SIGSEGV
     def testRememberZeroSnoozeTime(self):
@@ -73,7 +74,7 @@ class ReminderDialogTest(test.TestCase):
         reminderDialog.replaceDefaultSnoozeTime.SetValue(False)
         reminderDialog.onClose(DummyEvent())
         self.assertEqual(False, self.settings.getboolean('view',
-                                'replacedefaultsnoozetime'))
+                                                         'replacedefaultsnoozetime'))
 
     @test.skipOnPlatform('__WXGTK__') # Causes SIGSEGV
     def testUseReminderReplaceDefaultSnoozeTime(self):
