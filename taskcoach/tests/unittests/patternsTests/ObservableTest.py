@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import test
-from taskcoachlib import patterns
+from ....taskcoachlib import patterns
 
 
 class EventTest(test.TestCase):
@@ -49,7 +49,8 @@ class EventTest(test.TestCase):
         self.assertEqual(set(), event.sources())
 
     def testEventSources(self):
-        self.assertEqual(set([self]), self.event.sources())
+        # self.assertEqual(set([self]), self.event.sources())
+        self.assertEqual({self}, self.event.sources())
 
     def testEventValue(self):
         self.assertEqual('some value', self.event.value())
@@ -65,11 +66,13 @@ class EventTest(test.TestCase):
         
     def testAddSource(self):
         self.event.addSource('source')
-        self.assertEqual(set([self, 'source']), self.event.sources())
+        # self.assertEqual(set([self, 'source']), self.event.sources())
+        self.assertEqual({self, 'source'}, self.event.sources())
         
     def testAddExistingSource(self):
         self.event.addSource(self)
-        self.assertEqual(set([self]), self.event.sources())
+        # self.assertEqual(set([self]), self.event.sources())
+        self.assertEqual({self}, self.event.sources())
         
     def testAddSourceAndValue(self):
         self.event.addSource('source', 'value')
@@ -77,33 +80,40 @@ class EventTest(test.TestCase):
 
     def testAddSourceAndValues(self):
         self.event.addSource('source', 'value1', 'value2')
-        self.assertEqual(set(['value1', 'value2']), set(self.event.values('source')))
+        # self.assertEqual(set(['value1', 'value2']), set(self.event.values('source')))
+        self.assertEqual({'value1', 'value2'}, set(self.event.values('source')))
         
     def testExistingSourceAndValue(self):
         self.event.addSource(self, 'new value')
-        self.assertEqual(set(['some value', 'new value']), set(self.event.values()))
+        # self.assertEqual(set(['some value', 'new value']), set(self.event.values()))
+        self.assertEqual({'some value', 'new value'}, set(self.event.values()))
 
     def testEventTypes(self):
-        self.assertEqual(set(['eventtype']), self.event.types())
+        # self.assertEqual(set(['eventtype']), self.event.types())
+        self.assertEqual({'eventtype'}, self.event.types())
         
     def testAddSourceForSpecificType(self):
         self.event.addSource(self, type='another eventtype')
-        self.assertEqual(set(['eventtype', 'another eventtype']), 
+        # self.assertEqual(set(['eventtype', 'another eventtype']), 
+        self.assertEqual({'eventtype', 'another eventtype'},
                          self.event.types())
         
     def testGetSourcesForSpecificType(self):
-        self.assertEqual(set([self]), self.event.sources('eventtype'))
+        # self.assertEqual(set([self]), self.event.sources('eventtype'))
+        self.assertEqual({self}, self.event.sources('eventtype'))
         
     def testGetSourcesForSpecificTypes(self):
         self.event.addSource('source', type='another eventtype')
-        self.assertEqual(set([self, 'source']), self.event.sources(*self.event.types()))
+        # self.assertEqual(set([self, 'source']), self.event.sources(*self.event.types()))
+        self.assertEqual({self, 'source'}, self.event.sources(*self.event.types()))
         
     def testGetSourcesForNonExistingEventType(self):
         self.assertEqual(set(), self.event.sources('unused eventType'))
         
     def testGetAllSourcesAfterAddingSourceForSpecificType(self):
         self.event.addSource('source', type='another eventtype')
-        self.assertEqual(set([self, 'source']), self.event.sources())
+        # self.assertEqual(set([self, 'source']), self.event.sources())
+        self.assertEqual({self, 'source'}, self.event.sources())
         
     def testAddSourceAndValueForSpecificType(self):
         self.event.addSource('source', 'value', type='another eventtype')
@@ -112,11 +122,13 @@ class EventTest(test.TestCase):
     def testAddSourceAndValuesForSpecificType(self):
         self.event.addSource('source', 'value1', 'value2', 
                              type='another eventtype')
-        self.assertEqual(set(['value1', 'value2']), set(self.event.values('source')))
+        # self.assertEqual(set(['value1', 'value2']), set(self.event.values('source')))
+        self.assertEqual({'value1', 'value2'}, set(self.event.values('source')))
         
     def testAddExistingSourceToAnotherType(self):
         self.event.addSource(self, type='another eventtype')
-        self.assertEqual(set([self]), self.event.sources())
+        # self.assertEqual(set([self]), self.event.sources())
+        self.assertEqual({self}, self.event.sources())
 
     def testAddExistingSourceWithValueToTypeDoesNotRemoveValueForEarlierType(self):
         self.event.addSource(self, 'value for another eventtype', 
@@ -462,9 +474,9 @@ class PublisherTest(test.TestCase):
         self.assertEqual([self.onEvent], self.publisher.observers())
         
     def testRegisterObserver_ListMethod(self):
-        ''' A previous implementation of Publisher used sets. This caused a 
+        """ A previous implementation of Publisher used sets. This caused a 
             "TypeError: list objects are unhashable" whenever one tried to use
-            an instance method of a list (sub)class as callback. '''
+            an instance method of a list (sub)class as callback. """
         class List(list):
             def onEvent(self, *args):
                 pass # pragma: no cover
