@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import base, task, effort, category, date
+from builtins import object
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import base, task, effort, category, date
 import test
 
 
@@ -101,21 +102,21 @@ class UpdatePerSecondViewerTestsMixin(object):
         categories.append(category.Category('Test'))
         try:
             categories.clear()
-        except AttributeError: # pragma: no cover
+        except AttributeError:  # pragma: no cover
             self.fail("Removing a category shouldn't affect the UpdatePerSecondViewer.")
             
 
 class TaskListViewerUpdatePerSecondViewerTest(UpdatePerSecondViewerTestsMixin, 
-        test.wxTestCase):
+                                              test.wxTestCase):
     ListViewerClass = gui.viewer.TaskViewer
 
 
 class SquareTaskViewerUpdatePerSecondViewerTest(UpdatePerSecondViewerTestsMixin, 
-        test.wxTestCase):
+                                                test.wxTestCase):
     ListViewerClass = gui.viewer.SquareTaskViewer
 
 
 class EffortListViewerUpdatePerSecondTest(UpdatePerSecondViewerTestsMixin, 
-        test.wxTestCase):
+                                          test.wxTestCase):
     ListViewerClass = gui.viewer.EffortViewer
 
