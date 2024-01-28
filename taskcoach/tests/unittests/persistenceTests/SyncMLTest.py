@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test
-from taskcoachlib import persistence
-from taskcoachlib.domain import task, note, category, effort, date
+from ... import test
+from ....taskcoachlib import persistence
+from ....taskcoachlib.domain import task, note, category, effort, date
 
 
 class TaskFileTestCase(test.TestCase):
@@ -56,5 +56,5 @@ class TaskFileTestCase(test.TestCase):
         anEffort = effort.Effort(self.task)
         self.task.addEffort(anEffort)
         self.failUnless(effort.Effort.STATUS_NEW, anEffort.getStatus())
-        anEffort.setStart(date.DateTime(2000,1,1,10,0,0))
+        anEffort.setStart(date.DateTime(2000, 1, 1, 10, 0, 0))
         self.failUnless(effort.Effort.STATUS_CHANGED, anEffort.getStatus())
