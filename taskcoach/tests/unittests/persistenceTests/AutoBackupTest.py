@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from builtins import object
-import test
+from ... import test
 import os
 import shutil
 import bz2
