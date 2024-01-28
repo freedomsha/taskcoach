@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,11 +16,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, StringIO
-from taskcoachlib import persistence, config, gui
-from taskcoachlib.domain import task, category, date
+from future import standard_library
+from ... import test
+import io as StringIO
+from ....taskcoachlib import persistence, config, gui
+from ....taskcoachlib.domain import task, category, date
+standard_library.install_aliases()
 
 
 class TodoTxtWriterTestCase(test.wxTestCase):
@@ -48,7 +51,8 @@ class TodoTxtWriterTestCase(test.wxTestCase):
         self.taskFile.tasks().append(theTask1)
         self.taskFile.tasks().append(theTask2)
         self.writer.write(self.viewer, self.settings, False)
-        self.assertEqual('Get cheese tcid:%s\nPaint house tcid:%s\n' % (theTask1.id(), theTask2.id()), self.file.getvalue())
+        self.assertEqual('Get cheese tcid:%s\nPaint house tcid:%s\n' % (theTask1.id(), theTask2.id()), 
+                         self.file.getvalue())
         
     def testNonAsciiSubject(self):
         theTask = task.Task(subject='Call Jérôme')
@@ -64,7 +68,8 @@ class TodoTxtWriterTestCase(test.wxTestCase):
         self.viewer.sortBy('subject')
         self.viewer.setSortOrderAscending(False)
         self.writer.write(self.viewer, self.settings, False)
-        self.assertEqual('Paint house tcid:%s\nGet cheese tcid:%s\n' % (theTask2.id(), theTask1.id()), self.file.getvalue())
+        self.assertEqual('Paint house tcid:%s\nGet cheese tcid:%s\n' % (theTask2.id(), theTask1.id()), 
+                         self.file.getvalue())
         
     def testTaskPriorityIsWrittenAsLetter(self):
         theTask = task.Task(subject='Get cheese', priority=1)
@@ -80,14 +85,14 @@ class TodoTxtWriterTestCase(test.wxTestCase):
         
     def testStartDate(self):
         theTask = task.Task(subject='Get cheese', 
-                            plannedStartDateTime=date.DateTime(2027,1,23,15,34,12))
+                            plannedStartDateTime=date.DateTime(2027, 1, 23, 15, 34, 12))
         self.taskFile.tasks().append(theTask)
         self.writer.write(self.viewer, self.settings, False)
         self.assertEqual('2027-01-23 Get cheese tcid:%s\n' % theTask.id(), self.file.getvalue())
         
     def testCompletionDate(self):
         theTask = task.Task(subject='Get cheese', 
-                            completionDateTime=date.DateTime(2027,1,23,15,34,12))
+                            completionDateTime=date.DateTime(2027, 1, 23, 15, 34, 12))
         self.taskFile.tasks().append(theTask)
         self.writer.write(self.viewer, self.settings, False)
         self.assertEqual('X 2027-01-23 Get cheese tcid:%s\n' % theTask.id(), self.file.getvalue())
@@ -166,11 +171,12 @@ class TodoTxtWriterTestCase(test.wxTestCase):
         project.addChild(activity)
         self.taskFile.tasks().append(project)
         self.writer.write(self.viewer, self.settings, False)
-        self.assertEqual('Project tcid:%s\nProject -> Some activity tcid:%s\n' % (project.id(), activity.id()), self.file.getvalue())
+        self.assertEqual('Project tcid:%s\nProject -> Some activity tcid:%s\n' % (project.id(), activity.id()), 
+                         self.file.getvalue())
         
     def testTaskWithDueDate(self):
         theTask = task.Task(subject='Export due date',
-                            dueDateTime=date.DateTime(2011,1,1,16,50,10))
+                            dueDateTime=date.DateTime(2011, 1, 1, 16, 50, 10))
         self.taskFile.tasks().append(theTask)
         self.writer.write(self.viewer, self.settings, False)
         self.assertEqual('Export due date due:2011-01-01 tcid:%s\n' % theTask.id(), self.file.getvalue())
