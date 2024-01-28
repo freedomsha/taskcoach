@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,18 +14,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import object
 import wx
 import test
-from unittests import dummy
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import task, category, date, attachment, effort
-from taskcoachlib.thirdparty import desktop
-from taskcoachlib.gui.dialog.editor import NoteEditor, TaskEditor
+from ...unittests import dummy
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import task, category, date, attachment, effort
+import desktop  # module desktop3
+from ....taskcoachlib.gui.dialog.editor import NoteEditor, TaskEditor
 
 
-if desktop.get_desktop() in ('KDE', 'GNOME'): # pragma: no cover
+if desktop.get_desktop() in ('KDE', 'GNOME'):  # pragma: no cover
     # On a KDE desktop, kfmclient insists on showing an error message for 
     # non-existing files, even when passing --noninteractive, so we make sure 
     # kfmclient is not invoked at all. 
@@ -89,7 +90,7 @@ class NewTaskWithSelectedCategoryTest(wxTestCaseWithFrameAsTopLevelWindow):
                                                 self.settings)
        
     def createNewTask(self):
-        taskNew = gui.uicommand.NewTaskWithSelectedCategories( \
+        taskNew = gui.uicommand.NewTaskWithSelectedCategories( 
             taskList=self.taskFile.tasks(), viewer=self.viewer, 
             categories=self.categories, settings=self.settings)
         dialog = taskNew.doCommand(None, show=False)
@@ -120,7 +121,7 @@ class NewNoteWithSelectedCategoryTest(wxTestCaseWithFrameAsTopLevelWindow):
                                                 self.settings)
        
     def createNewNote(self):
-        noteNew = gui.uicommand.NewNoteWithSelectedCategories( \
+        noteNew = gui.uicommand.NewNoteWithSelectedCategories( 
             notes=self.taskFile.notes(), viewer=self.viewer, 
             categories=self.categories, settings=self.settings)
         dialog = noteNew.doCommand(None, show=False)
@@ -143,7 +144,7 @@ class NewNoteWithSelectedCategoryTest(wxTestCaseWithFrameAsTopLevelWindow):
 
 
 class DummyTask(object):
-    def subject(self, *args, **kwargs): # pylint: disable=W0613
+    def subject(self, *args, **kwargs):  # pylint: disable=W0613
         return 'subject'
 
     def customAttributes(self, sectionName):
@@ -178,11 +179,11 @@ class DummyViewer(object):
 
 class MailTaskTest(test.TestCase):
     def testException(self):
-        def mail(*args): # pylint: disable=W0613
+        def mail(*args):  # pylint: disable=W0613
             raise RuntimeError('message')
         
-        def showerror(*args, **kwargs): # pylint: disable=W0613
-            self.showerror = args # pylint: disable=W0201
+        def showerror(*args, **kwargs):  # pylint: disable=W0613
+            self.showerror = args  # pylint: disable=W0201
             
         mailTask = gui.uicommand.Mail(viewer=DummyViewer([DummyTask()]))
         mailTask.doCommand(None, mail=mail, showerror=showerror)
@@ -234,7 +235,7 @@ class MarkInactiveTest(test.TestCase):
         self.assertMarkInactiveIsEnabled(selection=[], shouldBeEnabled=False)
         
     def testEnabledWhenSelectedTaskIsNotInactive(self):
-        self.assertMarkInactiveIsEnabled( \
+        self.assertMarkInactiveIsEnabled( 
             selection=[task.Task(actualStartDateTime=date.Now())])
         
     def testEnabledWhenSelectedTaskIsInactive(self):
@@ -363,11 +364,13 @@ class EffortViewerAggregationChoiceTest(test.TestCase):
     def setUp(self):
         self.settings = config.Settings(load=False)
         self.choice = gui.uicommand.EffortViewerAggregationChoice(viewer=self,
-            settings=self.settings)
+                                                                  settings=self.settings)
         self.choice.currentChoice = 0
+        
         class DummyEvent(object):
             def __init__(self, selection):
                 self.selection = selection
+                
             def GetInt(self):
                 return self.selection
         self.DummyEvent = DummyEvent
@@ -409,7 +412,7 @@ class OpenAllAttachmentsTest(test.TestCase):
                                                         viewer=self.viewer)
         self.errorArgs = self.errorKwargs = None
 
-    def showerror(self, *args, **kwargs): # pragma: no cover
+    def showerror(self, *args, **kwargs):  # pragma: no cover
         self.errorArgs = args
         self.errorKwargs = kwargs
         
@@ -417,7 +420,7 @@ class OpenAllAttachmentsTest(test.TestCase):
         self.openAll.doCommand(None)
         
     @test.skipOnPlatform('__WXMAC__')
-    def testNonexistingAttachment(self): # pragma: no cover
+    def testNonexistingAttachment(self):  # pragma: no cover
         self.viewer.selection[0].addAttachment(attachment.FileAttachment('Attachment'))
         result = self.openAll.doCommand(None, showerror=self.showerror)
         # Don't test the error message itself, it differs per platform
@@ -431,8 +434,10 @@ class OpenAllAttachmentsTest(test.TestCase):
         class DummyAttachment(object):
             def __init__(self):
                 self.openCalled = False
+                 
             def open(self, attachmentBase): # pylint: disable=W0613
                 self.openCalled = True
+                
             def isDeleted(self):
                 return False
             
