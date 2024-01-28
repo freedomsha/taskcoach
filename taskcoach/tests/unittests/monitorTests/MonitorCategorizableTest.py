@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2011 Task Coach developers <developers@taskcoach.org>
 
@@ -14,13 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import test
-from taskcoachlib.changes import ChangeMonitor
-from taskcoachlib.domain.categorizable import CategorizableCompositeObject
-from taskcoachlib.domain.category import Category
-from taskcoachlib.patterns import ObservableList
+from ....taskcoachlib.changes import ChangeMonitor
+from ....taskcoachlib.domain.categorizable import CategorizableCompositeObject
+from ....taskcoachlib.domain.category import Category
+from ....taskcoachlib.patterns import ObservableList
+
 
 class MonitorCategorizableTest(test.TestCase):
     def setUp(self):
@@ -45,16 +46,19 @@ class MonitorCategorizableTest(test.TestCase):
     def testAddCategory(self):
         self.monitor.resetAllChanges()
         self.obj.addCategory(self.cat1)
-        self.assertEqual(self.monitor.getChanges(self.obj), set(['__add_category:%s' % self.cat1.id()]))
+        # self.assertEqual(self.monitor.getChanges(self.obj), set(['__add_category:%s' % self.cat1.id()]))
+        self.assertEqual(self.monitor.getChanges(self.obj), {'__add_category:%s' % self.cat1.id()})
 
     def testRemoveCategory(self):
         self.obj.addCategory(self.cat1)
         self.monitor.resetAllChanges()
         self.obj.removeCategory(self.cat1)
-        self.assertEqual(self.monitor.getChanges(self.obj), set(['__del_category:%s' % self.cat1.id()]))
+        # self.assertEqual(self.monitor.getChanges(self.obj), set(['__del_category:%s' % self.cat1.id()]))
+        self.assertEqual(self.monitor.getChanges(self.obj), {'__del_category:%s' % self.cat1.id()})
 
     def testRemoveBadCategory(self):
         self.obj.addCategory(self.cat1)
         self.monitor.resetAllChanges()
         self.obj.removeCategory(self.cat2)
         self.assertEqual(self.monitor.getChanges(self.obj), set())
+        # self.assertEqual(self.monitor.getChanges(self.obj), {})
