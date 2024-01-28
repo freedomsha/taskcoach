@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import wx
 import test
-from unittests import dummy
-from taskcoachlib import gui, config
+from ...unittests import dummy
+from ....taskcoachlib import gui, config
  
 
 class ToolBar(gui.toolbar.ToolBar):
@@ -66,10 +66,12 @@ class ToolBarPerspectiveTest(test.wxTestCase):
         class NoBitmapUICommand(dummy.DummyUICommand):
             def appendToToolBar(self, toolbar):
                 pass
+             
         class TestFrame(test.TestCaseFrame):
             def createToolBarUICommands(self):
                 class Test1(NoBitmapUICommand):
                     pass
+                 
                 class Test2(NoBitmapUICommand):
                     pass
                 return [Test1(), None, Test2(), 1]
