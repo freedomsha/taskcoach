@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import StringIO
-import test
-from taskcoachlib import persistence, config
-from taskcoachlib.domain import task
+from future import standard_library
+import io as StringIO
+from ... import test
+from ....taskcoachlib import persistence, config
+from ....taskcoachlib.domain import task
+standard_library.install_aliases()
 
 
 class TemplateXMLReaderTestCase(test.TestCase):
@@ -34,7 +36,7 @@ class TemplateXMLReaderTestCase(test.TestCase):
         self.reader = persistence.TemplateXMLReader(self.fd)
         
     def writeAndRead(self, xml):
-        xml = '<?taskcoach release="whatever" tskversion="%d"?>\n'%self.tskversion + xml
+        xml = '<?taskcoach release="whatever" tskversion="%d"?>\n' % self.tskversion + xml
         self.fd.write(xml)
         self.fd.seek(0)
         return self.reader.read()
