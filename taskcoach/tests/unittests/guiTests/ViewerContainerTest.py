@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,13 +14,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import str
+from builtins import object
 import test
-from unittests import dummy
-from taskcoachlib import gui, config, persistence, widgets
-from taskcoachlib.domain import task
-from taskcoachlib.thirdparty.pubsub import pub
+from ...unittests import dummy
+from ....taskcoachlib import gui, config, persistence, widgets
+from ....taskcoachlib.domain import task
+from ....taskcoachlib.thirdparty.pubsub import pub
 
 
 class DummyMainWindow(widgets.AuiManagedFrameWithDynamicCenterPane):
@@ -32,7 +34,7 @@ class DummyMainWindow(widgets.AuiManagedFrameWithDynamicCenterPane):
     def addPane(self, window, caption, floating=False):
         self.count += 1
         super(DummyMainWindow, self).addPane(window, caption, 
-                                             str('name%d'%self.count))
+                                             str('name%d' % self.count))
 
     def AddBalloonTip(self, *args, **kwargs):
         pass
@@ -95,7 +97,7 @@ class ViewerContainerTest(test.wxTestCase):
     def createViewer(self, settingsSection):
         self.settings.add_section(settingsSection)
         return dummy.ViewerWithDummyWidget(self.mainWindow, self.taskFile, 
-            self.settings, settingsSection=settingsSection)
+                                           self.settings, settingsSection=settingsSection)
             
     def onEvent(self):
         self.events += 1
@@ -133,4 +135,3 @@ class ViewerContainerTest(test.wxTestCase):
         pub.subscribe(self.onEvent, 'viewer.status')
         self.container.closeViewer(self.viewer2)
         self.failUnless(self.events > 0)
-
