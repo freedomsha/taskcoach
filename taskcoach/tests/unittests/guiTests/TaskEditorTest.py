@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,12 +16,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import gui, config, persistence, operating_system
-from taskcoachlib.domain import task, effort, date, note, attachment
-from taskcoachlib.gui import uicommand
-from unittests import dummy
+from builtins import object
+from ....taskcoachlib import gui, config, persistence, operating_system
+from ....taskcoachlib.domain import task, effort, date, note, attachment
+from ....taskcoachlib.gui import uicommand
+from ...unittests import dummy
 import test
 import wx
 
@@ -114,7 +115,7 @@ class TaskEditorTestCase(test.wxTestCase):
         self.taskList = self.taskFile.tasks()
         self.taskList.extend(self.createTasks())
         self.editor = self.editorClass(self.frame, self.getItems(),
-            self.settings, self.taskList, self.taskFile)
+                                       self.settings, self.taskList, self.taskFile)
 
     def tearDown(self):
         # TaskEditor uses CallAfter for setting the focus, make sure those 
@@ -133,7 +134,7 @@ class TaskEditorTestCase(test.wxTestCase):
 
 
 class EditorDisplayTest(TaskEditorTestCase):
-    ''' Does the editor display the task data correctly when opened? '''
+    """ Does the editor display the task data correctly when opened? """
     
     def getItems(self):
         return [self.task]
@@ -142,7 +143,7 @@ class EditorDisplayTest(TaskEditorTestCase):
         # pylint: disable=W0201
         self.task = task.Task('Task to edit')
         self.stop_datetime = date.DateTime(2012, 12, 12, 12, 12)
-        self.task.setRecurrence( \
+        self.task.setRecurrence( 
             date.Recurrence('daily', amount=1, 
                             stop_datetime=self.stop_datetime))
         return [self.task]
@@ -223,7 +224,7 @@ class EditTaskTestMixin(object):
         self.assertEqual(date.DateTime(), self.task.completionDateTime())
 
     def testSetReminder(self):
-        reminderDateTime = date.DateTime(2005,1,1)
+        reminderDateTime = date.DateTime(2005, 1, 1)
         self.setReminder(reminderDateTime)
         self.assertEqual(reminderDateTime, self.task.reminder())
 
@@ -301,7 +302,7 @@ class EditTaskTestMixin(object):
             self.errorMessage = args[0]  # pragma: no cover
             
         att = attachment.FileAttachment(u'tÃƒÂ©st.ÃƒÂ©')
-        openAttachment = uicommand.AttachmentOpen(\
+        openAttachment = uicommand.AttachmentOpen(
             viewer=self.editor._interior[6].viewer,
             attachments=attachment.AttachmentList([att]),
             settings=self.settings)
@@ -398,6 +399,7 @@ class FocusTest(TaskEditorTestCase):
 
 class FocusTestWithGTKSetting(TaskEditorTestCase):
     extraSettings = [('os_linux', 'focustextentry', 'False')]
+    
     def createTasks(self):
         self.task = task.Task('Task to edit')
         return [self.task]
