@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import test
-from taskcoachlib import patterns
+from ....taskcoachlib import patterns
 
 
 class Numbered(object):
@@ -32,9 +32,9 @@ class SubclassOfNumbered(Numbered):
 
 
 class NumberedInstancesTestsMixin(object):
-    ''' The tests below should work for a class with NumberedInstances as 
+    """ The tests below should work for a class with NumberedInstances as 
         metaclass as well as for a subclass of a class with NumberedInstances
-        as metaclass. '''
+        as metaclass. """
         
     def testCounterIncreasesAfterEachInstantation(self):
         instances = []
@@ -84,5 +84,3 @@ class SubclassOfNumberedInstancesTest(NumberedInstancesTestsMixin,
         subclassOfNumberedInstance = SubclassOfNumbered()
         self.assertEqual(0, numberedInstance.instanceNumber)
         self.assertEqual(0, subclassOfNumberedInstance.instanceNumber)
-
-
