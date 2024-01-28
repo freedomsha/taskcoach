@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import config, meta
-from unittests import dummy
-import StringIO
+from future import standard_library
+from ....taskcoachlib import config, meta
+from ...unittests import dummy
+import io as StringIO
 import test
+standard_library.install_aliases()
 
 
 class DeveloperMessageCheckerUnderTest(meta.DeveloperMessageChecker):
