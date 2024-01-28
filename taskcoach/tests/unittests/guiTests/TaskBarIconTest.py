@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import meta, config, gui, operating_system
-from taskcoachlib.domain import task, effort, date
+from builtins import object
+from ....taskcoachlib import meta, config, gui, operating_system
+from ....taskcoachlib.domain import task, effort, date
 import test
 
 
@@ -49,7 +50,7 @@ class TaskBarIconTestCase(test.TestCase):
         self.settings = task.Task.settings = config.Settings(load=False)
         self.window = MainWindowMock()
         self.icon = gui.TaskBarIcon(self.window, self.taskList,
-            self.settings)
+                                    self.settings)
 
     def tearDown(self):  # pragma: no cover
         if operating_system.isWindows():
