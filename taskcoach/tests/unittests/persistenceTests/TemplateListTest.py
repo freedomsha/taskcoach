@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, xml
-from taskcoachlib import persistence
+from builtins import object
+from ... import test
+import xml
+from ....taskcoachlib import persistence
 
 
 class Fake(object):
@@ -26,7 +28,7 @@ class Fake(object):
 
 
 class TemplateReaderThatThrowsTooNewException(Fake):    
-    def read(self, *args, **kwargs): # pylint: disable=W0613
+    def read(self, *args, **kwargs):  # pylint: disable=W0613
         raise persistence.xml.reader.XMLReaderTooNewException
 
 
@@ -36,7 +38,7 @@ class TemplateReaderThatThrowsIOError(Fake):
     
     
 class TemplateReaderThatThrowsParseError(Fake):
-    def read(self, *args, **kwargs): # pylint: disable=W0613
+    def read(self, *args, **kwargs):  # pylint: disable=W0613
         raise xml.etree.ElementTree.ParseError
 
 
@@ -46,7 +48,7 @@ class FakeFileClass(Fake):
     
 
 class FileClassThatRaisesIOError(object):
-    def __init__(self, *args, **kwargs): # pylint: disable=W0613
+    def __init__(self, *args, **kwargs):  # pylint: disable=W0613
         raise IOError
     
 
