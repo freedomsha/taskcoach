@@ -16,10 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import wx, StringIO, os
-import test
-from taskcoachlib import persistence, gui, config, render
-from taskcoachlib.domain import task, category, effort, date
+from future import standard_library
+from builtins import str
+from builtins import object
+import wx
+import io as StringIO
+import os
+from ... import test
+from ....taskcoachlib import persistence, gui, config, render
+from ....taskcoachlib.domain import task, category, effort, date
+standard_library.install_aliases()
     
     
 class HTMLWriterTestCase(test.wxTestCase):
@@ -45,7 +51,7 @@ class HTMLWriterTestCase(test.wxTestCase):
             os.remove(cssFilename)
             
     def createViewer(self):
-        raise NotImplementedError # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
     def __writeAndRead(self, selectionOnly):
         self.writer.write(self.viewer, self.settings, selectionOnly, True)
@@ -56,13 +62,13 @@ class HTMLWriterTestCase(test.wxTestCase):
         html = self.__writeAndRead(selectionOnly)
         for htmlFragment in htmlFragments:
             self.failUnless(htmlFragment in html, 
-                            '%s not in %s'%(htmlFragment, html))
+                            '%s not in %s' % (htmlFragment, html))
     
     def expectNotInHTML(self, *htmlFragments, **kwargs):
         selectionOnly = kwargs.pop('selectionOnly', False)
         html = self.__writeAndRead(selectionOnly)
         for htmlFragment in htmlFragments:
-            self.failIf(htmlFragment in html, '%s in %s'%(htmlFragment, html))
+            self.failIf(htmlFragment in html, '%s in %s' % (htmlFragment, html))
 
     def selectItem(self, items):
         self.viewer.widget.select(items)
@@ -173,9 +179,9 @@ class TaskTestsMixin(CommonTestsMixin):
             self.expectNotInHTML('stylesheet')
             
     def testOSErrorWhileWritingCSS(self):
-        def open(*args): # pylint: disable=W0613,W0622
+        def open(*args):  # pylint: disable=W0613,W0622
             raise IOError
-        self.writer._writeCSS(open=open) # pylint: disable=W0212
+        self.writer._writeCSS(open=open)  # pylint: disable=W0212
         
 
 class TaskListTestsMixin(object):
@@ -284,4 +290,3 @@ class CategoryWriterExportTest(CategoryWriterTestsMixin, CategoryWriterTestCase)
 
 class CategoryWriterPrintTest(CategoryWriterTestsMixin, CategoryWriterTestCase):
     filename = ''
-    
