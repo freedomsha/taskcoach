@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,7 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import tempfile
 import test
@@ -43,7 +43,8 @@ class CSVReaderTestCase(test.TestCase):
         self.reader.read(filename=filename, 
                          mappings={0: 'Subject'}, 
                          **self.defaultReaderKwArgs)
-        self.assertEqual(set(['Subject 1', 'Subject 2']), 
+        # self.assertEqual(set(['Subject 1', 'Subject 2']), 
+        self.assertEqual({'Subject 1', 'Subject 2'},
                          set([t.subject() for t in self.taskList]))
         
     def testTwoTasksWithSubjectAndDescription(self):
@@ -51,8 +52,8 @@ class CSVReaderTestCase(test.TestCase):
         self.reader.read(filename=filename, 
                          mappings={0: 'Subject', 1: 'Description'},
                          **self.defaultReaderKwArgs)
-        self.assertEqual(set([('Subject 1', 'Description 1\n'), 
-                              ('Subject 2', 'Description 2\n')]), 
+        # self.assertEqual(set([('Subject 1', 'Description 1\n'), ('Subject 2', 'Description 2\n')]), 
+        self.assertEqual({('Subject 1', 'Description 1\n'), ('Subject 2', 'Description 2\n')},
                          set([(t.subject(), t.description()) for t in self.taskList]))
 
     def testTaskWithPlannedStartDate(self):
@@ -220,7 +221,8 @@ class CSVReaderTestCase(test.TestCase):
                          **self.defaultReaderKwArgs)
         self.assertEqual(1, len(self.categoryList))
         newCategory = list(self.categoryList)[0]
-        self.assertEqual([set([newCategory]), set([newCategory])], 
+        # self.assertEqual([set([newCategory]), set([newCategory])], 
+        self.assertEqual([{newCategory}, {newCategory}],
                          [t.categories() for t in self.taskList])
         
     def testTwoTasksWithCategoryAndSubcategory(self):
@@ -247,7 +249,8 @@ class CSVReaderTestCase(test.TestCase):
         self.reader.read(filename=filename,
                          mappings={0: 'Subject', 1: 'Due date'},
                          **self.defaultReaderKwArgs)
-        self.assertEqual(set([1,4,6]), set(t.dueDateTime().month for t in self.taskList))
+        # self.assertEqual(set([1,4,6]), set(t.dueDateTime().month for t in self.taskList))
+        self.assertEqual({1, 4, 6}, set(t.dueDateTime().month for t in self.taskList))
         
     def testMonthFirstDates(self):
         filename = self.createCSVFile('T1,3-6-2011\nT2,1-1-2011\nT3,4-20-2011')
@@ -255,5 +258,6 @@ class CSVReaderTestCase(test.TestCase):
         self.reader.read(filename=filename,
                          mappings={0: 'Subject', 1: 'Due date'},
                          **self.defaultReaderKwArgs)
-        self.assertEqual(set([1,3,4]), set(t.dueDateTime().month for t in self.taskList))
+        # self.assertEqual(set([1,3,4]), set(t.dueDateTime().month for t in self.taskList))
+        self.assertEqual({1, 3, 4}, set(t.dueDateTime().month for t in self.taskList))
         
