@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import StringIO
-import test
-from taskcoachlib import persistence, gui, config, render
-from taskcoachlib.domain import task, effort, date
+from future import standard_library
+from builtins import object
+import io as StringIO
+from ... import test
+from ....taskcoachlib import persistence, gui, config, render
+from ....taskcoachlib.domain import task, effort, date
+standard_library.install_aliases()
 
 
 class CSVWriterTestCase(test.wxTestCase):
@@ -44,7 +47,7 @@ class CSVWriterTestCase(test.wxTestCase):
         self.settings.set('taskviewer', 'treemode', self.treeMode)
         # pylint: disable=W0201
         self.viewer = gui.viewer.TaskViewer(self.frame, self.taskFile,
-            self.settings)
+                                            self.settings)
 
     def __writeAndRead(self, selectionOnly, separateDateAndTimeColumns, columns):
         self.writer.write(self.viewer, self.settings, selectionOnly, 
@@ -315,7 +318,7 @@ class EffortWriterTest(CSVWriterTestCase):
     def createViewer(self):
         # pylint: disable=W0201
         self.viewer = gui.viewer.EffortViewer(self.frame, self.taskFile,
-            self.settings)
+                                              self.settings)
 
     def testTaskSubject(self):
         self.expectInCSV('Task subject,')
@@ -357,7 +360,7 @@ class EffortWriterRenderTest(CSVWriterTestCase):
     def createViewer(self):
         # pylint: disable=W0201
         self.viewer = gui.viewer.EffortViewer(self.frame, self.taskFile,
-            self.settings)
+                                              self.settings)
 
     def testToday(self):
         midnight = date.Now().startOfDay()
