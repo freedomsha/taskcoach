@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2011 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, wx
-from taskcoachlib.changes import ChangeMonitor
-from taskcoachlib.domain.base import Object, CompositeObject
-from taskcoachlib.patterns import ObservableList
+import test
+import wx
+from ....taskcoachlib.changes import ChangeMonitor
+from ....taskcoachlib.domain.base import Object, CompositeObject
+from ....taskcoachlib.patterns import ObservableList
 
 
 class MonitorBaseTest(test.TestCase):
@@ -47,7 +48,8 @@ class MonitorObjectTest(MonitorBaseTest):
         getattr(self.obj, 'set' + methodName[:1].upper() + methodName[1:])(initialValue)
         self.monitor.resetChanges(self.obj)
         getattr(self.obj, 'set' + methodName[:1].upper() + methodName[1:])(value)
-        self.assertEqual(self.monitor.getChanges(self.obj), set([name]))
+        # self.assertEqual(self.monitor.getChanges(self.obj), set([name]))
+        self.assertEqual(self.monitor.getChanges(self.obj), {name})
 
     def doTestAttributeDidNotChange(self, name, initialValue, methodName=None):
         if methodName is None:
@@ -113,9 +115,11 @@ class MonitorObjectTest(MonitorBaseTest):
         self.monitor.resetChanges(self.obj)
         self.obj.setSubject('Foo')
         self.list.remove(self.obj)
-        self.assertEqual(self.monitor.getChanges(self.obj), set(['subject', '__del__']))
+        # self.assertEqual(self.monitor.getChanges(self.obj), set(['subject', '__del__']))
+        self.assertEqual(self.monitor.getChanges(self.obj), {'subject', '__del__'})
         self.list.append(self.obj)
-        self.assertEqual(self.monitor.getChanges(self.obj), set(['subject']))
+        # self.assertEqual(self.monitor.getChanges(self.obj), set(['subject']))
+        self.assertEqual(self.monitor.getChanges(self.obj), {'subject'})
         self.failIf(self.monitor.isRemoved(self.obj))
 
 
@@ -140,16 +144,19 @@ class MonitorCompositeObjectTest(MonitorObjectTest):
     def testChangeChildSubject2(self):
         self.monitor.resetChanges(self.child)
         self.child.setSubject('Child subject')
-        self.assertEqual(self.monitor.getChanges(self.child), set(['subject']))
+        # self.assertEqual(self.monitor.getChanges(self.child), set(['subject']))
+        self.assertEqual(self.monitor.getChanges(self.child), {'subject'})
 
     def testExpansionChanged(self):
         self.monitor.resetChanges(self.obj)
         self.obj.expand()
-        self.assertEqual(self.monitor.getChanges(self.obj), set(['expandedContexts']))
+        # self.assertEqual(self.monitor.getChanges(self.obj), set(['expandedContexts']))
+        self.assertEqual(self.monitor.getChanges(self.obj), {'expandedContexts'})
 
     def testAddChild(self):
         child = self.klass(subject='Child')
         self.list.append(child)
         self.monitor.resetChanges(child)
         self.obj.addChild(child)
-        self.assertEqual(self.monitor.getChanges(child), set(['__parent__']))
+        # self.assertEqual(self.monitor.getChanges(child), set(['__parent__']))
+        self.assertEqual(self.monitor.getChanges(child), {'__parent__'})
