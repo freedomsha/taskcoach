@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,13 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import persistence, config
-from taskcoachlib.domain import task, category
-from unittests import dummy
-import test
-from taskcoachlib.changes import ChangeMonitor
+from builtins import object
+from ....taskcoachlib import persistence, config
+from ....taskcoachlib.domain import task, category
+from ...unittests import dummy
+from ... import test
+from ....taskcoachlib.changes import ChangeMonitor
 
 
 class DummyFile(object):
@@ -75,7 +76,7 @@ class AutoSaverTestCase(test.TestCase):
         super(AutoSaverTestCase, self).tearDown()
         self.taskFile.close()
         self.taskFile.stop()
-        del self.autoSaver # Make sure AutoSaver is not observing task files
+        del self.autoSaver  # Make sure AutoSaver is not observing task files
         
     def testCreate(self):
         self.failIf(self.taskFile.saveCalled)
