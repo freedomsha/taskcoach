@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib import gui, config, persistence, command, patterns, render, \
+from builtins import range
+from builtins import object
+from ....taskcoachlib import gui, config, persistence, command, patterns, render, \
     operating_system
-from taskcoachlib.domain import task, date, effort, category, attachment
-from taskcoachlib.i18n import _
+from ....taskcoachlib.domain import task, date, effort, category, attachment
+from ....taskcoachlib.i18n import _
 import locale
 import os
 import test
@@ -97,7 +99,7 @@ class TaskViewerTestCase(test.wxTestCase):
             self.assertItem(index, eachTask)
             
     def assertItem(self, index, aTask):
-        if type(aTask) == type((), ):
+        if type(aTask) == type((), ):  # use isinstance ?
             aTask, nrChildren = aTask
         else:
             nrChildren = 0
@@ -105,7 +107,7 @@ class TaskViewerTestCase(test.wxTestCase):
         treeItem = self.viewer.widget.GetItemChildren(recursively=True)[index]
         self.assertEqual(subject, self.viewer.widget.GetItemText(treeItem))
         self.assertEqual(nrChildren, 
-            self.viewer.widget.GetChildrenCount(treeItem, recursively=False))
+                         self.viewer.widget.GetChildrenCount(treeItem, recursively=False))
 
     def firstItem(self):
         widget = self.viewer.widget
@@ -589,8 +591,8 @@ class CommonTestsMixin(object):
             
     def testStatusMessage_EmptyTaskList(self):
         self.assertEqual(('Tasks: 0 selected, 0 visible, 0 total', 
-            'Status: 0 overdue, 0 late, 0 inactive, 0 completed'),
-            self.viewer.statusMessages())
+                          'Status: 0 overdue, 0 late, 0 inactive, 0 completed'),
+                         self.viewer.statusMessages())
     
     def testOnDropFiles(self):
         aTask = task.Task()
@@ -607,7 +609,8 @@ class CommonTestsMixin(object):
                          self.viewer.presentation()[0].attachments())
 
     def testOnDropMail(self):
-        file('test.mail', 'wb').write('Subject: foo\r\n\r\nBody\r\n')
+        # file('test.mail', 'wb').write('Subject: foo\r\n\r\nBody\r\n')
+        io.open('test.mail', 'wb').write('Subject: foo\r\n\r\nBody\r\n')
         aTask = task.Task()
         self.taskList.append(aTask)
         self.viewer.onDropMail(aTask, 'test.mail')
@@ -689,7 +692,7 @@ class CommonTestsMixin(object):
         
     def testModeIsSavedInSettings(self):
         self.assertEqual(self.treeMode, 
-            self.settings.getboolean(self.viewer.settingsSection(), 'treemode'))
+                         self.settings.getboolean(self.viewer.settingsSection(), 'treemode'))
 
     def testRenderSubject(self):
         self.task.addChild(self.child)
@@ -738,7 +741,7 @@ class CommonTestsMixin(object):
     def testGetTimeSpent(self):
         self.taskList.append(self.task)
         self.task.addEffort(effort.Effort(self.task, date.DateTime(2000, 1, 1),
-                                                     date.DateTime(2000, 1, 2)))
+                                          date.DateTime(2000, 1, 2)))
         self.showColumn('timeSpent')
         timeSpent = self.getItemText(0, 3)
         self.assertEqual("24:00:00", timeSpent)
@@ -748,9 +751,9 @@ class CommonTestsMixin(object):
         self.taskList.append(self.task)
         self.task.expand(False, context=self.viewer.settingsSection())
         self.task.addEffort(effort.Effort(self.task, date.DateTime(2000, 1, 1),
-                                                     date.DateTime(2000, 1, 2)))
+                                          date.DateTime(2000, 1, 2)))
         self.child.addEffort(effort.Effort(self.child, date.DateTime(2000, 1, 1),
-                                                     date.DateTime(2000, 1, 2)))
+                                           date.DateTime(2000, 1, 2)))
         self.showColumn('timeSpent')
         timeSpent = self.getItemText(0, 3)
         expectedTimeSpent = "(48:00:00)" if self.treeMode else "24:00:00"
