@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, StringIO
-from taskcoachlib import persistence, config
-from taskcoachlib.domain import task, category, date
+from future import standard_library
+from ... import test
+import io as StringIO
+from ....taskcoachlib import persistence, config
+from ....taskcoachlib.domain import task, category, date
+standard_library.install_aliases()
 
 
 class TodoTxtReaderTestCase(test.TestCase):
@@ -107,16 +110,20 @@ class TodoTxtReaderTestCase(test.TestCase):
         self.assertCategorySubject(('@phone'))
         phone = list(self.categories)[0]
         pizza = list(self.tasks)[0]
-        self.assertEqual(set([pizza]), phone.categorizables())
-        self.assertEqual(set([phone]), pizza.categories())
+        # self.assertEqual(set([pizza]), phone.categorizables())
+        self.assertEqual({pizza}, phone.categorizables())
+        # self.assertEqual(set([phone]), pizza.categories())
+        self.assertEqual({phone}, pizza.categories())
 
     def testTaskWithSimpleProject(self):
         self.read('Order pizza +phone\n')
         self.assertCategorySubject(('+phone'))
         phone = list(self.categories)[0]
         pizza = list(self.tasks)[0]
-        self.assertEqual(set([pizza]), phone.categorizables())
-        self.assertEqual(set([phone]), pizza.categories())
+        # self.assertEqual(set([pizza]), phone.categorizables())
+        self.assertEqual({pizza}, phone.categorizables())
+        # self.assertEqual(set([phone]), pizza.categories())
+        self.assertEqual({phone}, pizza.categories())
         
     def testTaskWithPlusSign(self):
         self.read('Order pizza + drink\n')
@@ -133,7 +140,8 @@ class TodoTxtReaderTestCase(test.TestCase):
         self.assertEqual(1, len(self.categories))
         phone = list(self.categories)[0]
         self.assertEqual(set(self.tasks), phone.categorizables())
-        self.assertEqual([set([phone]), set([phone])], 
+        # self.assertEqual([set([phone]), set([phone])], 
+        self.assertEqual([{phone}, {phone}],
                          [t.categories() for t in self.tasks])
         
     def testTaskWithSubcategoryAsContext(self):
@@ -143,8 +151,10 @@ class TodoTxtReaderTestCase(test.TestCase):
         phone = home.children()[0]
         self.assertEqual('phone', phone.subject())
         pizza = list(self.tasks)[0]
-        self.assertEqual(set([pizza]), phone.categorizables())
-        self.assertEqual(set([phone]), pizza.categories())
+        # self.assertEqual(set([pizza]), phone.categorizables())
+        self.assertEqual({pizza}, phone.categorizables())
+        # self.assertEqual(set([phone]), pizza.categories())
+        self.assertEqual({phone}, pizza.categories())
         
     def testTwoTasksWithTheSameSubcategory(self):
         self.read('Order pizza @home->phone\nOrder flowers @home->phone\n')
@@ -154,7 +164,8 @@ class TodoTxtReaderTestCase(test.TestCase):
         self.assertEqual('phone', phone.subject())
         self.assertEqual(set(self.tasks), phone.categorizables())
         for eachTask in self.tasks:
-            self.assertEqual(set([phone]), eachTask.categories())
+            # self.assertEqual(set([phone]), eachTask.categories())
+            self.assertEqual({phone}, eachTask.categories())
             
     def testTaskWithMultipleContexts(self):
         self.read('Order pizza @phone @food\n')
@@ -176,8 +187,10 @@ class TodoTxtReaderTestCase(test.TestCase):
         self.assertCategorySubject('@phone')
         phone = list(self.categories)[0]
         thankMom = list(self.tasks)[0]
-        self.assertEqual(set([thankMom]), phone.categorizables())
-        self.assertEqual(set([phone]), thankMom.categories())
+        # self.assertEqual(set([thankMom]), phone.categorizables())
+        self.assertEqual({thankMom}, phone.categorizables())
+        # self.assertEqual(set([phone]), thankMom.categories())
+        self.assertEqual({phone}, thankMom.categories())
                 
     def testPriorityAndProjectAndContextBeforeTask(self):
         self.read('(B) +GarageSale @phone schedule Goodwill pickup')
