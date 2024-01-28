@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import os, wx
-import test
-from taskcoachlib import persistence, config
-from taskcoachlib.domain import base, task, effort, date, category, note, attachment
+from builtins import str
+from builtins import object
+import os
+import io
+import wx
+from ... import test
+from ....taskcoachlib import persistence, config
+from ....taskcoachlib.domain import base, task, effort, date, category, note, attachment
 
 
 class FakeAttachment(base.Object):
@@ -51,7 +55,7 @@ class TaskFileTestCase(test.TestCase):
         self.note = note.Note(subject='note')
         self.taskFile.notes().append(self.note)
         self.effort = effort.Effort(self.task, date.DateTime(2004, 1, 1),
-                                               date.DateTime(2004, 1, 2))
+                                    date.DateTime(2004, 1, 2))
         self.task.addEffort(self.effort)
         self.filename = 'test.tsk'
         self.filename2 = 'test2.tsk'
@@ -307,14 +311,14 @@ class DirtyTaskFileTest(TaskFileTestCase):
         self.taskFile.setFilename(self.filename)
         self.taskFile.save()
         self.failIf(self.taskFile.needSave())
-        self.effort.setStart(date.DateTime(2005,1,1,10,0,0))
+        self.effort.setStart(date.DateTime(2005, 1, 1, 10, 0, 0))
         self.failUnless(self.taskFile.needSave())
 
     def testNeedSave_AfterEditEffortStop(self):
         self.taskFile.setFilename(self.filename)
         self.taskFile.save()
         self.failIf(self.taskFile.needSave())
-        self.effort.setStop(date.DateTime(2005,1,1,10,0,0))
+        self.effort.setStop(date.DateTime(2005, 1, 1, 10, 0, 0))
         self.failUnless(self.taskFile.needSave())
 
     def testNeedSave_AfterEditEffortTask(self):
@@ -367,13 +371,13 @@ class DirtyTaskFileTest(TaskFileTestCase):
     def testNeedSave_AfterAddingNoteToTask(self):
         self.taskFile.setFilename(self.filename)
         self.taskFile.save()
-        self.task.addNote(note.Note(subject='Note')) # pylint: disable=E1101
+        self.task.addNote(note.Note(subject='Note'))  # pylint: disable=E1101
         self.failUnless(self.taskFile.needSave())
 
     def testNeedSave_AfterTaskNoteChanged(self):
         self.taskFile.setFilename(self.filename)
         newNote = note.Note(subject='Note')
-        self.task.addNote(newNote) # pylint: disable=E1101
+        self.task.addNote(newNote)  # pylint: disable=E1101
         self.taskFile.save()
         newNote.setSubject('New subject')
         self.failUnless(self.taskFile.needSave())
@@ -412,7 +416,7 @@ class DirtyTaskFileTest(TaskFileTestCase):
         self.failUnless(self.taskFile.needSave())
 
     def testNeedSave_AfterSetReminder(self):
-        self.task.setReminder(date.DateTime(2005,1,1,10,0,0))
+        self.task.setReminder(date.DateTime(2005, 1, 1, 10, 0, 0))
         self.failUnless(self.taskFile.needSave())
 
     def testNeedSave_AfterChangeRecurrence(self):
@@ -587,7 +591,7 @@ class ChangingAttachmentsTestsMixin(object):
         self.taskFile.save()
 
     def addFileAttachment(self):
-        self.fileAttachment = attachment.FileAttachment('Old location') # pylint: disable=W0201
+        self.fileAttachment = attachment.FileAttachment('Old location')  # pylint: disable=W0201
         self.addAttachment(self.fileAttachment)
 
     def testNeedSave_AfterFileAttachmentLocationChanged(self):
@@ -617,11 +621,11 @@ class ChangingAttachmentsTestsMixin(object):
 
     def testNeedSave_AfterFileAttachmentNoteAdded(self):
         self.addFileAttachment()
-        self.fileAttachment.addNote(note.Note(subject='Note')) # pylint: disable=E1101
+        self.fileAttachment.addNote(note.Note(subject='Note'))  # pylint: disable=E1101
         self.failUnless(self.taskFile.needSave())
 
     def addURIAttachment(self):
-        self.uriAttachment = attachment.URIAttachment('Old location') # pylint: disable=W0201
+        self.uriAttachment = attachment.URIAttachment('Old location')  # pylint: disable=W0201
         self.addAttachment(self.uriAttachment)
 
     def testNeedSave_AfterURIAttachmentLocationChanged(self):
@@ -651,12 +655,12 @@ class ChangingAttachmentsTestsMixin(object):
 
     def testNeedSave_AfterURIAttachmentNoteAdded(self):
         self.addURIAttachment()
-        self.uriAttachment.addNote(note.Note(subject='Note')) # pylint: disable=E1101
+        self.uriAttachment.addNote(note.Note(subject='Note'))  # pylint: disable=E1101
         self.failUnless(self.taskFile.needSave())
 
     def addMailAttachment(self):
-        self.mailAttachment = attachment.MailAttachment(self.filename, # pylint: disable=W0201
-                                  readMail=lambda location: ('', ''))
+        self.mailAttachment = attachment.MailAttachment(self.filename,  # pylint: disable=W0201
+                                                        readMail=lambda location: ('', ''))
         self.addAttachment(self.mailAttachment)
 
     def testNeedSave_AfterMailAttachmentLocationChanged(self):
@@ -686,7 +690,7 @@ class ChangingAttachmentsTestsMixin(object):
 
     def testNeedSave_AfterMailAttachmentNoteAdded(self):
         self.addMailAttachment()
-        self.mailAttachment.addNote(note.Note(subject='Note')) # pylint: disable=E1101
+        self.mailAttachment.addNote(note.Note(subject='Note'))  # pylint: disable=E1101
         self.failUnless(self.taskFile.needSave())
 
 
@@ -696,7 +700,7 @@ class TaskFileDirtyWhenChangingAttachmentsTestCase(TaskFileTestCase):
         self.attachment = FakeAttachment('file', 'attachment')
 
 
-class TaskFileDirtyWhenChangingTaskAttachmentsTestCase(\
+class TaskFileDirtyWhenChangingTaskAttachmentsTestCase(
         TaskFileDirtyWhenChangingAttachmentsTestCase, 
         ChangingAttachmentsTestsMixin):
     def setUp(self):
@@ -704,7 +708,7 @@ class TaskFileDirtyWhenChangingTaskAttachmentsTestCase(\
         self.item = self.task
 
 
-class TaskFileDirtyWhenChangingNoteAttachmentsTestCase(\
+class TaskFileDirtyWhenChangingNoteAttachmentsTestCase(
         TaskFileDirtyWhenChangingAttachmentsTestCase, 
         ChangingAttachmentsTestsMixin):
     def setUp(self):
@@ -712,7 +716,7 @@ class TaskFileDirtyWhenChangingNoteAttachmentsTestCase(\
         self.item = self.note
 
 
-class TaskFileDirtyWhenChangingCategoryAttachmentsTestCase(\
+class TaskFileDirtyWhenChangingCategoryAttachmentsTestCase(
         TaskFileDirtyWhenChangingAttachmentsTestCase, 
         ChangingAttachmentsTestsMixin):
     def setUp(self):
@@ -733,19 +737,19 @@ class TaskFileSaveAndLoadTest(TaskFileTestCase):
         self.emptyTaskFile.notes().extend(notes)
         self.emptyTaskFile.save()
         self.emptyTaskFile.load()
-        self.assertEqual( \
+        self.assertEqual( 
             sorted([eachTask.subject() for eachTask in tasks]), 
             sorted([eachTask.subject() for eachTask in self.emptyTaskFile.tasks()]))
-        self.assertEqual( \
+        self.assertEqual( 
             sorted([eachCategory.subject() for eachCategory in categories]),
             sorted([eachCategory.subject() for eachCategory in self.emptyTaskFile.categories()]))
-        self.assertEqual( \
+        self.assertEqual( 
             sorted([eachNote.subject() for eachNote in notes]),
             sorted([eachNote.subject() for eachNote in self.emptyTaskFile.notes()]))
 
     def testSaveAndLoad(self):
         self.saveAndLoad([task.Task(subject='ABC'), 
-            task.Task(dueDateTime=date.Tomorrow())])
+                         task.Task(dueDateTime=date.Tomorrow())])
 
     def testSaveAndLoadTaskWithChild(self):
         parentTask = task.Task()
@@ -975,37 +979,45 @@ class TaskFileMonitorTestBase(TaskFileTestCase):
         super(TaskFileMonitorTestBase, self).tearDown()
 
     def testTaskExistsAfterLoad(self):
-        self.assertEqual(self.taskFile.monitor().getChanges(self.task), set())
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.task), set())
+        self.assertEqual(self.taskFile.monitor().getChanges(self.task), {})
 
     def testCategoryExistsAfterLoad(self):
-        self.assertEqual(self.taskFile.monitor().getChanges(self.category), set())
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.category), set())
+        self.assertEqual(self.taskFile.monitor().getChanges(self.category), {})
 
     def testNoteExistsAfterLoad(self):
-        self.assertEqual(self.taskFile.monitor().getChanges(self.note), set())
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.note), set())
+        self.assertEqual(self.taskFile.monitor().getChanges(self.note), {})
 
     def testChangeTask(self):
         self.task.setSubject('New subject')
-        self.assertEqual(self.taskFile.monitor().getChanges(self.task), set(['subject']))
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.task), set(['subject']))
+        self.assertEqual(self.taskFile.monitor().getChanges(self.task), {'subject'})
 
     def testChangeCategory(self):
         self.category.setSubject('New subject')
-        self.assertEqual(self.taskFile.monitor().getChanges(self.category), set(['subject']))
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.category), set(['subject']))
+        self.assertEqual(self.taskFile.monitor().getChanges(self.category), {'subject'})
 
     def testChangeNone(self):
         self.note.setSubject('New subject')
-        self.assertEqual(self.taskFile.monitor().getChanges(self.note), set(['subject']))
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.note), set(['subject']))
+        self.assertEqual(self.taskFile.monitor().getChanges(self.note), {'subject'})
 
     def testChangesResetAfterSave(self):
         self.task.setSubject('New subject')
         self.taskFile.save()
-        self.assertEqual(self.taskFile.monitor().getChanges(self.task), set([]))
+        # self.assertEqual(self.taskFile.monitor().getChanges(self.task), set([]))
+        self.assertEqual(self.taskFile.monitor().getChanges(self.task), {})
 
     def testResetAfterClose(self):
         self.taskFile.close()
         self.assertEqual(self.taskFile.monitor().getChanges(self.task), None)
 
     def _loadChangesFromFile(self, filename):
-        return persistence.ChangesXMLReader(file(filename + '.delta', 'rU')).read()
+        # return persistence.ChangesXMLReader(file(filename + '.delta', 'rU')).read()
+        return persistence.ChangesXMLReader(io.open(filename + '.delta', 'rU')).read()
 
     def testGUIDPresentAfterLoad(self):
         self.failUnless(self._loadChangesFromFile(self.filename).has_key(self.taskFile.monitor().guid()))
@@ -1015,22 +1027,27 @@ class TaskFileMonitorTestBase(TaskFileTestCase):
         self.failIf(self.taskFile.monitor().guid() in self._loadChangesFromFile(self.filename))
 
     def testChangeOtherSetsChanges(self):
-        self.otherFile.monitor().setChanges(self.task.id(), set(['subject']))
+        # self.otherFile.monitor().setChanges(self.task.id(), set(['subject']))
+        self.otherFile.monitor().setChanges(self.task.id(), {'subject'})
         self.otherFile.save()
         allChanges = self._loadChangesFromFile(self.filename)
-        self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(self.task), set(['subject']))
-        self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(self.task), set())
+        # self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(self.task), set(['subject']))
+        self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(self.task), {'subject'})
+        # self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(self.task), set())
+        self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(self.task), {})
 
     def testDeleteObject(self):
         self.otherFile.tasks().remove(self.otherFile.tasks().rootItems()[0])
         self.otherFile.save()
         allChanges = self._loadChangesFromFile(self.filename)
-        self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(self.task), set(['__del__']))
+        # self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(self.task), set(['__del__']))
+        self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(self.task), {'__del__'})
         self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(self.task), None)
 
     def testDiskChangesAfterLoad(self):
         changes = self._loadChangesFromFile(self.filename)[self.taskFile.monitor().guid()]
-        self.assertEqual(changes.getChanges(self.task), set())
+        # self.assertEqual(changes.getChanges(self.task), set())
+        self.assertEqual(changes.getChanges(self.task), {})
 
     def testNewObject(self):
         item = task.Task(subject='New task')
@@ -1038,8 +1055,10 @@ class TaskFileMonitorTestBase(TaskFileTestCase):
         self.otherFile.save()
         self.taskFile.save()
         allChanges = self._loadChangesFromFile(self.filename)
-        self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(item), set())
-        self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(item), set())
+        # self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(item), set())
+        self.assertEqual(allChanges[self.otherFile.monitor().guid()].getChanges(item), {})
+        # self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(item), set())
+        self.assertEqual(allChanges[self.taskFile.monitor().guid()].getChanges(item), {})
 
 
 class TaskFileMultiUserTestBase(object):
@@ -1085,7 +1104,7 @@ class TaskFileMultiUserTestBase(object):
         for filename in filenames:
             tries = 0
             while os.path.exists(filename) and tries < 3:
-                try: # Don't fail on random 'Access denied' errors.
+                try:  # Don't fail on random 'Access denied' errors.
                     os.remove(filename)
                     break
                 except WindowsError:
