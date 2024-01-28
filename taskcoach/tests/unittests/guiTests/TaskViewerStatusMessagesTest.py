@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import object
 import test
-from taskcoachlib import gui, config
-from taskcoachlib.domain import task, date
+from ....taskcoachlib import gui, config
+from ....taskcoachlib.domain import task, date
 
 
 class DummyViewer(object):
@@ -51,8 +52,8 @@ class TaskViewerStatusMessagesTest(test.TestCase):
         
     def assertMessages(self, selected=0, visible=0, total=0, overdue=0, 
                        late=0, inactive=0, completed=0):
-        message1 = self.template1%(selected, visible, total)     
-        message2 = self.template2%(overdue, late, inactive, completed)
+        message1 = self.template1 % (selected, visible, total)     
+        message2 = self.template2 % (overdue, late, inactive, completed)
         self.assertEqual((message1, message2), self.status())
         
     def addActiveTask(self):
