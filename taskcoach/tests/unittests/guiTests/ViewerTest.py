@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from builtins import object
 import test
-from taskcoachlib import gui, config, widgets, persistence
-from taskcoachlib.domain import task, date
-from taskcoachlib.thirdparty import hypertreelist
+from ....taskcoachlib import gui, config, widgets, persistence
+from ....taskcoachlib.domain import task, date
+from ....taskcoachlib.thirdparty import hypertreelist
 
 
 class AuiManagedFrameWithDynamicCenterPane(widgets.AuiManagedFrameWithDynamicCenterPane):
@@ -41,7 +42,7 @@ class ViewerTest(test.wxTestCase):
         self.taskFile.tasks().append(self.task)
         self.window = Window(self.frame)
         self.viewerContainer = gui.viewer.ViewerContainer(self.window, 
-            self.settings)
+                                                          self.settings)
         self.viewer = self.createViewer()
         self.viewerContainer.addViewer(self.viewer)
 
@@ -52,7 +53,7 @@ class ViewerTest(test.wxTestCase):
 
     def createViewer(self):
         return gui.viewer.TaskViewer(self.window, self.taskFile,
-            self.settings)
+                                     self.settings)
 
     def testSelectAllViaWidget(self):
         self.viewer.widget.select_all()
@@ -159,7 +160,7 @@ class SortableViewerTest(test.TestCase):
     def testSortBy(self):
         self.viewer.sortBy('subject')
         self.assertEqual('subject',
-            eval(self.settings.get(self.viewer.settingsSection(), 'sortby'))[0])
+                         eval(self.settings.get(self.viewer.settingsSection(), 'sortby'))[0])
 
     def testSortByTwiceFlipsSortOrder(self):
         self.viewer.sortBy('subject')
@@ -199,6 +200,7 @@ class SortableViewerTest(test.TestCase):
 class SortableViewerForTasksTest(test.TestCase):
     def setUp(self):
         self.settings = config.Settings(load=False)
+        
         class ViewerUnderTest(gui.viewer.mixin.SortableViewerForTasksMixin):
             viewerImages = []
         self.viewer = ViewerUnderTest()
@@ -261,8 +263,8 @@ class SearchableViewerTest(test.TestCase):
     def testSearchMatchCase(self):
         self.viewer.setSearchFilter('bla', matchCase=True)
         self.assertEqual(True, 
-            self.settings.getboolean(self.viewer.settingsSection(), 
-                                     'searchfiltermatchcase'))
+                         self.settings.getboolean(self.viewer.settingsSection(), 
+                                                  'searchfiltermatchcase'))
         
     def testSearchMatchCase_AffectsPresenation(self):
         self.viewer.presentation().append(task.Task('BLA'))
@@ -272,8 +274,8 @@ class SearchableViewerTest(test.TestCase):
     def testSearchIncludesSubItems(self):
         self.viewer.setSearchFilter('bla', includeSubItems=True)
         self.assertEqual(True, 
-            self.settings.getboolean(self.viewer.settingsSection(), 
-                                     'searchfilterincludesubitems'))
+                         self.settings.getboolean(self.viewer.settingsSection(), 
+                                                  'searchfilterincludesubitems'))
         
     def testSearchIncludesSubItems_AffectsPresentation(self):
         parent = task.Task('parent')
@@ -501,7 +503,7 @@ class ViewerBaseClassTest(test.wxTestCase):
             try:
                 gui.viewer.base.Viewer(self.frame, taskFile,
                                        None, settingsSection='bla')
-                self.fail('Expected NotImplementedError') # pragma: no cover
+                self.fail('Expected NotImplementedError')  # pragma: no cover
             except NotImplementedError:
                 pass
         finally:
@@ -514,7 +516,7 @@ class ViewerIteratorTestCase(test.wxTestCase):
     
     def createViewer(self):
         return gui.viewer.TaskViewer(self.window, self.taskFile,
-            self.settings)
+                                     self.settings)
 
     def setUp(self):
         super(ViewerIteratorTestCase, self).setUp()
@@ -534,7 +536,7 @@ class ViewerIteratorTestCase(test.wxTestCase):
         self.taskFile.stop()
 
     def getItemsFromIterator(self):
-        return list(self.viewer.visibleItems()) # pylint: disable=E1101
+        return list(self.viewer.visibleItems())  # pylint: disable=E1101
 
 
 class ViewerIteratorTestsMixin(object):
@@ -584,7 +586,6 @@ class ListViewerIteratorTest(ViewerIteratorTestCase, ViewerIteratorTestsMixin):
     treeMode = 'False'
 
 
-
 class ViewerWithColumnsTest(test.wxTestCase):
     def setUp(self):
         self.settings = config.Settings(load=False)
@@ -597,6 +598,6 @@ class ViewerWithColumnsTest(test.wxTestCase):
         self.taskFile.stop()
 
     def testDefaultColumnWidth(self):
-        expectedWidth = hypertreelist._DEFAULT_COL_WIDTH # pylint: disable=W0212
+        expectedWidth = hypertreelist._DEFAULT_COL_WIDTH  # pylint: disable=W0212
         self.assertEqual(expectedWidth, self.viewer.getColumnWidth('subject'))
         
