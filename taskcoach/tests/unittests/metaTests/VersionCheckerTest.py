@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from future import standard_library
+from builtins import object
 import test
-from taskcoachlib import config, meta
+from ....taskcoachlib import config, meta
+standard_library.install_aliases()
 
 
 class VersionCheckerUnderTest(meta.VersionChecker):
@@ -70,7 +73,8 @@ class VersionCheckerTest(test.TestCase):
         self.assertLastVersionNotified(meta.data.version)
         
     def testErrorWhileGettingPadFile(self):
-        import urllib2
+        # import urllib2
+        from urllib import error as urllib2
         retrievalException = urllib2.HTTPError(None, None, None, None, None)
         self.assertLastVersionNotified(meta.data.version, retrievalException)
         
