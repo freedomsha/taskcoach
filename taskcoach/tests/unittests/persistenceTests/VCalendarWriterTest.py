@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,11 +16,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import test, StringIO, time
-from taskcoachlib import persistence, gui, config, meta
-from taskcoachlib.domain import task, effort, date
+from future import standard_library
+from builtins import object
+from ... import test
+import io as StringIO
+import time
+from ....taskcoachlib import persistence, gui, config, meta
+from ....taskcoachlib.domain import task, effort, date
+standard_library.install_aliases()
 
 
 class UTF8StringIO(StringIO.StringIO):
@@ -69,8 +74,8 @@ class VCalendarCommonTestsMixin(object):
 
     def testProdId(self):
         domain = meta.url[len('http://'):-1]
-        self.assertEqual('PRODID:-//%s//NONSGML %s V%s//EN'%(domain,
-            meta.name, meta.version), self.vcalFile.split('\r\n')[2])
+        self.assertEqual('PRODID:-//%s//NONSGML %s V%s//EN' % (domain,
+                         meta.name, meta.version), self.vcalFile.split('\r\n')[2])
 
     def testEnd(self):
         self.assertEqual('END:VCALENDAR', self.vcalFile.split('\r\n')[-2])
@@ -81,8 +86,8 @@ class VCalEffortWriterTestCase(VCalTestCase):
         super(VCalEffortWriterTestCase, self).setUp()        
         self.task1 = task.Task(u'Task 1')
         self.effort1 = effort.Effort(self.task1, description=u'Description',
-                                     start=date.DateTime(2000,1,1,1,1,1),
-                                     stop=date.DateTime(2000,2,2,2,2,2))
+                                     start=date.DateTime(2000, 1, 1, 1, 1, 1),
+                                     stop=date.DateTime(2000, 2, 2, 2, 2, 2))
         self.effort2 = effort.Effort(self.task1)
         self.task1.addEffort(self.effort1)
         self.task1.addEffort(self.effort2)
@@ -130,7 +135,7 @@ class VCalEffortCommonTestsMixin(VCalendarCommonTestsMixin):
                                                               endUTC.second))
         
     def testEffortId(self):
-        self.failUnless('UID:%s'%self.effort1.id() in self.vcalFile)
+        self.failUnless('UID:%s' % self.effort1.id() in self.vcalFile)
 
     
 class VCalEffortWriterTest(VCalEffortWriterTestCase,
@@ -164,7 +169,7 @@ class VCalTaskWriterTestCase(VCalTestCase):
         self.taskFile.tasks().extend([self.task1, self.task2])
         self.settings.set('taskviewer', 'treemode', self.treeMode)
         self.viewer = gui.viewer.TaskViewer(self.frame, self.taskFile,
-            self.settings)
+                                            self.settings)
         self.selectItems([self.task2])
         self.vcalFile = self.writeAndRead()
         
@@ -208,6 +213,7 @@ class TestSelectionOnlyMixin(VCalTaskCommonTestsMixin):
 class TestSelectionList(TestSelectionOnlyMixin, VCalTaskWriterTestCase):
     treeMode = 'False'
 
+
 class TestSelectionTree(TestSelectionOnlyMixin, VCalTaskWriterTestCase):
     treeMode = 'True'
 
@@ -224,6 +230,7 @@ class TestNotSelectionOnlyMixin(VCalTaskCommonTestsMixin):
 
 class TestNotSelectionList(TestNotSelectionOnlyMixin, VCalTaskWriterTestCase):
     treeMode = 'False'
+
 
 class TestNotSelectionTree(TestNotSelectionOnlyMixin, VCalTaskWriterTestCase):
     treeMode = 'True'
@@ -253,7 +260,7 @@ class FoldTest(test.TestCase):
         
     def testFoldTwoLongLines(self):
         self.assertEqual('Long \r\n line\r\n'*2, self.fold(['Long line']*2, 
-                                                         linewidth=5))
+                                                           linewidth=5))
 
     def testFoldALineWithNewLines(self):
         self.assertEqual('Line 1\r\n Line 2\r\n', self.fold(['Line 1\nLine 2']))
