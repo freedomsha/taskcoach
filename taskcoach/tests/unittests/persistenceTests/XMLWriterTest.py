@@ -18,11 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import wx, StringIO # We cannot use CStringIO since unicode strings are used below.
-import test
-from taskcoachlib import persistence, config, meta
-from taskcoachlib.domain import base, task, effort, date, category, note, attachment
-from taskcoachlib.syncml.config import SyncMLConfigNode
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
+import wx
+import io as StringIO  # We cannot use CStringIO since unicode strings are used below.
+from ... import test
+from ....taskcoachlib import persistence, config, meta
+from ....taskcoachlib.domain import base, task, effort, date, category, note, attachment
+from ....taskcoachlib.syncml.config import SyncMLConfigNode
 
 
 class XMLWriterTest(test.TestCase):
