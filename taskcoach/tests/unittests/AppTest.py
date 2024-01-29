@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test
+from .. import test
 import wx
-from taskcoachlib import meta, application, config
+from ...taskcoachlib import meta, application, config
 
 
 class DummyOptions(object):
@@ -90,6 +90,7 @@ class AppTests(test.TestCase):
     
     def testLanguageViaLocale(self):
         self.assertLanguage('en_GB', DummyLocale('en_GB'))
+        
         
     def testLanguageViaCLocale(self):
         self.assertLanguage('en_US', DummyLocale())
