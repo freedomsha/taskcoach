@@ -18,12 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import StringIO, wx
-import test
-from taskcoachlib import persistence
-from taskcoachlib import config
-from taskcoachlib.domain import task, category, effort, date, note, attachment
-from taskcoachlib.syncml.config import SyncMLConfigNode
+from future import standard_library
+standard_library.install_aliases()
+import io as StringIO
+import wx
+from ... import test
+from ....taskcoachlib import persistence
+from ....taskcoachlib import config
+from ....taskcoachlib.domain import task, category, effort, date, note, attachment
+from ....taskcoachlib.syncml.config import SyncMLConfigNode
 
 
 class IntegrationTestCase(test.TestCase):
