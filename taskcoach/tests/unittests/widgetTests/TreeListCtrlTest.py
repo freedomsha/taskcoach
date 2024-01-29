@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from __future__ import absolute_import
+
+from builtins import range
 import wx
-import TreeCtrlTest
-from unittests import dummy
-from taskcoachlib import widgets
+from . import TreeCtrlTest
+from ...unittests import dummy
+from ....taskcoachlib import widgets
 
 
 class TreeListCtrlTestCase(TreeCtrlTest.TreeCtrlTestCase):
@@ -30,16 +33,16 @@ class TreeListCtrlTestCase(TreeCtrlTest.TreeCtrlTestCase):
         super(TreeListCtrlTestCase, self).setUp()
         self._columns = self.createColumns()
         self.treeCtrl = widgets.TreeListCtrl(self.frame, self.columns(), 
-            self.getItemTooltipText,
-            self.onSelect, dummy.DummyUICommand(), dummy.DummyUICommand())
+                                             self.getItemTooltipText,
+                                             self.onSelect, dummy.DummyUICommand(), dummy.DummyUICommand())
         imageList = wx.ImageList(16, 16)
         for bitmapName in ['led_blue_icon', 'folder_blue_icon']:
             imageList.Add(wx.ArtProvider_GetBitmap(bitmapName, wx.ART_MENU, 
-                          (16,16)))
-        self.treeCtrl.AssignImageList(imageList) # pylint: disable=E1101
+                          (16, 16)))
+        self.treeCtrl.AssignImageList(imageList)  # pylint: disable=E1101
 
     def createColumns(self):
-        names = ['treeColumn'] + ['column%d'%index for index in range(1, 5)]
+        names = ['treeColumn'] + ['column%d' % index for index in range(1, 5)]
         return [widgets.Column(name, name, ('view', 'whatever'), None) for name in names]
         
     def columns(self):
@@ -81,7 +84,7 @@ class TreeListCtrlColumnsTest(TreeListCtrlTestCase):
         self.assertColumns()
         
     def testHideLastColumn(self):
-        lastColumnHeader = 'column%d'%len(self.visibleColumns)
+        lastColumnHeader = 'column%d' % len(self.visibleColumns)
         self.showColumn(lastColumnHeader, False)
         self.assertColumns()
         
