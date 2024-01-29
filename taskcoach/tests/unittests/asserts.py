@@ -16,6 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import object
+
+
 class TaskListAssertsMixin(object):
     def assertTaskList(self, expected):
         self.assertEqualLists(expected, self.taskList)
@@ -93,7 +99,7 @@ class TaskAssertsMixin(object):
 
 class CommandAssertsMixin(object):
     def assertHistoryAndFuture(self, expectedHistory, expectedFuture):
-        from taskcoachlib import patterns
+        from ...taskcoachlib import patterns
         commands = patterns.CommandHistory()
         self.assertEqual(expectedHistory, commands.getHistory())
         self.assertEqual(expectedFuture, commands.getFuture())
@@ -106,6 +112,7 @@ class CommandAssertsMixin(object):
         assertUndone()
         self.redo()
         assertDone()
+
 
 class Mixin(CommandAssertsMixin, TaskAssertsMixin, EffortAssertsMixin, 
             TaskListAssertsMixin, EffortListAssertsMixin, 
