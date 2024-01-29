@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test
-from taskcoachlib.widgets import masked
+from ... import test
+from ....taskcoachlib.widgets import masked
 
 
 class LocalConv(dict):
@@ -51,7 +51,7 @@ class AmountCtrlTest(test.wxTestCase):
     def testCommaAsDecimalSepAndGrouping(self):
         masked.AmountCtrl(self.frame, 
                           locale_conventions=LocalConv(decimal_point=',',
-                                                       grouping=[3,3,3]))
+                                                       grouping=[3, 3, 3]))
 
     def testCommaAsBothDecimalSepAndThousandsSepButNoGrouping(self):
         masked.AmountCtrl(self.frame, 
@@ -62,13 +62,13 @@ class AmountCtrlTest(test.wxTestCase):
         masked.AmountCtrl(self.frame, 
                           locale_conventions=LocalConv(decimal_point=',',
                                                        thousands_sep=',', 
-                                                       grouping=[3,3,3]))
+                                                       grouping=[3, 3, 3]))
 
     def testSpaceIsNotAllowedAsDecimalPoint(self):
         try:
             masked.AmountCtrl(self.frame, 
                               locale_conventions=LocalConv(decimal_point=' '))
-            self.fail('Expected ValueError') # pragma: no cover
+            self.fail('Expected ValueError')  # pragma: no cover
         except ValueError:
             pass
 
@@ -79,7 +79,7 @@ class AmountCtrlTest(test.wxTestCase):
     def testNonAsciiThousandsSeparator(self):
         masked.AmountCtrl(self.frame, 
                           locale_conventions=LocalConv(thousands_sep=u'�', 
-                                                       grouping=[3,3,3]))
+                                                       grouping=[3, 3, 3]))
 
     def testMultiCharThousandsSeparator(self):
         masked.AmountCtrl(self.frame, 
