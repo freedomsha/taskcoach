@@ -18,9 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test, sys, os, ConfigParser, StringIO
-from taskcoachlib import config, meta
-from taskcoachlib.thirdparty.pubsub import pub
+from .. import test
+import sys
+import os
+import configparser as ConfigParser
+import io as StringIO
+from ...taskcoachlib import config, meta
+from ...taskcoachlib.thirdparty.pubsub import pub
 
 
 class SettingsTestCase(test.TestCase):
