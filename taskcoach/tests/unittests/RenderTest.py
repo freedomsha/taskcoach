@@ -18,10 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test
-from taskcoachlib import render
-from taskcoachlib.i18n import _
-from taskcoachlib.domain import date
+from .. import test
+from ...taskcoachlib import render
+from ...taskcoachlib.i18n import _
+from ...taskcoachlib.domain import date
 
 
 class RenderDateTime(test.TestCase):
@@ -233,14 +233,16 @@ class RenderRecurrenceTest(test.TestCase):
 class RenderException(test.TestCase):
     def testRenderException(self):
         instance = Exception()
-        self.assertEqual(unicode(instance), 
+        # self.assertEqual(unicode(instance), 
+        self.assertEqual(str(instance),
                          render.exception(Exception, instance))
 
     def testRenderUnicodeDecodeError(self):
         try:
             'abc'.encode('utf-16').decode('utf-8')
         except UnicodeDecodeError as instance:
-            self.assertEqual(unicode(instance), 
+            # self.assertEqual(unicode(instance), 
+            self.assertEqual(str(instance),
                              render.exception(UnicodeDecodeError, instance))
             
     def testExceptionThatCannotBePrinted(self):
