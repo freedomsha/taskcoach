@@ -16,11 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test, wx
-from taskcoachlib.widgets import tooltip
+from ... import test
+import wx
+from ....taskcoachlib.widgets import tooltip
 
 
-class ToolTipUnderTest(tooltip.ToolTipMixin, wx.Frame): # pylint: disable=W0223
+class ToolTipUnderTest(tooltip.ToolTipMixin, wx.Frame):  # pylint: disable=W0223
     def GetMainWindow(self):
         return self
 
