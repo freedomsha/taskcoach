@@ -17,8 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import wx
-import test
-from taskcoachlib import gui, config, operating_system
+from ... import test
+from ....taskcoachlib import gui, config, operating_system
 
 
 class WindowDimensionsTrackerTest(test.wxTestCase):
@@ -30,7 +30,7 @@ class WindowDimensionsTrackerTest(test.wxTestCase):
         self.settings.setvalue(self.section, 'starticonized', 'Never')
         if operating_system.isWindows():
             self.frame.Show()
-        self.tracker = gui.windowdimensionstracker.WindowDimensionsTracker( \
+        self.tracker = gui.windowdimensionstracker.WindowDimensionsTracker( 
                            self.frame, self.settings)
         
     def test_initial_position(self):
