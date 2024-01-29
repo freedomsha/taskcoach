@@ -16,14 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import test
-import taskcoachlib.mailer
+from .. import test
+from ...taskcoachlib import mailer
 
 
 class TestMailer(test.TestCase):        
     def testWriteMail(self):
         def openURL(mailtoString):
             self.mailtoString = mailtoString # pylint: disable=W0201
-        taskcoachlib.mailer.sendMail('to', 'subject', 'body', openURL=openURL)
+        mailer.sendMail('to', 'subject', 'body', openURL=openURL)
         self.failUnless(self.mailtoString.startswith('mailto:'))
         
