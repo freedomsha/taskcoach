@@ -16,9 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 import wx
-import test
-from taskcoachlib import widgets
+from ... import test
+from ....taskcoachlib import widgets
 
 
 class CtrlWithColumnsTestCase(test.wxTestCase):
@@ -29,11 +30,11 @@ class CtrlWithColumnsTestCase(test.wxTestCase):
         self.control = self.createControl()
 
     def createControl(self):
-        raise NotImplementedError # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
 
-class CtrlWithHideableColumnsUnderTest( \
-          widgets.itemctrl._CtrlWithHideableColumnsMixin, # pylint: disable=W0212 
+class CtrlWithHideableColumnsUnderTest( 
+          widgets.itemctrl._CtrlWithHideableColumnsMixin,  # pylint: disable=W0212 
           wx.ListCtrl): 
     pass
 
@@ -59,15 +60,15 @@ class CtrlWithHideableColumnsTest(CtrlWithColumnsTestCase,
             columns=[self.column1, self.column2])
                 
         
-class CtrlWithSortableColumnsUnderTest( \
-        widgets.itemctrl._CtrlWithSortableColumnsMixin, # pylint: disable=W0212 
+class CtrlWithSortableColumnsUnderTest( 
+        widgets.itemctrl._CtrlWithSortableColumnsMixin,  # pylint: disable=W0212 
         wx.ListCtrl):
     pass
 
 
 class CtrlWithSortableColumnsTestsMixin(object):
     def assertCurrentSortColumn(self, expectedSortColumn):
-        currentSortColumn = self.control._currentSortColumn() # pylint: disable=W0212
+        currentSortColumn = self.control._currentSortColumn()  # pylint: disable=W0212
         self.assertEqual(expectedSortColumn, currentSortColumn)
         
     def testDefaultSortColumn(self):
