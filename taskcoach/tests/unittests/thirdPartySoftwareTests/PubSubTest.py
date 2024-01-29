@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,10 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from taskcoachlib.thirdparty.pubsub import pub
-import test
+from ....taskcoachlib.thirdparty.pubsub import pub
+from ... import test
 
 
 class PubSubTest(test.TestCase):
@@ -32,4 +32,3 @@ class PubSubTest(test.TestCase):
         pub.sendMessage('TestTopic')
         self.failUnless(self.calledTestTopic)
         
- 
