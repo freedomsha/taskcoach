@@ -18,15 +18,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from future import standard_library
 import xml.parsers.expat
 import wx
-import StringIO
+import io as StringIO
 import os
 import tempfile
 import base64
-import test
-from taskcoachlib import persistence, config, operating_system
-from taskcoachlib.domain import date, task
+from ... import test
+from ....taskcoachlib import persistence, config, operating_system
+from ....taskcoachlib.domain import date, task
+standard_library.install_aliases()
 
 
 class XMLTemplateReaderTestCase(test.TestCase):
@@ -709,7 +711,7 @@ class XMLReaderVersion20Test(XMLReaderTestCase):
             <category subject="cat2"/>
         </tasks>''')
         self.assertEqual(['cat1', 'cat2'], 
-            [category.subject() for category in categories])
+                         [category.subject() for category in categories])
 
     def testCategoryId(self):
         categories = self.writeAndReadCategories('''
