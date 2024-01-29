@@ -16,10 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from builtins import object
 import wx
-import test
-from unittests import dummy
-from taskcoachlib import widgets
+from ... import test
+from ...unittests import dummy
+from ....taskcoachlib import widgets
 
         
 class TreeCtrlTestCase(test.wxTestCase):
