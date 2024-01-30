@@ -18,23 +18,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import print_function
+
 # Script to update copyright notices.
 
+# from io import open as file ?
 import os, datetime
 
 copyright_notice = 'Copyright (C) 2004-%s Task Coach developers <developers@taskcoach.org>'
 year = datetime.date.today().year
-copyright_notice_last_year = copyright_notice%(year-1)
-copyright_notice_this_year = copyright_notice%(year)
+copyright_notice_last_year = copyright_notice % (year-1)
+copyright_notice_this_year = copyright_notice % year
 
 
 def change_copyright_notice(filepath):
-    with file(filepath, 'r') as fp:
+    with file(filepath, 'r') as fp:  # use io.open ?
         contents = fp.read()
     if copyright_notice_last_year in contents:
         print 'updating', filepath
         contents = contents.replace(copyright_notice_last_year, copyright_notice_this_year, 1)
-        with file(filepath, 'w') as fp:
+        with file(filepath, 'w') as fp:  # use io.open ?
             fp.write(contents)
     else:
         print 'skipping', filepath
@@ -46,4 +49,3 @@ for dirpath, dirnames, filenames in os.walk('..'):
             dirnames.remove(dirname)
     for filename in filenames:
         change_copyright_notice(os.path.join(dirpath, filename))
-
