@@ -1,3 +1,4 @@
+from builtins import map
 leadins = """On the other hand,
     This suggests that
     This means that
@@ -84,6 +85,7 @@ objects = """ problems of scope and lead time.
 import textwrap, random
 from itertools import chain, islice, izip
 
+
 def composeText(partsToUse, line_length=72, times=1):
     parts = []
     for part in partsToUse:
@@ -93,8 +95,10 @@ def composeText(partsToUse, line_length=72, times=1):
     output = chain(*islice(izip(*parts), 0, times))
     return textwrap.fill(' '.join(output), line_length)
 
+
 def text(times=1, line_length=72):
     return composeText((leadins, subjects, verbs, objects), line_length, times)
+
 
 def title(line_length=72):
     return composeText((commands, objects), line_length)
