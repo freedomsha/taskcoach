@@ -24,6 +24,7 @@ packages = []
 modules = []
 classdef = re.compile('class ([A-Za-z]+)\(([^)]+)\)', re.MULTILINE)
 
+
 def stripmodule(classname):
     return classname.split('.')[-1]
 
