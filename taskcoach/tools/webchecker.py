@@ -106,20 +106,29 @@ rooturl   -- URL to start checking
 __version__ = "$Revision: 1.3 $"
 
 
+from __future__ import print_function
+
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
+from future.utils import raise_
 import sys
 import os
 from types import *
-import StringIO
+import io as StringIO
 import getopt
 import pickle
 
-import urllib
-import urlparse
+import urllib.request
+import urllib.error
+import urllib.parse
 import sgmllib
 import cgi
 
 import mimetypes
-import robotparser
+import urllib.robotparser
 
 # Extract real version number if necessary
 if __version__[0] == '$':
@@ -156,7 +165,7 @@ def main():
     except getopt.error, msg:
         sys.stdout = sys.stderr
         print msg
-        print __doc__%globals()
+        print __doc__ % globals()
         sys.exit(2)
 
     # The extra_roots variable collects extra roots.
@@ -213,7 +222,7 @@ def main():
             # directory component.
             if root[-1] != "/":
                 root = root + "/"
-            c.addroot(root, add_to_do = 0)
+            c.addroot(root, add_to_do=0)
 
     try:
 
@@ -291,12 +300,12 @@ class Checker:
     def note(self, level, format, *args):
         if self.verbose > level:
             if args:
-                format = format%args
+                format = format % args
             self.message(format)
 
     def message(self, format, *args):
         if args:
-            format = format%args
+            format = format % args
         print format
 
     def __getstate__(self):
@@ -310,7 +319,7 @@ class Checker:
         for url in self.bad.keys():
             self.markerror(url)
 
-    def addroot(self, root, add_to_do = 1):
+    def addroot(self, root, add_to_do=1):
         if root not in self.roots:
             troot = root
             scheme, netloc, path, params, query, fragment = \
@@ -405,7 +414,7 @@ class Checker:
         except sgmllib.SGMLParseError, msg:
             msg = self.sanitize(msg)
             self.note(0, "Error parsing %s: %s",
-                          self.format_url(url_pair), msg)
+                      self.format_url(url_pair), msg)
             # Dont actually mark the URL as bad - it exists, just
             # we can't parse it!
             page = None
@@ -688,7 +697,7 @@ class Page:
         else:
             if self.verbose >= level:
                 if args:
-                    msg = msg%args
+                    msg = msg % args
                 print msg
 
     # Method to retrieve names.
@@ -835,8 +844,8 @@ class MyHTMLParser(sgmllib.SGMLParser):
         for name, value in attributes:
             if name == "rel":
                 parts = value.lower().split()
-                if (  parts == ["stylesheet"]
-                      or parts == ["alternate", "stylesheet"]):
+                if (parts == ["stylesheet"]
+                        or parts == ["alternate", "stylesheet"]):
                     self.link_attr(attributes, "href")
                     break
         self.check_name_id(attributes)
