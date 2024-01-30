@@ -18,6 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from __future__ import print_function
+
+from builtins import object
 import wxversion
 wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True)
 
