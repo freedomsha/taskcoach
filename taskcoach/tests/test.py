@@ -21,15 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 
 from builtins import object
-import wxversion
+import wxversion  # a supprimer obsolete
 wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True)
 
-import sys, unittest, os, time, wx, logging
+import sys
+import unittest
+import os
+import time
+import wx
+import logging
 projectRoot = os.path.abspath('..')
 if projectRoot not in sys.path:
     sys.path.insert(0, projectRoot)
 
-from taskcoachlib.notify import AbstractNotifier
+from ..taskcoachlib.notify import AbstractNotifier
 
 
 def skipOnPlatform(*platforms):
@@ -64,7 +69,7 @@ class TestCase(unittest.TestCase, object):
     def registerObserver(self, eventType, eventSource=None):
         if not hasattr(self, 'events'):
             self.events = []  # pylint: disable=W0201
-        from taskcoachlib import patterns  # pylint: disable=W0404
+        from ..taskcoachlib import patterns  # pylint: disable=W0404
         patterns.Publisher().registerObserver(self.onEvent, eventType=eventType,
                                               eventSource=eventSource)
         
@@ -78,16 +83,16 @@ class TestCase(unittest.TestCase, object):
         # pylint: disable=W0404
         # Prevent processing of pending events after the test has finished:
         wx.GetApp().Disconnect(wx.ID_ANY) 
-        from taskcoachlib import patterns
+        from ..taskcoachlib import patterns
         patterns.Publisher().clear()
         patterns.CommandHistory().clear()
         patterns.NumberedInstances.count = dict()
-        from taskcoachlib.domain import date
+        from ..taskcoachlib.domain import date
         date.Scheduler().shutdown()
         date.Scheduler.deleteInstance()
         if hasattr(self, 'events'):
             del self.events
-        from taskcoachlib.thirdparty.pubsub import pub
+        from ..taskcoachlib.thirdparty.pubsub import pub
         pub.unsubAll()
         super(TestCase, self).tearDown()
 
@@ -108,17 +113,17 @@ class wxTestCase(TestCase):
     # pylint: disable=W0404
     app = wx.App(0)
     frame = TestCaseFrame()
-    from taskcoachlib import i18n
+    from ..taskcoachlib import i18n
     i18n.Translator('en_US')
-    from taskcoachlib import gui
+    from ..taskcoachlib import gui
     gui.init()
 
     def tearDown(self):
         super(wxTestCase, self).tearDown()
-        self.frame.DestroyChildren() # Clean up GDI objects on Windows
+        self.frame.DestroyChildren()  # Clean up GDI objects on Windows
 
 
-class TestResultWithTimings(unittest._TextTestResult): # pylint: disable=W0212
+class TestResultWithTimings(unittest._TextTestResult):  # pylint: disable=W0212
     def __init__(self, *args, **kwargs):
         super(TestResultWithTimings, self).__init__(*args, **kwargs)
         self._timings = {}
@@ -193,7 +198,7 @@ class AllTests(unittest.TestSuite):
             # modules.
             __import__(moduleName)
             suite = testloader.loadTestsFromName(moduleName)
-            self.addTests(suite._tests) # pylint: disable=W0212
+            self.addTests(suite._tests)  # pylint: disable=W0212
    
     def runTests(self):       
         testrunner = TextTestRunnerWithTimings(
@@ -213,13 +218,13 @@ class AllTests(unittest.TestSuite):
     @staticmethod
     def getFilesFromDir(directory, extension):
         result = []
-        for root, dirs, filenames in os.walk(directory): # pylint: disable=W0612
+        for root, dirs, filenames in os.walk(directory):  # pylint: disable=W0612
             result.extend([os.path.join(root, filename) for filename in filenames \
                            if filename.endswith(extension)])
         return result
 
 
-from taskcoachlib import config
+from ..taskcoachlib import config
 class TestOptionParser(config.OptionParser):
     def __init__(self):
         super(TestOptionParser, self).__init__(usage='usage: %prog [options] [testfiles]')
