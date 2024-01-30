@@ -17,8 +17,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from __future__ import print_function
 
+from builtins import map
 import os, re, sys
+
 
 def findLatest(path, valid):
     rx = re.compile(r'(.*)(\d+\.\d+\.\d+\.\d+)(.*)')
@@ -70,6 +73,7 @@ def listPath(path):
 
     print '</ul>'
 
+
 def main(path):
     print 'Content-type: text/html'
     print
@@ -94,6 +98,7 @@ def main(path):
 
     print '</body></html>'
 
+
 if __name__ == '__main__':
     if sys.argv[0].endswith('latest_features.py'):
         main('.')
@@ -101,4 +106,3 @@ if __name__ == '__main__':
         main('branches')
     else:
         main('all')
-
