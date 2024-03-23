@@ -4,9 +4,12 @@
 from __future__ import print_function
 from past.builtins import cmp
 from builtins import map
-import os, re, sys
+import os
+import re
+import sys
 
-def findLatest(path, valid):
+
+def findlatest(path, valid):
     rx = re.compile(r'(.*)(\d+\.\d+\.\d+\.\d+)(.*)')
 
     results = dict()
@@ -16,14 +19,13 @@ def findLatest(path, valid):
             mt = rx.search(name)
             if mt:
                 ls = results.get((mt.group(1), mt.group(3)), [])
-                # ls.append(map(int, mt.group(2).split('.')))
-                # futurize:
                 ls.append(list(map(int, mt.group(2).split('.'))))
                 results[(mt.group(1), mt.group(3))] = ls
 
     packages = []
 
-    for (part1, part3), versions in results.items():
+    # for (part1, part3), versions in results.items():
+    for (part1, part3), versions in list(results.items()):
         versions.sort()
         packages.append('%s%s%s' % (part1, '.'.join(map(str, versions[-1])), part3))
 
@@ -32,16 +34,16 @@ def findLatest(path, valid):
     return packages
 
 
-def listPath(path):
-    def isSource(name):
+def listpath(path):  # def listPath(path):
+    def issource(name):  # def isSource(name):
         if name.endswith('.tar.gz') or name.endswith('.src.rpm') or name.endswith('.tgz'):
             return True
         if name.endswith('.zip'):
             return not name.endswith('_rev1.zip')
         return False
 
-
-    print '<table border="0">'
+    # print'<table border="0">'
+    print('<table border="0">')
 
     changelog = os.path.join(path, 'changelog_content')
     if os.path.exists(changelog):
@@ -55,24 +57,26 @@ def listPath(path):
         print(open(changelog, 'rb').read())
         print('</td></tr></pre>')
 
-    print '<tr><th colspan="2"><h2>Sources</h2></th></tr>'
+    # print'<tr><th colspan="2"><h2>Sources</h2></th></tr>'
+    print('<tr><th colspan="2"><h2>Sources</h2></th></tr>')
 
-    for pkgname in findLatest(path, isSource):
-        print '<tr>'
-        print '<td><img src="source.png" /></td>'
-        print '<td>'
+    # for pkgname in findLatest(path, isSource):
+    for pkgname in findlatest(path, issource):
+        print('<tr>')
+        print('<td><img src="source.png" /></td>')
+        print('<td>')
         if path == '.' or path == 'all':
-            print '<a href="http://www.fraca7.net/TaskCoach-packages/%s">%s</a>' % (pkgname, pkgname)
+            print('<a href="http://www.fraca7.net/TaskCoach-packages/%s">%s</a>' % (pkgname, pkgname))
         else:
-            print '<a href="http://www.fraca7.net/TaskCoach-packages/%s/%s">%s</a>' % (path, pkgname, pkgname)
-        print '</td>'
-        print '</tr>'
+            print('<a href="http://www.fraca7.net/TaskCoach-packages/%s/%s">%s</a>' % (path, pkgname, pkgname))
+        print('</td>')
+        print('</tr>')
 
-    print '<tr><th colspan="2"><h2>Binaries</h2></th></tr>'
+    print('<tr><th colspan="2"><h2>Binaries</h2></th></tr>')
 
-    for pkgname in findLatest(path, lambda x: not isSource(x)):
+    for pkgname in findlatest(path, lambda x: not issource(x)):
         # print '<tr>'
-        # futurize :
+        # futurize:
         print('<tr>')
         img = 'binary.png'
         if pkgname.endswith('.dmg'):
@@ -83,7 +87,7 @@ def listPath(path):
             img = 'linux.png'
         # print '<td><img src="%s" /></td>' % img
         # print '<td>'
-        # futurize: 
+        # futurize:
         print('<td><img src="%s" /></td>' % img)
         print('<td>')
         if path == '.' or path == 'all':
@@ -103,6 +107,7 @@ def listPath(path):
     print('</table>')
     print('<hr />')
 
+
 def main(path):
     print('Content-type: text/html')
     print()
@@ -113,10 +118,10 @@ def main(path):
 
     if path == '.' or path == 'all':
         print('<h1>New developments (from trunk)</h1>')
-        listPath('.')
+        listpath('.')
 
     if path != '.':
-        for name in sorted(os.listdir(path), cmp=lambda x, y: cmp(y, x)): # Feature should come first
+        for name in sorted(os.listdir(path), cmp=lambda x, y: cmp(y, x)):  # Feature should come first
             if name.startswith('Release') or name.startswith('Feature'):
                 fname = os.path.join(path, name)
                 if os.path.isdir(fname):
@@ -124,11 +129,12 @@ def main(path):
                         print('<h1>Bug fixes (from %s)</h1>' % name)
                     else:
                         print('<h1>Experimental features (from %s)</h1>' % name)
-                    listPath(fname)
+                    listpath(fname)
 
     print('<a href="http://www.taskcoach.org/download.html>Back to Task Coach downloads</a>')
 
     print('</center></body></html>')
+
 
 if __name__ == '__main__':
     if sys.argv[0].endswith('latest_features.py'):
@@ -137,4 +143,3 @@ if __name__ == '__main__':
         main('branches')
     else:
         main('all')
-
