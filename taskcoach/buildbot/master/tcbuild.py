@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -16,11 +16,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 # pylint: disable=F0401,E1101
 # +1 ligne futurize :
 from builtins import object
+# but this imports don't exist !!!
 from buildbot.steps.shell import Compile, ShellCommand, WithProperties
 from buildbot.steps.master import MasterShellCommand
 from buildbot.steps.transfer import FileUpload, DirectoryUpload
@@ -30,15 +31,18 @@ from buildbot.process.buildstep import SUCCESS, FAILURE
 from twisted.python import log
 
 from zope.interface import implements
-import re, os
+import re
+import os
+
 
 class TaskCoachEmailLookup(object):
     implements(interfaces.IEmailLookup)
 
-    def getAddress(self, name):
+    # @staticmethod
+    def getaddress(name):
         try:
-            return { 'fraca7': 'fraca7@free.fr',
-                     'fniessink': 'frank@niessink.com' }[name]
+            return {'fraca7': 'fraca7@free.fr',
+                    'fniessink': 'frank@niessink.com'}[name]
         except KeyError:
             return None
 
@@ -122,7 +126,8 @@ class KillEXE(ShellCommand):
     description = ['Killing', 'exe']
     descriptionDone = ['Exe', 'killed']
 
-    def evaluateCommand(self, cmd):
+    # @staticmethod
+    def evaluatecommand(cmd):
         return SUCCESS
 
 
@@ -133,8 +138,8 @@ class Coverage(Compile):
     haltOnFailure = False
     command = ['make', 'coverage']
 
-    def createSummary(self, log):
-        Compile.createSummary(self, log)
+    def createsummary(self, log):
+        Compile.createsummary(self, log)
 
         self.addURL('coverage',
                     'http://jeromelaheurte.net/TaskCoach-coverage/%s/index.html' % (self.getProperty('buildername')))
@@ -187,7 +192,7 @@ class DistCompile(Compile):
 
         Compile.start(self)
 
-    def commandComplete(self, cmd):
+    def commandcomplete(self, cmd):
         log = cmd.logs['stdio']
 
         for line in log.readlines():
@@ -202,18 +207,18 @@ class DistCompile(Compile):
                 self.setProperty('basefilename', filename[filename.rfind(self.sep) + 1:])
                 break
 
-        Compile.commandComplete(self, cmd)
+        Compile.commandcomplete(self, cmd)
 
-    def createSummary(self, log):
+    def tccreatesummary(self, log):
         if not self.ignoreWarnings:
-            Compile.createSummary(self, log)
+            Compile.createsummary(self, log)
 
 
 class UploadBase(FileUpload):
     def __init__(self, **kwargs):
         kwargs['slavesrc'] = WithProperties('%s', 'filename')
         kwargs['masterdest'] = WithProperties('/var/www/TaskCoach-packages/branches/%s/%s', 'branch', 'basefilename')
-        kwargs['mode'] = 0644
+        kwargs['mode'] = 0o644
         FileUpload.__init__(self, **kwargs)
 
     def start(self):
@@ -233,7 +238,7 @@ class UploadChangelog(FileUpload):
     def __init__(self, **kwargs):
         kwargs['slavesrc'] = 'changelog_content'
         kwargs['masterdest'] = WithProperties('/var/www/TaskCoach-packages/branches/%s/changelog_content', 'branch')
-        kwargs['mode'] = 0644
+        kwargs['mode'] = 0o644
         FileUpload.__init__(self, **kwargs)
 
 
@@ -345,7 +350,8 @@ class BuildDEB(DistCompile):
     def __init__(self, **kwargs):
         # Avoid having the virtualenv bin directory in path, it messes up things
         kwargs['env'] = {'PATH': '/bin:/usr/bin:/usr/local/bin'}
-        super(DistCompile, self).__init__(**kwargs)
+        # super(DistCompile, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 class BuildUbuntu(BuildDEB):
@@ -462,7 +468,7 @@ class PylintUploadStep(FileUpload):
     def __init__(self, **kwargs):
         kwargs['slavesrc'] = 'pylint.html'
         kwargs['masterdest'] = WithProperties('/var/www/pylint-%s.html', 'buildername')
-        kwargs['mode'] = 0644
+        kwargs['mode'] = 0o644
         FileUpload.__init__(self, **kwargs)
 
     def start(self):
