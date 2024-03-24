@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,32 +14,49 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import os, fnmatch
-from distutils.command.clean import clean as BaseCleanCommand
+import os
+import fnmatch
+# Remove the distutils package. It was deprecated in Python 3.10 by PEP 632 “Deprecate distutils module”.
+# For projects still using distutils and cannot be updated to something else, the setuptools project can be installed:
+# it still provides distutils.
+# Supprimez le package distutils. Il a été obsolète dans Python 3.10 par la PEP 632 « Module distutils obsolète ».
+# Pour les projets utilisant toujours distutils et ne pouvant pas être mis à jour vers autre chose,
+# le projet setuptools peut être installé : il fournit toujours distutils.
+from distutils.command.clean import clean as base_clean_command
 from distutils import log
 
 
-class clean(BaseCleanCommand, object):
-    user_options = BaseCleanCommand.user_options + \
-        [('really-clean', 'r', 'remove even more files')]
-    boolean_options = BaseCleanCommand.boolean_options + ['really-clean']
+class Clean(base_clean_command):
+    user_options = base_clean_command.user_options + \
+                   [('really-clean', 'r', 'remove even more files')]
+    boolean_options = base_clean_command.boolean_options + ['really-clean']
 
-    def initialize_options(self):
-        super(clean, self).initialize_options()
+    # def initialize_options(self):
+    def __init__(self):
+        # Parameter 'dist' unfilled
+        super().__init__()
+        # super(clean, self).initialize_options()
+        super().initialize_options()
         # pylint: disable=W0201
+        # TODO: Instance attributes are defined outside __init__
         self.really_clean = False
         self.cleaning_patterns = ['*.pyc']
         self.really_clean_patterns = ['*.bak']
-                    
+
     def finalize_options(self):
-        super(clean, self).finalize_options()
+        # super(clean, self).finalize_options()
+        super().finalize_options()
         if self.really_clean:
             self.cleaning_patterns.extend(self.really_clean_patterns)
-                    
+
     def run(self):
-        super(clean, self).run()
+        # super(clean, self).run()
+        super().run()
+        # TODO:
+        # Unresolved attribute reference 'verbose' and 'dry_run' for class 'Clean'
+        # mais d'ou viennent-ils ?
         if not self.verbose:
             log.info("recursively removing '" + "', '".join(self.cleaning_patterns) + "'")
         for root, _, files in os.walk('.'):
@@ -50,6 +67,6 @@ class clean(BaseCleanCommand, object):
                         if not self.dry_run:
                             os.unlink(filename)
                         if self.verbose:
-                            log.info("removing '%s'"%filename.strip('.\\'))
+                            log.info("removing '%s'" % filename.strip('.\\'))
                     except IOError:
                         pass
