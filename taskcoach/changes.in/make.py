@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,14 +14,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
-# futurize ajoute 2 lignes: 
+"""
+
+# futurize ajoute 2 lignes:
 from __future__ import print_function
 
 from future.utils import raise_
-import converter, changes, sys
+from . import converter, changes
+import sys
 
-numberOfReleases = int(sys.argv[2]) if len(sys.argv) >= 3 else sys.maxint
+numberOfReleases = int(sys.argv[2]) if len(sys.argv) >= 3 else sys.maxsize
+# = au 3e argument si le nombre d'argument est >=3 sinon sa valeur maximale
 
 if sys.argv[1] == 'text':
     converter = converter.ReleaseToTextConverter()
@@ -33,10 +36,8 @@ elif sys.argv[1] == 'debian':
     numberOfReleases = 1
 else:
     # raise ValueError, 'Unknown target format (%s)'%sys.argv[1]
-    raise_(ValueError, 'Unknown target format (%s)'%sys.argv[1])
-    
+    raise_(ValueError, 'Unknown target format (%s)' % sys.argv[1])
+
 releases = changes.releases[:numberOfReleases]
 for release in releases:
-    # print converter.convert(release)
     print(converter.convert(release))
-
