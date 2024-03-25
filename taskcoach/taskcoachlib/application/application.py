@@ -42,6 +42,7 @@ import wx
 import calendar
 import re
 import threading
+from io import open as file
 
 
 class RedirectedOutput(object):
@@ -59,7 +60,8 @@ class RedirectedOutput(object):
                 return
 
         if self.__handle is None:
-            self.__handle = open(self.__path, 'a+')
+            self.__handle = file(self.__path, 'a+')
+            # self.__handle = open(self.__path, 'a+')
             self.__handle.write('============= %s\n' % time.ctime())
         self.__handle.write(bf)
 
