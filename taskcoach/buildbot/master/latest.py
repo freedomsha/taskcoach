@@ -120,15 +120,29 @@ def main(path):
         print('<h1>New developments (from trunk)</h1>')
         listpath('.')
 
+    #    if path != '.':
+    #        for name in sorted(os.listdir(path), cmp=lambda x, y: cmp(y, x)):  # Feature should come first
+    #            if name.startswith('Release') or name.startswith('Feature'):
+    #                fname = os.path.join(path, name)
+    #                if os.path.isdir(fname):
+    #                    if name.startswith('Release'):
+    #                        print('<h1>Bug fixes (from %s)</h1>' % name)
+    #                    else:
+    #                        print('<h1>Experimental features (from %s)</h1>' % name)
+    #                    listpath(fname)
+
+    # Dans cet exemple, j'ai remplacé cmp par key pour spécifier la fonction de tri pour sorted,
+    # et j'ai utilisé des f-strings pour inclure la variable name dans les chaînes de caractères.
+    # Cela rend le code compatible avec Python 3.
     if path != '.':
-        for name in sorted(os.listdir(path), cmp=lambda x, y: cmp(y, x)):  # Feature should come first
+        for name in sorted(os.listdir(path), key=lambda x: x, reverse=True):  # Feature should come first
             if name.startswith('Release') or name.startswith('Feature'):
                 fname = os.path.join(path, name)
                 if os.path.isdir(fname):
                     if name.startswith('Release'):
-                        print('<h1>Bug fixes (from %s)</h1>' % name)
+                        print(f'<h1>Bug fixes (from {name})</h1>')
                     else:
-                        print('<h1>Experimental features (from %s)</h1>' % name)
+                        print(f'<h1>Experimental features (from {name})</h1>')
                     listpath(fname)
 
     print('<a href="http://www.taskcoach.org/download.html>Back to Task Coach downloads</a>')
