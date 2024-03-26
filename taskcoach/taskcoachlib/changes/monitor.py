@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2011 Task Coach developers <developers@taskcoach.org>
 
@@ -14,16 +14,22 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from taskcoachlib.patterns import Observer, ObservableComposite
 from taskcoachlib.domain.categorizable import CategorizableCompositeObject
+# from taskcoachlib.domain.base import NoteOwner, AttachmentOwner
 from taskcoachlib.domain.note import NoteOwner
 from taskcoachlib.domain.task import Task
 from taskcoachlib.domain.effort import Effort
 from taskcoachlib.domain.attachment import AttachmentOwner
 from taskcoachlib.thirdparty import guid
-from taskcoachlib.thirdparty.pubsub import pub
+try:
+    from pubsub import pub
+except ImportError:
+    from taskcoachlib.thirdparty.pubsub import pub
+else:
+    from wx.lib.pubsub import pub
 
 
 class ChangeMonitor(Observer):
@@ -33,6 +39,7 @@ class ChangeMonitor(Observer):
 
     def __init__(self, id_=None):
         super(ChangeMonitor, self).__init__()
+        # super().__init__()
 
         self.__guid = id_ or guid.generate()
         self.__frozen = False
@@ -56,7 +63,7 @@ class ChangeMonitor(Observer):
     def monitorClass(self, klass):
         if klass not in self._classes:
             for name in klass.monitoredAttributes():
-                eventType = getattr(klass, '%sChangedEventType' % name)()    
+                eventType = getattr(klass, '%sChangedEventType' % name)()
                 if eventType.startswith('pubsub'):
                     pub.subscribe(self.onAttributeChanged, eventType)
                 else:
@@ -72,10 +79,14 @@ class ChangeMonitor(Observer):
                 pub.subscribe(self.onEffortAddedOrRemoved, Task.effortsChangedEventType())
                 pub.subscribe(self.onPrerequisitesChanged, Task.prerequisitesChangedEventType())
             if issubclass(klass, NoteOwner):
+                # Unresolved attribute reference 'noteAddedEventType' for class 'NoteOwner'
                 self.registerObserver(self.onOtherObjectAdded, klass.noteAddedEventType())
+                # Unresolved attribute reference 'noteRemovedEventType' for class 'NoteOwner'
                 self.registerObserver(self.onOtherObjectRemoved, klass.noteRemovedEventType())
             if issubclass(klass, AttachmentOwner):
+                # Cannot find reference 'attachmentAddedEventType' in 'AttachmentOwner | AttachmentOwner'
                 self.registerObserver(self.onOtherObjectAdded, klass.attachmentAddedEventType())
+                # Cannot find reference 'attachmentRemovedEventType' in 'AttachmentOwner | AttachmentOwner'
                 self.registerObserver(self.onOtherObjectRemoved, klass.attachmentRemovedEventType())
             if issubclass(klass, Effort):
                 pub.subscribe(self.onEffortTaskChanged, Effort.taskChangedEventType())
@@ -83,7 +94,7 @@ class ChangeMonitor(Observer):
     def unmonitorClass(self, klass):
         if klass in self._classes:
             for name in klass.monitoredAttributes():
-                eventType = getattr(klass, '%sChangedEventType' % name)()    
+                eventType = getattr(klass, '%sChangedEventType' % name)()
                 if eventType.startswith('pubsub'):
                     pub.unsubscribe(self.onAttributeChanged, eventType)
                 else:
@@ -130,15 +141,13 @@ class ChangeMonitor(Observer):
         if self.__frozen:
             return
 
-        # for type_, valBySource in event.sourcesAndValuesByType().items():
         for type_, valBySource in list(event.sourcesAndValuesByType().items()):
-            # for obj in valBySource.keys():
             for obj in list(valBySource.keys()):
                 for name in obj.monitoredAttributes():
                     if type_ == getattr(obj, '%sChangedEventType' % name)():
                         if obj.id() in self._changes and self._changes[obj.id()] is not None:
                             self._changes[obj.id()].add(name)
-                                
+
     def _objectAdded(self, obj):
         if obj.id() in self._changes:
             if self._changes[obj.id()] is not None and \
@@ -216,10 +225,11 @@ class ChangeMonitor(Observer):
             self._objectAdded(effort)
         for effort in effortsToRemove:
             self._objectRemoved(effort)
-            
+
     def onEffortTaskChanged(self, newValue, sender):
         changes = self._changes.get(sender.id(), None)
         if changes is not None:
+
             changes.add('__task__')
 
     def onCategoryAdded(self, event):
@@ -285,7 +295,8 @@ class ChangeMonitor(Observer):
         self._changes[obj.id()] = changes
 
     def resetAllChanges(self):
-        for id_, changes in self._changes.items():
+        # for id_, changes in self._changes.items():
+        for id_, changes in list(self._changes.items()):
             if changes is not None and '__del__' in changes:
                 del self._changes[id_]
             else:
