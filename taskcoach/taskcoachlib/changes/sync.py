@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2011 Task Coach developers <developers@taskcoach.org>
 
@@ -14,9 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
+
 from builtins import object
-import wx # For ArtProvider
+import wx  # For ArtProvider
 
 from taskcoachlib.changes import ChangeMonitor
 from taskcoachlib.domain.note import NoteOwner
@@ -100,6 +101,7 @@ class ChangeSynchronizer(object):
                     addIds(obj.attachments(), idMap, ownerMap, obj)
                 if isinstance(obj, Task):
                     addIds(obj.efforts(), idMap, ownerMap)
+
         addIds(memList, self.memMap, self.memOwnerMap)
         addIds(diskList, self.diskMap, self.diskOwnerMap)
 
@@ -309,7 +311,8 @@ class ChangeSynchronizer(object):
             memChanges = self._monitor.getChanges(memObject)
 
             if diskChanges is not None and '__del__' in diskChanges:
-                if (memChanges is None or '__del__' in memChanges or len(memChanges) == 0):
+                # if (memChanges is None or '__del__' in memChanges or len(memChanges) == 0):
+                if memChanges is None or '__del__' in memChanges or len(memChanges) == 0:
                     memList.remove(memObject)
                     del self.memMap[memObject.id()]
                     if memObject.id() in self.memOwnerMap:
@@ -375,7 +378,7 @@ class ChangeSynchronizer(object):
 
                 for changeName in diskChanges:
                     if changeName == '__parent__':
-                        pass # Already handled
+                        pass  # Already handled
                     elif changeName.startswith('__add_category:'):
                         categoryId = changeName[15:]
                         if categoryId not in self.memMap:
@@ -384,7 +387,7 @@ class ChangeSynchronizer(object):
                             self.conflictChanges.addChange(memObject, '__del' + changeName[5:])
                         else:
                             if memChanges is not None and \
-                               '__del' + changeName[5:] in memChanges:
+                                    '__del' + changeName[5:] in memChanges:
                                 conflicts.append(changeName)
                                 self.conflictChanges.addChange(memObject, '__del' + changeName[5:])
                             else:
@@ -396,7 +399,7 @@ class ChangeSynchronizer(object):
                         categoryId = changeName[15:]
                         if categoryId in self.memMap:
                             if memChanges is not None and \
-                               '__add' + changeName[5:] in memChanges:
+                                    '__add' + changeName[5:] in memChanges:
                                 conflicts.append(changeName)
                                 self.conflictChanges.addChange(memObject, '__add' + changeName[5:])
                             else:
@@ -407,8 +410,8 @@ class ChangeSynchronizer(object):
                         diskPrereqs = set([self.memMap[obj.id()] for obj in diskObject.prerequisites()])
                         memPrereqs = set(memObject.prerequisites())
                         if memChanges is not None and \
-                           '__prerequisites__' in memChanges and \
-                           memPrereqs != diskPrereqs:
+                                '__prerequisites__' in memChanges and \
+                                memPrereqs != diskPrereqs:
                             conflicts.append('__prerequisites__')
                             self.conflictChanges.addChange(memObject, '__prerequisites__')
                         else:
@@ -416,8 +419,8 @@ class ChangeSynchronizer(object):
                     elif changeName == '__task__':
                         # Effort changed task
                         if memChanges is not None and \
-                           '__task__' in memChanges and \
-                           memObject.parent().id() != diskObject.parent().id():
+                                '__task__' in memChanges and \
+                                memObject.parent().id() != diskObject.parent().id():
                             conflicts.append('__task__')
                             self.conflictChanges.addChange(memObject, '__task__')
                         else:
@@ -425,8 +428,8 @@ class ChangeSynchronizer(object):
                     elif changeName == '__owner__':
                         # This happens after a conflict
                         if memChanges is not None and \
-                           '__owner__' in memChanges and \
-                           self.memOwnerMap[memObject.id()].id() != self.diskOwnerMap[diskObject.id()].id():
+                                '__owner__' in memChanges and \
+                                self.memOwnerMap[memObject.id()].id() != self.diskOwnerMap[diskObject.id()].id():
                             # Yet another conflict... Memory wins
                             conflicts.append('__owner__')
                             self.conflictChanges.addChange(memObject, '__owner__')
@@ -441,14 +444,15 @@ class ChangeSynchronizer(object):
                     elif changeName == 'appearance':
                         attrNames = ['foregroundColor', 'backgroundColor', 'font', 'icon', 'selectedIcon']
                         if memChanges is not None and \
-                           'appearance' in memChanges:
+                                'appearance' in memChanges:
                             for attrName in attrNames:
                                 if getattr(memObject, attrName)() != getattr(diskObject, attrName)():
                                     conflicts.append(attrName)
                             self.conflictChanges.addChange(memObject, 'appearance')
                         else:
                             for attrName in attrNames:
-                                getattr(memObject, 'set' + attrName[0].upper() + attrName[1:])(getattr(diskObject, attrName)())
+                                getattr(memObject, 'set' + attrName[0].upper() + attrName[1:])(getattr(diskObject,
+                                                                                                       attrName)())
                     elif changeName == 'expandedContexts':
                         # Note: no conflict resolution for this one.
                         memObject.expand(diskObject.isExpanded())
@@ -458,12 +462,14 @@ class ChangeSynchronizer(object):
                         else:
                             getterName = changeName
                         if memChanges is not None and \
-                               changeName in memChanges and \
-                               getattr(memObject, getterName)() != getattr(diskObject, getterName)():
+                                changeName in memChanges and \
+                                getattr(memObject, getterName)() != getattr(diskObject, getterName)():
                             conflicts.append(changeName)
                             self.conflictChanges.addChange(memObject, changeName)
                         else:
-                            getattr(memObject, 'set' + changeName[0].upper() + changeName[1:])(getattr(diskObject, getterName)())
+                            getattr(memObject, 'set' + changeName[0].upper() + changeName[1:])(
+                                getattr(diskObject, getterName)())
 
                     if conflicts:
-                        self.notify(_('Conflicts detected for "%s".\nThe local version was used.') % memObject.subject())
+                        self.notify(
+                            _('Conflicts detected for "%s".\nThe local version was used.') % memObject.subject())
