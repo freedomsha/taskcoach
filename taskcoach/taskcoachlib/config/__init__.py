@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,7 +14,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from .settings import Settings
-from .options import OptionParser, ApplicationOptionParser, OptionGroup
+from taskcoachlib.config.settings import Settings
+from taskcoachlib.config.options import OptionParser, ApplicationOptionParser, OptionGroup
+from taskcoachlib.config.arguments import ArgumentParser, ApplicationArgumentParser
