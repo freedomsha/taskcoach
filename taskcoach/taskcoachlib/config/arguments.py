@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from ...taskcoachlib import meta
-from .. import meta  # used in lines 52, 70->85, 103, 115, 133
+from taskcoachlib import meta
 import argparse
 # Analyseur d'arguments, d'options, et de sous-commandes de ligne de commande
 
@@ -101,12 +101,34 @@ class ApplicationArgumentParser(ArgumentParser):
         # et la plupart des arguments nommés d'add_argument(), tels que %(default)s, %(type)s, etc :
         kwargs['usage'] = "usage='%(prog)s [options] [.tsk file]'"
         # kwargs['version'] = f'{meta.data.name} {meta.data.version}'
-        self.add_argument('--version', action='version', version=f'{meta.data.name} {meta.data.version}')
+        # self.add_argument('--version', action='version', version=f'{meta.data.name} {meta.data.version}')
         # ou
         # self.add_argument('--version', action='version', version='%s %s' % (meta.data.name, meta.data.version))
         super(ApplicationArgumentParser, self).__init__(*args, **kwargs)
 
     # La méthode ArgumentParser.add_argument() permet de définir les arguments de l'analyseur.
+    def versionoption(self):
+        """ methode to add a profile option.
+
+        Method to add an option type action to know the version.
+
+        return:
+        -------
+        argument
+            The ArgumentParser.add_argument() method attaches individual argument specifications to the parser.
+            --version
+        """
+        # méthode d'ajout de l'option version
+        #
+        # Méthode de type action pour savoir la version utilisée
+        #
+        # retour:
+        # argument
+        #   --version
+        #
+        self.add_argument('--version', action='version',
+                          version='%s %s' % (meta.data.name, meta.data.version))
+
     def profileoption(self):
         """ methode to add a profile option.
 
