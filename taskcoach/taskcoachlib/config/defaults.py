@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 Copyright (C) 2012 Nicola Chiapolini <nicola.chiapolini@physik.uzh.ch>
@@ -16,12 +16,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from builtins import str
 import wx
 from taskcoachlib import meta
-
 
 defaults = {
     'balloontips': {
@@ -38,7 +37,7 @@ defaults = {
         'toolbar': '(22, 22)',
         'toolbarperspective': 'FileOpen,Print,Separator,EditUndo,EditRedo,Separator,EffortStartButton,EffortStop',
         # Index of the active effort viewer in task editor:
-        'effortviewerintaskeditor': '0',  
+        'effortviewerintaskeditor': '0',
         'taskviewercount': '1',  # Number of task viewers in main window
         'categoryviewercount': '1',  # Number of category viewers in main window
         'noteviewercount': '0',  # Number of note viewers in main window
@@ -51,9 +50,9 @@ defaults = {
         'taskstatsviewercount': '0',
         'taskinterdepsviewercount': '0',  # Number of interdep viewers in main window
         # Language and locale, maybe set externally (e.g. by PortableApps):
-        'language': '',  
+        'language': '',
         # Language and locale as set by user via preferences, overrides language:
-        'language_set_by_user': '',  
+        'language_set_by_user': '',
         'categoryfiltermatchall': 'False',
         'weekstart': 'monday',  # Start of work week, 'monday' or 'sunday'
         # The next three options are used in the effort dialog to populate the
@@ -66,7 +65,7 @@ defaults = {
         'replacedefaultsnoozetime': 'True',  # Make chosen snooze time the default?
         'perspective': '',  # The layout of the viewers in the main window
         # What to do when changing the planned start date or due date:
-        'datestied': '',  
+        'datestied': '',
         # Default date and times to offer in the task dialog, see preferences for
         # possible values:
         'defaultplannedstartdatetime': 'propose_today_currenttime',
@@ -105,10 +104,11 @@ defaults = {
         'hideoverduetasks': 'False',
         'hidecompletedtasks': 'False',
         'hidecompositetasks': 'False',
-    },              
+    },
     'taskstatsviewer': {
         'title': '',
-        'toolbarperspective': 'TaskNew,TaskNewFromTemplateButton,Separator,ViewerPieChartAngle,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
+        'toolbarperspective': 'TaskNew,TaskNewFromTemplateButton,Separator,ViewerPieChartAngle,Spacer,\
+        ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
         'searchfilterincludesubitems': 'False',
@@ -141,7 +141,9 @@ defaults = {
     },
     'prerequisiteviewerintaskeditor': {
         'title': '',  # User supplied viewer title
-        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
+        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,\
+        TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Spacer,\
+        ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
         'treemode': 'True',  # True = tree mode, False = list mode
         'sortby': '["subject"]',
         'sortbystatusfirst': 'True',
@@ -166,7 +168,9 @@ defaults = {
     },
     'squaretaskviewer': {
         'title': '',
-        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,SquareTaskViewerOrderChoice,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
+        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,\
+        TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,\
+        SquareTaskViewerOrderChoice,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
         'sortby': '["budget"]',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
@@ -183,7 +187,9 @@ defaults = {
     },
     'timelineviewer': {
         'title': '',
-        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
+        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,\
+        TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Spacer,\
+        ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
         'searchfilterincludesubitems': 'False',
@@ -203,7 +209,11 @@ defaults = {
         'headerformat': '1',
         'drawnow': 'True',
         'todaycolor': '0, 0, 200',
-        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,HierarchicalCalendarViewerConfigure,HierarchicalCalendarViewerPreviousPeriod,HierarchicalCalendarViewerToday,HierarchicalCalendarViewerNextPeriod,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
+        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,\
+        TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,\
+        HierarchicalCalendarViewerConfigure,HierarchicalCalendarViewerPreviousPeriod,HierarchicalCalendarViewerToday,\
+        HierarchicalCalendarViewerNextPeriod,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,\
+        Search',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
         'searchfilterincludesubitems': 'False',
@@ -222,7 +232,10 @@ defaults = {
     },
     'calendarviewer': {
         'title': '',
-        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,CalendarViewerConfigure,CalendarViewerPreviousPeriod,CalendarViewerToday,CalendarViewerNextPeriod,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
+        'toolbarperspective': 'TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,\
+        TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,\
+        CalendarViewerConfigure,CalendarViewerPreviousPeriod,CalendarViewerToday,CalendarViewerNextPeriod,Spacer,\
+        ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,Search',
         'viewtype': '1',
         'periodcount': '1',
         'periodwidth': '150',
@@ -248,7 +261,7 @@ defaults = {
         'sortcasesensitive': 'False',
         'sortbystatusfirst': 'True',
         'highlightcolor': '',
-        'shownow': 'True' 
+        'shownow': 'True'
     },
     'categoryviewer': {
         'title': '',
@@ -306,7 +319,7 @@ defaults = {
         'searchdescription': 'False',
         'regularexpression': 'False',
         'columns': "['attachments', 'description', 'creationDateTime', \
-                     'modificationDateTime']",
+                 'modificationDateTime']",
         'columnsalwaysvisible': "['subject']",
         'columnwidths': "{'attachments': 28, 'description': 200, 'ordering': 28}",
         'columnautoresizing': 'True'
@@ -316,7 +329,7 @@ defaults = {
         'sortby': '["subject"]',
         'sortcasesensitive': 'False',
         'columns': "['attachments', 'description', 'creationDateTime', \
-                     'modificationDateTime']",
+                 'modificationDateTime']",
         'columnsalwaysvisible': "['subject']",
         'columnwidths': "{'attachments': 28, 'description': 200, 'ordering': 28}",
         'columnautoresizing': 'True',
@@ -356,15 +369,16 @@ defaults = {
     },
     'effortviewer': {
         'title': '',
-        'toolbarperspective': 'EffortNew,Separator,Edit,Delete,Separator,EffortStartForEffort,EffortStop,Separator,EffortViewerAggregationChoice,Spacer,ResetFilter,Search',
+        'toolbarperspective': 'EffortNew,Separator,Edit,Delete,Separator,EffortStartForEffort,EffortStop,Separator,\
+        EffortViewerAggregationChoice,Spacer,ResetFilter,Search',
         'aggregation': 'details',  # 'details' (default), 'day', 'week', or 'month'
         'sortby': '["-period"]',
         'sortcasesensitive': 'False',
         'columns': "['description', 'timeSpent']",
         'columnsalwaysvisible': "['period', 'task']",
         'columnwidths': "{'period': 160, 'monday': 70, 'tuesday': 70, "
-                         "'wednesday': 70, 'thursday': 70, 'friday': 70, "
-                         "'saturday': 70, 'sunday': 70, 'description': 200}",
+                        "'wednesday': 70, 'thursday': 70, 'friday': 70, "
+                        "'saturday': 70, 'sunday': 70, 'description': 200}",
         'columnautoresizing': 'True',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
@@ -377,15 +391,16 @@ defaults = {
     },
     'effortviewerforselectedtasks': {
         'title': '',
-        'toolbarperspective': 'EffortNew,Separator,Edit,Delete,Separator,EffortStartForEffort,EffortStop,Separator,EffortViewerAggregationChoice,Spacer,ResetFilter,Search',
+        'toolbarperspective': 'EffortNew,Separator,Edit,Delete,Separator,EffortStartForEffort,EffortStop,Separator,\
+        EffortViewerAggregationChoice,Spacer,ResetFilter,Search',
         'aggregation': 'details',  # 'details' (default), 'day', 'week', or 'month'
         'sortby': '["-period"]',
         'sortcasesensitive': 'False',
         'columns': "['description', 'timeSpent']",
         'columnsalwaysvisible': "['period', 'task']",
         'columnwidths': "{'period': 160, 'monday': 70, 'tuesday': 70, "
-                         "'wednesday': 70, 'thursday': 70, 'friday': 70, "
-                         "'saturday': 70, 'sunday': 70, 'description': 200}",
+                        "'wednesday': 70, 'thursday': 70, 'friday': 70, "
+                        "'saturday': 70, 'sunday': 70, 'description': 200}",
         'columnautoresizing': 'True',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
@@ -397,15 +412,16 @@ defaults = {
         'consolidateeffortspertask': 'False',
     },
     'effortviewerintaskeditor': {
-        'toolbarperspective': 'EffortNew,Separator,Edit,Delete,Separator,EffortStartForEffort,EffortStop,Separator,EffortViewerAggregationChoice,Spacer,ResetFilter,Search',
+        'toolbarperspective': 'EffortNew,Separator,Edit,Delete,Separator,EffortStartForEffort,EffortStop,Separator,\
+        EffortViewerAggregationChoice,Spacer,ResetFilter,Search',
         'aggregation': 'details',  # 'details' (default), 'day', 'week', or 'month'
         'sortby': '["-period"]',
         'sortcasesensitive': 'False',
         'columns': "['description', 'timeSpent']",
         'columnsalwaysvisible': "['period', 'task']",
         'columnwidths': "{'period': 160, 'monday': 70, 'tuesday': 70, "
-                         "'wednesday': 70, 'thursday': 70, 'friday': 70, "
-                         "'saturday': 70, 'sunday': 70, 'description': 200}",
+                        "'wednesday': 70, 'thursday': 70, 'friday': 70, "
+                        "'saturday': 70, 'sunday': 70, 'description': 200}",
         'columnautoresizing': 'True',
         'searchfilterstring': '',
         'searchfiltermatchcase': 'False',
@@ -413,7 +429,7 @@ defaults = {
         'searchdescription': 'False',
         'regularexpression': 'False',
         'round': '0',  # round effort to this number of seconds, 0 = no rounding
-        'alwaysroundup': 'False', 
+        'alwaysroundup': 'False',
         'consolidateeffortspertask': 'False',
     },
     'attachmentviewer': {
@@ -474,7 +490,7 @@ defaults = {
         'columns': "[]",
         'columnsalwaysvisible': "['type', 'subject']",
         'columnwidths': "{'notes': 28, 'type': 28}",
-        'columnautoresizing': 'True' 
+        'columnautoresizing': 'True'
     },
     'window': {
         'size': '(900, 500)',  # Default size of the main window
@@ -482,10 +498,10 @@ defaults = {
         'iconized': 'False',  # Don't start up iconized by default
         'maximized': 'False',  # Don't start up maximized by default
         # Possible strticonized values: 'Never', 'Always', 'WhenClosedIconized'
-        'starticonized': 'WhenClosedIconized',  
+        'starticonized': 'WhenClosedIconized',
         'splash': 'True',  # Show a splash screen while starting up
         'hidewheniconized': 'False',  # Don't hide the window from the task bar
-        'hidewhenclosed': 'False',  # Close window quits the application
+        'hidewhenclosed': 'False',  # close window quits the application
         'tips': 'True',  # Show tips after starting up
         'tipsindex': '0',  # Start at the first tip
         'blinktaskbariconwhentrackingeffort': 'True'
@@ -501,12 +517,12 @@ defaults = {
         'lastfile': '',
         'autosave': 'True',
         'autoload': 'False',
-        # Formats to automatically import from, only "Todo.txt" supported at this 
+        # Formats to automatically import from, only "Todo.txt" supported at this
         # time:
-        'autoimport': '[]',  
-        # Formats to automatically export to, only "Todo.txt" supported at this 
+        'autoimport': '[]',
+        # Formats to automatically export to, only "Todo.txt" supported at this
         # time:
-        'autoexport': '[]',  
+        'autoexport': '[]',
         'nopoll': 'False',
         'saveinifileinprogramdir': 'False',
         'attachmentbase': '',
@@ -520,7 +536,7 @@ defaults = {
         'completedtasks': '(0, 255, 0, 255)',
         'overduetasks': '(255, 0, 0, 255)',
         'inactivetasks': '(192, 192, 192, 255)',
-        'duesoontasks': '(255, 128, 0, 255)' 
+        'duesoontasks': '(255, 128, 0, 255)'
     },
     'bgcolor': {
         'activetasks': '(255, 255, 255, 255)',
@@ -538,17 +554,17 @@ defaults = {
         'inactivetasks': '',
         'duesoontasks': ''
     },
-    'icon': { 
+    'icon': {
         'activetasks': 'led_blue_icon',
         'latetasks': 'led_purple_icon',
         'completedtasks': 'checkmark_green_icon',
         'overduetasks': 'led_red_icon',
         'inactivetasks': 'led_grey_icon',
-        'duesoontasks': 'led_orange_icon' 
+        'duesoontasks': 'led_orange_icon'
     },
     'editor': {
         'descriptionfont': '',  # Font to use in the desciption field of editors
-        'maccheckspelling': 'True' 
+        'maccheckspelling': 'True'
     },
     'os_darwin': {
         'getmailsubject': 'False'
@@ -562,12 +578,12 @@ defaults = {
         'pythonfrozen': '',  # Idem
         'current': meta.data.version,
         'notified': meta.data.version,
-        'notify': 'True' 
+        'notify': 'True'
     },
     'behavior': {
         'markparentcompletedwhenallchildrencompleted': 'False',
         'duesoonhours': '24'  # When a task is considered to be "due soon"
-    }, 
+    },
     'feature': {
         'syncml': 'False',
         'iphone': 'False',
@@ -578,10 +594,10 @@ defaults = {
         'sayreminder': 'False',
         'sdtcspans': '60,120,1440,2880',
         'sdtcspans_effort': '60,120,180,240',
-        'decimaltime' : 'False'
+        'decimaltime': 'False'
     },
-    'syncml': { 
-        'url': '',
+    'syncml': {
+        'urlpo': '',
         'username': '',
         'preferredsyncmode': 'TWO_WAY',
         'verbose': 'True',
@@ -589,13 +605,13 @@ defaults = {
         'notedbname': 'note',
         'synctasks': 'True',
         'syncnotes': 'True',
-        'showwarning': 'True' 
+        'showwarning': 'True'
     },
     'iphone': {
         'password': '',
         'service': '',
         'synccompleted': 'True',
-        'showlog': 'False' 
+        'showlog': 'False'
     },
     'printer': {
         'margin_left': '0',
@@ -603,7 +619,7 @@ defaults = {
         'margin_bottom': '0',
         'margin_right': '0',
         'paper_id': '0',
-        'orientation': str(wx.PORTRAIT) 
+        'orientation': str(wx.PORTRAIT)
     },
     'export': {
         'html_selectiononly': 'False',
@@ -611,12 +627,12 @@ defaults = {
         'csv_selectiononly': 'False',
         'csv_separatedateandtimecolumns': 'False',
         'ical_selectiononly': 'False',
-        'todotxt_selectiononly': 'False' 
+        'todotxt_selectiononly': 'False'
     }
 }
 
-minimum = { 
-'view': { 
-    'taskviewercount': '1' 
+minimum = {
+    'view': {
+        'taskviewercount': '1'
     }
 }
