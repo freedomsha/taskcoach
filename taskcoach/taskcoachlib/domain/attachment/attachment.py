@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,14 +14,23 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
+from io import open as file
+from filecmp import cmp
+# unresolved reference'cmp'
 import os
 from urllib.parse import urlparse
 from taskcoachlib import patterns, mailer
 from taskcoachlib.domain import base
 from taskcoachlib.tools import openfile
-from taskcoachlib.thirdparty.pubsub import pub
+try:
+    from pubsub import pub
+except ImportError:
+    # try:
+    from taskcoachlib.thirdparty.pubsub import pub
+#    except ImportError:
+#        from wx.lib.pubsub import pub
 from taskcoachlib.domain.note.noteowner import NoteOwner
 
 
@@ -64,14 +73,14 @@ def getRelativePath(path, basePath=os.getcwd()):
 
 
 class Attachment(base.Object, NoteOwner):
-    ''' Abstract base class for attachments. '''
+    """ Abstract base class for attachments. """
 
     type_ = 'unknown'
 
     def __init__(self, location, *args, **kwargs):
         if 'subject' not in kwargs:
             kwargs['subject'] = location
-        super(Attachment, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__location = location
 
     def data(self):
@@ -92,12 +101,12 @@ class Attachment(base.Object, NoteOwner):
             pub.sendMessage(self.locationChangedEventType(), newValue=location,
                             sender=self)
 
-    @classmethod        
-    def locationChangedEventType(class_):
+    @classmethod
+    def locationChangedEventType(cls):  # better use cls not class_
         return 'pubsub.attachment.location'
 
     @classmethod
-    def monitoredAttributes(class_):
+    def monitoredAttributes(cls):
         return base.Object.monitoredAttributes() + ['location']
 
     def open(self, workingDir=None):
@@ -107,11 +116,14 @@ class Attachment(base.Object, NoteOwner):
         try:
             return cmp(self.location(), other.location())
         except AttributeError:
-            return 1
+            return False
+
+    # def __hash__(self):
+    #    return hash(self.__location)
 
     def __getstate__(self):
         try:
-            state = super(Attachment, self).__getstate__()
+            state = super().__getstate__()
         except AttributeError:
             state = dict()
         state.update(dict(location=self.location()))
@@ -120,7 +132,7 @@ class Attachment(base.Object, NoteOwner):
     @patterns.eventSource
     def __setstate__(self, state, event=None):
         try:
-            super(Attachment, self).__setstate__(state, event=event)
+            super().__setstate__(state, event=event)
         except AttributeError:
             pass
         self.setLocation(state['location'])
@@ -130,11 +142,11 @@ class Attachment(base.Object, NoteOwner):
 
     def __unicode__(self):
         return self.subject()
-    
+
     @classmethod
-    def modificationEventTypes(class_):
-        eventTypes = super(Attachment, class_).modificationEventTypes()
-        return eventTypes + [class_.locationChangedEventType()]
+    def modificationEventTypes(cls):
+        eventTypes = super().modificationEventTypes()
+        return eventTypes + [cls.locationChangedEventType()]
 
 
 class FileAttachment(Attachment):
@@ -152,7 +164,7 @@ class FileAttachment(Attachment):
         return location
 
     def isLocalFile(self):
-        return urlparse.urlparse(self.location())[0] == ''
+        return urlparse(self.location())[0] == ''
 
 
 class URIAttachment(Attachment):
@@ -160,13 +172,14 @@ class URIAttachment(Attachment):
 
     def __init__(self, location, *args, **kwargs):
         if location.startswith('message:') and 'subject' not in kwargs:
+            # unresolved attribute reference settings
             if self.settings.getboolean('os_darwin', 'getmailsubject'):
                 subject = mailer.getSubjectOfMail(location[8:])
                 if subject:
                     kwargs['subject'] = subject
             else:
                 kwargs['subject'] = _('Mail.app message')
-        super(URIAttachment, self).__init__(location, *args, **kwargs)
+        super().__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
         return openfile.openFile(self.location())
@@ -182,7 +195,7 @@ class MailAttachment(Attachment):
         kwargs.setdefault('subject', subject)
         kwargs.setdefault('description', content)
 
-        super(MailAttachment, self).__init__(location, *args, **kwargs)
+        super().__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
         return mailer.openMail(self.location())
@@ -192,8 +205,8 @@ class MailAttachment(Attachment):
 
     def data(self):
         try:
-            # return file(self.location(), 'rb').read()
-            return io.open(self.location(), 'rb').read()
+            return file(self.location(), 'rb').read()  # fichier binaire !!!
+            # return io.open(self.location(), 'rb').read()
         except IOError:
             return None
 
