@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# from ...taskcoachlib import meta
 from taskcoachlib import meta
 import argparse
 # Analyseur d'arguments, d'options, et de sous-commandes de ligne de commande
@@ -55,8 +54,26 @@ class ArgumentParser(argparse.ArgumentParser):
         self.__getandaddoptions('Option', self.add_argument)
 
     def __getandaddoptions(self, suffix, addoption):
-        for getOption in self.__methodsendingwith(suffix):
-            addoption(getOption(self))
+        """ Fonction-méthode d'obtention et d'ajout d'options.
+
+        Nous vérifions d'abord si la liste des méthodes se terminant par suffix n'est pas vide.
+        Ensuite, pour chaque méthode:
+        nous obtenons les options à ajouter
+        et vérifions si elles ne sont pas None ou une liste vide avant d'appeler addoption.
+           Cela devrait empêcher l'erreur que vous avez rencontrée:
+            File "/usr/lib/python3.11/argparse.py", line 1429, in add_argument
+        if not args or len(args) == 1 and args[0][0] not in chars:
+                                      ~~~~~~~^^^
+        TypeError: 'NoneType' object is not subscriptable
+        """
+        # for getOption in self.__methodsendingwith(suffix):
+        #    addoption(getOption(self))
+        methods = self.__methodsendingwith(suffix)
+        if methods:
+            for getOption in methods:
+                options = getOption(self)
+                if options:
+                    addoption(options)
 
     def __methodsendingwith(self, suffix):
         return [method for name, method in vars(self.__class__).items() if
@@ -107,7 +124,7 @@ class ApplicationArgumentParser(ArgumentParser):
         super(ApplicationArgumentParser, self).__init__(*args, **kwargs)
 
     # La méthode ArgumentParser.add_argument() permet de définir les arguments de l'analyseur.
-    def versionoption(self):
+    def versionOption(self):
         """ methode to add a profile option.
 
         Method to add an option type action to know the version.
@@ -126,8 +143,10 @@ class ApplicationArgumentParser(ArgumentParser):
         # argument
         #   --version
         #
+        # self.add_argument('--version', action='version',
+        #                  version='%s %s' % (meta.data.name, meta.data.version))
         self.add_argument('--version', action='version',
-                          version='%s %s' % (meta.data.name, meta.data.version))
+                          version=f'{meta.data.name} {meta.data.version}')
 
     def profileoption(self):
         """ methode to add a profile option.
