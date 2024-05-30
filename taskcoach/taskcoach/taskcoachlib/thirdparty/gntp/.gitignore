@@ -1,0 +1,10 @@
+dist/*
+build/*
+MANIFEST
+README.html
+
+# Testing files
+.tox/*
+.coverage
+cover/*
+htmlcov/*
