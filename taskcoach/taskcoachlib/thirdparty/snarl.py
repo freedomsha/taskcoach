@@ -168,7 +168,7 @@ if __name__=='__main__':
     d = options.__dict__.copy()
     cmd = options.cmd
     for key in options.__dict__:
-        if key not in inspect.getargspec(cmd)[0]:
+        if key not in inspect.getfullargspec(cmd)[0]:
             del d[key]
         elif d[key] is None:
             del d[key]
