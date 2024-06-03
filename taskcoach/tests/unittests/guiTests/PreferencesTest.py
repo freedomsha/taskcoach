@@ -17,39 +17,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import test
-from ....taskcoachlib import gui, config, persistence
+from taskcoachlib import gui, config, persistence
 
 
 class PreferencesTest(test.wxTestCase):
     def setUp(self):
         super(PreferencesTest, self).setUp()
         self.settings = config.Settings(load=False)
-        self.preferences = gui.Preferences(parent=self.frame, title='Test',
-                                           settings=self.settings)
-        self.originalColor = self.settings.get('fgcolor', 'activetasks')
+        self.preferences = gui.Preferences(
+            parent=self.frame, title="Test", settings=self.settings
+        )
+        self.originalColor = self.settings.get("fgcolor", "activetasks")
         self.newColor = (1, 2, 29)
-        
+
     # pylint: disable=W0212
-    
+
     def testCancel(self):
         self.preferences[5]._colorSettings[4][2].SetColour(self.newColor)
         self.preferences.cancel()
-        self.assertEqual(self.originalColor, self.settings.get('fgcolor', 'activetasks'))
-        
+        self.assertEqual(
+            self.originalColor, self.settings.get("fgcolor", "activetasks")
+        )
+
     def testOk(self):
         self.preferences[5]._colorSettings[4][2].SetColour(self.newColor)
         self.preferences.ok()
-        self.assertEqual(self.newColor, 
-                         eval(self.settings.get('fgcolor', 'activetasks'))[:3])
-        
+        self.assertEqual(
+            self.newColor,
+            eval(self.settings.get("fgcolor", "activetasks"))[:3],
+        )
+
 
 class SyncMLPreferencesTest(test.TestCase):
     def testCreate(self):
         taskFile = persistence.TaskFile()
         try:
-            gui.dialog.syncpreferences.SyncMLPreferences(parent=None,
-                                                         iocontroller=gui.IOController(taskFile, None, None), 
-                                                         title='Edit SyncML preferences')
+            gui.dialog.syncpreferences.SyncMLPreferences(
+                parent=None,
+                iocontroller=gui.IOController(taskFile, None, None),
+                title="Edit SyncML preferences",
+            )
         finally:
             taskFile.close()
             taskFile.stop()

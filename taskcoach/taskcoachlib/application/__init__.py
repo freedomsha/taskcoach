@@ -16,9 +16,4 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-try:
-    from .application import Application
-except ImportError:
-    from taskcoachlib.application.application import Application
-
-
+from .application import Application

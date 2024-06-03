@@ -1,36 +1,41 @@
 # deltaTime.py
 #
-# Parser to convert a conversational time reference such as "in a minute" or 
-# "noon tomorrow" and convert it to a Python datetime.  The returned 
+# Parser to convert a conversational time reference such as "in a minute" or
+# "noon tomorrow" and convert it to a Python datetime.  The returned
 # ParseResults object contains the results name "timeOffset" containing
-# the timedelta, and "calculatedTime" containing the computed time relative 
+# the timedelta, and "calculatedTime" containing the computed time relative
 # to datetime.now().
 #
 # Copyright 2010, by Paul McGuire
 #
 
-from __future__ import print_function
-from builtins import map
-from past.builtins import basestring
 from datetime import datetime, timedelta
 from pyparsing import *
 import calendar
 
 __all__ = ["nlTimeExpression"]
 
-daynames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+daynames = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
 
 
 # string conversion parse actions
 def convertToTimedelta(toks):
     unit = toks.timeunit.lower().rstrip("s")
     td = {
-        'week'   : timedelta(7),
-        'day'    : timedelta(1),
-        'hour'   : timedelta(0, 0, 0, 0, 0, 1),
-        'minute' : timedelta(0, 0, 0, 0, 1),
-        'second' : timedelta(0, 1),
-        }[unit]
+        "week": timedelta(7),
+        "day": timedelta(1),
+        "hour": timedelta(0, 0, 0, 0, 0, 1),
+        "minute": timedelta(0, 0, 0, 0, 1),
+        "second": timedelta(0, 1),
+    }[unit]
     if toks.qty:
         td *= int(toks.qty)
     if toks.dir:
@@ -47,15 +52,18 @@ def convertToDay(toks):
             daydiff = (nameddaynum + 7 - todaynum) % 7
         else:
             daydiff = -((todaynum + 7 - nameddaynum) % 7)
-        toks["absTime"] = datetime(now.year, now.month, now.day)+timedelta(daydiff)
+        toks["absTime"] = datetime(now.year, now.month, now.day) + timedelta(
+            daydiff
+        )
     else:
         name = toks.name.lower()
         toks["absTime"] = {
-            "now"       : now,
-            "today"     : datetime(now.year, now.month, now.day),
-            "yesterday" : datetime(now.year, now.month, now.day)+timedelta(-1),
-            "tomorrow"  : datetime(now.year, now.month, now.day)+timedelta(+1),
-            }[name]
+            "now": now,
+            "today": datetime(now.year, now.month, now.day),
+            "yesterday": datetime(now.year, now.month, now.day)
+            + timedelta(-1),
+            "tomorrow": datetime(now.year, now.month, now.day) + timedelta(+1),
+        }[name]
 
 
 def convertToAbsTime(toks):
@@ -66,26 +74,34 @@ def convertToAbsTime(toks):
     else:
         day = datetime(now.year, now.month, now.day)
     if "timeOfDay" in toks:
-        if isinstance(toks.timeOfDay, basestring):
+        if isinstance(toks.timeOfDay, str):
             timeOfDay = {
-                "now"      : timedelta(0, (now.hour*60+now.minute)*60+now.second, now.microsecond),
-                "noon"     : timedelta(0, 0, 0, 0, 0, 12),
-                "midnight" : timedelta(),
-                }[toks.timeOfDay]
+                "now": timedelta(
+                    0,
+                    (now.hour * 60 + now.minute) * 60 + now.second,
+                    now.microsecond,
+                ),
+                "noon": timedelta(0, 0, 0, 0, 0, 12),
+                "midnight": timedelta(),
+            }[toks.timeOfDay]
         else:
             hhmmss = toks.timeparts
             if hhmmss.miltime:
                 hh, mm = hhmmss.miltime
                 ss = 0
-            else:            
+            else:
                 hh, mm, ss = (hhmmss.HH % 12), hhmmss.MM, hhmmss.SS
-                if not mm: mm = 0
-                if not ss: ss = 0
-                if toks.timeOfDay.ampm == 'pm':
+                if not mm:
+                    mm = 0
+                if not ss:
+                    ss = 0
+                if toks.timeOfDay.ampm == "pm":
                     hh += 12
-            timeOfDay = timedelta(0, (hh*60+mm)*60+ss, 0)
+            timeOfDay = timedelta(0, (hh * 60 + mm) * 60 + ss, 0)
     else:
-        timeOfDay = timedelta(0, (now.hour*60+now.minute)*60+now.second, now.microsecond)
+        timeOfDay = timedelta(
+            0, (now.hour * 60 + now.minute) * 60 + now.second, now.microsecond
+        )
     toks["absTime"] = day + timeOfDay
 
 
@@ -101,15 +117,17 @@ def calculateTime(toks):
 
 # grammar definitions
 CL = CaselessLiteral
-today, tomorrow, yesterday, noon, midnight, now = list(map(CL,
-    "today tomorrow yesterday noon midnight now".split()))
+today, tomorrow, yesterday, noon, midnight, now = list(
+    map(CL, "today tomorrow yesterday noon midnight now".split())
+)
 plural = lambda s: Combine(CL(s) + Optional(CL("s")))
-week, day, hour, minute, second = list(map(plural,
-    "week day hour minute second".split()))
+week, day, hour, minute, second = list(
+    map(plural, "week day hour minute second".split())
+)
 am = CL("am")
 pm = CL("pm")
-COLON = Suppress(':')
- 
+COLON = Suppress(":")
+
 # are these actually operators?
 in_ = CL("in").setParseAction(replaceWith(1))
 from_ = CL("from").setParseAction(replaceWith(1))
@@ -120,48 +138,69 @@ next_ = CL("next").setParseAction(replaceWith(1))
 last_ = CL("last").setParseAction(replaceWith(-1))
 at_ = CL("at")
 
-couple = (Optional(CL("a")) + CL("couple") + Optional(CL("of"))).setParseAction(replaceWith(2))
+couple = (
+    Optional(CL("a")) + CL("couple") + Optional(CL("of"))
+).setParseAction(replaceWith(2))
 a_qty = CL("a").setParseAction(replaceWith(1))
 integer = Word(nums).setParseAction(lambda t: int(t[0]))
-int4 = Group(Word(nums, exact=4).setParseAction(lambda t: [int(t[0][:2]), int(t[0][2:])]))
+int4 = Group(
+    Word(nums, exact=4).setParseAction(
+        lambda t: [int(t[0][:2]), int(t[0][2:])]
+    )
+)
 qty = integer | couple | a_qty
 dayName = oneOf(daynames)
- 
-dayOffset = (qty("qty") + (week | day)("timeunit"))
+
+dayOffset = qty("qty") + (week | day)("timeunit")
 dayFwdBack = (from_ + now.suppress() | ago)("dir")
-weekdayRef = (Optional(next_ | last_,1)("dir") + dayName("day"))
-dayRef = Optional((dayOffset + (before | after | from_)("dir")).setParseAction(convertToTimedelta)) + \
-            ((yesterday | today | tomorrow)("name") |
-             weekdayRef("wkdayRef")).setParseAction(convertToDay)
-todayRef = (dayOffset + dayFwdBack).setParseAction(convertToTimedelta) | \
-            (in_("dir") + qty("qty") + day("timeunit")).setParseAction(convertToTimedelta)
- 
+weekdayRef = Optional(next_ | last_, 1)("dir") + dayName("day")
+dayRef = Optional(
+    (dayOffset + (before | after | from_)("dir")).setParseAction(
+        convertToTimedelta
+    )
+) + (
+    (yesterday | today | tomorrow)("name") | weekdayRef("wkdayRef")
+).setParseAction(
+    convertToDay
+)
+todayRef = (dayOffset + dayFwdBack).setParseAction(convertToTimedelta) | (
+    in_("dir") + qty("qty") + day("timeunit")
+).setParseAction(convertToTimedelta)
+
 dayTimeSpec = dayRef | todayRef
 dayTimeSpec.setParseAction(calculateTime)
- 
-hourMinuteOrSecond = (hour | minute | second)
- 
-timespec = Group(int4("miltime") |
-                 integer("HH") + 
-                 Optional(COLON + integer("MM")) + 
-                 Optional(COLON + integer("SS")) + (am | pm)("ampm")
-                 )
-absTimeSpec = ((noon | midnight | now | timespec("timeparts"))("timeOfDay") + 
-                Optional(dayRef)("dayRef") |
-                dayRef("dayRef") + at_ + 
-                (noon | midnight | now | timespec("timeparts"))("timeOfDay"))
-absTimeSpec.setParseAction(convertToAbsTime, calculateTime)
- 
-relTimeSpec = qty("qty") + hourMinuteOrSecond("timeunit") + \
-                (from_ | before | after)("dir") + \
-                absTimeSpec("absTime") | \
-              qty("qty") + hourMinuteOrSecond("timeunit") + ago("dir") | \
-              in_ + qty("qty") + hourMinuteOrSecond("timeunit")
-relTimeSpec.setParseAction(convertToTimedelta, calculateTime)
- 
-nlTimeExpression = (absTimeSpec | dayTimeSpec | relTimeSpec)
 
-if __name__ == '__main__':
+hourMinuteOrSecond = hour | minute | second
+
+timespec = Group(
+    int4("miltime")
+    | integer("HH")
+    + Optional(COLON + integer("MM"))
+    + Optional(COLON + integer("SS"))
+    + (am | pm)("ampm")
+)
+absTimeSpec = (noon | midnight | now | timespec("timeparts"))(
+    "timeOfDay"
+) + Optional(dayRef)("dayRef") | dayRef("dayRef") + at_ + (
+    noon | midnight | now | timespec("timeparts")
+)(
+    "timeOfDay"
+)
+absTimeSpec.setParseAction(convertToAbsTime, calculateTime)
+
+relTimeSpec = (
+    qty("qty")
+    + hourMinuteOrSecond("timeunit")
+    + (from_ | before | after)("dir")
+    + absTimeSpec("absTime")
+    | qty("qty") + hourMinuteOrSecond("timeunit") + ago("dir")
+    | in_ + qty("qty") + hourMinuteOrSecond("timeunit")
+)
+relTimeSpec.setParseAction(convertToTimedelta, calculateTime)
+
+nlTimeExpression = absTimeSpec | dayTimeSpec | relTimeSpec
+
+if __name__ == "__main__":
     # test grammar
     tests = """\
     today
@@ -201,10 +240,10 @@ if __name__ == '__main__':
     next Sunday at 2pm""".splitlines()
 
     for t in tests:
-        print t, "(relative to %s)" % datetime.now()
+        print(t, "(relative to %s)" % datetime.now())
         res = nlTimeExpression.parseString(t)
         if "calculatedTime" in res:
-            print res.calculatedTime
+            print(res.calculatedTime)
         else:
-            print "???"
-        print
+            print("???")
+        print()

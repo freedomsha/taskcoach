@@ -16,22 +16,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from ....taskcoachlib import config
-from ....taskcoachlib.gui.dialog import developer_message
+from taskcoachlib import config
+from taskcoachlib.gui.dialog import developer_message
 import test
 
 
 class DeveloperMessageDialogTest(test.TestCase):
     def setUp(self):
         self.settings = config.Settings(load=False)
-        self.dialog = developer_message.MessageDialog(None, message='Message',
-                                                      url='http://a.b',
-                                                      settings=self.settings)
-        
+        self.dialog = developer_message.MessageDialog(
+            None, message="Message", url="http://a.b", settings=self.settings
+        )
+
     def testDialogContainsMessage(self):
-        self.assertEqual('Message', 
-                         self.dialog.GetChildren()[0].GetChildren()[0].GetLabel())
+        self.assertEqual(
+            "Message", self.dialog.GetChildren()[0].GetChildren()[0].GetLabel()
+        )
 
     def testDialogContainsURL(self):
-        self.assertEqual('http://a.b', self.dialog.GetChildren()[0]. 
-                         GetChildren()[1].GetChildren()[1].GetURL())
+        self.assertEqual(
+            "http://a.b",
+            self.dialog.GetChildren()[0]
+            .GetChildren()[1]
+            .GetChildren()[1]
+            .GetURL(),
+        )

@@ -16,45 +16,52 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test
-import mock
-from ...taskcoachlib.domain import task, category
+import test, mock
+from taskcoachlib.domain import task, category
 
 
 class TaskViewerAndCategoryFilterIntegrationTestFixture(test.wxTestCase):
     def setUp(self):
         super(TaskViewerAndCategoryFilterIntegrationTestFixture, self).setUp()
         self.app = mock.App()
-        parent = task.Task('parent')
-        child = task.Task('child')
+        parent = task.Task("parent")
+        child = task.Task("child")
         parent.addChild(child)
-        self.category = category.Category('category')
+        self.category = category.Category("category")
         self.app.mainwindow.taskFile.categories().append(self.category)
         self.app.mainwindow.taskFile.tasks().extend([parent, child])
         self.category.addCategorizable(child)
         self.category.setFiltered()
         self.taskViewer = self.app.mainwindow.viewer[0]
-        
+
     def tearDown(self):
         mock.App.deleteInstance()
-        super(TaskViewerAndCategoryFilterIntegrationTestFixture, self).tearDown()
-        
+        super(
+            TaskViewerAndCategoryFilterIntegrationTestFixture, self
+        ).tearDown()
+
 
 class TaskListViewerAndCategoryFilterIntegrationTest(
-        TaskViewerAndCategoryFilterIntegrationTestFixture):
-            
+    TaskViewerAndCategoryFilterIntegrationTestFixture
+):
+
     def testFilterOnCategoryChildDoesHideParent(self):
         import wx
+
         if wx.VERSION < (3, 0):
-            self.taskViewer.settings.setboolean(self.taskViewer.settingsSection(), 'treemode', False)
+            self.taskViewer.settings.setboolean(
+                self.taskViewer.settingsSection(), "treemode", False
+            )
             self.assertEqual(1, self.taskViewer.widget.GetItemCount())
 
 
 class TaskTreeViewerAndCategoryFilterIntegrationTest(
-        TaskViewerAndCategoryFilterIntegrationTestFixture):
-            
+    TaskViewerAndCategoryFilterIntegrationTestFixture
+):
+
     def testFilterOnCategoryChildDoesNotHideParent(self):
-        self.taskViewer.settings.setboolean(self.taskViewer.settingsSection(), 'treemode', True)
+        self.taskViewer.settings.setboolean(
+            self.taskViewer.settingsSection(), "treemode", True
+        )
         self.taskViewer.expandAll()
         self.assertEqual(2, self.taskViewer.widget.GetItemCount())
-        

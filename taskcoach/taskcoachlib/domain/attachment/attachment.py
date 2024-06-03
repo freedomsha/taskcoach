@@ -16,21 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from io import open as file
+# for unresolved reference 'cmp':
 from filecmp import cmp
-# unresolved reference'cmp'
 import os
-from urllib.parse import urlparse
+import urllib.parse
 from taskcoachlib import patterns, mailer
 from taskcoachlib.domain import base
 from taskcoachlib.tools import openfile
-try:
-    from pubsub import pub
-except ImportError:
-    # try:
-    from taskcoachlib.thirdparty.pubsub import pub
-#    except ImportError:
-#        from wx.lib.pubsub import pub
+from taskcoachlib.thirdparty.pubsub import pub
 from taskcoachlib.domain.note.noteowner import NoteOwner
 
 
@@ -51,12 +44,12 @@ def getRelativePath(path, basePath=os.getcwd()):
 
     if path1.startswith(path2):
         if path1 == path2:
-            return ''
+            return ""
 
         if path2 == os.path.sep:
-            return path1[1:].replace('\\', '/')
+            return path1[1:].replace("\\", "/")
 
-        return path1[len(path2) + 1:].replace('\\', '/')
+        return path1[len(path2) + 1 :].replace("\\", "/")
 
     path1 = path1.split(os.path.sep)
     path2 = path2.split(os.path.sep)
@@ -66,21 +59,21 @@ def getRelativePath(path, basePath=os.getcwd()):
         path2.pop(0)
 
     while path2:
-        path1.insert(0, '..')
+        path1.insert(0, "..")
         path2.pop(0)
 
-    return os.path.join(*path1).replace('\\', '/')  # pylint: disable=W0142
+    return os.path.join(*path1).replace("\\", "/")  # pylint: disable=W0142
 
 
 class Attachment(base.Object, NoteOwner):
-    """ Abstract base class for attachments. """
+    """Abstract base class for attachments."""
 
-    type_ = 'unknown'
+    type_ = "unknown"
 
     def __init__(self, location, *args, **kwargs):
-        if 'subject' not in kwargs:
-            kwargs['subject'] = location
-        super().__init__(*args, **kwargs)
+        if "subject" not in kwargs:
+            kwargs["subject"] = location
+        super(Attachment, self).__init__(*args, **kwargs)
         self.__location = location
 
     def data(self):
@@ -98,16 +91,17 @@ class Attachment(base.Object, NoteOwner):
         if location != self.__location:
             self.__location = location
             self.markDirty()
-            pub.sendMessage(self.locationChangedEventType(), newValue=location,
-                            sender=self)
+            pub.sendMessage(
+                self.locationChangedEventType(), newValue=location, sender=self
+            )
 
     @classmethod
-    def locationChangedEventType(cls):  # better use cls not class_
-        return 'pubsub.attachment.location'
+    def locationChangedEventType(class_):
+        return "pubsub.attachment.location"
 
     @classmethod
-    def monitoredAttributes(cls):
-        return base.Object.monitoredAttributes() + ['location']
+    def monitoredAttributes(class_):
+        return base.Object.monitoredAttributes() + ["location"]
 
     def open(self, workingDir=None):
         raise NotImplementedError
@@ -116,14 +110,11 @@ class Attachment(base.Object, NoteOwner):
         try:
             return cmp(self.location(), other.location())
         except AttributeError:
-            return False
-
-    # def __hash__(self):
-    #    return hash(self.__location)
+            return 1
 
     def __getstate__(self):
         try:
-            state = super().__getstate__()
+            state = super(Attachment, self).__getstate__()
         except AttributeError:
             state = dict()
         state.update(dict(location=self.location()))
@@ -132,10 +123,10 @@ class Attachment(base.Object, NoteOwner):
     @patterns.eventSource
     def __setstate__(self, state, event=None):
         try:
-            super().__setstate__(state, event=event)
+            super(Attachment, self).__setstate__(state, event=event)
         except AttributeError:
             pass
-        self.setLocation(state['location'])
+        self.setLocation(state["location"])
 
     def __getcopystate__(self):
         return self.__getstate__()
@@ -144,15 +135,17 @@ class Attachment(base.Object, NoteOwner):
         return self.subject()
 
     @classmethod
-    def modificationEventTypes(cls):
-        eventTypes = super().modificationEventTypes()
-        return eventTypes + [cls.locationChangedEventType()]
+    def modificationEventTypes(class_):
+        eventTypes = super(Attachment, class_).modificationEventTypes()
+        return eventTypes + [class_.locationChangedEventType()]
 
 
 class FileAttachment(Attachment):
-    type_ = 'file'
+    type_ = "file"
 
-    def open(self, workingDir=None, openAttachment=openfile.openFile):  # pylint: disable=W0221
+    def open(
+        self, workingDir=None, openAttachment=openfile.openFile
+    ):  # pylint: disable=W0221
         return openAttachment(self.normalizedLocation(workingDir))
 
     def normalizedLocation(self, workingDir=None):
@@ -164,38 +157,37 @@ class FileAttachment(Attachment):
         return location
 
     def isLocalFile(self):
-        return urlparse(self.location())[0] == ''
+        return urllib.parse.urlparse(self.location())[0] == ""
 
 
 class URIAttachment(Attachment):
-    type_ = 'uri'
+    type_ = "uri"
 
     def __init__(self, location, *args, **kwargs):
-        if location.startswith('message:') and 'subject' not in kwargs:
-            # unresolved attribute reference settings
-            if self.settings.getboolean('os_darwin', 'getmailsubject'):
+        if location.startswith("message:") and "subject" not in kwargs:
+            if self.settings.getboolean("os_darwin", "getmailsubject"):
                 subject = mailer.getSubjectOfMail(location[8:])
                 if subject:
-                    kwargs['subject'] = subject
+                    kwargs["subject"] = subject
             else:
-                kwargs['subject'] = _('Mail.app message')
-        super().__init__(location, *args, **kwargs)
+                kwargs["subject"] = _("Mail.app message")
+        super(URIAttachment, self).__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
         return openfile.openFile(self.location())
 
 
 class MailAttachment(Attachment):
-    type_ = 'mail'
+    type_ = "mail"
 
     def __init__(self, location, *args, **kwargs):
-        self._readMail = kwargs.pop('readMail', mailer.readMail)
+        self._readMail = kwargs.pop("readMail", mailer.readMail)
         subject, content = self._readMail(location)
 
-        kwargs.setdefault('subject', subject)
-        kwargs.setdefault('description', content)
+        kwargs.setdefault("subject", subject)
+        kwargs.setdefault("description", content)
 
-        super().__init__(location, *args, **kwargs)
+        super(MailAttachment, self).__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
         return mailer.openMail(self.location())
@@ -205,26 +197,33 @@ class MailAttachment(Attachment):
 
     def data(self):
         try:
-            return file(self.location(), 'rb').read()  # fichier binaire !!!
-            # return io.open(self.location(), 'rb').read()
+            return open(self.location(), "rb").read()
         except IOError:
             return None
 
 
 def AttachmentFactory(location, type_=None, *args, **kwargs):
     if type_ is None:
-        if location.startswith('URI:'):
-            return URIAttachment(location[4:], subject=location[4:], description=location[4:])
-        elif location.startswith('FILE:'):
-            return FileAttachment(location[5:], subject=location[5:], description=location[5:])
-        elif location.startswith('MAIL:'):
-            return MailAttachment(location[5:], subject=location[5:], description=location[5:])
+        if location.startswith("URI:"):
+            return URIAttachment(
+                location[4:], subject=location[4:], description=location[4:]
+            )
+        elif location.startswith("FILE:"):
+            return FileAttachment(
+                location[5:], subject=location[5:], description=location[5:]
+            )
+        elif location.startswith("MAIL:"):
+            return MailAttachment(
+                location[5:], subject=location[5:], description=location[5:]
+            )
 
         return FileAttachment(location, subject=location, description=location)
 
     try:
-        return {'file': FileAttachment,
-                'uri': URIAttachment,
-                'mail': MailAttachment}[type_](location, *args, **kwargs)
+        return {
+            "file": FileAttachment,
+            "uri": URIAttachment,
+            "mail": MailAttachment,
+        }[type_](location, *args, **kwargs)
     except KeyError:
-        raise TypeError('Unknown attachment type: %s' % type_)
+        raise TypeError("Unknown attachment type: %s" % type_)

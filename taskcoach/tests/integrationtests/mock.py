@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from builtins import object
-from ...taskcoachlib import application
-from ...taskcoachlib.domain import task
+from taskcoachlib import application
+from taskcoachlib.domain import task
 
 
 class MockWxApp(object):
@@ -30,17 +29,17 @@ class MockWxApp(object):
 
     def ProcessIdle(self):
         pass
-    
+
     def ExitMainLoop(self):
         pass
-    
+
     def SetTopWindow(self, *args):
         pass
 
     def onQuit(self):
         pass
-    
-    
+
+
 class App(application.Application):
     def __init__(self, args=None):  # pylint: disable=W0231
         self._options = None
@@ -63,12 +62,12 @@ class App(application.Application):
         super(App, self).init(loadSettings=False, loadTaskFile=False)
 
     def addTask(self):
-        self.task = task.Task('Task')
+        self.task = task.Task("Task")
         self.taskFile.tasks().extend([self.task])
 
     def addTasks(self):
         # pylint: disable=W0201
-        self.parent = task.Task('Parent')
-        self.child = task.Task('Child')
+        self.parent = task.Task("Parent")
+        self.child = task.Task("Child")
         self.parent.addChild(self.child)
         self.taskFile.tasks().extend([self.parent])

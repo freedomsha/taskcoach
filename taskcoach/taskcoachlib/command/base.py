@@ -18,48 +18,55 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import zip
-from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.domain import date
 from taskcoachlib.i18n import _
-from taskcoachlib.command.clipboard import Clipboard
+from .clipboard import Clipboard
 
 
 class BaseCommand(patterns.Command):
-    def __init__(self, list=None, items=None, *args, **kwargs):  # pylint: disable=W0622
+    def __init__(
+        self, list=None, items=None, *args, **kwargs
+    ):  # pylint: disable=W0622
         super(BaseCommand, self).__init__(*args, **kwargs)
         self.list = list
         self.items = [item for item in items] if items else []
-        self.saveModificationDatetimes()
+        self.save_modification_datetimes()
 
-    def saveModificationDatetimes(self):
-        self.__oldModificationDatetimes = [(item,
-                                            item.modificationDateTime()) for item in self.modifiedItems() if item]
-        self.__now = date.now()
+    def save_modification_datetimes(self):
+        self.__old_modification_datetimes = [
+            (item, item.modificationDateTime())
+            for item in self.modified_items()
+            if item
+        ]
+        self.__now = date.Now()
 
     def __str__(self):
         return self.name()
 
-    singularName = 'Do something with %s'  # Override in subclass
-    pluralName = 'Do something'            # Override in subclass
+    singular_name = "Do something with %s"  # Override in subclass
+    plural_name = "Do something"  # Override in subclass
 
     def name(self):
-        return self.singularName % self.nameSubject(self.items[0]) if len(self.items) == 1 else self.pluralName
+        return (
+            self.singular_name % self.name_subject(self.items[0])
+            if len(self.items) == 1
+            else self.plural_name
+        )
 
-    def nameSubject(self, item):
+    def name_subject(self, item):
         subject = item.subject()
-        return subject if len(subject) < 60 else subject[:57] + '...'
+        return subject if len(subject) < 60 else subject[:57] + "..."
 
-    def itemsAreNew(self):
+    def items_are_new(self):
         return False
 
     def getItems(self):
-        """ The items this command operates on. """
+        """The items this command operates on."""
         return self.items
 
-    def modifiedItems(self):
-        """ Return the items that are modified by this command. """
+    def modified_items(self):
+        """Return the items that are modified by this command."""
         return self.items
 
     def canDo(self):
@@ -78,32 +85,35 @@ class BaseCommand(patterns.Command):
         super(BaseCommand, self).redo()
         self.redo_command()
 
-    def __tryInvokeMethodOnSuper(self, method_name, *args, **kwargs):
+    def __tryInvokeMethodOnSuper(self, methodName, *args, **kwargs):
         try:
-            method = getattr(super(BaseCommand, self), method_name)
+            method = getattr(super(BaseCommand, self), methodName)
         except AttributeError:
             return  # no 'method' in any super class
         return method(*args, **kwargs)
 
     def do_command(self):
-        self.__tryInvokeMethodOnSuper('do_command')
-        for item in self.modifiedItems():
+        self.__tryInvokeMethodOnSuper("do_command")
+        for item in self.modified_items():
             item.setModificationDateTime(self.__now)
 
     def undo_command(self):
-        self.__tryInvokeMethodOnSuper('undo_command')
-        for item, old_modification_datetime in self.__oldModificationDatetimes:
+        self.__tryInvokeMethodOnSuper("undo_command")
+        for (
+            item,
+            old_modification_datetime,
+        ) in self.__old_modification_datetimes:
             item.setModificationDateTime(old_modification_datetime)
 
     def redo_command(self):
-        self.__tryInvokeMethodOnSuper('redo_command')
-        for item in self.modifiedItems():
+        self.__tryInvokeMethodOnSuper("redo_command")
+        for item in self.modified_items():
             item.setModificationDateTime(self.__now)
 
 
 class SaveStateMixin(object):
-    """ Mixin class for commands that need to keep the states of objects.
-        Objects should provide __getstate__ and __setstate__ methods. """
+    """Mixin class for commands that need to keep the states of objects.
+    Objects should provide __getstate__ and __setstate__ methods."""
 
     # pylint: disable=W0201
 
@@ -121,8 +131,10 @@ class SaveStateMixin(object):
         self.__setStates(self.newStates, event=event)
 
     def __getStates(self):
-        return [objectToBeSaved.__getstate__() for objectToBeSaved in
-                self.objectsToBeSaved]
+        return [
+            objectToBeSaved.__getstate__()
+            for objectToBeSaved in self.objectsToBeSaved
+        ]
 
     @patterns.eventSource
     def __setStates(self, states, event=None):
@@ -131,41 +143,47 @@ class SaveStateMixin(object):
 
 
 class CompositeMixin(object):
-    """ Mixin class for commands that deal with composites. """
-    def getAncestors(self, composites):  # Method may be 'static'
+    """Mixin class for commands that deal with composites."""
+
+    def getAncestors(self, composites):
         ancestors = []
         for composite in composites:
             ancestors.extend(composite.ancestors())
         return ancestors
 
-    def getAllChildren(self, composites):  # Method may be 'static'
-        all_children = []
+    def getAllChildren(self, composites):
+        allChildren = []
         for composite in composites:
-            all_children.extend(composite.children(recursive=True))
-        return all_children
+            allChildren.extend(composite.children(recursive=True))
+        return allChildren
 
-    def getAllParents(self, composites):  # Method may be 'static'
-        return [composite.parent() for composite in composites
-                if composite.parent() is not None]
+    def getAllParents(self, composites):
+        return [
+            composite.parent()
+            for composite in composites
+            if composite.parent() != None
+        ]
 
 
 class NewItemCommand(BaseCommand):
     def name(self):
         # Override to always return the singular name without a subject. The
         # subject would be something like "New task", so not very interesting.
-        return self.singularName
+        return self.singular_name
 
-    def itemsAreNew(self):
+    def items_are_new(self):
         return True
 
-    def modifiedItems(self):
+    def modified_items(self):
         return []
 
     @patterns.eventSource
     def do_command(self, event=None):
         super(NewItemCommand, self).do_command()
-        self.list.extend(self.items)  # Don't use the event to force this change to be notified first
-        event.addSource(self, type='newitem', *self.items)
+        self.list.extend(
+            self.items
+        )  # Don't use the event to force this change to be notified first
+        event.addSource(self, type="newitem", *self.items)
 
     @patterns.eventSource
     def undo_command(self, event=None):
@@ -175,28 +193,31 @@ class NewItemCommand(BaseCommand):
     @patterns.eventSource
     def redo_command(self, event=None):
         super(NewItemCommand, self).redo_command()
-        self.list.extend(self.items)  # Don't use the event to force this change to be notified first
-        event.addSource(self, type='newitem', *self.items)
+        self.list.extend(
+            self.items
+        )  # Don't use the event to force this change to be notified first
+        event.addSource(self, type="newitem", *self.items)
 
 
 class NewSubItemCommand(NewItemCommand):
-    def nameSubject(self, subitem):
+    def name_subject(self, subitem):
         # Override to use the subject of the parent of the new subitem instead
         # of the subject of the new subitem itself, which wouldn't be very
         # interesting because it's something like 'New subitem'.
         return subitem.parent().subject()
 
-    def modifiedItems(self):
+    def modified_items(self):
         return [item.parent() for item in self.items]
 
 
 class CopyCommand(BaseCommand):
-    plular_name = _('Copy')
-    singularName = _('Copy "%s"')
+    plular_name = _("Copy")
+    singular_name = _('Copy "%s"')
 
     def do_command(self):
-        self.__copies = [item.copy() for item in self.items]  # pylint: disable=W0201
-        # instance attribute __copies defined outside __init__
+        self.__copies = [
+            item.copy() for item in self.items
+        ]  # pylint: disable=W0201
         Clipboard().put(self.__copies, self.list)
 
     def undo_command(self):
@@ -207,14 +228,14 @@ class CopyCommand(BaseCommand):
 
 
 class DeleteCommand(BaseCommand, SaveStateMixin):
-    pluralName = _('Delete')
-    singularName = _('Delete "%s"')
+    plural_name = _("Delete")
+    singular_name = _('Delete "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__shadow = kwargs.pop('shadow', False)
+        self.__shadow = kwargs.pop("shadow", False)
         super(DeleteCommand, self).__init__(*args, **kwargs)
 
-    def modifiedItems(self):
+    def modified_items(self):
         return [item.parent() for item in self.items if item.parent()]
 
     def do_command(self):
@@ -223,7 +244,7 @@ class DeleteCommand(BaseCommand, SaveStateMixin):
             self.saveStates(self.items)
 
             for item in self.items:
-                item.mark_deleted()
+                item.markDeleted()
         else:
             self.list.removeItems(self.items)
 
@@ -243,7 +264,7 @@ class DeleteCommand(BaseCommand, SaveStateMixin):
 
 
 class CutCommandMixin(object):
-    plural_name = _('Cut')
+    plural_name = _("Cut")
     singular_name = _('Cut "%s"')
 
     def __putItemsOnClipboard(self):
@@ -277,12 +298,14 @@ class CutCommand(CutCommandMixin, DeleteCommand):
 
 
 class PasteCommand(BaseCommand, SaveStateMixin):
-    pluralName = _('Paste')
-    singularName = _('Paste "%s"')
+    plural_name = _("Paste")
+    singular_name = _('Paste "%s"')
 
     def __init__(self, *args, **kwargs):
         super(PasteCommand, self).__init__(*args, **kwargs)
-        self.__itemsToPaste, self.__sourceOfItemsToPaste = self.getItemsToPaste()
+        self.__itemsToPaste, self.__sourceOfItemsToPaste = (
+            self.getItemsToPaste()
+        )
         self.saveStates(self.getItemsToSave())
 
     def getItemsToSave(self):
@@ -307,31 +330,32 @@ class PasteCommand(BaseCommand, SaveStateMixin):
         for item in self.__itemsToPaste:
             item.setParent(newParent)
 
-    @staticmethod
-    def getItemsToPaste():
+    def getItemsToPaste(self):
         items, source = Clipboard().get()
         return [item.copy() for item in items], source
 
 
 class PasteAsSubItemCommand(PasteCommand, CompositeMixin):
-    pluralName = _('Paste as subitem')
-    singularName = _('Paste as subitem of "%s"')
+    plural_name = _("Paste as subitem")
+    singular_name = _('Paste as subitem of "%s"')
 
     def setParentOfPastedItems(self):  # pylint: disable=W0221
         newParent = self.items[0]
         super(PasteAsSubItemCommand, self).setParentOfPastedItems(newParent)
 
     def getItemsToSave(self):
-        return self.getAncestors([self.items[0]]) + \
-            super(PasteAsSubItemCommand, self).getItemsToSave()
+        return (
+            self.getAncestors([self.items[0]])
+            + super(PasteAsSubItemCommand, self).getItemsToSave()
+        )
 
 
 class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
-    pluralName = _('Drag and drop')
-    singularName = _('Drag and drop "%s"')
+    plural_name = _("Drag and drop")
+    singular_name = _('Drag and drop "%s"')
 
     def __init__(self, *args, **kwargs):
-        dropTargets = kwargs.pop('drop')
+        dropTargets = kwargs.pop("drop")
         self._itemToDropOn = dropTargets[0] if dropTargets else None
         super(DragAndDropCommand, self).__init__(*args, **kwargs)
         self.saveStates(self.getItemsToSave())
@@ -342,13 +366,20 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
             toSave.insert(0, self._itemToDropOn)
         return toSave
 
-    def modifiedItems(self):
-        return [item.parent() for item in self.items if item.parent()] + \
-               [self._itemToDropOn] if self._itemToDropOn else []
+    def modified_items(self):
+        return (
+            [item.parent() for item in self.items if item.parent()]
+            + [self._itemToDropOn]
+            if self._itemToDropOn
+            else []
+        )
 
     def canDo(self):
-        return self._itemToDropOn not in (self.items +
-                                          self.getAllChildren(self.items) + self.getAllParents(self.items))
+        return self._itemToDropOn not in (
+            self.items
+            + self.getAllChildren(self.items)
+            + self.getAllParents(self.items)
+        )
 
     def do_command(self):
         super(DragAndDropCommand, self).do_command()
@@ -372,18 +403,21 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
 
 class OrderingDragAndDropCommand(DragAndDropCommand):
     def __init__(self, *args, **kwargs):
-        self.column = kwargs.pop('column', None)
-        self.isTreeMode = kwargs.pop('isTree', True)
-        self.part = kwargs.pop('part', 0)
+        self.column = kwargs.pop("column", None)
+        self.isTreeMode = kwargs.pop("isTree", True)
+        self.part = kwargs.pop("part", 0)
         super(OrderingDragAndDropCommand, self).__init__(*args, **kwargs)
 
     def isOrdering(self):
-        return self.column is not None and self.column.name() == 'ordering'
+        return self.column is not None and self.column.name() == "ordering"
 
     def getSiblings(self):
         siblings = []
         for item in self.list:
-            if item.parent() == self._itemToDropOn.parent() and item not in self.items:
+            if (
+                item.parent() == self._itemToDropOn.parent()
+                and item not in self.items
+            ):
                 siblings.append(item)
         return siblings
 
@@ -412,48 +446,108 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
             minOrdering = min(orderings)
             maxOrdering = max(orderings)
 
-            insertIndex = siblings.index(self._itemToDropOn) + (self.part + 1) // 2
+            insertIndex = (
+                siblings.index(self._itemToDropOn) + (self.part + 1) // 2
+            )
 
             # Simple special cases
             if insertIndex == 0:
-                minOrderingOfSiblings = min([item.ordering() for item in siblings])
+                minOrderingOfSiblings = min(
+                    [item.ordering() for item in siblings]
+                )
                 for item in self.items:
-                    item.setOrdering(item.ordering() - maxOrdering + minOrderingOfSiblings - 1)
+                    item.setOrdering(
+                        item.ordering()
+                        - maxOrdering
+                        + minOrderingOfSiblings
+                        - 1
+                    )
             elif insertIndex == len(siblings):
-                maxOrderingOfSiblings = max([item.ordering() for item in siblings])
+                maxOrderingOfSiblings = max(
+                    [item.ordering() for item in siblings]
+                )
                 for item in self.items:
-                    item.setOrdering(item.ordering() - minOrdering + maxOrderingOfSiblings + 1)
+                    item.setOrdering(
+                        item.ordering()
+                        - minOrdering
+                        + maxOrderingOfSiblings
+                        + 1
+                    )
             else:
-                maxOrderingOfPreviousSiblings = max([item.ordering() for idx, item in enumerate(siblings)
-                                                         if idx < insertIndex])
-                minOrderingOfPreviousSiblings = min([item.ordering() for idx, item in enumerate(siblings)
-                                                         if idx < insertIndex])
-                maxOrderingOfNextSiblings = max([item.ordering() for idx, item in enumerate(siblings)
-                                                     if idx >= insertIndex])
-                minOrderingOfNextSiblings = min([item.ordering() for idx, item in enumerate(siblings)
-                                                     if idx >= insertIndex])
+                maxOrderingOfPreviousSiblings = max(
+                    [
+                        item.ordering()
+                        for idx, item in enumerate(siblings)
+                        if idx < insertIndex
+                    ]
+                )
+                minOrderingOfPreviousSiblings = min(
+                    [
+                        item.ordering()
+                        for idx, item in enumerate(siblings)
+                        if idx < insertIndex
+                    ]
+                )
+                maxOrderingOfNextSiblings = max(
+                    [
+                        item.ordering()
+                        for idx, item in enumerate(siblings)
+                        if idx >= insertIndex
+                    ]
+                )
+                minOrderingOfNextSiblings = min(
+                    [
+                        item.ordering()
+                        for idx, item in enumerate(siblings)
+                        if idx >= insertIndex
+                    ]
+                )
                 if insertIndex < len(siblings) // 2:
                     for item in self.items:
-                        item.setOrdering(item.ordering() - maxOrdering - 1 + minOrderingOfNextSiblings)
+                        item.setOrdering(
+                            item.ordering()
+                            - maxOrdering
+                            - 1
+                            + minOrderingOfNextSiblings
+                        )
                     for item in siblings[:insertIndex]:
-                        item.setOrdering(item.ordering() - maxOrderingOfPreviousSiblings - 1 +
-                                         minOrdering - maxOrdering - 1 + minOrderingOfNextSiblings)
+                        item.setOrdering(
+                            item.ordering()
+                            - maxOrderingOfPreviousSiblings
+                            - 1
+                            + minOrdering
+                            - maxOrdering
+                            - 1
+                            + minOrderingOfNextSiblings
+                        )
                 else:
                     for item in self.items:
-                        item.setOrdering(item.ordering() - minOrdering + 1 + maxOrderingOfPreviousSiblings)
+                        item.setOrdering(
+                            item.ordering()
+                            - minOrdering
+                            + 1
+                            + maxOrderingOfPreviousSiblings
+                        )
                     for item in siblings[insertIndex:]:
-                        item.setOrdering(item.ordering() - minOrderingOfNextSiblings + 1 +
-                                         maxOrdering - minOrdering + 1 + maxOrderingOfPreviousSiblings)
+                        item.setOrdering(
+                            item.ordering()
+                            - minOrderingOfNextSiblings
+                            + 1
+                            + maxOrdering
+                            - minOrdering
+                            + 1
+                            + maxOrderingOfPreviousSiblings
+                        )
         else:
             super(OrderingDragAndDropCommand, self).do_command()
 
 
 class EditSubjectCommand(BaseCommand):
-    pluralName = _('Edit subjects')
-    singularName = _('Edit subject "%s"')
+    plural_name = _("Edit subjects")
+    singular_name = _('Edit subject "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__newSubject = kwargs.pop('newValue')
+        self.__newSubject = kwargs.pop("newValue")
         super(EditSubjectCommand, self).__init__(*args, **kwargs)
         self.__old_subjects = [(item, item.subject()) for item in self.items]
 
@@ -474,11 +568,11 @@ class EditSubjectCommand(BaseCommand):
 
 
 class EditDescriptionCommand(BaseCommand):
-    pluralName = _('Edit descriptions')
-    singularName = _('Edit description "%s"')
+    plural_name = _("Edit descriptions")
+    singular_name = _('Edit description "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__new_description = kwargs.pop('newValue')
+        self.__new_description = kwargs.pop("newValue")
         super(EditDescriptionCommand, self).__init__(*args, **kwargs)
         self.__old_descriptions = [item.description() for item in self.items]
 
@@ -499,16 +593,20 @@ class EditDescriptionCommand(BaseCommand):
 
 
 class EditIconCommand(BaseCommand):
-    pluralName = _('Change icons')
-    singularName = _('Change icon "%s"')
+    plural_name = _("Change icons")
+    singular_name = _('Change icon "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__newIcon = icon = kwargs.pop('newValue')
-        self.__newSelectedIcon = icon[:-len('_icon')] + '_open_icon' \
-            if (icon.startswith('folder') and icon.count('_') == 2) \
+        self.__newIcon = icon = kwargs.pop("newValue")
+        self.__newSelectedIcon = (
+            icon[: -len("_icon")] + "_open_icon"
+            if (icon.startswith("folder") and icon.count("_") == 2)
             else icon
+        )
         super(EditIconCommand, self).__init__(*args, **kwargs)
-        self.__oldIcons = [(item.icon(), item.selectedIcon()) for item in self.items]
+        self.__oldIcons = [
+            (item.icon(), item.selectedIcon()) for item in self.items
+        ]
 
     @patterns.eventSource
     def do_command(self, event=None):
@@ -520,7 +618,9 @@ class EditIconCommand(BaseCommand):
     @patterns.eventSource
     def undo_command(self, event=None):
         super(EditIconCommand, self).undo_command()
-        for item, (oldIcon, oldSelectedIcon) in zip(self.items, self.__oldIcons):
+        for item, (oldIcon, oldSelectedIcon) in zip(
+            self.items, self.__oldIcons
+        ):
             item.setIcon(oldIcon, event=event)
             item.setSelectedIcon(oldSelectedIcon, event=event)
 
@@ -529,11 +629,11 @@ class EditIconCommand(BaseCommand):
 
 
 class EditFontCommand(BaseCommand):
-    pluralName = _('Change fonts')
-    singularName = _('Change font "%s"')
+    plural_name = _("Change fonts")
+    singular_name = _('Change font "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__newFont = kwargs.pop('newValue')
+        self.__newFont = kwargs.pop("newValue")
         super(EditFontCommand, self).__init__(*args, **kwargs)
         self.__oldFonts = [item.font() for item in self.items]
 
@@ -555,7 +655,7 @@ class EditFontCommand(BaseCommand):
 
 class EditColorCommand(BaseCommand):
     def __init__(self, *args, **kwargs):
-        self.__newColor = kwargs.pop('newValue')
+        self.__newColor = kwargs.pop("newValue")
         super(EditColorCommand, self).__init__(*args, **kwargs)
         self.__oldColors = [self.getItemColor(item) for item in self.items]
 
@@ -584,8 +684,8 @@ class EditColorCommand(BaseCommand):
 
 
 class EditForegroundColorCommand(EditColorCommand):
-    pluralName = _('Change foreground colors')
-    singularName = _('Change foreground color "%s"')
+    plural_name = _("Change foreground colors")
+    singular_name = _('Change foreground color "%s"')
 
     @staticmethod
     def getItemColor(item):
@@ -597,8 +697,8 @@ class EditForegroundColorCommand(EditColorCommand):
 
 
 class EditBackgroundColorCommand(EditColorCommand):
-    pluralName = _('Change background colors')
-    singularName = _('Change background color "%s"')
+    plural_name = _("Change background colors")
+    singular_name = _('Change background color "%s"')
 
     @staticmethod
     def getItemColor(item):

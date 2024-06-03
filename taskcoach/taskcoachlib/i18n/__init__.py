@@ -16,57 +16,48 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wx
-import os
-import sys
-# from imp import load_source as Load_Source # obsolète à remplacer par importlib.
-# Pour imp.load_source remplacer par importlib.machinery.SourceFileLoader
-from importlib.machinery import SourceFileLoader as Load_Source
-import tempfile
+# import imp  # Obsolète
 import locale
-import gettext
+import tempfile
+from importlib.machinery import SourceFileLoader as load_source
+import os
+import wx
+
 from taskcoachlib import patterns, operating_system
-from . import po2dict  # XXXFIXME get rid of this later
-import builtins
+from . import po2dict
 
 
 class Translator(metaclass=patterns.Singleton):
     def __init__(self, language):
-        if language.endswith('.po'):
-            load = self._loadPoFile
-        else:
-            load = self._loadModule
-        module, language = load(language)  # unexpected argument language
+        load = (
+            self._loadPoFile if language.endswith(".po") else self._loadModule
+        )
+        module, language = load(language)
         self._installModule(module)
         self._setLocale(language)
 
     def _loadPoFile(self, poFilename):
-        """ Load the translation from a .po file by creating a python
-            module with po2dict and them importing that module. """
-        # Chargez la traduction à partir d'un fichier .po en créant
-        # un module python avec po2dict et en important ce module.
+        """Load the translation from a .po file by creating a python
+        module with po2dict and them importing that module."""
         language = self._languageFromPoFilename(poFilename)
         pyFilename = self._tmpPyFilename()
         po2dict.make(poFilename, pyFilename)
-        module = Load_Source(language, pyFilename)  # imp déprécié. Remplacer par importlib.machinery.SourceFileLoader
+        # module = imp.load_source(language, pyFilename)
+        # imp déprécié. Remplacer par importlib.machinery.SourceFileLoader
+        module = load_source(language, pyFilename)
         os.remove(pyFilename)
         return module, language
 
-    # @staticmethod
     def _tmpPyFilename(self):
-        """ Return a filename of a (closed) temporary .py file. """
-        # Renvoie le nom d'un fichier .py temporaire (fermé).
-        tmpFile = tempfile.NamedTemporaryFile(suffix='.py')
+        """Return a filename of a (closed) temporary .py file."""
+        tmpFile = tempfile.NamedTemporaryFile(suffix=".py")
         pyFilename = tmpFile.name
         tmpFile.close()
         return pyFilename
 
     def _loadModule(self, language):
-        """ Load the translation from a python module that has been
-            created from a .po file with po2dict before. """
-        # Chargez la traduction à partir d'un module python qui a été
-        # créé auparavant à partir d'un fichier .po avec po2dict.
-        # module = None  # d'où ça sort ?
+        """Load the translation from a python module that has been
+        created from a .po file with po2dict before."""
         for moduleName in self._localeStrings(language):
             try:
                 module = __import__(moduleName, globals())
@@ -76,43 +67,43 @@ class Translator(metaclass=patterns.Singleton):
         return module, language
 
     def _installModule(self, module):
-        """ Make the module's translation dictionary and encoding available. """
-        # Rendre disponible le dictionnaire de traduction et l'encodage du module.
+        """Make the module's translation dictionary and encoding available."""
         # pylint: disable=W0201
         if module:
             self.__language = module.dict
             self.__encoding = module.encoding
 
     def _setLocale(self, language):
-        """ Try to set the locale, trying possibly multiple localeStrings. """
-        # Essayez de définir les paramètres régionaux, en essayant éventuellement plusieurs localeStrings.
+        """Try to set the locale, trying possibly multiple localeStrings."""
         if not operating_system.isGTK():
-            locale.setlocale(locale.LC_ALL, '')
+            locale.setlocale(locale.LC_ALL, "")
         # Set the wxPython locale:
         for localeString in self._localeStrings(language):
             languageInfo = wx.Locale.FindLanguageInfo(localeString)
             if languageInfo:
-                self.__locale = wx.Locale(languageInfo.Language)  # pylint: disable=W0201
+                self.__locale = wx.Locale(
+                    languageInfo.Language
+                )  # pylint: disable=W0201
                 # Add the wxWidgets message catalog. This is really only for
                 # py2exe'ified versions, but it doesn't seem to hurt on other
                 # platforms...
-                # localedir = os.path.join(wx.StandardPaths_Get().GetResourcesDir(), 'locale')
-                localedir = os.path.join(wx.StandardPaths.Get().GetResourcesDir(), 'locale')
-                self.__locale.AddCatalogLookupPathPrefix(localedir)
-                self.__locale.AddCatalog('wxstd')
+                localeDir = os.path.join(
+                    wx.StandardPaths.Get().GetResourcesDir(), "locale"
+                )
+                self.__locale.AddCatalogLookupPathPrefix(localeDir)
+                self.__locale.AddCatalog("wxstd")
                 break
         if operating_system.isGTK():
             try:
-                locale.setlocale(locale.LC_ALL, '')
+                locale.setlocale(locale.LC_ALL, "")
             except locale.Error:
                 # Mmmh. wx will display a message box later, so don't do anything.
                 pass
         self._fixBrokenLocales()
 
-    # @staticmethod
     def _fixBrokenLocales(self):
         current_language = locale.getlocale(locale.LC_TIME)[0]
-        if current_language and '_NO' in current_language:
+        if current_language and "_NO" in current_language:
             # nb_BO and ny_NO cause crashes in the wx.DatePicker. Set the
             # time part of the locale to some other locale. Since we don't
             # know which ones are available we try a few. First we try the
@@ -121,39 +112,33 @@ class Translator(metaclass=patterns.Singleton):
             # English (GB) so the user at least gets a European date and time
             # format if that works. If all else fails we use the default
             # 'C' locale.
-            for lang in ['', 'en_GB.utf8', 'C']:
+            for lang in ["", "en_GB.utf8", "C"]:
                 try:
                     locale.setlocale(locale.LC_TIME, lang)
                 except locale.Error:
                     continue
                 current_language = locale.getlocale(locale.LC_TIME)[0]
-                if current_language and '_NO' in current_language:
+                if current_language and "_NO" in current_language:
                     continue
                 else:
                     break
 
-    # def _localeStrings(language):
-    # TypeError: Translator._localeStrings() takes 1 positional argument but 2 were given
     def _localeStrings(self, language):
-        """ Extract language and language_country from language if possible. """
-        # Extrayez la langue et la langue_pays de language si possible.
+        """Extract language and language_country from language if possible."""
         localeStrings = []
         if language:
             localeStrings.append(language)
-            if '_' in language:
-                localeStrings.append(language.split('_')[0])
+            if "_" in language:
+                localeStrings.append(language.split("_")[0])
         return localeStrings
 
     def _languageFromPoFilename(self, poFilename):
         return os.path.splitext(os.path.basename(poFilename))[0]
 
     def translate(self, string):
-        """ Look up string in the current language dictionary. Return the
-            passed string if no language dictionary is available or if the
-            dictionary doesn't contain the string. """
-        # Recherchez une chaîne dans le dictionnaire de langue actuel.
-        # Renvoie la chaîne transmise si aucun dictionnaire de langue n'est disponible
-        # ou si le dictionnaire ne contient pas la chaîne.
+        """Look up string in the current language dictionary. Return the
+        passed string if no language dictionary is available or if the
+        dictionary doesn't contain the string."""
         try:
             return self.__language[string].decode(self.__encoding)
         except (AttributeError, KeyError):
@@ -165,17 +150,12 @@ def currentLanguageIsRightToLeft():
 
 
 def translate(string):
-    return Translator().translate(string)
-    # Parameter 'language' unfilled
-    # TypeError: Translator.translate() missing 1 required positional argument: 'string'
-    # return Translator(language=?).translate(string)
-    # return Translator(language=language).translate(string)
+    return Translator(locale.getdefaultlocale()[0]).translate(string)
 
 
 _ = translate  # This prevents a warning from pygettext.py
 
 # Inject into builtins for 3rdparty packages
-# #import __builtin__
-# #__builtin__.__dict__['_'] = _
+import builtins
 
-# builtins.__dict__['_'] = _
+builtins.__dict__["_"] = _
