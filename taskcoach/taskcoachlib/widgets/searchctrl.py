@@ -16,9 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wx, re, sre_constants
-from taskcoachlib.widgets import tooltip
-from taskcoachlib.i18n import _
+from builtins import range
+import wx
+import re
+
+# import sre_constants
+from ..widgets import tooltip
+from ..i18n import _
 
 
 class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
@@ -31,9 +35,7 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         self.__bitmapSize = kwargs.pop("size", (16, 16))
         value = kwargs.pop("value", "")
         super(SearchCtrl, self).__init__(*args, **kwargs)
-        self.SetSearchMenuBitmap(
-            self.getBitmap("magnifier_glass_dropdown_icon")
-        )
+        self.SetSearchMenuBitmap(self.getBitmap("magnifier_glass_dropdown_icon"))
         self.SetSearchBitmap(self.getBitmap("magnifier_glass_icon"))
         self.SetCancelBitmap(self.getBitmap("cross_red_icon"))
         self.__timer = wx.Timer(self)
@@ -49,16 +51,12 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
 
     def getTextCtrl(self):
         textCtrl = [
-            child
-            for child in self.GetChildren()
-            if isinstance(child, wx.TextCtrl)
+            child for child in self.GetChildren() if isinstance(child, wx.TextCtrl)
         ]
         return textCtrl[0] if textCtrl else self
 
     def getBitmap(self, bitmap):
-        return wx.ArtProvider.GetBitmap(
-            bitmap, wx.ART_TOOLBAR, self.__bitmapSize
-        )
+        return wx.ArtProvider.GetBitmap(bitmap, wx.ART_TOOLBAR, self.__bitmapSize)
 
     def createMenu(self):
         # pylint: disable=W0201
@@ -121,7 +119,7 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         # handler for those menu item ids. It's no problem that the actual menu
         # items don't exist yet.
         self.__recentSearchMenuItemIds = [
-            wx.NewId() for dummy in range(self.__maxRecentSearches)
+            wx.NewIdRef() for dummy in range(self.__maxRecentSearches)
         ]
         self.Bind(
             wx.EVT_MENU_RANGE,
@@ -150,7 +148,8 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         if self.__regularExpression:
             try:
                 re.compile(self.GetValue())
-            except sre_constants.error:
+            # except sre_constants.error:
+            except re.error:
                 return False
         return True
 
@@ -220,9 +219,7 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
 
     def onRecentSearchMenuItem(self, event):
         self.SetValue(
-            self.__recentSearches[
-                event.GetId() - self.__recentSearchMenuItemIds[0]
-            ]
+            self.__recentSearches[event.GetId() - self.__recentSearchMenuItemIds[0]]
         )
         self.onFind(event)
         # Don't call event.Skip(). It will result in this event handler being
@@ -270,9 +267,7 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
         # This will fail if the event is coming from the window, but in that
         # case we can event.IsChecked() expect to work so we use that.
         try:
-            return (
-                event.GetEventObject().FindItemById(event.GetId()).IsChecked()
-            )
+            return event.GetEventObject().FindItemById(event.GetId()).IsChecked()
         except AttributeError:
             return event.IsChecked()
 
