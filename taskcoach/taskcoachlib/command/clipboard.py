@@ -29,9 +29,9 @@ class Clipboard(metaclass=patterns.Singleton):
         self._source = source
 
     def get(self):
-        current_contents = self._contents
-        current_source = self._source
-        return current_contents, current_source
+        currentContents = self._contents
+        currentSource = self._source
+        return currentContents, currentSource
 
     def peek(self):
         return self._contents
@@ -40,5 +40,5 @@ class Clipboard(metaclass=patterns.Singleton):
         self._contents = []
         self._source = None
 
-    def __nonzero__(self):
-        return len(self._contents)
+    def __bool__(self):
+        return len(self._contents) > 0

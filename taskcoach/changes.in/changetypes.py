@@ -15,18 +15,26 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-# futurize ajoute 1 ligne :
-from builtins import object
-# Unused import statement 'import textwrap'
+
 import textwrap
 
 
-class Release(object):  # nouvelle classe mère
-    def __init__(self, number, date, bugsFixed=None, featuresAdded=None,
-                 featuresRemoved=None, featuresChanged=None,
-                 dependenciesChanged=None, implementationChanged=None,
-                 websiteChanges=None, distributionsChanged=None, teamChanges=None,
-                 summary=''):
+class Release:
+    def __init__(
+        self,
+        number,
+        date,
+        bugsFixed=None,
+        featuresAdded=None,
+        featuresRemoved=None,
+        featuresChanged=None,
+        dependenciesChanged=None,
+        implementationChanged=None,
+        websiteChanges=None,
+        distributionsChanged=None,
+        teamChanges=None,
+        summary="",
+    ):
         self.number = number
         self.date = date
         self.summary = summary
@@ -41,13 +49,12 @@ class Release(object):  # nouvelle classe mère
         self.teamChanges = teamChanges or []
 
 
-class Change(object):  # nouvelle classe mère
-    def __init__(self, description, *changeids):
+class Change(object):
+    def __init__(self, description, *changeIds):
         self.description = description
-        self.changeIds = changeids
+        self.changeIds = changeIds
 
 
-# classes enfants de change :
 class Bug(Change):
     pass
 
@@ -73,9 +80,8 @@ class Distribution(Change):
 
 
 class Website(Change):
-    def __init__(self, description, url, *changeids):
-        # super(Website, self).__init__(description, *changeIds)
-        super(Website, self).__init__(description, *changeids)
+    def __init__(self, description, url, *changeIds):
+        super(Website, self).__init__(description, *changeIds)
         self.url = url
 
 

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import zip
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import category
@@ -24,45 +23,51 @@ from . import base
 
 
 class NewCategoryCommand(base.NewItemCommand):
-    singularName = _('New category')
+    singular_name = _("New category")
 
     def __init__(self, *args, **kwargs):
-        subject = kwargs.pop('subject', _('New category'))
-        description = kwargs.pop('description', '')
-        attachments = kwargs.pop('attachments', [])
+        subject = kwargs.pop("subject", _("New category"))
+        description = kwargs.pop("description", "")
+        attachments = kwargs.pop("attachments", [])
         super(NewCategoryCommand, self).__init__(*args, **kwargs)
-        self.items = self.createNewCategories(subject=subject,
-                                              description=description, attachments=attachments)
+        self.items = self.createNewCategories(
+            subject=subject, description=description, attachments=attachments
+        )
 
-    def createNewCategories(self, **kwargs):  # Method may be 'static'
+    def createNewCategories(self, **kwargs):
         return [category.Category(**kwargs)]
 
 
 class NewSubCategoryCommand(base.NewSubItemCommand):
-    pluralName = _('New subcategories')
-    singularName = _('New subcategory of "%s"')
+    plural_name = _("New subcategories")
+    singular_name = _('New subcategory of "%s"')
 
     def __init__(self, *args, **kwargs):
-        subject = kwargs.pop('subject', _('New subcategory'))
-        description = kwargs.pop('description', '')
-        attachments = kwargs.pop('attachments', [])
+        subject = kwargs.pop("subject", _("New subcategory"))
+        description = kwargs.pop("description", "")
+        attachments = kwargs.pop("attachments", [])
         super(NewSubCategoryCommand, self).__init__(*args, **kwargs)
-        self.items = self.createNewCategories(subject=subject,
-                                              description=description, attachments=attachments)
-        self.saveModificationDatetimes()
+        self.items = self.createNewCategories(
+            subject=subject, description=description, attachments=attachments
+        )
+        self.save_modification_datetimes()
 
     def createNewCategories(self, **kwargs):
         return [parent.newChild(**kwargs) for parent in self.items]
 
 
 class EditExclusiveSubcategoriesCommand(base.BaseCommand):
-    pluralName = _('Edit exclusive subcategories')
-    singularName = _('Edit exclusive subcategories of "%s"')
+    plural_name = _("Edit exclusive subcategories")
+    singular_name = _('Edit exclusive subcategories of "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__newExclusivity = kwargs.pop('newValue')
-        super(EditExclusiveSubcategoriesCommand, self).__init__(*args, **kwargs)
-        self.__oldExclusivities = [item.hasExclusiveSubcategories() for item in self.items]
+        self.__newExclusivity = kwargs.pop("newValue")
+        super(EditExclusiveSubcategoriesCommand, self).__init__(
+            *args, **kwargs
+        )
+        self.__oldExclusivities = [
+            item.hasExclusiveSubcategories() for item in self.items
+        ]
 
     @patterns.eventSource
     def do_command(self, event=None):
@@ -81,9 +86,9 @@ class EditExclusiveSubcategoriesCommand(base.BaseCommand):
 
 
 class DeleteCategoryCommand(base.DeleteCommand):
-    pluralName = _('Delete categories')
-    singularName = _('Delete category "%s"')
+    plural_name = _("Delete categories")
+    singular_name = _('Delete category "%s"')
 
 
 class DragAndDropCategoryCommand(base.OrderingDragAndDropCommand):
-    pluralName = _('Drag and drop categories')
+    plural_name = _("Drag and drop categories")

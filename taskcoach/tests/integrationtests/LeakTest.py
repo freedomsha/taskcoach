@@ -17,9 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import weakref
-import test
-import mock
-import os
+import test, mock, os
 
 
 class LeakTest(test.TestCase):
@@ -28,8 +26,8 @@ class LeakTest(test.TestCase):
         self.mockApp.addTask()
 
     def tearDown(self):
-        self.mockApp.iocontroller.saveas('Test.tsk')
-        os.remove('Test.tsk')
+        self.mockApp.iocontroller.saveas("Test.tsk")
+        os.remove("Test.tsk")
         self.mockApp.quitApplication()
         mock.App.deleteInstance()
         super(LeakTest, self).tearDown()

@@ -26,29 +26,35 @@ def dumpTemplate(filename, fd):
     path, name = os.path.split(filename)
     name, ext = os.path.splitext(name)
 
-    if ext == '.tsktmpl':
-        fd.write('    templates.append((%s, %s))\n' % (repr(name),
-                                                       repr(open(filename, 'rb').read())))
-                with open(filename, 'rb') as fileobj:
-        tree = ET.parse(file(filename, 'rb'))
+    if ext == ".tsktmpl":
+        fd.write(
+            "    templates.append((%s, %s))\n"
+            % (repr(name), repr(open(filename, "rb").read()))
+        )
+        tree = ET.parse(open(filename, "rb"))
         root = tree.getroot()
-        subject = root.find('task').attrib['subject']
-        fd.write('    _(%s)\n' % repr(subject.encode('UTF-8')))
+        subject = root.find("task").attrib["subject"]
+        fd.write("    _(%s)\n" % repr(subject.encode("UTF-8")))
 
 
 def dumpDirectory(path):
-    fd = file(os.path.join('..', 'taskcoachlib', 'persistence', 'xml',
-                           'templates.py'), 'wb')
-    fd.write('#-*- coding: UTF-8\n\n')
-    fd.write('from taskcoachlib.i18n import _\n\n')
-    fd.write('def getDefaultTemplates():\n')
-    fd.write('    templates = []\n')
+    fd = open(
+        os.path.join(
+            "..", "taskcoachlib", "persistence", "xml", "templates.py"
+        ),
+        "w",
+        encoding="utf-8",
+    )
+    fd.write("# -*- coding: UTF-8 -*-\n\n")
+    fd.write("from taskcoachlib.i18n import _\n\n")
+    fd.write("def getDefaultTemplates():\n")
+    fd.write("    templates = []\n")
 
     for name in os.listdir(path):
         dumpTemplate(os.path.join(path, name), fd)
 
-    fd.write('\n    return templates\n')
+    fd.write("\n    return templates\n")
 
 
-if __name__ == '__main__':
-    dumpDirectory('.')
+if __name__ == "__main__":
+    dumpDirectory(".")

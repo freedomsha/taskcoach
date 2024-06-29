@@ -16,6 +16,5 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib.config.settings import Settings
-from taskcoachlib.config.options import OptionParser, ApplicationOptionParser, OptionGroup
-from taskcoachlib.config.arguments import ArgumentParser, ApplicationArgumentParser
+from .settings import Settings
+from .options import OptionParser, ApplicationOptionParser, OptionGroup

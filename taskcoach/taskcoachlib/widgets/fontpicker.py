@@ -21,15 +21,15 @@ import wx
 
 class FontPickerCtrl(wx.Button):
     def __init__(self, *args, **kwargs):
-        self.__font = kwargs.pop('font')
-        self.__colour = kwargs.pop('colour')
+        self.__font = kwargs.pop("font")
+        self.__colour = kwargs.pop("colour")
         super(FontPickerCtrl, self).__init__(*args, **kwargs)
         self.__updateButton()
         self.Bind(wx.EVT_BUTTON, self.onClick)
 
     def GetSelectedFont(self):
         return self.__font
-    
+
     def SetSelectedFont(self, font):
         self.__font = font
         self.__updateButton()
@@ -58,7 +58,7 @@ class FontPickerCtrl(wx.Button):
     def __readFontData(self, fontData):
         self.__font = fontData.GetChosenFont()
         self.__colour = fontData.GetColour()
-    
+
     def __updateButton(self):
         self.SetLabel(self.__font.GetNativeFontInfoUserDesc())
         self.SetFont(self.__font)

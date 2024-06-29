@@ -16,18 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
-import wx
-import test
-import mock
+import os, wx
+import test, mock
 
 
 class LoadTest(test.TestCase):
     def setUp(self):
-        self.filename = 'LoadTest.tsk'
-        # taskfile = file(self.filename, 'w')
-        taskfile = open(self.filename, 'w')
-        taskfile.writelines(['Line 1\n', 'Line 2\n'])
+        self.filename = "LoadTest.tsk"
+        taskfile = open(self.filename, "w")
+        taskfile.writelines(["Line 1\n", "Line 2\n"])
         taskfile.close()
         self.errorDialogCalled = False
         self.mockApp = mock.App()
@@ -50,17 +47,20 @@ class LoadTest(test.TestCase):
         self.errorDialogCalled = True
 
     def testLoadInvalidFileDoesNotAffectFile(self):
-        self.mockApp.iocontroller.open(self.filename, showerror=self.mockErrorDialog)
-        # lines = file(self.filename, 'r').readlines()
-        lines = open(self.filename, 'r').readlines()
-        self.failUnless(self.errorDialogCalled)
-        self.assertEqual(2, len(lines)) 
-        self.assertEqual('Line 1\n', lines[0])
-        self.assertEqual('Line 2\n', lines[1])
+        self.mockApp.iocontroller.open(
+            self.filename, showerror=self.mockErrorDialog
+        )
+        lines = open(self.filename, "r").readlines()
+        self.assertTrue(self.errorDialogCalled)
+        self.assertEqual(2, len(lines))
+        self.assertEqual("Line 1\n", lines[0])
+        self.assertEqual("Line 2\n", lines[1])
 
     def testLoadNonExistingFileGivesErrorMessage(self):
-        self.mockApp.iocontroller.open("I don't exist.tsk", 
-                                       showerror=self.mockErrorDialog,
-                                       fileExists=lambda filename: False)
+        self.mockApp.iocontroller.open(
+            "I don't exist.tsk",
+            showerror=self.mockErrorDialog,
+            fileExists=lambda filename: False,
+        )
         wx.GetApp().Yield()  # io.open uses wx.CallAfter
-        self.failUnless(self.errorDialogCalled)
+        self.assertTrue(self.errorDialogCalled)

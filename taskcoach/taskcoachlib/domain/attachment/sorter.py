@@ -22,4 +22,4 @@ from . import attachment
 
 class AttachmentSorter(base.Sorter):
     DomainObjectClass = attachment.Attachment
-    EventTypePrefix = 'attachment'
+    EventTypePrefix = "attachment"

@@ -16,10 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import object
-from ... import test
-import xml
-from ....taskcoachlib import persistence
+import test, xml
+from taskcoachlib import persistence
 
 
 class Fake(object):
@@ -27,16 +25,16 @@ class Fake(object):
         pass
 
 
-class TemplateReaderThatThrowsTooNewException(Fake):    
+class TemplateReaderThatThrowsTooNewException(Fake):
     def read(self, *args, **kwargs):  # pylint: disable=W0613
         raise persistence.xml.reader.XMLReaderTooNewException
 
 
-class TemplateReaderThatThrowsIOError(Fake):    
-    def read(self, *args, **kwargs): # pylint: disable=W0613
+class TemplateReaderThatThrowsIOError(Fake):
+    def read(self, *args, **kwargs):  # pylint: disable=W0613
         raise IOError
-    
-    
+
+
 class TemplateReaderThatThrowsParseError(Fake):
     def read(self, *args, **kwargs):  # pylint: disable=W0613
         raise xml.etree.ElementTree.ParseError
@@ -45,38 +43,43 @@ class TemplateReaderThatThrowsParseError(Fake):
 class FakeFileClass(Fake):
     def close(self):
         pass
-    
+
 
 class FileClassThatRaisesIOError(object):
     def __init__(self, *args, **kwargs):  # pylint: disable=W0613
         raise IOError
-    
+
 
 class TemplateListUnderTest(persistence.TemplateList):
     def _templateFilenames(self):
-        return ['dummy.tsktmpl']
-        
+        return ["dummy.tsktmpl"]
+
 
 class TemplateListTestCase(test.TestCase):
     def testPathWithoutTemplates(self):
-        templateList = persistence.TemplateList('.')
+        templateList = persistence.TemplateList(".")
         self.assertEqual([], templateList.tasks())
-        
+
     def testHandleTooNewException(self):
-        templateList = TemplateListUnderTest('.', TemplateReaderThatThrowsTooNewException,
-                                             FakeFileClass)
+        templateList = TemplateListUnderTest(
+            ".", TemplateReaderThatThrowsTooNewException, FakeFileClass
+        )
         self.assertEqual([], templateList.tasks())
-        
+
     def testHandleIOErrorWhileOpeningFile(self):
-        templateList = TemplateListUnderTest('.', openFile=FileClassThatRaisesIOError)
+        templateList = TemplateListUnderTest(
+            ".", openFile=FileClassThatRaisesIOError
+        )
         self.assertEqual([], templateList.tasks())
 
     def testHandleIOErrorWhileReadingTemplate(self):
-        templateList = TemplateListUnderTest('.', TemplateReaderThatThrowsIOError,
-                                             FakeFileClass)
+        templateList = TemplateListUnderTest(
+            ".", TemplateReaderThatThrowsIOError, FakeFileClass
+        )
         self.assertEqual([], templateList.tasks())
 
     def testHandleParseErrorWhileReadingTemplate(self):
-        templateList = TemplateListUnderTest('.', TemplateReaderThatThrowsParseError,
-                                             FakeFileClass)
+        templateList = TemplateListUnderTest(
+            ".", TemplateReaderThatThrowsParseError, FakeFileClass
+        )
         self.assertEqual([], templateList.tasks())

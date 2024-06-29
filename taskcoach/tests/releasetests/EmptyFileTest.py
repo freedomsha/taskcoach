@@ -23,24 +23,30 @@ import test
 # root folder to be the current dir. Work around that by changing
 # the current dir while importing setup.py:
 cwd = os.path.realpath(os.path.curdir)
-os.chdir('..')
+os.chdir("..")
 import setup
+
 os.chdir(cwd)
 
 
 class EmptFileTest(test.TestCase):
     def emptyPyFiles(self, *folders):
         empty = []
-        for root, dirs, files in os.walk(os.path.join(test.projectRoot, *folders)):
-            pyfiles = [os.path.join(root, filename) for filename in files 
-                       if filename.endswith('.py')]
+        for root, dirs, files in os.walk(
+            os.path.join(test.projectRoot, *folders)
+        ):
+            pyfiles = [
+                os.path.join(root, filename)
+                for filename in files
+                if filename.endswith(".py")
+            ]
             for filename in pyfiles:
                 if os.stat(filename).st_size == 0:
                     empty.append(filename)
         return empty
 
     def testNoSourcePyFilesAreEmpty(self):
-        self.assertEqual([], self.emptyPyFiles('taskcoachlib'))
+        self.assertEqual([], self.emptyPyFiles("taskcoachlib"))
 
     """
     def testAllUnittestPyFilesAreInManifest(self):

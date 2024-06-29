@@ -16,24 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-import test
-from urllib import request as urllib2
-import urllib.error
-import urllib.parse
-import re
-from ...taskcoachlib import help  # pylint: disable=W0622
+import test, urllib.request, urllib.error, urllib.parse, re
+from taskcoachlib import help  # pylint: disable=W0622
 
 
 class MSDownloadTest(test.TestCase):
     def testExeInPage(self):
-        req = urllib2.Request(help._MSURL)
-        req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36')
+        req = urllib.request.Request(help._MSURL)
+        req.add_header(
+            "User-Agent",
+            "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36",
+        )
         try:
-            content = urllib2.build_opener().open(req).read()
+            content = urllib.request.build_opener().open(req).read()
         except Exception as message:  # pylint: disable=W0703
-            self.fail('Could not download page: %s' % str(message))
+            self.fail("Could not download page: %s" % str(message))
 
-        self.failUnless(re.search('vcredist[a-zA-Z0-9_-]*\.exe', content))
+        self.assertTrue(re.search("vcredist[a-zA-Z0-9_-]*\.exe", content))

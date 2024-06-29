@@ -18,63 +18,65 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# import wxversion
-# wxversion.ensureMinimal("2.8")
 import sys
-try:
-    import wxversion  # in python 3 try with wx.__version__ ?
-    wxversion.ensureMinimal("2.8")
-except ImportError:
-    pass
-from io import open as file
 import os
-from wx.tools import img2py  # introuvable !
+from wx.tools import img2py
 
 
-def extracticon(iconzipfile, pngfilename, pngzipped):
-    pngfile = file(pngfilename, 'wb')  # ATTENTION: fichier de type bytes
-    pngfile.write(iconzipfile.read(pngzipped))
-    pngfile.close()
+def extractIcon(iconZipFile, pngFilename, pngZipped):
+    pngFile = open(pngFilename, "wb")
+    pngFile.write(iconZipFile.read(pngZipped))
+    pngFile.close()
 
 
-def addicon(pngname, pngfilename, iconpyfile, first):
-    options = ['-F', '-i', '-c', '-a', '-n%s' % pngname, pngfilename, iconpyfile]
+def addIcon(pngName, pngFilename, iconPyFile, first):
+    options = [
+        "-F",
+        "-i",
+        "-c",
+        "-a",
+        "-n%s" % pngName,
+        pngFilename,
+        iconPyFile,
+    ]
     if first:
-        options.remove('-a')
+        options.remove("-a")
     img2py.main(options)
 
 
-def extractandaddicon(iconzipfile, iconpyfile, pngname, pngzipped, first):
-    pngfilename = '%s.png' % pngname
-    extracticon(iconzipfile, pngfilename, pngzipped)
-    addicon(pngname, pngfilename, iconpyfile, first)
-    os.remove(pngfilename)
+def extractAndAddIcon(iconZipFile, iconPyFile, pngName, pngZipped, first):
+    pngFilename = "%s.png" % pngName
+    extractIcon(iconZipFile, pngFilename, pngZipped)
+    addIcon(pngName, pngFilename, iconPyFile, first)
+    os.remove(pngFilename)
 
 
-def extractandaddicons(iconzipfile, iconpyfile):
+def extractAndAddIcons(iconZipFile, iconPyFile):
     import iconmap
+
     first = True
     for pngName, pngZipped in list(iconmap.icons.items()):
-        extractandaddicon(iconzipfile, iconpyfile, pngName, pngZipped, first)
+        extractAndAddIcon(iconZipFile, iconPyFile, pngName, pngZipped, first)
         first = False
 
 
-def makeiconpyfile(iconpyfile):
-    if os.path.isfile(iconpyfile):
-        os.remove(iconpyfile)
+def makeIconPyFile(iconPyFile):
+    if os.path.isfile(iconPyFile):
+        os.remove(iconPyFile)
 
     import zipfile
-    iconzipfile = zipfile.ZipFile('nuvola.zip', 'r')
-    extractandaddicons(iconzipfile, iconpyfile)
-    iconzipfile.close()
+
+    iconZipFile = zipfile.ZipFile("nuvola.zip", "r")
+    extractAndAddIcons(iconZipFile, iconPyFile)
+    iconZipFile.close()
 
 
-def makesplashscreen(iconpyfile):
-    options = ['-F', '-c', '-a', '-nsplash', 'splash.png', iconpyfile]
+def makeSplashScreen(iconPyFile):
+    options = ["-F", "-c", "-a", "-nsplash", "splash.png", iconPyFile]
     img2py.main(options)
 
 
-if __name__ == '__main__':
-    iconFileName = '../taskcoachlib/gui/icons.py'
-    makeiconpyfile(iconFileName)
-    makesplashscreen(iconFileName)
+if __name__ == "__main__":
+    iconFileName = "../taskcoachlib/gui/icons.py"
+    makeIconPyFile(iconFileName)
+    makeSplashScreen(iconFileName)

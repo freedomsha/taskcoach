@@ -16,33 +16,33 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import division
-
-from builtins import range
-from past.utils import old_div
-import time
-import os
-import test
-import mock
-from ...taskcoachlib import persistence, config
-from ...taskcoachlib.domain import task, category, note
-from ...taskcoachlib.syncml.config import createDefaultSyncConfig
+import time, os
+import test, mock
+from taskcoachlib import persistence, config
+from taskcoachlib.domain import task, category, note
+from taskcoachlib.syncml.config import createDefaultSyncConfig
 
 
 class PerformanceTest(test.TestCase):
     def createTestFile(self):
         task.Task.settings = config.Settings(load=False)
-        taskList = task.TaskList([task.Task('test') for _ in range(self.nrTasks)])
-        # file -> open
-        taskfile = open(self.taskfilename, 'w')
+        taskList = task.TaskList(
+            [task.Task("test") for _ in range(self.nrTasks)]
+        )
+        taskfile = open(self.taskfilename, "w")
         taskWriter = persistence.XMLWriter(taskfile)
-        taskWriter.write(taskList, category.CategoryList(), note.NoteContainer(),
-                         createDefaultSyncConfig('fake'), 'fake')
+        taskWriter.write(
+            taskList,
+            category.CategoryList(),
+            note.NoteContainer(),
+            createDefaultSyncConfig("fake"),
+            "fake",
+        )
         taskfile.close()
 
     def setUp(self):
         self.nrTasks = 100
-        self.taskfilename = 'performanceTest.tsk'
+        self.taskfilename = "performanceTest.tsk"
         self.createTestFile()
 
     def tearDown(self):
@@ -55,6 +55,5 @@ class PerformanceTest(test.TestCase):
         mockApp.iocontroller.open(self.taskfilename)
         end = time.time()
         self.assertEqual(self.nrTasks, len(mockApp.taskFile.tasks()))
-        # self.failUnless(end-start < self.nrTasks/10)
-        self.failUnless(end-start < old_div(self.nrTasks, 10))
+        self.assertTrue(end - start < self.nrTasks / 10)
         mockApp.quitApplication()

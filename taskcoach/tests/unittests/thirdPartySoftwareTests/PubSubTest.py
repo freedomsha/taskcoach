@@ -16,19 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from ....taskcoachlib.thirdparty.pubsub import pub
-from ... import test
+from taskcoachlib.thirdparty.pubsub import pub
+import test
 
 
 class PubSubTest(test.TestCase):
     def setUp(self):
         self.calledTestTopic = False
-        
+
     def onTestTopic(self):
         self.calledTestTopic = True
-        
+
     def testSubscribe(self):
-        pub.subscribe(self.onTestTopic, 'TestTopic')
-        pub.sendMessage('TestTopic')
-        self.failUnless(self.calledTestTopic)
-        
+        pub.subscribe(self.onTestTopic, "TestTopic")
+        pub.sendMessage("TestTopic")
+        self.assertTrue(self.calledTestTopic)

@@ -21,12 +21,14 @@ import test
 
 class DateTest(test.TestCase):
     def testNoQuestionMarkInMetaDataDate(self):
-        from ...taskcoachlib import meta
-        self.failIf('?' in meta.date)
+        from taskcoachlib import meta
+
+        self.assertFalse("?" in meta.date)
 
     def testNoQuestionMarkInChangeLog(self):
-        import sys
-        import os.path
-        sys.path.insert(0, os.path.join(test.projectRoot, 'changes.in'))
+        import sys, os.path
+
+        sys.path.insert(0, os.path.join(test.projectRoot, "changes.in"))
         import changes  # pylint: disable=F0401
-        self.failIf('?' in changes.releases[0].date)
+
+        self.assertFalse("?" in changes.releases[0].date)

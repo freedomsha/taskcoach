@@ -18,8 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import zip
-from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import attachment
@@ -27,11 +25,11 @@ from . import base, noteCommands
 
 
 class EditAttachmentLocationCommand(base.BaseCommand):
-    plural_name = _('Edit location of attachments')
+    plural_name = _("Edit location of attachments")
     singular_name = _('Edit attachment "%s" location')
 
     def __init__(self, *args, **kwargs):
-        self.__newLocation = kwargs.pop('newValue')
+        self.__newLocation = kwargs.pop("newValue")
         super(EditAttachmentLocationCommand, self).__init__(*args, **kwargs)
         self.__oldLocations = [item.location() for item in self.items]
 
@@ -52,13 +50,15 @@ class EditAttachmentLocationCommand(base.BaseCommand):
 
 
 class AddAttachmentCommand(base.BaseCommand):
-    plural_name = _('Add attachment')
+    plural_name = _("Add attachment")
     singular_name = _('Add attachment to "%s"')
 
     def __init__(self, *args, **kwargs):
         self.owners = []
-        self.__attachments = kwargs.get('attachments',
-                                        [attachment.FileAttachment('', subject=_('New attachment'))])
+        self.__attachments = kwargs.get(
+            "attachments",
+            [attachment.FileAttachment("", subject=_("New attachment"))],
+        )
         super(AddAttachmentCommand, self).__init__(*args, **kwargs)
         self.owners = self.items
         self.items = self.__attachments
@@ -71,13 +71,17 @@ class AddAttachmentCommand(base.BaseCommand):
     def addAttachments(self, event=None):
         kwargs = dict(event=event)
         for owner in self.owners:
-            owner.addAttachments(*self.__attachments, **kwargs)  # pylint: disable=W0142
+            owner.addAttachments(
+                *self.__attachments, **kwargs
+            )  # pylint: disable=W0142
 
     @patterns.eventSource
     def removeAttachments(self, event=None):
         kwargs = dict(event=event)
         for owner in self.owners:
-            owner.removeAttachments(*self.__attachments, **kwargs)  # pylint: disable=W0142
+            owner.removeAttachments(
+                *self.__attachments, **kwargs
+            )  # pylint: disable=W0142
 
     def do_command(self):
         super(AddAttachmentCommand, self).do_command()
@@ -93,24 +97,28 @@ class AddAttachmentCommand(base.BaseCommand):
 
 
 class RemoveAttachmentCommand(base.BaseCommand):
-    plural_name = _('Remove attachment')
+    plural_name = _("Remove attachment")
     singular_name = _('Remove attachment to "%s"')
 
     def __init__(self, *args, **kwargs):
-        self._attachments = kwargs.pop('attachments')
+        self._attachments = kwargs.pop("attachments")
         super(RemoveAttachmentCommand, self).__init__(*args, **kwargs)
 
     @patterns.eventSource
     def addAttachments(self, event=None):
         kwargs = dict(event=event)
         for item in self.items:
-            item.addAttachments(*self._attachments, **kwargs)  # pylint: disable=W0142
+            item.addAttachments(
+                *self._attachments, **kwargs
+            )  # pylint: disable=W0142
 
     @patterns.eventSource
     def removeAttachments(self, event=None):
         kwargs = dict(event=event)
         for item in self.items:
-            item.removeAttachments(*self._attachments, **kwargs)  # pylint: disable=W0142
+            item.removeAttachments(
+                *self._attachments, **kwargs
+            )  # pylint: disable=W0142
 
     def do_command(self):
         super(RemoveAttachmentCommand, self).do_command()
@@ -138,7 +146,8 @@ class CutAttachmentCommand(base.CutCommandMixin, RemoveAttachmentCommand):
                 for item in self.__items:
                     item.addAttachments(*attachments)
 
-            def removeItems(self, attachments):  # utilisé souvent !
+            def removeItems(self, attachments):
                 for item in self.__items:
                     item.removeAttachments(*attachments)
+
         return Wrapper(self.items)

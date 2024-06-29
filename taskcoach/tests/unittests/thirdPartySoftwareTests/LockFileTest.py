@@ -16,37 +16,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import with_statement
-from ... import test
-import tempfile
-from ....taskcoachlib.thirdparty import lockfile
+import test, tempfile
+from taskcoachlib.thirdparty import lockfile
 
 
 class LockFileTest(test.TestCase):
     def setUp(self):
         self.tmpfile = tempfile.NamedTemporaryFile()
         self.lock = lockfile.FileLock(self.tmpfile.name)
-        
+
     def tearDown(self):
         super(LockFileTest, self).tearDown()
-        self.tmpfile.close() # Temp files are deleted when closed
-        
+        self.tmpfile.close()  # Temp files are deleted when closed
+
     def testFileIsNotLockedInitially(self):
-        self.failIf(self.lock.is_locked())
-        
+        self.assertFalse(self.lock.is_locked())
+
     def testFileIsLockedAfterLocking(self):
         self.lock.acquire()
-        self.failUnless(self.lock.is_locked())
-        
+        self.assertTrue(self.lock.is_locked())
+
     def testLockingWithContextManager(self):
         with self.lock:
-            self.failUnless(self.lock.is_locked())
-        self.failIf(self.lock.is_locked())
+            self.assertTrue(self.lock.is_locked())
+        self.assertFalse(self.lock.is_locked())
 
     def testLockingTwoFiles(self):
         self.lock.acquire()
         tmpfile2 = tempfile.NamedTemporaryFile()
         lock2 = lockfile.FileLock(tmpfile2.name)
         lock2.acquire()
-        self.failUnless(self.lock.is_locked())
-        self.failUnless(lock2.is_locked())
+        self.assertTrue(self.lock.is_locked())
+        self.assertTrue(lock2.is_locked())

@@ -16,25 +16,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os
-import test
+import os, test
 
 # Tests are run with ./tests as current dir, but setup.py expects the project
 # root folder to be the current dir. Work around that by changing
 # the current dir while importing setup.py:
 cwd = os.path.realpath(os.path.curdir)
-os.chdir('..')
+os.chdir("..")
 import setup
+
 os.chdir(cwd)
 
 
 class LineEndingsTest(test.TestCase):
     def testNoDOSLineEndingsInPythonScripts(self):
-        """ On Linux, scripts won't work if they have DOS line endings. """
-        scripts = [os.path.join(test.projectRoot, script) 
-                   for script in setup.setupOptions['scripts'] 
-                   if script.endswith('.py')]
+        """On Linux, scripts won't work if they have DOS line endings."""
+        scripts = [
+            os.path.join(test.projectRoot, script)
+            for script in setup.setupOptions["scripts"]
+            if script.endswith(".py")
+        ]
         for script in scripts:
-            # self.failIf('\r\n' in file(script, 'rb').read(), 
-            self.failIf('\r\n' in open(script, 'rb').read(),
-                        '%s contains DOS line endings' % script)
+            self.assertFalse(
+                "\r\n" in open(script, "rb").read(),
+                "%s contains DOS line endings" % script,
+            )

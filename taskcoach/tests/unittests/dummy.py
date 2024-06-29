@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from builtins import object
 import wx
-from ...taskcoachlib import persistence, gui
+from taskcoachlib import persistence, gui
 
 
 class Event(object):
@@ -36,10 +35,10 @@ class DummyWidget(wx.Frame):
 
     def curselection(self):
         return []
-    
+
     def select(self, *args):
         pass
-    
+
     def clear_selection(self):
         pass
 
@@ -51,47 +50,47 @@ class DummyWidget(wx.Frame):
 
     def IsAutoResizing(self):
         return False
-    
+
     def GetMainWindow(self):
         return self
-    
+
     def Bind(self, *args, **kwargs):
         pass
-        
+
 
 class DummyUICommand(gui.uicommand.UICommand):  # pylint: disable=W0223
-    bitmap = 'undo'
-    section = 'view'
-    setting = 'setting'
+    bitmap = "undo"
+    section = "view"
+    setting = "setting"
 
     def onCommandActivate(self, event):
         self.activated = True  # pylint: disable=W0201
 
 
 class ViewerWithDummyWidget(gui.viewer.base.Viewer):  # pylint: disable=W0223
-    defaultTitle = 'ViewerWithDummyWidget'
-    defaultBitmap = ''
-    
+    defaultTitle = "ViewerWithDummyWidget"
+    defaultBitmap = ""
+
     def domainObjectsToView(self):
         return self.taskFile.tasks()
-    
+
     def createWidget(self):
         self._columns = self._createColumns()  # pylint: disable=W0201
         return DummyWidget(self)
 
     def _createColumns(self):
         return []
-    
-    
+
+
 class TaskFile(persistence.TaskFile):
     raiseError = None
-    
+
     def load(self, *args, **kwargs):  # pylint: disable=W0613
         if self.raiseError:
             raise self.raiseError  # pylint: disable=E0702
-        
+
     merge = save = saveas = load
-    
+
 
 class MainWindow:  # pylint: disable=W0232
     showFindDialog = None
