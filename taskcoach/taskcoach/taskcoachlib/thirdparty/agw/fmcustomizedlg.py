@@ -277,7 +277,7 @@ class FMCustomizeDlg(wx.Dialog):
             self._visibleMenus = visible
             self._hiddenMenus = hidden
 
-        self._menuListId = wx.NewId()
+        self._menuListId = wx.NewIdRef()
         self._checkListMenus = wx.CheckListBox(menus, self._menuListId, pos=wx.DefaultPosition, size=wx.Size(250, 250),
                                                choices=self.order, style=wx.BORDER_SIMPLE)
         self._checkListMenus.bind(wx.EVT_CHECKLISTBOX, self.OnMenuChecked)
@@ -324,7 +324,7 @@ class FMCustomizeDlg(wx.Dialog):
         #     + Menu bar background colour  (combo button)
         # -----------------------------------------------------------
 
-        self._menuStyleID = wx.NewId()
+        self._menuStyleID = wx.NewIdRef()
         choices = [_("Default style"), _("Metallic")]
         self._menuStyle = wx.RadioBox(options, self._menuStyleID, _("Menu bar style"),
                                       wx.DefaultPosition, wx.DefaultSize, choices)
@@ -343,19 +343,19 @@ class FMCustomizeDlg(wx.Dialog):
         vsizer.Add(self._menuStyle, 0, wx.EXPAND | wx.ALL, 5)
 
         self._sbStyle = wx.StaticBoxSizer(wx.StaticBox(options, -1, _("Default style settings")), wx.VERTICAL)
-        self._drawVertGradID = wx.NewId()
+        self._drawVertGradID = wx.NewIdRef()
         self._verticalGradient = wx.CheckBox(options, self._drawVertGradID, _("Draw vertical gradient"))
         self._verticalGradient.bind(wx.EVT_CHECKBOX, self.OnChangeStyle)
         self._sbStyle.Add(self._verticalGradient, 0, wx.EXPAND | wx.ALL, 3)
         self._verticalGradient.set_value(ArtManager.Get().GetMBVerticalGradient())
 
-        self._drawBorderID = wx.NewId()
+        self._drawBorderID = wx.NewIdRef()
         self._drawBorder = wx.CheckBox(options, self._drawBorderID, _("Draw border around menu bar"))
         self._drawBorder.bind(wx.EVT_CHECKBOX, self.OnChangeStyle)
         self._sbStyle.Add(self._drawBorder, 0, wx.EXPAND | wx.ALL, 3)
         self._drawBorder.set_value(ArtManager.Get().GetMenuBarBorder())
 
-        self._shadowUnderTBID = wx.NewId()
+        self._shadowUnderTBID = wx.NewIdRef()
         self._shadowUnderTB = wx.CheckBox(options, self._shadowUnderTBID, _("Toolbar float over menu bar"))
         self._shadowUnderTB.bind(wx.EVT_CHECKBOX, self.OnChangeStyle)
         self._sbStyle.Add(self._shadowUnderTB, 0, wx.EXPAND | wx.ALL, 3)
@@ -365,7 +365,7 @@ class FMCustomizeDlg(wx.Dialog):
 
         # Misc 
         sb = wx.StaticBoxSizer(wx.StaticBox(options, -1, _("Colour Scheme")), wx.VERTICAL)
-        self._colourID = wx.NewId()
+        self._colourID = wx.NewIdRef()
 
         colourChoices = ArtManager.Get().GetColourSchemes()
         colourChoices.sort()

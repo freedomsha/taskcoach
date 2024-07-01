@@ -29,7 +29,7 @@ class ToolTipMixin(object):
         self.__enabled = kwargs.pop("tooltipsEnabled", True)
         super(ToolTipMixin, self).__init__(*args, **kwargs)
 
-        self.__timer = wx.Timer(self, wx.NewId())
+        self.__timer = wx.Timer(self, wx.NewIdRef())
 
         self.__tip = None
         self.__position = (0, 0)

@@ -2197,7 +2197,7 @@ class MenuEntryInfo(object):
             self._rect = wx.Rect()
             self._state = state
             if cmd == wx.ID_ANY:
-                cmd = wx.NewId()
+                cmd = wx.NewIdRef()
 
             self._cmd = cmd  # the menu itself accelerator id
 

@@ -282,7 +282,7 @@ class _NotificationCenter(wx.EvtHandler):
         self.notificationMargin = 5
 
         self.__tmr = wx.Timer()
-        id_ = wx.NewId()
+        id_ = wx.NewIdRef()
         self.__tmr.SetOwner(self, id_)
         # wx.EVT_TIMER(self, id_, self.__OnTick)
         #         self.__timer = wx.Timer(self, timerId)
