@@ -16,11 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test
-from unittests import dummy
+from ... import test
+from .. import dummy
 from taskcoachlib import gui, config, persistence, widgets
 from taskcoachlib.domain import task
-from taskcoachlib.thirdparty.pubsub import pub
+from pubsub import pub
 
 
 class DummyMainWindow(widgets.AuiManagedFrameWithDynamicCenterPane):

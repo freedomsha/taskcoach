@@ -20,8 +20,28 @@ from taskcoachlib import patterns
 
 
 class Collection(patterns.CompositeSet):
+    """
+    Une classe de collection qui étend CompositeSet de taskcoachlib.patterns.
+
+    Cette classe représente une collection d'objets de domaine et fournit une méthode
+    pour récupérer un objet par son ID.
+    """
+
     def getObjectById(self, domainObjectId):
+        """
+        Get an object from the collection by its ID.
+
+        Args:
+            domainObjectId (str): The ID of the domain object to retrieve.
+
+        Returns:
+            The domain object with the specified ID.
+
+        Raises:
+            IndexError: If no object with the specified ID is found in the collection.
+        """
         for domainObject in self:
             if domainObjectId == domainObject.id():
                 return domainObject
         raise IndexError
+

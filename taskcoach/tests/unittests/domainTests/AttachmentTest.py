@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-import test
+from ... import test
 from taskcoachlib.domain import attachment
-from taskcoachlib.thirdparty.pubsub import pub
+# from taskcoachlib.thirdparty.pubsub import pub
+from pubsub import pub
 
 
 class GetRelativePathTest(test.TestCase):

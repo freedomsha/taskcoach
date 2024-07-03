@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from taskcoachlib import config
 from taskcoachlib.domain import task, effort, date
-from taskcoachlib.thirdparty.pubsub import pub
+from pubsub import pub
 from . import EffortCompositeTest
-import test
+from ... import test
 
 
 class CompositeEffortPerPeriodTest(test.TestCase):

@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import patterns, config
 from taskcoachlib.domain import task, effort, date, attachment, note, category
 from taskcoachlib.domain.attribute.icon import getImagePlural, getImageOpen
-from taskcoachlib.thirdparty.pubsub import pub
-from unittests import asserts
-import test
+from pubsub import pub
+from ...unittests import asserts
+from ... import test
 import wx
 
 # pylint: disable=C0103,C0111

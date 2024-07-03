@@ -22,13 +22,15 @@ from taskcoachlib import patterns, operating_system
 from taskcoachlib.domain import base, task, category, note, effort, attachment
 from taskcoachlib.syncml.config import createDefaultSyncConfig
 from taskcoachlib.thirdparty.guid import generate
-from taskcoachlib.thirdparty import lockfile
+# from taskcoachlib.thirdparty.lockfile import lockfile
+import lockfile
 from taskcoachlib.changes import ChangeMonitor, ChangeSynchronizer
 from taskcoachlib.filesystem import (
     FilesystemNotifier,
     FilesystemPollerNotifier,
 )
-from taskcoachlib.thirdparty.pubsub import pub
+# from taskcoachlib.thirdparty.pubsub import pub
+from pubsub import pub
 
 
 def _isCloud(path):
