@@ -1732,7 +1732,7 @@ class AuiToolBar(wx.PyControl):
         item.spacer_pixels = 0
 
         if tool_id == wx.ID_ANY:
-            tool_id = wx.NewIdRef()
+            tool_id = wx.NewId()
 
         item.id = tool_id
         item.state = 0
@@ -1837,7 +1837,7 @@ class AuiToolBar(wx.PyControl):
         item.spacer_pixels = 0
 
         if tool_id == wx.ID_ANY:
-            tool_id = wx.NewIdRef()
+            tool_id = wx.NewId()
 
         item.id = tool_id
         item.state = 0
