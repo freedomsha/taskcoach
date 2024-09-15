@@ -17,39 +17,36 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 import wx
 from taskcoachlib import operating_system
 from taskcoachlib.gui.newid import IdProvider
+from taskcoachlib.i18n import _
 
-
-""" User interface commands (subclasses of UICommand) are actions that can
+''' User interface commands (subclasses of UICommand) are actions that can
     be invoked by the user via the user interface (menu's, toolbar, etc.).
-    See the Taskmaster pattern described here: 
-    http://www.objectmentor.com/resources/articles/taskmast.pdf 
-"""  # pylint: disable=W0105
+    See the Taskmaster pattern described here:
+    http://www.objectmentor.com/resources/articles/taskmast.pdf
+'''  # pylint: disable=W0105
 
 
 class UICommand(object):
-    """Base user interface command. An UICommand is some action that can be
-    associated with menu's and/or toolbars. It contains the menutext and
-    helptext to be displayed, code to deal with wx.EVT_UPDATE_UI and
-    methods to attach the command to a menu or toolbar. Subclasses should
-    implement doCommand() and optionally override enabled()."""
+    """ Base user interface command. An UICommand is some action that can be
+        associated with menu's and/or toolbars. It contains the menutext and
+        helptext to be displayed, code to deal with wx.EVT_UPDATE_UI and
+        methods to attach the command to a menu or toolbar. Subclasses should
+        implement doCommand() and optionally override enabled(). """
 
-    def __init__(
-        self,
-        menuText="",
-        helpText="",
-        bitmap="nobitmap",
-        kind=wx.ITEM_NORMAL,
-        id=None,
-        bitmap2=None,
-        *args,
-        **kwargs
-    ):  # pylint: disable=W0622
-        super(UICommand, self).__init__()
+    def __init__(self, menuText="", helpText="", bitmap="nobitmap",
+                 kind=wx.ITEM_NORMAL, id=None, bitmap2=None,
+                 *args, **kwargs):  # pylint: disable=W0622
+        super().__init__()
+        # menuText = menuText or '<%s>' % _('None')
         menuText = menuText or "<%s>" % _("None")
+        # menuText = menuText or f"<{_("None")}>"
+        # self.menuText = menuText if '&' in menuText else '&' + menuText
         self.menuText = menuText if "&" in menuText else "&" + menuText
+        # self.menuText = menuText if "&" in menuText else f"&{menuText}"
         self.helpText = helpText
         self.bitmap = bitmap
         self.bitmap2 = bitmap2
@@ -88,24 +85,33 @@ class UICommand(object):
         return []
 
     def addToMenu(self, menu, window, position=None):
-        menuItem = wx.MenuItem(
-            menu, self.id, self.menuText, self.helpText, self.kind
-        )
+        """ Ajoute un sous-menu au Menu menu dans la fenêtre window à la fin en principe. """
+        # Un menuItem représente un élément dans un menu.
+        # menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
+        # test de chatGPT
+        print(f"tclib.gui.uicommand.base_uicommand essaye d'ajouter le sous-menu {self} dans le menu {menu} de la fenêtre {window} à la position {position}")
+        try:
+            menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
+        except wx._core.wxAssertionError as e:
+            print(f"tclib.gui.uicommand.base_uicommand: Error creating MenuItem: {e}")
+            # Handle the error or create a new ID manually
+            # new_id = wx.NewIdRef().GetId()
+            new_id = wx.ID_ANY
+            menuItem = wx.MenuItem(menu, new_id, self.menuText, self.helpText, self.kind)
+            return menu.Append(menuItem)
         self.menuItems.append(menuItem)
         self.addBitmapToMenuItem(menuItem)
         if position is None:
+            # menu.AppendItem(menuItem)
             menu.Append(menuItem)
         else:
+            # menu.InsertItem(position, menuItem)
             menu.Insert(position, menuItem)
         self.bind(window, self.id)
         return self.id
 
     def addBitmapToMenuItem(self, menuItem):
-        if (
-            self.bitmap2
-            and self.kind == wx.ITEM_CHECK
-            and not operating_system.isGTK()
-        ):
+        if self.bitmap2 and self.kind == wx.ITEM_CHECK and not operating_system.isGTK():
             bitmap1 = self.__getBitmap(self.bitmap)
             bitmap2 = self.__getBitmap(self.bitmap2)
             menuItem.SetBitmaps(bitmap1, bitmap2)
@@ -123,18 +129,16 @@ class UICommand(object):
 
     def appendToToolBar(self, toolbar):
         self.toolbar = toolbar
-        bitmap = self.__getBitmap(
-            self.bitmap, wx.ART_TOOLBAR, toolbar.GetToolBitmapSize()
-        )
-        toolbar.AddLabelTool(
-            self.id,
-            "",
-            bitmap,
-            wx.NullBitmap,
-            self.kind,
-            shortHelp=wx.MenuItem.GetLabelText(self.menuText),
-            longHelp=self.helpText,
-        )
+        bitmap = self.__getBitmap(self.bitmap, wx.ART_TOOLBAR,
+                                  toolbar.GetToolBitmapSize())
+        # toolbar.AddLabelTool(self.id, '',
+        #               bitmap, wx.NullBitmap, self.kind,
+        #               shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
+        #               longHelp = self.helpText)
+        toolbar.AddLabelTool(self.id, "",
+                             bitmap, wx.NullBitmap, self.kind,
+                             shortHelp=wx.MenuItem.GetLabelText(self.menuText),
+                             longHelp=self.helpText)
         self.bind(toolbar, self.id)
         return self.id
 
@@ -147,13 +151,13 @@ class UICommand(object):
             window.Unbind(eventType, id=itemId)
 
     def onCommandActivate(self, event, *args, **kwargs):
-        """For Menu's and ToolBars, activating the command is not
-        possible when not enabled, because menu items and toolbar
-        buttons are disabled through onUpdateUI. For other controls such
-        as the ListCtrl and the TreeCtrl the EVT_UPDATE_UI event is not
-        sent, so we need an explicit check here. Otherwise hitting return
-        on an empty selection in the ListCtrl would bring up the
-        TaskEditor."""
+        """ For Menu's and ToolBars, activating the command is not
+            possible when not enabled, because menu items and toolbar
+            buttons are disabled through onUpdateUI. For other controls such
+            as the ListCtrl and the TreeCtrl the EVT_UPDATE_UI event is not
+            sent, so we need an explicit check here. Otherwise hitting return
+            on an empty selection in the ListCtrl would bring up the
+            TaskEditor. """
         if self.enabled(event):
             return self.doCommand(event, *args, **kwargs)
 
@@ -169,12 +173,13 @@ class UICommand(object):
             self.updateToolHelp()
 
     def enabled(self, event):  # pylint: disable=W0613
-        """Can be overridden in a subclass."""
+        """ Can be overridden in a subclass. """
         return True
 
     def updateToolHelp(self):
         if not self.toolbar:
             return  # Not attached to a toolbar or it's hidden
+        # shortHelp = wx.MenuItem.GetLabelFromText(self.getMenuText())
         shortHelp = wx.MenuItem.GetLabelText(self.getMenuText())
         if shortHelp != self.toolbar.GetToolShortHelp(self.id):
             self.toolbar.SetToolShortHelp(self.id, shortHelp)
@@ -188,9 +193,7 @@ class UICommand(object):
             for menuItem in self.menuItems[:]:
                 menu = menuItem.GetMenu()
                 pos = menu.GetMenuItems().index(menuItem)
-                newMenuItem = wx.MenuItem(
-                    menu, self.id, menuText, self.helpText, self.kind
-                )
+                newMenuItem = wx.MenuItem(menu, self.id, menuText, self.helpText, self.kind)
                 self.addBitmapToMenuItem(newMenuItem)
                 menu.DeleteItem(menuItem)
                 self.menuItems.remove(menuItem)
@@ -200,6 +203,7 @@ class UICommand(object):
             for menuItem in self.menuItems:
                 menuItem.SetItemLabel(menuText)
 
+    # @staticmethod
     def mainWindow(self):
         return wx.GetApp().TopWindow
 
@@ -209,7 +213,11 @@ class UICommand(object):
     def getHelpText(self):
         return self.helpText
 
-    def __getBitmap(
-        self, bitmapName, bitmapType=wx.ART_MENU, bitmapSize=(16, 16)
-    ):
-        return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
+    # @staticmethod
+    def __getBitmap(self, bitmapName, bitmapType=wx.ART_MENU, bitmapSize=(16, 16)):
+        # return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
+        try:
+            return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
+        except Exception as e:
+            print(f"tclib.gui.uicommand.base_uicommand: Error getting bitmap: {e}")
+            return wx.NullBitmap

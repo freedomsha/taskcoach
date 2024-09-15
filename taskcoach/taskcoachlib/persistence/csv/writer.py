@@ -16,13 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import csv, io
-from . import generator
+# from future import standard_library
+
+# standard_library.install_aliases()
+# from builtins import object
+import csv
+import io
+# from . import generator
+from taskcoachlib.persistence.csv import generator
 
 
+# class UnicodeCSVWriter(object):
 class UnicodeCSVWriter:
-    """A CSV writer that writes rows to a CSV file encoded in utf-8.
-    Based on http://docs.python.org/lib/csv-examples.html.
+    """ A CSV writer that writes rows to a CSV file encoded in utf-8.
+        Based on http://docs.python.org/lib/csv-examples.html.
     """
 
     def __init__(self, fd, *args, **kwargs):
@@ -35,7 +42,7 @@ class UnicodeCSVWriter:
         self.writer.writerow([cell.encode("utf-8") for cell in row])
         # Fetch UTF-8 output from the queue
         data = self.queue.getvalue()
-        data = data.decode("utf-8")
+        data = data.decode("utf-8")  # Unresolved attribute reference 'decode' for class 'str'
         self.fd.write(data)
         self.queue.truncate(0)
 
@@ -48,16 +55,9 @@ class CSVWriter(object):
     def __init__(self, fd, filename=None):
         self.__fd = fd
 
-    def write(
-        self,
-        viewer,
-        settings,
-        selectionOnly=False,
-        separateDateAndTimeColumns=False,
-        columns=None,
-    ):  # pylint: disable=W0613
-        csvRows = generator.viewer2csv(
-            viewer, selectionOnly, separateDateAndTimeColumns, columns
-        )
+    def write(self, viewer, settings, selectionOnly=False,
+              separateDateAndTimeColumns=False, columns=None):  # pylint: disable=W0613
+        csvRows = generator.viewer2csv(viewer, selectionOnly,
+                                       separateDateAndTimeColumns, columns)
         UnicodeCSVWriter(self.__fd).writerows(csvRows)
         return len(csvRows) - 1  # Don't count header row

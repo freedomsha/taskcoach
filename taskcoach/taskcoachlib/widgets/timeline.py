@@ -16,7 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wx, operator
+import wx
+import operator
 from taskcoachlib.thirdparty.timeline import timeline
 from . import tooltip
 from functools import reduce

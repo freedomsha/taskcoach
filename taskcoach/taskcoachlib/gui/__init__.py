@@ -15,12 +15,19 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+#  Les packages les plus importants et les plus volumineux sont les packages
+#  de domaine qui contiennent des classes pour les objets de domaine et
+#  le package gui qui contient des visualiseurs, des boîtes de dialogue et d'autres composants gui.
 
 from .splash import SplashScreen
 from .mainwindow import MainWindow
 from .dialog.editor import TaskEditor, EffortEditor, CategoryEditor
 from .dialog.preferences import Preferences
 from .iocontroller import IOController
+# from .mainwindow import MainWindow
 from .remindercontroller import ReminderController
 from .artprovider import init, itemImages
 from .taskbaricon import TaskBarIcon
+
+
+# __all__ = ["artprovider", "dialog", "icons", "idlecontroller", "iocontroller", "iphone", "mainwindow", "menu", "newid", "printer", "remindercontroller", "splash", "status", "toolbar", "uicommand", "viewer", "windowdimensionstracker", "wizard"]

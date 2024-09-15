@@ -16,16 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib.tools import wxhelper
+# from builtins import range
+# from builtins import str
+# from taskcoachlib.tools import wxhelper
+import wxhelper
 import wx
 from taskcoachlib.i18n import _
+# from wx.lib import sized_controls, newevent
 from wx.lib import sized_controls
 from taskcoachlib import meta, widgets
 
 
 class ExportDialog(sized_controls.SizedDialog):
-    """Base class for all export dialogs. Use control classes below to add
-    features."""
+    """ Base class for all export dialogs. Use control classes below to add
+        features. """
 
     title = "Override in subclass"
     section = "export"
@@ -33,12 +37,13 @@ class ExportDialog(sized_controls.SizedDialog):
     def __init__(self, *args, **kwargs):
         self.window = args[0]
         self.settings = kwargs.pop("settings")
-        super(ExportDialog, self).__init__(title=self.title, *args, **kwargs)
+        super().__init__(title=self.title, *args, **kwargs)
         pane = self.GetContentsPane()
         pane.SetSizerType("vertical")
         self.components = self.createInterior(pane)
         buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(buttonSizer)
+        # buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.onOk)
         wxhelper.getButtonFromStdDialogButtonSizer(buttonSizer, wx.ID_OK).Bind(
             wx.EVT_BUTTON, self.onOk
         )
@@ -68,14 +73,15 @@ class ExportDialog(sized_controls.SizedDialog):
 
 # Controls for adding behavior to the base export dialog:
 
+# ViewerPickedEvent, EVT_VIEWERPICKED = newevent.NewEvent()
 ViewerPickedEvent, EVT_VIEWERPICKED = wx.lib.newevent.NewEvent()
 
 
 class ViewerPicker(sized_controls.SizedPanel):
-    """Control for adding a viewer chooser widget to the export dialog."""
+    """ Control for adding a viewer chooser widget to the export dialog. """
 
     def __init__(self, parent, viewers, activeViewer):
-        super(ViewerPicker, self).__init__(parent)
+        super().__init__(parent)
         self.SetSizerType("horizontal")
         self.createPicker()
         self.populatePicker(viewers)
@@ -98,9 +104,7 @@ class ViewerPicker(sized_controls.SizedPanel):
             self.titleToViewer[viewer.title()] = viewer
 
     def selectActiveViewer(self, viewers, activeViewer):
-        selectedViewer = (
-            activeViewer if activeViewer in viewers else viewers[0]
-        )
+        selectedViewer = activeViewer if activeViewer in viewers else viewers[0]
         self.viewerComboBox.SetValue(selectedViewer.title())
 
     def selectedViewer(self):
@@ -118,13 +122,12 @@ class ViewerPicker(sized_controls.SizedPanel):
 
 
 class SelectionOnlyCheckBox(wx.CheckBox):
-    """Control for adding a widget to the export dialog that lets the
-    user choose between exporting all items or just the selected items."""
+    """ Control for adding a widget to the export dialog that lets the
+        user choose between exporting all items or just the selected items. """
 
     def __init__(self, parent, settings, section, setting):
-        super(SelectionOnlyCheckBox, self).__init__(
-            parent, label=_("Export only the selected items")
-        )
+        super().__init__(parent,
+                         label=_("Export only the selected items"))
         self.settings = settings
         self.section = section
         self.setting = setting
@@ -138,19 +141,16 @@ class SelectionOnlyCheckBox(wx.CheckBox):
         return dict(selectionOnly=self.GetValue())
 
     def saveSettings(self):
-        self.settings.set(
-            self.section,
-            self.setting,  # pylint: disable=E1101
-            str(self.GetValue()),
-        )
+        self.settings.set(self.section, self.setting,  # pylint: disable=E1101
+                          str(self.GetValue()))
 
 
 class ColumnPicker(sized_controls.SizedPanel):
-    """Control that lets the user select which columns should be used for
-    exporting."""
+    """ Control that lets the user select which columns should be used for
+        exporting. """
 
     def __init__(self, parent, viewer):
-        super(ColumnPicker, self).__init__(parent)
+        super().__init__(parent)
         self.SetSizerType("horizontal")
         self.SetSizerProps(expand=True, proportion=1)
         self.createColumnPicker()
@@ -172,17 +172,11 @@ class ColumnPicker(sized_controls.SizedPanel):
         visibleColumns = viewer.visibleColumns()
         for column in viewer.selectableColumns():
             if column.header():
-                index = self.columnPicker.Append(
-                    column.header(), clientData=column
-                )
+                index = self.columnPicker.Append(column.header(), clientData=column)
                 self.columnPicker.Check(index, column in visibleColumns)
 
     def selectedColumns(self):
-        indices = [
-            index
-            for index in range(self.columnPicker.GetCount())
-            if self.columnPicker.IsChecked(index)
-        ]
+        indices = [index for index in range(self.columnPicker.GetCount()) if self.columnPicker.IsChecked(index)]
         return [self.columnPicker.GetClientData(index) for index in indices]
 
     def options(self):
@@ -193,11 +187,11 @@ class ColumnPicker(sized_controls.SizedPanel):
 
 
 class SeparateDateAndTimeColumnsCheckBox(wx.CheckBox):
-    """Control that lets the user decide whether dates and times should be
-    separated or kept together."""
+    """ Control that lets the user decide whether dates and times should be
+        separated or kept together. """
 
     def __init__(self, parent, settings, section, setting):
-        super(SeparateDateAndTimeColumnsCheckBox, self).__init__(
+        super().__init__(
             parent, label=_("Put task dates and times in separate columns")
         )
         self.settings = settings
@@ -206,9 +200,7 @@ class SeparateDateAndTimeColumnsCheckBox(wx.CheckBox):
         self.initializeCheckBox()
 
     def initializeCheckBox(self):
-        separateDateAndTimeColumns = self.settings.getboolean(
-            self.section, self.setting
-        )
+        separateDateAndTimeColumns = self.settings.getboolean(self.section, self.setting)
         self.SetValue(separateDateAndTimeColumns)
 
     def options(self):
@@ -219,11 +211,11 @@ class SeparateDateAndTimeColumnsCheckBox(wx.CheckBox):
 
 
 class SeparateCSSCheckBox(sized_controls.SizedPanel):
-    """Control to let the user write CSS style information to a
-    separate file instead of including it into the HTML file."""
+    """ Control to let the user write CSS style information to a
+        separate file instead of including it into the HTML file. """
 
     def __init__(self, parent, settings, section, setting):
-        super(SeparateCSSCheckBox, self).__init__(parent)
+        super().__init__(parent)
         self.settings = settings
         self.section = section
         self.setting = setting
@@ -233,71 +225,44 @@ class SeparateCSSCheckBox(sized_controls.SizedPanel):
     def createCheckBox(self):
         self.separateCSSCheckBox = wx.CheckBox(
             self,  # pylint: disable=W0201
-            label=_("Write style information to a separate CSS file"),
+            label=_("Write style information to a separate CSS file")
         )
         separateCSS = self.settings.getboolean(self.section, self.setting)
         self.separateCSSCheckBox.SetValue(separateCSS)
 
     def createHelpInformation(self, parent):
-        width = max(
-            [
-                child.GetSize()[0]
-                for child in [self.separateCSSCheckBox]
-                + list(parent.GetChildren())
-            ]
-        )
-        info = wx.StaticText(
-            self,
-            label=_(
-                "If a CSS file exists for the exported file, %(name)s will not overwrite it. "
-                "This allows you to change the style information without losing your changes on the next export."
-            )
-            % meta.metaDict,
-        )
+        width = max([child.GetSize()[0] for child in [self.separateCSSCheckBox] + list(parent.GetChildren())])
+        info = wx.StaticText(self,
+                             label=_('If a CSS file exists for the exported file, %(name)s will not overwrite it. '
+                                     'This allows you to change the style information without losing your changes'
+                                     ' on the next export.') % meta.metaDict)
         info.Wrap(width)
 
     def options(self):
         return dict(separateCSS=self.separateCSSCheckBox.GetValue())
 
     def saveSettings(self):
-        self.settings.set(
-            self.section,
-            self.setting,
-            str(self.separateCSSCheckBox.GetValue()),
-        )
+        self.settings.set(self.section, self.setting,
+                          str(self.separateCSSCheckBox.GetValue()))
 
 
 # Export dialogs for different file types:
-
 
 class ExportAsCSVDialog(ExportDialog):
     title = _("Export as CSV")
 
     def createInterior(self, pane):
-        viewerPicker = ViewerPicker(
-            pane, self.exportableViewers(), self.activeViewer()
-        )
+        viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         viewerPicker.Bind(EVT_VIEWERPICKED, self.onViewerChanged)
         # pylint: disable=W0201
         self.columnPicker = ColumnPicker(pane, viewerPicker.selectedViewer())
         selectionOnlyCheckBox = SelectionOnlyCheckBox(
-            pane, self.settings, self.section, "csv_selectiononly"
-        )
-        self.separateDateAndTimeColumnsCheckBox = (
-            SeparateDateAndTimeColumnsCheckBox(
-                pane,
-                self.settings,
-                self.section,
-                "csv_separatedateandtimecolumns",
-            )
-        )
+            pane, self.settings, self.section, "csv_selectiononly")
+        self.separateDateAndTimeColumnsCheckBox = \
+            SeparateDateAndTimeColumnsCheckBox(pane, self.settings, self.section,
+                                               "csv_separatedateandtimecolumns")
         self.__check(viewerPicker.selectedViewer())
-        return (
-            viewerPicker,
-            self.columnPicker,
-            selectionOnlyCheckBox,
-            self.separateDateAndTimeColumnsCheckBox,
-        )
+        return viewerPicker, self.columnPicker, selectionOnlyCheckBox, self.separateDateAndTimeColumnsCheckBox
 
     def onViewerChanged(self, event):
         event.Skip()
@@ -305,59 +270,37 @@ class ExportAsCSVDialog(ExportDialog):
         self.__check(event.viewer)
 
     def __check(self, viewer):
-        self.separateDateAndTimeColumnsCheckBox.Enable(
-            viewer.isShowingTasks() or viewer.isShowingEffort()
-        )
+        self.separateDateAndTimeColumnsCheckBox.Enable(viewer.isShowingTasks() or viewer.isShowingEffort())
 
 
 class ExportAsICalendarDialog(ExportDialog):
     title = _("Export as iCalendar")
 
     def createInterior(self, pane):
-        viewerPicker = ViewerPicker(
-            pane, self.exportableViewers(), self.activeViewer()
-        )
-        selectionOnlyCheckBox = SelectionOnlyCheckBox(
-            pane, self.settings, self.section, "ical_selectiononly"
-        )
+        viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
+        selectionOnlyCheckBox = SelectionOnlyCheckBox(pane, self.settings,
+                                                      self.section, "ical_selectiononly")
         return viewerPicker, selectionOnlyCheckBox
 
     def exportableViewers(self):
-        viewers = super(ExportAsICalendarDialog, self).exportableViewers()
-        return [
-            viewer
-            for viewer in viewers
-            if viewer.isShowingTasks()
-            or (
-                viewer.isShowingEffort()
-                and not viewer.isShowingAggregatedEffort()
-            )
-        ]
+        viewers = super().exportableViewers()
+        return [viewer for viewer in viewers if
+                viewer.isShowingTasks() or
+                (viewer.isShowingEffort() and not viewer.isShowingAggregatedEffort())]
 
 
 class ExportAsHTMLDialog(ExportDialog):
     title = _("Export as HTML")
 
     def createInterior(self, pane):
-        viewerPicker = ViewerPicker(
-            pane, self.exportableViewers(), self.activeViewer()
-        )
+        viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         viewerPicker.Bind(EVT_VIEWERPICKED, self.onViewerChanged)
-        self.columnPicker = ColumnPicker(
-            pane, viewerPicker.selectedViewer()
-        )  # pylint: disable=W0201
+        self.columnPicker = ColumnPicker(pane, viewerPicker.selectedViewer())  # pylint: disable=W0201
         selectionOnlyCheckBox = SelectionOnlyCheckBox(
-            pane, self.settings, self.section, "html_selectiononly"
-        )
+            pane, self.settings, self.section, "html_selectiononly")
         separateCSSChooser = SeparateCSSCheckBox(
-            pane, self.settings, self.section, "html_separatecss"
-        )
-        return (
-            viewerPicker,
-            self.columnPicker,
-            selectionOnlyCheckBox,
-            separateCSSChooser,
-        )
+            pane, self.settings, self.section, "html_separatecss")
+        return viewerPicker, self.columnPicker, selectionOnlyCheckBox, separateCSSChooser
 
     def onViewerChanged(self, event):
         event.Skip()
@@ -368,14 +311,11 @@ class ExportAsTodoTxtDialog(ExportDialog):
     title = _("Export as Todo.txt")
 
     def createInterior(self, pane):
-        viewerPicker = ViewerPicker(
-            pane, self.exportableViewers(), self.activeViewer()
-        )
+        viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         selectionOnlyCheckBox = SelectionOnlyCheckBox(
-            pane, self.settings, self.section, "todotxt_selectiononly"
-        )
+            pane, self.settings, self.section, "todotxt_selectiononly")
         return viewerPicker, selectionOnlyCheckBox
 
     def exportableViewers(self):
-        viewers = super(ExportAsTodoTxtDialog, self).exportableViewers()
+        viewers = super().exportableViewers()
         return [viewer for viewer in viewers if viewer.isShowingTasks()]

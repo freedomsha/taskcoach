@@ -21,21 +21,18 @@ import wx
 
 
 class BalloonTipManager(balloontip.BalloonTipManager):
-    def AddBalloonTip(
-        self, settings, name, target, message=None, title=None, getRect=None
-    ):
+    def AddBalloonTip(self, settings, name, target, message=None, title=None, bitmap=None, getRect=None):
+        # Signature of method 'BalloonTipManager.AddBalloonTip()' does not match signature of the base
+        # method in class 'BalloonTipManager'
+        # (self, parent, target, message=None, title=None, bitmap=None, getRect=None):
         if settings.getboolean("balloontips", name):
-            super(BalloonTipManager, self).AddBalloonTip(
-                target,
-                message=message,
-                title=title,
-                bitmap=wx.ArtProvider.GetBitmap(
-                    "lamp_icon", wx.ART_MENU, (16, 16)
-                ),
-                getRect=getRect,
-                name=name,
-                settings=settings,
-            )
+            # super().AddBalloonTip(target, message=message, title=title,
+            #                      bitmap=wx.ArtProvider.getBitmap('lamp_icon', wx.ART_MENU, (16, 16)),
+            #                      getRect=get_rect, name=name, settings=settings)
+            # Unresolved attribute reference 'getBitmap' for class 'ArtProvider'
+            super().AddBalloonTip(settings=settings, name=name, target=target, message=message, title=title,
+                                  bitmap=wx.ArtProvider.GetBitmap("lamp_icon", wx.ART_MENU, (16, 16)),
+                                  getRect=getRect)
 
     def OnBalloonTipShow(self, name=None, settings=None):
         settings.setboolean("balloontips", name, False)

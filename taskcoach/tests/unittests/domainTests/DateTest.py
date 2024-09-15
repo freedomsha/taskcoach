@@ -16,7 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test, time, datetime
+# from builtins import str
+import test
+import time
+import datetime
 from taskcoachlib.domain import date
 
 
@@ -77,25 +80,20 @@ class DateTest(test.TestCase):
         self.assertTrue(date1 > date2)
 
     def testAddManyDays(self):
-        self.assertEqual(
-            date.Date(2003, 1, 1), date.Date(2002, 1, 1) + date.ONE_YEAR
-        )
+        self.assertEqual(date.Date(2003, 1, 1),
+                         date.Date(2002, 1, 1) + date.ONE_YEAR)
 
     def testSubstractTwoDates_ZeroDifference(self):
-        self.assertEqual(
-            date.TimeDelta(), date.Date(2004, 2, 29) - date.Date(2004, 2, 29)
-        )
+        self.assertEqual(date.TimeDelta(),
+                         date.Date(2004, 2, 29) - date.Date(2004, 2, 29))
 
     def testSubstractTwoDates_YearDifference(self):
-        self.assertEqual(
-            date.TimeDelta(days=365),
-            date.Date(2004, 2, 29) + date.ONE_YEAR - date.Date(2004, 2, 29),
-        )
+        self.assertEqual(date.TimeDelta(days=365),
+                         date.Date(2004, 2, 29) + date.ONE_YEAR - date.Date(2004, 2, 29))
 
     def testSubstractTwoDates_Infinite(self):
-        self.assertEqual(
-            date.TimeDelta.max, date.Date() - date.Date(2004, 2, 29)
-        )
+        self.assertEqual(date.TimeDelta.max,
+                         date.Date() - date.Date(2004, 2, 29))
 
     def testSubstractTwoDates_BothInfinite(self):
         self.assertEqual(date.TimeDelta(), date.Date() - date.Date())

@@ -18,9 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .. import test
-import sys, os, configparser, io
+import test
+import sys
+import os
+import configparser
+import io as StringIO
 from taskcoachlib import config, meta
+# from ...taskcoachlib.thirdparty.pubsub import pub
 from pubsub import pub
 
 
@@ -52,12 +56,16 @@ class SettingsTest(SettingsTestCase):
     def testSetList_SimpleStrings(self):
         recentfiles = ["abc", "C:\Documents And Settings\Whatever"]
         self.settings.setlist("file", "recentfiles", recentfiles)
-        self.assertEqual(recentfiles, self.settings.getlist("file", "recentfiles"))
+        self.assertEqual(
+            recentfiles, self.settings.getlist("file", "recentfiles")
+        )
 
     def testSetList_UnicodeStrings(self):
         recentfiles = ["√É¬ºmlaut", "√é¬£√é¬ø√é¬º√é¬∑ √è‚Ä°√èÔøΩ√é¬µ√é¬µ√é¬∫"]
         self.settings.setlist("file", "recentfiles", recentfiles)
-        self.assertEqual(recentfiles, self.settings.getlist("file", "recentfiles"))
+        self.assertEqual(
+            recentfiles, self.settings.getlist("file", "recentfiles")
+        )
 
     def testGetNonExistingSettingFromSection1ReturnsDefault(self):
         self.settings.add_section("effortviewer1")
@@ -87,11 +95,15 @@ class SettingsTest(SettingsTestCase):
         )
 
     def testGetNonExistingSectionRaisesException(self):
-        self.assertRaises(configparser.NoSectionError, self.settings.get, "bla", "bla")
+        self.assertRaises(
+            configparser.NoSectionError, self.settings.get, "bla", "bla"
+        )
 
     def testAddSectionAndSkipOne(self):
         self.settings.set("effortviewer", "columnwidths", "dict(subject=10)")
-        self.settings.add_section("effortviewer2", copyFromSection="effortviewer")
+        self.settings.add_section(
+            "effortviewer2", copyFromSection="effortviewer"
+        )
         self.assertEqual(
             dict(subject=10),
             self.settings.getdict("effortviewer2", "columnwidths"),
@@ -100,7 +112,9 @@ class SettingsTest(SettingsTestCase):
     def testSinglePercentage(self):
         # Prevent ValueError: invalid interpolation syntax in '%' at position 0:
         self.settings.set("effortviewer", "searchfilterstring", "%")
-        self.assertEqual("%", self.settings.get("effortviewer", "searchfilterstring"))
+        self.assertEqual(
+            "%", self.settings.get("effortviewer", "searchfilterstring")
+        )
 
     def testEmbeddedPercentage(self):
         # Prevent ValueError: invalid interpolation syntax in '%' at position 0
@@ -112,18 +126,24 @@ class SettingsTest(SettingsTestCase):
     def testDoublePercentage(self):
         # Prevent ValueError: invalid interpolation syntax in '%' at position 0
         self.settings.set("effortviewer", "searchfilterstring", "%%")
-        self.assertEqual("%%", self.settings.get("effortviewer", "searchfilterstring"))
+        self.assertEqual(
+            "%%", self.settings.get("effortviewer", "searchfilterstring")
+        )
 
     def testFixInvalidValuesFromOldIniFile(self):
         self.settings.set("feature", "notifier", "Native")
-        self.assertEqual("Task Coach", self.settings.get("feature", "notifier"))
-        self.assertEqual("Task Coach", self.settings.getRawValue("feature", "notifier"))
+        self.assertEqual(
+            "Task Coach", self.settings.get("feature", "notifier")
+        )
+        self.assertEqual(
+            "Task Coach", self.settings.getRawValue("feature", "notifier")
+        )
 
 
 class SettingsIOTest(SettingsTestCase):
     def setUp(self):
         super(SettingsIOTest, self).setUp()
-        self.fakeFile = io.StringIO()
+        self.fakeFile = StringIO.StringIO()
 
     def testSave(self):
         self.settings.write(self.fakeFile)
@@ -156,17 +176,22 @@ class SettingsIOTest(SettingsTestCase):
                 raise configparser.ParsingError("Testing")
 
         self.assertFalse(
-            SettingsThatThrowsParsingError().getboolean("file", "inifileloaded")
+            SettingsThatThrowsParsingError().getboolean(
+                "file", "inifileloaded"
+            )
         )
 
     def testFixOldColumnValues(self):
         section = "prerequisiteviewerintaskeditor1"
         self.fakeFile.write(
-            "[%s]\ncolumns = ['dueDate']\ncolumnwidths = {'dueDate': 40}\n" % section
+            "[%s]\ncolumns = ['dueDate']\ncolumnwidths = {'dueDate': 40}\n"
+            % section
         )
         self.fakeFile.seek(0)
         self.settings.readfp(self.fakeFile)
-        self.assertTrue(["dueDateTime"], self.settings.getlist(section, "columns"))
+        self.assertTrue(
+            ["dueDateTime"], self.settings.getlist(section, "columns")
+        )
         self.assertEqual(
             dict(dueDateTime=40),
             self.settings.getdict(section, "columnwidths"),
@@ -202,7 +227,7 @@ class UnicodeAwareConfigParserTest(test.TestCase):
     def setUp(self):
         self.parser = config.settings.UnicodeAwareConfigParser()
         self.parser.add_section("section")
-        self.iniFile = io.StringIO()
+        self.iniFile = StringIO.StringIO()
         self.asciiValue = "ascii"
         self.unicodeValue = (
             "√ÉÔøΩ√¢‚Ç¨¬¶√É≈Ω√Ç¬Ω√É≈Ω√Ç¬π√É≈Ω√Ç¬≥√É≈Ω√Ç¬ø√É≈Ω√Ç¬¥√É≈Ω√Ç¬∑"
@@ -212,7 +237,9 @@ class UnicodeAwareConfigParserTest(test.TestCase):
         self.parser.set("section", "setting", self.asciiValue)
         self.parser.write(self.iniFile)
         fileContents = self.iniFile.getvalue()
-        self.assertEqual("[section]\nsetting = %s\n\n" % self.asciiValue, fileContents)
+        self.assertEqual(
+            "[section]\nsetting = %s\n\n" % self.asciiValue, fileContents
+        )
 
     def testWriteUnicodeValue(self):
         self.parser.set("section", "setting", self.unicodeValue)
@@ -228,16 +255,20 @@ class UnicodeAwareConfigParserTest(test.TestCase):
         self.iniFile.write(iniFileContents)
         self.iniFile.seek(0)
         self.parser.readfp(self.iniFile)
-        self.assertEqual(self.asciiValue, self.parser.get("section", "setting"))
+        self.assertEqual(
+            self.asciiValue, self.parser.get("section", "setting")
+        )
 
     def testReadUnicodeValue(self):
-        iniFileContents = "[section]\nsetting = %s\n\n" % self.unicodeValue.encode(
-            "utf-8"
+        iniFileContents = (
+            "[section]\nsetting = %s\n\n" % self.unicodeValue.encode("utf-8")
         )
         self.iniFile.write(iniFileContents)
         self.iniFile.seek(0)
         self.parser.readfp(self.iniFile)
-        self.assertEqual(self.unicodeValue, self.parser.get("section", "setting"))
+        self.assertEqual(
+            self.unicodeValue, self.parser.get("section", "setting")
+        )
 
 
 class SpecificSettingsTest(SettingsTestCase):
@@ -247,7 +278,9 @@ class SpecificSettingsTest(SettingsTestCase):
     def testSetCurrentVersionAtSave(self):
         self.settings.set("version", "current", "0.0")
         self.settings.save()
-        self.assertEqual(meta.data.version, self.settings.get("version", "current"))
+        self.assertEqual(
+            meta.data.version, self.settings.get("version", "current")
+        )
 
 
 class SettingsFileLocationTest(SettingsTestCase):

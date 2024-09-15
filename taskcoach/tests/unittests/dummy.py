@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 import wx
 from taskcoachlib import persistence, gui
 
@@ -92,5 +93,6 @@ class TaskFile(persistence.TaskFile):
     merge = save = saveas = load
 
 
+# class MainWindow(object):  # pylint: disable=W0232
 class MainWindow:  # pylint: disable=W0232
     showFindDialog = None

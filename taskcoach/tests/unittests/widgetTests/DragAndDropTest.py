@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test, wx
-from taskcoachlib.widgets import treectrl
+from builtins import object
+from ... import test
+import wx
+from ....taskcoachlib.widgets import treectrl
 
 
 class DummyEvent(object):
@@ -40,18 +42,19 @@ class TreeCtrlDragAndDropMixinTest(test.wxTestCase):
 
     def setUp(self):
         self.treeCtrl = treectrl.HyperTreeList(self.frame)
-        self.treeCtrl.AddColumn("First")
+        self.treeCtrl.AddColumn('First')
 
-        self.rootItem = self.treeCtrl.AddRoot("root")
-        self.item = self.treeCtrl.Append(self.rootItem, "item")
+        self.rootItem = self.treeCtrl.AddRoot('root')
+        # self.item = self.treeCtrl.AppendItem(self.rootItem, 'item')
+        self.item = self.treeCtrl.Append(self.rootItem, 'item')
 
     def assertEventIsVetoed(self, event):
-        self.assertTrue(event.vetoed)
-        self.assertFalse(event.allowed)
+        self.failUnless(event.vetoed)
+        self.failIf(event.allowed)
 
     def assertEventIsAllowed(self, event):
-        self.assertTrue(event.allowed)
-        self.assertFalse(event.vetoed)
+        self.failUnless(event.allowed)
+        self.failIf(event.vetoed)
 
     def testEventIsVetoedWhenDragBeginsWithoutItem(self):
         event = DummyEvent()

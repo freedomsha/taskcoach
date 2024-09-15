@@ -16,11 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 from taskcoachlib import patterns, meta, notify
 from taskcoachlib.domain import date, task
 from taskcoachlib.gui.dialog import reminder, editor
+from taskcoachlib.gui.dialog.editor import TaskEditor
 from taskcoachlib.i18n import _
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
+#    from ..thirdparty.pubsub import pub
+# except ImportError:
+#    from wx.lib.pubsub import pub
 from pubsub import pub
 import wx
 
@@ -34,18 +39,14 @@ class ReminderController(object):
         return cls.lastId
 
     def __init__(self, mainWindow, taskList, effortList, settings):
-        super(ReminderController, self).__init__()
+        super().__init__()
         pub.subscribe(self.onSetReminder, task.Task.reminderChangedEventType())
-        patterns.Publisher().registerObserver(
-            self.onAddTask,
-            eventType=taskList.addItemEventType(),
-            eventSource=taskList,
-        )
-        patterns.Publisher().registerObserver(
-            self.onRemoveTask,
-            eventType=taskList.removeItemEventType(),
-            eventSource=taskList,
-        )
+        patterns.Publisher().registerObserver(self.onAddTask,
+                                              eventType=taskList.addItemEventType(),
+                                              eventSource=taskList)
+        patterns.Publisher().registerObserver(self.onRemoveTask,
+                                              eventType=taskList.removeItemEventType(),
+                                              eventSource=taskList)
         self.__tasksWithReminders = {}  # {task: reminderDateTime}
         self.__mainWindow = mainWindow
         self.__mainWindowWasHidden = False
@@ -77,9 +78,8 @@ class ReminderController(object):
         if requestUserAttention:
             self.requestUserAttention()
 
-    def showReminderMessage(
-        self, taskWithReminder, ReminderDialog=reminder.ReminderDialog
-    ):
+    def showReminderMessage(self, taskWithReminder,
+                            ReminderDialog=reminder.ReminderDialog):
         if self.__useOwnReminderDialog():
             self.__showReminderDialog(taskWithReminder, ReminderDialog)
             self.__removeReminder(taskWithReminder)
@@ -99,13 +99,8 @@ class ReminderController(object):
         # If the dialog has self.__mainWindow as parent, it steals the focus when
         # returning to Task Coach through Alt+Tab; we don't want that for
         # reminders.
-        reminderDialog = ReminderDialog(
-            taskWithReminder,
-            self.taskList,
-            self.effortList,
-            self.settings,
-            None,
-        )
+        reminderDialog = ReminderDialog(taskWithReminder, self.taskList,
+                                        self.effortList, self.settings, None)
         reminderDialog.Bind(wx.EVT_CLOSE, self.onCloseReminderDialog)
         reminderDialog.Show()
 
@@ -113,7 +108,7 @@ class ReminderController(object):
         notifier = notify.AbstractNotifier.get(
             self.settings.get("feature", "notifier")
         )
-        notifier.notify(
+        notifier.Notify(
             _("%s Reminder") % meta.name,
             taskWithReminder.subject(),
             wx.ArtProvider.GetBitmap("taskcoach", size=wx.Size(32, 32)),
@@ -132,23 +127,14 @@ class ReminderController(object):
         taskWithReminder = dialog.task
         if not dialog.ignoreSnoozeOption:
             snoozeOptions = dialog.snoozeOptions
-            snoozeTimeDelta = snoozeOptions.GetClientData(
-                snoozeOptions.Selection
-            )
-            taskWithReminder.snoozeReminder(
-                snoozeTimeDelta
-            )  # Note that this is not undoable
+            snoozeTimeDelta = snoozeOptions.GetClientData(snoozeOptions.Selection)
+            taskWithReminder.snoozeReminder(snoozeTimeDelta)  # Note that this is not undoable
             # Undoing the snoozing makes little sense, because it would set the
-            # reminder back to its original date-time, which is now in the past.
+            # reminder back to its original Date-time, which is Now in the past.
         if dialog.openTaskAfterClose:
-            editTask = editor.TaskEditor(
-                self.__mainWindow,
-                [taskWithReminder],
-                self.settings,
-                self.taskList,
-                self.__mainWindow.taskFile,
-                bitmap="edit",
-            )
+            editTask = TaskEditor(self.__mainWindow, [taskWithReminder],
+                                  self.settings, self.taskList, self.__mainWindow.taskFile,
+                                  bitmap="edit")
             editTask.Show(show)
         else:
             editTask = None
@@ -187,9 +173,8 @@ class ReminderController(object):
         now = date.DateTime.now()
         if reminderDateTime < now:
             reminderDateTime = now + date.TimeDelta(seconds=10)
-        job = self.__tasksWithReminders[taskWithReminder] = (
-            date.Scheduler().schedule(self.onReminder, reminderDateTime)
-        )
+        job = self.__tasksWithReminders[taskWithReminder] = date.Scheduler().schedule(self.onReminder,
+                                                                                      reminderDateTime)
         job.setId(self.nextId())
 
     def __removeReminder(self, taskWithReminder):

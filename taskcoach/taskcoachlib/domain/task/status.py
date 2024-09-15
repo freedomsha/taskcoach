@@ -16,14 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 from taskcoachlib.i18n import _
 from taskcoachlib.config import defaults
 
 
 class TaskStatus(object):
-    def __init__(
-        self, statusString, pluralLabel, countLabel, hideMenuText, hideHelpText
-    ):
+    def __init__(self, statusString, pluralLabel, countLabel, hideMenuText,
+                 hideHelpText):
         self.statusString = statusString
         self.pluralLabel = pluralLabel
         self.countLabel = countLabel
@@ -57,14 +57,17 @@ class TaskStatus(object):
     def __eq__(self, other):
         return self.statusString == other.statusString
 
+# j'ai ajouter cette fonction:
+    def __hash__(self) -> int:
+        # Because of __eq__
+        # return hash(id(self))
+        return hash(self.statusString)
+
     def __neq__(self, other):
         return self.statusString != other.statusString
 
     def __bool__(self):
         return True
-
-    def __hash__(self) -> int:
-        return hash(self.statusString)
 
 
 inactive = TaskStatus(

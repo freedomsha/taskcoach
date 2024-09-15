@@ -2,6 +2,7 @@
 # This code is separated-out because it is needed
 # by abc.py to load everything else at startup.
 
+# from builtins import object
 from _weakref import ref
 
 __all__ = ["WeakSet"]

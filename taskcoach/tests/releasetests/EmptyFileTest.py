@@ -25,7 +25,6 @@ import test
 cwd = os.path.realpath(os.path.curdir)
 os.chdir("..")
 import setup
-
 os.chdir(cwd)
 
 
@@ -51,7 +50,7 @@ class EmptFileTest(test.TestCase):
     """
     def testAllUnittestPyFilesAreInManifest(self):
         self.assertEqual([], self.missingPyFiles('tests', 'unittests'))
-    
+
     def testAllReleasetestPyFilesAreInManifest(self):
         self.assertEqual([], self.missingPyFiles('tests', 'releasetests'))
 

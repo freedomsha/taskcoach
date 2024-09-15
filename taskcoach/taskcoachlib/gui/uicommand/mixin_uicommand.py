@@ -17,205 +17,159 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 from taskcoachlib.domain import task, note, category, effort, attachment
 import wx
 
 
+# Quels sont ces types de classes ?
+# class NeedsSelectionMixin:
 class NeedsSelectionMixin(object):
-    """Mixin class for UI commands that need at least one selected item."""
-
+    """ Mixin class for UI commands that need at least one selected item. """
     def enabled(self, event):
-        return (
-            super(NeedsSelectionMixin, self).enabled(event)
-            and self.viewer.curselection()
-        )
+        return super().enabled(event) and self.viewer.curselection()
 
 
 class NeedsSelectedCategorizableMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need at least one selected
-    categorizable."""
-
+    """ Mixin class for UI commands that need at least one selected
+        categorizable. """
     def enabled(self, event):
-        return super(NeedsSelectedCategorizableMixin, self).enabled(
-            event
-        ) and (
-            self.viewer.curselectionIsInstanceOf(task.Task)
-            or self.viewer.curselectionIsInstanceOf(note.Note)
-        )
+        return super().enabled(event) and \
+            (self.viewer.curselectionIsInstanceOf(task.Task) or
+             self.viewer.curselectionIsInstanceOf(note.Note))
 
 
 class NeedsOneSelectedItemMixin(object):
-    """Mixin class for UI commands that need exactly one selected item."""
-
+    """ Mixin class for UI commands that need exactly one selected item. """
     def enabled(self, event):
-        return (
-            super(NeedsOneSelectedItemMixin, self).enabled(event)
-            and len(self.viewer.curselection()) == 1
-        )
+        return super().enabled(event) and \
+            len(self.viewer.curselection()) == 1
 
 
 class NeedsSelectedCompositeMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need at least one selected composite
-    item."""
-
+    """ Mixin class for UI commands that need at least one selected composite
+        item. """
     def enabled(self, event):
-        return super(NeedsSelectedCompositeMixin, self).enabled(event) and (
-            self.viewer.curselectionIsInstanceOf(task.Task)
-            or self.viewer.curselectionIsInstanceOf(note.Note)
-            or self.viewer.curselectionIsInstanceOf(category.Category)
-        )
+        return super().enabled(event) and \
+            (self.viewer.curselectionIsInstanceOf(task.Task) or
+             self.viewer.curselectionIsInstanceOf(note.Note) or
+             self.viewer.curselectionIsInstanceOf(category.Category))
 
 
-class NeedsOneSelectedCompositeItemMixin(
-    NeedsOneSelectedItemMixin, NeedsSelectedCompositeMixin
-):
-    """Mixin class for UI commands that need exactly one selected composite
-    item."""
-
+class NeedsOneSelectedCompositeItemMixin(NeedsOneSelectedItemMixin,
+                                         NeedsSelectedCompositeMixin):
+    """ Mixin class for UI commands that need exactly one selected composite
+        item. """
     pass
 
 
 class NeedsAttachmentViewerMixin(object):
-    """Mixin class for UI commands that need a viewer that is showing
-    attachments."""
-
+    """ Mixin class for UI commands that need a viewer that is showing
+        attachments. """
     def enabled(self, event):
-        return (
-            super(NeedsAttachmentViewerMixin, self).enabled(event)
-            and self.viewer.isShowingAttachments()
-        )
+        return super().enabled(event) and \
+            self.viewer.isShowingAttachments()
 
 
 class NeedsSelectedTasksMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need one or more selected tasks."""
-
+    """ Mixin class for UI commands that need one or more selected tasks. """
     def enabled(self, event):
-        return super(NeedsSelectedTasksMixin, self).enabled(
-            event
-        ) and self.viewer.curselectionIsInstanceOf(task.Task)
+        return super().enabled(event) and \
+            self.viewer.curselectionIsInstanceOf(task.Task)
 
 
 class NeedsSelectedNoteOwnersMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need at least one selected note
-    owner."""
-
+    """ Mixin class for UI commands that need at least one selected note
+        owner. """
     def enabled(self, event):
-        return super(NeedsSelectedNoteOwnersMixin, self).enabled(event) and (
-            self.viewer.curselectionIsInstanceOf(task.Task)
-            or self.viewer.curselectionIsInstanceOf(category.Category)
-            or self.viewer.curselectionIsInstanceOf(attachment.Attachment)
-        )
+        return super().enabled(event) and \
+            (self.viewer.curselectionIsInstanceOf(task.Task) or
+             self.viewer.curselectionIsInstanceOf(category.Category) or
+             self.viewer.curselectionIsInstanceOf(attachment.Attachment))
 
 
 class NeedsSelectedNoteOwnersMixinWithNotes(NeedsSelectedNoteOwnersMixin):
-    """Mixin class for UI commands that need at least one selected note owner
-    with notes."""
-
+    """ Mixin class for UI commands that need at least one selected note owner
+        with notes. """
     def enabled(self, event):
         # pylint: disable=E1101
-        return super(NeedsSelectedNoteOwnersMixinWithNotes, self).enabled(
-            event
-        ) and any([item.notes() for item in self.viewer.curselection()])
+        return super().enabled(event) and \
+            any([item.notes() for item in self.viewer.curselection()])
 
 
 class NeedsSelectedAttachmentOwnersMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need at least one selected attachment
-    owner."""
-
+    """ Mixin class for UI commands that need at least one selected attachment
+        owner. """
     def enabled(self, event):
-        return super(NeedsSelectedAttachmentOwnersMixin, self).enabled(
-            event
-        ) and (
-            self.viewer.curselectionIsInstanceOf(task.Task)
-            or self.viewer.curselectionIsInstanceOf(category.Category)
-            or self.viewer.curselectionIsInstanceOf(note.Note)
-        )
+        return super().enabled(event) and \
+            (self.viewer.curselectionIsInstanceOf(task.Task) or
+             self.viewer.curselectionIsInstanceOf(category.Category) or
+             self.viewer.curselectionIsInstanceOf(note.Note))
 
 
-class NeedsOneSelectedTaskMixin(
-    NeedsSelectedTasksMixin, NeedsOneSelectedItemMixin
-):
-    """Mixin class for UI commands that need at least one selected tasks."""
-
+class NeedsOneSelectedTaskMixin(NeedsSelectedTasksMixin,
+                                NeedsOneSelectedItemMixin):
+    """ Mixin class for UI commands that need at least one selected tasks. """
     pass
 
 
 class NeedsSelectionWithAttachmentsMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need at least one selected item with
-    one or more attachments."""
-
+    """ Mixin class for UI commands that need at least one selected item with
+        one or more attachments. """
     def enabled(self, event):
-        return super(NeedsSelectionWithAttachmentsMixin, self).enabled(
-            event
-        ) and any(
-            item.attachments()
-            for item in self.viewer.curselection()
-            if not isinstance(item, effort.Effort)
-        )
+        return super().enabled(event) and \
+            any(item.attachments() for item in self.viewer.curselection() if not isinstance(item, effort.Effort))
 
 
 class NeedsSelectedEffortMixin(NeedsSelectionMixin):
-    """Mixin class for UI commands that need at least one selected effort."""
-
+    """ Mixin class for UI commands that need at least one selected effort. """
     def enabled(self, event):
-        return super(NeedsSelectedEffortMixin, self).enabled(
-            event
-        ) and self.viewer.curselectionIsInstanceOf(effort.Effort)
+        return super().enabled(event) and \
+            self.viewer.curselectionIsInstanceOf(effort.Effort)
 
 
-class NeedsSelectedAttachmentsMixin(
-    NeedsAttachmentViewerMixin, NeedsSelectionMixin
-):
-    """Mixin class for UI commands that need at least one selected
-    attachment."""
-
+class NeedsSelectedAttachmentsMixin(NeedsAttachmentViewerMixin,
+                                    NeedsSelectionMixin):
+    """ Mixin class for UI commands that need at least one selected
+        attachment. """
     pass
 
 
 class NeedsAtLeastOneTaskMixin(object):
-    """Mixin class for UI commands that need at least one task created."""
-
+    """ Mixin class for UI commands that need at least one task created. """
     def enabled(self, event):  # pylint: disable=W0613
         return len(self.taskList) > 0
 
 
 class NeedsAtLeastOneCategoryMixin(object):
-    """Mixin class for UI commands that need at least one category created."""
-
+    """ Mixin class for UI commands that need at least one category created. """
     def enabled(self, event):  # pylint: disable=W0613
         return len(self.categories) > 0
 
 
 class NeedsItemsMixin(object):
-    """Mixin class for UI commands that need at least one item in their
-    viewer."""
-
+    """ Mixin class for UI commands that need at least one item in their
+       viewer. """
     def enabled(self, event):  # pylint: disable=W0613
         return self.viewer.size()
 
 
 class NeedsTreeViewerMixin(object):
-    """Mixin class for UI commands that need a tree viewer."""
-
+    """ Mixin class for UI commands that need a tree viewer. """
     def enabled(self, event):
-        return (
-            super(NeedsTreeViewerMixin, self).enabled(event)
-            and self.viewer.isTreeViewer()
-        )
+        return super().enabled(event) and \
+            self.viewer.isTreeViewer()
 
 
 class NeedsDeletedItemsMixin(object):
-    """Mixin class for UI commands that need deleted items to be present."""
-
+    """ Mixin class for UI commands that need deleted items to be present. """
     def enabled(self, event):
-        return (
-            super(NeedsDeletedItemsMixin, self).enabled(event)
-            and self.iocontroller.hasDeletedItems()
-        )
+        return super().enabled(event) and \
+               self.iocontroller.hasDeletedItems()
 
 
 class PopupButtonMixin(object):
-    """Mix this with a UICommand for a toolbar pop-up menu."""
+    """ Mix this with a UICommand for a toolbar pop-up menu. """
 
     def doCommand(self, event):  # pylint: disable=W0613
         try:
@@ -228,7 +182,7 @@ class PopupButtonMixin(object):
         self.mainWindow().PopupMenu(*args)  # pylint: disable=W0142
 
     def menuXY(self):
-        """Location to pop up the menu."""
+        """ Location to pop up the menu. """
         return self.mainWindow().ScreenToClient((self.menuX(), self.menuY()))
 
     def menuX(self):

@@ -16,6 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from __future__ import absolute_import
+#
+# from builtins import object
 from taskcoachlib import command
 from taskcoachlib.domain import attachment, task, note, category
 from .CommandTestCase import CommandTestCase
@@ -64,22 +67,16 @@ class AddAttachmentTestCase(CommandTestCase):
         self.container = self.ContainerClass([self.item1, self.item2])
 
 
-class AddAttachmentCommandWithTasksTest(
-    AddAttachmentTestCase, AddAttachmentTestsMixin
-):
+class AddAttachmentCommandWithTasksTest(AddAttachmentTestCase, AddAttachmentTestsMixin):
     ItemClass = task.Task
     ContainerClass = task.TaskList
 
 
-class AddAttachmentCommandWithNotesTest(
-    AddAttachmentTestCase, AddAttachmentTestsMixin
-):
+class AddAttachmentCommandWithNotesTest(AddAttachmentTestCase, AddAttachmentTestsMixin):
     ItemClass = note.Note
     ContainerClass = note.NoteContainer
 
 
-class AddAttachmentCommandWithCategoriesTest(
-    AddAttachmentTestCase, AddAttachmentTestsMixin
-):
+class AddAttachmentCommandWithCategoriesTest(AddAttachmentTestCase, AddAttachmentTestsMixin):
     ItemClass = category.Category
     ContainerClass = category.CategoryList

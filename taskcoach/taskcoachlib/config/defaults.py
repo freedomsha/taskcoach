@@ -18,9 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from builtins import str
 import wx
 from taskcoachlib import meta
-
 
 defaults = {
     "balloontips": {
@@ -554,7 +554,7 @@ defaults = {
         "pythonfrozen": "",  # Idem
         "current": meta.data.version,
         "notified": meta.data.version,
-        "notify": "True",
+        "Notify": "True",
     },
     "behavior": {
         "markparentcompletedwhenallchildrencompleted": "False",

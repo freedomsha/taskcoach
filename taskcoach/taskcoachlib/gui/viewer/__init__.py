@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 from .task import (
     TaskViewer,
     TaskStatsViewer,
@@ -28,7 +29,7 @@ from .task import (
 from .category import CategoryViewer, BaseCategoryViewer
 from .effort import EffortViewer, EffortViewerForSelectedTasks
 from .note import NoteViewer, BaseNoteViewer
-from .attachment import AttachmentViewer
+from .attachment import AttachmentViewer  # ?
 from .container import ViewerContainer
 from .factory import viewerTypes, addViewers, addOneViewer
 

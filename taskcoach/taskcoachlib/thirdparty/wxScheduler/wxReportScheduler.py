@@ -32,7 +32,7 @@ class wxReportScheduler( wx.Printout ):
 		scheduler.Draw( None )
 		self.pages = scheduler.pageCount
 
-		for idx in range( scheduler.pageCount ):
+		for idx in xrange( scheduler.pageCount ):
 			self._bitmaps.append( scheduler.Draw( idx + 1 ) )
 
 	def _GetScheduler( self, dc, day ):
@@ -56,7 +56,7 @@ class wxReportScheduler( wx.Printout ):
 
 	def OnPrintPage( self, page ):
 		"""
-		This code draw a wxScheduler scaled to fit page using date, format and 
+		This code draw a wxScheduler scaled to fit page using Date, format and
 		schedules passed by the user.
 		Note there is no difference on manage scheduler and schedules beetwen 
 		GUI and printing framework

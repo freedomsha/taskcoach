@@ -17,9 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import str
 from taskcoachlib import persistence, patterns, operating_system
 from taskcoachlib.i18n import _
 import wx
+# from wx import *
+
 
 
 # Prepare for printing. On Jolicloud, printing crashes unless we do this:
@@ -27,14 +30,15 @@ import wx
 # BUT on Fedora, if we do this, TaskCoach doesn't even start. My opinion is that
 # Fedora is more widely used than Jolicloud.
 
-## if operating_system.isGTK():
-##     try:
-##         import gtk  # pylint: disable=F0401
-##         gtk.remove_log_handlers()
-##     except ImportError:
-##         pass
+# # if operating_system.isGTK():
+# #     try:
+# #         import gtk  # pylint: disable=F0401
+# #         gtk.remove_log_handlers()
+# #     except ImportError:
+# #         pass
 
 
+# class PrinterSettings(metaclass=patterns.Singleton):
 class PrinterSettings(object, metaclass=patterns.Singleton):
     edges = ("top", "left", "bottom", "right")
 
@@ -60,7 +64,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
             return getattr(self.printData, attr)
 
     def __initialize_from_settings(self):
-        """Load the printer settings from the user settings."""
+        """ Load the printer settings from the user settings. """
         margin = dict()
         for edge in self.edges:
             margin[edge] = self.__get_setting("margin_" + edge)
@@ -72,7 +76,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
         self.SetOrientation(self.__get_setting("orientation"))
 
     def __save_to_settings(self):
-        """Save the printer settings to the user settings."""
+        """ Save the printer settings to the user settings. """
         margin = dict()
         margin["left"], margin["top"] = self.GetMarginTopLeft()
         margin["right"], margin["bottom"] = self.GetMarginBottomRight()
@@ -90,7 +94,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
 
 class HTMLPrintout(wx.html.HtmlPrintout):
     def __init__(self, html_text, settings):
-        super(HTMLPrintout, self).__init__()
+        super().__init__()
         self.SetHtmlText(html_text)
         self.SetFooter(_("Page") + " @PAGENUM@/@PAGESCNT@", wx.html.PAGE_ALL)
         self.SetFonts("Arial", "Courier")
@@ -103,11 +107,12 @@ class HTMLPrintout(wx.html.HtmlPrintout):
 class DCPrintout(wx.Printout):
     def __init__(self, widget):
         self.widget = widget
-        super(DCPrintout, self).__init__()
+        super().__init__()
 
     def OnPrintPage(self, page):  # pylint: disable=W0613
         self.widget.Draw(self.GetDC())
 
+    # @staticmethod
     def GetPageInfo(self):  # pylint: disable=W0221
         return (1, 1, 1, 1)
 
@@ -117,18 +122,13 @@ def Printout(viewer, settings, printSelectionOnly=False, twoPrintouts=False):
     if hasattr(widget, "GetPrintout"):
         _printout = widget.GetPrintout
     elif hasattr(widget, "Draw"):
-
         def _printout(settings):
             return DCPrintout(widget)
-
     else:
-        html_text = persistence.viewer2html(
-            viewer, settings, selectionOnly=printSelectionOnly
-        )[0]
+        html_text = persistence.viewer2html(viewer, settings, selectionOnly=printSelectionOnly)[0]
 
         def _printout(settings):
             return HTMLPrintout(html_text, settings)
-
     result = _printout(PrinterSettings(settings))
     if twoPrintouts:
         result = (result, _printout(PrinterSettings(settings)))

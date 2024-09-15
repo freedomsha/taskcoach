@@ -16,6 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from future import standard_library
+#
+# standard_library.install_aliases()
+# from builtins import object
 from taskcoachlib.i18n import _
 from taskcoachlib import render
 from taskcoachlib.domain import date
@@ -73,53 +77,31 @@ class RowBuilder(object):
             if self.shouldSplitDateAndTime(column):
                 row.extend(self.splitDateAndTime(column, item))
             elif column.name() == "notes":
-
                 def renderNotes(notes, indent=0):
                     bf = io.StringIO()
                     spaces = "  " * indent
                     for note in sorted(notes, key=lambda note: note.subject()):
-                        bf.write(
-                            "%s%s\n%s%s\n"
-                            % (
-                                spaces,
-                                note.subject(),
-                                spaces,
-                                note.description(),
-                            )
-                        )
+                        bf.write("%s%s\n%s%s\n" % (spaces, note.subject(), spaces, note.description()))
                         bf.write(renderNotes(note.children(), indent + 1))
                     return bf.getvalue()
 
                 row.append(renderNotes(item.notes()))
             elif column.name() == "attachments":
-                row.append(
-                    "\n".join(
-                        sorted(
-                            [
-                                attachment.subject()
-                                for attachment in item.attachments()
-                            ]
-                        )
-                    )
-                )
+                row.append("\n".join(sorted([attachment.subject() for attachment in item.attachments()])))
             else:
                 row.append(column.render(item, humanReadable=False))
         row[0] = self.indent(item) + row[0]
         return row
 
     def shouldSplitDateAndTime(self, column):
-        return (
-            self.__separateDateAndTimeColumns
-            and column.name() in self.dateAndTimeColumnHeaders
-        )
+        return self.__separateDateAndTimeColumns and column.name() in self.dateAndTimeColumnHeaders
 
     def splitDateAndTime(self, column, item):
         if column.name() == "period":
-            return self.__splitDateAndTime(
-                item.getStart()
-            ) + self.__splitDateAndTime(item.getStop())
+            return self.__splitDateAndTime(item.getStart()) + self.__splitDateAndTime(item.getStop())
         return self.__splitDateAndTime(getattr(item, column.name())())
 
+    # @staticmethod
     def __splitDateAndTime(self, dateTime):
         if dateTime == date.DateTime() or dateTime is None:
             return "", ""
@@ -132,13 +114,12 @@ class RowBuilder(object):
         return [self.headerRow()] + self.itemRows(items)
 
 
-def viewer2csv(
-    viewer, selectionOnly=False, separateDateAndTimeColumns=False, columns=None
-):
-    """Convert the items displayed by a viewer into a list of rows, where
-    each row consists of a list of values. If the viewer is in tree mode,
-    indent the first value (typically the subject of the item) to
-    indicate the depth of the item in the tree."""
+def viewer2csv(viewer, selectionOnly=False, separateDateAndTimeColumns=False,
+               columns=None):
+    """ Convert the items displayed by a viewer into a list of rows, where
+        each row consists of a list of values. If the viewer is in tree mode,
+        indent the first value (typically the subject of the item) to
+        indicate the depth of the item in the tree. """
 
     isTree = viewer.isTreeViewer()
     columns = columns or viewer.visibleColumns()

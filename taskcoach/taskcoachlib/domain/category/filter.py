@@ -18,7 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from taskcoachlib import patterns
 from taskcoachlib.domain import base
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
+#    from taskcoachlib.thirdparty.pubsub import pub
+# except ImportError:
+#    from wx.lib.pubsub import pub
 from pubsub import pub
 from .category import Category
 
@@ -26,35 +29,24 @@ from .category import Category
 class CategoryFilter(base.Filter):
     def __init__(self, *args, **kwargs):
         self.__categories = kwargs.pop("categories")
-        self.__filterOnlyWhenAllCategoriesMatch = kwargs.pop(
-            "filterOnlyWhenAllCategoriesMatch", False
-        )
-        for eventType in (
-            self.__categories.addItemEventType(),
-            self.__categories.removeItemEventType(),
-        ):
-            patterns.Publisher().registerObserver(
-                self.onCategoryChanged,
-                eventType=eventType,
-                eventSource=self.__categories,
-            )
-        eventTypes = (
-            Category.categorizableAddedEventType(),
-            Category.categorizableRemovedEventType(),
-            Category.filterChangedEventType(),
-        )
+        self.__filterOnlyWhenAllCategoriesMatch = \
+            kwargs.pop("filterOnlyWhenAllCategoriesMatch", False)
+        for eventType in (self.__categories.addItemEventType(),
+                          self.__categories.removeItemEventType()):
+            patterns.Publisher().registerObserver(self.onCategoryChanged,
+                                                  eventType=eventType,
+                                                  eventSource=self.__categories)
+        eventTypes = (Category.categorizableAddedEventType(),
+                       Category.categorizableRemovedEventType(),
+                       Category.filterChangedEventType())
         for eventType in eventTypes:
-            patterns.Publisher().registerObserver(
-                self.onCategoryChanged, eventType=eventType
-            )
-        pub.subscribe(
-            self.onFilterMatchingChanged,
-            "settings.view.categoryfiltermatchall",
-        )
-        super(CategoryFilter, self).__init__(*args, **kwargs)
+            patterns.Publisher().registerObserver(self.onCategoryChanged,
+                                                  eventType=eventType)
+        pub.subscribe(self.onFilterMatchingChanged, "settings.view.categoryfiltermatchall")
+        super().__init__(*args, **kwargs)
 
     def detach(self):
-        super(CategoryFilter, self).detach()
+        super().detach()
         self.removeObserver(self.onCategoryChanged)
 
     def filterItems(self, categorizables):
@@ -65,15 +57,11 @@ class CategoryFilter(base.Filter):
         if self.__filterOnlyWhenAllCategoriesMatch:
             filteredCategorizables = set(categorizables)
             for category in filteredCategories:
-                filteredCategorizables &= (
-                    self.__categorizablesBelongingToCategory(category)
-                )
+                filteredCategorizables &= self.__categorizablesBelongingToCategory(category)
         else:
             filteredCategorizables = set()
             for category in filteredCategories:
-                filteredCategorizables |= (
-                    self.__categorizablesBelongingToCategory(category)
-                )
+                filteredCategorizables |= self.__categorizablesBelongingToCategory(category)
 
         filteredCategorizables &= self.observable()
         return filteredCategorizables

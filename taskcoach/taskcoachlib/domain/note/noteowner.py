@@ -16,10 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
+# try:
+#    from .. import base
+# except ImportError:
 from taskcoachlib.domain import base
 
 
 class NoteOwner(object, metaclass=base.DomainObjectOwnerMetaclass):
-    """Mixin class for (other) domain objects that may contain notes."""
+    """ Mixin class for (other) domain objects that may contain notes. """
 
+    # __metaclass__ = base.DomainObjectOwnerMetaclass
+    # lequel NoteOwner utiliser ? domain/note/noteowner ou domain/base/owner ?
     __ownedType__ = "Note"

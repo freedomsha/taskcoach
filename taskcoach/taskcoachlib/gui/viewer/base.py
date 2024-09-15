@@ -19,25 +19,49 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+# from __future__ import print_function
+
+# from builtins import object
+# from builtins import str
 
 import wx
 from taskcoachlib import patterns, widgets, command, render
 from taskcoachlib.i18n import _
 from taskcoachlib.gui import uicommand, toolbar, artprovider
 from wx.lib.agw import hypertreelist
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
+#    from taskcoachlib.thirdparty.agw import hypertreelist
+# except ImportError:
+#    from agw import hypertreelist
+# try:
 from pubsub import pub
+
+# except ImportError:
+#    from taskcoachlib.thirdparty.pubsub import pub
+# else:
+#    from wx.lib.pubsub import pub
 from taskcoachlib.widgets import ToolTipMixin
 from . import mixin
 
+# print('le mro de patterns.Observer est ', patterns.Observer.__mro__)
+# print('le mro de wx.Panel est ', wx.Panel.__mro__)
+# print('le mro de patterns.NumberedInstances est ', patterns.NumberedInstances.__mro__)
 
-class ViewerMeta(type(wx.Panel), patterns.NumberedInstances):
+
+# class PreViewer(type(wx.Panel), metaclass=patterns.NumberedInstances):
+class PreViewer(type(wx.Panel), patterns.NumberedInstances):
+    # def __init__(self):
+    # instanceNumber =
     pass
 
 
-class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
-    """A Viewer shows domain objects (e.g. tasks or efforts) by means of a
-    widget (e.g. a ListCtrl or a TreeListCtrl)."""
+# class Viewer(wx.Panel, patterns.Observer, metaclass=patterns.makecls(patterns.NumberedInstances)):
+class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
+    # class Viewer(wx.Panel, with_metaclass(patterns.NumberedInstances), patterns.Observer):
+    # TypeError: metaclass conflict: the metaclass of a derived class must be
+    # a (non-strict) subclass of the metaclasses of all its bases
+    """Une visionneuse affiche les objets du domaine (par exemple les tâches ou les efforts) au moyen d'un widget
+    (par exemple un ListCtrl ou un TreeListCtrl)."""
 
     defaultTitle = "Subclass responsibility"
     defaultBitmap = "Subclass responsibility"
@@ -46,21 +70,25 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
     def __init__(self, parent, taskFile, settings, *args, **kwargs):
         patterns.Observer.__init__(self)
         super().__init__(parent, -1)
+        # new_id = wx.NewIdRef().GetId()
+        # super().__init__(parent, new_id)
+        # print('le mro de gui.viewer.base.Viewer est ', Viewer.__mro__)
         self.parent = parent
         self.taskFile = taskFile
         self.settings = settings
         self.__settingsSection = kwargs.pop("settingsSection")
         self.__freezeCount = 0
         # The how maniest of this viewer type are we? Used for settings
-        self.__instanceNumber = kwargs.pop("instanceNumber")
+        self.__instanceNumber = kwargs.pop("instanceNumber")  # KeyError: 'instanceNumber'
+        # self.__instanceNumber = kwargs.pop("instanceNumber", 0)
         self.__use_separate_settings_section = kwargs.pop(
             "use_separate_settings_section", True
         )
         # Selection cache:
         self.__curselection = []
-        # Flag so that we don't notify observers while we're selecting all items
+        # Flag so that we don't Notify observers while we're selecting all items
         self.__selectingAllItems = False
-        # Popup menus we have to destroy before closing the viewer to prevent
+        # Popup menus we have to Destroy before closing the viewer to prevent
         # memory leakage:
         self._popupMenus = []
         # What are we presenting:
@@ -84,10 +112,10 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         pub.subscribe(self.onEndIO, "taskfile.justCleared")
         pub.subscribe(self.onEndIO, "taskfile.justSaved")
 
-        if isinstance(self.widget, ToolTipMixin):
-            pub.subscribe(
-                self.onShowTooltipsChanged, "settings.view.descriptionpopups"
-            )
+        if isinstance(self.widget, ToolTipMixin):  # si widget est une instance de ToolTupMixin
+            # Informer l'utilisateur
+            pub.subscribe(self.onShowTooltipsChanged, "settings.view.descriptionpopups")
+            # Régler les infos du widget
             self.widget.SetToolTipsEnabled(
                 settings.getboolean("view", "descriptionpopups")
             )
@@ -109,7 +137,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
                 ),
                 message=_(
                     """Click on the gear icon on the right to add buttons and rearrange them."""
-                ),
+                )
             )
 
     def onShowTooltipsChanged(self, value):
@@ -167,11 +195,21 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
                 pass  # Ignore observables that are not an observer themselves
 
         for popupMenu in self._popupMenus:
-            try:
-                popupMenu.clearMenu()
-                popupMenu.Destroy()
-            except wx.PyDeadObjectError or RuntimeError:
-                pass
+            # try:
+            popupMenu.clearMenu()
+            popupMenu.Destroy()
+            # except wx.PyDeadObjectError:
+            #     pass
+            #     # https://stackoverflow.com/questions/34202195/import-pydeadobjecterror-with-wx-version-3-0-3
+            #     # https://wxpython.org/Phoenix/docs/html/MigrationGuide.html#wx-pydeadobjecterror-runtimeerror
+            #     # try with:
+            #     # if someWindow:
+            #     #     someWindow.doSomething()
+            # except RuntimeError:
+            #     pass
+            # TODO: Essayer plutôt ça :
+            #   popupMenu.clearMenu()
+            #   popupMenu.Destroy()
 
         pub.unsubscribe(self.onBeginIO, "taskfile.aboutToRead")
         pub.unsubscribe(self.onBeginIO, "taskfile.aboutToClear")
@@ -193,16 +231,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         return "", ""
 
     def title(self):
-        return (
-            self.settings.get(self.settingsSection(), "title")
-            or self.defaultTitle
-        )
+        return self.settings.get(self.settingsSection(), "title") or self.defaultTitle
 
     def setTitle(self, title):
         titleToSaveInSettings = "" if title == self.defaultTitle else title
-        self.settings.set(
-            self.settingsSection(), "title", titleToSaveInSettings
-        )
+        self.settings.set(self.settingsSection(), "title", titleToSaveInSettings)
         self.parent.setPaneTitle(self, title)
         self.parent.manager.Update()
 
@@ -221,9 +254,10 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         self.imageIndex = {}  # pylint: disable=W0201
         for index, image in enumerate(self.viewerImages):
             try:
-                imageList.Add(
-                    wx.ArtProvider.GetBitmap(image, wx.ART_MENU, size)
-                )
+                # image_list.Add(wx.ArtProvider_GetBitmap(image, wx.ART_MENU, size))
+                # print(image)
+                imageList.Add(wx.ArtProvider.GetBitmap(image, wx.ART_MENU, size))
+                # print(imageList)
             except:
                 print(image)
                 raise
@@ -236,9 +270,16 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
     def SetFocus(self, *args, **kwargs):
         try:
             self.widget.SetFocus(*args, **kwargs)
-        except wx.PyDeadObjectError or RuntimeError:
+        except wx.PyDeadObjectError:
+            # https://stackoverflow.com/questions/34202195/import-pydeadobjecterror-with-wx-version-3-0-3
+            # https://wxpython.org/Phoenix/docs/html/MigrationGuide.html#wx-pydeadobjecterror-runtimeerror
+            # try with:
+            # if someWindow:
+            #     someWindow.doSomething()
+            # except RuntimeError:
             pass
 
+    # @staticmethod
     def createSorter(self, collection):
         """This method can be overridden to decorate the presentation with a
         sorter."""
@@ -258,11 +299,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
 
     def onNewItem(self, event):
         self.select(
-            [
-                item
-                for item in list(event.values())
-                if item in self.presentation()
-            ]
+            [item for item in list(event.values()) if item in self.presentation()]
         )
 
     def onPresentationChanged(self, event):  # pylint: disable=W0613
@@ -293,13 +330,13 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
                 # Some widgets change the selection and send selection events when
                 # deleting all items as part of the Destroy process. Ignore.
                 return
-
             # Be sure all wx events are handled before we update our selection
-            # cache and notify our observers:
+            # cache and Notify our observers:
             wx.CallAfter(self.updateSelection)
         except RuntimeError:
             # RuntimeError: wrapped C/C++ object of type EffortViewer has been deleted
             # FIXME: It's a bug?
+            # wx.PyDeadObjectError create now RuntimeError !
             pass
 
     def updateSelection(self, sendViewerStatusEvent=True):
@@ -377,9 +414,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         """Change the presentation of the viewer."""
         self.__presentation = presentation
 
+    # @staticmethod
     def widgetCreationKeywordArguments(self):
         return {}
 
+    # @staticmethod
     def isViewerContainer(self):
         return False
 
@@ -429,9 +468,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         class."""
         previousSectionNumber = self.__instanceNumber - 1
         while previousSectionNumber > 0:
-            previousSection = self.__settingsSection + str(
-                previousSectionNumber
-            )
+            previousSection = self.__settingsSection + str(previousSectionNumber)
             if self.settings.has_section(previousSection):
                 return previousSection
             previousSectionNumber -= 1
@@ -443,12 +480,15 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
     def getModeUICommands(self):
         return []
 
+    # @staticmethod
     def isSortable(self):
         return False
 
+    # @staticmethod
     def getSortUICommands(self):
         return []
 
+    # @staticmethod
     def isSearchable(self):
         return False
 
@@ -458,9 +498,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
     def getColumnUICommands(self):
         return []
 
+    # @staticmethod
     def isFilterable(self):
         return False
 
+    # @staticmethod
     def getFilterUICommands(self):
         return []
 
@@ -506,13 +548,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
             modeToolBarUICommands,
         )
         editSeparator = separator(
-            editToolBarUICommands,
-            actionToolBarUICommands,
-            modeToolBarUICommands,
+            editToolBarUICommands, actionToolBarUICommands, modeToolBarUICommands
         )
-        actionSeparator = separator(
-            actionToolBarUICommands, modeToolBarUICommands
-        )
+        actionSeparator = separator(actionToolBarUICommands, modeToolBarUICommands)
 
         return (
             clipboardToolBarUICommands
@@ -530,9 +568,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         return self.settings.get(self.settingsSection(), "toolbarperspective")
 
     def saveToolBarPerspective(self, perspective):
-        self.settings.set(
-            self.settingsSection(), "toolbarperspective", perspective
-        )
+        self.settings.set(self.settingsSection(), "toolbarperspective", perspective)
 
     def createClipboardToolBarUICommands(self):
         """UI commands for manipulating the clipboard (cut, copy, paste)."""
@@ -554,6 +590,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         self.deleteUICommand = uicommand.Delete(
             viewer=self
         )  # For unittests pylint: disable=W0201
+        # Instance attribute deleteUICommand defined outside __init__
         editCommand.bind(self, wx.ID_EDIT)
         self.deleteUICommand.bind(self, wx.ID_DELETE)
         return editCommand, self.deleteUICommand
@@ -570,20 +607,14 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         bitmap = kwargs.pop("bitmap")
         newItemCommand = self.newItemCommand(*args, **kwargs)
         newItemCommand.do()
-        return self.editItemDialog(
-            newItemCommand.items, bitmap, items_are_new=True
-        )
+        return self.editItemDialog(newItemCommand.items, bitmap, items_are_new=True)
 
     def newSubItemDialog(self, bitmap):
         newSubItemCommand = self.newSubItemCommand()
         newSubItemCommand.do()
-        return self.editItemDialog(
-            newSubItemCommand.items, bitmap, items_are_new=True
-        )
+        return self.editItemDialog(newSubItemCommand.items, bitmap, items_are_new=True)
 
-    def editItemDialog(
-        self, items, bitmap, columnName="", items_are_new=False
-    ):
+    def editItemDialog(self, items, bitmap, columnName="", items_are_new=False):
         Editor = self.itemEditorClass()
         return Editor(
             wx.GetTopLevelParent(self),
@@ -606,32 +637,28 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=ViewerMeta):
         raise NotImplementedError
 
     def newSubItemCommand(self):
-        return self.newSubItemCommandClass()(
-            self.presentation(), self.curselection()
-        )
+        return self.newSubItemCommandClass()(self.presentation(), self.curselection())
 
     def newSubItemCommandClass(self):
         raise NotImplementedError
 
     def deleteItemCommand(self):
-        return self.deleteItemCommandClass()(
-            self.presentation(), self.curselection()
-        )
+        return self.deleteItemCommandClass()(self.presentation(), self.curselection())
 
     def deleteItemCommandClass(self):
         return command.DeleteCommand
 
     def cutItemCommand(self):
-        return self.cutItemCommandClass()(
-            self.presentation(), self.curselection()
-        )
+        return self.cutItemCommandClass()(self.presentation(), self.curselection())
 
     def cutItemCommandClass(self):
         return command.CutCommand
 
+    # @staticmethod
     def onEditSubject(self, item, newValue):
         command.EditSubjectCommand(items=[item], newValue=newValue).do()
 
+    # @staticmethod
     def onEditDescription(self, item, newValue):
         command.EditDescriptionCommand(items=[item], newValue=newValue).do()
 
@@ -646,18 +673,12 @@ class CategorizableViewerMixin(object):
             (
                 "folder_blue_arrow_icon",
                 (
-                    [
-                        ", ".join(
-                            sorted(
-                                [cat.subject() for cat in item.categories()]
-                            )
-                        )
-                    ]
+                    [", ".join(sorted([cat.subject() for cat in item.categories()]))]
                     if item.categories()
                     else []
                 ),
             )
-        ] + super(CategorizableViewerMixin, self).getItemTooltipData(item)
+        ] + super().getItemTooltipData(item)
 
 
 class WithAttachmentsViewerMixin(object):
@@ -667,10 +688,11 @@ class WithAttachmentsViewerMixin(object):
                 "paperclip_icon",
                 sorted([str(attachment) for attachment in item.attachments()]),
             )
-        ] + super(WithAttachmentsViewerMixin, self).getItemTooltipData(item)
+        ] + super().getItemTooltipData(item)
 
 
 class ListViewer(Viewer):  # pylint: disable=W0223
+    # @staticmethod
     def isTreeViewer(self):
         return False
 
@@ -692,8 +714,10 @@ class ListViewer(Viewer):  # pylint: disable=W0223
 class TreeViewer(Viewer):  # pylint: disable=W0223
     def __init__(self, *args, **kwargs):
         self.__selectionIndex = 0
-        super(TreeViewer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        # self.widget.bind(wx.EVT_TREE_ITEM_EXPANDED, self.onItemExpanded)
         self.widget.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.onItemExpanded)
+        # self.widget.bind(wx.EVT_TREE_ITEM_COLLAPSED, self.onItemCollapsed)
         self.widget.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.onItemCollapsed)
 
     def onItemExpanded(self, event):
@@ -708,7 +732,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         # If we get an expanded or collapsed event for the root item, ignore it
         if treeItem == self.widget.GetRootItem():
             return
-        item = self.widget.GetItemPyData(treeItem)
+        item = self.widget.GetItemPyData(treeItem)  # TODO: try GetItemData
         item.expand(expanded, context=self.settingsSection())
 
     def expandAll(self):
@@ -740,7 +764,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         for item in items:
             self.__expandItemRecursively(item)
         self.refresh()
-        super(TreeViewer, self).select(items)
+        super().select(items)
 
     def __expandItemRecursively(self, item):
         parent = self.getItemParent(item)
@@ -750,9 +774,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
 
     def selectNextItemsAfterRemoval(self, removedItems):
         parents = [self.getItemParent(item) for item in removedItems]
-        parents = [
-            parent for parent in parents if parent in self.presentation()
-        ]
+        parents = [parent for parent in parents if parent in self.presentation()]
         parent = parents[0] if parents else None
         siblings = self.children(parent)
         newSelection = (
@@ -764,14 +786,12 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
             self.select([newSelection])
 
     def updateSelection(self, *args, **kwargs):
-        super(TreeViewer, self).updateSelection(*args, **kwargs)
+        super().updateSelection(*args, **kwargs)
         curselection = self.curselection()
         if curselection:
             siblings = self.children(self.getItemParent(curselection[0]))
             self.__selectionIndex = (
-                siblings.index(curselection[0])
-                if curselection[0] in siblings
-                else 0
+                siblings.index(curselection[0]) if curselection[0] in siblings else 0
             )
         else:
             self.__selectionIndex = 0
@@ -780,9 +800,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         """Iterate over the items in the presentation."""
 
         def yieldItemsAndChildren(items):
-            sortedItems = [
-                item for item in self.presentation() if item in items
-            ]
+            sortedItems = [item for item in self.presentation() if item in items]
             for item in sortedItems:
                 yield item
                 children = self.children(item)
@@ -808,9 +826,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         if parent:
             children = parent.children()
             if children:
-                return [
-                    child for child in self.presentation() if child in children
-                ]
+                return [child for child in self.presentation() if child in children]
             else:
                 return []
         else:
@@ -820,13 +836,15 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         return item.subject()
 
 
-class ViewerWithColumns(Viewer):  # pylint: disable=W0223
+class ViewerWithColumns(
+    Viewer
+):  # pylint: disable=W0223 better TreeViewer than Viewer ?
     def __init__(self, *args, **kwargs):
         self.__initDone = False
         self._columns = []
         self.__visibleColumns = []
         self.__columnUICommands = []
-        super(ViewerWithColumns, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.initColumns()
         self.__initDone = True
         self.refresh()
@@ -850,7 +868,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
 
     def refresh(self, *args, **kwargs):
         if self and self.__initDone:
-            super(ViewerWithColumns, self).refresh(*args, **kwargs)
+            super().refresh(*args, **kwargs)
 
     def initColumns(self):
         for column in self.columns():
@@ -877,9 +895,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
         for column in self.hideableColumns():
             if columnName == column.name():
                 isVisibleColumn = self.isVisibleColumn(column)
-                if (show and not isVisibleColumn) or (
-                    not show and isVisibleColumn
-                ):
+                if (show and not isVisibleColumn) or (not show and isVisibleColumn):
                     self.showColumn(column, show)
                 break
 
@@ -918,9 +934,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
         return self._columns
 
     def isVisibleColumnByName(self, columnName):
-        return columnName in [
-            column.name() for column in self.__visibleColumns
-        ]
+        return columnName in [column.name() for column in self.__visibleColumns]
 
     def isVisibleColumn(self, column):
         return column in self.__visibleColumns
@@ -933,9 +947,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
             column
             for column in self._columns
             if column.name()
-            not in self.settings.getlist(
-                self.settingsSection(), "columnsalwaysvisible"
-            )
+            not in self.settings.getlist(self.settingsSection(), "columnsalwaysvisible")
         ]
 
     def isHideableColumn(self, visibleColumnIndex):
@@ -946,35 +958,25 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
         return column.name() not in unhideableColumns
 
     def getColumnWidth(self, columnName):
-        columnWidths = self.settings.getdict(
-            self.settingsSection(), "columnwidths"
-        )
+        columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
         defaultWidth = (
-            28
-            if columnName == "ordering"
-            else hypertreelist._DEFAULT_COL_WIDTH
+            28 if columnName == "ordering" else hypertreelist._DEFAULT_COL_WIDTH
         )  # pylint: disable=W0212
+        # Access to a protected member _DEFAULT_COL_WIDTH of a module
         return columnWidths.get(columnName, defaultWidth)
 
     def onResizeColumn(self, column, width):
-        columnWidths = self.settings.getdict(
-            self.settingsSection(), "columnwidths"
-        )
+        columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
         columnWidths[column.name()] = width
-        self.settings.setdict(
-            self.settingsSection(), "columnwidths", columnWidths
-        )
+        self.settings.setdict(self.settingsSection(), "columnwidths", columnWidths)
 
     def validateDrag(self, dropItem, dragItems, columnIndex):
-        if (
-            columnIndex == -1
-            or self.visibleColumns()[columnIndex].name() != "ordering"
-        ):
+        if columnIndex == -1 or self.visibleColumns()[columnIndex].name() != "ordering":
             return None  # Normal behavior
 
         # Ordering
 
-        if not self.isTreeViewer():
+        if not self.isTreeViewer():  # where come from ?
             return True
 
         # Tree mode. Only allow drag if all selected items are siblings.
@@ -992,9 +994,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
             return False
 
         # If they are, only allow drag at the same level
-        if dragItems[0].parent() != (
-            None if dropItem is None else dropItem.parent()
-        ):
+        if dragItems[0].parent() != (None if dropItem is None else dropItem.parent()):
             wx.GetTopLevelParent(self).AddBalloonTip(
                 self.settings,
                 "treechildrenmanualordering",
@@ -1026,9 +1026,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
         normalIcon = item.icon(recursive=True)
         selectedIcon = item.selectedIcon(recursive=True) or normalIcon
         normalImageIndex = self.imageIndex[normalIcon] if normalIcon else -1
-        selectedImageIndex = (
-            self.imageIndex[selectedIcon] if selectedIcon else -1
-        )
+        selectedImageIndex = self.imageIndex[selectedIcon] if selectedIcon else -1
         return {
             wx.TreeItemIcon_Normal: normalImageIndex,
             wx.TreeItemIcon_Expanded: selectedImageIndex,
@@ -1066,7 +1064,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
         ownItems = getItems(recursive=False)
         if ownItems:
             subjects.append(self.renderSubjects(ownItems))
-        isListViewer = not self.isTreeViewer()  # pylint: disable=E1101
+        isListViewer = (
+            not self.isTreeViewer()
+        )  # pylint: disable=E1101  # where come from ?
         if isListViewer or self.isItemCollapsed(item):
             childItems = [
                 theItem
@@ -1084,9 +1084,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
 
     @staticmethod
     def renderCreationDateTime(item, humanReadable=True):
-        return render.dateTime(
-            item.creationDateTime(), humanReadable=humanReadable
-        )
+        return render.dateTime(item.creationDateTime(), humanReadable=humanReadable)
 
     @staticmethod
     def renderModificationDateTime(item, humanReadable=True):
@@ -1103,24 +1101,25 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223
             else False
         )
 
+    # Unresolved attribute reference 'getItemExpanded' for class 'ViewerWithColumns'
+    # Unresolved attribute reference 'isTreeViewer' for class 'ViewerWithColumns'  # where come from ? TreeViewer?
+
 
 class SortableViewerWithColumns(
     mixin.SortableViewerMixin, ViewerWithColumns
 ):  # pylint: disable=W0223
     def initColumn(self, column):
-        super(SortableViewerWithColumns, self).initColumn(column)
+        super().initColumn(column)
         if self.isSortedBy(column.name()):
             self.widget.showSortColumn(column)
             self.showSortOrder()
 
     def setSortOrderAscending(self, *args, **kwargs):  # pylint: disable=W0221
-        super(SortableViewerWithColumns, self).setSortOrderAscending(
-            *args, **kwargs
-        )
+        super().setSortOrderAscending(*args, **kwargs)
         self.showSortOrder()
 
     def sortBy(self, *args, **kwargs):  # pylint: disable=W0221
-        super(SortableViewerWithColumns, self).sortBy(*args, **kwargs)
+        super().sortBy(*args, **kwargs)
         self.showSortColumn()
         self.showSortOrder()
 
@@ -1134,8 +1133,4 @@ class SortableViewerWithColumns(
         self.widget.showSortOrder(self.imageIndex[self.getSortOrderImage()])
 
     def getSortOrderImage(self):
-        return (
-            "arrow_up_icon"
-            if self.isSortOrderAscending()
-            else "arrow_down_icon"
-        )
+        return "arrow_up_icon" if self.isSortOrderAscending() else "arrow_down_icon"

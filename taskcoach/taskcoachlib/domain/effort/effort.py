@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from taskcoachlib import patterns
 from taskcoachlib.domain import date, base, task
-# from taskcoachlib.thirdparty.pubsub import pub
+#    try:
+#        from taskcoachlib.thirdparty.pubsub import pub
+#    except ImportError:
+#        from wx.lib.pubsub import pub
+#    except ModuleNotFoundError:
 from pubsub import pub
 from . import base as baseeffort
 import weakref
@@ -27,9 +31,8 @@ import weakref
 
 class Effort(baseeffort.BaseEffort, base.Object):
     def __init__(self, task=None, start=None, stop=None, *args, **kwargs):
-        super(Effort, self).__init__(
-            task, start or date.DateTime.now(), stop, *args, **kwargs
-        )
+        super().__init__(task, start or date.DateTime.now(), stop,
+                         *args, **kwargs)
         self.__updateDurationCache()
 
     def setTask(self, task):
@@ -43,16 +46,12 @@ class Effort(baseeffort.BaseEffort, base.Object):
         if task in (self.task(), None):
             # command.PasteCommand may try to set the parent to None
             return
-        event = (
-            patterns.Event()
-        )  # Change monitor needs one event to detect task change
+        event = patterns.Event()  # Change monitor needs one event to detect task change
         self._task().removeEffort(self)
         self._task = weakref.ref(task)
         self._task().addEffort(self)
         event.send()
-        pub.sendMessage(
-            self.taskChangedEventType(), newValue=task, sender=self
-        )
+        pub.sendMessage(self.taskChangedEventType(), newValue=task, sender=self)
 
     setParent = setTask  # FIXME: should we create a common superclass for Effort and Task?
 
@@ -73,41 +72,32 @@ class Effort(baseeffort.BaseEffort, base.Object):
     __repr__ = __str__
 
     def __getstate__(self):
-        state = super(Effort, self).__getstate__()
-        state.update(
-            dict(task=self.task(), start=self._start, stop=self._stop)
-        )
+        state = super().__getstate__()
+        state.update(dict(task=self.task(), start=self._start, stop=self._stop))
         return state
 
     @patterns.eventSource
     def __setstate__(self, state, event=None):
-        super(Effort, self).__setstate__(state, event=event)
+        super().__setstate__(state, event=event)
         self.setTask(state["task"])
         self.setStart(state["start"])
         self.setStop(state["stop"])
 
     def __getcopystate__(self):
-        state = super(Effort, self).__getcopystate__()
-        state.update(
-            dict(task=self.task(), start=self._start, stop=self._stop)
-        )
+        state = super().__getcopystate__()
+        state.update(dict(task=self.task(), start=self._start, stop=self._stop))
         return state
 
     def duration(self, now=date.DateTime.now):
-        return (
-            now() - self._start
-            if self.__cachedDuration is None
-            else self.__cachedDuration
-        )
+        return now() - self._start if self.__cachedDuration is None else self.__cachedDuration
 
     def setStart(self, startDateTime):
         if startDateTime == self._start:
             return
         self._start = startDateTime
         self.__updateDurationCache()
-        pub.sendMessage(
-            self.startChangedEventType(), newValue=startDateTime, sender=self
-        )
+        pub.sendMessage(self.startChangedEventType(), newValue=startDateTime,
+                        sender=self)
         self.task().sendTimeSpentChangedMessage()
         self.sendDurationChangedMessage()
         if self.task().hourlyFee():
@@ -127,20 +117,17 @@ class Effort(baseeffort.BaseEffort, base.Object):
         previousStop = self._stop
         self._stop = newStop
         self.__updateDurationCache()
-        if newStop == None:
-            pub.sendMessage(
-                self.trackingChangedEventType(), newValue=True, sender=self
-            )
+        if newStop is None:
+            pub.sendMessage(self.trackingChangedEventType(), newValue=True,
+                            sender=self)
             self.task().sendTrackingChangedMessage(tracking=True)
-        elif previousStop == None:
-            pub.sendMessage(
-                self.trackingChangedEventType(), newValue=False, sender=self
-            )
+        elif previousStop is None:
+            pub.sendMessage(self.trackingChangedEventType(), newValue=False,
+                            sender=self)
             self.task().sendTrackingChangedMessage(tracking=False)
         self.task().sendTimeSpentChangedMessage()
-        pub.sendMessage(
-            self.stopChangedEventType(), newValue=self._stop, sender=self
-        )
+        pub.sendMessage(self.stopChangedEventType(), newValue=self._stop,
+                        sender=self)
         self.sendDurationChangedMessage()
         if self.task().hourlyFee():
             self.sendRevenueChangedMessage()
@@ -150,9 +137,7 @@ class Effort(baseeffort.BaseEffort, base.Object):
         return "pubsub.effort.stop"
 
     def __updateDurationCache(self):
-        self.__cachedDuration = (
-            self._stop - self._start if self._stop else None
-        )
+        self.__cachedDuration = self._stop - self._start if self._stop else None
 
     def isBeingTracked(self, recursive=False):  # pylint: disable=W0613
         return self._stop is None
@@ -164,26 +149,18 @@ class Effort(baseeffort.BaseEffort, base.Object):
     def periodSortFunction(**kwargs):
         # Sort by start of effort first, then make sure the Total entry comes
         # first and finally sort by task subject:
-        return lambda effort: (
-            effort.getStart(),
-            effort.isTotal(),
-            effort.task().subject(recursive=True),
-        )
+        return lambda effort: (effort.getStart(), effort.isTotal(),
+                               effort.task().subject(recursive=True))
 
     @classmethod
     def periodSortEventTypes(class_):
-        """The event types that influence the effort sort order."""
-        return (
-            class_.startChangedEventType(),
-            class_.taskChangedEventType(),
-            task.Task.subjectChangedEventType(),
-        )
+        """ The event types that influence the effort sort order. """
+        return (class_.startChangedEventType(), class_.taskChangedEventType(),
+                task.Task.subjectChangedEventType())
 
     @classmethod
     def modificationEventTypes(class_):
-        eventTypes = super(Effort, class_).modificationEventTypes()
-        return eventTypes + [
-            class_.taskChangedEventType(),
-            class_.startChangedEventType(),
-            class_.stopChangedEventType(),
-        ]
+        eventTypes = super().modificationEventTypes()
+        return eventTypes + [class_.taskChangedEventType(),
+                             class_.startChangedEventType(),
+                             class_.stopChangedEventType()]

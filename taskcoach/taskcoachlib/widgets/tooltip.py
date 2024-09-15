@@ -16,20 +16,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import range
+# from builtins import object
 from taskcoachlib import operating_system
 import wx
 import textwrap
 
 
 class ToolTipMixin(object):
-    """Subclass this and override OnBeforeShowToolTip to provide
-    dynamic tooltip over a control."""
+    """ Sous-classez ceci et remplacez OnBeforeShowToolTip pour fournir
+    une info-bulle dynamique sur un contrôle. """
 
     def __init__(self, *args, **kwargs):
-        self.__enabled = kwargs.pop("tooltipsEnabled", True)
-        super(ToolTipMixin, self).__init__(*args, **kwargs)
+        self.__enabled = kwargs.pop('tooltipsEnabled', True)
+        super().__init__(*args, **kwargs)
 
-        self.__timer = wx.Timer(self, wx.NewIdRef())
+        # self.__timer = wx.Timer(self, wx.NewId())
+        # self.__timer = wx.Timer(self, wx.NewIdRef())
+        self.__timer = wx.Timer(self, wx.ID_ANY)
 
         self.__tip = None
         self.__position = (0, 0)
@@ -45,20 +49,20 @@ class ToolTipMixin(object):
 
     def PopupMenu(self, menu):
         self.__frozen = False
-        super(ToolTipMixin, self).PopupMenu(menu)
+        super().PopupMenu(menu)
         self.__frozen = True
 
     def ShowTip(self, x, y):
-        # Ensure we're not too big (in the Y direction anyway) for the
-        # desktop display area. This doesn't work on Linux because
-        # ClientDisplayRect() returns the whole display size, not
-        # taking the taskbar into account...
+        # Assurez-vous que nous ne sommes pas trop grands (dans la direction Y
+        # de toute façon) pour la zone d'affichage du bureau.
+        # Cela ne fonctionne pas sous Linux car
+        # ClientDisplayRect() renvoie la taille totale de l'affichage, pas
+        # en tenant compte de la barre des tâches...
 
         if self.__frozen:
             theDisplay = wx.Display(wx.Display.GetFromPoint(wx.Point(x, y)))
-            displayX, displayY, displayWidth, displayHeight = (
-                theDisplay.GetClientArea()
-            )
+            displayX, displayY, displayWidth, displayHeight = theDisplay.GetClientArea()
+            # tipWidth, tipHeight = self.__tip.GetSizeTuple()
             tipWidth, tipHeight = self.__tip.GetSize()
 
             if tipHeight > displayHeight:
@@ -66,7 +70,7 @@ class ToolTipMixin(object):
                 y = 5
                 tipHeight = displayHeight - 10
             elif y + tipHeight > displayY + displayHeight:
-                # Adjust y so that the whole tip is visible.
+                # Ajustez y pour que toute la pointe soit visible.
                 y = displayY + displayHeight - tipHeight - 5
 
             if tipWidth > displayWidth:
@@ -85,8 +89,8 @@ class ToolTipMixin(object):
             self.__tip.Hide()
 
     def OnBeforeShowToolTip(self, x, y):
-        """Should return a wx.Frame instance that will be displayed as
-        the tooltip, or None."""
+        """Doit renvoyer une instance de wx.Frame qui sera affichée sous la forme
+        d'info-bulle, ou Aucune."""
         raise NotImplementedError  # pragma: no cover
 
     def __OnMotion(self, event):
@@ -121,34 +125,26 @@ class ToolTipMixin(object):
         event.Skip()
 
     def __OnTimer(self, event):  # pylint: disable=W0613
-        self.ShowTip(*self.GetMainWindow().ClientToScreen(*self.__position))
+        self.ShowTip(*self.GetMainWindow().ClientToScreenXY(*self.__position))
 
 
 if operating_system.isWindows():
-
     class ToolTipBase(wx.MiniFrame):
         def __init__(self, parent):
-            style = (
-                wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
-            )
-            super(ToolTipBase, self).__init__(
-                parent, wx.ID_ANY, "Tooltip", style=style
-            )
+            style = wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
+            super().__init__(parent, wx.ID_ANY, "Tooltip",
+                             style=style)
 
         def Show(self, x, y, w, h):  # pylint: disable=W0221
-            self.SetSize(x, y, w, h)
-            super(ToolTipBase, self).Show()
+            self.SetDimensions(x, y, w, h)
+            super().Show()
 
 elif operating_system.isMac():
-
     class ToolTipBase(wx.Frame):
         def __init__(self, parent):  # pylint: disable=E1003
-            style = (
-                wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
-            )
-            super(ToolTipBase, self).__init__(
-                parent, wx.ID_ANY, "ToolTip", style=style
-            )
+            style = wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
+            super().__init__(parent, wx.ID_ANY, "ToolTip",
+                             style=style)
 
             # There are some subtleties on Mac regarding multi-monitor
             # displays...
@@ -160,25 +156,26 @@ elif operating_system.isMac():
                 self.__maxHeight = max(self.__maxHeight, y + height)
 
             self.MoveXY(self.__maxWidth, self.__maxHeight)
-            super(ToolTipBase, self).Show()
+            super().Show()
 
         def Show(self, x, y, width, height):  # pylint: disable=W0221
+            # self.SetDimensions(x, y, width, height)
             self.SetSize(x, y, width, height)
 
         def Hide(self):  # pylint: disable=W0221
             self.MoveXY(self.__maxWidth, self.__maxHeight)
 
 else:
-
     class ToolTipBase(wx.PopupWindow):
         def Show(self, x, y, width, height):  # pylint: disable=E1003,W0221
+            # self.SetDimensions(x, y, width, height)
             self.SetSize(x, y, width, height)
-            super(ToolTipBase, self).Show()
+            super().Show()
 
 
 class SimpleToolTip(ToolTipBase):
     def __init__(self, parent):
-        super(SimpleToolTip, self).__init__(parent)
+        super().__init__(parent)
         self.data = []
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
@@ -202,9 +199,7 @@ class SimpleToolTip(ToolTipBase):
         self._setFontBrushAndPen(dc)
         width, height = 0, 0
         for sectionIndex in range(len(self.data)):
-            sectionWidth, sectionHeight = self._calculateSectionSize(
-                dc, sectionIndex
-            )
+            sectionWidth, sectionHeight = self._calculateSectionSize(dc, sectionIndex)
             width = max(width, sectionWidth)
             height += sectionHeight
         return wx.Size(width + 6, height + 6)
@@ -227,9 +222,13 @@ class SimpleToolTip(ToolTipBase):
 
     def OnPaint(self, event):  # pylint: disable=W0613
         dc = wx.PaintDC(self)
+        # dc.BeginDrawing()  # TODO: BeginDrawing n'existe pas
+        # try:
         self._setFontBrushAndPen(dc)
         self._drawBorder(dc)
         self._drawSections(dc)
+        # finally:
+        #     dc.EndDrawing()
 
     def _setFontBrushAndPen(self, dc):
         font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
@@ -241,6 +240,7 @@ class SimpleToolTip(ToolTipBase):
         dc.SetPen(wx.Pen(textColour))
 
     def _drawBorder(self, dc):
+        # width, height = self.GetClientSizeTuple()
         width, height = self.GetClientSize()
         dc.DrawRectangle(0, 0, width, height)
 
@@ -266,6 +266,7 @@ class SimpleToolTip(ToolTipBase):
 
     def _drawSectionSeparator(self, dc, x, y):
         y += 1
+        # width = self.GetClientSizeTuple()[0]
         width = self.GetClientSize()[0]
         dc.DrawLine(x, y, width - x, y)
         return y + 2
@@ -289,5 +290,5 @@ class SimpleToolTip(ToolTipBase):
         return y + textHeight + 1
 
     def _drawIconSeparator(self, dc, x, top, bottom):
-        """Draw a vertical line between the icon and the text."""
+        """ Dessine une ligne verticale entre l'icône et le texte. """
         dc.DrawLine(x, top, x, bottom)

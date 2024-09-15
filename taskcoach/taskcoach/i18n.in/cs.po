@@ -1181,7 +1181,7 @@ msgstr "Obnovit"
 
 #: taskcoachlib/gui/dialog/backupmanager.py:52
 #: taskcoachlib/widgets/dialog.py:81
-msgid "close"
+msgid "Close"
 msgstr "Zavřít"
 
 #: taskcoachlib/gui/dialog/backupmanager.py:111
@@ -2048,15 +2048,15 @@ msgid "Propose"
 msgstr "Navrhnout"
 
 #: taskcoachlib/gui/dialog/preferences.py:620 taskcoachlib/render.py:142
-msgid "today"
+msgid "Today"
 msgstr "Dnes"
 
 #: taskcoachlib/gui/dialog/preferences.py:621 taskcoachlib/render.py:146
-msgid "tomorrow"
+msgid "Tomorrow"
 msgstr "Zítra"
 
 #: taskcoachlib/gui/dialog/preferences.py:622
-msgid "Day after tomorrow"
+msgid "Day after Tomorrow"
 msgstr "Pozítří"
 
 #: taskcoachlib/gui/dialog/preferences.py:623
@@ -2365,7 +2365,7 @@ msgid "Spacer"
 msgstr "Mezera"
 
 #: taskcoachlib/gui/dialog/version.py:41
-msgid "notify me of new versions."
+msgid "Notify me of new versions."
 msgstr "Upozorňovat na nové verze"
 
 #: taskcoachlib/gui/dialog/version.py:62
@@ -2993,7 +2993,7 @@ msgid "Merge tasks from another file with the current file"
 msgstr "Spoj úlohy z jiného souboru s aktuálním souborem"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:123
-msgid "&close\tCtrl+W"
+msgid "&Close\tCtrl+W"
 msgstr "&Zavřít\tCtrl+W"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:134
@@ -3772,12 +3772,12 @@ msgstr "Zobrazit předchozí období"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2487
 #: taskcoachlib/gui/uicommand/uicommand.py:2494
-msgid "&today"
+msgid "&Today"
 msgstr "&Dnes"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2488
 #: taskcoachlib/gui/uicommand/uicommand.py:2495
-msgid "Show today"
+msgid "Show Today"
 msgstr "Zobrazit dnešek"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2511
@@ -6103,7 +6103,7 @@ msgid ""
 "task is created, the due, start and completion dates, if applicable, are \n"
 "reevaluated relatively to the current Date. That means that if you create a "
 "\n"
-"template from a task starting today and due tomorrow, every time the "
+"template from a task starting Today and due Tomorrow, every time the "
 "template \n"
 "is instantiated, the planned start Date will be replaced by the current Date "
 "and the \n"
@@ -6356,7 +6356,7 @@ msgid "Ctrl-Z"
 msgstr ""
 
 #: taskcoachlib/help/__init__.py:838
-msgid "Edit the selected item(s) or close a dialog"
+msgid "Edit the selected item(s) or Close a dialog"
 msgstr "Upravit zvolené položky nebo zavřít dialogové okno"
 
 #: taskcoachlib/help/__init__.py:838
@@ -6477,7 +6477,7 @@ msgstr ""
 msgid ""
 "%(name)s has a mailing list where you can discuss usage of %(name)s with "
 "fellow users, discuss and request features and complain about bugs. Go to "
-"%(url)s and join today!"
+"%(url)s and join Today!"
 msgstr ""
 "Problematice aplikace %(name)s se věnuje e-mailová konference, ve které "
 "můžete probírat používání %(name)s s ostatními uživateli, diskutovat o "
@@ -6653,7 +6653,7 @@ msgid "Stop tracking effort or resume tracking effort"
 msgstr "Zastavit nebo pokračovat v zaznamenávání odpracovaného času"
 
 #: taskcoachlib/help/uicommand.py:40
-msgid "close the current file"
+msgid "Close the current file"
 msgstr "Zavřít aktuální soubor"
 
 #: taskcoachlib/help/uicommand.py:41
@@ -7022,11 +7022,11 @@ msgid "No subject"
 msgstr "Žádný předmět"
 
 #: taskcoachlib/persistence/xml/templates.py:8
-msgid "New task due today"
+msgid "New task due Today"
 msgstr "Dnes má termín nový úkol"
 
 #: taskcoachlib/persistence/xml/templates.py:10
-msgid "New task due tomorrow"
+msgid "New task due Tomorrow"
 msgstr "Zítra má termín nový úkol"
 
 #: taskcoachlib/render.py:50 taskcoachlib/thirdparty/smartdatetimectrl.py:1754
@@ -7070,7 +7070,7 @@ msgid "Every other year"
 msgstr "Každý druhý rok"
 
 #: taskcoachlib/render.py:144
-msgid "yesterday"
+msgid "Yesterday"
 msgstr "Včera"
 
 #: taskcoachlib/render.py:284
@@ -7172,7 +7172,7 @@ msgid "Cl&ose"
 msgstr "&Zavřít"
 
 #: taskcoachlib/thirdparty/aui/tabmdi.py:33
-msgid "close All"
+msgid "Close All"
 msgstr "Zavřít vše"
 
 #: taskcoachlib/thirdparty/aui/tabmdi.py:35

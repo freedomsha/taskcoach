@@ -16,10 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import zip
+# from builtins import object
+
 
 class TaskListAssertsMixin(object):
-    """"""
-
     def assertTaskList(self, expected):
         self.assertEqualLists(expected, self.taskList)
         self.assertAllChildrenInTaskList()
@@ -126,6 +129,4 @@ class Mixin(
     EffortListAssertsMixin,
     NoteContainerAssertsMixin,
 ):
-    """"""
-
     pass

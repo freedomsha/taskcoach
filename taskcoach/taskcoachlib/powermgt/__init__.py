@@ -24,8 +24,6 @@ elif sys.platform == "darwin":
     from taskcoachlib.powermgt.macos import PowerStateMixin
 else:
     # No way to know yet
-    from taskcoachlib.powermgt.base import (
-        PowerStateMixinBase as PowerStateMixin,
-    )
+    from taskcoachlib.powermgt.base import PowerStateMixinBase as PowerStateMixin
 
 from taskcoachlib.powermgt.idle import IdleNotifier

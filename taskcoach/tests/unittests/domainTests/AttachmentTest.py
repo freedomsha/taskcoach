@@ -15,9 +15,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+# à passer futurize
 
 import os
-from ... import test
+import test
 from taskcoachlib.domain import attachment
 # from taskcoachlib.thirdparty.pubsub import pub
 from pubsub import pub
@@ -91,14 +92,10 @@ class FileAttachmentTest(test.TestCase):
     def testModificationEventTypes(self):
         Attachment = attachment.Attachment
         # pylint: disable=E1101
-        self.assertEqual(
-            [
-                Attachment.notesChangedEventType(),
-                Attachment.subjectChangedEventType(),
-                Attachment.descriptionChangedEventType(),
-                Attachment.appearanceChangedEventType(),
-                Attachment.orderingChangedEventType(),
-                Attachment.locationChangedEventType(),
-            ],
-            Attachment.modificationEventTypes(),
-        )
+        self.assertEqual([Attachment.notesChangedEventType(),
+                          Attachment.subjectChangedEventType(),
+                          Attachment.descriptionChangedEventType(),
+                          Attachment.appearanceChangedEventType(),
+                          Attachment.orderingChangedEventType(),
+                          Attachment.locationChangedEventType()],
+                         Attachment.modificationEventTypes())

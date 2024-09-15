@@ -17,26 +17,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import wx
-import wx.lib.agw.aui as aui
+# from taskcoachlib.thirdparty import aui
+# import aui2 as aui
+from wx.lib.agw import aui
 from taskcoachlib import operating_system
 
 
 class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
     def __init__(self, *args, **kwargs):
-        super(AuiManagedFrameWithDynamicCenterPane, self).__init__(
-            *args, **kwargs
-        )
+        super().__init__(*args, **kwargs)
         agwStyle = aui.AUI_MGR_DEFAULT | aui.AUI_MGR_ALLOW_ACTIVE_PANE
         if not operating_system.isWindows():
             # With this style on Windows, you can't dock back floating frames
-            agwStyle |= wx.lib.agw.aui.AUI_MGR_USE_NATIVE_MINIFRAMES
+            agwStyle |= aui.AUI_MGR_USE_NATIVE_MINIFRAMES
         self.manager = aui.AuiManager(self, agwStyle)
-        self.manager.SetAutoNotebookStyle(
-            aui.AUI_NB_TOP
-            | aui.AUI_NB_CLOSE_BUTTON
-            | aui.AUI_NB_SUB_NOTEBOOK
-            | aui.AUI_NB_SCROLL_BUTTONS
-        )
+        self.manager.SetAutoNotebookStyle(aui.AUI_NB_TOP |
+                                          aui.AUI_NB_CLOSE_BUTTON |
+                                          aui.AUI_NB_SUB_NOTEBOOK |
+                                          aui.AUI_NB_SCROLL_BUTTONS)
         self.bindEvents()
 
     def bindEvents(self):
@@ -56,22 +54,18 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
                 dockedPanes[0].Center()
 
     def addPane(self, window, caption, name, floating=False):
+        # x, y = window.GetPositionTuple()
+        # wxPyDeprecationWarning: Call to deprecated item. Use GetPosition instead
         x, y = window.GetPosition()
+        # x, y = window.ClientToScreenXY(x, y)
+        # AttributeError: 'TaskViewer' object has no attribute 'ClientToScreenXY'. Did you mean: 'ClientToScreen'?
         x, y = window.ClientToScreen(x, y)
         paneInfo = aui.AuiPaneInfo()
-        paneInfo = (
-            paneInfo.CloseButton(True)
-            .Floatable(True)
-            .Name(name)
-            .Caption(caption)
-            .Right()
-            .FloatingSize((300, 200))
-            .BestSize((200, 200))
-            .FloatingPosition((x + 30, y + 30))
-            .CaptionVisible()
-            .MaximizeButton()
-            .DestroyOnClose()
-        )
+        paneInfo = paneInfo.CloseButton(True).Floatable(True).\
+            Name(name).Caption(caption).Right().\
+            FloatingSize((300, 200)).BestSize((200, 200)).\
+            FloatingPosition((x + 30, y + 30)).\
+            CaptionVisible().MaximizeButton().DestroyOnClose()
         if floating:
             paneInfo.Float()
         if not self.dockedPanes():
@@ -83,14 +77,10 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         self.manager.GetPane(window).Caption(title)
 
     def dockedPanes(self):
-        return [
-            pane
-            for pane in self.manager.GetAllPanes()
-            if not pane.IsToolbar()
-            and not pane.IsFloating()
-            and not pane.IsNotebookPage()
-        ]
-
+        return [pane for pane in self.manager.GetAllPanes()
+                if not pane.IsToolbar() and not pane.IsFloating()
+                and not pane.IsNotebookPage()]
+        
     def float(self, window):
         self.manager.GetPane(window).Float()
 

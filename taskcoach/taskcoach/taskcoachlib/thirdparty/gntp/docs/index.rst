@@ -34,7 +34,7 @@ for growl
 
 .. automethod:: gntp.notifier.GrowlNotifier.register
 
-.. automethod:: gntp.notifier.GrowlNotifier.notify
+.. automethod:: gntp.notifier.GrowlNotifier.Notify
 
 .. automethod:: gntp.notifier.GrowlNotifier.subscribe
 
@@ -60,7 +60,7 @@ Complete Example
 	growl.register()
 
 	# Send one message
-	growl.notify(
+	growl.Notify(
 		noteType = "New Messages",
 		title = "You have a new message",
 		description = "A longer message description",
@@ -72,7 +72,7 @@ Complete Example
 	# Try to send a different type of message
 	# This one may fail since it is not in our list
 	# of defaultNotifications
-	growl.notify(
+	growl.Notify(
 		noteType = "New Updates",
 		title = "There is a new update to download",
 		description = "A longer message description",
@@ -83,7 +83,7 @@ Complete Example
 
 	# Send the image with the growl notification
 	image = open('/path/to/icon.png', 'rb').read()
-	growl.notify(
+	growl.Notify(
 		noteType = "New Messages",
 		title = "now with icons",
 		description = "This time we attach the image",

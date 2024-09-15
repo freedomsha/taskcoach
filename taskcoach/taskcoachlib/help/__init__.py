@@ -21,24 +21,30 @@ from taskcoachlib.i18n import _
 from .tips import showTips
 from .uicommand import *
 
-
 _MSURL = "https://www.microsoft.com/en-us/download/details.aspx?id=5638"
 
 
 def sequence(*text):
-    return "".join(text)
+    # return ''.join(text)
+    # TypeError: sequence item 1: expected str instance, NoneType found
+    return "".join(filter(None, text))
+    # return
 
 
 def a_href(text, name):
     return '<a href="#%s">%s</a>' % (name, text)
+    # return '<a href="#{}">{}</a>'.format(name, text)
+    # return f'<a href="#{name}">{text}</a>'
 
 
 def a_name(text, name):
     return '<a name="%s">%s</a>' % (name, text)
+    # return '<a name="{}">{}</a>'.format(name, text)
 
 
 def h(level, text):
     return "<h%d>%s</h%d>" % (level, text, level)
+    # return '<h{}>{}</h{}>'.format(level, text, level)
 
 
 def h3(text):
@@ -54,15 +60,34 @@ def h5(text):
 
 
 def p(*text):
+    # return '<p>%s</p>' % '\n'.join(text)  # A remplacer
     return "<p>%s</p>" % "\n".join(text)
+    # TypeError: sequence item 0: expected str instance, NoneType found
+    # return '<p>{}</p>\n'.join(text)
+    # print(text)
+    # print(str('\n'.join(text)))
+    # if
+    # return
+    # else:
+    # return '<p>{}</p>'.format('\n'.join(filter(None, text)))
 
 
 def ul(*li):  # pylint: disable=W0621
+    # return '<ul>%s</ul>' % '\n'.join(li)
     return "<ul>%s</ul>" % "\n".join(li)
+    # TypeError: sequence item 0: expected str instance, NoneType found
+    # if li is not None:
+    # return '<ul>{}</ul>'.format('\n'.join(filter(None, li)))
+    # else:
+    # return
 
 
 def li(*text):
+    # return '<li>%s</li>' % '\n'.join(text)
     return "<li>%s</li>" % "\n".join(text)
+    # TypeError: sequence item 0: expected str instance, NoneType found
+    # return '<li>{}</li>'.format('\n'.join(filter(None, text)))
+    # return
 
 
 def table(*tr):  # pylint: disable=W0621
@@ -1189,7 +1214,7 @@ shortcuts are not configurable at the moment."""
             tr(_("Ctrl-X"), editCut),
             tr(_("Ctrl-Y"), editRedo),
             tr(_("Ctrl-Z"), editUndo),
-            tr(_("Enter"), _("Edit the selected item(s) or close a dialog")),
+            tr(_("Enter"), _("Edit the selected item(s) or Close a dialog")),
             tr(_("Ctrl-Enter"), _("Mark the selected task(s) (un)completed")),
             tr(
                 _("Escape"),

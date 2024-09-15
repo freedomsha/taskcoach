@@ -16,7 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, test
+import os
+import test
 
 # Tests are run with ./tests as current dir, but setup.py expects the project
 # root folder to be the current dir. Work around that by changing
@@ -24,7 +25,6 @@ import os, test
 cwd = os.path.realpath(os.path.curdir)
 os.chdir("..")
 import setup
-
 os.chdir(cwd)
 
 

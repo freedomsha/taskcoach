@@ -20,93 +20,73 @@ from taskcoachlib import patterns
 from taskcoachlib.domain import base, note, attachment
 
 
-class Category(
-    attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject
-):
-    def __init__(
-        self,
-        subject,
-        categorizables=None,
-        children=None,
-        filtered=False,
-        parent=None,
-        description="",
-        exclusiveSubcategories=False,
-        *args,
-        **kwargs
-    ):
-        super(Category, self).__init__(
-            subject=subject,
-            children=children or [],
-            parent=parent,
-            description=description,
-            *args,
-            **kwargs
-        )
-        self.__categorizables = base.SetAttribute(
-            set(categorizables or []),
-            self,
-            self.categorizableAddedEvent,
-            self.categorizableRemovedEvent,
-            weak=True,
-        )
+class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject):
+    def __init__(self, subject, categorizables=None, children=None,
+                 filtered=False, parent=None, description="",
+                 exclusiveSubcategories=False, *args, **kwargs):
+        super().__init__(subject=subject, children=children or [],
+                         parent=parent, description=description,
+                         *args, **kwargs)
+        self.__categorizables = base.SetAttribute(set(categorizables or []),
+                                                  self,
+                                                  self.categorizableAddedEvent,
+                                                  self.categorizableRemovedEvent, weak=True)
         self.__filtered = filtered
         self.__exclusiveSubcategories = exclusiveSubcategories
 
     @classmethod
     def monitoredAttributes(class_):
-        return base.CompositeObject.monitoredAttributes() + [
-            "exclusiveSubcategories"
-        ]
+        # def monitoredAttributes(cls):
+        return base.CompositeObject.monitoredAttributes() + ["exclusiveSubcategories"]
 
     @classmethod
     def filterChangedEventType(class_):
-        """Event type to notify observers that categorizables belonging to
-        this category are filtered or not."""
+        # def filterChangedEventType(cls):
+        """ Event type to Notify observers that categorizables belonging to
+            this category are filtered or not. """
         return "category.filter"
 
     @classmethod
     def categorizableAddedEventType(class_):
-        """Event type to notify observers that categorizables have been added
-        to this category."""
+        # def categorizableAddedEventType(cls):
+        """ Event type to Notify observers that categorizables have been added
+            to this category. """
         return "category.categorizable.added"
 
     @classmethod
     def categorizableRemovedEventType(class_):
-        """Event type to notify observers that categorizables have been removed
-        from this category."""
+        # def categorizableRemovedEventType(cls):
+        """ Event type to Notify observers that categorizables have been removed
+            from this category. """
         return "category.categorizable.removed"
 
     @classmethod
     def exclusiveSubcategoriesChangedEventType(class_):
-        """Event type to notify observers that subcategories have become
-        exclusive (or vice versa)."""
+        # def exclusiveSubcategoriesChangedEventType(cls):
+        """ Event type to Notify observers that subcategories have become
+            exclusive (or vice versa). """
         return "category.exclusiveSubcategories"
 
     @classmethod
     def modificationEventTypes(class_):
-        eventTypes = super(Category, class_).modificationEventTypes()
-        return eventTypes + [
-            class_.filterChangedEventType(),
-            class_.categorizableAddedEventType(),
-            class_.categorizableRemovedEventType(),
-            class_.exclusiveSubcategoriesChangedEventType(),
-        ]
+        # def modificationEventTypes(cls):
+        eventTypes = super().modificationEventTypes()
+        # return event_types + [class_.filterChangedEventType(),
+        return eventTypes + [class_.filterChangedEventType(),
+                             class_.categorizableAddedEventType(),
+                             class_.categorizableRemovedEventType(),
+                             class_.exclusiveSubcategoriesChangedEventType()]
 
     def __getstate__(self):
-        state = super(Category, self).__getstate__()
-        state.update(
-            dict(
-                categorizables=self.__categorizables.get(),
-                filtered=self.__filtered,
-            ),
-            exclusiveSubcategories=self.__exclusiveSubcategories,
-        )
+        state = super().__getstate__()
+        state.update(dict(categorizables=self.__categorizables.get(),
+                          filtered=self.__filtered),
+                     exclusiveSubcategories=self.__exclusiveSubcategories)
         return state
 
     @patterns.eventSource
     def __setstate__(self, state, event=None):
-        super(Category, self).__setstate__(state, event=event)
+        super().__setstate__(state, event=event)
         self.setCategorizables(state["categorizables"], event=event)
         self.setFiltered(state["filtered"], event=event)
         self.makeSubcategoriesExclusive(
@@ -114,17 +94,13 @@ class Category(
         )
 
     def __getcopystate__(self):
-        state = super(Category, self).__getcopystate__()
-        state.update(
-            dict(
-                categorizables=self.__categorizables.get(),
-                filtered=self.__filtered,
-            )
-        )
+        state = super().__getcopystate__()
+        state.update(dict(categorizables=self.__categorizables.get(),
+                          filtered=self.__filtered))
         return state
 
     def subjectChangedEvent(self, event):
-        super(Category, self).subjectChangedEvent(event)
+        super().subjectChangedEvent(event)
         self.categorySubjectChangedEvent(event)
 
     def categorySubjectChangedEvent(self, event):
@@ -140,28 +116,18 @@ class Category(
         return result
 
     def addCategorizable(self, *categorizables, **kwargs):
-        self.__categorizables.add(
-            set(categorizables), event=kwargs.pop("event", None)
-        )
+        self.__categorizables.add(set(categorizables), event=kwargs.pop("event", None))
 
     def categorizableAddedEvent(self, event, *categorizables):
-        event.addSource(
-            self,
-            *categorizables,
-            **dict(type=self.categorizableAddedEventType())
-        )
+        event.addSource(self, *categorizables,
+                        **dict(type=self.categorizableAddedEventType()))
 
     def removeCategorizable(self, *categorizables, **kwargs):
-        self.__categorizables.remove(
-            set(categorizables), event=kwargs.pop("event", None)
-        )
+        self.__categorizables.remove(set(categorizables), event=kwargs.pop("event", None))
 
     def categorizableRemovedEvent(self, event, *categorizables):
-        event.addSource(
-            self,
-            *categorizables,
-            **dict(type=self.categorizableRemovedEventType())
-        )
+        event.addSource(self, *categorizables,
+                        **dict(type=self.categorizableRemovedEventType()))
 
     def setCategorizables(self, categorizables, event=None):
         self.__categorizables.set(set(categorizables), event=event)
@@ -177,15 +143,14 @@ class Category(
         self.filterChangedEvent(event)
 
     def filterChangedEvent(self, event):
-        event.addSource(
-            self, self.isFiltered(), type=self.filterChangedEventType()
-        )
+        event.addSource(self, self.isFiltered(),
+                        type=self.filterChangedEventType())
 
     def appearanceChangedEvent(self, event):
-        """Override to include all categorizables in the event
-        that belong to this category since their appearance (may)
-        have changed too."""
-        super(Category, self).appearanceChangedEvent(event)
+        """ Override to include all categorizables in the event
+            that belong to this category since their appearance (may)
+            have changed too. """
+        super().appearanceChangedEvent(event)
         for categorizable in self.categorizables():
             categorizable.appearanceChangedEvent(event)
 
@@ -214,8 +179,5 @@ class Category(
         self.makeSubcategoriesExclusive(exclusive=exclusive, event=event)
 
     def exclusiveSubcategoriesEvent(self, event):
-        event.addSource(
-            self,
-            self.hasExclusiveSubcategories(),
-            type=self.exclusiveSubcategoriesChangedEventType(),
-        )
+        event.addSource(self, self.hasExclusiveSubcategories(),
+                        type=self.exclusiveSubcategoriesChangedEventType())

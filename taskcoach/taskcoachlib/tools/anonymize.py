@@ -16,14 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ETree
 import os
 
 
 def anonymize(filename):
-    """Anonymize the file specified by the filename by reading its contents,
-    replacing the contents with X's and saving the anonymized contents to
-    a copy of the file."""
+    """ Anonymize the file specified by the filename by reading its contents,
+        replacing the contents with X's and saving the anonymized contents to
+        a copy of the file. """
 
     def anonymize_string(string):
         """Return an anonymized version of the string."""
@@ -35,7 +35,7 @@ def anonymize(filename):
         return "\n".join([anonymize_string(line) for line in text.split("\n")])
 
     def anonymize_node(node):
-        """Recursively anonymize the node and all of its child nodes."""
+        """ Recursively anonymize the node and all of its child nodes. """
         for child in node:
             anonymize_node(child)
 
@@ -59,7 +59,8 @@ def anonymize(filename):
         if node.tag == "attachment" and "location" in node.attrib:
             node.attrib["location"] = anonymize_string(node.attrib["location"])
 
-    tree = ET.parse(open(filename, "rb"))
+    # tree = ET.parse(file(filename, 'rb'))
+    tree = ETree.parse(open(filename, "rb"))
     anonymize_node(tree.getroot())
     name, ext = os.path.splitext(filename)
     anonymized_filename = name + ".anonymized" + ext

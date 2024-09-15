@@ -1180,8 +1180,8 @@ msgstr ""
 
 #: taskcoachlib/gui/dialog/backupmanager.py:52
 #: taskcoachlib/widgets/dialog.py:81
-msgid "close"
-msgstr "close"
+msgid "Close"
+msgstr "Close"
 
 #: taskcoachlib/gui/dialog/backupmanager.py:111
 msgid "Choose the restoration destination"
@@ -2041,16 +2041,16 @@ msgid "Propose"
 msgstr "Propose"
 
 #: taskcoachlib/gui/dialog/preferences.py:620 taskcoachlib/render.py:142
-msgid "today"
-msgstr "today"
+msgid "Today"
+msgstr "Today"
 
 #: taskcoachlib/gui/dialog/preferences.py:621 taskcoachlib/render.py:146
-msgid "tomorrow"
-msgstr "tomorrow"
+msgid "Tomorrow"
+msgstr "Tomorrow"
 
 #: taskcoachlib/gui/dialog/preferences.py:622
-msgid "Day after tomorrow"
-msgstr "Day after tomorrow"
+msgid "Day after Tomorrow"
+msgstr "Day after Tomorrow"
 
 #: taskcoachlib/gui/dialog/preferences.py:623
 msgid "Next Friday"
@@ -2358,8 +2358,8 @@ msgid "Spacer"
 msgstr "Spacer"
 
 #: taskcoachlib/gui/dialog/version.py:41
-msgid "notify me of new versions."
-msgstr "notify me of new versions."
+msgid "Notify me of new versions."
+msgstr "Notify me of new versions."
 
 #: taskcoachlib/gui/dialog/version.py:62
 msgid "New version of %(name)s available"
@@ -2979,8 +2979,8 @@ msgid "Merge tasks from another file with the current file"
 msgstr "Merge tasks from another file with the current file"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:123
-msgid "&close\tCtrl+W"
-msgstr "&close\tCtrl+W"
+msgid "&Close\tCtrl+W"
+msgstr "&Close\tCtrl+W"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:134
 msgid "&Save\tCtrl+S"
@@ -3753,13 +3753,13 @@ msgstr "Show previous period"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2487
 #: taskcoachlib/gui/uicommand/uicommand.py:2494
-msgid "&today"
-msgstr "&today"
+msgid "&Today"
+msgstr "&Today"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2488
 #: taskcoachlib/gui/uicommand/uicommand.py:2495
-msgid "Show today"
-msgstr "Show today"
+msgid "Show Today"
+msgstr "Show Today"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2511
 msgid "&Automatic column resizing"
@@ -6065,7 +6065,7 @@ msgid ""
 "task is created, the due, start and completion dates, if applicable, are \n"
 "reevaluated relatively to the current Date. That means that if you create a "
 "\n"
-"template from a task starting today and due tomorrow, every time the "
+"template from a task starting Today and due Tomorrow, every time the "
 "template \n"
 "is instantiated, the planned start Date will be replaced by the current Date "
 "and the \n"
@@ -6077,7 +6077,7 @@ msgstr ""
 "task is created, the due, start and completion dates, if applicable, are \n"
 "re-evaluated relatively to the current Date. That means that if you create a "
 "\n"
-"template from a task starting today and due tomorrow, every time the "
+"template from a task starting Today and due Tomorrow, every time the "
 "template \n"
 "is instantiated, the planned start Date will be replaced by the current Date "
 "and the \n"
@@ -6324,8 +6324,8 @@ msgid "Ctrl-Z"
 msgstr "Ctrl-Z"
 
 #: taskcoachlib/help/__init__.py:838
-msgid "Edit the selected item(s) or close a dialog"
-msgstr "Edit the selected item(s) or close a dialog"
+msgid "Edit the selected item(s) or Close a dialog"
+msgstr "Edit the selected item(s) or Close a dialog"
 
 #: taskcoachlib/help/__init__.py:838
 msgid "Enter"
@@ -6443,11 +6443,11 @@ msgstr ""
 msgid ""
 "%(name)s has a mailing list where you can discuss usage of %(name)s with "
 "fellow users, discuss and request features and complain about bugs. Go to "
-"%(url)s and join today!"
+"%(url)s and join Today!"
 msgstr ""
 "%(name)s has a mailing list where you can discuss usage of %(name)s with "
 "fellow users, discuss and request features and complain about bugs. Go to "
-"%(url)s and join today!"
+"%(url)s and join Today!"
 
 #: taskcoachlib/help/tips.py:28
 msgid ""
@@ -6618,8 +6618,8 @@ msgid "Stop tracking effort or resume tracking effort"
 msgstr "Stop tracking effort or resume tracking effort"
 
 #: taskcoachlib/help/uicommand.py:40
-msgid "close the current file"
-msgstr "close the current file"
+msgid "Close the current file"
+msgstr "Close the current file"
 
 #: taskcoachlib/help/uicommand.py:41
 msgid "Exit %s"
@@ -6986,12 +6986,12 @@ msgid "No subject"
 msgstr "No subject"
 
 #: taskcoachlib/persistence/xml/templates.py:8
-msgid "New task due today"
-msgstr "New task due today"
+msgid "New task due Today"
+msgstr "New task due Today"
 
 #: taskcoachlib/persistence/xml/templates.py:10
-msgid "New task due tomorrow"
-msgstr "New task due tomorrow"
+msgid "New task due Tomorrow"
+msgstr "New task due Tomorrow"
 
 #: taskcoachlib/render.py:50 taskcoachlib/thirdparty/smartdatetimectrl.py:1754
 msgid "%d days"
@@ -7034,8 +7034,8 @@ msgid "Every other year"
 msgstr "Every other year"
 
 #: taskcoachlib/render.py:144
-msgid "yesterday"
-msgstr "yesterday"
+msgid "Yesterday"
+msgstr "Yesterday"
 
 #: taskcoachlib/render.py:284
 msgid "Now"
@@ -7135,8 +7135,8 @@ msgid "Cl&ose"
 msgstr "Cl&ose"
 
 #: taskcoachlib/thirdparty/aui/tabmdi.py:33
-msgid "close All"
-msgstr "close All"
+msgid "Close All"
+msgstr "Close All"
 
 #: taskcoachlib/thirdparty/aui/tabmdi.py:35
 msgid "&Next"

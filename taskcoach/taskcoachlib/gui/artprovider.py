@@ -16,11 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from __future__ import division
+
+# from builtins import chr
+# from builtins import range
+# from past.utils import old_div
 from taskcoachlib import patterns, operating_system
 from taskcoachlib.i18n import _
 from taskcoachlib.tools import wxhelper
 import wx
-from . import icons
+from taskcoachlib.gui import icons  # where?
 
 
 class ArtProvider(wx.ArtProvider):
@@ -29,27 +34,57 @@ class ArtProvider(wx.ArtProvider):
             w, h = size
             main, overlay = artId.split("+")
 
-            overlayImage = self._CreateBitmap(
-                overlay, artClient, size
-            ).ConvertToImage()  # type: wx.Image
-            overlayImage.Rescale(int(w / 2), int(h / 2), wx.IMAGE_QUALITY_HIGH)
-
-            overlayAlpha = overlayImage.GetAlphaBuffer()
+            overlayImage = self._CreateBitmap(overlay, artClient, size
+                                              ).ConvertToImage()  # type: wx.Image
+            # overlayImage.Rescale(int(old_div(w, 2)), int(old_div(h, 2)), wx.IMAGE_QUALITY_HIGH)
+            overlayImage.Rescale(int(w // 2), int(h // 2), wx.IMAGE_QUALITY_HIGH)
+            # overlayAlpha = overlayImage.GetAlphaData()
+            # AttributeError: 'Image' object has no attribute 'GetAlphaData'
+            # if overlayImage.HasAlpha():
+            #    # overlayAlpha = overlayImage.GetAlpha()
+            overlayAlpha = overlayImage.GetAlphaBuffer()  # I try
+            # else:
+            #    # Handle the case where there is no alpha channel
+            #     overlayAlpha = None
+            # overlayAlpha = overlayImage.GetAlphaBuffer()  # TODO: a essayer (starofrainnight)
             overlayBitmap = overlayImage.ConvertToBitmap()
 
-            mainImage = self._CreateBitmap(
-                main, artClient, size
-            ).ConvertToImage()  # type: wx.Image
+            mainImage = self._CreateBitmap(main, artClient, size
+                                           ).ConvertToImage()  # type: wx.Image
+            # vieux code :
+            # mainAlpha = mainImage.GetAlphaData()
+            # AttributeError: 'Image' object has no attribute 'GetAlphaData'
+            # nouveau code :
+            # if mainImage.HasAlpha():
+            #     # mainAlpha = mainImage.GetAlpha()
+            # mainAlpha = wxhelper.getAlphaDataFromImage(mainImage)  # I try
+            # else:
+            #     # Handle the case where there is no alpha channel
+            #     mainAlpha = None
+            #     # mainImage.SetAlphaData(chr(255) * len(mainAlpha))
+            #     # AttributeError: 'Image' object has no attribute 'SetAlphaData'
+            #     # mainImage.SetAlpha(255 * len(mainAlpha))
+            #     # TypeError: Image.SetAlpha(): arguments did not match any overloaded call:
+            #     #   overload 1: not enough arguments
+            #     #   overload 2: argument 1 has unexpected type 'int'
+            #     mainAlphaToSet = [255] * (mainImage.GetWidth() * mainImage.GetHeight())
+
+                # # Convertir le canal alpha en une liste d'entiers si ce n'est pas déjà fait
+                # mainAlpha = list(map(int, mainAlphaToSet))
+
+            # # Manipuler mainAlpha ici si nécessaire avant de le réappliquer à l'image
+            # mainImage.SetAlpha(mainAlpha)
+            # sinon essayer ses 2 lignes :
             mainAlpha = wxhelper.getAlphaDataFromImage(mainImage)
             wxhelper.clearAlphaDataOfImage(mainImage, 255)
+
             mainBitmap = mainImage.ConvertToBitmap()
 
             dstDC = wx.MemoryDC()
             dstDC.SelectObject(mainBitmap)
             try:
-                dstDC.DrawBitmap(
-                    overlayBitmap, w - (w // 2), h - (h // 2), True
-                )
+                # dstDC.DrawBitmap(overlayBitmap, w - int(old_div(w, 2)), h - int(old_div(h, 2)), True)
+                dstDC.DrawBitmap(overlayBitmap, w - int(w // 2), h - int(h // 2), True)
             finally:
                 dstDC.SelectObject(wx.NullBitmap)
             mainImage = mainBitmap.ConvertToImage()
@@ -57,15 +92,20 @@ class ArtProvider(wx.ArtProvider):
             # Just drawing works fine on OS X but clips to the destination bitmap on
             # other platforms. There doesn't seem to be anything better than this.
             resultAlpha = list()
+            # TODO: essayer ça :
+            # resultAlpha = []
             for y in range(h):
                 for x in range(w):
                     alpha = mainAlpha[y * w + x]
-                    if x >= w // 2 and y >= h // 2:
+                    # if x >= old_div(w, 2) and y >= old_div(h, 2):
+                    if x >= w // 2 and y >= h // 2 and overlayAlpha:
+                        # alpha = max(alpha, overlayAlpha[old_div((y - old_div(h, 2)) * w, 2) + x - old_div(w, 2)])
                         alpha = max(
                             alpha,
-                            overlayAlpha[(y - h // 2) * w // 2 + x - w // 2],
-                        )
+                            overlayAlpha[(y - h // 2) * w // 2 + x - w // 2])
                     resultAlpha.append(alpha)
+            # mainImage.SetAlphaData(''.join(bytes(resultAlpha)))
+            # mainImage.SetAlpha(bytes(resultAlpha))
             wxhelper.setAlphaDataToImage(mainImage, resultAlpha)
 
             return mainImage.ConvertToBitmap()
@@ -74,9 +114,11 @@ class ArtProvider(wx.ArtProvider):
 
     def _CreateBitmap(self, artId, artClient, size) -> wx.Bitmap:
         if not artId:
+            # return wx.EmptyBitmap(*size)
             return wx.Bitmap(*size)
         catalogKey = "%s%dx%d" % (artId, size[0], size[1])
         if catalogKey in list(icons.catalog.keys()):
+            # bitmap = icons.catalog[catalogKey].getBitmap()
             bitmap = icons.catalog[catalogKey].GetBitmap()
             if artClient == wx.ART_FRAME_ICON:
                 bitmap = self.convertAlphaToMask(bitmap)
@@ -91,6 +133,7 @@ class ArtProvider(wx.ArtProvider):
         return wx.BitmapFromImage(image)
 
 
+# class IconProvider(metaclass=patterns.Singleton):
 class IconProvider(object, metaclass=patterns.Singleton):
     def __init__(self):
         self.__iconCache = dict()
@@ -102,8 +145,8 @@ class IconProvider(object, metaclass=patterns.Singleton):
             self.__iconSizeOnCurrentPlatform = 16
 
     def getIcon(self, iconTitle):
-        """Return the icon. Use a cache to prevent leakage of GDI object
-        count."""
+        """ Renvoie l'icône. Utilisez un cache pour éviter la fuite du
+        nombre d'objets GDI. """
         try:
             return self.__iconCache[iconTitle]
         except KeyError:
@@ -112,7 +155,7 @@ class IconProvider(object, metaclass=patterns.Singleton):
             return icon
 
     def iconBundle(self, iconTitle):
-        """Create an icon bundle with icons of different sizes."""
+        """ Créez un groupe d'icônes avec des icônes de différentes tailles. """
         bundle = wx.IconBundle()
         for size in (16, 22, 32, 48, 64, 128):
             bundle.AddIcon(self.getIconFromArtProvider(iconTitle, size))
@@ -125,15 +168,16 @@ class IconProvider(object, metaclass=patterns.Singleton):
         if operating_system.isGTK():
             return wx.ArtProvider.GetIcon(
                 iconTitle, wx.ART_FRAME_ICON, (size, size)
-            )
+                                          )
 
-        # wx.ArtProvider.GetIcon doesn't convert alpha to mask, so we do it
+        # wx.ArtProvider_GetIcon doesn't convert alpha to mask, so we do it
         # ourselves:
         bitmap = wx.ArtProvider.GetBitmap(
             iconTitle, wx.ART_FRAME_ICON, (size, size)
         )
         bitmap = ArtProvider.convertAlphaToMask(bitmap)
         return wx.IconFromBitmap(bitmap)
+        # return wx.Icon(bitmap)
 
 
 def iconBundle(iconTitle):
@@ -146,7 +190,7 @@ def getIcon(iconTitle):
 
 def init():
     if operating_system.isWindows() and wx.DisplayDepth() >= 32:
-        wx.SystemOptions_SetOption("msw.remap", "0")  # pragma: no cover
+        wx.SystemOptions.SetOption("msw.remap", "0")  # pragma: no cover
     try:
         wx.ArtProvider.PushProvider(ArtProvider())  # pylint: disable=E1101
     except AttributeError:

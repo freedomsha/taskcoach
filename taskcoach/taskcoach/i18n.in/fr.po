@@ -1185,7 +1185,7 @@ msgstr "Rétablir"
 
 #: taskcoachlib/gui/dialog/backupmanager.py:52
 #: taskcoachlib/widgets/dialog.py:81
-msgid "close"
+msgid "Close"
 msgstr "Fermer"
 
 #: taskcoachlib/gui/dialog/backupmanager.py:111
@@ -2055,15 +2055,15 @@ msgid "Propose"
 msgstr "Proposer"
 
 #: taskcoachlib/gui/dialog/preferences.py:620 taskcoachlib/render.py:142
-msgid "today"
+msgid "Today"
 msgstr "Aujourd'hui"
 
 #: taskcoachlib/gui/dialog/preferences.py:621 taskcoachlib/render.py:146
-msgid "tomorrow"
+msgid "Tomorrow"
 msgstr "Demain"
 
 #: taskcoachlib/gui/dialog/preferences.py:622
-msgid "Day after tomorrow"
+msgid "Day after Tomorrow"
 msgstr "Après-demain"
 
 #: taskcoachlib/gui/dialog/preferences.py:623
@@ -2378,7 +2378,7 @@ msgid "Spacer"
 msgstr "Espacement"
 
 #: taskcoachlib/gui/dialog/version.py:41
-msgid "notify me of new versions."
+msgid "Notify me of new versions."
 msgstr "Me prévenir lorsqu'une nouvelle version est disponible"
 
 #: taskcoachlib/gui/dialog/version.py:62
@@ -3012,7 +3012,7 @@ msgid "Merge tasks from another file with the current file"
 msgstr "Fusionner les tâches d'un autre fichier avec le fichier courant"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:123
-msgid "&close\tCtrl+W"
+msgid "&Close\tCtrl+W"
 msgstr "&Fermer\tCtrl+W"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:134
@@ -3796,12 +3796,12 @@ msgstr "Afficher la période précédente"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2487
 #: taskcoachlib/gui/uicommand/uicommand.py:2494
-msgid "&today"
+msgid "&Today"
 msgstr "&Ajourd'hui"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2488
 #: taskcoachlib/gui/uicommand/uicommand.py:2495
-msgid "Show today"
+msgid "Show Today"
 msgstr "Aujourd'hui"
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2511
@@ -6186,7 +6186,7 @@ msgid ""
 "task is created, the due, start and completion dates, if applicable, are \n"
 "reevaluated relatively to the current Date. That means that if you create a "
 "\n"
-"template from a task starting today and due tomorrow, every time the "
+"template from a task starting Today and due Tomorrow, every time the "
 "template \n"
 "is instantiated, the planned start Date will be replaced by the current Date "
 "and the \n"
@@ -6442,7 +6442,7 @@ msgid "Ctrl-Z"
 msgstr "Ctrl-Z"
 
 #: taskcoachlib/help/__init__.py:838
-msgid "Edit the selected item(s) or close a dialog"
+msgid "Edit the selected item(s) or Close a dialog"
 msgstr "Editer les objets sélectionnés ou fermer un dialogue"
 
 #: taskcoachlib/help/__init__.py:838
@@ -6564,7 +6564,7 @@ msgstr ""
 msgid ""
 "%(name)s has a mailing list where you can discuss usage of %(name)s with "
 "fellow users, discuss and request features and complain about bugs. Go to "
-"%(url)s and join today!"
+"%(url)s and join Today!"
 msgstr ""
 "%(name)s dispose d'une liste de diffusion sur laquelle vous pouvez dialoguer "
 "au sujet de l'utilisation de %(name)s avec d'autres utilisateurs, parler et "
@@ -6750,7 +6750,7 @@ msgid "Stop tracking effort or resume tracking effort"
 msgstr "Arrêter le suivi de l'effort ou le reprendre"
 
 #: taskcoachlib/help/uicommand.py:40
-msgid "close the current file"
+msgid "Close the current file"
 msgstr "Fermer le fichier courant"
 
 #: taskcoachlib/help/uicommand.py:41
@@ -7119,11 +7119,11 @@ msgid "No subject"
 msgstr "Pas de sujet"
 
 #: taskcoachlib/persistence/xml/templates.py:8
-msgid "New task due today"
+msgid "New task due Today"
 msgstr "Nouvelle tâche arrivant à échéance aujourd'hui"
 
 #: taskcoachlib/persistence/xml/templates.py:10
-msgid "New task due tomorrow"
+msgid "New task due Tomorrow"
 msgstr "Nouvelle tâche arrivant à échéance demain"
 
 #: taskcoachlib/render.py:50 taskcoachlib/thirdparty/smartdatetimectrl.py:1754
@@ -7168,7 +7168,7 @@ msgstr "Tous les deux ans"
 
 #: taskcoachlib/render.py:144
 # fr.po:7171: Double définition de message...
-# sgid "yesterday"
+# sgid "Yesterday"
 # msgstr "Hier"
 
 #: taskcoachlib/render.py:284
@@ -7270,7 +7270,7 @@ msgid "Cl&ose"
 msgstr "&Fermer"
 
 #: taskcoachlib/thirdparty/aui/tabmdi.py:33
-msgid "close All"
+msgid "Close All"
 msgstr "Tout fermer"
 
 #: taskcoachlib/thirdparty/aui/tabmdi.py:35

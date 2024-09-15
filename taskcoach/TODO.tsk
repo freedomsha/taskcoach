@@ -8,7 +8,7 @@
 <task expandedContexts="('taskviewer',)" id="35213552:1172262261.27" startdate="2007-02-03 00:00:00" status="1" subject="Improve reminders">
 <task id="35278064:1170528560.29" startdate="2007-02-28 00:00:00" status="1" subject="Show missed reminders">
 <description>
-If Task Coach wasn't running at the time of a reminder, show the reminder the next time Task Coach is started
+If Task Coach wasn't running at the time of a reminder, show the reminder the next time Task Coach is Started
 </description>
 </task>
 <task id="36259824:1170528642.55" startdate="2007-02-03 00:00:00" status="1" subject="Postpone reminders (snooze)"/>

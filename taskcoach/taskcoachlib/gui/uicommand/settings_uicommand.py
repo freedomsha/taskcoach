@@ -17,42 +17,63 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from . import base_uicommand
+# from builtins import str
+from taskcoachlib.gui.uicommand import base_uicommand
 import wx
 
 
 class SettingsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
-    """SettingsCommands are saved in the settings (a ConfigParser)."""
+    """ SettingsCommands are saved in the settings (a ConfigParser). """
 
-    def __init__(
-        self, settings=None, setting=None, section="view", *args, **kwargs
-    ):
+    def __init__(self, settings=None, setting=None, section="view",
+                 *args, **kwargs):
         self.settings = settings
         self.section = section
         self.setting = setting
-        super(SettingsCommand, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
-    """Bae class for commands that change a boolean setting.
-    Whenever the setting is changed, the user interface
-    representation is changed as well. E.g. a menu gets
-    a checkmark."""
+    """ Bae class for commands that change a boolean setting.
+        Whenever the setting is changed, the user interface
+        representation is changed as well. E.g. a menu gets
+        a checkmark.
+
+        Classe Bae pour les commandes qui modifient un paramètre booléen.
+        Chaque fois que le paramètre est modifié,
+        la représentation de l'interface utilisateur est également modifiée.
+        Par exemple. un menu est coché.
+        """
 
     def __init__(self, value=None, *args, **kwargs):
         self.value = value
-        super(BooleanSettingsCommand, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def onUpdateUI(self, event):
         event.Check(self.isSettingChecked())
-        super(BooleanSettingsCommand, self).onUpdateUI(event)
+        super().onUpdateUI(event)
 
     def addToMenu(self, menu, window, position=None):
-        menuId = super(BooleanSettingsCommand, self).addToMenu(
-            menu, window, position
-        )
-        menuItem = menu.FindItemById(menuId)
-        menuItem.Check(self.isSettingChecked())
+        """ Ajouter un sous_menu au menu"""
+        print(f"tclib.gui.uicommand.setings_uicommand.py BooleanSettingCommand.addToMenu essaie d'ajouter: self =",
+              repr(self), " au",
+              f"menu: {menu} dans window: {window}")
+        menuId = super().addToMenu(menu, window, position)
+
+        print(f'menuId: {menuId} ajouté' )
+        print(f'au menu: {menu} window: {window} position: {position}')
+        # menuId: <wx._core.MenuItem object at 0x7f9bffc23ec0>
+        # ce devrait être un nombre entier !
+        try:
+            print(f"essaie try FindItemById de {menuId}")
+            menuItem = menu.FindItemById(menuId)
+            print(f"résultat: menuItem: {menuItem}")
+            print(f"vérification de menuItem: {menuItem} avec {self.isSettingChecked}")
+            menuItem.Check(self.isSettingChecked())
+        except TypeError as e:
+            # menuItem = menu.FindItemById(menuId)  # ?
+            print(f"Error d'ajout de UI command au menu: {e}")
+            # TypeError: Menu.FindItemById(): argument 1 has unexpected type 'MenuItem'
         return menuId
 
     def isSettingChecked(self):
@@ -62,13 +83,12 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
 class UICheckCommand(BooleanSettingsCommand):
     def __init__(self, *args, **kwargs):
         kwargs["bitmap"] = kwargs.get("bitmap", self.getBitmap())
-        super(UICheckCommand, self).__init__(
-            kind=wx.ITEM_CHECK, *args, **kwargs
-        )
+        super().__init__(kind=wx.ITEM_CHECK, *args, **kwargs)
 
     def isSettingChecked(self):
         return self.settings.getboolean(self.section, self.setting)
 
+    # @staticmethod
     def _isMenuItemChecked(self, event):
         # There's a bug in wxPython 2.8.3 on Windows XP that causes
         # event.IsChecked() to return the wrong value in the context menu.
@@ -77,17 +97,15 @@ class UICheckCommand(BooleanSettingsCommand):
         # This will fail if the event is coming from the window, but in that
         # case we can event.IsChecked() expect to work so we use that.
         try:
-            return (
-                event.GetEventObject().FindItemById(event.GetId()).IsChecked()
-            )
+            return event.GetEventObject().FindItemById(event.GetId()).IsChecked()
         except AttributeError:
             return event.IsChecked()
 
     def doCommand(self, event):
-        self.settings.setboolean(
-            self.section, self.setting, self._isMenuItemChecked(event)
-        )
+        self.settings.setboolean(self.section, self.setting,
+                                 self._isMenuItemChecked(event))
 
+    # @staticmethod
     def getBitmap(self):
         # Using our own bitmap for checkable menu items does not work on
         # all platforms, most notably Gtk where providing our own bitmap causes
@@ -98,13 +116,12 @@ class UICheckCommand(BooleanSettingsCommand):
 
 class UIRadioCommand(BooleanSettingsCommand):
     def __init__(self, *args, **kwargs):
-        super(UIRadioCommand, self).__init__(
-            kind=wx.ITEM_RADIO, bitmap="", *args, **kwargs
-        )
+        super().__init__(kind=wx.ITEM_RADIO, bitmap='',
+                         *args, **kwargs)
 
     def onUpdateUI(self, event):
         if self.isSettingChecked():
-            super(UIRadioCommand, self).onUpdateUI(event)
+            super().onUpdateUI(event)
 
     def isSettingChecked(self):
         return self.settings.get(self.section, self.setting) == str(self.value)

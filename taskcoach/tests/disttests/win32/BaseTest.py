@@ -16,19 +16,26 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, time, base
+# from builtins import range
+# from io import open as file
+import os
+import time
+import base
 
 
 class TestLaunch(base.Win32TestCase):
     def test_launch(self):
         window = self.findWindow(r"^Task Coach$")
+        # self.failIf(window is None,
+        #             'Cannot find main window')
         self.assertFalse(window is None, "Cannot find main window")
 
 
 class TestWithTaskFile(base.Win32TestCase):
     def setUp(self):
         self.args = ['"%s"' % os.path.join(self.basepath, "testfile.tsk")]
-        super(TestWithTaskFile, self).setUp()
+        # super(TestWithTaskFile, self).setUp()
+        super().setUp()
 
     def test_launch(self):
         self.assertTrue(
@@ -54,12 +61,14 @@ class TestWithTaskFile(base.Win32TestCase):
             time.sleep(0.1)
 
         editor = self.findWindow(r"\(task\)$")
+        # self.failIf(editor is None, 'Task editor not found')
         self.assertFalse(editor is None, "Task editor not found")
         editor.waitFocus()
 
         # Change subject so the task is "dirty":
         editor.sendText("New subject")
         # Close the task edit dialog:
+        # editor.Close()
         editor.close()
 
         mainwindow.waitFocus()

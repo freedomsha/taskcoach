@@ -16,11 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from __future__ import absolute_import
+
 from taskcoachlib import config
 from taskcoachlib.domain import task, effort, date
 from pubsub import pub
 from . import EffortCompositeTest
-from ... import test
+import test
 
 
 class CompositeEffortPerPeriodTest(test.TestCase):
@@ -62,7 +64,7 @@ class CompositeEffortPerPeriodTest(test.TestCase):
         self.assertEqual(date.TimeDelta(), self.composite.duration())
 
     def testInitialTrackingState(self):
-        self.assertFalse(self.composite.isBeingTracked())
+        self.failIf(self.composite.isBeingTracked())
 
     def testInitialTrackingStateWhenTaskIsTracked(self):
         self.task.addEffort(self.trackedEffort)
@@ -72,7 +74,7 @@ class CompositeEffortPerPeriodTest(test.TestCase):
             self.taskList,
             self.trackedEffort,
         )
-        self.assertTrue(composite.isBeingTracked())
+        self.failUnless(composite.isBeingTracked())
 
     def testDurationForSingleEffort(self):
         self.task.addEffort(self.effort1)
@@ -94,9 +96,7 @@ class CompositeEffortPerPeriodTest(test.TestCase):
             date.DateTime(2004, 1, 1, 14, 0, 0),
         )
         self.task.addEffort(effortSameStartTime)
-        self.assertEqual(
-            effortSameStartTime.duration(), self.composite.duration()
-        )
+        self.assertEqual(effortSameStartTime.duration(), self.composite.duration())
 
     def testAddEffortWithStartTimeEqualToEndOfPeriodToTask(self):
         effortSameStopTime = effort.Effort(
@@ -105,9 +105,7 @@ class CompositeEffortPerPeriodTest(test.TestCase):
             date.DateTime(2004, 1, 2, 1, 0, 0),
         )
         self.task.addEffort(effortSameStopTime)
-        self.assertEqual(
-            effortSameStopTime.duration(), self.composite.duration()
-        )
+        self.assertEqual(effortSameStopTime.duration(), self.composite.duration())
 
     def testRemoveEffortFromTask(self):
         self.task.addEffort(self.effort1)
@@ -120,13 +118,11 @@ class CompositeEffortPerPeriodTest(test.TestCase):
         def onEvent(sender):
             events.append(sender)
 
-        pub.subscribe(
-            onEvent, effort.CompositeEffort.compositeEmptyEventType()
-        )
+        pub.subscribe(onEvent, effort.CompositeEffort.compositeEmptyEventType())
         self.task.addEffort(self.effort1)
         self.task.addEffort(self.effort2)
         self.task.setEfforts([])
-        self.assertTrue(events)
+        self.failUnless(events)
 
     def testRemoveMultipleEffortsFromDifferentPeriodsFromTask(self):
         events = []
@@ -134,10 +130,8 @@ class CompositeEffortPerPeriodTest(test.TestCase):
         def onEvent(sender):
             events.append(sender)
 
-        pub.subscribe(
-            onEvent, effort.CompositeEffort.compositeEmptyEventType()
-        )
+        pub.subscribe(onEvent, effort.CompositeEffort.compositeEmptyEventType())
         self.task.addEffort(self.effort3)
         self.task.addEffort(self.effort1)
         self.task.setEfforts([])
-        self.assertTrue(events)
+        self.failUnless(events)

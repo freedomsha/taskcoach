@@ -16,33 +16,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from future import standard_library
+
+# standard_library.install_aliases()
 from taskcoachlib import operating_system
+# from taskcoachlib.thirdparty import aui
+# import aui2 as aui
 from wx.lib.agw import aui
 import wx
-from . import uicommand
+from taskcoachlib.gui import uicommand
+# from taskcoachlib.gui.uicommand import uicommandcontainer
 
 
 class _Toolbar(aui.AuiToolBar):
     def __init__(self, parent, style):
-        super(_Toolbar, self).__init__(
-            parent, agwStyle=aui.AUI_TB_NO_AUTORESIZE
-        )
+        super().__init__(parent, agwStyle=aui.AUI_TB_NO_AUTORESIZE)
 
     def AddLabelTool(self, id, label, bitmap1, bitmap2, kind, **kwargs):
         long_help_string = kwargs.pop("longHelp", "")
         short_help_string = kwargs.pop("shortHelp", "")
         bitmap2 = self.MakeDisabledBitmap(bitmap1)
-        super(_Toolbar, self).AddTool(
-            id,
-            label,
-            bitmap1,
-            bitmap2,
-            kind,
-            short_help_string,
-            long_help_string,
-            None,
-            None,
-        )
+        # TypeError: _Toolbar.MakeDisabledBitmap() takes 1 positional argument but 2 were given
+        # Attention ligne 63 déclaration de MakeDisabledBitmap. Ne pas mettre staticmethod.
+        super().AddTool(id, label, bitmap1, bitmap2, kind,
+                        short_help_string, long_help_string, None, None)
 
     def GetToolState(self, toolid):
         return self.GetToolToggled(toolid)
@@ -58,10 +55,11 @@ class _Toolbar(aui.AuiToolBar):
 
     def SetMargins(self, *args):
         if len(args) == 2:
-            super(_Toolbar, self).SetMarginsXY(args[0], args[1])
+            super().SetMarginsXY(args[0], args[1])
         else:
-            super(_Toolbar, self).SetMargins(*args)
+            super().SetMargins(*args)
 
+    # @staticmethod
     def MakeDisabledBitmap(self, bitmap):
         return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
 
@@ -72,9 +70,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         self.__settings = settings
         self.__visibleUICommands = list()
         self.__cache = None
-        super(ToolBar, self).__init__(
-            window, style=wx.TB_FLAT | wx.TB_NODIVIDER
-        )
+        super().__init__(window, style=wx.TB_FLAT | wx.TB_NODIVIDER)
         self.SetToolBitmapSize(size)
         if operating_system.isMac():
             # Extra margin needed because the search control is too high
@@ -98,7 +94,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
             else:
                 idx += 1
 
-        super(ToolBar, self).Clear()
+        super().Clear()
 
     def detach(self):
         self.Clear()
@@ -109,23 +105,15 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
             return self.__customizeId
 
         for uiCommand in self.__visibleUICommands:
-            if (
-                isinstance(uiCommand, uicommand.UICommand)
-                and uiCommand.uniqueName() == commandName
-            ):
+            if isinstance(uiCommand, uicommand.UICommand) and uiCommand.uniqueName() == commandName:
                 return uiCommand.id
         return wx.ID_ANY
 
     def _filterCommands(self, perspective, cache=True):
         commands = list()
         if perspective:
-            index = dict(
-                [
-                    (command.uniqueName(), command)
-                    for command in self.uiCommands(cache=cache)
-                    if command is not None and not isinstance(command, int)
-                ]
-            )
+            index = dict([(command.uniqueName(), command) for command in self.uiCommands(cache=cache) if
+                          command is not None and not isinstance(command, int)])
             index["Separator"] = None
             index["Spacer"] = 1
             for className in perspective.split(","):
@@ -145,10 +133,8 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
             if 1 not in commands:
                 commands.append(1)
             from taskcoachlib.gui.dialog.toolbar import ToolBarEditor
-
-            uiCommand = uicommand.EditToolBarPerspective(
-                self, ToolBarEditor, settings=self.__settings
-            )
+            uiCommand = uicommand.EditToolBarPerspective(self, ToolBarEditor,
+                                                        settings=self.__settings)
             commands.append(uiCommand)
             self.__customizeId = uiCommand.id
         if operating_system.isMac():
@@ -181,7 +167,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         return self.__visibleUICommands[:]
 
     def AppendSeparator(self):
-        """This little adapter is needed for
+        """ This little adapter is needed for
         uicommand.UICommandContainerMixin.appendUICommands"""
         self.AddSeparator()
 
@@ -194,7 +180,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
 
 class MainToolBar(ToolBar):
     def __init__(self, *args, **kwargs):
-        super(MainToolBar, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_SIZE, self._OnSize)
 
     def _OnSize(self, event):
@@ -206,8 +192,9 @@ class MainToolBar(ToolBar):
 
     def Realize(self):
         self._agwStyle &= ~aui.AUI_TB_NO_AUTORESIZE
-        super(MainToolBar, self).Realize()
+        super().Realize()
         self._agwStyle |= aui.AUI_TB_NO_AUTORESIZE
         wx.CallAfter(self.GetParent().SendSizeEvent)
+        # w, h = self.GetParent().GetClientSizeTuple()
         w, h = self.GetParent().GetClientSize()
         wx.CallAfter(self.SetMinSize, (w, -1))

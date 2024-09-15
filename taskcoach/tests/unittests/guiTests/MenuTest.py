@@ -18,23 +18,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wx
-import test
-from taskcoachlib import gui, config
-from taskcoachlib.gui import uicommand
-from taskcoachlib.domain import task, category, date
+from ....taskcoachlib import gui, config
+from ....taskcoachlib.gui import uicommand
+from ....taskcoachlib.domain import task, category, date
+# from ....taskcoachlib.thirdparty.pubsub import pub
+
+from builtins import str
+from builtins import object
 from pubsub import pub
+import test
+import wx
 
 
 class MockViewerContainer(object):
     def __init__(self):
-        self.__sortBy = "subject"
+        self.__sortBy = 'subject'
         self.__ascending = True
         self.selection = []
         self.showingCategories = False
 
     def settingsSection(self):
-        return "section"
+        return 'section'
 
     def curselection(self):
         return self.selection  # pragma: no cover
@@ -64,24 +68,14 @@ class MockViewerContainer(object):
         return True
 
     def getSortUICommands(self):
-        return [
-            uicommand.ViewerSortOrderCommand(viewer=self),
-            uicommand.ViewerSortCaseSensitive(viewer=self),
-            uicommand.ViewerSortByTaskStatusFirst(viewer=self),
-            None,
-            uicommand.ViewerSortByCommand(
-                viewer=self,
-                value="subject",
-                menuText="Sub&ject",
-                helpText="help",
-            ),
-            uicommand.ViewerSortByCommand(
-                viewer=self,
-                value="description",
-                menuText="&Description",
-                helpText="help",
-            ),
-        ]
+        return [uicommand.ViewerSortOrderCommand(viewer=self),
+                uicommand.ViewerSortCaseSensitive(viewer=self),
+                uicommand.ViewerSortByTaskStatusFirst(viewer=self),
+                None,
+                uicommand.ViewerSortByCommand(viewer=self, value='subject',
+                                              menuText='Sub&ject', helpText='help'),
+                uicommand.ViewerSortByCommand(viewer=self, value='description',
+                                              menuText='&Description', helpText='help')]
 
 
 class MenuTestCase(test.wxTestCase):
@@ -90,7 +84,7 @@ class MenuTestCase(test.wxTestCase):
         self.frame.viewer = MockViewerContainer()
         self.menu = gui.menu.Menu(self.frame)
         menuBar = wx.MenuBar()
-        menuBar.Append(self.menu, "menu")
+        menuBar.Append(self.menu, 'menu')
         self.frame.SetMenuBar(menuBar)
 
 
@@ -119,50 +113,42 @@ class MenuWithBooleanMenuItemsTestCase(MenuTestCase):
         for index, shouldBeChecked in enumerate(expectedStates):
             isChecked = self.menu.FindItemByPosition(index).IsChecked()
             if shouldBeChecked:
-                self.assertTrue(isChecked)
+                self.failUnless(isChecked)
             else:
-                self.assertFalse(isChecked)
+                self.failIf(isChecked)
 
 
 class MenuWithCheckItemsTest(MenuWithBooleanMenuItemsTestCase):
     def createCommands(self):
-        return [
-            uicommand.UICheckCommand(
-                settings=self.settings, section="view", setting="statusbar"
-            )
-        ]
+        return [uicommand.UICheckCommand(settings=self.settings,
+                                         section='view', setting='statusbar')]
 
     def testCheckedItem(self):
-        self.settings.set("view", "statusbar", "True")
+        self.settings.set('view', 'statusbar', 'True')
         self.assertMenuItemsChecked(True)
 
     def testUncheckedItem(self):
-        self.settings.set("view", "statusbar", "False")
+        self.settings.set('view', 'statusbar', 'False')
         self.assertMenuItemsChecked(False)
 
 
 class MenuWithRadioItemsTest(MenuWithBooleanMenuItemsTestCase):
     def createCommands(self):
-        return [
-            uicommand.UIRadioCommand(
-                settings=self.settings,
-                section="view",
-                setting="toolbar",
-                value=value,
-            )
-            for value in [None, (16, 16)]
-        ]
+        return [uicommand.UIRadioCommand(settings=self.settings,
+                                         section='view', setting='toolbar',
+                                         value=value)
+                for value in [None, (16, 16)]]
 
     def testRadioItem_FirstChecked(self):
-        self.settings.setvalue("view", "toolbar", None)
+        self.settings.setvalue('view', 'toolbar', None)
         self.assertMenuItemsChecked(True, False)
 
     def testRadioItem_SecondChecked(self):
-        self.settings.setvalue("view", "toolbar", (16, 16))
+        self.settings.setvalue('view', 'toolbar', (16, 16))
         self.assertMenuItemsChecked(False, True)
 
 
-class MockIOController:
+class MockIOController(object):
     def __init__(self):
         self.openCalled = False
 
@@ -176,14 +162,13 @@ class RecentFilesMenuTest(test.wxTestCase):
         self.ioController = MockIOController()
         self.settings = config.Settings(load=False)
         self.initialFileMenuLength = len(self.createFileMenu())
-        self.filename1 = "c:/Program Files/TaskCoach/test.tsk"
-        self.filename2 = "c:/two.tsk"
+        self.filename1 = 'c:/Program Files/TaskCoach/test.tsk'
+        self.filename2 = 'c:/two.tsk'
         self.filenames = []
 
     def createFileMenu(self):
-        return gui.menu.FileMenu(
-            self.frame, self.settings, self.ioController, None
-        )
+        return gui.menu.FileMenu(self.frame, self.settings,
+                                 self.ioController, None)
 
     def setRecentFilesAndCreateMenu(self, *filenames):
         self.addRecentFiles(*filenames)
@@ -191,7 +176,7 @@ class RecentFilesMenuTest(test.wxTestCase):
 
     def addRecentFiles(self, *filenames):
         self.filenames.extend(filenames)
-        self.settings.set("file", "recentfiles", str(list(self.filenames)))
+        self.settings.set('file', 'recentfiles', str(list(self.filenames)))
 
     def assertRecentFileMenuItems(self, *expectedFilenames):
         expectedFilenames = expectedFilenames or self.filenames
@@ -199,15 +184,11 @@ class RecentFilesMenuTest(test.wxTestCase):
         numberOfMenuItemsAdded = len(expectedFilenames)
         if numberOfMenuItemsAdded > 0:
             numberOfMenuItemsAdded += 1  # the extra separator
-        self.assertEqual(
-            self.initialFileMenuLength + numberOfMenuItemsAdded, len(self.menu)
-        )
+        self.assertEqual(self.initialFileMenuLength + numberOfMenuItemsAdded, len(self.menu))
         for index, expectedFilename in enumerate(expectedFilenames):
-            menuItem = self.menu.FindItemByPosition(
-                self.initialFileMenuLength - 1 + index
-            )
+            menuItem = self.menu.FindItemByPosition(self.initialFileMenuLength-1 + index)
             # Apparently the '&' can also be a '_' (seen on Ubuntu)
-            expectedLabel = "&%d %s" % (index + 1, expectedFilename)
+            expectedLabel = u'&%d %s' % (index + 1, expectedFilename)
             self.assertEqual(expectedLabel[1:], menuItem.GetText()[1:])
 
     def openMenu(self):
@@ -230,9 +211,7 @@ class RecentFilesMenuTest(test.wxTestCase):
         self.addRecentFiles(self.filename1)
         self.assertRecentFileMenuItems()
 
-    def testOneRecentFileWhenCreatingMenuAndAddOneRecentFileAfterCreatingMenu(
-        self,
-    ):
+    def testOneRecentFileWhenCreatingMenuAndAddOneRecentFileAfterCreatingMenu(self):
         self.setRecentFilesAndCreateMenu(self.filename1)
         self.addRecentFiles(self.filename2)
         self.assertRecentFileMenuItems()
@@ -242,11 +221,11 @@ class RecentFilesMenuTest(test.wxTestCase):
         self.openMenu()
         menuItem = self.menu.FindItemByPosition(self.initialFileMenuLength - 1)
         self.menu.invokeMenuItem(menuItem)
-        self.assertTrue(self.ioController.openCalled)
+        self.failUnless(self.ioController.openCalled)
 
     def testNeverShowMoreThanTheMaximumNumberAllowed(self):
         self.setRecentFilesAndCreateMenu(self.filename1, self.filename2)
-        self.settings.set("file", "maxrecentfiles", "1")
+        self.settings.set('file', 'maxrecentfiles', '1')
         self.assertRecentFileMenuItems(self.filename1)
 
 
@@ -257,14 +236,14 @@ class ViewMenuTestCase(test.wxTestCase):
         self.viewerContainer = MockViewerContainer()
         self.menuBar = wx.MenuBar()
         self.parentMenu = wx.Menu()
-        self.menuBar.Append(self.parentMenu, "parentMenu")
+        self.menuBar.Append(self.parentMenu, 'parentMenu')
         self.menu = self.createMenu()
-        self.parentMenu.AppendSubMenu(self.menu, "menu")
+        self.parentMenu.AppendSubMenu(self.menu, 'menu')
         self.frame.SetMenuBar(self.menuBar)
 
     def createMenu(self):
         self.frame.viewer = self.viewerContainer
-        menu = gui.menu.SortMenu(self.frame, self.parentMenu, "menu")
+        menu = gui.menu.SortMenu(self.frame, self.parentMenu, 'menu')
         menu.updateMenu()
         return menu
 
@@ -272,27 +251,27 @@ class ViewMenuTestCase(test.wxTestCase):
         self.viewerContainer.setSortOrderAscending(True)
         self.menu.UpdateUI()
         self.menu.openMenu()
-        self.assertTrue(self.menu.FindItemByPosition(0).IsChecked())
+        self.failUnless(self.menu.FindItemByPosition(0).IsChecked())
 
     def testSortOrderDescending(self):
         self.viewerContainer.setSortOrderAscending(False)
         self.menu.UpdateUI()
         self.menu.openMenu()
-        self.assertFalse(self.menu.FindItemByPosition(0).IsChecked())
+        self.failIf(self.menu.FindItemByPosition(0).IsChecked())
 
     def testSortBySubject(self):
-        self.viewerContainer.sortBy("subject")
+        self.viewerContainer.sortBy('subject')
         self.menu.UpdateUI()
         self.menu.openMenu()
-        self.assertTrue(self.menu.FindItemByPosition(4).IsChecked())
-        self.assertFalse(self.menu.FindItemByPosition(5).IsChecked())
+        self.failUnless(self.menu.FindItemByPosition(4).IsChecked())
+        self.failIf(self.menu.FindItemByPosition(5).IsChecked())
 
     def testSortByDescription(self):
-        self.viewerContainer.sortBy("description")
+        self.viewerContainer.sortBy('description')
         self.menu.UpdateUI()
         self.menu.openMenu()
-        self.assertFalse(self.menu.FindItemByPosition(4).IsChecked())
-        self.assertTrue(self.menu.FindItemByPosition(5).IsChecked())
+        self.failIf(self.menu.FindItemByPosition(4).IsChecked())
+        self.failUnless(self.menu.FindItemByPosition(5).IsChecked())
 
 
 class StartEffortForTaskMenuTest(test.wxTestCase):
@@ -301,14 +280,13 @@ class StartEffortForTaskMenuTest(test.wxTestCase):
         self.tasks = task.TaskList()
         self.menu = gui.menu.StartEffortForTaskMenu(self.frame, self.tasks)
 
-    def addTask(self, subject="Subject"):
+    def addTask(self, subject='Subject'):
         newTask = task.Task(subject=subject, plannedStartDateTime=date.Now())
         self.tasks.append(newTask)
         return newTask
 
-    def addParentAndChild(
-        self, parentSubject="Subject", childSubject="Subject"
-    ):
+    def addParentAndChild(self, parentSubject='Subject',
+                          childSubject='Subject'):
         parent = self.addTask(parentSubject)
         child = self.addTask(childSubject)
         parent.addChild(child)
@@ -336,7 +314,7 @@ class StartEffortForTaskMenuTest(test.wxTestCase):
         self.assertEqual(1, len(self.menu))
 
     def testTaskWithNonAsciiSubject(self):
-        self.addParentAndChild("Jérôme", "Jîrôme")
+        self.addParentAndChild(u'Jérôme', u'Jîrôme')
         self.menu.updateMenuItems()
         self.assertEqual(2, len(self.menu))
 
@@ -344,12 +322,11 @@ class StartEffortForTaskMenuTest(test.wxTestCase):
 class ToggleCategoryMenuTest(test.wxTestCase):
     def setUp(self):
         self.categories = category.CategoryList()
-        self.category1 = category.Category("Category 1")
-        self.category2 = category.Category("Category 2")
+        self.category1 = category.Category('Category 1')
+        self.category2 = category.Category('Category 2')
         self.viewerContainer = MockViewerContainer()
-        self.menu = gui.menu.ToggleCategoryMenu(
-            self.frame, self.categories, self.viewerContainer
-        )
+        self.menu = gui.menu.ToggleCategoryMenu(self.frame, self.categories,
+                                                self.viewerContainer)
 
     def setUpSubcategories(self):
         self.category1.addChild(self.category2)
@@ -372,10 +349,8 @@ class ToggleCategoryMenuTest(test.wxTestCase):
 
     def testSubcategorySubmenuLabel(self):
         self.setUpSubcategories()
-        self.assertEqual(
-            gui.menu.ToggleCategoryMenu.subMenuLabel(self.category1),
-            self.menu.GetMenuItems()[2].GetLabel(),
-        )
+        self.assertEqual(gui.menu.ToggleCategoryMenu.subMenuLabel(self.category1),
+                         self.menu.GetMenuItems()[2].GetLabel())
 
     def testSubcategorySubmenuItemLabel(self):
         self.setUpSubcategories()
@@ -386,7 +361,7 @@ class ToggleCategoryMenuTest(test.wxTestCase):
     def testMutualExclusiveSubcategories_AreCheckItems(self):
         self.category1.makeSubcategoriesExclusive()
         self.setUpSubcategories()
-        category3 = category.Category("Category 3")
+        category3 = category.Category('Category 3')
         self.category1.addChild(category3)
         subMenu = self.menu.GetMenuItems()[2].GetSubMenu()
         for subMenuItem in subMenu.GetMenuItems():
@@ -395,22 +370,22 @@ class ToggleCategoryMenuTest(test.wxTestCase):
     def testMutualExclusiveSubcategories_NoneChecked(self):
         self.category1.makeSubcategoriesExclusive()
         self.setUpSubcategories()
-        category3 = category.Category("Category 3")
+        category3 = category.Category('Category 3')
         self.category1.addChild(category3)
         subMenuItems = self.menu.GetMenuItems()[2].GetSubMenu().GetMenuItems()
         checkedItems = [item for item in subMenuItems if item.IsChecked()]
-        self.assertFalse(checkedItems)
+        self.failIf(checkedItems)
 
     def testMutualExclusiveSubcategoriesWithSubcategories(self):
         self.category1.makeSubcategoriesExclusive()
         self.setUpSubcategories()
-        category3 = category.Category("Category 3")
+        category3 = category.Category('Category 3')
         self.category1.addChild(category3)
-        category4 = category.Category("Category 4")
+        category4 = category.Category('Category 4')
         category3.addChild(category4)
         subMenuItems = self.menu.GetMenuItems()[2].GetSubMenu().GetMenuItems()
         checkedItems = [item for item in subMenuItems if item.IsChecked()]
-        self.assertFalse(checkedItems)
+        self.failIf(checkedItems)
 
 
 class TaskTemplateMenuTest(test.wxTestCase):
@@ -426,5 +401,5 @@ class TaskTemplateMenuTest(test.wxTestCase):
         menu = TaskTemplateMenu(self.frame, taskList, settings)
         self.assertEqual(1, len(menu))
         uicommands.append(None)  # Add another separator
-        pub.sendMessage("templates.saved")
+        pub.sendMessage('templates.saved')
         self.assertEqual(2, len(menu))

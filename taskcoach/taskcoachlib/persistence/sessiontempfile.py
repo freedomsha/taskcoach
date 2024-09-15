@@ -16,15 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, stat, atexit, tempfile
+import os
+import stat
+import atexit
+import tempfile
 from taskcoachlib import patterns
 
 
+# class TempFiles(metaclass=patterns.Singleton):
 class TempFiles(object, metaclass=patterns.Singleton):
     def __init__(self):
         self.__tempFiles = []
         atexit.register(self.cleanup)
-
+        
     def register(self, filename):
         self.__tempFiles.append(filename)
 
@@ -34,13 +38,13 @@ class TempFiles(object, metaclass=patterns.Singleton):
                 if os.name == "nt":
                     os.chmod(name, stat.S_IREAD | stat.S_IWRITE)
                 os.remove(name)
-            except:
+            except:  # else ?
                 pass  # pylint: disable=W0702
 
 
 def get_temp_file(**kwargs):
-    """Return the name of a temporary file. This file will be registered
-    for deletion at process termination."""
+    """ Return the name of a temporary file. This file will be registered
+        for deletion at process termination. """
 
     fd, filename = tempfile.mkstemp(**kwargs)
     os.close(fd)

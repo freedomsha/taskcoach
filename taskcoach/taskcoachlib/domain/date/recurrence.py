@@ -16,26 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 import calendar
 from . import timedelta
 from . import dateandtime as date
 
 
 class Recurrence(object):
-    """Class representing a recurring date."""
+    """ Class representing a recurring Date. """
 
     units = ("daily", "weekly", "monthly", "yearly", "")
 
-    def __init__(
-        self,
-        unit="",
-        amount=1,
-        sameWeekday=False,
-        maximum=0,
-        count=0,
-        stop_datetime=None,
-        recurBasedOnCompletion=False,
-    ):
+    def __init__(self, unit="", amount=1, sameWeekday=False, maximum=0, count=0,
+                 stop_datetime=None, recurBasedOnCompletion=False):
         assert unit in self.units
         assert amount >= 1
         self.unit = unit
@@ -64,14 +57,11 @@ class Recurrence(object):
             return
 
     def __finished_recurring(self):
-        """Return whether this recurrence is finished, either because the
-        maximum number of recurrences has happened or because the end date
-        for the reccurences has passed."""
-        return (
-            self.max != 0
-            and self.count >= self.max
-            or date.Now() > self.stop_datetime
-        )
+        """ Return whether this recurrence is Finished, either because the
+            maximum number of recurrences has happened or because the end Date
+            for the reccurences has passed. """
+        return self.max != 0 and self.count >= self.max or \
+            date.Now() > self.stop_datetime
 
     def _nextDateTime(self, dateTime, amount=0):
         if date.DateTime() == dateTime or not self.unit:
@@ -92,12 +82,7 @@ class Recurrence(object):
 
     def _addMonth(self, dateTime):
         year, month, day = dateTime.year, dateTime.month, dateTime.day
-        details = (
-            dateTime.hour,
-            dateTime.minute,
-            dateTime.second,
-            dateTime.microsecond,
-        )
+        details = dateTime.hour, dateTime.minute, dateTime.second, dateTime.microsecond
         if month == 12:  # If December, move to January next year
             year += 1
             month = 1
@@ -105,36 +90,29 @@ class Recurrence(object):
             month += 1
         if self.sameWeekday:
             weekday = dateTime.weekday()
-            weekNr = min(
-                3, (day - 1) / 7
-            )  # In what week of the month falls aDate, allowable range 0-3
-            day = (
-                weekNr * 7 + 1
-            )  # The earliest possible day that is on the same weekday as aDate
+            weekNr = min(3, (day - 1) // 7)  # In what week of the month falls aDate, allowable range 0-3
+            day = weekNr * 7 + 1  # The earliest possible day that is on the same weekday as aDate
             result = date.DateTime(year, month, day, *details)
             while result.weekday() != weekday:
                 day += 1
                 result = date.DateTime(year, month, day, *details)
             return result
         else:
-            while True:  # Find a valid date in the next month
+            while True:  # Find a valid Date in the next month
                 try:
                     return date.DateTime(year, month, day, *details)
                 except ValueError:
                     day -= 1
 
     def _addYear(self, dateTime):
-        if (
-            calendar.isleap(dateTime.year)
-            and dateTime.month <= 2
-            and dateTime.day <= 28
-        ) or (calendar.isleap(dateTime.year + 1) and dateTime.month >= 3):
+        if (calendar.isleap(dateTime.year) and dateTime.month <= 2 and dateTime.day <= 28) or \
+           (calendar.isleap(dateTime.year + 1) and dateTime.month >= 3):
             days = 366
         else:
             days = 365
         newDateTime = dateTime + timedelta.TimeDelta(days=days)
         if self.sameWeekday:
-            # Find the nearest date in newDate's year that is on the right
+            # Find the nearest Date in newDate's year that is on the right
             # weekday:
             weekday, year = dateTime.weekday(), newDateTime.year
             newEarlierDateTime = newLaterDateTime = newDateTime
@@ -149,14 +127,9 @@ class Recurrence(object):
         return newDateTime
 
     def copy(self):
-        return self.__class__(
-            self.unit,
-            self.amount,
-            self.sameWeekday,
-            self.max,
-            stop_datetime=self.stop_datetime,
-            recurBasedOnCompletion=self.recurBasedOnCompletion,
-        )
+        return self.__class__(self.unit, self.amount, self.sameWeekday,
+                              self.max, stop_datetime=self.stop_datetime,
+                              recurBasedOnCompletion=self.recurBasedOnCompletion)
 
     def __eq__(self, other):
         try:
@@ -173,12 +146,9 @@ class Recurrence(object):
 
     def __lt__(self, other):
         try:
-            return self.units.index(self.unit) < self.units.index(
-                other.unit
-            ) or (
-                self.units.index(self.unit) == self.units.index(other.unit)
-                and self.amount < other.amount
-            )
+            return self.units.index(self.unit) < self.units.index(other.unit) or \
+                (self.units.index(self.unit) == self.units.index(other.unit) and
+                 self.amount < other.amount)
         except AttributeError:
             return True
 

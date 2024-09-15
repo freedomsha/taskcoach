@@ -50,7 +50,7 @@ Description: GNTP
             growl.register()
         
             # Send one message
-            growl.notify(
+            growl.Notify(
                 noteType = "New Messages",
                 title = "You have a new message",
                 description = "A longer message description",
@@ -62,7 +62,7 @@ Description: GNTP
             # Try to send a different type of message
             # This one may fail since it is not in our list
             # of defaultNotifications
-            growl.notify(
+            growl.Notify(
                 noteType = "New Updates",
                 title = "There is a new update to download",
                 description = "A longer message description",
@@ -79,7 +79,7 @@ Description: GNTP
         ::
         
             image = open('/path/to/image.png').read()
-            growl.notify(
+            growl.Notify(
                 noteType = "New Messages",
                 title = "You have a new message",
                 description = "This time we embed the image",

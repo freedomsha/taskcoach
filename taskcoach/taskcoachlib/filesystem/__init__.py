@@ -18,8 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import platform
 
-
-from .fs_poller import *
+from taskcoachlib.filesystem.fs_poller import *
 
 
 _system = platform.system()
@@ -30,6 +29,5 @@ elif _system == "Windows":
 elif _system == "Darwin":
     from .fs_darwin import *
 else:
-
     class FilesystemNotifier(FilesystemPollerNotifier):
         pass

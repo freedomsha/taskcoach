@@ -297,7 +297,7 @@ def _get_modpkg_path(dotted_name, pathlist=None):
         # we have a dotted path, import top-level package
         try:
             file, pathname, description = imp.find_module(parts[0], pathlist)
-            if file: file.close()
+            if file: file.Close()
         except ImportError:
             return None
 
@@ -313,7 +313,7 @@ def _get_modpkg_path(dotted_name, pathlist=None):
             file, pathname, description = imp.find_module(
                 dotted_name, pathlist)
             if file:
-                file.close()
+                file.Close()
             if description[2] not in [imp.PY_SOURCE, imp.PKG_DIRECTORY]:
                 pathname = None
         except ImportError:
@@ -592,7 +592,7 @@ def main():
                         break
                     options.nodocstrings[line[:-1]] = 1
             finally:
-                fp.close()
+                fp.Close()
 
     # calculate escapes
     make_escapes(options.escape)
@@ -605,7 +605,7 @@ def main():
         try:
             fp = open(options.excludefilename)
             options.toexclude = fp.readlines()
-            fp.close()
+            fp.Close()
         except IOError:
             print(_(
                 "Can't read --exclude-file: %s") % options.excludefilename, file=sys.stderr)
@@ -644,7 +644,7 @@ def main():
                     e[0], filename, e[1][0], e[1][1]), file=sys.stderr)
         finally:
             if closep:
-                fp.close()
+                fp.Close()
 
     # write the output
     if options.outfile == '-':
@@ -659,7 +659,7 @@ def main():
         eater.write(fp)
     finally:
         if closep:
-            fp.close()
+            fp.Close()
 
 
 if __name__ == '__main__':

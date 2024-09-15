@@ -1,4 +1,4 @@
-"""
+'''
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+'''
 
 import test
-from taskcoachlib import patterns, config
-from taskcoachlib.domain import task, effort, date
+from ....taskcoachlib import patterns, config
+from ....taskcoachlib.domain import task, effort, date
 
 
 class EffortListTest(test.TestCase):
@@ -29,19 +29,14 @@ class EffortListTest(test.TestCase):
         self.taskList = task.TaskList()
         self.effortList = effort.EffortList(self.taskList)
         self.taskList.append(self.task)
-        patterns.Publisher().registerObserver(
-            self.onEvent,
-            eventType=self.effortList.addItemEventType(),
-            eventSource=self.effortList,
-        )
-        patterns.Publisher().registerObserver(
-            self.onEvent,
-            eventType=self.effortList.removeItemEventType(),
-            eventSource=self.effortList,
-        )
-        self.effort = effort.Effort(
-            self.task, date.DateTime(2004, 1, 1), date.DateTime(2004, 1, 2)
-        )
+        patterns.Publisher().registerObserver(self.onEvent,
+                                              eventType=self.effortList.addItemEventType(),
+                                              eventSource=self.effortList)
+        patterns.Publisher().registerObserver(self.onEvent,
+                                              eventType=self.effortList.removeItemEventType(),
+                                              eventSource=self.effortList)
+        self.effort = effort.Effort(self.task, date.DateTime(2004, 1, 1),
+                                    date.DateTime(2004, 1, 2))
 
     def testCreate(self):
         self.assertEqual(0, len(self.effortList))
@@ -56,7 +51,7 @@ class EffortListTest(test.TestCase):
     def testAppend(self):
         self.task.addEffort(self.effort)
         self.assertEqual(1, len(self.effortList))
-        self.assertTrue(self.effort in self.effortList)
+        self.failUnless(self.effort in self.effortList)
 
     def testNotificationAfterRemove(self):
         self.task.addEffort(self.effort)
@@ -116,9 +111,8 @@ class EffortListTest(test.TestCase):
 
     def testRemoveAllItems(self):
         self.task.addEffort(self.effort)
-        effort2 = effort.Effort(
-            self.task, date.DateTime(2005, 1, 1), date.DateTime(2005, 1, 2)
-        )
+        effort2 = effort.Effort(self.task, date.DateTime(2005, 1, 1),
+                                date.DateTime(2005, 1, 2))
         self.task.addEffort(effort2)
         self.effortList.removeItems([effort2, self.effort])
         self.assertEqual(0, len(self.effortList))
@@ -127,13 +121,13 @@ class EffortListTest(test.TestCase):
     def testExtend(self):
         self.effortList.extend([self.effort])
         self.assertEqual(1, len(self.effortList))
-        self.assertTrue(self.effort in self.effortList)
+        self.failUnless(self.effort in self.effortList)
         self.assertEqual(1, len(self.task.efforts()))
         self.assertEqual(self.effort, self.task.efforts()[0])
 
     def testRemoveTaskWithEffort(self):
         self.task.addEffort(self.effort)
-        anotherTask = task.Task("Another task without effort")
+        anotherTask = task.Task('Another task without effort')
         self.taskList.append(anotherTask)
         self.assertEqual(1, len(self.effortList))
         self.taskList.remove(self.task)
@@ -141,7 +135,7 @@ class EffortListTest(test.TestCase):
 
     def testRemoveTaskWithoutEffort(self):
         self.task.addEffort(self.effort)
-        anotherTask = task.Task("Another task without effort")
+        anotherTask = task.Task('Another task without effort')
         self.taskList.append(anotherTask)
         self.assertEqual(1, len(self.effortList))
         self.taskList.remove(anotherTask)
@@ -149,7 +143,7 @@ class EffortListTest(test.TestCase):
 
     def testChangeTask(self):
         self.task.addEffort(self.effort)
-        anotherTask = task.Task("Another task without effort")
+        anotherTask = task.Task('Another task without effort')
         self.taskList.append(anotherTask)
         self.assertEqual(1, len(self.effortList))
         self.effort.setTask(anotherTask)

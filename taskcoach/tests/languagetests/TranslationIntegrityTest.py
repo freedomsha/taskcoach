@@ -18,16 +18,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from __future__ import division
+#
+# from past.utils import old_div
+# from builtins import object
 from taskcoachlib import meta
 import string  # pylint: disable=W0402
 import re
 import test
-import shutil, os
+import shutil
+import os
 
 
 class TranslationIntegrityTestsMixin(object):
-    """Unittests for translations. This class is subclassed below for each
-    translated string in each language."""
+    """ Unittests for translations. This class is subclassed below for each
+        translated string in each language. """
 
     conversionSpecificationRE = re.compile("%\(\w+\)[sd]")
 
@@ -42,9 +47,7 @@ class TranslationIntegrityTestsMixin(object):
         regex = self.conversionSpecificationRE
         matches_english = self.findMatches(regex, self.englishString)
         matches_translation = self.findMatches(regex, self.translatedString)
-        self.assertEqual(
-            matches_english, matches_translation, self.englishString
-        )
+        self.assertEqual(matches_english, matches_translation, self.englishString)
 
     def testMatchingNonLiterals(self):
         for symbol in "\t", "|", "%s", "%d", "%.2f":
@@ -89,6 +92,8 @@ class TranslationIntegrityTestsMixin(object):
             shortcutKey = shortcut, self.language
             timesUsed = self.usedShortcuts.get(shortcutKey, 0)
             timesAllowed = self.maxShortcuts.get(shortcut, 1)
+            # self.failIf(timesUsed > timesAllowed, "Shortcut ('%s') used more "
+            # "than once in language %s." % shortcutKey)
             self.assertFalse(
                 timesUsed > timesAllowed,
                 "Shortcut ('%s') used more "
@@ -180,11 +185,8 @@ def installAllTestCaseClasses():
 
 
 def getLanguages():
-    return [
-        (language, enabled)
-        for language, enabled in list(meta.data.languages.values())
-        if language is not None
-    ]
+    return [(language, enabled) for language, enabled in list(meta.data.languages.values())
+            if language is not None]
 
 
 def installTestCaseClasses(language, enabled, allStrings):

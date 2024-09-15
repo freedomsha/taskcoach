@@ -22,3 +22,4 @@ from .collection import Collection
 from .filter import Filter, SearchFilter, SelectedItemsFilter, DeletedFilter
 from .sorter import Sorter, TreeSorter
 from .owner import DomainObjectOwnerMetaclass
+# from .owner import DomainObjectOwnerMetaclass, NoteOwner, AttachmentOwner

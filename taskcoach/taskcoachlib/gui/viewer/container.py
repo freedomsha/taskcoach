@@ -16,98 +16,98 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import range
+# from builtins import object
 from taskcoachlib import operating_system
 import taskcoachlib.gui.menu
-# from taskcoachlib.thirdparty.pubsub import pub
+# from taskcoachlib.gui.menu import *
+# try:
 from pubsub import pub
+# except ImportError:
+#     try:
+#        from ...thirdparty.pubsub import pub
+#    except ImportError:
+#        from wx.lib.pubsub import pub
+# from taskcoachlib.thirdparty import aui as aui
 import wx.lib.agw.aui as aui
+# import aui2 as aui
 import wx
 
 
 class ViewerContainer(object):
-    """ViewerContainer is a container of viewers. It has a containerWidget
-    that displays the viewers. The containerWidget is assumed to be
-    an AUI managed frame. The ViewerContainer knows which of its viewers
-    is active and dispatches method calls to the active viewer or to the
-    first viewer that can handle the method. This allows other GUI
-    components, e.g. menu's, to talk to the ViewerContainer as were
-    it a regular viewer."""
-
+    """ ViewerContainer is a container of viewers. It has a containerWidget
+        that displays the viewers. The containerWidget is assumed to be
+        an AUI managed frame. The ViewerContainer knows which of its viewers
+        is active and dispatches method calls to the active viewer or to the
+        first viewer that can handle the method. This allows other GUI
+        components, e.g. menu's, to talk to the ViewerContainer as were
+        it a regular viewer. """
+        
     def __init__(self, containerWidget, settings, *args, **kwargs):
         self.containerWidget = containerWidget
         self._notifyActiveViewer = False
         self.__bind_event_handlers()
         self._settings = settings
         self.viewers = []
-        super(ViewerContainer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def componentsCreated(self):
         self._notifyActiveViewer = True
 
     def advanceSelection(self, forward):
-        """Activate the next viewer if forward is true else the previous
-        viewer."""
+        """ Activate the next viewer if forward is true else the previous
+            viewer. """
         if len(self.viewers) <= 1:
             return  # Not enough viewers to advance selection
         active_viewer = self.activeViewer()
-        current_index = (
-            self.viewers.index(active_viewer) if active_viewer else 0
-        )
+        current_index = self.viewers.index(active_viewer) if active_viewer else 0
         minimum_index, maximum_index = 0, len(self.viewers) - 1
         if forward:
-            new_index = (
-                current_index + 1
-                if minimum_index <= current_index < maximum_index
-                else minimum_index
-            )
+            new_index = current_index + 1 if minimum_index <= current_index < maximum_index else minimum_index
         else:
-            new_index = (
-                current_index - 1
-                if minimum_index < current_index <= maximum_index
-                else maximum_index
-            )
+            new_index = current_index - 1 if minimum_index < current_index <= maximum_index else maximum_index
         self.activateViewer(self.viewers[new_index])
-
+        
+    # @staticmethod
     def isViewerContainer(self):
-        """Return whether this is a viewer container or an actual viewer."""
+        """ Return whether this is a viewer container or an actual viewer. """
         return True
 
     def __bind_event_handlers(self):
-        """Register for pane closing, activating and floating events."""
+        """ Register for pane closing, activating and floating events. """
         self.containerWidget.Bind(aui.EVT_AUI_PANE_CLOSE, self.onPageClosed)
-        self.containerWidget.Bind(
-            aui.EVT_AUI_PANE_ACTIVATED, self.onPageChanged
-        )
+        self.containerWidget.Bind(aui.EVT_AUI_PANE_ACTIVATED,
+                                  self.onPageChanged)
         self.containerWidget.Bind(aui.EVT_AUI_PANE_FLOATED, self.onPageFloated)
-
+    
     def __getitem__(self, index):
         return self.viewers[index]
-
+    
     def __len__(self):
         return len(self.viewers)
 
     def addViewer(self, viewer, floating=False):
-        """Add a new pane with the specified viewer."""
+        """ Add a new pane with the specified viewer. """
         self.containerWidget.addPane(viewer, viewer.title(), floating=floating)
         self.viewers.append(viewer)
         if len(self.viewers) == 1:
             self.activateViewer(viewer)
         pub.subscribe(self.onStatusChanged, viewer.viewerStatusEventType())
-
+        
     def closeViewer(self, viewer):
-        """Close the specified viewer."""
+        """ Close the specified viewer. """
         if viewer == self.activeViewer():
             self.advanceSelection(False)
         pane = self.containerWidget.manager.GetPane(viewer)
         self.containerWidget.manager.ClosePane(pane)
-
+    
     def __getattr__(self, attribute):
-        """Forward unknown attributes to the active viewer or the first
-        viewer if there is no active viewer."""
+        """ Forward unknown attributes to the active viewer or the first
+            viewer if there is no active viewer. """
         return getattr(self.activeViewer() or self.viewers[0], attribute)
 
     def activeViewer(self):
-        """Return the active (selected) viewer."""
+        """ Return the active (selected) viewer. """
         all_panes = self.containerWidget.manager.GetAllPanes()
         for pane in all_panes:
             if pane.IsToolbar():
@@ -119,9 +119,9 @@ class ViewerContainer(object):
                 else:
                     return pane.window
         return None
-
+        
     def activateViewer(self, viewer_to_activate):
-        """Activate (select) the specified viewer."""
+        """ Activate (select) the specified viewer. """
         self.containerWidget.manager.ActivatePane(viewer_to_activate)
         paneInfo = self.containerWidget.manager.GetPane(viewer_to_activate)
         if paneInfo.IsNotebookPage():
@@ -130,7 +130,7 @@ class ViewerContainer(object):
 
     def __del__(self):
         pass  # Don't forward del to one of the viewers.
-
+    
     def onStatusChanged(self, viewer):
         if self.activeViewer() == viewer:
             self.sendViewerStatusEvent()
@@ -143,6 +143,7 @@ class ViewerContainer(object):
             self.activeViewer().activate()
         event.Skip()
 
+    # @staticmethod
     def sendViewerStatusEvent(self):
         pub.sendMessage("viewer.status")
 
@@ -169,11 +170,11 @@ class ViewerContainer(object):
             return
         window = event.GetPane().window
         if hasattr(window, "GetPage"):
-            # Window is a notebook, close each of its pages
+            # Window is a notebook, Close each of its pages
             for pageIndex in range(window.GetPageCount()):
                 self.__close_viewer(window.GetPage(pageIndex))
         else:
-            # Window is a viewer, close it
+            # Window is a viewer, Close it
             self.__close_viewer(window)
         # Make sure we have an active viewer
         if not self.activeViewer():
@@ -181,9 +182,9 @@ class ViewerContainer(object):
         event.Skip()
 
     def __close_viewer(self, viewer):
-        """Close the specified viewer and unsubscribe all its event
-        handlers."""
-        # When closing an AUI managed frame, we get two close events,
+        """ Close the specified viewer and unsubscribe all its event
+            handlers. """
+        # When closing an AUI managed frame, we get two Close events,
         # be prepared:
         if viewer in self.viewers:
             self.viewers.remove(viewer)
@@ -191,21 +192,15 @@ class ViewerContainer(object):
 
     @staticmethod
     def onPageFloated(event):
-        """Give floating pane accelerator keys for activating next and previous
-        viewer."""
+        """ Give floating pane accelerator keys for activating next and previous
+            viewer. """
         viewer = event.GetPane().window
-        table = wx.AcceleratorTable(
-            [
-                (
-                    wx.ACCEL_CTRL,
-                    wx.WXK_PAGEDOWN,
-                    taskcoachlib.gui.menu.activateNextViewerId,
-                ),
-                (
-                    wx.ACCEL_CTRL,
-                    wx.WXK_PAGEUP,
-                    taskcoachlib.gui.menu.activatePreviousViewerId,
-                ),
-            ]
-        )
+        table = wx.AcceleratorTable([(wx.ACCEL_CTRL, wx.WXK_PAGEDOWN,
+                                     taskcoachlib.gui.menu.activateNextViewerId),
+                                    (wx.ACCEL_CTRL, wx.WXK_PAGEUP,
+                                     taskcoachlib.gui.menu.activatePreviousViewerId)])
+        # table = wx.AcceleratorTable([(wx.ACCEL_CTRL, wx.WXK_PAGEDOWN,
+        #                               activateNextViewerId),
+        #                              (wx.ACCEL_CTRL, wx.WXK_PAGEUP,
+        #                               activatePreviousViewerId)])
         viewer.SetAcceleratorTable(table)

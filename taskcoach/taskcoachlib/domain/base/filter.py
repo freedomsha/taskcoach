@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import re
-import sre_constants
+# import sre_constants # inutile avec re sous python 3
 from taskcoachlib import patterns
 from taskcoachlib.domain.base import object as domainobject
 
@@ -25,11 +25,11 @@ from taskcoachlib.domain.base import object as domainobject
 class Filter(patterns.SetDecorator):
     def __init__(self, *args, **kwargs):
         self.__treeMode = kwargs.pop("treeMode", False)
-        super(Filter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reset()
 
     def thaw(self):
-        super(Filter, self).thaw()
+        super().thaw()
         if not self.isFrozen():
             self.reset()
 
@@ -53,15 +53,11 @@ class Filter(patterns.SetDecorator):
         if self.treeMode():
             for item in filteredItems.copy():
                 filteredItems.update(set(item.ancestors()))
-        self.removeItemsFromSelf(
-            [item for item in self if item not in filteredItems], event=event
-        )
-        self.extendSelf(
-            [item for item in filteredItems if item not in self], event=event
-        )
+        self.removeItemsFromSelf([item for item in self if item not in filteredItems], event=event)
+        self.extendSelf([item for item in filteredItems if item not in self], event=event)
 
     def filterItems(self, items):
-        """filter returns the items that pass the filter."""
+        """ filter returns the items that pass the filter. """
         raise NotImplementedError  # pragma: no cover
 
     def rootItems(self):
@@ -78,22 +74,18 @@ class SelectedItemsFilter(Filter):
     def __init__(self, *args, **kwargs):
         self.__selectedItems = set(kwargs.pop("selectedItems", []))
         self.__includeSubItems = kwargs.pop("includeSubItems", True)
-        super(SelectedItemsFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @patterns.eventSource
     def removeItemsFromSelf(self, items, event=None):
-        super(SelectedItemsFilter, self).removeItemsFromSelf(items, event)
+        super().removeItemsFromSelf(items, event)
         self.__selectedItems.difference_update(set(items))
         if not self.__selectedItems:
             self.extendSelf(self.observable(), event)
 
     def filterItems(self, items):
         if self.__selectedItems:
-            result = [
-                item
-                for item in items
-                if self.itemOrAncestorInSelectedItems(item)
-            ]
+            result = [item for item in items if self.itemOrAncestorInSelectedItems(item)]
             if self.__includeSubItems:
                 for item in result[:]:
                     result.extend(item.children(recursive=True))
@@ -118,33 +110,21 @@ class SearchFilter(Filter):
         searchDescription = kwargs.pop("searchDescription", False)
         regularExpression = kwargs.pop("regularExpression", False)
 
-        self.setSearchFilter(
-            searchString,
-            matchCase=matchCase,
-            includeSubItems=includeSubItems,
-            searchDescription=searchDescription,
-            regularExpression=regularExpression,
-            doReset=False,
-        )
+        self.setSearchFilter(searchString, matchCase=matchCase,
+                             includeSubItems=includeSubItems,
+                             searchDescription=searchDescription,
+                             regularExpression=regularExpression, doReset=False)
 
-        super(SearchFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-    def setSearchFilter(
-        self,
-        searchString,
-        matchCase=False,
-        includeSubItems=False,
-        searchDescription=False,
-        regularExpression=False,
-        doReset=True,
-    ):
+    def setSearchFilter(self, searchString, matchCase=False,
+                        includeSubItems=False, searchDescription=False,
+                        regularExpression=False, doReset=True):
         # pylint: disable=W0201
         self.__includeSubItems = includeSubItems
         self.__searchDescription = searchDescription
         self.__regularExpression = regularExpression
-        self.__searchPredicate = self.__compileSearchPredicate(
-            searchString, matchCase, regularExpression
-        )
+        self.__searchPredicate = self.__compileSearchPredicate(searchString, matchCase, regularExpression)
         if doReset:
             self.reset()
 
@@ -156,7 +136,8 @@ class SearchFilter(Filter):
         if regularExpression:
             try:
                 rx = re.compile(searchString, flag)
-            except sre_constants.error:
+            # except sre_constants.error:
+            except re.error:
                 if matchCase:
                     return lambda x: x.find(searchString) != -1
                 else:
@@ -169,15 +150,9 @@ class SearchFilter(Filter):
             return lambda x: x.lower().find(searchString.lower()) != -1
 
     def filterItems(self, items):
-        return (
-            [
-                item
-                for item in items
-                if self.__searchPredicate(self.__itemText(item))
-            ]
-            if self.__searchPredicate
-            else items
-        )
+        return [item for item in items if
+                self.__searchPredicate(self.__itemText(item))] \
+                if self.__searchPredicate else items
 
     def __itemText(self, item):
         text = self.__itemOwnText(item)
@@ -187,13 +162,8 @@ class SearchFilter(Filter):
                 text += self.__itemOwnText(parent)
                 parent = parent.parent()
         if self.treeMode():
-            text += " ".join(
-                [
-                    self.__itemOwnText(child)
-                    for child in item.children(recursive=True)
-                    if child in self.observable()
-                ]
-            )
+            text += " ".join([self.__itemOwnText(child) for child in
+                              item.children(recursive=True) if child in self.observable()])
         return text
 
     def __itemOwnText(self, item):
@@ -205,19 +175,16 @@ class SearchFilter(Filter):
 
 class DeletedFilter(Filter):
     def __init__(self, *args, **kwargs):
-        super(DeletedFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        for eventType in [
-            domainobject.Object.markDeletedEventType(),
-            domainobject.Object.markNotDeletedEventType(),
-        ]:
-            patterns.Publisher().registerObserver(
-                self.onObjectMarkedDeletedOrNot, eventType=eventType
-            )
+        for eventType in [domainobject.Object.markDeletedEventType(),
+                          domainobject.Object.markNotDeletedEventType()]:
+            patterns.Publisher().registerObserver(self.onObjectMarkedDeletedOrNot,
+                                                  eventType=eventType)
 
     def detach(self):
         patterns.Publisher().removeObserver(self.onObjectMarkedDeletedOrNot)
-        super(DeletedFilter, self).detach()
+        super().detach()
 
     def onObjectMarkedDeletedOrNot(self, event):  # pylint: disable=W0613
         self.reset()

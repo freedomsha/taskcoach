@@ -18,25 +18,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 class Singleton(type):
-    """Singleton metaclass. Use by defining the metaclass of a class Singleton,
-    e.g.: class ThereCanBeOnlyOne:
-              __metaclass__ = Singleton
+    """Métaclasse Singleton. A utiliser en définissant la métaclasse d'une classe Singleton,
+    par exemple : class ThereCanBeOnlyOne(metaclass=Singleton).
     """
 
     def __call__(class_, *args, **kwargs):
         if not class_.hasInstance():
+            # ols line :
             # pylint: disable=W0201
-            class_.instance = super(Singleton, class_).__call__(
-                *args, **kwargs
-            )
+            class_.instance = super().__call__(*args, **kwargs)
+            # New line python 3 :
+            # class_.instance = super().__call__(*args, **kwargs)
         return class_.instance
 
     def deleteInstance(class_):
-        """Delete the (only) instance. This method is mainly for unittests so
-        they can start with a clean slate."""
+        """Supprimez la (unique) instance. Cette méthode est principalement destinée aux tests unitaires afin
+        qu'ils puissent commencer avec une table rase."""
         if class_.hasInstance():
             del class_.instance
 
     def hasInstance(class_):
-        """Has the (only) instance been created already?"""
+        """La (seule) instance a-t-elle déjà été créée ?"""
         return "instance" in class_.__dict__

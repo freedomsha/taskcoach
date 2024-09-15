@@ -16,16 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys, time, wx
+# from __future__ import division
+# from past.utils import old_div
+# from builtins import object
+import sys
+import time
+import wx
 from taskcoachlib import operating_system
 from ctypes import *
 
-
+
 # ==============================================================================
 # Linux/BSD
 
 if operating_system.isGTK():
-
     class XScreenSaverInfo(Structure):
         _fields_ = [
             ("window", c_ulong),
@@ -75,7 +79,6 @@ if operating_system.isGTK():
     IdleQuery = LinuxIdleQuery
 
 elif operating_system.isWindows():
-
     class LASTINPUTINFO(Structure):
         _fields_ = [("cbSize", c_uint), ("dwTime", c_uint)]
 
@@ -127,9 +130,8 @@ elif operating_system.isMac():
     IdleQuery = MacIdleQuery
 
 
-# ==============================================================================
+#==============================================================================
 #
-
 
 class IdleNotifier(wx.EvtHandler, IdleQuery):
     STATE_SLEEPING = 0
@@ -161,17 +163,11 @@ class IdleNotifier(wx.EvtHandler, IdleQuery):
             wx.GetApp().Bind(wx.EVT_IDLE, self._OnIdle)
 
     def _check(self):
-        if (
-            self.state == self.STATE_AWAKE
-            and time.time() - self.lastActivity >= self.getMinIdleTime()
-        ):
+        if self.state == self.STATE_AWAKE and time.time() - self.lastActivity >= self.getMinIdleTime():
             self.goneToSleep = self.lastActivity
             self.state = self.STATE_SLEEPING
             self.sleep()
-        elif (
-            self.state == self.STATE_SLEEPING
-            and time.time() - self.lastActivity < self.getMinIdleTime()
-        ):
+        elif self.state == self.STATE_SLEEPING and time.time() - self.lastActivity < self.getMinIdleTime():
             self.state = self.STATE_AWAKE
             self.wake(self.goneToSleep)
 

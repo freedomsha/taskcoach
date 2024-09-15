@@ -1,4 +1,4 @@
-"""
+'''
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,15 +14,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+'''
 
+from builtins import object
 import test
-from taskcoachlib.domain import base
-from taskcoachlib import patterns
+from ....taskcoachlib.domain import base
+from ....taskcoachlib import patterns
+from future.utils import with_metaclass
 
 
-class OwnerUnderTest(base.Object, metaclass=base.DomainObjectOwnerMetaclass):
-    __ownedType__ = "Foo"
+class OwnerUnderTest(with_metaclass(base.DomainObjectOwnerMetaclass, base.Object)):
+    __ownedType__ = 'Foo'
 
 
 class Foo(object):
@@ -37,22 +39,20 @@ class OwnerTest(test.TestCase):
     def onEvent(self, event):
         self.events.append(event)
 
-    # pylint: disable=E1101
+        # pylint: disable=E1101
 
     def testSetObjects_NoNotificationWhenUnchanged(self):
-        patterns.Publisher().registerObserver(
-            self.onEvent, self.owner.foosChangedEventType()
-        )
+        patterns.Publisher().registerObserver(self.onEvent,
+                                              self.owner.foosChangedEventType())
         self.owner.setFoos([])
-        self.assertFalse(self.events)
+        self.failIf(self.events)
 
     def testSetObjects_NotificationWhenCanged(self):
-        patterns.Publisher().registerObserver(
-            self.onEvent, self.owner.foosChangedEventType()
-        )
+        patterns.Publisher().registerObserver(self.onEvent,
+                                              self.owner.foosChangedEventType())
         self.owner.setFoos([Foo()])
         self.assertEqual(1, len(self.events))
 
     def testRemoveNoObjects(self):
         self.owner.removeFoos()
-        self.assertFalse(self.owner.foos())
+        self.failIf(self.owner.foos())

@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from . import singleton
+# from . import singleton
+from taskcoachlib.patterns import singleton
 import functools
+# from taskcoachlib.thirdparty.pubsub import pub
 from pubsub import pub
 
 # Ignore these pylint messages:
@@ -27,35 +29,73 @@ from pubsub import pub
 
 
 class List(list):
+    """
+    Une sous-classe de liste utilisée pour les collections d'objets de domaine.
+    Garantit que les sous-classes de List sont toujours considérées comme inégales
+    même lorsque leur contenu est le même.
+    """
+
     def __eq__(self, other):
-        """Subclasses of List are always considered to be unequal, even when
-        their contents are the same. This is because List subclasses are
-        used as Collections of domain objects. When compared to other types,
-        the contents are compared."""
+        """
+        Comparez deux listes pour l'égalité.
+
+        Les sous-classes de List sont toujours considérées comme inégales, même lorsque
+        leur contenu est le même. En effet, les sous-classes List sont
+        utilisées comme collections d'objets de domaine. Lorsqu'il est comparé à d'autres types,
+        le contenu est comparé.
+
+        Args:
+            other (Liste ou liste) : La liste avec laquelle comparer.
+
+        Returns:
+            bool : True si les listes sont égales, False sinon.
+        """
         if isinstance(other, List):
             return self is other
         else:
             return list(self) == other
 
     def removeItems(self, items):
-        """List.removeItems is the opposite of list.extend. Useful for
-        ObservableList to be able to generate just one notification
-        when removing multiple items."""
+        """
+        Supprimez plusieurs éléments de la liste.
+
+        List.removeItems est l'opposé de list.extend. Utile pour
+        ObservableList pour pouvoir générer une seule notification
+        lors de la suppression de plusieurs éléments.
+
+        Args:
+            items (list) : Les éléments à supprimer.
+        """
         for item in items:
-            # No super() to prevent overridden remove method from being invoked
-            list.remove(self, item)
+            list.remove(
+                self, item
+            )  # No super() to prevent overridden remove method from being invoked
 
 
 class Set(set):
-    """The builtin set type does not like keyword arguments, so to keep
-    it happy we don't pass these on."""
+    """
+    Une sous-classe d'ensemble utilisée pour les collections d'objets de domaine.
+    Garantit que les arguments de mot-clé ne sont pas transmis à la classe d'ensemble de base.
+    Le type d'ensemble intégré n'aime pas les arguments de mot-clé, donc pour le garder
+    , il est heureux que nous ne le fassions pas. Je ne les transmets pas.
+    """
 
     def __new__(class_, iterable=None, *args, **kwargs):
         return set.__new__(class_, iterable)
 
     def __cmp__(self, other):
-        # If set.__cmp__ is called we get a TypeError in Python 2.5, so
-        # call set.__eq__ instead
+        """
+        Comparez deux ensembles pour l'égalité.
+
+        Si set.__cmp__ est appelé, nous obtenons une TypeError dans Python 2.5, donc
+        appelez set.__eq__ à la place
+
+        Args:
+            other (Set or set) : L'ensemble à comparer.
+
+        Returns:
+            int : 0 si les ensembles sont égaux, -1 sinon.
+        """
         if self == other:
             return 0
         else:
@@ -63,21 +103,36 @@ class Set(set):
 
 
 class Event(object):
-    """Event represents notification events. Events can notify about a single
-    event type for a single source or for multiple event types and multiple
-    sources at the same time. The Event methods try to make both uses easy.
+    """
+    L'événement représente des événements de notification.
 
-    This creates an event for one type, one source and one value
-    >>> event = Event('event type', 'event source', 'new value')
+    Les événements peuvent notifier un seul type d'événement pour une seule source ou plusieurs types d'événements
+    et plusieurs sources en même temps. Les méthodes Event tentent de rendre les deux utilisations
+    faciles.
 
-    To add more event sources with their own value:
-    >>> event.addSource('another source', 'another value')
+    L'événement représente les événements de notification. Les événements peuvent notifier un seul type d'événement
+    pour une seule source ou pour plusieurs types d'événements et plusieurs sources
+    en même temps. Les méthodes Event tentent de faciliter les deux utilisations.
 
-    To add a source with a different event type:
-    >>> event.addSource('yet another source', 'its value', type='another type')
+    Cela crée un événement pour un type, une source et une valeur
+    >> event = Event('event type', 'event source', 'new value')
+
+    Pour ajouter plus de sources d'événements avec leur propre valeur :
+    >> event.addSource('une autre source', 'une autre valeur')
+
+    Pour ajouter une source avec une type d'événement différent :
+    >> event.addSource('encore une autre source', 'sa valeur', type='un autre type')
     """
 
     def __init__(self, type=None, source=None, *values):
+        """
+        Initialisez l'événement.
+
+        Args:
+            type (str, facultatif) : le type d'événement.
+            source (object, facultatif) : la source de l'événement.
+            *values : valeurs supplémentaires associées à l'événement.
+        """
         self.__sourcesAndValuesByType = (
             {}
             if type is None
@@ -88,14 +143,33 @@ class Event(object):
         return "Event(%s)" % (self.__sourcesAndValuesByType)
 
     def __eq__(self, other):
-        """Events compare equal when all their data is equal."""
+        """
+        Comparez deux événements pour l'égalité.
+
+        Les événements sont comparables lorsque toutes leurs données sont égales.
+
+        Args:
+            other (event) : L'événement avec lequel comparer.
+
+        Returns:
+            bool : vrai si les événements sont égaux, faux sinon.
+        """
         return self.sourcesAndValuesByType() == other.sourcesAndValuesByType()
 
     def addSource(self, source, *values, **kwargs):
-        """Add a source with optional values to the event. Optionally specify
-        the type as keyword argument. If no type is specified, the source
-        and values are added for a random type, i.e. only omit the type if
-        the event has only one type."""
+        """
+        Ajoutez une source avec des valeurs facultatives à l'événement.
+
+        Ajoutez une source avec des valeurs facultatives à l'événement. Spécifiez éventuellement
+        le type comme argument de mot-clé. Si aucun type n'est spécifié, la source
+        et les valeurs sont ajoutées pour un type aléatoire, c'est-à-dire n'omettez le type que si
+        l'événement n'a qu'un seul type.
+
+        Args :
+            source (objet ) : La source de l'événement.
+            *values : Valeurs supplémentaires associées à l'événement.
+            **kwargs : arguments de mots-clés arbitraires (type : str, facultatif).
+        """
         eventType = kwargs.pop("type", self.type())
         currentValues = set(
             self.__sourcesAndValuesByType.setdefault(eventType, {}).setdefault(
@@ -108,19 +182,39 @@ class Event(object):
         )
 
     def type(self):
-        """Return the event type. If there are multiple event types, this
-        method returns an arbitrary event type. This method is useful if
-        the caller is sure this event instance has exactly one event
-        type."""
+        """
+        Renvoie le type d'événement.
+
+        S'il existe plusieurs types d'événements, cette méthode
+        renvoie un type d'événement arbitraire. Cette méthode est utile si
+        l'appelant est sûr que cette instance d'événement a exactement un type d'événement
+        .
+
+        Returns:
+            str : Le type d'événement.
+        """
         return list(self.types())[0] if self.types() else None
 
     def types(self):
-        """Return the set of event types that this event is notifying."""
+        """
+        Renvoie l'ensemble des types d'événements que cet événement notifie.
+
+        Returns:
+            set : l'ensemble des types d'événements.
+        """
         return set(self.__sourcesAndValuesByType.keys())
 
     def sources(self, *types):
-        """Return the set of all sources of this event instance, or the
-        sources for specific event types."""
+        """
+        Renvoie l'ensemble de toutes les sources de cette instance d'événement, ou les sources
+        pour des types d'événements spécifiques.
+
+        Args:
+            *types : types d'événements spécifiques à filtrer.
+
+        Returns:
+            set : L'ensemble des sources.
+        """
         types = types or self.types()
         sources = set()
         for type in types:
@@ -130,35 +224,71 @@ class Event(object):
         return sources
 
     def sourcesAndValuesByType(self):
-        """Return all data {type: {source: values}}."""
+        """
+        Renvoie toutes les données {type : {source : valeurs}}.
+
+        Returns:
+            dict : Les données de l'événement.
+        """
         return self.__sourcesAndValuesByType
 
     def value(self, source=None, type=None):
-        """Return the value that belongs to source. If there are multiple
-        values, this method returns only the first one. So this method is
-        useful if the caller is sure there is only one value associated
-        with source. If source is None return the value of an arbitrary
-        source. This latter option is useful if the caller is sure there
-        is only one source."""
+        """
+        Renvoie la valeur qui appartient à une source.
+
+        S'il existe plusieurs valeurs,
+        cette méthode renvoie uniquement la première. Cette méthode est donc
+        utile si l'appelant est sûr qu'il n'y a qu'une seule valeur associée
+        à la source. Si la source est None, renvoie la valeur d'une source
+        arbitraire. Cette dernière option est utile si l'appelant est sûr
+        qu'il n'y a qu'une seule source.
+
+        Args:
+            source (object, facultatif) : La source de l'événement.
+            type (str, facultatif) : Le type d'événement.
+
+        Returns:
+            object : La valeur associée à la source.
+        """
         return self.values(source, type)[0]
 
     def values(self, source=None, type=None):
-        """Return the values that belong to source. If source is None return
-        the values of an arbitrary source. This latter option is useful if
-        the caller is sure there is only one source."""
+        """
+        Renvoie les valeurs qui appartiennent à une source.
+
+        Si la source est Aucune, renvoie
+        les valeurs d'une source arbitraire. Cette dernière option est utile si
+        l'appelant est sûr qu'il n'y a qu'une seule source.
+
+        Args:
+            source (object, facultatif) : La source de l'événement.
+            type (str, facultatif) : Le type d'événement.
+
+        Returns:
+            liste : Les valeurs associées à la source.
+        """
         type = type or self.type()
         source = source or list(self.__sourcesAndValuesByType[type].keys())[0]
         return self.__sourcesAndValuesByType.get(type, {}).get(source, [])
 
     def subEvent(self, *typesAndSources):
-        """Create a new event that contains a subset of the data of this
-        event."""
+        """
+        Créez un nouvel événement qui contient un sous-ensemble des données de cet événement.
+
+        Args:
+            *typesAndSources : Tuples de (type, source).
+
+        Returns:
+            Événement : L'événement de sous-ensemble.
+        """
         subEvent = self.__class__()
         for type, source in typesAndSources:
             sourcesToAdd = self.sources(type)
             if source is not None:
                 # Make sure source is actually in self.sources(type):
                 sourcesToAdd &= set([source])
+                # TODO: try this
+                # sourcesToAdd &= {source}
             kwargs = dict(
                 type=type
             )  # Python doesn't allow type=type after *values
@@ -169,19 +299,31 @@ class Event(object):
         return subEvent
 
     def send(self):
-        """Send this event to observers of the type(s) of this event."""
+        """
+        Envoyez cet événement aux observateurs du(des) type(s) de cet événement.
+        """
         Publisher().notifyObservers(self)
 
 
 def eventSource(f):
-    """Decorate methods that send events with code to optionally create the
-    event and optionally send it. This allows for sending just one event
-    for chains of multiple methods that each need to send an event."""
+    """
+    Décorez les méthodes qui envoient des événements avec du code pour éventuellement créer l'événement
+    et éventuellement l'envoyer.
+
+    Cela permet d'envoyer un seul événement
+    pour des chaînes de plusieurs méthodes dont chacune doit envoyer un événement.
+
+    Args:
+        f (fonction) : La méthode pour décorer.
+
+    Returns:
+        fonction : La méthode décorée.
+    """
 
     @functools.wraps(f)
     def decorator(*args, **kwargs):
         event = kwargs.pop("event", None)
-        notify = event is None  # We only notify if we're the event creator
+        notify = event is None  # We only Notify if we're the event creator
         kwargs["event"] = event = event if event else Event()
         result = f(*args, **kwargs)
         if notify:
@@ -192,22 +334,50 @@ def eventSource(f):
 
 
 class MethodProxy(object):
-    """Wrap methods in a class that allows for comparing methods. Comparison
-    if instance methods was changed in python 2.5. In python 2.5, instance
-    methods are equal when their instances compare equal, which is not
-    the behaviour we need for callbacks. So we wrap callbacks in this class
-    to get back the old (correct, imho) behaviour."""
+    """
+    Enveloppez les méthodes dans une classe qui permet de comparer les méthodes.
+
+    Comparaison si les méthodes d'instance ont été modifiées dans Python 2.5 Dans Python 2.5,
+    les méthodes d'instance sont égales lorsque leurs instances sont égales, ce qui n'est pas
+    le comportement nécessaire pour les rappels. Cette classe encapsule les rappels pour restaurer ou
+    pour récupérer l'ancien comportement.
+    """
 
     def __init__(self, method):
+        """
+        Initialisez la méthode MethodProxy.
+
+        Args:
+            method (fonction) : La méthode à envelopper.
+        """
         self.method = method
 
     def __repr__(self):
         return "MethodProxy(%s)" % self.method  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
+        """
+        Appelez la méthode encapsulée.
+
+        Args:
+            *args : liste d'arguments de longueur variable.
+            **kwargs : arguments de mots clés arbitraires.
+
+        Returns:
+            objet : le résultat de l’appel de méthode.
+        """
         return self.method(*args, **kwargs)
 
     def __eq__(self, other):
+        """
+        Comparez deux objets MethodProxy pour l'égalité.
+
+        Args:
+            other (MethodProxy) : Le MethodProxy avec lequel comparer.
+
+        Returns:
+            bool : True si les MethodProxies sont égaux, False sinon .
+        """
         return (
             self.method.__self__.__class__ is other.method.__self__.__class__
             and self.method.__self__ is other.method.__self__
@@ -215,9 +385,24 @@ class MethodProxy(object):
         )
 
     def __ne__(self, other):
+        """
+        Comparez deux objets MethodProxy pour l'inégalité.
+
+        Args:
+            other (MethodProxy) : Le MethodProxy avec lequel comparer.
+
+        Returns:
+            bool : True si les MethodProxies ne sont pas égaux, False sinon.
+        """
         return not (self == other)
 
     def __hash__(self):
+        """
+        Obtenez le hachage du MethodProxy.
+
+        Returns:
+            int : Le hachage du MethodProxy.
+        """
         # Can't use self.method.__self__ for the hash, it might be mutable
         return hash(
             (
@@ -228,6 +413,12 @@ class MethodProxy(object):
         )
 
     def get_im_self(self):
+        """
+        Récupère l'instance associée à la méthode.
+
+        Renvoie :
+            object : L'instance associée à la méthode.
+        """
         return self.method.__self__
 
     im_self = property(get_im_self)
@@ -235,8 +426,16 @@ class MethodProxy(object):
 
 
 def wrapObserver(decoratedMethod):
-    """Wrap the observer argument (assumed to be the first after self) in
-    a MethodProxy class."""
+    """
+    Enveloppez l'argument de l'observateur (supposé être le premier après self) dans
+    une classe MethodProxy.
+
+    Args:
+        decoratedMethod (fonction) : La méthode à décorer.
+
+    Returns:
+        fonction : La méthode décorée.
+    """
 
     def decorator(self, observer, *args, **kwargs):
         assert hasattr(observer, "__self__")
@@ -247,7 +446,15 @@ def wrapObserver(decoratedMethod):
 
 
 def unwrapObservers(decoratedMethod):
-    """Unwrap the returned observers from their MethodProxy class."""
+    """
+    Déballez les observateurs renvoyés de leur classe MethodProxy.
+
+    Args:
+        decoratedMethod (fonction) : La méthode à décorer.
+
+    Returns:
+        fonction : La méthode décorée.
+    """
 
     def decorator(*args, **kwargs):
         observers = decoratedMethod(*args, **kwargs)
@@ -257,36 +464,49 @@ def unwrapObservers(decoratedMethod):
 
 
 class Publisher(object, metaclass=singleton.Singleton):
-    """Publisher is used to register for event notifications. It supports
-    the publisher/subscribe pattern, also known as the observer pattern.
-    Objects (Observers) interested in change notifications register a
-    callback method via Publisher.registerObserver. The callback should
-    expect one argument; an instance of the Event class. Observers can
-    register their interest in specific event types (topics), and
-    optionally specific event sources, when registering.
+    """
+    Publisher est utilisé pour s’inscrire aux notifications d’événements. Il prend en charge
+    le modèle éditeur/abonnement, également connu sous le nom de modèle observateur.
+    Les objets (observateurs) intéressés par les notifications de changement enregistrent une méthode de rappel
+    via Publisher.registerObserver. Le rappel devrait
+    attendre un argument ; une instance de la classe Event. Les observateurs peuvent
+    enregistrer leur intérêt pour des types d'événements spécifiques (sujets) et
+    éventuellement des sources d'événements spécifiques, lors de leur inscription.
 
-    Implementation note:
-    - Publisher is a Singleton class since all observables and all
-    observers have to use exactly one registry to be sure that all
-    observables can reach all observers."""
+    Note d'implémentation :
+    - Publisher est une classe Singleton puisque tous les observables et tous les observateurs
+    doivent utiliser exactement un seul registre pour être sûr que tous les observables
+    peuvent atteindre tous les observateurs.
+    """
 
     def __init__(self, *args, **kwargs):
-        super(Publisher, self).__init__(*args, **kwargs)
+        """
+        Initialisez l'éditeur.
+        """
+        super().__init__(*args, **kwargs)
         self.clear()
 
     def clear(self):
-        """Clear the registry of observers. Mainly for testing purposes."""
+        """
+        Effacer le registre des observateurs. Principalement à des fins de tests.
+        """
         # observers = {(eventType, eventSource): set(callbacks)}
         self.__observers = {}  # pylint: disable=W0201
 
     @wrapObserver
     def registerObserver(self, observer, eventType, eventSource=None):
-        """Register an observer for an event type. The observer is a callback
-        method that should expect one argument, an instance of Event.
-        The eventType can be anything hashable, typically a string. When
-        passing a specific eventSource, the observer is only called when the
-        event originates from the specified eventSource."""
+        """
+        Enregistrez un observateur pour un type d'événement. L'observateur est une méthode de rappel
+        qui doit attendre un argument, une instance de Event.
+        Le eventType peut être n'importe quoi hachable, généralement une chaîne. Lorsque
+        passe une source d'événement spécifique, l'observer n'est appelé que lorsque l'événement
+        provient de la source d'événement spécifiée.
 
+        Args:
+            observer (fonction) : la méthode de rappel de l'observateur.
+            eventType (str) : le type d'événement à observer.
+            eventSource (object, facultatif) : la source d'événement à observer.
+        """
         observers = self.__observers.setdefault(
             (eventType, eventSource), set()
         )
@@ -294,15 +514,21 @@ class Publisher(object, metaclass=singleton.Singleton):
 
     @wrapObserver
     def removeObserver(self, observer, eventType=None, eventSource=None):
-        """Remove an observer. If no event type is specified, the observer
-        is removed for all event types. If an event type is specified
-        the observer is removed for that event type only. If no event
-        source is specified, the observer is removed for all event sources.
-        If an event source is specified, the observer is removed for that
-        event source only. If both an event type and an event source are
-        specified, the observer is removed for the combination of that
-        specific event type and event source only."""
+        """
+        Supprimez un observateur. Si aucun type d'événement n'est spécifié, l'observateur
+        est supprimé pour tous les types d'événements. Si un type d'événement est spécifié
+        , l'observateur est supprimé pour ce type d'événement uniquement. Si aucune source d'événement
+        n'est spécifiée, l'observateur est supprimé pour toutes les sources d'événements.
+        Si une source d'événement est spécifiée, l'observateur est supprimé pour cette source d'événement
+        uniquement. Si un type d'événement et une source d'événement sont
+        spécifiés, l'observateur est supprimé pour la combinaison de ce type d'événement spécifique
+        et de cette source d'événement uniquement.
 
+        Args :
+            observer (fonction) : La méthode de rappel de l'observateur.
+            eventType (str, facultatif) : Le type d'événement à arrêter d'observer.
+            eventSource (object, facultatif) : La source d'événement à arrêter d'observer.
+        """
         # pylint: disable=W0613
 
         # First, create a match function that will select the combination of
@@ -337,14 +563,20 @@ class Publisher(object, metaclass=singleton.Singleton):
                 del self.__observers[key]
 
     def notifyObservers(self, event):
-        """Notify observers of the event. The event type and sources are
-        extracted from the event."""
+        """
+        Informer les observateurs de l'événement. Le type et les sources de l'événement sont
+        extraits de l'événement.
+
+        Args:
+            event (event) : L'événement dont il faut informer les observateurs.
+        """
         if not event.sources():
             return
-        # Collect observers *and* the types and sources they are registered for
+        # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
         observers = dict()  # {observer: set([(type, source), ...])}
         types = event.types()
-        # Include observers not registered for a specific event source:
+        # Inclure les observateurs non inscrits pour une source d'événement spécifique :
+        # sources = event.sources() | {None}
         sources = event.sources() | set([None])
         eventTypesAndSources = [
             (type, source) for source in sources for type in types
@@ -359,8 +591,16 @@ class Publisher(object, metaclass=singleton.Singleton):
 
     @unwrapObservers
     def observers(self, eventType=None):
-        """Get the currently registered observers. Optionally specify
-        a specific event type to get observers for that event type only."""
+        """
+        Obtenez les observateurs actuellement enregistrés. Spécifiez éventuellement
+        un type d'événement spécifique pour obtenir des observateurs pour ce type d'événement uniquement.
+
+        Args:
+            eventType (str, facultatif) : le type d'événement par lequel filtrer les observateurs.
+
+        Returns:
+            set : L'ensemble des observateurs.
+        """
         if eventType:
             return self.__observers.get((eventType, None), set())
         else:
@@ -371,19 +611,45 @@ class Publisher(object, metaclass=singleton.Singleton):
 
 
 class Observer(object):
+    """
+    Classe de base observer pour gérer l’enregistrement et la suppression des observateurs.
+    """
+
     def __init__(self, *args, **kwargs):
+        """
+        Initialisez l'observateur.
+        """
         self.__observers = set()
         super().__init__(*args, **kwargs)
 
     def registerObserver(self, observer, *args, **kwargs):
+        """
+        Enregistrez un observateur.
+
+        Args:
+            observer (function) : La méthode de rappel de l'observateur.
+            *args : liste d'arguments de longueur variable.
+            **kwargs : arguments de mots clés arbitraires.
+        """
         self.__observers.add(observer)
         Publisher().registerObserver(observer, *args, **kwargs)
 
     def removeObserver(self, observer, *args, **kwargs):
+        """
+        Supprimer un observateur.
+
+        Args:
+            observer (function) : La méthode de rappel de l'observateur.
+            *args : liste d'arguments de longueur variable.
+            **kwargs : arguments de mots clés arbitraires.
+        """
         self.__observers.discard(observer)
         Publisher().removeObserver(observer, *args, **kwargs)
 
     def removeInstance(self):
+        """
+        Supprimez tous les observateurs enregistrés sur cette instance.
+        """
         for observer in self.__observers.copy():
             self.removeObserver(observer)
         pub.unsubAll(
@@ -395,11 +661,31 @@ class Observer(object):
 
 
 class Decorator(Observer):
+    """
+    Classe Decorator pour ajouter une fonctionnalité d'observateur à une autre classe.
+    Hérite d'Observer et encapsule une instance observable.
+    """
+
     def __init__(self, observable, *args, **kwargs):
+        """
+        Initialisez le décorateur.
+
+        Args:
+            observable (objet) : l'instance observable à envelopper.
+        """
         self.__observable = observable
-        super(Decorator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def observable(self, recursive=False):
+        """
+        Obtenez l'instance observable encapsulée.
+
+        Args:
+            recursive (bool, facultatif) : Si True, obtenez l'observable de niveau supérieur.
+
+        Renvoie :
+            object : L'observable encapsulé exemple.
+        """
         if recursive:
             try:
                 return self.__observable.observable(recursive=True)
@@ -408,35 +694,42 @@ class Decorator(Observer):
         return self.__observable
 
     def __getattr__(self, attribute):
+        """
+        Déléguez l'accès aux attributs à l'instance observable encapsulée.
+
+        Args:
+            attribute (str) : le nom de l'attribut.
+
+        Returns:
+            Any : la valeur de l'attribut.
+        """
         return getattr(self.observable(), attribute)
 
 
 class ObservableCollection(object):
     def __hash__(self):
-        """Make ObservableCollections suitable as keys in dictionaries."""
+        """Rendre les ObservableCollections appropriées comme clés dans les dictionnaires."""
         return hash(id(self))
 
     def detach(self):
-        """Break cycles"""
+        """Met en pause les Cycles."""
 
     @classmethod
     def addItemEventType(class_):
-        """The event type used to notify observers that one or more items
-        have been added to the collection."""
+        """Type d'événement utilisé pour informer les observateurs qu'un ou plusieurs éléments
+        ont été ajoutés à la collection."""
         return "%s.add" % class_
 
     @classmethod
     def removeItemEventType(class_):
-        """The event type used to notify observers that one or more items
-        have been removed from the collection."""
+        """Type d'événement utilisé pour informer les observateurs qu'un ou plusieurs éléments
+        ont été supprimés de la collection."""
         return "%s.remove" % class_
 
     @classmethod
     def modificationEventTypes(class_):
         try:
-            eventTypes = super(
-                ObservableCollection, class_
-            ).modificationEventTypes()
+            eventTypes = super().modificationEventTypes()
         except AttributeError:
             eventTypes = []
         return eventTypes + [
@@ -446,24 +739,57 @@ class ObservableCollection(object):
 
 
 class ObservableSet(ObservableCollection, Set):
+    """
+    ObservableSet est un ensemble qui avertit les observateurs lorsque des éléments sont ajoutés ou supprimés de l'ensemble.
+    """
+
     def __eq__(self, other):
+        """
+        Compare cet ObservableSet avec un autre objet.
+
+        Args:
+            other : L'objet à comparer.
+
+        Renvoie :
+            bool : True si les objets sont égaux, False sinon.
+        """
         if isinstance(other, self.__class__):
             result = self is other
         else:
             result = list(self) == other
         return result
 
-    # FIXME: Only for satisfying registerObserver()
+    # FIXME: Uniquement pour satisfaire registerObserver()
     def __hash__(self):
+        """
+        Calcule la valeur de hachage pour cet ObservableSet.
+
+        Returns:
+            int : la valeur de hachage.
+        """
         return hash(id(self))
 
     @eventSource
     def append(self, item, event=None):
+        """
+        Ajoute un élément à ObservableList.
+
+        Args:
+            item : L'élément à ajouter.
+            event : Événement facultatif associé à l'opération.
+        """
         self.add(item)
         event.addSource(self, item, type=self.addItemEventType())
 
     @eventSource
     def extend(self, items, event=None):
+        """
+        Étend l'ObservableSet avec plusieurs éléments.
+
+        Args:
+            items : itérable des éléments à ajouter.
+            event : événement facultatif associé à l'opération.
+        """
         if not items:
             return
         self.update(items)
@@ -471,11 +797,25 @@ class ObservableSet(ObservableCollection, Set):
 
     @eventSource
     def remove(self, item, event=None):
-        super(ObservableSet, self).remove(item)
+        """
+        Supprime un élément de l'ObservableSet.
+
+        Args:
+            item : L'élément à supprimer.
+            event : Événement facultatif associé à l'opération.
+        """
+        super().remove(item)
         event.addSource(self, item, type=self.removeItemEventType())
 
     @eventSource
     def removeItems(self, items, event=None):
+        """
+        Supprime plusieurs éléments de l'ObservableSet.
+
+        Args:
+            items : itérable des éléments à supprimer.
+            event : événement facultatif associé à l'opération.
+        """
         if not items:
             return
         self.difference_update(items)
@@ -483,24 +823,44 @@ class ObservableSet(ObservableCollection, Set):
 
     @eventSource
     def clear(self, event=None):
+        """
+        Efface tous les éléments de l’événement ObservableSet.
+
+        Args:
+            event : événement facultatif associé à l’opération.
+        """
         if not self:
             return
         items = tuple(self)
-        super(ObservableSet, self).clear()
+        super().clear()
         event.addSource(self, *items, **dict(type=self.removeItemEventType()))
 
 
 class ObservableList(ObservableCollection, List):
-    """ObservableList is a list that notifies observers
-    when items are added to or removed from the list."""
+    """ObservableList est une liste qui informe les observateurs
+    lorsque des éléments sont ajoutés ou supprimés de la liste."""
 
     @eventSource
     def append(self, item, event=None):
-        super(ObservableList, self).append(item)
+        """
+        Ajoute un élément à ObservableList.
+
+        Args:
+            item : L'élément à ajouter.
+            event : Événement facultatif associé à l'opération.
+        """
+        super().append(item)
         event.addSource(self, item, type=self.addItemEventType())
 
     @eventSource
     def extend(self, items, event=None):
+        """
+        Étend l'ObservableList avec plusieurs éléments.
+
+        Args:
+            items : itérable des éléments à ajouter.
+            event : événement facultatif associé à l'opération.
+        """
         if not items:
             return
         super(ObservableList, self).extend(items)
@@ -508,18 +868,38 @@ class ObservableList(ObservableCollection, List):
 
     @eventSource
     def remove(self, item, event=None):
-        super(ObservableList, self).remove(item)
+        """
+        Supprime un élément de l'ObservableList.
+
+        Args:
+            item : L'élément à supprimer.
+            event : Événement facultatif associé à l'opération.
+        """
+        super().remove(item)
         event.addSource(self, item, type=self.removeItemEventType())
 
     @eventSource
     def removeItems(self, items, event=None):  # pylint: disable=W0221
+        """
+        Supprime plusieurs éléments de l'ObservableList.
+
+        Args:
+            items : itérable des éléments à supprimer.
+            event : événement facultatif associé à l'opération.
+        """
         if not items:
             return
-        super(ObservableList, self).removeItems(items)
+        super().removeItems(items)
         event.addSource(self, *items, **dict(type=self.removeItemEventType()))
 
     @eventSource
     def clear(self, event=None):
+        """
+        Efface tous les éléments de l’événement ObservableList.
+
+        Args:
+            event : événement facultatif associé à l’opération.
+        """
         if not self:
             return
         items = tuple(self)
@@ -528,16 +908,14 @@ class ObservableList(ObservableCollection, List):
 
 
 class CollectionDecorator(Decorator, ObservableCollection):
-    """CollectionDecorator observes an ObservableCollection and is an
-    ObservableCollection itself too. Its purpose is to decorate another
-    collection and add some behaviour, such as sorting or filtering.
-    Users of this class shouldn't see a difference between using the
-    original collection or a decorated version."""
+    """CollectionDecorator observe une ObservableCollection et est également une
+    ObservableCollection elle-même. Son but est de décorer une autre collection
+    et d'ajouter des comportements, tels que le tri ou le filtrage.
+    Les utilisateurs de cette classe ne devraient pas voir de différence entre
+    l'utilisation de la collection originale ou une version décorée."""
 
     def __init__(self, observedCollection, *args, **kwargs):
-        super(CollectionDecorator, self).__init__(
-            observedCollection, *args, **kwargs
-        )
+        super().__init__(observedCollection, *args, **kwargs)
         self.__freezeCount = 0
         observable = self.observable()
         self.registerObserver(
@@ -553,10 +931,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         self.extendSelf(observable)
 
     def __repr__(self):  # pragma: no cover
-        return "%s(%s)" % (
-            self.__class__,
-            super(CollectionDecorator, self).__repr__(),
-        )
+        return "%s(%s)" % (self.__class__, super().__repr__())
 
     def freeze(self):
         if isinstance(self.observable(), CollectionDecorator):
@@ -575,31 +950,33 @@ class CollectionDecorator(Decorator, ObservableCollection):
         self.removeObserver(self.onAddItem)
         self.removeObserver(self.onRemoveItem)
         self.observable().detach()
-        super(CollectionDecorator, self).detach()
+        super().detach()
 
     def onAddItem(self, event):
-        """The default behaviour is to simply add the items that are
-        added to the original collection to this collection too.
-        Extend to add behaviour."""
+        """Le comportement par défaut consiste simplement à ajouter à
+        cette collection les éléments qui sont
+        ajoutés à la collection d'origine.
+        Étendre pour ajouter un comportement."""
         self.extendSelf(list(event.values()))
 
     def onRemoveItem(self, event):
-        """The default behaviour is to simply remove the items that are
-        removed from the original collection from this collection too.
-        Extend to add behaviour."""
+        """Le comportement par défaut consiste simplement à supprimer également
+        de cette collection les éléments qui sont
+        supprimés de la collection d'origine.
+        Étendre pour ajouter un comportement."""
         self.removeItemsFromSelf(list(event.values()))
 
     def extendSelf(self, items, event=None):
-        """Provide a method to extend this collection without delegating to
-        the observed collection."""
-        return super(CollectionDecorator, self).extend(items, event=event)
+        """Fournissez une méthode pour étendre cette collection sans déléguer à
+        la collection observée."""
+        return super().extend(items, event=event)
 
     def removeItemsFromSelf(self, items, event=None):
-        """Provide a method to remove items from this collection without
-        delegating to the observed collection."""
-        return super(CollectionDecorator, self).removeItems(items, event=event)
+        """Fournissez une méthode pour supprimer des éléments de cette collection sans
+        déléguer à la collection observée."""
+        return super().removeItems(items, event=event)
 
-    # Delegate changes to the observed collection
+    # Déléguer les modifications à la collection observée
 
     def append(self, *args, **kwargs):
         return self.observable().append(*args, **kwargs)

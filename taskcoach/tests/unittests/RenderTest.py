@@ -87,10 +87,8 @@ class RenderDateTime(test.TestCase):
 
 class RenderDate(test.TestCase):
     def testRenderDateWithDateTime(self):
-        self.assertEqual(
-            render.date(date.DateTime(2000, 1, 1)),
-            render.date(date.DateTime(2000, 1, 1, 10, 11, 12)),
-        )
+        self.assertEqual(render.date(date.DateTime(2000, 1, 1)),
+                         render.date(date.DateTime(2000, 1, 1, 10, 11, 12)))
 
 
 class RenderTimeLeftTest(test.TestCase):

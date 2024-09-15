@@ -16,6 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import chr
+# from builtins import str
+# from builtins import range
+# from builtins import object
 from taskcoachlib import persistence, operating_system
 from taskcoachlib.thirdparty.ntlm import IMAPNtlmAuthHandler
 from taskcoachlib.widgets.password import GetPassword
@@ -71,6 +75,7 @@ def loadPreferences():
     def user_pref(key, value):
         config[key] = value
 
+    # for line in file(os.path.join(getDefaultProfileDir(), 'prefs.js'), 'r'):
     for line in open(os.path.join(getDefaultProfileDir(), "prefs.js"), "r"):
         if line.startswith("user_pref("):
             # pylint: disable=W0122

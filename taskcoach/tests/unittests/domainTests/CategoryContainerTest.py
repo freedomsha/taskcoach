@@ -58,13 +58,9 @@ class CategoryContainerTest(test.TestCase):
 
     def testFilteredCategoriesAfterAddingOneFilteredCategory(self):
         self.categories.append(self.filteredCategory)
-        self.assertEqual(
-            [self.filteredCategory], self.categories.filteredCategories()
-        )
+        self.assertEqual([self.filteredCategory], self.categories.filteredCategories())
 
-    def testFilteredCategoriesAfterAddingOneUnfilteredCategoryAndMakingItFilter(
-        self,
-    ):
+    def testFilteredCategoriesAfterAddingOneUnfilteredCategoryAndMakingItFilter(self):
         self.categories.append(self.category)
         self.category.setFiltered(True)
         self.assertEqual([self.category], self.categories.filteredCategories())
@@ -79,24 +75,16 @@ class CategoryContainerTest(test.TestCase):
         self.categories.remove(self.filteredCategory)
         self.assertFalse(self.categories.filteredCategories())
 
-    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategory(
-        self,
-    ):
+    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategory(self):
         self.categories.extend([self.category, self.filteredCategory])
-        self.assertEqual(
-            [self.filteredCategory], self.categories.filteredCategories()
-        )
+        self.assertEqual([self.filteredCategory], self.categories.filteredCategories())
 
-    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingBothFiltered(
-        self,
-    ):
+    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingBothFiltered(self):
         self.categories.extend([self.category, self.filteredCategory])
         self.category.setFiltered(True)
         self.assertEqual(2, len(self.categories.filteredCategories()))
 
-    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingNoneFiltered(
-        self,
-    ):
+    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingNoneFiltered(self):
         self.categories.extend([self.category, self.filteredCategory])
         self.filteredCategory.setFiltered(False)
         self.assertFalse(self.categories.filteredCategories())

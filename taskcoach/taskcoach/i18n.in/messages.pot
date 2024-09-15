@@ -1156,7 +1156,7 @@ msgstr ""
 
 #: taskcoachlib/gui/dialog/backupmanager.py:53
 #: taskcoachlib/widgets/dialog.py:81
-msgid "close"
+msgid "Close"
 msgstr ""
 
 #: taskcoachlib/gui/dialog/backupmanager.py:113
@@ -1981,7 +1981,7 @@ msgid "Tomorrow"
 msgstr ""
 
 #: taskcoachlib/gui/dialog/preferences.py:633
-msgid "Day after tomorrow"
+msgid "Day after Tomorrow"
 msgstr ""
 
 #: taskcoachlib/gui/dialog/preferences.py:634
@@ -2277,7 +2277,7 @@ msgid "Spacer"
 msgstr ""
 
 #: taskcoachlib/gui/dialog/version.py:43
-msgid "notify me of new versions."
+msgid "Notify me of new versions."
 msgstr ""
 
 #: taskcoachlib/gui/dialog/version.py:64
@@ -2856,7 +2856,7 @@ msgid "Merge tasks from another file with the current file"
 msgstr ""
 
 #: taskcoachlib/gui/uicommand/uicommand.py:130
-msgid "&close\tCtrl+W"
+msgid "&Close\tCtrl+W"
 msgstr ""
 
 #: taskcoachlib/gui/uicommand/uicommand.py:141
@@ -3617,7 +3617,7 @@ msgstr ""
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2504
 #: taskcoachlib/gui/uicommand/uicommand.py:2511
-msgid "Show today"
+msgid "Show Today"
 msgstr ""
 
 #: taskcoachlib/gui/uicommand/uicommand.py:2527
@@ -5535,7 +5535,7 @@ msgid ""
 "template\" menu in the Task menu, or the equivalent toolbar button. When the\n"
 "task is created, the due, start and completion dates, if applicable, are\n"
 "reevaluated relatively to the current Date. That means that if you create a\n"
-"template from a task starting today and due tomorrow, every time the template\n"
+"template from a task starting Today and due Tomorrow, every time the template\n"
 "is instantiated, the planned start Date will be replaced by the current Date and the\n"
 "due Date by the current Date plus one day."
 msgstr ""
@@ -5748,7 +5748,7 @@ msgid "Ctrl-Z"
 msgstr ""
 
 #: taskcoachlib/help/__init__.py:831
-msgid "Edit the selected item(s) or close a dialog"
+msgid "Edit the selected item(s) or Close a dialog"
 msgstr ""
 
 #: taskcoachlib/help/__init__.py:831
@@ -5854,7 +5854,7 @@ msgstr ""
 #: taskcoachlib/help/tips.py:28
 msgid ""
 "%(name)s has a mailing list where you can discuss usage of %(name)s with fellow users, discuss and \n"
-"        request features and complain about bugs. Go to %(urlpo)s and join today!"
+"        request features and complain about bugs. Go to %(urlpo)s and join Today!"
 msgstr ""
 
 #: taskcoachlib/help/tips.py:30
@@ -5988,7 +5988,7 @@ msgid "Stop tracking effort or resume tracking effort"
 msgstr ""
 
 #: taskcoachlib/help/uicommand.py:40
-msgid "close the current file"
+msgid "Close the current file"
 msgstr ""
 
 #: taskcoachlib/help/uicommand.py:41
@@ -6498,7 +6498,7 @@ msgid "Cl&ose"
 msgstr ""
 
 #: taskcoachlib/thirdparty/agw/aui/tabmdi.py:41
-msgid "close All"
+msgid "Close All"
 msgstr ""
 
 #: taskcoachlib/thirdparty/agw/aui/tabmdi.py:43
@@ -6611,7 +6611,7 @@ msgid "Customize..."
 msgstr ""
 
 #: taskcoachlib/thirdparty/agw/fmcustomizedlg.py:217
-msgid "&close"
+msgid "&Close"
 msgstr ""
 
 #: taskcoachlib/thirdparty/agw/fmcustomizedlg.py:225

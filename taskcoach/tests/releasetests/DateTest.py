@@ -26,8 +26,8 @@ class DateTest(test.TestCase):
         self.assertFalse("?" in meta.date)
 
     def testNoQuestionMarkInChangeLog(self):
-        import sys, os.path
-
+        import sys
+        import os.path
         sys.path.insert(0, os.path.join(test.projectRoot, "changes.in"))
         import changes  # pylint: disable=F0401
 

@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib.tools import wxhelper
 import wx
 from taskcoachlib.domain.task import Task
 from taskcoachlib import persistence, operating_system
@@ -27,7 +26,7 @@ from wx.lib import sized_controls
 
 class TimeExpressionEntry(wx.TextCtrl):
     def __init__(self, *args, **kwargs):
-        super(TimeExpressionEntry, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.__defaultColor = self.GetBackgroundColour()
         self.__invalidColor = wx.Colour(255, 128, 128)
@@ -41,35 +40,28 @@ class TimeExpressionEntry(wx.TextCtrl):
                 res = nlTimeExpression.parseString(value)
             except:
                 return False  # pylint: disable=W0702
-            return "calculatedTime" in res
+            return 'calculatedTime' in res
         return True  # Empty is valid.
 
     def _onTextChanged(self, event):
         event.Skip()
-        self.SetBackgroundColour(
-            self.__defaultColor
-            if self.isValid(self.GetValue())
-            else self.__invalidColor
-        )
+        self.SetBackgroundColour(self.__defaultColor if self.isValid(self.GetValue()) else self.__invalidColor)
 
 
 class TemplatesDialog(sized_controls.SizedDialog):
     def __init__(self, settings, *args, **kwargs):
         self.settings = settings
         self._changing = False
-        super(TemplatesDialog, self).__init__(
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER, *args, **kwargs
-        )
+        super().__init__(style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+                         *args, **kwargs)
         pane = self.GetContentsPane()
-        pane.SetSizerType("vertical")
+        pane.SetSizerType('vertical')
         self.createInterior(pane)
         self._buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(self._buttonSizer)
         self.Fit()
         self.SetMinSize(self.GetSize())  # Current size is min size
-        wxhelper.getButtonFromStdDialogButtonSizer(
-            self._buttonSizer, wx.ID_OK
-        ).Bind(wx.EVT_BUTTON, self.ok)
+        self._buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.ok)
         self.CentreOnParent()
 
     def createInterior(self, pane):
@@ -78,20 +70,14 @@ class TemplatesDialog(sized_controls.SizedDialog):
 
     def createTemplateList(self, pane):
         panel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType("horizontal")
+        panel.SetSizerType('horizontal')
         panel.SetSizerProps(expand=True, proportion=1)
-        self._templateList = wx.TreeCtrl(
-            panel, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE
-        )
+        self._templateList = wx.TreeCtrl(panel, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE)
         self._templateList.SetMinSize((300, 200))
         self._templateList.SetSizerProps(expand=True, proportion=1)
-        self._templateList.Bind(
-            wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged
-        )
-        self._templates = persistence.TemplateList(
-            self.settings.pathToTemplatesDir()
-        )
-        self._root = self._templateList.AddRoot("Root")
+        self._templateList.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
+        self._templates = persistence.TemplateList(self.settings.pathToTemplatesDir())
+        self._root = self._templateList.AddRoot('Root')
         for task in self._templates.tasks():
             item = self.appendTemplate(self._root, task)
             if operating_system.isMac():
@@ -102,17 +88,11 @@ class TemplatesDialog(sized_controls.SizedDialog):
 
     def createTemplateListButtons(self, pane):
         panel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType("vertical")
-        self._btnDelete = self.createButton(
-            panel, "cross_red_icon", self.OnDelete, enable=False
-        )
-        self._btnUp = self.createButton(
-            panel, "arrow_up_icon", self.OnUp, enable=False
-        )
-        self._btnDown = self.createButton(
-            panel, "arrow_down_icon", self.OnDown, enable=False
-        )
-        self._btnAdd = self.createButton(panel, "symbol_plus_icon", self.OnAdd)
+        panel.SetSizerType('vertical')
+        self._btnDelete = self.createButton(panel, 'cross_red_icon', self.onDelete, enable=False)
+        self._btnUp = self.createButton(panel, 'arrow_up_icon', self.OnUp, enable=False)
+        self._btnDown = self.createButton(panel, 'arrow_down_icon', self.OnDown, enable=False)
+        self._btnAdd = self.createButton(panel, 'symbol_plus_icon', self.onAdd)
         panel.Fit()
 
     def createButton(self, parent, bitmapName, handler, enable=True):
@@ -124,32 +104,27 @@ class TemplatesDialog(sized_controls.SizedDialog):
 
     def createTemplateEntries(self, pane):
         panel = self._editPanel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType("form")
+        panel.SetSizerType('form')
         panel.SetSizerProps(expand=True)
-        label = wx.StaticText(panel, label=_("Subject"))
-        label.SetSizerProps(valign="center")
+        label = wx.StaticText(panel, label=_('Subject'))
+        label.SetSizerProps(valign='center')
         self._subjectCtrl = wx.TextCtrl(panel)
-        label = wx.StaticText(panel, label=_("Planned start date"))
-        label.SetSizerProps(valign="center")
+        label = wx.StaticText(panel, label=_('Planned start Date'))
+        label.SetSizerProps(valign='center')
         self._plannedStartDateTimeCtrl = TimeExpressionEntry(panel)
-        label = wx.StaticText(panel, label=_("Due date"))
-        label.SetSizerProps(valign="center")
+        label = wx.StaticText(panel, label=_('Due Date'))
+        label.SetSizerProps(valign='center')
         self._dueDateTimeCtrl = TimeExpressionEntry(panel)
-        label = wx.StaticText(panel, label=_("Completion date"))
-        label.SetSizerProps(valign="center")
+        label = wx.StaticText(panel, label=_('Completion Date'))
+        label.SetSizerProps(valign='center')
         self._completionDateTimeCtrl = TimeExpressionEntry(panel)
-        label = wx.StaticText(panel, label=_("Reminder"))
-        label.SetSizerProps(valign="center")
+        label = wx.StaticText(panel, label=_('Reminder'))
+        label.SetSizerProps(valign='center')
         self._reminderDateTimeCtrl = TimeExpressionEntry(panel)
-        self._taskControls = (
-            self._subjectCtrl,
-            self._plannedStartDateTimeCtrl,
-            self._dueDateTimeCtrl,
-            self._completionDateTimeCtrl,
-            self._reminderDateTimeCtrl,
-        )
+        self._taskControls = (self._subjectCtrl, self._plannedStartDateTimeCtrl, self._dueDateTimeCtrl,
+                              self._completionDateTimeCtrl, self._reminderDateTimeCtrl)
         for ctrl in self._taskControls:
-            ctrl.SetSizerProps(valign="center", expand=True)
+            ctrl.SetSizerProps(valign='center', expand=True)
             ctrl.Bind(wx.EVT_TEXT, self.onValueChanged)
         self.enableEditPanel(False)
         panel.Fit()
@@ -159,6 +134,7 @@ class TemplatesDialog(sized_controls.SizedDialog):
             ctrl.Enable(enable)
 
     def appendTemplate(self, parentItem, task):
+        # item = self._templateList.AppendItem(parentItem, task.subject(), data=wx.TreeItemData(task))
         item = self._templateList.Append(parentItem, task.subject(), data=task)
         for child in task.children():
             self.appendTemplate(item, child)
@@ -167,16 +143,12 @@ class TemplatesDialog(sized_controls.SizedDialog):
     def onValueChanged(self, event):
         event.Skip()
         if self._GetSelection().IsOk() and not self._changing:
-            task = self._templateList.GetItemData(
-                self._GetSelection()
-            ).GetData()
+            task = self._templateList.GetItemData(self._GetSelection()).GetData()
             task.setSubject(self._subjectCtrl.GetValue())
-            for ctrl, name in [
-                (self._plannedStartDateTimeCtrl, "plannedstartdatetmpl"),
-                (self._dueDateTimeCtrl, "duedatetmpl"),
-                (self._completionDateTimeCtrl, "completiondatetmpl"),
-                (self._reminderDateTimeCtrl, "remindertmpl"),
-            ]:
+            for ctrl, name in [(self._plannedStartDateTimeCtrl, 'plannedstartdatetmpl'),
+                               (self._dueDateTimeCtrl, 'duedatetmpl'),
+                               (self._completionDateTimeCtrl, 'completiondatetmpl'),
+                               (self._reminderDateTimeCtrl, 'remindertmpl')]:
                 if TimeExpressionEntry.isValid(ctrl.GetValue()):
                     setattr(task, name, ctrl.GetValue() or None)
 
@@ -187,46 +159,32 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self._changing = True
         try:
             selection = self._GetSelection()
-            selectionOK = selection.IsOk() and selection != self._root
+            selectionOk = selection.IsOk() and selection != self._root
             selectionAtRoot = False
-            if selectionOK:
-                selectionAtRoot = (
-                    self._templateList.GetItemParent(selection) == self._root
-                )
+            if selectionOk:
+                selectionAtRoot = (self._templateList.GetItemParent(selection) == self._root)
             self._btnDelete.Enable(selectionAtRoot)
-            self._btnUp.Enable(
-                selectionAtRoot
-                and self._templateList.GetPrevSibling(selection).IsOk()
-            )
-            self._btnDown.Enable(
-                selectionAtRoot
-                and self._templateList.GetNextSibling(selection).IsOk()
-            )
-            self.enableEditPanel(selectionOK)
-            if selectionOK:
+            self._btnUp.Enable(selectionAtRoot and self._templateList.GetPrevSibling(selection).IsOk())
+            self._btnDown.Enable(selectionAtRoot and self._templateList.GetNextSibling(selection).IsOk())
+            self.enableEditPanel(selectionOk)
+            if selectionOk:
                 task = self._templateList.GetItemData(selection).GetData()
                 if task is None:
                     for ctrl in self._taskControls:
-                        ctrl.SetValue("")
+                        ctrl.SetValue(u'')
                 else:
                     self._subjectCtrl.SetValue(task.subject())
-                    self._plannedStartDateTimeCtrl.SetValue(
-                        task.plannedstartdatetmpl or ""
-                    )
-                    self._dueDateTimeCtrl.SetValue(task.duedatetmpl or "")
-                    self._completionDateTimeCtrl.SetValue(
-                        task.completiondatetmpl or ""
-                    )
-                    self._reminderDateTimeCtrl.SetValue(
-                        task.remindertmpl or ""
-                    )
+                    self._plannedStartDateTimeCtrl.SetValue(task.plannedstartdatetmpl or u'')
+                    self._dueDateTimeCtrl.SetValue(task.duedatetmpl or u'')
+                    self._completionDateTimeCtrl.SetValue(task.completiondatetmpl or u'')
+                    self._reminderDateTimeCtrl.SetValue(task.remindertmpl or u'')
             else:
                 for ctrl in self._taskControls:
-                    ctrl.SetValue("")
+                    ctrl.SetValue(u'')
         finally:
             self._changing = False
 
-    def OnDelete(self, event):  # pylint: disable=W0613
+    def onDelete(self, event):  # pylint: disable=W0613
         task = self._templateList.GetItemData(self._GetSelection()).GetData()
         index = self._templates.tasks().index(task)
         self._templates.deleteTemplate(index)
@@ -239,13 +197,11 @@ class TemplatesDialog(sized_controls.SizedDialog):
         task = self._templateList.GetItemData(selection).GetData()
         self._templateList.Delete(selection)
         if prev.IsOk():
-            item = self._templateList.InsertItem(
-                self._root, prev, task.subject(), data=task
-            )
+            # item = self._templateList.InsertItem(self._root, prev, task.subject(), data=wx.TreeItemData(task))
+            item = self._templateList.InsertItem(self._root, prev, task.subject(), data=task)
         else:
-            item = self._templateList.PrependItem(
-                self._root, task.subject(), data=task
-            )
+            # item = self._templateList.PrependItem(self._root, task.subject(), data=wx.TreeItemData(task))
+            item = self._templateList.PrependItem(self._root, task.subject(), data=task)
         for child in task.children():
             self.appendTemplate(item, child)
         index = self._templates.tasks().index(task)
@@ -257,23 +213,18 @@ class TemplatesDialog(sized_controls.SizedDialog):
         next = self._templateList.GetNextSibling(selection)
         task = self._templateList.GetItemData(selection).GetData()
         self._templateList.Delete(selection)
-        item = self._templateList.InsertItem(
-            self._root, next, task.subject(), data=task
-        )
+        # item = self._templateList.InsertItem(self._root, next, task.subject(), data=wx.TreeItemData(task))
+        item = self._templateList.InsertItem(self._root, next, task.subject(), data=task)
         for child in task.children():
             self.appendTemplate(item, child)
         index = self._templates.tasks().index(task)
         self._templates.swapTemplates(index, index + 1)
         self._templateList.SelectItem(item)
 
-    def OnAdd(self, event):  # pylint: disable=W0613
-        template = Task(subject=_("New task template"))
-        for name in (
-            "plannedstartdatetmpl",
-            "duedatetmpl",
-            "completiondatetmpl",
-            "remindertmpl",
-        ):
+    def onAdd(self, event):  # pylint: disable=W0613
+        template = Task(subject=_('New task template'))
+        for name in ('plannedstartdatetmpl', 'duedatetmpl', 'completiondatetmpl',
+                     'remindertmpl'):
             setattr(template, name, None)
         theTask = self._templates.addTemplate(template)
         self.appendTemplate(self._root, theTask)

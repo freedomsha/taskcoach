@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib import config
-from taskcoachlib.gui.dialog import version
+from builtins import object
+from ....taskcoachlib import config
+from ....taskcoachlib.gui.dialog import version
 import test
 
 
@@ -29,46 +30,42 @@ class DummyEvent(object):
 class CommonTestsMixin(object):
     def testCreateAndClose(self):
         self.dialog.onClose(DummyEvent())
-        self.assertTrue(self.settings.getboolean("version", "notify"))
+        self.failUnless(self.settings.getboolean('version', 'Notify'))
 
     def testNoMoreNotifications(self):
         self.dialog.check.SetValue(False)
         self.dialog.onClose(DummyEvent())
-        self.assertFalse(self.settings.getboolean("version", "notify"))
+        self.failIf(self.settings.getboolean('version', 'Notify'))
 
 
 class VersionDialogTestCase(test.TestCase):
     def setUp(self):
         self.settings = config.Settings(load=False)
         self.dialog = self.createDialog()
-
+        
     def createDialog(self):
         raise NotImplementedError  # pragma: no cover
-
+        
 
 class NewVersionDialogTest(CommonTestsMixin, VersionDialogTestCase):
     def createDialog(self):
-        return version.NewVersionDialog(
-            None, version="0.0", message="", settings=self.settings
-        )
+        return version.NewVersionDialog(None, version='0.0', message='', 
+                                        settings=self.settings)
 
 
 class VersionUpToDateDialogTest(CommonTestsMixin, VersionDialogTestCase):
     def createDialog(self):
-        return version.VersionUpToDateDialog(
-            None, version="0.0", message="", settings=self.settings
-        )
-
+        return version.VersionUpToDateDialog(None, version='0.0', message='', 
+                                             settings=self.settings)
+        
 
 class NoVersionDialogTest(CommonTestsMixin, VersionDialogTestCase):
     def createDialog(self):
-        return version.NoVersionDialog(
-            None, version="0.0", message="", settings=self.settings
-        )
-
-
+        return version.NoVersionDialog(None, version='0.0', message='', 
+                                       settings=self.settings)
+        
+        
 class PrereleaseVersionDialogTest(CommonTestsMixin, VersionDialogTestCase):
     def createDialog(self):
-        return version.PrereleaseVersionDialog(
-            None, version="0.0", message="", settings=self.settings
-        )
+        return version.PrereleaseVersionDialog(None, version='0.0', message='', 
+                                               settings=self.settings)

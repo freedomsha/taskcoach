@@ -16,16 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib import persistence, config
-from taskcoachlib.domain import task, category
-from unittests import dummy
-import test
-from taskcoachlib.changes import ChangeMonitor
+from builtins import object
+from ....taskcoachlib import persistence, config
+from ....taskcoachlib.domain import task, category
+from ...unittests import dummy
+from ... import test
+from ....taskcoachlib.changes import ChangeMonitor
 
 
 class DummyFile(object):
-    name = "testfile.tsk"
-    encoding = "utf-8"
+    name = 'testfile.tsk'
+    encoding = 'utf-8'
 
     def close(self, *args, **kwargs):
         pass
@@ -44,14 +45,7 @@ class DummyTaskFile(persistence.TaskFile):
         if self._throw:
             raise IOError
         else:
-            return (
-                [task.Task()],
-                [category.Category("category")],
-                [],
-                None,
-                {self.monitor().guid(): self.monitor()},
-                None,
-            )
+            return [task.Task()], [category.Category('category')], [], None, {self.monitor().guid(): self.monitor()}, None
 
     def exists(self, *args, **kwargs):  # pylint: disable=W0613
         return True
@@ -63,13 +57,11 @@ class DummyTaskFile(persistence.TaskFile):
         return DummyFile()
 
     def save(self, *args, **kwargs):
-        if kwargs.get("doNotify", True):
+        if kwargs.get('doNotify', True):
             self.saveCalled += 1
         super(DummyTaskFile, self).save(*args, **kwargs)
 
-    def load(
-        self, filename=None, throw=False, *args, **kwargs
-    ):  # pylint: disable=W0221
+    def load(self, filename=None, throw=False, *args, **kwargs):  # pylint: disable=W0221
         self._throw = throw  # pylint: disable=W0201
         return super(DummyTaskFile, self).load(filename, *args, **kwargs)
 
@@ -87,68 +79,68 @@ class AutoSaverTestCase(test.TestCase):
         del self.autoSaver  # Make sure AutoSaver is not observing task files
 
     def testCreate(self):
-        self.assertFalse(self.taskFile.saveCalled)
+        self.failIf(self.taskFile.saveCalled)
 
     def testFileChanged_ButNoFilenameAndAutoSaveOff(self):
         self.taskFile.tasks().append(task.Task())
         self.autoSaver.on_idle(dummy.Event())
-        self.assertFalse(self.taskFile.saveCalled)
+        self.failIf(self.taskFile.saveCalled)
 
     def testFileChanged_ButAutoSaveOff(self):
-        self.settings.set("file", "autosave", "False")
-        self.taskFile.setFilename("whatever.tsk")
+        self.settings.set('file', 'autosave', 'False')
+        self.taskFile.setFilename('whatever.tsk')
         self.taskFile.tasks().append(task.Task())
         self.autoSaver.on_idle(dummy.Event())
-        self.assertFalse(self.taskFile.saveCalled)
+        self.failIf(self.taskFile.saveCalled)
 
     def testFileChanged_ButNoFilename(self):
-        self.settings.set("file", "autosave", "True")
+        self.settings.set('file', 'autosave', 'True')
         self.taskFile.tasks().append(task.Task())
         self.autoSaver.on_idle(dummy.Event())
-        self.assertFalse(self.taskFile.saveCalled)
+        self.failIf(self.taskFile.saveCalled)
 
     def testFileChanged(self):
-        self.settings.set("file", "autosave", "True")
-        self.taskFile.setFilename("whatever.tsk")
+        self.settings.set('file', 'autosave', 'True')
+        self.taskFile.setFilename('whatever.tsk')
         self.taskFile.tasks().append(task.Task())
         self.autoSaver.on_idle(dummy.Event())
         self.assertEqual(1, self.taskFile.saveCalled)
 
     def testSaveAsDoesNotTriggerAutoSave(self):
-        self.settings.set("file", "autosave", "True")
-        self.taskFile.setFilename("whatever.tsk")
-        self.taskFile.saveas("newfilename.tsk")
+        self.settings.set('file', 'autosave', 'True')
+        self.taskFile.setFilename('whatever.tsk')
+        self.taskFile.saveas('newfilename.tsk')
         self.autoSaver.on_idle(dummy.Event())
         self.assertEqual(1, self.taskFile.saveCalled)
 
     def testCloseDoesNotTriggerAutoSave(self):
-        self.settings.set("file", "autosave", "True")
-        self.taskFile.setFilename("whatever.tsk")
+        self.settings.set('file', 'autosave', 'True')
+        self.taskFile.setFilename('whatever.tsk')
         self.taskFile.tasks().append(task.Task())
         self.autoSaver.on_idle(dummy.Event())
         self.taskFile.close()
         self.assertEqual(1, self.taskFile.saveCalled)
 
     def testLoadDoesNotTriggerAutoSave(self):
-        self.settings.set("file", "autosave", "True")
-        self.taskFile.setFilename("whatever.tsk")
+        self.settings.set('file', 'autosave', 'True')
+        self.taskFile.setFilename('whatever.tsk')
         self.taskFile.load()
         self.autoSaver.on_idle(dummy.Event())
-        self.assertFalse(self.taskFile.saveCalled)
+        self.failIf(self.taskFile.saveCalled)
 
     def testLoadWithExceptionDoesNotTriggerAutoSave(self):
-        self.settings.set("file", "autosave", "True")
-        self.taskFile.setFilename("whatever.tsk")
+        self.settings.set('file', 'autosave', 'True')
+        self.taskFile.setFilename('whatever.tsk')
         try:
             self.taskFile.load(throw=True)
         except IOError:
             pass
         self.autoSaver.on_idle(dummy.Event())
-        self.assertFalse(self.taskFile.saveCalled)
+        self.failIf(self.taskFile.saveCalled)
 
     def testMergeDoesTriggerAutoSave(self):
-        self.settings.set("file", "autosave", "True")
-        self.taskFile.setFilename("whatever.tsk")
-        self.taskFile.merge("another-non-existing-file.tsk")
+        self.settings.set('file', 'autosave', 'True')
+        self.taskFile.setFilename('whatever.tsk')
+        self.taskFile.merge('another-non-existing-file.tsk')
         self.autoSaver.on_idle(dummy.Event())
         self.assertEqual(1, self.taskFile.saveCalled)

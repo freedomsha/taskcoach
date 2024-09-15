@@ -18,3 +18,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # This is the domain package. It contains classes for domain objects,
 # such as tasks, effort, etc.
+# from . import attachment, attribute, base, categorizable, category, date, effort, note, task
+# from . import base

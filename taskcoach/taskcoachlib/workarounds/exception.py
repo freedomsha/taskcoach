@@ -16,11 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# No way to monkey-patch this unfortunately...
 
+# No way to monkey-patch this unfortunately...
 
 def ExceptionAsUnicode(e):
     try:
+        #     return unicode(e)
+        # except NameError:
         return str(e)
     except UnicodeDecodeError:
         components = list()

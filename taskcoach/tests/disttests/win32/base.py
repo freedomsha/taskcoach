@@ -15,15 +15,32 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-""" These tests actually assume a fresh configuration (new .ini file, 
-nothing changed). """  # pylint: disable=W0105
-
-import sys, os, time, re, shutil, unittest
-import win32process, win32event, win32gui, win32con
+# pylint: disable=W0105
+# from __future__ import print_function
+# from __future__ import absolute_import
+# from __future__ import division
+#
+# from builtins import str
+# from builtins import range
+# from builtins import object
+# from past.utils import old_div
+from io import open as file
+import sys
+import os
+import time
+import re
+import shutil
+import unittest
+import win32process
+import win32event
+import win32gui
+import win32con
 
 sys.path.insert(0, os.path.join(os.path.split(__file__)[0], "sendinput"))
 from . import sendinput as si
+
+""" These tests actually assume a fresh configuration (new .ini file, 
+nothing changed). """
 
 
 class Window(object):
@@ -61,9 +78,8 @@ class Window(object):
     def _get_isForeground(self):
         return win32gui.GetForegroundWindow() == self.hwnd
 
-    isForeground = property(
-        _get_isForeground, doc="Whether the window is the foreground"
-    )
+    isForeground = property(_get_isForeground,
+                            doc="Whether the window is the foreground")
 
     def waitFocus(self):
         for _ in range(10):
@@ -73,7 +89,7 @@ class Window(object):
         return False
 
     def clickAt(self, dx, dy):
-        """Simulates a click at a given position (relative to the window)"""
+        """ Simulates a click at a given position (relative to the window) """
 
         # Posting WM_LBUTTON[DOWN/UP] does not work it seems. Use
         # SendInput instead. We must find the absolute coordinates
@@ -86,17 +102,16 @@ class Window(object):
         desktop = win32gui.GetDesktopWindow()
         left, top, right, bottom = win32gui.GetClientRect(desktop)
 
-        x = int(1.0 * x * 65535 / (right - left))
-        y = int(1.0 * y * 65535 / (bottom - top))
+        # x = int(1.0 * x * 65535 / (right - left))
+        # y = int(1.0 * y * 65535 / (bottom - top))
+        # x = int(old_div(1.0 * x * 65535, (right - left)))
+        # y = int(old_div(1.0 * y * 65535, (bottom - top)))
+        x = int(1.0 * x * 65535 // (right - left))
+        y = int(1.0 * y * 65535 // (bottom - top))
 
-        si.SendInput(
-            (
-                si.INPUT_MOUSE,
-                (x, y, 0, si.MOUSEEVENTF_ABSOLUTE | si.MOUSEEVENTF_MOVE, 0),
-            ),
-            (si.INPUT_MOUSE, (0, 0, 0, si.MOUSEEVENTF_LEFTDOWN, 0)),
-            (si.INPUT_MOUSE, (0, 0, 0, si.MOUSEEVENTF_LEFTUP, 0)),
-        )
+        si.SendInput((si.INPUT_MOUSE, (x, y, 0, si.MOUSEEVENTF_ABSOLUTE | si.MOUSEEVENTF_MOVE, 0)),
+                     (si.INPUT_MOUSE, (0, 0, 0, si.MOUSEEVENTF_LEFTDOWN, 0)),
+                     (si.INPUT_MOUSE, (0, 0, 0, si.MOUSEEVENTF_LEFTUP, 0)))
 
     def sendText(self, text):
         inputs = []
@@ -106,11 +121,11 @@ class Window(object):
         si.SendInput(*tuple(inputs))
 
     def close(self):
-        """Closes the window."""
+        """ Closes the window. """
         win32gui.SendMessage(self.hwnd, win32con.WM_CLOSE, 0, 0)
 
     def findChildren(self, klass, title):
-        """Find all children, recursively, matching a class and a title."""
+        """ Find all children, recursively, matching a class and a title. """
 
         result = []
         for child in self.children:
@@ -120,7 +135,7 @@ class Window(object):
         return result
 
     def dump(self, level=0):
-        """Dumps the window and its children, recursively, to stdout."""
+        """ Dumps the window and its children, recursively, to stdout. """
         print((" " * level) + str(self))
         for child in self.children:
             child.dump(level + 1)
@@ -197,13 +212,13 @@ class Win32TestCase(unittest.TestCase):
             os.remove(self.logfilename)
 
     def findWindow(self, title, tries=5):
-        """Waits for a window to appear, and return a Window instance,
+        """ Waits for a window to appear, and return a Window instance,
         or None if not found.
 
         @param title: Criterion for the window's title
             (regular expression string)
         @param tries: Max number of scans to perform. Scans are one
-            second apart."""
+            second apart. """
 
         titleRegex = re.compile(title)
 

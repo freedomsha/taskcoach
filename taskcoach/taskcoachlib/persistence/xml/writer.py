@@ -18,10 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from xml.etree import ElementTree as ET
+# from builtins import str
+# from builtins import object
 from taskcoachlib import meta
 from taskcoachlib.domain import date, task, note, category
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as eTree
 import os
 import sys
 
@@ -36,37 +37,27 @@ def flatten(elem):
         flatten(child)
 
 
-class PIElementTree(ET.ElementTree):
+class PIElementTree(eTree.ElementTree):
     def __init__(self, pi, *args, **kwargs):
         self.__pi = pi
-        ET.ElementTree.__init__(self, *args, **kwargs)
+        eTree.ElementTree.__init__(self, *args, **kwargs)
 
     def _write(self, file, node, encoding, namespaces):
         if node == self._root:
             # WTF? ElementTree does not write the encoding if it's ASCII or UTF-8...
             if encoding in ["us-ascii", "utf-8"]:
-                file.write(
-                    (
-                        '<?xml version="1.0" encoding="%s"?>\n' % encoding
-                    ).encode(encoding)
-                )
+                file.write('<?xml version="1.0" encoding="%s"?>\n' % encoding).encode(encoding)
             file.write((self.__pi + "\n").encode(encoding))
-        ET.ElementTree._write(
-            self, file, node, encoding, namespaces
-        )  # pylint: disable=E1101
+        eTree.ElementTree._write(self, file, node, encoding, namespaces)  # pylint: disable=E1101
 
     def write(self, file, encoding, *args, **kwargs):
         if encoding is None:
             encoding = "utf-8"
         if sys.version_info >= (2, 7):
-            file.write(
-                ('<?xml version="1.0" encoding="%s"?>\n' % encoding).encode(
-                    encoding
-                )
-            )
+            file.write(('<?xml version="1.0" encoding="%s"?>\n' % encoding).encode(encoding))
             file.write((self.__pi + "\n").encode(encoding))
             kwargs["xml_declaration"] = False
-        ET.ElementTree.write(self, file, encoding, *args, **kwargs)
+        eTree.ElementTree.write(self, file, encoding, *args, **kwargs)
 
 
 def sortedById(objects):
@@ -82,19 +73,16 @@ class XMLWriter(object):
         self.__fd = fd
         self.__versionnr = versionnr
 
-    def write(
-        self, taskList, categoryContainer, noteContainer, syncMLConfig, guid
-    ):
-        root = ET.Element("tasks")
+    def write(self, taskList, categoryContainer,
+              noteContainer, syncMLConfig, guid):
+        root = eTree.Element("tasks")
 
         for rootTask in sortedById(taskList.rootItems()):
             self.taskNode(root, rootTask)
 
         ownedNotes = self.notesOwnedByNoteOwners(taskList, categoryContainer)
         for rootCategory in sortedById(categoryContainer.rootItems()):
-            self.categoryNode(
-                root, rootCategory, taskList, noteContainer, ownedNotes
-            )
+            self.categoryNode(root, rootCategory, taskList, noteContainer, ownedNotes)
 
         for rootNote in sortedById(noteContainer.rootItems()):
             self.noteNode(root, rootNote)
@@ -102,7 +90,7 @@ class XMLWriter(object):
         if syncMLConfig:
             self.syncMLNode(root, syncMLConfig)
         if guid:
-            ET.SubElement(root, "guid").text = guid
+            eTree.SubElement(root, "guid").text = guid
 
         flatten(root)
         PIElementTree(
@@ -111,6 +99,7 @@ class XMLWriter(object):
             root,
         ).write(self.__fd, "utf-8")
 
+    # @staticmethod
     def notesOwnedByNoteOwners(self, *collectionOfNoteOwners):
         notes = []
         for noteOwners in collectionOfNoteOwners:
@@ -143,11 +132,11 @@ class XMLWriter(object):
         if task.fixedFee():
             node.attrib["fixedFee"] = str(task.fixedFee())
         reminder = task.reminder()
-        if reminder != maxDateTime and reminder != None:
+        if reminder != maxDateTime and reminder != None:  # is not None !
             node.attrib["reminder"] = str(reminder)
             reminderBeforeSnooze = task.reminder(includeSnooze=False)
             if (
-                reminderBeforeSnooze != None
+                reminderBeforeSnooze != None  # is not None
                 and reminderBeforeSnooze < task.reminder()
             ):
                 node.attrib["reminderBeforeSnooze"] = str(reminderBeforeSnooze)
@@ -159,7 +148,7 @@ class XMLWriter(object):
         )
         if prerequisiteIds:
             node.attrib["prerequisites"] = prerequisiteIds
-        if task.shouldMarkCompletedWhenAllChildrenCompleted() != None:
+        if task.shouldMarkCompletedWhenAllChildrenCompleted() != None:  # is not None !
             node.attrib["shouldMarkCompletedWhenAllChildrenCompleted"] = str(
                 task.shouldMarkCompletedWhenAllChildrenCompleted()
             )
@@ -185,30 +174,24 @@ class XMLWriter(object):
             attrs["sameWeekday"] = "True"
         if recurrence.recurBasedOnCompletion:
             attrs["recurBasedOnCompletion"] = "True"
-        return ET.SubElement(parentNode, "recurrence", attrs)
+        return eTree.SubElement(parentNode, "recurrence", attrs)
 
     def effortNode(self, parentNode, effort):
         formattedStart = self.formatDateTime(effort.getStart())
-        attrs = dict(
-            id=effort.id(),
-            status=str(effort.getStatus()),
-            start=formattedStart,
-        )
+        attrs = dict(id=effort.id(), status=str(effort.getStatus()), start=formattedStart)
         stop = effort.getStop()
-        if stop != None:
+        if stop is not None:
             formattedStop = self.formatDateTime(stop)
             if formattedStop == formattedStart:
                 # Make sure the effort duration is at least one second
                 formattedStop = self.formatDateTime(stop + date.ONE_SECOND)
             attrs["stop"] = formattedStop
-        node = ET.SubElement(parentNode, "effort", attrs)
+        node = eTree.SubElement(parentNode, "effort", attrs)
         if effort.description():
-            ET.SubElement(node, "description").text = effort.description()
+            eTree.SubElement(node, "description").text = effort.description()
         return node
 
-    def categoryNode(
-        self, parentNode, category, *categorizableContainers
-    ):  # pylint: disable=W0621
+    def categoryNode(self, parentNode, category, *categorizableContainers):  # pylint: disable=W0621
         def inCategorizableContainer(categorizable):
             for container in categorizableContainers:
                 if categorizable in container:
@@ -251,12 +234,10 @@ class XMLWriter(object):
             self.attachmentNode(node, attachment)
         return node
 
+    # @staticmethod
     def __baseNode(self, parentNode, item, nodeName):
-        node = ET.SubElement(
-            parentNode,
-            nodeName,
-            dict(id=item.id(), status=str(item.getStatus())),
-        )
+        node = eTree.SubElement(parentNode, nodeName,
+                                dict(id=item.id(), status=str(item.getStatus())))
         if item.creationDateTime() > date.DateTime.min:
             node.attrib["creationDateTime"] = str(item.creationDateTime())
         if item.modificationDateTime() > date.DateTime.min:
@@ -266,12 +247,12 @@ class XMLWriter(object):
         if item.subject():
             node.attrib["subject"] = item.subject()
         if item.description():
-            ET.SubElement(node, "description").text = item.description()
+            eTree.SubElement(node, "description").text = item.description()
         return node
 
     def baseNode(self, parentNode, item, nodeName):
-        """Create a node and add the attributes that all domain
-        objects share, such as id, subject, description."""
+        """ Create a node and add the attributes that all domain
+            objects share, such as id, subject, description. """
         node = self.__baseNode(parentNode, item, nodeName)
         if item.foregroundColor():
             node.attrib["fgColor"] = str(item.foregroundColor())
@@ -287,16 +268,9 @@ class XMLWriter(object):
             node.attrib["ordering"] = str(item.ordering())
         return node
 
-    def baseCompositeNode(
-        self,
-        parentNode,
-        item,
-        nodeName,
-        childNodeFactory,
-        childNodeFactoryArgs=(),
-    ):
-        """Same as baseNode, but also create child nodes by means of
-        the childNodeFactory."""
+    def baseCompositeNode(self, parentNode, item, nodeName, childNodeFactory, childNodeFactoryArgs=()):
+        """ Same as baseNode, but also create child nodes by means of
+            the childNodeFactory. """
         node = self.__baseNode(parentNode, item, nodeName)
         if item.foregroundColor():
             node.attrib["fgColor"] = str(item.foregroundColor())
@@ -315,9 +289,7 @@ class XMLWriter(object):
                 tuple(sorted(item.expandedContexts()))
             )
         for child in sortedById(item.children()):
-            childNodeFactory(
-                node, child, *childNodeFactoryArgs
-            )  # pylint: disable=W0142
+            childNodeFactory(node, child, *childNodeFactoryArgs)  # pylint: disable=W0142
         return node
 
     def attachmentNode(self, parentNode, attachment):
@@ -327,31 +299,30 @@ class XMLWriter(object):
         if data is None:
             node.attrib["location"] = attachment.location()
         else:
-            ET.SubElement(
-                node,
-                "data",
-                dict(extension=os.path.splitext(attachment.location())[-1]),
-            ).text = data.encode("base64")
+            eTree.SubElement(node, "data", dict(extension=os.path.splitext(attachment.location())[-1])).text = \
+                data.encode("base64")
         for eachNote in sortedById(attachment.notes()):
             self.noteNode(node, eachNote)
         return node
 
     def syncMLNode(self, parentNode, syncMLConfig):
-        node = ET.SubElement(parentNode, "syncmlconfig")
+        node = eTree.SubElement(parentNode, "syncmlconfig")
         self.__syncMLNode(syncMLConfig, node)
         return node
 
     def __syncMLNode(self, cfg, node):
         for name, value in cfg.properties():
-            ET.SubElement(node, "property", dict(name=name)).text = value
+            eTree.SubElement(node, "property", dict(name=name)).text = value
 
         for childCfg in cfg.children():
-            child = ET.SubElement(node, childCfg.name)
+            child = eTree.SubElement(node, childCfg.name)
             self.__syncMLNode(childCfg, child)
 
+    # @staticmethod
     def budgetAsAttribute(self, budget):
         return "%d:%02d:%02d" % budget.hoursMinutesSeconds()
 
+    # @staticmethod
     def formatDateTime(self, dateTime):
         return dateTime.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -361,33 +332,31 @@ class ChangesXMLWriter(object):
         self.__fd = fd
 
     def write(self, allChanges):
-        root = ET.Element("changes")
+        root = eTree.Element("changes")
         if allChanges:
+            # for devName, monitor in allChanges.items():
             for devName, monitor in list(allChanges.items()):
-                devNode = ET.SubElement(root, "device")
+                devNode = eTree.SubElement(root, "device")
                 devNode.attrib["guid"] = monitor.guid()
                 for id_, changes in list(monitor.allChanges().items()):
-                    objNode = ET.SubElement(devNode, "obj")
+                    objNode = eTree.SubElement(devNode, "obj")
                     objNode.attrib["id"] = id_
                     if changes:
                         objNode.text = ",".join(list(changes))
 
-        tree = ET.ElementTree(root)
+        tree = eTree.ElementTree(root)
         tree.write(self.__fd)
 
 
 class TemplateXMLWriter(XMLWriter):
     def write(self, tsk):  # pylint: disable=W0221
-        super(TemplateXMLWriter, self).write(
-            task.TaskList([tsk]),
-            category.CategoryList(),
-            note.NoteContainer(),
-            None,
-            None,
-        )
+        super().write(task.TaskList([tsk]),
+                      category.CategoryList(),
+                      note.NoteContainer(),
+                      None, None)
 
     def taskNode(self, parentNode, task):  # pylint: disable=W0621
-        node = super(TemplateXMLWriter, self).taskNode(parentNode, task)
+        node = super().taskNode(parentNode, task)
 
         for name, getter in [
             ("plannedstartdate", "plannedStartDateTime"),
@@ -401,9 +370,7 @@ class TemplateXMLWriter(XMLWriter):
                 dateTime = getattr(task, getter)()
                 if dateTime not in (None, date.DateTime()):
                     delta = dateTime - date.Now()
-                    minutes = delta.days * 24 * 60 + round(
-                        delta.seconds / 60.0
-                    )
+                    minutes = delta.days * 24 * 60 + round(delta.seconds / 60)
                     if minutes < 0:
                         value = "%d minutes ago" % -minutes
                     else:

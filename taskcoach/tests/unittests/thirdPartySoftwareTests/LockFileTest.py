@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test, tempfile
-from taskcoachlib.thirdparty import lockfile
+from __future__ import with_statement
+from ... import test
+import tempfile
+from ....taskcoachlib.thirdparty import lockfile
 
 
 class LockFileTest(test.TestCase):
@@ -30,21 +32,22 @@ class LockFileTest(test.TestCase):
         self.tmpfile.close()  # Temp files are deleted when closed
 
     def testFileIsNotLockedInitially(self):
-        self.assertFalse(self.lock.is_locked())
+        self.failIf(self.lock.is_locked())
 
     def testFileIsLockedAfterLocking(self):
         self.lock.acquire()
-        self.assertTrue(self.lock.is_locked())
+        self.failUnless(self.lock.is_locked())
 
     def testLockingWithContextManager(self):
         with self.lock:
-            self.assertTrue(self.lock.is_locked())
-        self.assertFalse(self.lock.is_locked())
+            self.failUnless(self.lock.is_locked())
+        self.failIf(self.lock.is_locked())
 
     def testLockingTwoFiles(self):
         self.lock.acquire()
         tmpfile2 = tempfile.NamedTemporaryFile()
         lock2 = lockfile.FileLock(tmpfile2.name)
         lock2.acquire()
-        self.assertTrue(self.lock.is_locked())
-        self.assertTrue(lock2.is_locked())
+        self.failUnless(self.lock.is_locked())
+        self.failUnless(lock2.is_locked())
+        

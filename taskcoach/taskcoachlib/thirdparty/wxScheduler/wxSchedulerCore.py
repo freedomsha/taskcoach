@@ -7,8 +7,9 @@ from .wxSchedulerPaint import *
 import wx
 from . import wxScheduleUtils as utils
 
-if sys.version.startswith( "2.3" ):
-	from sets import Set as set
+# if sys.version.startswith("2.3"):
+# 	from sets import Set as set
+# set() est intégré dans python 3
 
 
 class InvalidSchedule( Exception ):
@@ -66,7 +67,7 @@ class wxSchedulerCore( wxSchedulerPaint ):
 		TO-DO: Make a better calculation!!
 		"""
 		
-		# Update the current date according to 
+		# Update the current Date according to
 		for i in ( self._startingHour, self._startingPauseHour,
 							self._endingPauseHour, self._endingPauseHour ):
 			i = utils.copyDate( self._currentDate )
@@ -74,12 +75,12 @@ class wxSchedulerCore( wxSchedulerPaint ):
 		# Create the list
 		self._lstDisplayedHours = []
 		if self._showOnlyWorkHour:
-			morningWorkTime = list(range( self._startingHour.GetHour(), self._startingPauseHour.GetHour()))
-			afternoonWorkTime = list(range( self._endingPauseHour.GetHour(), self._endingHour.GetHour()))
+			morningWorkTime = range( self._startingHour.GetHour(), self._startingPauseHour.GetHour() )
+			afternoonWorkTime = range( self._endingPauseHour.GetHour(), self._endingHour.GetHour() )
 			rangeWorkHour = morningWorkTime + afternoonWorkTime
 		else:
 			# Show all the hours
-			rangeWorkHour = list(range( self._startingHour.GetHour(), self._endingHour.GetHour()))
+			rangeWorkHour = range( self._startingHour.GetHour(), self._endingHour.GetHour() )
 		
 		for H in rangeWorkHour:
 			for M in ( 0, 30 ):
@@ -91,8 +92,8 @@ class wxSchedulerCore( wxSchedulerPaint ):
 				
 	def _calcRightDateOnMove( self, side ):
 		""" 
-		Calculate the right date when the user
-		move the date on the next period
+		Calculate the right Date when the user
+		move the Date on the next period
 		"""
 		
 		if self._viewType == wxSCHEDULER_DAILY:
@@ -194,7 +195,7 @@ class wxSchedulerCore( wxSchedulerPaint ):
 	
 	def GetWeekdayDate( self, weekday, day ):
 		"""
-		Return date of week day passed by
+		Return Date of week day passed by
 		Range values is 0 to 6
 		"""
 		if weekday == 6:
@@ -208,7 +209,7 @@ class wxSchedulerCore( wxSchedulerPaint ):
 	
 	def IsInRange( self, date=None, schedule=None ):
 		"""
-		Return True if the date or schedule is in the range of days displayed
+		Return True if the Date or schedule is in the range of days displayed
 		in current visualization type
 		"""
 		
@@ -259,7 +260,7 @@ class wxSchedulerCore( wxSchedulerPaint ):
 	def Next( self, steps=1 ):
 		self.Freeze()
 		try:
-			for step in range( steps ):
+			for step in xrange( steps ):
 				self.SetViewType( wxSCHEDULER_NEXT )
 		finally:
 			self.Thaw()
@@ -267,13 +268,13 @@ class wxSchedulerCore( wxSchedulerPaint ):
 	def Previous( self, steps=1 ):
 		self.Freeze()
 		try:
-			for step in range( steps ):
+			for step in xrange( steps ):
 				self.SetViewType( wxSCHEDULER_PREV )
 		finally:
 			self.Thaw()
 
 	def SetDate( self, date=None ):
-		# Go to the date. Default is today.
+		# Go to the Date. Default is Today.
 		if date == None:
 			date = wx.DateTime.Now()
 		self._currentDate = date
@@ -306,7 +307,7 @@ class wxSchedulerCore( wxSchedulerPaint ):
 		if not view in ( wxSCHEDULER_DAILY, wxSCHEDULER_WEEKLY,
 							wxSCHEDULER_MONTHLY, wxSCHEDULER_TODAY,
 							wxSCHEDULER_PREV, wxSCHEDULER_NEXT ):
-				raise ValueError("Pass me a valid view value")
+			raise ValueError("Pass me a valid view value")
 		
 		if view in ( wxSCHEDULER_TODAY, wxSCHEDULER_NEXT, wxSCHEDULER_PREV ):
 			if view == wxSCHEDULER_TODAY:

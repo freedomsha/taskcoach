@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 from taskcoachlib import operating_system
 
 
@@ -61,7 +62,6 @@ class AbstractNotifier(object):
             else:
                 return klass.get("Task Coach")
         else:
-
             class DummyNotifier(AbstractNotifier):
                 def getName(self):
                     return "Dummy"
@@ -71,7 +71,6 @@ class AbstractNotifier(object):
 
                 def notify(self, title, summary, bitmap, **kwargs):
                     pass
-
             return DummyNotifier()
 
     @classmethod

@@ -4,13 +4,17 @@
 """Generate python dictionaries catalog from textual translation description.
 
 This program converts a textual Uniforum-style message catalog (.po file) into
-a python dictionary 
+a python dictionary
 
 Based on msgfmt.py by Martin v. Löwis <loewis@informatik.hu-berlin.de>
 
 """
+# from __future__ import print_function
 
-import sys, re, os
+from io import open
+import sys
+import re
+import os
 
 MESSAGES = {}
 STRINGS = set()
@@ -19,15 +23,15 @@ STRINGS = set()
 
 
 def add(id_, string, fuzzy):
-    "Add a non-fuzzy translation to the dictionary."
+    """Add a non-fuzzy translation to the dictionary."""
     global MESSAGES
     if not fuzzy and string:
         MESSAGES[id_] = string
     STRINGS.add(id_)
 
 
-def generateDict():
-    "Return the generated dictionary"
+def generatedict():
+    """Return the generated dictionary"""
     global MESSAGES
     metadata = MESSAGES[""]
     del MESSAGES[""]
@@ -53,6 +57,7 @@ def make(filename, outfile=None):
         outfile = os.path.splitext(infile)[0] + ".py"
 
     try:
+        # lines = open(infile, "r").readlines()
         lines = open(infile).readlines()
     except IOError as msg:
         print(msg, file=sys.stderr)
@@ -98,11 +103,11 @@ def make(filename, outfile=None):
         elif section == STR:
             msgstr += l
         else:
-            print(
-                "Syntax error on %s:%d" % (infile, lno),
-                "before:",
-                file=sys.stderr,
-            )
+            # print >> sys.stderr, 'Syntax error on %s:%d' % (infile, lno),
+            #      'before:'
+            # print >> sys.stderr, line
+            print("Syntax error on %s:%d" % (infile, lno),
+                  "before:", file=sys.stderr)
             print(l, file=sys.stderr)
             sys.exit(1)
     # Add last entry
@@ -110,6 +115,7 @@ def make(filename, outfile=None):
         add(msgid, msgstr, fuzzy)
 
     # Compute output
+    # output = bytes(generatedict(), 'utf-8')  # génération du fichier en binaire
     output = generateDict()
 
     # TODO: This is a hack to get the encoding from the output
@@ -118,6 +124,7 @@ def make(filename, outfile=None):
     )
 
     try:
+        # open(outfile, "wb").write(output)  # ! fichier binaire, utiliser des données de type bytes
         open(outfile, "w", encoding=encoding).write(output)
     except IOError as msg:
         print(msg, file=sys.stderr)

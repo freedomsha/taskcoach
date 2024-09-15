@@ -18,7 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from taskcoachlib import patterns
 from taskcoachlib.domain import base, date
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
+#    from taskcoachlib.thirdparty.pubsub import pub
+# except ImportError:
+#    from wx.lib.pubsub import pub
+# except ModuleNotFoundError:
 from pubsub import pub
 from . import task
 from . import tasklist
@@ -29,43 +33,38 @@ class ViewFilter(tasklist.TaskListQueryMixin, base.Filter):
         self.__statusesToHide = set(kwargs.pop("statusesToHide", []))
         self.__hideCompositeTasks = kwargs.pop("hideCompositeTasks", False)
         self.registerObservers()
-        super(ViewFilter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def registerObservers(self):
         registerObserver = patterns.Publisher().registerObserver
-        for eventType in (
-            task.Task.plannedStartDateTimeChangedEventType(),
-            task.Task.dueDateTimeChangedEventType(),
-            task.Task.actualStartDateTimeChangedEventType(),
-            task.Task.completionDateTimeChangedEventType(),
-            task.Task.prerequisitesChangedEventType(),
-            task.Task.appearanceChangedEventType(),  # Proxy for status changes
-            task.Task.addChildEventType(),
-            task.Task.removeChildEventType(),
-        ):
+        for eventType in (task.Task.plannedStartDateTimeChangedEventType(),
+                          task.Task.dueDateTimeChangedEventType(),
+                          task.Task.actualStartDateTimeChangedEventType(),
+                          task.Task.completionDateTimeChangedEventType(),
+                          task.Task.prerequisitesChangedEventType(),
+                          task.Task.appearanceChangedEventType(),  # Proxy for status changes
+                          task.Task.addChildEventType(),
+                          task.Task.removeChildEventType()):
             if eventType.startswith("pubsub"):
                 pub.subscribe(self.onTaskStatusChange, eventType)
             else:
-                registerObserver(
-                    self.onTaskStatusChange_Deprecated, eventType=eventType
-                )
+                registerObserver(self.onTaskStatusChange_Deprecated,
+                                 eventType=eventType)
         date.Scheduler().schedule_interval(self.atMidnight, days=1)
 
     def detach(self):
-        super(ViewFilter, self).detach()
+        super().detach()
         patterns.Publisher().removeObserver(self.onTaskStatusChange_Deprecated)
 
     def atMidnight(self):
-        """Whether tasks are included in the filter or not may change at
-        midnight."""
+        """ Whether tasks are included in the filter or not may change at
+            midnight. """
         self.reset()
 
     def onTaskStatusChange(self, newValue, sender):  # pylint: disable=W0613
         self.reset()
 
-    def onTaskStatusChange_Deprecated(
-        self, event=None
-    ):  # pylint: disable=W0613
+    def onTaskStatusChange_Deprecated(self, event=None):  # pylint: disable=W0613
         self.reset()
 
     def hideTaskStatus(self, status, hide=True):
@@ -80,23 +79,15 @@ class ViewFilter(tasklist.TaskListQueryMixin, base.Filter):
         self.reset()
 
     def filterItems(self, tasks):
-        return [
-            task for task in tasks if self.filterTask(task)
-        ]  # pylint: disable=W0621
+        return [task for task in tasks if self.filterTask(task)]  # pylint: disable=W0621
 
     def filterTask(self, task):  # pylint: disable=W0621
         result = True
         if task.status() in self.__statusesToHide:
             result = False
-        elif (
-            self.__hideCompositeTasks
-            and not self.treeMode()
-            and task.children()
-        ):
+        elif self.__hideCompositeTasks and not self.treeMode() and task.children():
             result = False  # Hide composite task
         return result
 
     def hasFilter(self):
-        return len(self.__statusesToHide) != 0 or (
-            self.__hideCompositeTasks and not self.treeMode()
-        )
+        return len(self.__statusesToHide) != 0 or (self.__hideCompositeTasks and not self.treeMode())

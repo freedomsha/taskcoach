@@ -17,7 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from taskcoachlib.domain import base
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
+#     from taskcoachlib.thirdparty.pubsub import pub
+# except ImportError:
+#    from wx.lib.pubsub import pub
+# except ModuleNotFoundError:
 from pubsub import pub
 from . import task
 
@@ -29,23 +33,21 @@ class Sorter(base.TreeSorter):
         "dueDateTime",
         "plannedStartDateTime",
         "actualStartDateTime",
-        "completionDateTime",
+        "completionDateTime"
     )
 
     def __init__(self, *args, **kwargs):
         self.__treeMode = kwargs.pop("treeMode", False)
-        self.__sortByTaskStatusFirst = kwargs.pop(
-            "sortByTaskStatusFirst", True
-        )
-        super(Sorter, self).__init__(*args, **kwargs)
-        for eventType in (
-            task.Task.prerequisitesChangedEventType(),
-            task.Task.dueDateTimeChangedEventType(),
-            task.Task.plannedStartDateTimeChangedEventType(),
-            task.Task.actualStartDateTimeChangedEventType(),
-            task.Task.completionDateTimeChangedEventType(),
-        ):
+        self.__sortByTaskStatusFirst = kwargs.pop("sortByTaskStatusFirst", True)
+        super().__init__(*args, **kwargs)
+        for eventType in (task.Task.prerequisitesChangedEventType(),
+                          task.Task.dueDateTimeChangedEventType(),
+                          task.Task.plannedStartDateTimeChangedEventType(),
+                          task.Task.actualStartDateTimeChangedEventType(),
+                          task.Task.completionDateTimeChangedEventType()):
             pub.subscribe(self.onAttributeChanged, eventType)
+            # pubsub.core.callables.ListenerMismatchError: Listener "Sorter.onAttributeChanged"
+            # (from module "taskcoachlib.domain.task.sorter") inadequate: needs to accept 1 more args (newValue)
 
     def setTreeMode(self, treeMode=True):
         self.__treeMode = treeMode
@@ -66,7 +68,7 @@ class Sorter(base.TreeSorter):
 
     def createSortKeyFunction(self, sortKey):
         statusSortKey = self.__createStatusSortKey()
-        regularSortKey = super(Sorter, self).createSortKeyFunction(sortKey)
+        regularSortKey = super().createSortKeyFunction(sortKey)
         return lambda task: statusSortKey(task) + [regularSortKey(task)]
 
     def __createStatusSortKey(self):
@@ -83,9 +85,9 @@ class Sorter(base.TreeSorter):
         # sorting by status depends on those attributes. Hence we don't need
         # to subscribe to these attributes when they become the sort key.
         if attribute not in self.TaskStatusAttributes:
-            super(Sorter, self)._registerObserverForAttribute(attribute)
+            super()._registerObserverForAttribute(attribute)
 
     def _removeObserverForAttribute(self, attribute):
         # See comment at _registerObserverForAttribute.
         if attribute not in self.TaskStatusAttributes:
-            super(Sorter, self)._removeObserverForAttribute(attribute)
+            super()._removeObserverForAttribute(attribute)

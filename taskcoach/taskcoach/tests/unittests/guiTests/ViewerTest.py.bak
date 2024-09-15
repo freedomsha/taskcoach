@@ -47,7 +47,7 @@ class ViewerTest(test.wxTestCase):
 
     def tearDown(self):
         super(ViewerTest, self).tearDown()
-        self.taskFile.close()
+        self.taskFile.Close()
         self.taskFile.stop()
 
     def createViewer(self):
@@ -321,7 +321,7 @@ class FilterableViewerForTasks(test.TestCase):
 
     def tearDown(self):
         super(FilterableViewerForTasks, self).tearDown()
-        self.viewer.taskFile.close()
+        self.viewer.taskFile.Close()
         self.viewer.taskFile.stop()
 
     def createViewer(self):
@@ -347,12 +347,12 @@ class FilterableViewerForTasks(test.TestCase):
                                                  'hideinactivetasks'))
 
     def testHideInactiveTasks_AffectsPresentation(self):
-        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.tomorrow()))
+        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.Tomorrow()))
         self.viewer.hideTaskStatus(task.status.inactive)
         self.failIf(self.viewer.presentation())
 
     def testUnhideInactiveTasks(self):
-        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.tomorrow()))
+        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.Tomorrow()))
         self.viewer.hideTaskStatus(task.status.inactive)
         self.viewer.hideTaskStatus(task.status.inactive, False)
         self.failUnless(self.viewer.presentation())
@@ -370,12 +370,12 @@ class FilterableViewerForTasks(test.TestCase):
                                                  'hidelatetasks'))
 
     def testHideLateTasks_AffectsPresentation(self):
-        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.yesterday()))
+        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.Yesterday()))
         self.viewer.hideTaskStatus(task.status.late)
         self.failIf(self.viewer.presentation())
 
     def testUnhideLateTasks(self):
-        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.yesterday()))
+        self.viewer.presentation().append(task.Task(plannedStartDateTime=Date.Yesterday()))
         self.viewer.hideTaskStatus(task.status.late)
         self.viewer.hideTaskStatus(task.status.late, False)
         self.failUnless(self.viewer.presentation())
@@ -416,12 +416,12 @@ class FilterableViewerForTasks(test.TestCase):
                                                  'hideoverduetasks'))
 
     def testHideOverDueTasks_AffectsPresentation(self):
-        self.viewer.presentation().append(task.Task(dueDateTime=Date.yesterday()))
+        self.viewer.presentation().append(task.Task(dueDateTime=Date.Yesterday()))
         self.viewer.hideTaskStatus(task.status.overdue)
         self.failIf(self.viewer.presentation())
 
     def testUnhideOverDueTasks(self):
-        self.viewer.presentation().append(task.Task(dueDateTime=Date.yesterday()))
+        self.viewer.presentation().append(task.Task(dueDateTime=Date.Yesterday()))
         self.viewer.hideTaskStatus(task.status.overdue)
         self.viewer.hideTaskStatus(task.status.overdue, False)
         self.failUnless(self.viewer.presentation())
@@ -505,7 +505,7 @@ class ViewerBaseClassTest(test.wxTestCase):
             except NotImplementedError:
                 pass
         finally:
-            taskFile.close()
+            taskFile.Close()
             taskFile.stop()
 
 
@@ -530,7 +530,7 @@ class ViewerIteratorTestCase(test.wxTestCase):
 
     def tearDown(self):
         super(ViewerIteratorTestCase, self).tearDown()
-        self.taskFile.close()
+        self.taskFile.Close()
         self.taskFile.stop()
 
     def getItemsFromIterator(self):
@@ -593,7 +593,7 @@ class ViewerWithColumnsTest(test.wxTestCase):
 
     def tearDown(self):
         super(ViewerWithColumnsTest, self).tearDown()
-        self.taskFile.close()
+        self.taskFile.Close()
         self.taskFile.stop()
 
     def testDefaultColumnWidth(self):

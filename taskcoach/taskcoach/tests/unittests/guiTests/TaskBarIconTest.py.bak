@@ -110,16 +110,16 @@ class TaskBarIconTooltipTest(TaskBarIconTooltipTestCase):
         self.assertTooltip('2 tasks due soon')
 
     def testOneTasksOverdue(self):
-        self.taskList.append(task.Task(dueDateTime=Date.yesterday()))
+        self.taskList.append(task.Task(dueDateTime=Date.Yesterday()))
         self.assertTooltip('one task overdue')
 
     def testTwoTasksOverdue(self):
-        self.taskList.append(task.Task(dueDateTime=Date.yesterday()))
-        self.taskList.append(task.Task(dueDateTime=Date.yesterday()))
+        self.taskList.append(task.Task(dueDateTime=Date.Yesterday()))
+        self.taskList.append(task.Task(dueDateTime=Date.Yesterday()))
         self.assertTooltip('2 tasks overdue')
 
     def testOneTaskDueSoonAndOneTaskOverdue(self):
-        self.taskList.append(task.Task(dueDateTime=Date.yesterday()))
+        self.taskList.append(task.Task(dueDateTime=Date.Yesterday()))
         self.taskList.append(task.Task(dueDateTime=Date.Now() + Date.ONE_HOUR))
         self.assertTooltip('one task overdue, one task due soon')
 
@@ -130,7 +130,7 @@ class TaskBarIconTooltipTest(TaskBarIconTooltipTestCase):
         self.assertTooltip('')
 
     def testRemoveOverdueTask(self):
-        overdueTask = task.Task(dueDateTime=Date.yesterday())
+        overdueTask = task.Task(dueDateTime=Date.Yesterday())
         self.taskList.append(overdueTask)
         self.taskList.remove(overdueTask)
         self.assertTooltip('')

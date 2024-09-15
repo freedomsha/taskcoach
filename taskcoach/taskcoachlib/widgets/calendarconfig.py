@@ -16,41 +16,40 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from __future__ import division
+#
+# from builtins import str
+# from builtins import map
+# from past.utils import old_div
 from taskcoachlib.tools import wxhelper
 import wx
 import wx.lib.colourselect as csel
 from wx.lib import sized_controls
 from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.wxScheduler import (
-    wxSCHEDULER_DAILY,
-    wxSCHEDULER_WEEKLY,
-    wxSCHEDULER_MONTHLY,
-    wxSCHEDULER_HORIZONTAL,
-    wxSCHEDULER_VERTICAL,
-)
+# TODO: trouver une alternative à wxScheduler
+from taskcoachlib.thirdparty.wxScheduler import wxSCHEDULER_DAILY, \
+    wxSCHEDULER_WEEKLY, wxSCHEDULER_MONTHLY, wxSCHEDULER_HORIZONTAL, \
+    wxSCHEDULER_VERTICAL
 
 
 class CalendarConfigDialog(sized_controls.SizedDialog):
     VIEWTYPES = [wxSCHEDULER_DAILY, wxSCHEDULER_WEEKLY, wxSCHEDULER_MONTHLY]
     VIEWORIENTATIONS = [wxSCHEDULER_HORIZONTAL, wxSCHEDULER_VERTICAL]
-    VIEWFILTERS = [
-        (False, False, False),
-        (False, True, False),
-        (True, False, False),
-        (True, True, False),
-        (True, True, True),
-    ]
+    VIEWFILTERS = [(False, False, False), (False, True, False),
+                   (True, False, False), (True, True, False),
+                   (True, True, True)]
 
     def __init__(self, settings, settingsSection, *args, **kwargs):
         self._settings = settings
         self._settingsSection = settingsSection
-        super(CalendarConfigDialog, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pane = self.GetContentsPane()
         pane.SetSizerType("form")
         self.createInterior(pane)
         buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(buttonSizer)
         self.Fit()
+        # buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.ok)
         wxhelper.getButtonFromStdDialogButtonSizer(buttonSizer, wx.ID_OK).Bind(
             wx.EVT_BUTTON, self.ok
         )
@@ -63,27 +62,18 @@ class CalendarConfigDialog(sized_controls.SizedDialog):
         self.createColorEntry(pane)
 
     def createPeriodEntry(self, pane):
-        label = wx.StaticText(
-            pane, label=_("Kind of period displayed and its count")
-        )
+        label = wx.StaticText(pane,
+                              label=_("Kind of period displayed and its count"))
         label.SetSizerProps(valign="center")
         panel = sized_controls.SizedPanel(pane)
         panel.SetSizerType("horizontal")
-        self._spanCount = wx.SpinCtrl(
-            panel, value="1", min=1
-        )  # pylint: disable=W0201
+        self._spanCount = wx.SpinCtrl(panel, value="1", min=1)  # pylint: disable=W0201
         self._spanCount.SetSizerProps(valign="center")
         periods = (_("Day(s)"), _("Week(s)"), _("Month"))
-        self._spanType = wx.Choice(
-            panel, choices=periods
-        )  # pylint: disable=W0201
+        self._spanType = wx.Choice(panel, choices=periods)  # pylint: disable=W0201
         self._spanType.SetSizerProps(valign="center")
-        self._spanCount.SetValue(
-            self._settings.getint(self._settingsSection, "periodcount")
-        )
-        selection = self.VIEWTYPES.index(
-            self._settings.getint(self._settingsSection, "viewtype")
-        )
+        self._spanCount.SetValue(self._settings.getint(self._settingsSection, "periodcount"))
+        selection = self.VIEWTYPES.index(self._settings.getint(self._settingsSection, "viewtype"))
         self._spanType.SetSelection(selection)
         panel.SetSizerProps(valign="center")
         panel.Fit()
@@ -165,10 +155,7 @@ class CalendarConfigDialog(sized_controls.SizedDialog):
         self._highlight.SetColour(color)
 
     def onChangeViewType(self, event):  # pylint: disable=W0613
-        if (
-            self.VIEWTYPES[self._spanType.GetSelection()]
-            == wxSCHEDULER_MONTHLY
-        ):
+        if self.VIEWTYPES[self._spanType.GetSelection()] == wxSCHEDULER_MONTHLY:
             self._spanCount.SetValue(1)
             self._spanCount.Enable(False)
         else:

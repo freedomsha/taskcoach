@@ -18,21 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib import (
-    application,
-    meta,
-    widgets,
-    operating_system,
-)  # pylint: disable=W0622
-from taskcoachlib.gui import (
-    viewer,
-    toolbar,
-    uicommand,
-    remindercontroller,
-    artprovider,
-    windowdimensionstracker,
-    idlecontroller,
-)
+# from builtins import str
+from taskcoachlib import application, meta, widgets, operating_system  # pylint: disable=W0622
+# from . import viewer, toolbar, uicommand, remindercontroller, \
+# !!! éviter les boucles d'import !!!
+from taskcoachlib.gui import artprovider, idlecontroller, remindercontroller, toolbar, uicommand, viewer, windowdimensionstracker
+from .viewer import addViewers, ViewerContainer, viewerTypes
+from taskcoachlib.gui.newid import IdProvider
+# from .viewer import container, factory
 from taskcoachlib.gui.dialog.iphone import IPhoneSyncTypeDialog
 from taskcoachlib.gui.dialog.xfce4warning import XFCE4WarningDialog
 from taskcoachlib.gui.dialog.editor import Editor
@@ -40,11 +33,17 @@ from taskcoachlib.gui.iphone import IPhoneSyncFrame
 from taskcoachlib.i18n import _
 from taskcoachlib.powermgt import PowerStateMixin
 from taskcoachlib.help.balloontips import BalloonTipManager
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
+#    from ..thirdparty.pubsub import pub
+# except ImportError:
+#    from wx.lib.pubsub import pub
 from pubsub import pub
 from taskcoachlib.config.settings import Settings
+# from taskcoachlib.thirdparty import aui
+# import aui2 as aui
 import wx.lib.agw.aui as aui
-import wx, ctypes
+import wx
+import ctypes
 
 
 def turn_on_double_buffering_on_windows(window):
@@ -55,29 +54,23 @@ def turn_on_double_buffering_on_windows(window):
     ret = wintypes.BOOL()
     if dll.DwmIsCompositionEnabled(ctypes.pointer(ret)) == 0 and ret.value:
         return
-    import win32gui, win32con  # pylint: disable=F0401
-
+    import win32gui
+    import win32con  # pylint: disable=F0401
     exstyle = win32gui.GetWindowLong(window.GetHandle(), win32con.GWL_EXSTYLE)
     exstyle |= win32con.WS_EX_COMPOSITED
     win32gui.SetWindowLong(window.GetHandle(), win32con.GWL_EXSTYLE, exstyle)
 
 
-class MainWindow(
-    PowerStateMixin,
-    BalloonTipManager,
-    widgets.AuiManagedFrameWithDynamicCenterPane,
-):
-    def __init__(
-        self, iocontroller, taskFile, settings: Settings, *args, **kwargs
-    ):
+class MainWindow(PowerStateMixin, BalloonTipManager,
+                 widgets.AuiManagedFrameWithDynamicCenterPane):
+    def __init__(self, iocontroller, taskFile, settings, *args, **kwargs):
         self.__splash = kwargs.pop("splash", None)
-        super(MainWindow, self).__init__(None, -1, "", *args, **kwargs)
+        # super(MainWindow, self).__init__(None, -1, '', *args, **kwargs)
+        super().__init__(None, -1, "", *args, **kwargs)
         # This prevents the viewers from flickering on Windows 7 when refreshed:
         if operating_system.isWindows7_OrNewer():
             turn_on_double_buffering_on_windows(self)
-        self.__dimensions_tracker = (
-            windowdimensionstracker.WindowDimensionsTracker(self, settings)
-        )
+        self.__dimensions_tracker = windowdimensionstracker.WindowDimensionsTracker(self, settings)
         self.iocontroller = iocontroller
         self.taskFile = taskFile
         self.settings = settings
@@ -109,30 +102,25 @@ class MainWindow(
         self._registerBonjour()
         pub.subscribe(self._registerBonjour, "settings.feature.iphone")
 
-        self._idleController = idlecontroller.IdleController(
-            self, self.settings, self.taskFile.efforts()
-        )
+        self._idleController = idlecontroller.IdleController(self,
+                                                             self.settings,
+                                                             self.taskFile.efforts())
 
         wx.CallAfter(self.checkXFCE4)
 
     def _registerBonjour(self, value=True):
         if self.bonjourRegister is not None:
             self.bonjourRegister.stop()
-            self.bonjourAcceptor.close()
+            self.bonjourAcceptor.Close()
             self.bonjourRegister = self.bonjourAcceptor = None
 
         if self.settings.getboolean("feature", "iphone"):
             # pylint: disable=W0612,W0404,W0702
             try:
                 from taskcoachlib.thirdparty import pybonjour
-                from taskcoachlib.iphone import (
-                    IPhoneAcceptor,
-                    BonjourServiceRegister,
-                )
+                from taskcoachlib.iphone import IPhoneAcceptor, BonjourServiceRegister
 
-                acceptor = IPhoneAcceptor(
-                    self, self.settings, self.iocontroller
-                )
+                acceptor = IPhoneAcceptor(self, self.settings, self.iocontroller)
 
                 def success(reader):
                     self.bonjourRegister = reader
@@ -142,9 +130,7 @@ class MainWindow(
                     acceptor.close()
                     wx.MessageBox(reason.getErrorMessage(), _("Error"), wx.OK)
 
-                BonjourServiceRegister(
-                    self.settings, acceptor.port
-                ).addCallbacks(success, error)
+                BonjourServiceRegister(self.settings, acceptor.port).addCallbacks(success, error)
             except:
                 from taskcoachlib.gui.dialog.iphone import IPhoneBonjourDialog
 
@@ -172,6 +158,7 @@ class MainWindow(
     def _create_window_components(self):  # Not private for test purposes
         self._create_viewer_container()
         viewer.addViewers(self.viewer, self.taskFile, self.settings)
+        # factory.AddViewers(self.viewer, self.taskFile, self.settings)
         self._create_status_bar()
         self.__create_menu_bar()
         self.__create_reminder_controller()
@@ -180,32 +167,28 @@ class MainWindow(
     def _create_viewer_container(self):  # Not private for test purposes
         # pylint: disable=W0201
         self.viewer = viewer.ViewerContainer(self, self.settings)
+        # self.viewer = container.ViewerContainer(self, self.settings)
 
     def _create_status_bar(self):
         from taskcoachlib.gui import status  # pylint: disable=W0404
-
         self.SetStatusBar(status.StatusBar(self, self.viewer))
 
     def __create_menu_bar(self):
         from taskcoachlib.gui import menu  # pylint: disable=W0404
-
-        self.SetMenuBar(
-            menu.MainMenu(
-                self,
-                self.settings,
-                self.iocontroller,
-                self.viewer,
-                self.taskFile,
-            )
-        )
+        self.SetMenuBar(menu.MainMenu(self, self.settings, self.iocontroller,
+                                      self.viewer, self.taskFile))
 
     def __create_reminder_controller(self):
         # pylint: disable=W0201
-        self.reminderController = remindercontroller.ReminderController(
-            self, self.taskFile.tasks(), self.taskFile.efforts(), self.settings
-        )
+        self.reminderController = \
+            remindercontroller.ReminderController(self, self.taskFile.tasks(),
+                                                  self.taskFile.efforts(), self.settings)
 
     def addPane(self, page, caption, floating=False):  # pylint: disable=W0221
+        # TODO: si problème Essayer :
+        # def addPane(self, page, caption, floating=False, **kwargs):  # pylint: disable=W0221
+        # Signature of method 'MainWindow.addPane()' does not match signature of the base method
+        # in class 'AuiManagedFrameWithDynamicCenterPane'
         name = page.settingsSection()
         super(MainWindow, self).addPane(page, caption, name, floating=floating)
 
@@ -231,9 +214,8 @@ class MainWindow(
     def __restore_perspective(self):
         perspective = self.settings.get("view", "perspective")
         for viewer_type in viewer.viewerTypes():
-            if self.__perspective_and_settings_viewer_count_differ(
-                viewer_type
-            ):
+            # for viewer_type in factory.viewerTypes():
+            if self.__perspective_and_settings_viewer_count_differ(viewer_type):
                 # Different viewer counts may happen when the name of a viewer
                 # is changed between versions
                 perspective = ""
@@ -246,21 +228,15 @@ class MainWindow(
             # if it does.
             if self.__splash:
                 self.__splash.Destroy()
-            wx.MessageBox(
-                _(
-                    """Couldn't restore the pane layout from TaskCoach.ini:
+            wx.MessageBox(_("""Couldn't restore the pane layout from TaskCoach.ini:
 %s
 
 The default pane layout will be used.
 
 If this happens again, please make a copy of your TaskCoach.ini file """
-                    """before closing the program, open a bug report, and attach the """
-                    """copied TaskCoach.ini file to the bug report."""
-                )
-                % reason,
-                _("%s settings error") % meta.name,
-                style=wx.OK | wx.ICON_ERROR,
-            )
+                            """before closing the program, open a bug report, and attach the """
+                            """copied TaskCoach.ini file to the bug report.""") % reason,
+                          _("%s settings error") % meta.name, style=wx.OK | wx.ICON_ERROR)
             self.manager.LoadPerspective("")
 
         for pane in self.manager.GetAllPanes():
@@ -276,9 +252,7 @@ If this happens again, please make a copy of your TaskCoach.ini file """
     def __perspective_and_settings_viewer_count_differ(self, viewer_type):
         perspective = self.settings.get("view", "perspective")
         perspective_viewer_count = perspective.count("name=%s" % viewer_type)
-        settings_viewer_count = self.settings.getint(
-            "view", "%scount" % viewer_type
-        )
+        settings_viewer_count = self.settings.getint("view", "%scount" % viewer_type)
         return perspective_viewer_count != settings_viewer_count
 
     def __register_for_window_component_changes(self):
@@ -306,6 +280,7 @@ If this happens again, please make a copy of your TaskCoach.ini file """
         self.SetTitle(title)
 
     def displayMessage(self, message, pane=0):
+        # self.GetStatusBar().SetStatusText(message, pane)
         statusBar = self.GetStatusBar()
         if statusBar:
             statusBar.SetStatusText(message, pane)
@@ -316,9 +291,9 @@ If this happens again, please make a copy of your TaskCoach.ini file """
         self.__save_position()
 
     def __save_viewer_counts(self):
-        """Save the number of viewers for each viewer type."""
+        """ Save the number of viewers for each viewer type. """
         for viewer_type in viewer.viewerTypes():
-
+            # for viewer_type in factory.viewerTypes():
             if hasattr(self, "viewer"):
                 count = len(
                     [
@@ -344,14 +319,14 @@ If this happens again, please make a copy of your TaskCoach.ini file """
                 child.Close()
 
     def onClose(self, event):
+        # print("Resetting IdProvider...")
+        # IdProvider.reset()
         self.closeEditors()
 
         if self.__shutdown:
             event.Skip()
             return
-        if event.CanVeto() and self.settings.getboolean(
-            "window", "hidewhenclosed"
-        ):
+        if event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed"):
             event.Veto()
             self.Iconize()
         else:
@@ -369,9 +344,8 @@ If this happens again, please make a copy of your TaskCoach.ini file """
         self.Refresh()
 
     def onIconify(self, event):
-        if event.IsIconized() and self.settings.getboolean(
-            "window", "hidewheniconized"
-        ):
+        # if event.Iconized() and self.settings.getboolean('window', 'hidewheniconized'):
+        if event.IsIconized() and self.settings.getboolean("window", "hidewheniconized"):
             self.Hide()
         else:
             event.Skip()
@@ -386,13 +360,15 @@ If this happens again, please make a copy of your TaskCoach.ini file """
     def showStatusBar(self, value=True):
         # FIXME: First hiding the statusbar, then hiding the toolbar, then
         # showing the statusbar puts it in the wrong place (only on Linux?)
+        # self.GetStatusBar().Show(value)
         statusBar = self.GetStatusBar()
         if statusBar:
             statusBar.Show(value)
             self.SendSizeEvent()
+        # self.SendSizeEvent()
 
     def createToolBarUICommands(self):
-        """UI commands to put on the toolbar of this window."""
+        """ UI commands to put on the toolbar of this window. """
         uiCommands = [
             uicommand.FileOpen(iocontroller=self.iocontroller),
             uicommand.FileSave(iocontroller=self.iocontroller),
@@ -400,19 +376,13 @@ If this happens again, please make a copy of your TaskCoach.ini file """
             uicommand.Print(viewer=self.viewer, settings=self.settings),
             None,
             uicommand.EditUndo(),
-            uicommand.EditRedo(),
-        ]
-        uiCommands.extend(
-            [
-                None,
-                uicommand.EffortStartButton(taskList=self.taskFile.tasks()),
-                uicommand.EffortStop(
-                    viewer=self.viewer,
-                    effortList=self.taskFile.efforts(),
-                    taskList=self.taskFile.tasks(),
-                ),
-            ]
-        )
+            uicommand.EditRedo()]
+        uiCommands.extend([
+            None,
+            uicommand.EffortStartButton(taskList=self.taskFile.tasks()),
+            uicommand.EffortStop(viewer=self.viewer,
+                                 effortList=self.taskFile.efforts(),
+                                 taskList=self.taskFile.tasks())])
         return uiCommands
 
     def getToolBarPerspective(self):
@@ -428,17 +398,9 @@ If this happens again, please make a copy of your TaskCoach.ini file """
             currentToolbar.window.Destroy()
         if value:
             bar = toolbar.MainToolBar(self, self.settings, size=value)
-            self.manager.AddPane(
-                bar,
-                aui.AuiPaneInfo()
-                .Name("toolbar")
-                .Caption("Toolbar")
-                .ToolbarPane()
-                .Top()
-                .DestroyOnClose()
-                .LeftDockable(False)
-                .RightDockable(False),
-            )
+            self.manager.AddPane(bar, aui.AuiPaneInfo().Name("toolbar").
+                                 Caption("Toolbar").ToolbarPane().Top().DestroyOnClose().
+                                 LeftDockable(False).RightDockable(False))
             # Using .Gripper(False) does not work here
             wx.CallAfter(bar.SetGripperVisible, False)
         self.manager.Update()
@@ -459,21 +421,15 @@ If this happens again, please make a copy of your TaskCoach.ini file """
     # Power management
 
     def OnPowerState(self, state):
-        pub.sendMessage(
-            "powermgt.%s" % {self.POWERON: "on", self.POWEROFF: "off"}[state]
-        )
+        pub.sendMessage("powermgt.%s" % {self.POWERON: "on", self.POWEROFF: "off"}[state])
 
     # iPhone-related methods.
 
     def createIPhoneProgressFrame(self):
-        return IPhoneSyncFrame(
-            self.settings,
-            _("iPhone/iPod"),
-            icon=wx.ArtProvider.GetBitmap(
-                "taskcoach", wx.ART_FRAME_ICON, (16, 16)
-            ),
-            parent=self,
-        )
+        return IPhoneSyncFrame(self.settings, _("iPhone/iPod"),
+                               icon=wx.ArtProvider.GetBitmap("taskcoach", wx.ART_FRAME_ICON,
+                                                             (16, 16)),
+                               parent=self)
 
     def getIPhoneSyncType(self, guid):
         if guid == self.taskFile.guid():
@@ -486,17 +442,13 @@ If this happens again, please make a copy of your TaskCoach.ini file """
         finally:
             dlg.Destroy()
 
+    # @staticmethod
     def notifyIPhoneProtocolFailed(self):
         # This should actually never happen.
-        wx.MessageBox(
-            _(
-                """An iPhone or iPod Touch device tried to synchronize with this\n"""
-                """task file, but the protocol negotiation failed. Please file a\n"""
-                """bug report."""
-            ),
-            _("Error"),
-            wx.OK,
-        )
+        wx.MessageBox(_("""An iPhone or iPod Touch device tried to synchronize with this\n"""
+                        """task file, but the protocol negotiation failed. Please file a\n"""
+                        """bug report."""),
+                      _("Error"), wx.OK)
 
     def clearTasks(self):
         self.taskFile.clear(False)
@@ -512,6 +464,7 @@ If this happens again, please make a copy of your TaskCoach.ini file """
     def removeIPhoneCategory(self, category):
         self.taskFile.categories().remove(category)
 
+    # @staticmethod
     def modifyIPhoneCategory(self, category, name):
         category.setSubject(name)
 
@@ -524,28 +477,21 @@ If this happens again, please make a copy of your TaskCoach.ini file """
     def removeIPhoneTask(self, task):
         self.taskFile.tasks().remove(task)
 
+    # @staticmethod
     def addIPhoneEffort(self, task, effort):
         if task is not None:
             task.addEffort(effort)
 
+    # @staticmethod
     def modifyIPhoneEffort(self, effort, subject, started, ended):
         effort.setSubject(subject)
         effort.setStart(started)
         effort.setStop(ended)
 
-    def modifyIPhoneTask(
-        self,
-        task,
-        subject,
-        description,
-        plannedStartDateTime,
-        dueDateTime,
-        completionDateTime,
-        reminderDateTime,
-        recurrence,
-        priority,
-        categories,
-    ):
+    # @staticmethod
+    def modifyIPhoneTask(self, task, subject, description, plannedStartDateTime,
+                         dueDateTime, completionDateTime, reminderDateTime,
+                         recurrence, priority, categories):
         task.setSubject(subject)
         task.setDescription(description)
         task.setPlannedStartDateTime(plannedStartDateTime)

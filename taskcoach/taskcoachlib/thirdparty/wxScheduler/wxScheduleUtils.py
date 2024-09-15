@@ -6,7 +6,9 @@ import wx
 
 def timeFunction(func):
 	"""Decorator which displays the total time a function used at exit, grouped by stack frame."""
-	import atexit, time, traceback
+	import atexit
+	import time
+	import traceback
 	func.elapsed = dict()
 	def wrapper(*args, **kwargs):
 		t0 = time.time()
@@ -18,7 +20,7 @@ def timeFunction(func):
 			func.elapsed[exc] = (elapsed + (time.time() - t0), count + 1)
 
 	def printit():
-		elapsed = [(tm, count, exc) for exc, (tm, count) in list(func.elapsed.items())]
+		elapsed = [(tm, count, exc) for exc, (tm, count) in func.elapsed.items()]
 		elapsed.sort()
 		totalElapsed = 0.0
 		totalCount = 0
@@ -36,15 +38,15 @@ def timeFunction(func):
 	return wrapper
 
 def copyDate(value):
-	""" Simple method for copy the date (Y,M,D).
+	""" Simple method for copy the Date (Y,M,D).
 	"""
-	return wx.DateTimeFromDMY(value.GetDay(), value.GetMonth(), value.GetYear())
+	return wx.DateTime.FromDMY(value.GetDay(), value.GetMonth(), value.GetYear())
 
 def copyDateTime(value):
 	""" Return a copy of input wxDateTime object
 	"""
 	if value.IsValid():
-		return wx.DateTimeFromDMY(
+		return wx.DateTime.FromDMY(
 			value.GetDay(), 
 			value.GetMonth(),
 			value.GetYear(),

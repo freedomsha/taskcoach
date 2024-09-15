@@ -16,8 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import os, wx
-import test, mock
+import os
+import wx
+import test
+import mock
 
 
 class LoadTest(test.TestCase):
@@ -63,4 +65,5 @@ class LoadTest(test.TestCase):
             fileExists=lambda filename: False,
         )
         wx.GetApp().Yield()  # io.open uses wx.CallAfter
+        # self.failUnless(self.errorDialogCalled)
         self.assertTrue(self.errorDialogCalled)

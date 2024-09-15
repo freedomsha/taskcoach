@@ -1,4 +1,4 @@
-"""
+'''
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,39 +14,34 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+'''
 
+from builtins import object
 import test
-from taskcoachlib import config
-from taskcoachlib.domain import task, date
+from ....taskcoachlib import config
+from ....taskcoachlib.domain import task, date
 
 
 class ViewFilterTestCase(test.TestCase):
     def setUp(self):
         task.Task.settings = config.Settings(load=False)
         self.list = task.TaskList()
-        self.filter = task.filter.ViewFilter(
-            self.list, treeMode=self.treeMode
-        )  # pylint: disable=E1101
-        self.task = task.Task(subject="task")
-        self.dueToday = task.Task(
-            subject="due today", dueDateTime=date.Now().endOfDay()
-        )
-        self.dueTomorrow = task.Task(
-            subject="due tomorrow", dueDateTime=date.Tomorrow().endOfDay()
-        )
-        self.dueYesterday = task.Task(
-            subject="due yesterday", dueDateTime=date.Yesterday().endOfDay()
-        )
-        self.child = task.Task(subject="child")
+        self.filter = task.filter.ViewFilter(self.list, treeMode=self.treeMode)  # pylint: disable=E1101
+        self.task = task.Task(subject='task')
+        self.dueToday = task.Task(subject='due Today', dueDateTime=date.Now().endOfDay())
+        self.dueTomorrow = task.Task(subject='due Tomorrow',
+                                     dueDateTime=date.Tomorrow().endOfDay())
+        self.dueYesterday = task.Task(subject='due Yesterday',
+                                      dueDateTime=date.Yesterday().endOfDay())
+        self.child = task.Task(subject='child')
 
     def assertFilterShows(self, *tasks):
         self.assertEqual(len(tasks), len(self.filter))
         for eachTask in tasks:
-            self.assertTrue(eachTask in self.filter)
+            self.failUnless(eachTask in self.filter)
 
     def assertFilterIsEmpty(self):
-        self.assertFalse(self.filter)
+        self.failIf(self.filter)
 
 
 class ViewFilterTestsMixin(object):
@@ -68,15 +63,13 @@ class ViewFilterTestsMixin(object):
         self.task.setCompletionDateTime()
         self.filter.append(self.task)
         self.filter.hideTaskStatus(task.status.completed)
-        self.assertEqual(
-            0, self.filter.nrOfTasksPerStatus()[task.status.completed]
-        )
+        self.assertEqual(0, self.filter.nrOfTasksPerStatus()[task.status.completed])
 
     def testFilterCompletedTask_RootTasks(self):
         self.task.setCompletionDateTime()
         self.filter.append(self.task)
         self.filter.hideTaskStatus(task.status.completed)
-        self.assertFalse(self.filter.rootItems())
+        self.failIf(self.filter.rootItems())
 
     def testMarkTaskCompleted(self):
         self.filter.hideTaskStatus(task.status.completed)
@@ -135,9 +128,7 @@ class ViewFilterTestsMixin(object):
         self.dueToday.setCompletionDateTime()
         self.assertFilterShows(self.task)
 
-    def testAddPrerequisiteToActiveTaskWhileFilteringInactiveTasksShouldHideTask(
-        self,
-    ):
+    def testAddPrerequisiteToActiveTaskWhileFilteringInactiveTasksShouldHideTask(self):
         for eachTask in (self.task, self.dueToday):
             eachTask.setPlannedStartDateTime(date.Now())
         self.filter.extend([self.dueToday, self.task])
@@ -196,18 +187,16 @@ class HideCompositeTasksTestCase(ViewFilterTestCase):
     def setUp(self):
         task.Task.settings = config.Settings(load=False)
         self.list = task.TaskList()
-        self.filter = task.filter.ViewFilter(
-            self.list, treeMode=self.treeMode
-        )  # pylint: disable=E1101
-        self.task = task.Task(subject="task")
-        self.child = task.Task(subject="child")
+        self.filter = task.filter.ViewFilter(self.list, treeMode=self.treeMode)  # pylint: disable=E1101
+        self.task = task.Task(subject='task')
+        self.child = task.Task(subject='child')
         self.task.addChild(self.child)
         self.filter.append(self.task)
 
     def _addTwoGrandChildren(self):
         # pylint: disable=W0201
-        self.grandChild1 = task.Task(subject="grandchild 1")
-        self.grandChild2 = task.Task(subject="grandchild 2")
+        self.grandChild1 = task.Task(subject='grandchild 1')
+        self.grandChild2 = task.Task(subject='grandchild 2')
         self.child.addChild(self.grandChild1)
         self.child.addChild(self.grandChild2)
         self.list.extend([self.grandChild1, self.grandChild2])
@@ -216,11 +205,7 @@ class HideCompositeTasksTestCase(ViewFilterTestCase):
 class HideCompositeTasksTestsMixin(object):
     def testTurnOn(self):
         self.filter.hideCompositeTasks()
-        expectedTasks = (
-            (self.task, self.child)
-            if self.filter.treeMode()
-            else (self.child,)
-        )
+        expectedTasks = (self.task, self.child) if self.filter.treeMode() else (self.child,)
         self.assertFilterShows(*expectedTasks)  # pylint: disable=W0142
 
     def testTurnOff(self):
@@ -230,14 +215,10 @@ class HideCompositeTasksTestsMixin(object):
 
     def testAddChild(self):
         self.filter.hideCompositeTasks()
-        grandChild = task.Task(subject="grandchild")
+        grandChild = task.Task(subject='grandchild')
         self.list.append(grandChild)
         self.child.addChild(grandChild)
-        expectedTasks = (
-            (self.task, self.child, grandChild)
-            if self.filter.treeMode()
-            else (grandChild,)
-        )
+        expectedTasks = (self.task, self.child, grandChild) if self.filter.treeMode() else (grandChild,)
         self.assertFilterShows(*expectedTasks)  # pylint: disable=W0142
 
     def testRemoveChild(self):
@@ -248,32 +229,24 @@ class HideCompositeTasksTestsMixin(object):
     def testAddTwoChildren(self):
         self.filter.hideCompositeTasks()
         self._addTwoGrandChildren()
-        expectedTasks = (
-            (self.task, self.child, self.grandChild1, self.grandChild2)
-            if self.filter.treeMode()
-            else (self.grandChild1, self.grandChild2)
-        )
+        expectedTasks = (self.task, self.child, self.grandChild1,
+                         self.grandChild2) if self.filter.treeMode() else \
+            (self.grandChild1, self.grandChild2)
         self.assertFilterShows(*expectedTasks)  # pylint: disable=W0142
 
     def testRemoveTwoChildren(self):
         self._addTwoGrandChildren()
         self.filter.hideCompositeTasks()
         self.list.removeItems([self.grandChild1, self.grandChild2])
-        expectedTasks = (
-            (self.task, self.child)
-            if self.filter.treeMode()
-            else (self.child,)
-        )
+        expectedTasks = (self.task, self.child) if self.filter.treeMode() else (self.child,)
         self.assertFilterShows(*expectedTasks)  # pylint: disable=W0142
 
 
-class HideCompositeTasksInListModeTest(
-    HideCompositeTasksTestsMixin, HideCompositeTasksTestCase
-):
+class HideCompositeTasksInListModeTest(HideCompositeTasksTestsMixin,
+                                       HideCompositeTasksTestCase):
     treeMode = False
 
 
-class HideCompositeTasksInTreeModeTest(
-    HideCompositeTasksTestsMixin, HideCompositeTasksTestCase
-):
+class HideCompositeTasksInTreeModeTest(HideCompositeTasksTestsMixin,
+                                       HideCompositeTasksTestCase):
     treeMode = True

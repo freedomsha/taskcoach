@@ -23,24 +23,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import command, widgets, domain
 from taskcoachlib.domain import note
 from taskcoachlib.gui import uicommand, dialog
+# from taskcoachlib.gui.menu import *
 import taskcoachlib.gui.menu
 from taskcoachlib.i18n import _
-from . import base
-from . import mixin
-from . import inplace_editor
+from taskcoachlib.gui.viewer import base
+from taskcoachlib.gui.viewer import mixin
+from taskcoachlib.gui.viewer import inplace_editor
 import wx
 
 
-class BaseNoteViewer(
-    mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
-    mixin.SearchableViewerMixin,
-    mixin.SortableViewerForNotesMixin,
-    mixin.AttachmentColumnMixin,
-    base.CategorizableViewerMixin,
-    base.WithAttachmentsViewerMixin,
-    base.SortableViewerWithColumns,
-    base.TreeViewer,
-):
+class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
+                     mixin.SearchableViewerMixin,
+                     mixin.SortableViewerForNotesMixin,
+                     mixin.AttachmentColumnMixin,
+                     base.CategorizableViewerMixin,
+                     base.WithAttachmentsViewerMixin,
+                     base.SortableViewerWithColumns, base.TreeViewer):
     SorterClass = note.NoteSorter
     defaultTitle = _("Notes")
     defaultBitmap = "note_icon"
@@ -58,11 +56,7 @@ class BaseNoteViewer(
             )
 
     def domainObjectsToView(self):
-        return (
-            self.taskFile.notes()
-            if self.notesToShow is None
-            else self.notesToShow
-        )
+        return self.taskFile.notes() if self.notesToShow is None else self.notesToShow
 
     def curselectionIsInstanceOf(self, class_):
         return class_ == note.Note
@@ -70,45 +64,38 @@ class BaseNoteViewer(
     def createWidget(self):
         imageList = self.createImageList()  # Has side-effects
         self._columns = self._createColumns()
-        itemPopupMenu = taskcoachlib.gui.menu.NotePopupMenu(
-            self.parent, self.settings, self.taskFile.categories(), self
-        )
+        # itemPopupMenu = taskcoachlib.gui.menu.NotePopupMenu(self.parent, self.settings,
+        itemPopupMenu = taskcoachlib.gui.menu.NotePopupMenu(self.parent, self.settings,
+                                                            self.taskFile.categories(), self)
+        # columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
-        widget = widgets.TreeListCtrl(
-            self,
-            self.columns(),
-            self.onSelect,
-            uicommand.Edit(viewer=self),
-            uicommand.NoteDragAndDrop(viewer=self, notes=self.presentation()),
-            itemPopupMenu,
-            columnPopupMenu,
-            resizeableColumn=1 if self.hasOrderingColumn() else 0,
-            validateDrag=self.validateDrag,
-            **self.widgetCreationKeywordArguments()
-        )
+        widget = widgets.TreeListCtrl(self, self.columns(), self.onSelect,
+                                      uicommand.Edit(viewer=self),
+                                      uicommand.NoteDragAndDrop(viewer=self, notes=self.presentation()),
+                                      itemPopupMenu, columnPopupMenu,
+                                      resizeableColumn=1 if self.hasOrderingColumn() else 0,
+                                      validateDrag=self.validateDrag,
+                                      **self.widgetCreationKeywordArguments())
         if self.hasOrderingColumn():
             widget.SetMainColumn(1)
         widget.AssignImageList(imageList)  # pylint: disable=E1101
         return widget
 
     def createFilter(self, notes):
-        notes = super(BaseNoteViewer, self).createFilter(notes)
+        notes = super().createFilter(notes)
         return domain.base.DeletedFilter(notes)
 
     def createCreationToolBarUICommands(self):
-        return (
-            uicommand.NoteNew(
-                notes=self.presentation(), settings=self.settings, viewer=self
-            ),
-            uicommand.NewSubItem(viewer=self),
-        ) + super(BaseNoteViewer, self).createCreationToolBarUICommands()
+        return (uicommand.NoteNew(notes=self.presentation(),
+                                  settings=self.settings, viewer=self),
+                uicommand.NewSubItem(viewer=self),) + \
+            super().createCreationToolBarUICommands()
 
     def createColumnUICommands(self):
         return [
-            uicommand.ToggleAutoColumnResizing(
-                viewer=self, settings=self.settings
-            ),
+            uicommand.ToggleAutoColumnResizing(viewer=self,
+                                               settings=self.settings),
             None,
             uicommand.ViewColumn(
                 menuText=_("&Manual ordering"),
@@ -273,7 +260,7 @@ class BaseNoteViewer(
 
     def newItemDialog(self, *args, **kwargs):
         kwargs["categories"] = self.taskFile.categories().filteredCategories()
-        return super(BaseNoteViewer, self).newItemDialog(*args, **kwargs)
+        return super().newItemDialog(*args, **kwargs)
 
     def deleteItemCommand(self):
         return command.DeleteNoteCommand(
@@ -292,7 +279,5 @@ class BaseNoteViewer(
         return command.NewSubNoteCommand
 
 
-class NoteViewer(
-    mixin.FilterableViewerForCategorizablesMixin, BaseNoteViewer
-):  # pylint: disable=W0223
+class NoteViewer(mixin.FilterableViewerForCategorizablesMixin, BaseNoteViewer):  # pylint: disable=W0223
     pass

@@ -17,8 +17,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from future import standard_library
+#
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from builtins import object
 import wx
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 from taskcoachlib.mailer import thunderbird, outlook
 from taskcoachlib.i18n import _
 
@@ -27,9 +35,7 @@ class FileDropTarget(wx.FileDropTarget):
     def __init__(self, onDropCallback=None, onDragOverCallback=None):
         wx.FileDropTarget.__init__(self)
         self.__onDropCallback = onDropCallback
-        self.__onDragOverCallback = (
-            onDragOverCallback or self.__defaultDragOverCallback
-        )
+        self.__onDragOverCallback = onDragOverCallback or self.__defaultDragOverCallback
 
     def OnDropFiles(self, x, y, filenames):  # pylint: disable=W0221
         if self.__onDropCallback:
@@ -41,9 +47,7 @@ class FileDropTarget(wx.FileDropTarget):
     def OnDragOver(self, x, y, defaultResult):  # pylint: disable=W0221
         return self.__onDragOverCallback(x, y, defaultResult)
 
-    def __defaultDragOverCallback(
-        self, x, y, defaultResult
-    ):  # pylint: disable=W0613
+    def __defaultDragOverCallback(self, x, y, defaultResult):  # pylint: disable=W0613
         return defaultResult
 
 
@@ -57,14 +61,9 @@ class TextDropTarget(wx.TextDropTarget):
 
 
 class DropTarget(wx.DropTarget):
-    def __init__(
-        self,
-        onDropURLCallback,
-        onDropFileCallback,
-        onDropMailCallback,
-        onDragOverCallback=None,
-    ):
-        super(DropTarget, self).__init__()
+    def __init__(self, onDropURLCallback, onDropFileCallback,
+                 onDropMailCallback, onDragOverCallback=None):
+        super().__init__()
         self.__onDropURLCallback = onDropURLCallback
         self.__onDropFileCallback = onDropFileCallback
         self.__onDropMailCallback = onDropMailCallback
@@ -203,20 +202,18 @@ class DropTarget(wx.DropTarget):
 
     def onFileDrop(self, x, y):
         if self.__onDropFileCallback:
-            self.__onDropFileCallback(
-                x, y, self.__fileDataObject.GetFilenames()
-            )
+            self.__onDropFileCallback(x, y, self.__fileDataObject.GetFilenames())
 
 
 class TreeHelperMixin(object):
-    """This class provides methods that are not part of the API of any
-    tree control, but are convenient to have available."""
+    """ This class provides methods that are not part of the API of any
+    tree control, but are convenient to have available. """
 
     def __init__(self, *args, **kwargs) -> None:
         pass
 
     def GetItemChildren(self, item=None, recursively=False):
-        """Return the children of item as a list."""
+        """ Return the children of item as a list. """
         if not item:
             item = self.GetRootItem()
             if not item:
@@ -232,7 +229,7 @@ class TreeHelperMixin(object):
 
 
 class TreeCtrlDragAndDropMixin(TreeHelperMixin):
-    """This is a mixin class that can be used to easily implement
+    """ This is a mixin class that can be used to easily implement
     dragging and dropping of tree items. It can be mixed in with
     wx.TreeCtrl, wx.gizmos.TreeListCtrl, or wx.lib.customtree.CustomTreeCtrl.
 
@@ -245,7 +242,7 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     dropped an item on top of another item. It's up to you to decide how
     to handle the drop. If you are using this mixin together with the
     VirtualTree mixin, it makes sense to rearrange your underlying data
-    and then call RefreshItems to let the virtual tree refresh itself."""
+    and then call RefreshItems to let the virtual tree refresh itself. """
 
     def __init__(self, *args, **kwargs):
         kwargs["style"] = (
@@ -259,7 +256,7 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         self._dragItems = []
 
     def OnDrop(self, dropItem, dragItems, part, column):
-        """This function must be overloaded in the derived class. dragItems
+        """ This function must be overloaded in the derived class. dragItems
         are the items being dragged by the user. dropItem is the item the
         dragItems are dropped on. If the user doesn't drop the dragItems
         on another item, dropItem equals the (hidden) root item of the
@@ -269,16 +266,12 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         raise NotImplementedError
 
     def OnBeginDrag(self, event):
-        """This method is called when the drag starts. It either allows the
+        """ This method is called when the drag starts. It either allows the
         drag and starts it or it vetoes the drag when the the root item is one
-        of the dragged items."""
+        of the dragged items. """
         column = self._ColumnHitTest(self._dragStartPos)
         selections = self.GetSelections()
-        self._dragItems = (
-            selections[:]
-            if selections
-            else [event.GetItem()] if event.GetItem() else []
-        )
+        self._dragItems = selections[:] if selections else [event.GetItem()] if event.GetItem() else []
         self._dragColumn = column
         if self._dragItems and (self.GetRootItem() not in self._dragItems):
             self.StartDragging()
@@ -299,7 +292,7 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
             if not hwin.IsColumnShown(j):
                 continue
             w = hwin.GetColumnWidth(j)
-            if point.x >= x and point.x < x + w:
+            if x <= point.x < x + w:
                 return j
             x += w
         return -1
@@ -374,23 +367,17 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
 
     def IsValidDropTarget(self, dropTarget):
         if self._validateDragCallback is not None:
-            isValid = self._validateDragCallback(
-                self.GetItemPyData(dropTarget),
-                [self.GetItemPyData(item) for item in self._dragItems],
-                self._dragColumn,
-            )
+            isValid = self._validateDragCallback(self.GetItemPyData(dropTarget),
+                                                 [self.GetItemPyData(item) for item in self._dragItems],
+                                                 self._dragColumn)
             if isValid is not None:
                 return isValid
 
         if dropTarget:
             invalidDropTargets = set(self._dragItems)
-            invalidDropTargets |= set(
-                self.GetItemParent(item) for item in self._dragItems
-            )
+            invalidDropTargets |= set(self.GetItemParent(item) for item in self._dragItems)
             for item in self._dragItems:
-                invalidDropTargets |= set(
-                    self.GetItemChildren(item, recursively=True)
-                )
+                invalidDropTargets |= set(self.GetItemChildren(item, recursively=True))
             return dropTarget not in invalidDropTargets
         else:
             return True

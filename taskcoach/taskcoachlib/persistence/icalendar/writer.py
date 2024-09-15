@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
+# from . import ical
 from taskcoachlib.persistence.icalendar import ical
 from taskcoachlib.domain import task
 from taskcoachlib import meta
@@ -30,13 +32,11 @@ def extendedWithAncestors(selection):
     return extendedSelection
 
 
-class iCalendarWriter(object):
+class iCalendarWriter(object):  # création nouvelle classe
     def __init__(self, fd, filename=None):
         self.__fd = fd
 
-    def write(
-        self, viewer, settings, selectionOnly=False
-    ):  # pylint: disable=W0613
+    def write(self, viewer, settings, selectionOnly=False):  # pylint: disable=W0613
         items = viewer.visibleItems()
         if selectionOnly:
             selection = viewer.curselection()

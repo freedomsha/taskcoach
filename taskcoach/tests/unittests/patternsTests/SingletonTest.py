@@ -17,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import test
-from taskcoachlib import patterns
+from ....taskcoachlib import patterns
 
 
-class Singleton(object, metaclass=patterns.Singleton):
-    pass
+class Singleton(object):
+    __metaclass__ = patterns.Singleton
 
 
 class SingletonTest(test.TestCase):
@@ -34,15 +34,17 @@ class SingletonTest(test.TestCase):
 
     def testCreation(self):
         singleton = Singleton()
-        self.assertTrue(isinstance(singleton, Singleton))
+        self.failUnless(isinstance(singleton, Singleton))
 
     def testCreateTwice(self):
         single1 = Singleton()
         single2 = Singleton()
-        self.assertTrue(single1 is single2)
+        self.failUnless(single1 is single2)
 
     def testSingletonsCanHaveInit(self):
-        class SingletonWithInit(metaclass=patterns.Singleton):
+        class SingletonWithInit:
+            __metaclass__ = patterns.Singleton
+
             def __init__(self):
                 self.a = 1
 
@@ -50,16 +52,19 @@ class SingletonTest(test.TestCase):
         self.assertEqual(1, single.a)
 
     def testSingletonInitCanHaveArgs(self):
-        class SingletonWithInit(metaclass=patterns.Singleton):
+        class SingletonWithInit:
+            __metaclass__ = patterns.Singleton
+
             def __init__(self, arg):
                 self.a = arg
 
-        single = SingletonWithInit("Yo")
-        self.assertEqual("Yo", single.a)
+        single = SingletonWithInit('Yo')
+        self.assertEqual('Yo', single.a)
 
     def testSingletonInitIsOnlyCalledOnce(self):
-        class SingletonWithInit(metaclass=patterns.Singleton):
+        class SingletonWithInit:
             _count = 0
+            __metaclass__ = patterns.Singleton
 
             def __init__(self):
                 SingletonWithInit._count += 1
@@ -72,24 +77,24 @@ class SingletonTest(test.TestCase):
         singleton1 = Singleton()
         self.resetSingleton()
         singleton2 = Singleton()
-        self.assertFalse(singleton1 is singleton2)
+        self.failIf(singleton1 is singleton2)
 
     def testSingletonHasNoInstanceBeforeFirstCreation(self):
-        self.assertFalse(Singleton.hasInstance())  # pylint: disable=E1101
+        self.failIf(Singleton.hasInstance())  # pylint: disable=E1101
 
     def testSingletonHasInstanceAfterFirstCreation(self):
         Singleton()
-        self.assertTrue(Singleton.hasInstance())  # pylint: disable=E1101
+        self.failUnless(Singleton.hasInstance())  # pylint: disable=E1101
 
     def testSingletonHasInstanceAfterSecondCreation(self):
         Singleton()
         Singleton()
-        self.assertTrue(Singleton.hasInstance())  # pylint: disable=E1101
+        self.failUnless(Singleton.hasInstance())  # pylint: disable=E1101
 
     def testSingletonHasNoInstanceAfterDeletion(self):
         Singleton()
         self.resetSingleton()
-        self.assertFalse(Singleton.hasInstance())  # pylint: disable=E1101
+        self.failIf(Singleton.hasInstance())  # pylint: disable=E1101
 
 
 class SingletonSubclassTest(test.TestCase):
@@ -99,7 +104,7 @@ class SingletonSubclassTest(test.TestCase):
 
         sub1 = Sub()
         sub2 = Sub()
-        self.assertTrue(sub1 is sub2)
+        self.failUnless(sub1 is sub2)
 
     def testDifferentSubclassesAreNotTheSameSingleton(self):
         class Sub1(Singleton):
@@ -111,7 +116,7 @@ class SingletonSubclassTest(test.TestCase):
             pass
 
         sub2 = Sub2()
-        self.assertFalse(sub1 is sub2)
+        self.failIf(sub1 is sub2)
 
     def testSubclassesCanHaveInit(self):
         class Sub(Singleton):
@@ -128,7 +133,7 @@ class SingletonSubclassTest(test.TestCase):
                 super(Sub, self).__init__()
                 self.arg = arg
 
-        self.assertEqual("Yo", Sub("Yo").arg)
+        self.assertEqual('Yo', Sub('Yo').arg)
 
     def testSubclassInitIsOnlyCalledOnce(self):
         class Sub(Singleton):

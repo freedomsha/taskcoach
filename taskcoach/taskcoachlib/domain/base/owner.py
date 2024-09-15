@@ -20,10 +20,10 @@ from taskcoachlib import patterns
 
 
 def DomainObjectOwnerMetaclass(name, bases, ns):
-    """This metaclass makes a class an owner for some domain
-    objects. The __ownedType__ attribute of the class must be a
-    string. For each type, the following methods will be added to the
-    class (here assuming a type of 'Foo'):
+    """Cette métaclasse fait d'une classe le propriétaire de certains objets de domaine
+    . L'attribut __ownedType__ de la classe doit être une chaîne
+    . Pour chaque type, les méthodes suivantes seront ajoutées à la classe
+    (en supposant ici un type 'Foo'):
 
       - __init__, __getstate__, __setstate__, __getcopystate__, __setcopystate__
       - addFoo, removeFoo, addFoos, removeFoos
@@ -32,70 +32,63 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
       - fooAddedEventType
       - fooRemovedEventType
       - modificationEventTypes
-      - __notifyObservers"""
+      - __notifyObservers
 
-    # This  metaclass is  a function  instead  of a  subclass of  type
-    # because as we're replacing __init__, we don't want the metaclass
-    # to be inherited by children.
+    """
+    #
+
+    # Cette métaclasse est une fonction au lieu d'une sous-classe de type
+    # car comme nous remplaçons __init__, nous ne voulons pas que la métaclasse
+    # soit héritée par les enfants.
+    #
 
     klass = type(name, bases, ns)
 
     def constructor(instance, *args, **kwargs):
         # NB: we use a simple list here. Maybe we should use a container type.
-        setattr(
-            instance,
-            "_%s__%ss" % (name, klass.__ownedType__.lower()),
-            kwargs.pop(klass.__ownedType__.lower() + "s", []),
-        )
+        setattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower()),
+                kwargs.pop(klass.__ownedType__.lower() + "s", []))
         super(klass, instance).__init__(*args, **kwargs)
 
     klass.__init__ = constructor
 
+    # @classmethod
     def changedEventType(class_):
         return "%s.%ss" % (class_, klass.__ownedType__.lower())
 
-    setattr(
-        klass,
-        "%ssChangedEventType" % klass.__ownedType__.lower(),
-        classmethod(changedEventType),
-    )
+    setattr(klass, "%ssChangedEventType" % klass.__ownedType__.lower(),
+            classmethod(changedEventType))
 
+    # @classmethod
     def addedEventType(class_):
         return "%s.%s.added" % (class_, klass.__ownedType__.lower())
 
-    setattr(
-        klass,
-        "%sAddedEventType" % klass.__ownedType__.lower(),
-        classmethod(addedEventType),
-    )
+    setattr(klass, "%sAddedEventType" % klass.__ownedType__.lower(),
+            classmethod(addedEventType))
 
+    # @classmethod
     def removedEventType(class_):
         return "%s.%s.removed" % (class_, klass.__ownedType__.lower())
 
-    setattr(
-        klass,
-        "%sRemovedEventType" % klass.__ownedType__.lower(),
-        classmethod(removedEventType),
-    )
+    setattr(klass, "%sRemovedEventType" % klass.__ownedType__.lower(),
+            classmethod(removedEventType))
 
+    # @classmethod
     def modificationEventTypes(class_):
         try:
             eventTypes = super(klass, class_).modificationEventTypes()
         except AttributeError:
             eventTypes = []
+        # if eventTypes is None:
+        #     eventTypes = []
         return eventTypes + [changedEventType(class_)]
 
     klass.modificationEventTypes = classmethod(modificationEventTypes)
 
     def objects(instance, recursive=False):
-        ownedObjects = getattr(
-            instance, "_%s__%ss" % (name, klass.__ownedType__.lower())
-        )
-        result = [
-            ownedObject
-            for ownedObject in ownedObjects
-            if not ownedObject.isDeleted()
-        ]
+        ownedObjects = getattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower()))
+        result = [ownedObject for ownedObject in ownedObjects
+                  if not ownedObject.isDeleted()]
         if recursive:
             for ownedObject in result[:]:
                 result.extend(ownedObject.children(recursive=True))
@@ -107,49 +100,33 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
     def setObjects(instance, newObjects, event=None):
         if newObjects == objects(instance):
             return
-        setattr(
-            instance,
-            "_%s__%ss" % (name, klass.__ownedType__.lower()),
-            newObjects,
-        )
+        setattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower()),
+                newObjects)
         changedEvent(instance, event, *newObjects)  # pylint: disable=W0142
 
     setattr(klass, "set%ss" % klass.__ownedType__, setObjects)
 
     def changedEvent(instance, event, *objects):
-        event.addSource(
-            instance,
-            *objects,
-            **dict(type=changedEventType(instance.__class__))
-        )
+        event.addSource(instance, *objects,
+                        **dict(type=changedEventType(instance.__class__)))
 
-    setattr(
-        klass, "%ssChangedEvent" % klass.__ownedType__.lower(), changedEvent
-    )
+    setattr(klass, "%ssChangedEvent" % klass.__ownedType__.lower(), changedEvent)
 
     def addedEvent(instance, event, *objects):
-        event.addSource(
-            instance, *objects, **dict(type=addedEventType(instance.__class__))
-        )
+        event.addSource(instance, *objects,
+                        **dict(type=addedEventType(instance.__class__)))
 
     setattr(klass, "%sAddedEvent" % klass.__ownedType__.lower(), addedEvent)
 
     def removedEvent(instance, event, *objects):
-        event.addSource(
-            instance,
-            *objects,
-            **dict(type=removedEventType(instance.__class__))
-        )
+        event.addSource(instance, *objects,
+                        **dict(type=removedEventType(instance.__class__)))
 
-    setattr(
-        klass, "%sRemovedEvent" % klass.__ownedType__.lower(), removedEvent
-    )
+    setattr(klass, "%sRemovedEvent" % klass.__ownedType__.lower(), removedEvent)
 
     @patterns.eventSource
     def addObject(instance, ownedObject, event=None):
-        getattr(
-            instance, "_%s__%ss" % (name, klass.__ownedType__.lower())
-        ).append(ownedObject)
+        getattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower())).append(ownedObject)
         changedEvent(instance, event, ownedObject)
         addedEvent(instance, event, ownedObject)
 
@@ -159,9 +136,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
     def addObjects(instance, *ownedObjects, **kwargs):
         if not ownedObjects:
             return
-        getattr(
-            instance, "_%s__%ss" % (name, klass.__ownedType__.lower())
-        ).extend(ownedObjects)
+        getattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower())).extend(ownedObjects)
         event = kwargs.pop("event", None)
         changedEvent(instance, event, *ownedObjects)
         addedEvent(instance, event, *ownedObjects)
@@ -170,9 +145,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
 
     @patterns.eventSource
     def removeObject(instance, ownedObject, event=None):
-        getattr(
-            instance, "_%s__%ss" % (name, klass.__ownedType__.lower())
-        ).remove(ownedObject)
+        getattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower())).remove(ownedObject)
         changedEvent(instance, event, ownedObject)
         removedEvent(instance, event, ownedObject)
 
@@ -184,9 +157,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
             return
         for ownedObject in ownedObjects:
             try:
-                getattr(
-                    instance, "_%s__%ss" % (name, klass.__ownedType__.lower())
-                ).remove(ownedObject)
+                getattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower())).remove(ownedObject)
             except ValueError:
                 pass
         event = kwargs.pop("event", None)
@@ -213,9 +184,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
             super(klass, instance).__setstate__(state, event=event)
         except AttributeError:
             pass
-        setObjects(
-            instance, state[klass.__ownedType__.lower() + "s"], event=event
-        )
+        setObjects(instance, state[klass.__ownedType__.lower() + "s"], event=event)
 
     klass.__setstate__ = setstate
 
@@ -232,3 +201,32 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
     klass.__getcopystate__ = getcopystate
 
     return klass
+
+
+# # Specific classes are defined here to avoid circular imports
+#
+#
+# class NoteOwner(metaclass=DomainObjectOwnerMetaclass):
+#     """ Mixin class for (other) domain objects that may contain notes. """
+#
+#     __ownedType__ = "Note"
+#
+#     @classmethod
+#     def noteAddedEventType(cls):
+#         # like taskcoachlib/patterns/observer/addItemEventType
+#         # and taskcoachlib/domain/attachment/attachmentowner/attachmentAddedEventType
+#         # return '%s.add' % cls
+#         pass
+#
+#     @classmethod
+#     def noteRemovedEventType(cls):
+#         # like taskcoachlib/patterns/observer/removeItemEventType
+#         # and taskcoachlib/domain/attachment/attachmentowner/attachmentRemovedEventType
+#         # return '%s.remove' % cls
+#         pass
+#
+#
+# class AttachmentOwner(metaclass=DomainObjectOwnerMetaclass):
+#     """Mixin class for other domain objects that may have attachments"""
+#
+#     __ownedType__ = "Attachment"

@@ -25,10 +25,8 @@ class ManifestTest(test.TestCase):
         manifestFile = open(os.path.join(test.projectRoot, "MANIFEST"))
         manifestLines = manifestFile.readlines()
         manifestFile.close()
-        self.manifest = [
-            os.path.join(test.projectRoot, filename[:-1])
-            for filename in manifestLines
-        ]
+        self.manifest = [os.path.join(test.projectRoot, filename[:-1])
+                         for filename in manifestLines]
 
     def missingPyFiles(self, *folders):
         missing = []

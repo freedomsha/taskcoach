@@ -16,32 +16,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import str
+# from builtins import object
 from taskcoachlib import patterns
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
 from pubsub import pub
+# except ImportError:
+#    from taskcoachlib.thirdparty.pubsub import pub
+# else:
+#    from wx.lib.pubsub import pub
 from taskcoachlib.i18n import _
 import wx
 
 
 class AttributeSync(object):
-    """Class used for keeping an attribute of a domain object synchronized with
-    a control in a dialog. If the user edits the value using the control,
-    the domain object is changed, using the appropriate command. If the
-    attribute of the domain object is changed (e.g. in another dialog) the
-    value of the control is updated."""
-
-    def __init__(
-        self,
-        attributeGetterName,
-        entry,
-        currentValue,
-        items,
-        commandClass,
-        editedEventType,
-        changedEventType,
-        callback=None,
-        **kwargs
-    ):
+    """ Classe utilisée pour garder un attribut d'un objet de domaine synchronisé avec
+        un contrôle dans une boîte de dialogue. Si l'utilisateur modifie la valeur à l'aide du contrôle
+        , l'objet de domaine est modifié à l'aide de la commande appropriée. Si l'attribut
+        de l'objet de domaine est modifié (par exemple dans une autre boîte de dialogue), la valeur
+        du contrôle est mise à jour. """
+        
+    def __init__(self, attributeGetterName, entry, currentValue, items,
+                 commandClass, editedEventType, changedEventType, callback=None,
+                 **kwargs):
         self._getter = attributeGetterName
         self._entry = entry
         self._currentValue = currentValue
@@ -60,9 +57,7 @@ class AttributeSync(object):
         if new_value != self._currentValue:
             self._currentValue = new_value
             commandKwArgs = self.commandKwArgs(new_value)
-            self._commandClass(
-                None, self._items, **commandKwArgs
-            ).do()  # pylint: disable=W0142
+            self._commandClass(None, self._items, **commandKwArgs).do()  # pylint: disable=W0142
             self.__invokeCallback(new_value)
 
     def onAttributeChanged_Deprecated(self, event):  # pylint: disable=W0613
@@ -106,12 +101,10 @@ class AttributeSync(object):
         if eventType.startswith("pubsub"):
             pub.subscribe(self.onAttributeChanged, eventType)
         else:
-            patterns.Publisher().registerObserver(
-                self.onAttributeChanged_Deprecated,
-                eventType=eventType,
-                eventSource=eventSource,
-            )
-
+            patterns.Publisher().registerObserver(self.onAttributeChanged_Deprecated,
+                                                  eventType=eventType,
+                                                  eventSource=eventSource)
+    
     def __stop_observing_attribute(self):
         try:
             pub.unsubscribe(self.onAttributeChanged, self.__changedEventType)

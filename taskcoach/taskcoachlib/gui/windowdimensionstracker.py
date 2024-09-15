@@ -16,33 +16,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 import wx
 from taskcoachlib import operating_system
 
 
 class _Tracker(object):
-    """Utility methods for setting and getting values from/to the
-    settings."""
+    """ Utility methods for setting and getting values from/to the
+        settings. """
 
     def __init__(self, settings, section):
-        super(_Tracker, self).__init__()
+        super().__init__()
         self.__settings = settings
         self.__section = section
 
     def set_setting(self, setting, value):
-        """Store the value for the setting in the settings."""
+        """ Store the value for the setting in the settings. """
         self.__settings.setvalue(self.__section, setting, value)
 
     def get_setting(self, setting):
-        """Get the value for the setting from the settings and return it."""
+        """ Get the value for the setting from the settings and return it. """
         return self.__settings.getvalue(self.__section, setting)
 
 
 class WindowSizeAndPositionTracker(_Tracker):
-    """Track the size and position of a window in the settings."""
+    """ Track the size and position of a window in the settings. """
 
     def __init__(self, window, settings, section):
-        super(WindowSizeAndPositionTracker, self).__init__(settings, section)
+        super().__init__(settings, section)
         self._window = window
         self.__set_dimensions()
         self._window.Bind(wx.EVT_SIZE, self.on_change_size)
@@ -50,30 +51,24 @@ class WindowSizeAndPositionTracker(_Tracker):
         self._window.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
 
     def on_change_size(self, event):
-        """Handle a size event by saving the new size of the window in the
-        settings."""
-        # Ignore the EVT_SIZE when the window is maximized or iconized.
-        # Note how this depends on the EVT_MAXIMIZE being sent before the
+        """ Handle a size event by saving the new size of the window in the
+            settings. """
+        # Ignore the EVT_SIZE when the window is maximized or iconized. 
+        # Note how this depends on the EVT_MAXIMIZE being sent before the 
         # EVT_SIZE.
         maximized = self._window.IsMaximized()
         if not maximized and not self._window.IsIconized():
-            self.set_setting(
-                "size",
-                (
-                    self._window.GetClientSize()
-                    if operating_system.isMac()
-                    else event.GetSize()
-                ),
-            )
+            self.set_setting("size", self._window.GetClientSize()
+            if operating_system.isMac() else event.GetSize())
         # Jerome, 2008/07/12: On my system (KDE 3.5.7), EVT_MAXIMIZE
-        # is not triggered, so set 'maximized' to True here as well as in
+        # is not triggered, so set 'maximized' to True here as well as in 
         # onMaximize:
         self.set_setting("maximized", maximized)
         event.Skip()
 
     def on_change_position(self, event):
-        """Handle a move event by saving the new position of the window in
-        the settings."""
+        """ Handle a move event by saving the new position of the window in
+            the settings. """
         if not self._window.IsMaximized():
             self.set_setting("maximized", False)
             if not self._window.IsIconized():
@@ -83,13 +78,13 @@ class WindowSizeAndPositionTracker(_Tracker):
         event.Skip()
 
     def on_maximize(self, event):
-        """Handle a maximize event by saving the window maximization state in
-        the settings."""
+        """ Handle a maximize event by saving the window maximization state in
+            the settings. """
         self.set_setting("maximized", True)
         event.Skip()
 
     def __set_dimensions(self):
-        """Set the window position and size based on the settings."""
+        """ Set the window position and size based on the settings. """
         x, y = self.get_setting("position")  # pylint: disable=C0103
         width, height = self.get_setting("size")
         if operating_system.isMac():
@@ -98,6 +93,8 @@ class WindowSizeAndPositionTracker(_Tracker):
             # highly annoying. This doesn't hold for dialogs though. Sigh.
             if not isinstance(self._window, wx.Dialog):
                 height += 18
+        # self._window.SetDimensions(x, y, width, height)
+        # wxPyDeprecationWarning: Call to deprecated item. Use SetSize instead.
         self._window.SetSize(x, y, width, height)
         if operating_system.isMac():
             self._window.SetClientSize((width, height))
@@ -112,12 +109,10 @@ class WindowSizeAndPositionTracker(_Tracker):
 
 
 class WindowDimensionsTracker(WindowSizeAndPositionTracker):
-    """Track the dimensions of a window in the settings."""
+    """ Track the dimensions of a window in the settings. """
 
     def __init__(self, window, settings):
-        super(WindowDimensionsTracker, self).__init__(
-            window, settings, "window"
-        )
+        super().__init__(window, settings, "window")
         self.__settings = settings
         if self.__start_iconized():
             if operating_system.isMac() or operating_system.isGTK():
@@ -127,15 +122,14 @@ class WindowDimensionsTracker(WindowSizeAndPositionTracker):
                 # show it.
                 self._window.Show()
             self._window.Iconize(True)
-            if not operating_system.isMac() and self.get_setting(
-                "hidewheniconized"
-            ):
+            if not operating_system.isMac() and \
+                    self.get_setting("hidewheniconized"):
                 # Seems like hiding the window after it's been
-                # iconized actually closes it on Mac OS...
+                # iconized actually closes it on macOS...
                 wx.CallAfter(self._window.Hide)
 
     def __start_iconized(self):
-        """Return whether the window should be opened iconized."""
+        """ Return whether the window should be opened iconized. """
         start_iconized = self.__settings.get("window", "starticonized")
         if start_iconized == "Always":
             return True
@@ -144,7 +138,7 @@ class WindowDimensionsTracker(WindowSizeAndPositionTracker):
         return self.get_setting("iconized")
 
     def save_position(self):
-        """Save the position of the window in the settings."""
+        """ Save the position of the window in the settings. """
         iconized = self._window.IsIconized()
         self.set_setting("iconized", iconized)
         if not iconized:

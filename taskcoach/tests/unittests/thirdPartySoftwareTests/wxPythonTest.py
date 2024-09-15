@@ -16,27 +16,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-""" These are unittests of wxPython functionality. Of course, the goal is
+''' These are unittests of wxPython functionality. Of course, the goal is
 not to test all wxPython functions, but rather to document platform
-inconsistencies or surprising behaviour. """  # pylint: disable=W0105
+inconsistencies or surprising behaviour. '''
+
+# pylint: disable=W0105
 
 import wx
-import test
-from taskcoachlib import operating_system
+from ... import test
+from ....taskcoachlib import operating_system
 
 
 class TextCtrlTest(test.wxTestCase):
     def testClearEmitsNoEventOnMacOSX(self):
         self.clearTextCausesEvent = False  # pylint: disable=W0201
         textCtrl = wx.TextCtrl(self.frame)
-        textCtrl.Bind(wx.EVT_TEXT, self.onTextChanged)
+        textCtrl.bind(wx.EVT_TEXT, self.onTextChanged)
         textCtrl.Clear()
         if operating_system.isMac():  # pragma: no cover
-            self.assertFalse(self.clearTextCausesEvent)
+            self.failIf(self.clearTextCausesEvent)
         else:  # pragma: no cover
-            self.assertTrue(self.clearTextCausesEvent)
+            self.failUnless(self.clearTextCausesEvent)
 
     def onTextChanged(self, event):  # pylint: disable=W0613
-        self.clearTextCausesEvent = (
-            True  # pragma: no cover pylint: disable=W0201
-        )
+        self.clearTextCausesEvent = True  # pragma: no cover pylint: disable=W0201

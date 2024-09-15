@@ -42,7 +42,7 @@ Simple Usage
     growl.register()
 
     # Send one message
-    growl.notify(
+    growl.Notify(
         noteType = "New Messages",
         title = "You have a new message",
         description = "A longer message description",
@@ -54,7 +54,7 @@ Simple Usage
     # Try to send a different type of message
     # This one may fail since it is not in our list
     # of defaultNotifications
-    growl.notify(
+    growl.Notify(
         noteType = "New Updates",
         title = "There is a new update to download",
         description = "A longer message description",
@@ -71,7 +71,7 @@ You can send the image along with the notification to get around this.
 ::
 
     image = open('/path/to/image.png', 'rb').read()
-    growl.notify(
+    growl.Notify(
         noteType = "New Messages",
         title = "You have a new message",
         description = "This time we embed the image",

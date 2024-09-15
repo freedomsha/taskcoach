@@ -16,9 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test, wx
-from taskcoachlib import gui, config, persistence
-from taskcoachlib.domain import category
+from builtins import zip
+import test
+import wx
+from ....taskcoachlib import gui, config, persistence
+from ....taskcoachlib.domain import category
 
 
 class CategoryViewerTest(test.wxTestCase):
@@ -27,9 +29,8 @@ class CategoryViewerTest(test.wxTestCase):
         self.settings = config.Settings(load=False)
         self.taskFile = persistence.TaskFile()
         self.categories = self.taskFile.categories()
-        self.viewer = gui.viewer.CategoryViewer(
-            self.frame, self.taskFile, self.settings
-        )
+        self.viewer = gui.viewer.CategoryViewer(self.frame, self.taskFile,
+                                                self.settings)
 
     def tearDown(self):
         super(CategoryViewerTest, self).tearDown()
@@ -37,8 +38,8 @@ class CategoryViewerTest(test.wxTestCase):
         self.taskFile.stop()
 
     def addTwoCategories(self):
-        cat1 = category.Category("1")
-        cat2 = category.Category("2")
+        cat1 = category.Category('1')
+        cat2 = category.Category('2')
         self.categories.extend([cat2, cat1])
         return cat1, cat2
 
@@ -56,9 +57,7 @@ class CategoryViewerTest(test.wxTestCase):
     def testSortInWidget(self):
         self.addTwoCategories()
         widget = self.viewer.widget
-        for item, cat in zip(
-            widget.GetItemChildren(), self.viewer.presentation()
-        ):
+        for item, cat in zip(widget.GetItemChildren(), self.viewer.presentation()):
             self.assertEqual(cat.subject(), widget.GetItemText(item))
 
     def testSelectAll(self):
@@ -69,12 +68,8 @@ class CategoryViewerTest(test.wxTestCase):
 
     def testFilterOnAllCheckedCategoriesSetsSetting(self):
         self.viewer.filterUICommand.doChoice(True)
-        self.assertTrue(
-            self.settings.getboolean("view", "categoryfiltermatchall")
-        )
+        self.failUnless(self.settings.getboolean('view', 'categoryfiltermatchall'))
 
     def testFilterOnAnyCheckedCategoriesSetsSetting(self):
         self.viewer.filterUICommand.doChoice(False)
-        self.assertFalse(
-            self.settings.getboolean("view", "categoryfiltermatchall")
-        )
+        self.failIf(self.settings.getboolean('view', 'categoryfiltermatchall'))

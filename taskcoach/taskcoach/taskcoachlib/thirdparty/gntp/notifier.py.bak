@@ -50,7 +50,7 @@ def mini(description, applicationName='PythonMini', noteType="Message",
 	if result is not True:
 		return result
 
-	return growl.notify(
+	return growl.Notify(
 		noteType=noteType,
 		title=title,
 		description=description,
@@ -128,7 +128,7 @@ class GrowlNotifier(object):
 		self.register_hook(register)
 		return self._send('register', register)
 
-	def notify(self, noteType, title, description, icon=None, sticky=False,
+	def Notify(self, noteType, title, description, icon=None, sticky=False,
 			priority=None, callback=None, identifier=None):
 		"""Send a GNTP notifications
 
@@ -176,7 +176,7 @@ class GrowlNotifier(object):
 		self.add_origin_info(notice)
 		self.notify_hook(notice)
 
-		return self._send('notify', notice)
+		return self._send('Notify', notice)
 
 	def subscribe(self, id, name, port):
 		"""Send a Subscribe request to a remote machine"""
@@ -225,7 +225,7 @@ class GrowlNotifier(object):
 		while not recv_data.endswith("\r\n\r\n"):
 			recv_data += s.recv(1024)
 		response = gntp.parse_gntp(recv_data)
-		s.close()
+		s.Close()
 
 		logger.debug('From : %s:%s <%s>\n%s', self.hostname, self.port, response.__class__, response)
 

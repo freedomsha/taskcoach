@@ -16,7 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from distutils.core import setup, Extension
+# distutils is deprecated with removal planned for Python 3.12.
+# from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 setup(
     name="sendinput",

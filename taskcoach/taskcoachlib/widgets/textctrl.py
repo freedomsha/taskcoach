@@ -16,6 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import chr
+# from builtins import str
+# from builtins import range
 from taskcoachlib import i18n, operating_system
 import wx
 import webbrowser
@@ -28,8 +31,17 @@ for ordinal in range(0x20):
 
 
 class BaseTextCtrl(wx.TextCtrl):
+    """ A sub-class of wx.TextCtrl
+    A text control allows text to be displayed and edited.
+    It may be single line or multi-line.
+     Notice that a lot of methods of the text controls are found in the base wx.TextEntry class
+    which is a common base class for wx.TextCtrl and other controls using a single line text entry field
+    (e.g. wx.ComboBox).
+    see: https://docs.wxpython.org/wx.TextCtrl.html?highlight=wx%20textctrl#wx.TextCtrl
+    """
+
     def __init__(self, parent, *args, **kwargs):
-        super(BaseTextCtrl, self).__init__(parent, -1, *args, **kwargs)
+        super().__init__(parent, -1, *args, **kwargs)
         self.__data = None
         if operating_system.isGTK() or operating_system.isMac():
             if operating_system.isGTK():
@@ -39,17 +51,17 @@ class BaseTextCtrl(wx.TextCtrl):
             self.__undone_value = None
 
     def GetValue(self, *args, **kwargs):
-        value = super(BaseTextCtrl, self).GetValue(*args, **kwargs)
+        value = super().GetValue(*args, **kwargs)
         # Don't allow unicode control characters:
         return value.translate(UNICODE_CONTROL_CHARACTERS_TO_WEED)
 
     def SetValue(self, *args, **kwargs):
-        super(BaseTextCtrl, self).SetValue(*args, **kwargs)
+        super().SetValue(*args, **kwargs)
         if operating_system.isGTK() or operating_system.isMac():
             self.__initial_value = self.GetValue()
 
     def AppendText(self, *args, **kwargs):
-        super(BaseTextCtrl, self).AppendText(*args, **kwargs)
+        super().AppendText(*args, **kwargs)
         if operating_system.isGTK() or operating_system.isMac():
             self.__initial_value = self.GetValue()
 
@@ -60,30 +72,38 @@ class BaseTextCtrl(wx.TextCtrl):
         return self.__data
 
     def CanUndo(self):
+        """    A copy from method wx.TextEntry.CanUndo
+        Returns True if there is an undo facility available and the last operation can be undone.
+
+        Return:
+        ------
+        type bool
+        """
         if operating_system.isMac():
             return self.__can_undo()
-        return super(BaseTextCtrl, self).CanUndo()
+        return super().CanUndo()
 
     def Undo(self):
         if operating_system.isMac():
             self.__undo()
         else:
-            super(BaseTextCtrl, self).Undo()
+            super().Undo()
 
     def CanRedo(self):
         if operating_system.isMac():
             return self.__can_redo()
-        return super(BaseTextCtrl, self).CanRedo()
+        return super().CanRedo()
 
     def Redo(self):
+        """ A copy of method wx.TextEntry.Redo """
         if operating_system.isMac():
             self.__redo()
         else:
-            super(BaseTextCtrl, self).Redo()
+            super().Redo()
 
     def __on_key_down(self, event):
-        """Check whether the user pressed Ctrl-Z (or Ctrl-Y) and if so,
-        undo (or redo) the editing."""
+        """ Check whether the user pressed Ctrl-Z (or Ctrl-Y) and if so,
+            undo (or redo) the editing. """
         if self.__ctrl_z_pressed(event) and self.__can_undo():
             self.__undo()
         elif self.__ctrl_y_pressed(event) and self.__can_redo():
@@ -93,49 +113,51 @@ class BaseTextCtrl(wx.TextCtrl):
 
     @staticmethod
     def __ctrl_z_pressed(event):
-        """Did the user press Ctrl-Z (for undo)?"""
+        """ Did the user press Ctrl-Z (for undo)? """
         return event.GetKeyCode() == ord("Z") and event.ControlDown()
 
     def __can_undo(self):
-        """Is there a change to be undone?"""
+        """ Is there a change to be undone? """
         return self.GetValue() != self.__initial_value
 
     def __undo(self):
-        """Undo the last change."""
+        """ Undo the last change. """
         insertion_point = self.GetInsertionPoint()
         self.__undone_value = self.GetValue()
-        super(BaseTextCtrl, self).SetValue(self.__initial_value)
+        super().SetValue(self.__initial_value)
         insertion_point = min(insertion_point, self.GetLastPosition())
         self.SetInsertionPoint(insertion_point)
 
     @staticmethod
     def __ctrl_y_pressed(event):
-        """Did the user press Ctrl-Y (for redo)?"""
+        """ Did the user press Ctrl-Y (for redo)? """
         return event.GetKeyCode() == ord("Y") and event.ControlDown()
 
     def __can_redo(self):
-        """Is there an undone change to be redone?"""
+        """ Is there an undone change to be redone? """
         return self.__undone_value not in (self.GetValue(), None)
 
     def __redo(self):
-        """Redo the last undone change."""
+        """ Redo the last undone change. """
         insertion_point = self.GetInsertionPoint()
-        super(BaseTextCtrl, self).SetValue(self.__undone_value)
+        super().SetValue(self.__undone_value)
         self.__undone_value = None
         insertion_point = min(insertion_point, self.GetLastPosition())
         self.SetInsertionPoint(insertion_point)
 
     def __on_kill_focus(self, event):
-        """Reset the edit history."""
+        """ Reset the edit history. """
         self.__initial_value = self.GetValue()
         self.__undone_value = None
 
 
 class SingleLineTextCtrl(BaseTextCtrl):
+    """ A sub-class of BaseTextCtrl. """
     pass
 
 
 class MultiLineTextCtrl(BaseTextCtrl):
+    """ A sub-class of BaseTextCtrl. """
     CheckSpelling = True
 
     def __init__(self, parent, text="", *args, **kwargs):
@@ -145,7 +167,7 @@ class MultiLineTextCtrl(BaseTextCtrl):
             # from the right-click menu in the TextCtrl, so we don't use
             # wx.TE_RICH if the language is RTL.
             kwargs["style"] |= wx.TE_RICH | wx.TE_AUTO_URL
-        super(MultiLineTextCtrl, self).__init__(parent, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
         self.__initializeText(text)
         self.Bind(wx.EVT_TEXT_URL, self.onURLClicked)
         try:
@@ -170,6 +192,6 @@ class MultiLineTextCtrl(BaseTextCtrl):
 
 class StaticTextWithToolTip(wx.StaticText):
     def __init__(self, *args, **kwargs):
-        super(StaticTextWithToolTip, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         label = kwargs["label"]
         self.SetToolTip(wx.ToolTip(label))

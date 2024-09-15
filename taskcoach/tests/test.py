@@ -18,11 +18,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wxversion
+# from __future__ import print_function
+# from builtins import object
 
-wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True)
+# import wxversion  # a supprimer obsolete
+from wx import version
+from taskcoachlib.notify import AbstractNotifier
 
-import sys, unittest, os, time, wx, logging
+# wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True)
+wx.__version__.select(["2.8-unicode", "3.0"], optionsRequired=True)
+
+import sys
+import unittest
+import os
+import time
+import wx
+import logging
 
 projectRoot = os.path.abspath("..")
 if projectRoot not in sys.path:
@@ -32,39 +43,27 @@ from taskcoachlib.notify import AbstractNotifier
 
 
 def skipOnPlatform(*platforms):
-    """Decorator for unit tests that are to be skipped on specific
-    platforms."""
-
+    """ Decorator for unit tests that are to be skipped on specific
+        platforms. """
     def wrapper(func):
         if wx.Platform in platforms:
             return lambda self, *args, **kwargs: self.skipTest(
                 "platform is %s" % wx.Platform
             )
         return func
-
     return wrapper
 
 
 def skipOnTwistedVersions(*versions):
-    """Decorator for unit tests that are to be skipped on specific
-    versions of Twisted. Versions are strings. The test is
-    skipped if the current Twisted version string is prefixed by any
-    of the specified ones."""
-
+    """ Decorator for unit tests that are to be skipped on specific
+        versions of Twisted. Versions are strings. The test is
+        skipped if the current Twisted version string is prefixed by any
+        of the specified ones. """
     def wrapper(func):
         import twisted
-
-        if any(
-            [
-                twisted.version.short().startswith(version)
-                for version in versions
-            ]
-        ):
-            return lambda self, *args, **kwargs: self.skipTest(
-                "Twisted version is %s" % twisted.version.short()
-            )
+        if any([twisted.version.short().startswith(version) for version in versions]):
+            return lambda self, *args, **kwargs: self.skipTest('Twisted version is %s' % twisted.version.short())
         return func
-
     return wrapper
 
 
@@ -72,16 +71,15 @@ class TestCase(unittest.TestCase, object):
     def assertEqualLists(self, expectedList, actualList):
         self.assertEqual(len(expectedList), len(actualList))
         for item in expectedList:
+            # self.failUnless(item in actualList)
             self.assertTrue(item in actualList)
 
     def registerObserver(self, eventType, eventSource=None):
         if not hasattr(self, "events"):
             self.events = []  # pylint: disable=W0201
         from taskcoachlib import patterns  # pylint: disable=W0404
-
-        patterns.Publisher().registerObserver(
-            self.onEvent, eventType=eventType, eventSource=eventSource
-        )
+        patterns.Publisher().registerObserver(self.onEvent, eventType=eventType,
+                                              eventSource=eventSource)
 
     def onEvent(self, event):
         self.events.append(event)
@@ -91,28 +89,27 @@ class TestCase(unittest.TestCase, object):
 
     def tearDown(self):
         # pylint: disable=W0404
-        # Prevent processing of pending events after the test has finished:
+        # Prevent processing of pending events after the test has Finished:
         wx.GetApp().Disconnect(wx.ID_ANY)
         from taskcoachlib import patterns
-
         patterns.Publisher().clear()
         patterns.CommandHistory().clear()
         patterns.NumberedInstances.count = dict()
         from taskcoachlib.domain import date
-
         date.Scheduler().shutdown()
         date.Scheduler.deleteInstance()
         if hasattr(self, "events"):
             del self.events
+        # from taskcoachlib.thirdparty.pubsub import pub
         from pubsub import pub
-
         pub.unsubAll()
-        super(TestCase, self).tearDown()
+        super().tearDown()
 
 
 class TestCaseFrame(wx.Frame):
     def __init__(self):
-        super(TestCaseFrame, self).__init__(None, wx.ID_ANY, "Frame")
+        # super(TestCaseFrame, self).__init__(None, wx.ID_ANY, 'Frame')
+        super().__init__(None, wx.ID_ANY, "Frame")
         self.toolbarPerspective = ""
 
     def getToolBarPerspective(self):
@@ -159,11 +156,10 @@ class TextTestRunnerWithTimings(unittest.TextTestRunner):
         self._nrTestsToReport = nrTestsToReport
 
     def _makeResult(self):
-        return TestResultWithTimings(
-            self.stream, self.descriptions, self.verbosity
-        )
+        return TestResultWithTimings(self.stream, self.descriptions,
+            self.verbosity)
 
-    def run(self, *args, **kwargs):  # pylint: disable=W0221
+    def run(self, *args, **kwargs): # pylint: disable=W0221
         result = super(TextTestRunnerWithTimings, self).run(*args, **kwargs)
         if self._timeTests:
             sortableTimings = [
@@ -226,8 +222,7 @@ class AllTests(unittest.TestSuite):
         testrunner = TextTestRunnerWithTimings(
             verbosity=self._options.verbosity,
             timeTests=self._options.time,
-            nrTestsToReport=self._options.time_reports,
-        )
+            nrTestsToReport=self._options.time_reports)
         return testrunner.run(self)
 
     @staticmethod
@@ -402,7 +397,7 @@ class TestOptionParser(config.OptionParser):
 
         return testselection
 
-    def parse_args(self):  # pylint: disable=W0221
+    def parse_args(self): # pylint: disable=W0221
         options, args = super(TestOptionParser, self).parse_args()
         if options.profile_report_only:
             options.profile = True
@@ -426,6 +421,7 @@ class TestOptionParser(config.OptionParser):
         return options, args
 
 
+# class TestProfiler(object):
 class TestProfiler:
     def __init__(self, options, logfile=".profile"):
         self._logfile = logfile
@@ -433,14 +429,12 @@ class TestProfiler:
 
     def reportLastRun(self):
         import pstats  # pylint: disable=W0404
-
         stats = pstats.Stats(self._logfile)
         stats.strip_dirs()
         for sortKey in self._options.profile_sort:
             stats.sort_stats(sortKey)
-            stats.print_stats(
-                self._options.profile_regex, self._options.profile_limit
-            )
+            stats.print_stats(self._options.profile_regex,
+                self._options.profile_limit)
         if self._options.profile_callers:
             stats.print_callers()
         if self._options.profile_callees:
@@ -451,8 +445,7 @@ class TestProfiler:
             self.reportLastRun()
 
     def profile(self, tests, command):  # pylint: disable=W0613
-        import cProfile  # pylint: disable=W0404
-
+        import cProfile # pylint: disable=W0404
         _locals = dict(locals())
         cProfile.runctx(
             "result = tests.%s()" % command,

@@ -14,10 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+'''
 
-import test, datetime
-from taskcoachlib.domain import date
+import test
+import datetime
+from ....taskcoachlib.domain import date
 
 
 class PyDateTimeTest(test.TestCase):
@@ -25,12 +26,8 @@ class PyDateTimeTest(test.TestCase):
         testDate = datetime.date(2004, 4, 1)  # April 1st, 2004
         try:
             lastDayOfApril = testDate.replace(day=31)
-            self.fail(
-                "Surprise! datetime.date.replace works as we want!"
-            )  # pragma: no cover
-            self.assertEqual(
-                datetime.date(2004, 4, 30), lastDayOfApril
-            )  # pragma: no cover
+            self.fail('Surprise! datetime.Date.replace works as we want!')  # pragma: no cover
+            self.assertEqual(datetime.date(2004, 4, 30), lastDayOfApril)  # pragma: no cover
         except ValueError:
             pass
 
@@ -86,6 +83,4 @@ class DateTimeTest(test.TestCase):
         self.assertEqual(expected, actual)
 
     def testFormat1900(self):
-        self.assertEqual(
-            date.DateTime(2, 5, 19, 0, 0, 0).strftime("%Y%m%d"), "20519"
-        )
+        self.assertEqual(date.DateTime(2, 5, 19, 0, 0, 0).strftime('%Y%m%d'), '20519')

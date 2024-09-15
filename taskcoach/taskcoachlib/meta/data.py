@@ -22,21 +22,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Edit these for every release:
 
-version = "1.5.0"  # Current version number of the application
-tskversion = 37  # Current version number of the task file format, changed to 37 for release 1.3.23.
-release_day = "5"  # Day number of the release, 1-31, as string
-release_month = "September"  # Month of the release in plain English
-release_year = "2020"  # Year of the release as string
-release_status = "stable"  # One of 'alpha', 'beta', 'stable'
+# from builtins import str
+# from builtins import map
+
+version = '2.0.0'  # Current version number of the application
+tskversion = 38  # Current version number of the task file format, changed to 37 for release 1.3.23.
+release_day = '13'  # Day number of the release, 1-31, as string
+release_month = 'September'  # Month of the release in plain English
+release_year = '2020'  # Year of the release as string
+release_status = 'stable'  # One of 'alpha', 'beta', 'stable'
 
 # No editing needed below this line for doing a release.
 
-import re, datetime
-
+import re
+import datetime
 try:
-    from taskcoachlib.meta.revision import (
-        revision,
-    )  # pylint: disable=F0401,W0611
+    from taskcoachlib.meta.revision import revision  # pylint: disable=F0401,W0611
 except ImportError:
     revision = None
 

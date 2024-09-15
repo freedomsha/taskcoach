@@ -16,7 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test, mock
+import test
+import mock
 from taskcoachlib.domain import task, category
 
 
@@ -36,18 +37,14 @@ class TaskViewerAndCategoryFilterIntegrationTestFixture(test.wxTestCase):
 
     def tearDown(self):
         mock.App.deleteInstance()
-        super(
-            TaskViewerAndCategoryFilterIntegrationTestFixture, self
-        ).tearDown()
+        super().tearDown()
 
 
 class TaskListViewerAndCategoryFilterIntegrationTest(
-    TaskViewerAndCategoryFilterIntegrationTestFixture
-):
+        TaskViewerAndCategoryFilterIntegrationTestFixture):
 
     def testFilterOnCategoryChildDoesHideParent(self):
         import wx
-
         if wx.VERSION < (3, 0):
             self.taskViewer.settings.setboolean(
                 self.taskViewer.settingsSection(), "treemode", False
@@ -56,8 +53,7 @@ class TaskListViewerAndCategoryFilterIntegrationTest(
 
 
 class TaskTreeViewerAndCategoryFilterIntegrationTest(
-    TaskViewerAndCategoryFilterIntegrationTestFixture
-):
+        TaskViewerAndCategoryFilterIntegrationTestFixture):
 
     def testFilterOnCategoryChildDoesNotHideParent(self):
         self.taskViewer.settings.setboolean(

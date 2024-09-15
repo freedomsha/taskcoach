@@ -51,8 +51,8 @@ class TaskTestCase(test.TestCase):
             for section, name, value in settings:
                 # XXXTODO: other types ? Not needed right Now
                 self.settings.setint(section, name, value)
-        self.yesterday = Date.yesterday()
-        self.tomorrow = Date.tomorrow()
+        self.Yesterday = Date.Yesterday()
+        self.Tomorrow = Date.Tomorrow()
         self.tasks = self.createTasks()
         self.task = self.tasks[0]
         for index, eachTask in enumerate(self.tasks):
@@ -249,9 +249,9 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
     # Setters
 
     def testSetPlannedStartDateTime(self):
-        self.task.setPlannedStartDateTime(self.yesterday)
+        self.task.setPlannedStartDateTime(self.Yesterday)
         for recursive in (False, True):
-            self.assertEqual(self.yesterday,
+            self.assertEqual(self.Yesterday,
                              self.task.plannedStartDateTime(recursive=recursive))
 
     def testSetPlannedStartDateTimeNotification(self):
@@ -261,8 +261,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
             events.append((newValue, sender))
 
         pub.subscribe(onEvent, task.Task.plannedStartDateTimeChangedEventType())
-        self.task.setPlannedStartDateTime(self.yesterday)
-        self.assertEqual((self.yesterday, self.task), events[0])
+        self.task.setPlannedStartDateTime(self.Yesterday)
+        self.assertEqual((self.Yesterday, self.task), events[0])
 
     def testSetPlannedStartDateTimeUnchangedCausesNoNotification(self):
         events = []
@@ -275,12 +275,12 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.failIf(events)
 
     def testSetFuturePlannedStartDateTimeChangesIcon(self):
-        self.task.setPlannedStartDateTime(self.tomorrow)
+        self.task.setPlannedStartDateTime(self.Tomorrow)
         self.assertEqual(task.inactive.getBitmap(self.settings), self.task.icon(recursive=True))
 
     def testIconChangedAfterSetPlannedStartDateTimeHasPassed(self):
-        self.task.setPlannedStartDateTime(self.tomorrow)
-        Now = self.tomorrow + Date.ONE_SECOND
+        self.task.setPlannedStartDateTime(self.Tomorrow)
+        Now = self.Tomorrow + Date.ONE_SECOND
         oldNow = Date.Now
         Date.Now = lambda: Now
         self.task.onTimeToStart()
@@ -288,9 +288,9 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         Date.Now = oldNow
 
     def testSetActualStartDateTime(self):
-        self.task.setActualStartDateTime(self.yesterday)
+        self.task.setActualStartDateTime(self.Yesterday)
         for recursive in (False, True):
-            self.assertEqual(self.yesterday,
+            self.assertEqual(self.Yesterday,
                              self.task.actualStartDateTime(recursive=recursive))
 
     def testSetActualStartDateTimeNotification(self):
@@ -300,8 +300,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
             events.append((newValue, sender))
 
         pub.subscribe(onEvent, task.Task.actualStartDateTimeChangedEventType())
-        self.task.setActualStartDateTime(self.yesterday)
-        self.assertEqual((self.yesterday, self.task), events[0])
+        self.task.setActualStartDateTime(self.Yesterday)
+        self.assertEqual((self.Yesterday, self.task), events[0])
 
     def testSetActualStartDateTimeUnchangedCausesNoNotification(self):
         events = []
@@ -314,9 +314,9 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.failIf(events)
 
     def testSetDueDateTime(self):
-        self.task.setDueDateTime(self.tomorrow)
+        self.task.setDueDateTime(self.Tomorrow)
         for recursive in (False, True):
-            self.assertEqual(self.tomorrow,
+            self.assertEqual(self.Tomorrow,
                              self.task.dueDateTime(recursive=recursive))
 
     def testSetDueDateTimeNotification(self):
@@ -326,8 +326,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
             events.append((newValue, sender))
 
         pub.subscribe(onEvent, task.Task.dueDateTimeChangedEventType())
-        self.task.setDueDateTime(self.tomorrow)
-        self.assertEqual((self.tomorrow, self.task), events[0])
+        self.task.setDueDateTime(self.Tomorrow)
+        self.assertEqual((self.Tomorrow, self.task), events[0])
 
     def testSetDueDateTimeUnchangedCausesNoNotification(self):
         events = []
@@ -340,8 +340,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.failIf(events)
 
     def testIconChangedAfterSetDueDateTimeHasPassed(self):
-        self.task.setDueDateTime(self.tomorrow)
-        Now = self.tomorrow + Date.ONE_SECOND
+        self.task.setDueDateTime(self.Tomorrow)
+        Now = self.Tomorrow + Date.ONE_SECOND
         oldNow = Date.Now
         Date.Now = lambda: Now
         self.task.onOverDue()
@@ -350,8 +350,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
 
     def testIconChangedAfterTaskHasBecomeDueSoon(self):
         self.settings.setint('behavior', 'duesoonhours', 1)
-        self.task.setDueDateTime(self.tomorrow)
-        Now = self.tomorrow + Date.ONE_SECOND - Date.ONE_HOUR
+        self.task.setDueDateTime(self.Tomorrow)
+        Now = self.Tomorrow + Date.ONE_SECOND - Date.ONE_HOUR
         oldNow = Date.Now
         Date.Now = lambda: Now
         self.task.onDueSoon()
@@ -359,9 +359,9 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         Date.Now = oldNow
 
     def testIconChangedAfterTaskHasBecomeDueSoonAccordingToNewDueSoonSetting(self):
-        self.task.setDueDateTime(self.tomorrow)
+        self.task.setDueDateTime(self.Tomorrow)
         self.settings.setint('behavior', 'duesoonhours', 1)
-        Now = self.tomorrow + Date.ONE_SECOND - Date.ONE_HOUR
+        Now = self.Tomorrow + Date.ONE_SECOND - Date.ONE_HOUR
         oldNow = Date.Now
         Date.Now = lambda: Now
         self.task.onDueSoon()
@@ -580,7 +580,7 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.settings.setboolean('behavior',
                                  'markparentcompletedwhenallchildrencompleted',
                                  True)
-        child = task.Task(completionDateTime=self.yesterday)
+        child = task.Task(completionDateTime=self.Yesterday)
         self.task.addChild(child)
         self.failUnless(self.task.completed())
 
@@ -591,10 +591,10 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
         self.failIf(self.task.completed())
 
     def testAddChildWithLaterDueDateTimeDoesNotChangeParentDueDateTime(self):
-        self.task.setDueDateTime(self.tomorrow)
+        self.task.setDueDateTime(self.Tomorrow)
         child = task.Task(dueDateTime=Date.Now() + Date.ONE_HOUR)
         self.task.addChild(child)
-        self.assertEqual(self.tomorrow, self.task.dueDateTime())
+        self.assertEqual(self.Tomorrow, self.task.dueDateTime())
         self.assertEqual(child.dueDateTime(),
                          self.task.dueDateTime(recursive=True))
 
@@ -607,45 +607,45 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
 
     def testAddChildWithEarlierPlannedStartDateTimeDoesNotChangeParentsPlannedStartDateTime(self):
         originalPlannedStartDateTime = self.task.plannedStartDateTime()
-        child = task.Task(plannedStartDateTime=self.yesterday)
+        child = task.Task(plannedStartDateTime=self.Yesterday)
         self.task.addChild(child)
         self.assertEqual(originalPlannedStartDateTime,
                          self.task.plannedStartDateTime())
-        self.assertEqual(self.yesterday,
+        self.assertEqual(self.Yesterday,
                          self.task.plannedStartDateTime(recursive=True))
-        self.assertEqual(self.yesterday, child.plannedStartDateTime())
+        self.assertEqual(self.Yesterday, child.plannedStartDateTime())
 
     def testAddChildWithEarlierActualStartDateTimeDoesNotChangeParentActualStartDateTime(self):
         originalActualStartDateTime = self.task.actualStartDateTime()
-        child = task.Task(actualStartDateTime=self.yesterday)
+        child = task.Task(actualStartDateTime=self.Yesterday)
         self.task.addChild(child)
         self.assertEqual(originalActualStartDateTime,
                          self.task.actualStartDateTime())
-        self.assertEqual(self.yesterday,
+        self.assertEqual(self.Yesterday,
                          self.task.actualStartDateTime(recursive=True))
-        self.assertEqual(self.yesterday, child.actualStartDateTime())
+        self.assertEqual(self.Yesterday, child.actualStartDateTime())
 
     def testAddActiveRecurringChildWithEarlierPlannedStartDateTimeDoesNotChangeParentsPlannedStartDateTime(self):
         originalPlannedStartDateTime = self.task.plannedStartDateTime()
-        child = task.Task(plannedStartDateTime=self.yesterday)
+        child = task.Task(plannedStartDateTime=self.Yesterday)
         child.setRecurrence(Date.Recurrence('monthly'))
         self.task.addChild(child)
         self.assertEqual(originalPlannedStartDateTime,
                          self.task.plannedStartDateTime())
-        self.assertEqual(self.yesterday,
+        self.assertEqual(self.Yesterday,
                          self.task.plannedStartDateTime(recursive=True))
-        self.assertEqual(self.yesterday, child.plannedStartDateTime())
+        self.assertEqual(self.Yesterday, child.plannedStartDateTime())
 
     def testAddActiveRecurringChildWithEarlierActualStartDateTimeDoesNotChangeParentActualStartDateTime(self):
         originalActualStartDateTime = self.task.actualStartDateTime()
-        child = task.Task(actualStartDateTime=self.yesterday)
+        child = task.Task(actualStartDateTime=self.Yesterday)
         child.setRecurrence(Date.Recurrence('monthly'))
         self.task.addChild(child)
         self.assertEqual(originalActualStartDateTime,
                          self.task.actualStartDateTime())
-        self.assertEqual(self.yesterday,
+        self.assertEqual(self.Yesterday,
                          self.task.actualStartDateTime(recursive=True))
-        self.assertEqual(self.yesterday, child.actualStartDateTime())
+        self.assertEqual(self.Yesterday, child.actualStartDateTime())
 
     def testAddChildWithBudgetCausesBudgetNotification(self):
         child = task.Task()
@@ -954,14 +954,14 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
     def testTaskStateIncludesPlannedStartDateTime(self):
         previousPlannedStartDateTime = self.task.plannedStartDateTime()
         state = self.task.__getstate__()
-        self.task.setPlannedStartDateTime(self.yesterday)
+        self.task.setPlannedStartDateTime(self.Yesterday)
         self.task.__setstate__(state)
         self.assertEqual(previousPlannedStartDateTime, self.task.plannedStartDateTime())
 
     def testTaskStateIncludesActualStartDateTime(self):
         previousActualStartDateTime = self.task.actualStartDateTime()
         state = self.task.__getstate__()
-        self.task.setActualStartDateTime(self.yesterday)
+        self.task.setActualStartDateTime(self.Yesterday)
         self.task.__setstate__(state)
         self.assertEqual(previousActualStartDateTime,
                          self.task.actualStartDateTime())
@@ -969,14 +969,14 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin,
     def testTaskStateIncludesDueDateTime(self):
         previousDueDateTime = self.task.dueDateTime()
         state = self.task.__getstate__()
-        self.task.setDueDateTime(self.yesterday)
+        self.task.setDueDateTime(self.Yesterday)
         self.task.__setstate__(state)
         self.assertEqual(previousDueDateTime, self.task.dueDateTime())
 
     def testTaskStateIncludesCompletionDateTime(self):
         previousCompletionDateTime = self.task.completionDateTime()
         state = self.task.__getstate__()
-        self.task.setCompletionDateTime(self.yesterday)
+        self.task.setCompletionDateTime(self.Yesterday)
         self.task.__setstate__(state)
         self.assertEqual(previousCompletionDateTime,
                          self.task.completionDateTime())
@@ -1077,7 +1077,7 @@ class TaskDueTodayTest(TaskTestCase, CommonTaskTestsMixin):
 
 class TaskDueTomorrowTest(TaskTestCase, CommonTaskTestsMixin):
     def taskCreationKeywordArguments(self):
-        return [{'dueDateTime': self.tomorrow.endOfDay()}]
+        return [{'dueDateTime': self.Tomorrow.endOfDay()}]
 
     def testDaysLeft(self):
         self.assertEqual(1, self.task.timeLeft().days)
@@ -1115,7 +1115,7 @@ class TaskDueTomorrowTest(TaskTestCase, CommonTaskTestsMixin):
 
 class OverdueTaskTest(TaskTestCase, CommonTaskTestsMixin):
     def taskCreationKeywordArguments(self):
-        return [{'dueDateTime': self.yesterday}]
+        return [{'dueDateTime': self.Yesterday}]
 
     def testIsOverdue(self):
         self.failUnless(self.task.overdue())
@@ -1184,7 +1184,7 @@ class CompletedTaskTest(TaskTestCase, CommonTaskTestsMixin):
         self.assertEqual(0, self.task.percentageComplete())
 
     def testSettingTheCompletionDateTimeToAnotherDateTimeLeavesTheTaskCompleted(self):
-        self.task.setCompletionDateTime(self.yesterday)
+        self.task.setCompletionDateTime(self.Yesterday)
         self.failUnless(self.task.completed())
 
     def testCompletedTaskIsHundredProcentComplete(self):
@@ -1245,7 +1245,7 @@ class HundredProcentCompletedTaskTest(TaskTestCase, CommonTaskTestsMixin):
 
 class TaskCompletedInTheFutureTest(TaskTestCase, CommonTaskTestsMixin):
     def taskCreationKeywordArguments(self):
-        return [{'completionDateTime': self.tomorrow}]
+        return [{'completionDateTime': self.Tomorrow}]
 
     def testATaskWithAFutureCompletionDateIsCompleted(self):
         self.failUnless(self.task.completed())
@@ -1253,7 +1253,7 @@ class TaskCompletedInTheFutureTest(TaskTestCase, CommonTaskTestsMixin):
 
 class TaskWithPlannedStartDateInTheFutureTest(TaskTestCase, CommonTaskTestsMixin):
     def taskCreationKeywordArguments(self):
-        return [{'plannedStartDateTime': self.tomorrow},
+        return [{'plannedStartDateTime': self.Tomorrow},
                 {'subject': 'prerequisite'}]
 
     def testTaskWithStartDateInTheFutureIsInactive(self):
@@ -1271,7 +1271,7 @@ class TaskWithPlannedStartDateInTheFutureTest(TaskTestCase, CommonTaskTestsMixin
         self.failIf(self.task.inactive())
 
     def testPlannedStartDateTime(self):
-        self.assertEqual(self.tomorrow, self.task.plannedStartDateTime())
+        self.assertEqual(self.Tomorrow, self.task.plannedStartDateTime())
 
     def testSetActualStartDateTimeToTodayMakesTaskActive(self):
         self.task.setActualStartDateTime(Date.Now())
@@ -1403,7 +1403,7 @@ class TaskWithoutPlannedStartDateTimeTest(TaskTestCase, CommonTaskTestsMixin):
 
 class InactiveTaskWithChildTest(TaskTestCase):
     def taskCreationKeywordArguments(self):
-        return [{'plannedStartDateTime': self.tomorrow,
+        return [{'plannedStartDateTime': self.Tomorrow,
                  'children': [task.Task(subject='child')]}]
 
     def testIcon(self):
@@ -1415,7 +1415,7 @@ class InactiveTaskWithChildTest(TaskTestCase):
 
     def testPlannedStartDateTime(self):
         for recursive in (False, True):
-            self.assertEqual(self.tomorrow,
+            self.assertEqual(self.Tomorrow,
                              self.task.plannedStartDateTime(recursive=recursive))
 
 
@@ -1706,8 +1706,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
 
     def testSettingPlannedStartDateTimeLaterThanChildPlannedStartDateTime(self):
         childPlannedStartDateTime = self.task1_1.plannedStartDateTime()
-        self.task1.setPlannedStartDateTime(self.tomorrow)
-        self.assertEqual(self.tomorrow, self.task1.plannedStartDateTime())
+        self.task1.setPlannedStartDateTime(self.Tomorrow)
+        self.assertEqual(self.Tomorrow, self.task1.plannedStartDateTime())
         self.assertEqual(childPlannedStartDateTime,
                          self.task1.plannedStartDateTime(recursive=True))
         self.assertEqual(childPlannedStartDateTime,
@@ -1715,9 +1715,9 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
 
     def testSettingPlannedStartDateTimeEarlierThanParentPlannedStartDateTime(self):
         parentPlannedStartDateTime = self.task1.plannedStartDateTime()
-        self.task1_1.setPlannedStartDateTime(self.yesterday)
-        self.assertEqual(self.yesterday, self.task1_1.plannedStartDateTime())
-        self.assertEqual(self.yesterday,
+        self.task1_1.setPlannedStartDateTime(self.Yesterday)
+        self.assertEqual(self.Yesterday, self.task1_1.plannedStartDateTime())
+        self.assertEqual(self.Yesterday,
                          self.task1.plannedStartDateTime(recursive=True))
         self.assertEqual(parentPlannedStartDateTime,
                          self.task1.plannedStartDateTime())
@@ -1739,8 +1739,8 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
                          set(events))
 
     def testRecursivePlannedStartDateTimeWhenChildStartsYesterday(self):
-        self.task1_1.setPlannedStartDateTime(self.yesterday)
-        self.assertEqual(self.yesterday,
+        self.task1_1.setPlannedStartDateTime(self.Yesterday)
+        self.assertEqual(self.Yesterday,
                          self.task1.plannedStartDateTime(recursive=True))
 
     def testRecursiveActualStartDateTime(self):
@@ -1760,20 +1760,20 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
                          set(events))
 
     def testRecursiveActualStartDateTimeWhenChildStartsYesterday(self):
-        self.task1_1.setActualStartDateTime(self.yesterday)
-        self.assertEqual(self.yesterday,
+        self.task1_1.setActualStartDateTime(self.Yesterday)
+        self.assertEqual(self.Yesterday,
                          self.task1.actualStartDateTime(recursive=True))
 
     def testRecursiveCompletionDateTime(self):
         self.settings.setboolean('behavior',
                                  'markparentcompletedwhenallchildrencompleted',
                                  True)
-        self.task1_1.setCompletionDateTime(self.tomorrow)
-        self.assertEqual(self.tomorrow,
+        self.task1_1.setCompletionDateTime(self.Tomorrow)
+        self.assertEqual(self.Tomorrow,
                          self.task1.completionDateTime(recursive=True))
 
     def testNotificationWhenRecursiveCompletionDateTimeChanges(self):
-        self.task1_1.setCompletionDateTime(self.yesterday)
+        self.task1_1.setCompletionDateTime(self.Yesterday)
         events = []
 
         def onEvent(newValue, sender):
@@ -1786,7 +1786,7 @@ class TaskWithChildTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixin):
                          set(events))
 
     def testRecursiveCompletionDateTimeWhenChildIsCompletedYesterday(self):
-        self.task1_1.setCompletionDateTime(self.yesterday)
+        self.task1_1.setCompletionDateTime(self.Yesterday)
         Now = Date.Now()
         self.task1.setCompletionDateTime(Now)
         self.assertEqual(Now, self.task1.completionDateTime(recursive=True))
@@ -2218,7 +2218,7 @@ class CompletedTaskWithChildTest(TaskTestCase):
 
 class OverdueTaskWithChildTest(TaskTestCase):
     def taskCreationKeywordArguments(self):
-        return [{'dueDateTime': self.yesterday,
+        return [{'dueDateTime': self.Yesterday,
                  'children': [task.Task(subject='child')]}]
 
     def testIcon(self):
@@ -2230,7 +2230,7 @@ class OverdueTaskWithChildTest(TaskTestCase):
 
     def testDueDateTime(self):
         for recursive in (False, True):
-            self.assertEqual(self.yesterday,
+            self.assertEqual(self.Yesterday,
                              self.task.dueDateTime(recursive=recursive))
 
 
@@ -2905,8 +2905,8 @@ class TaskColorTest(test.TestCase):
     def setUp(self):
         super(TaskColorTest, self).setUp()
         self.settings = task.Task.settings = config.Settings(load=False)
-        self.yesterday = Date.yesterday()
-        self.tomorrow = Date.tomorrow()
+        self.Yesterday = Date.Yesterday()
+        self.Tomorrow = Date.Tomorrow()
 
     def testDefaultTask(self):
         self.assertEqual(wx.Colour(192, 192, 192), task.Task().statusFgColor())
@@ -2917,7 +2917,7 @@ class TaskColorTest(test.TestCase):
         self.assertEqual(wx.GREEN, completed.statusFgColor())
 
     def testOverDueTask(self):
-        overdue = task.Task(dueDateTime=self.yesterday)
+        overdue = task.Task(dueDateTime=self.Yesterday)
         self.assertEqual(wx.RED, overdue.statusFgColor())
 
     def testDueTodayTask(self):
@@ -2925,7 +2925,7 @@ class TaskColorTest(test.TestCase):
         self.assertEqual(wx.Colour(255, 128, 0), duetoday.statusFgColor())
 
     def testDueTomorrow(self):
-        duetomorrow = task.Task(dueDateTime=self.tomorrow + Date.ONE_HOUR)
+        duetomorrow = task.Task(dueDateTime=self.Tomorrow + Date.ONE_HOUR)
         self.assertEqual(wx.Colour(192, 192, 192), duetomorrow.statusFgColor())
 
     def testActive(self):
@@ -3052,11 +3052,11 @@ class TaskSuggestedDateTimeBaseSetupAndTests(object):
         self.settings = task.Task.settings = config.Settings(load=False)
         self.changeSettings()
         self.Now = Now = Date.Now()
-        tomorrow = Now + Date.ONE_DAY
-        dayAfterTomorrow = tomorrow + Date.ONE_DAY
+        Tomorrow = Now + Date.ONE_DAY
+        dayAfterTomorrow = Tomorrow + Date.ONE_DAY
         currentTimeKwArgs = dict(hour=Now.hour, minute=Now.minute,
                                  second=Now.second, microsecond=Now.microsecond)
-        nextFriday = tomorrow.endOfWorkWeek().replace(**currentTimeKwArgs)
+        nextFriday = Tomorrow.endOfWorkWeek().replace(**currentTimeKwArgs)
         nextMonday = (Now + Date.ONE_WEEK).startOfWorkWeek().replace(**currentTimeKwArgs)
         startOfWorkingDayHour = self.settings.getint('view', 'efforthourstart')
         startOfWorkingDayKwArgs = dict(hour=startOfWorkingDayHour,
@@ -3073,8 +3073,8 @@ class TaskSuggestedDateTimeBaseSetupAndTests(object):
                                      second=second, microsecond=0)
         startOfWorkingDay = Now.replace(**startOfWorkingDayKwArgs)
         endOfWorkingDay = Now.replace(**endOfWorkingDayKwArgs)
-        startOfWorkingTomorrow = tomorrow.replace(**startOfWorkingDayKwArgs)
-        endOfWorkingTomorrow = tomorrow.replace(**endOfWorkingDayKwArgs)
+        startOfWorkingTomorrow = Tomorrow.replace(**startOfWorkingDayKwArgs)
+        endOfWorkingTomorrow = Tomorrow.replace(**endOfWorkingDayKwArgs)
         startOfWorkingDayAfterTomorrow = dayAfterTomorrow.replace(**startOfWorkingDayKwArgs)
         endOfWorkingDayAfterTomorrow = dayAfterTomorrow.replace(**endOfWorkingDayKwArgs)
         startOfWorkingNextFriday = nextFriday.replace(**startOfWorkingDayKwArgs)
@@ -3087,11 +3087,11 @@ class TaskSuggestedDateTimeBaseSetupAndTests(object):
                           today_currenttime=Now,
                           today_endofworkingday=endOfWorkingDay,
                           today_endofday=Now.endOfDay(),
-                          tomorrow_startofday=tomorrow.startOfDay(),
+                          tomorrow_startofday=Tomorrow.startOfDay(),
                           tomorrow_startofworkingday=startOfWorkingTomorrow,
-                          tomorrow_currenttime=tomorrow,
+                          tomorrow_currenttime=Tomorrow,
                           tomorrow_endofworkingday=endOfWorkingTomorrow,
-                          tomorrow_endofday=tomorrow.endOfDay(),
+                          tomorrow_endofday=Tomorrow.endOfDay(),
                           dayaftertomorrow_startofday=dayAfterTomorrow.startOfDay(),
                           dayaftertomorrow_startofworkingday=startOfWorkingDayAfterTomorrow,
                           dayaftertomorrow_currenttime=dayAfterTomorrow,

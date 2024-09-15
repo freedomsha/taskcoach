@@ -16,16 +16,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# for unresolved reference 'cmp':
+from io import open as file
 from filecmp import cmp
+# unresolved reference 'cmp'
 import os
-import urllib.parse
+from urllib.parse import urlparse
 from taskcoachlib import patterns, mailer
 from taskcoachlib.domain import base
+from taskcoachlib.i18n import _
 from taskcoachlib.tools import openfile
-# from taskcoachlib.thirdparty.pubsub import pub
+# try:
 from pubsub import pub
-from taskcoachlib.domain.note.noteowner import NoteOwner
+# except ImportError:
+#    # try:
+#    from taskcoachlib.thirdparty.pubsub import pub
+#    except ImportError:
+#        from wx.lib.pubsub import pub
+# from taskcoachlib.domain.base import NoteOwner
+from taskcoachlib.domain.note.noteowner import NoteOwner  # plutôt ?
 
 
 def getRelativePath(path, basePath=os.getcwd()):
@@ -50,7 +58,7 @@ def getRelativePath(path, basePath=os.getcwd()):
         if path2 == os.path.sep:
             return path1[1:].replace("\\", "/")
 
-        return path1[len(path2) + 1 :].replace("\\", "/")
+        return path1[len(path2) + 1:].replace("\\", "/")
 
     path1 = path1.split(os.path.sep)
     path2 = path2.split(os.path.sep)
@@ -67,14 +75,14 @@ def getRelativePath(path, basePath=os.getcwd()):
 
 
 class Attachment(base.Object, NoteOwner):
-    """Abstract base class for attachments."""
+    """ Abstract base class for attachments. """
 
     type_ = "unknown"
 
     def __init__(self, location, *args, **kwargs):
         if "subject" not in kwargs:
             kwargs["subject"] = location
-        super(Attachment, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__location = location
 
     def data(self):
@@ -92,16 +100,17 @@ class Attachment(base.Object, NoteOwner):
         if location != self.__location:
             self.__location = location
             self.markDirty()
-            pub.sendMessage(
-                self.locationChangedEventType(), newValue=location, sender=self
-            )
+            pub.sendMessage(self.locationChangedEventType(), newValue=location,
+                            sender=self)
 
     @classmethod
-    def locationChangedEventType(class_):
+    def locationChangedEventType(class_):  # better use cls not class_
+        # def locationChangedEventType(cls):  # better use cls not class_
         return "pubsub.attachment.location"
 
     @classmethod
     def monitoredAttributes(class_):
+        # def monitoredAttributes(cls):
         return base.Object.monitoredAttributes() + ["location"]
 
     def open(self, workingDir=None):
@@ -111,11 +120,17 @@ class Attachment(base.Object, NoteOwner):
         try:
             return cmp(self.location(), other.location())
         except AttributeError:
+            # return False
             return 1
+
+# j'ai ajouté cette fonction
+# à commenter ?
+#     def __hash__(self):
+#         return hash(self.__location)
 
     def __getstate__(self):
         try:
-            state = super(Attachment, self).__getstate__()
+            state = super().__getstate__()
         except AttributeError:
             state = dict()
         state.update(dict(location=self.location()))
@@ -124,7 +139,7 @@ class Attachment(base.Object, NoteOwner):
     @patterns.eventSource
     def __setstate__(self, state, event=None):
         try:
-            super(Attachment, self).__setstate__(state, event=event)
+            super().__setstate__(state, event=event)
         except AttributeError:
             pass
         self.setLocation(state["location"])
@@ -137,16 +152,15 @@ class Attachment(base.Object, NoteOwner):
 
     @classmethod
     def modificationEventTypes(class_):
-        eventTypes = super(Attachment, class_).modificationEventTypes()
+        # def modificationEventTypes(cls):
+        eventTypes = super().modificationEventTypes()
         return eventTypes + [class_.locationChangedEventType()]
 
 
 class FileAttachment(Attachment):
     type_ = "file"
 
-    def open(
-        self, workingDir=None, openAttachment=openfile.openFile
-    ):  # pylint: disable=W0221
+    def open(self, workingDir=None, openAttachment=openfile.openFile):  # pylint: disable=W0221
         return openAttachment(self.normalizedLocation(workingDir))
 
     def normalizedLocation(self, workingDir=None):
@@ -158,7 +172,7 @@ class FileAttachment(Attachment):
         return location
 
     def isLocalFile(self):
-        return urllib.parse.urlparse(self.location())[0] == ""
+        return urlparse(self.location())[0] == ""
 
 
 class URIAttachment(Attachment):
@@ -166,13 +180,14 @@ class URIAttachment(Attachment):
 
     def __init__(self, location, *args, **kwargs):
         if location.startswith("message:") and "subject" not in kwargs:
+            # unresolved attribute reference settings
             if self.settings.getboolean("os_darwin", "getmailsubject"):
                 subject = mailer.getSubjectOfMail(location[8:])
                 if subject:
                     kwargs["subject"] = subject
             else:
                 kwargs["subject"] = _("Mail.app message")
-        super(URIAttachment, self).__init__(location, *args, **kwargs)
+        super().__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
         return openfile.openFile(self.location())
@@ -188,7 +203,7 @@ class MailAttachment(Attachment):
         kwargs.setdefault("subject", subject)
         kwargs.setdefault("description", content)
 
-        super(MailAttachment, self).__init__(location, *args, **kwargs)
+        super().__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
         return mailer.openMail(self.location())
@@ -198,7 +213,8 @@ class MailAttachment(Attachment):
 
     def data(self):
         try:
-            return open(self.location(), "rb").read()
+            return file(self.location(), "rb").read()  # fichier binaire !!!
+            # return io.open(self.location(), "rb").read()
         except IOError:
             return None
 

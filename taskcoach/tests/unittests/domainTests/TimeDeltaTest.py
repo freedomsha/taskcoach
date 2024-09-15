@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import test
-from taskcoachlib.domain import date
+from ....taskcoachlib.domain import date
 
 
 class TimeDeltaTest(test.TestCase):
@@ -55,97 +55,66 @@ class TimeDeltaTest(test.TestCase):
 
     def testRoundTo5Seconds_AlwaysUp(self):
         timedelta = date.TimeDelta(seconds=1, milliseconds=100)
-        self.assertEqual(
-            date.TimeDelta(seconds=5),
-            timedelta.round(seconds=5, alwaysUp=True),
-        )
+        self.assertEqual(date.TimeDelta(seconds=5),
+                         timedelta.round(seconds=5, alwaysUp=True))
 
     def testRoundTo10Seconds_Down(self):
         timedelta = date.TimeDelta(seconds=4, milliseconds=400)
-        self.assertEqual(
-            date.TimeDelta(seconds=0), timedelta.round(seconds=10)
-        )
+        self.assertEqual(date.TimeDelta(seconds=0), timedelta.round(seconds=10))
 
     def testRoundTo10Seconds_Up(self):
         timedelta = date.TimeDelta(seconds=16, milliseconds=400)
-        self.assertEqual(
-            date.TimeDelta(seconds=20), timedelta.round(seconds=10)
-        )
+        self.assertEqual(date.TimeDelta(seconds=20), timedelta.round(seconds=10))
 
     def testRoundTo10Seconds_AlwaysUp(self):
         timedelta = date.TimeDelta(seconds=11)
-        self.assertEqual(
-            date.TimeDelta(seconds=20),
-            timedelta.round(seconds=10, alwaysUp=True),
-        )
+        self.assertEqual(date.TimeDelta(seconds=20),
+                         timedelta.round(seconds=10, alwaysUp=True))
 
     def testRoundTo5Minutes_Down(self):
         timedelta = date.TimeDelta(minutes=10, seconds=30)
-        self.assertEqual(
-            date.TimeDelta(minutes=10), timedelta.round(minutes=5)
-        )
+        self.assertEqual(date.TimeDelta(minutes=10), timedelta.round(minutes=5))
 
     def testRoundTo5Minutes_Up(self):
         timedelta = date.TimeDelta(minutes=8, seconds=30)
-        self.assertEqual(
-            date.TimeDelta(minutes=10), timedelta.round(minutes=5)
-        )
+        self.assertEqual(date.TimeDelta(minutes=10), timedelta.round(minutes=5))
 
     def testRoundTo5Minutes_AlwaysUp(self):
         timedelta = date.TimeDelta(minutes=6, seconds=30)
-        self.assertEqual(
-            date.TimeDelta(minutes=10),
-            timedelta.round(minutes=5, alwaysUp=True),
-        )
+        self.assertEqual(date.TimeDelta(minutes=10),
+                         timedelta.round(minutes=5, alwaysUp=True))
 
     def testRoundTo5Minutes_Big(self):
         timedelta = date.TimeDelta(days=10, minutes=10, seconds=30)
-        self.assertEqual(
-            date.TimeDelta(days=10, minutes=10), timedelta.round(minutes=5)
-        )
+        self.assertEqual(date.TimeDelta(days=10, minutes=10), timedelta.round(minutes=5))
 
     def testRoundTo15Minutes_Down(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=7)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=10), timedelta.round(minutes=15)
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=10), timedelta.round(minutes=15))
 
     def testRoundTo15Minutes_AlwaysUp(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=7)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=10, minutes=15),
-            timedelta.round(minutes=15, alwaysUp=True),
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=10, minutes=15),
+                         timedelta.round(minutes=15, alwaysUp=True))
 
     def testRoundTo30Minutes_Up(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=15)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=10, minutes=30),
-            timedelta.round(minutes=30),
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=10, minutes=30), timedelta.round(minutes=30))
 
     def testRoundTo30Minutes_AlwaysUp(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=14)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=10, minutes=30),
-            timedelta.round(minutes=30, alwaysUp=True),
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=10, minutes=30),
+                         timedelta.round(minutes=30, alwaysUp=True))
 
     def testRoundTo1Hour_Down(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=7)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=10), timedelta.round(hours=1)
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=10), timedelta.round(hours=1))
 
     def testRoundTo1Hour_Up(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=30)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=11), timedelta.round(hours=1)
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=11), timedelta.round(hours=1))
 
     def testRoundTo1Hour_AlwaysUp(self):
         timedelta = date.TimeDelta(days=1, hours=10, minutes=1)
-        self.assertEqual(
-            date.TimeDelta(days=1, hours=11),
-            timedelta.round(hours=1, alwaysUp=True),
-        )
+        self.assertEqual(date.TimeDelta(days=1, hours=11),
+                         timedelta.round(hours=1, alwaysUp=True))

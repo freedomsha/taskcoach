@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from __future__ import print_function
+
 import wx
 import wx.adv
 from taskcoachlib import i18n
@@ -28,7 +30,6 @@ except ImportError:  # pragma: no cover
     print("You need to generate the icons file.")
     print('Run "make prepare" in the Task Coach root folder.')
     import sys
-
     sys.exit(1)
 
 
@@ -40,13 +41,10 @@ class SplashScreen(wx.adv.SplashScreen):
             # the splash image is not internationalized, we have to mirror it
             # (back). Unfortunately using SetLayoutDirection() on the
             # SplashWindow doesn't work.
+            # bitmap = wx.BitmapFromImage(splash.GetImage().Mirror())
             bitmap = wx.BitmapFromImage(splash.GetBitmap().Mirror())
         else:
             bitmap = splash.GetBitmap()
-        super(SplashScreen, self).__init__(
-            bitmap,
-            wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT,
-            4000,
-            None,
-            -1,
-        )
+        # super().__init__(bitmap, wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 4000, None, -1)
+        super().__init__(bitmap,
+                         wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT, 4000, None, -1)

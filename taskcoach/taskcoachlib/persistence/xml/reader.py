@@ -18,57 +18,51 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .. import sessiontempfile  # pylint: disable=F0401
+# from future import standard_library
+#
+# standard_library.install_aliases()
+# from builtins import str
+# from builtins import range
+# from builtins import object
+from taskcoachlib.persistence import sessiontempfile  # pylint: disable=F0401
 from taskcoachlib import meta, patterns
 from taskcoachlib.changes import ChangeMonitor
-from taskcoachlib.domain import (
-    base,
-    date,
-    effort,
-    task,
-    category,
-    categorizable,
-    note,
-    attachment,
-)
+from taskcoachlib.domain import base, date, effort, task, category, categorizable, note, attachment
 from taskcoachlib.i18n import translate
-from taskcoachlib.syncml.config import (
-    SyncMLConfigNode,
-    createDefaultSyncConfig,
-)
+from taskcoachlib.syncml.config import SyncMLConfigNode, createDefaultSyncConfig
 from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
 from taskcoachlib.thirdparty.guid import generate
-import io
+import io  # as StringIO
 import os
 import re
 import stat
 import wx
+from wx import adv as wxadv
+# import xml.etree.ElementTree as eTreefrom lxml import etree as ET
 from lxml import etree as ET
 
 
 def parseAndAdjustDateTime(string, *timeDefaults):
     dateTime = date.parseDateTime(string, *timeDefaults)
-    if (
-        dateTime != date.DateTime()
-        and dateTime is not None
-        and dateTime.time() == date.Time(23, 59, 0, 0)
-    ):
-        dateTime = date.DateTime(
-            year=dateTime.year,
-            month=dateTime.month,
-            day=dateTime.day,
-            hour=23,
-            minute=59,
-            second=59,
-            microsecond=999999,
-        )
+    if dateTime != date.DateTime() and dateTime is not None and \
+            dateTime.time() == date.Time(23, 59, 0, 0):
+        dateTime = date.DateTime(year=dateTime.year,
+                                 month=dateTime.month,
+                                 day=dateTime.day,
+                                 hour=23, minute=59, second=59, microsecond=999999)
     return dateTime
 
 
+# class PIParser(ET.XMLTreeBuilder):  # XMLTreeBuilder don't exist
+# class PIParser(eTree.TreeBuilder):
 class PIParser(ET.XMLParser):
     """See http://effbot.org/zone/element-pi.htm"""
 
     def __init__(self):
+        # eTree.XMLTreeBuilder.__init__(self)
+        # eTree.TreeBuilder.__init__(self)
+        # self._parser.ProcessingInstructionHandler = self.handle_pi
+        # self.tskversion = meta.data.tskversion
         super().__init__()
 
         # FIXME: The codes below no longer works with lastest python
@@ -78,38 +72,44 @@ class PIParser(ET.XMLParser):
         #
         # Use lxml's ElementTree instead, it's provided better Processing Instruction handling
 
+    # def handle_pi(self, target, data):
+    #     if target == 'taskcoach':
+    #         # match_object = re.search('tskversion="(\d+)"', data)
+    #         match_object = re.search('tskversion="(\\d+)"', data)
+    #         # match_object = re.search(r'tskversion="(\d+)"', data)
+    #         self.tskversion = int(match_object.group(1))
+
 
 class XMLReaderTooNewException(Exception):
     pass
 
 
-class XMLReader(object):
-    """Class for reading task files in the default XML task file format."""
-
+class XMLReader(object):  # nouvelle classe
+    """ Class for reading task files in the default XML task file format. """
     defaultStartTime = (0, 0, 0, 0)
     defaultEndTime = (23, 59, 59, 999999)
 
     def __init__(self, fd):
         self.__fd = fd
         self.__default_font_size = wx.SystemSettings.GetFont(
-            wx.SYS_DEFAULT_GUI_FONT
-        ).GetPointSize()
+            wx.SYS_DEFAULT_GUI_FONT).GetPointSize()
         self.__modification_datetimes = {}
         self.__prerequisites = {}
         self.__categorizables = {}
 
     def tskversion(self):
-        """Return the version of the current task file. Note that this is not
-        the version of the application. The task file has its own version
-        numbering (a number that is increasing on every change)."""
+        """ Return the version of the current task file. Note that this is not
+            the version of the application. The task file has its own version
+            numbering (a number that is increasing on every change). """
         return self.__tskversion
 
     def read(self):
-        """Read the task file and return the tasks, categories, notes, SyncML
-        configuration and GUID."""
+        """ Read the task file and return the tasks, categories, notes, SyncML
+            configuration and GUID. """
         if self.__has_broken_lines():
             self.__fix_broken_lines()
         parser = PIParser()
+        # tree = eTree.parse(self.__fd, parser)
         tree = ET.parse(self.__fd, parser)
         root = tree.getroot()
         pis = tree.getroot().xpath("//processing-instruction()")
@@ -117,6 +117,7 @@ class XMLReader(object):
             if pi.target == "taskcoach":
                 tskversion = int(pi.attrib.get("tskversion"))
                 break
+        # self.__tskversion = parser.tskversion  # pylint: disable=W0201
         self.__tskversion = tskversion  # pylint: disable=W0201
         if self.__tskversion > meta.data.tskversion:
             # Version number of task file is too high
@@ -133,14 +134,13 @@ class XMLReader(object):
         guid = self.__parse_guid_node(root.find("guid"))
         syncml_config = self.__parse_syncml_node(root, guid)
 
-        for (
-            object,
-            modification_datetime,
-        ) in self.__modification_datetimes.items():
+        # for object, modification_datetime in list(self.__modification_datetimes.items()):
+        for object, modification_datetime in self.__modification_datetimes.items():
             object.setModificationDateTime(modification_datetime)
 
         changesName = self.__fd.name + ".delta"
         if os.path.exists(changesName):
+            # file -> open ?
             changes = ChangesXMLReader(
                 open(self.__fd.name + ".delta", "r")
             ).read()
@@ -156,7 +156,7 @@ class XMLReader(object):
         return has_broken_lines
 
     def __fix_broken_lines(self):
-        """Remove spurious newlines from element tags."""
+        """ Remove spurious newlines from element tags. """
         self.__origFd = self.__fd  # pylint: disable=W0201
         self.__fd = io.StringIO()
         self.__fd.name = self.__origFd.name
@@ -176,32 +176,29 @@ class XMLReader(object):
         return [self._parse_task_node(child) for child in node.findall("task")]
 
     def __resolve_prerequisites_and_dependencies(self, tasks):
-        """Replace all prerequisites with the actual task instances
-        and set the dependencies."""
+        """ Replace all prerequisites with the actual task instances
+            and set the dependencies. """
         tasks_by_id = dict()
 
         def collect_ids(tasks):
-            """Create a mapping from task ids to task instances."""
+            """ Create a mapping from task ids to task instances. """
             for each_task in tasks:
                 tasks_by_id[each_task.id()] = each_task
                 collect_ids(each_task.children())
 
         def resolve_ids(tasks):
-            """Replace all prerequisites ids with actual task instances and
-            set the dependencies."""
+            """ Replace all prerequisites ids with actual task instances and
+                set the dependencies. """
             for each_task in tasks:
                 if each_task.isDeleted():
                     # Don't restore prerequisites and dependencies for deleted
                     # tasks
-                    for deleted_task in [each_task] + each_task.children(
-                        recursive=True
-                    ):
+                    for deleted_task in [each_task] + \
+                                        each_task.children(recursive=True):
                         deleted_task.setPrerequisites([])
                     continue
                 prerequisites = set()
-                for prerequisiteId in self.__prerequisites.get(
-                    each_task.id(), []
-                ):
+                for prerequisiteId in self.__prerequisites.get(each_task.id(), []):
                     try:
                         prerequisites.add(tasks_by_id[prerequisiteId])
                     except KeyError:
@@ -225,9 +222,11 @@ class XMLReader(object):
             if isinstance(obj, base.CompositeObject):
                 for child in obj.children():
                     mapCategorizables(child, resultMap, categoryMap)
+            # if isinstance(obj, base.NoteOwner):
             if isinstance(obj, note.NoteOwner):
                 for theNote in obj.notes():
                     mapCategorizables(theNote, resultMap, categoryMap)
+            # if isinstance(obj, base.AttachmentOwner):
             if isinstance(obj, attachment.AttachmentOwner):
                 for theAttachment in obj.attachments():
                     mapCategorizables(theAttachment, resultMap, categoryMap)
@@ -242,9 +241,7 @@ class XMLReader(object):
             mapCategorizables(theNote, categorizableMap, categoryMap)
 
         event = patterns.Event()
-        for categoryId, categorizableIds in list(
-            self.__categorizables.items()
-        ):
+        for categoryId, categorizableIds in list(self.__categorizables.items()):
             theCategory = categoryMap[categoryId]
             for categorizableId in categorizableIds:
                 if categorizableId in categorizableMap:
@@ -254,22 +251,17 @@ class XMLReader(object):
         event.send()
 
     def __parse_category_nodes(self, node):
-        return [
-            self.__parse_category_node(child)
-            for child in node.findall("category")
-        ]
+        return [self.__parse_category_node(child)
+                for child in node.findall("category")]
 
     def __parse_note_nodes(self, node):
-        return [
-            self.__parse_note_node(child) for child in node.findall("note")
-        ]
+        return [self.__parse_note_node(child) for child in node.findall("note")]
 
     def __parse_category_node(self, category_node):
-        """Recursively parse the categories from the node and return a
-        category instance."""
-        kwargs = self.__parse_base_composite_attributes(
-            category_node, self.__parse_category_nodes
-        )
+        """ Recursively parse the categories from the node and return a
+            category instance. """
+        kwargs = self.__parse_base_composite_attributes(category_node,
+                                                        self.__parse_category_nodes)
         notes = self.__parse_note_nodes(category_node)
         filtered = self.__parse_boolean(
             category_node.attrib.get("filtered", "False")
@@ -292,17 +284,15 @@ class XMLReader(object):
             kwargs["attachments"] = self.__parse_attachments(category_node)
         theCategory = category.Category(**kwargs)  # pylint: disable=W0142
         self.__categorizables.setdefault(theCategory.id(), list()).extend(
-            categorizable_ids.split(" ")
-        )
+            categorizable_ids.split(" "))
         return self.__save_modification_datetime(theCategory)
 
     def __parse_category_nodes_from_task_nodes(self, root):
         """In tskversion <=13 category nodes were subnodes of task nodes."""
         task_nodes = root.findall(".//task")
-        category_mapping = self.__parse_category_nodes_within_task_nodes(
-            task_nodes
-        )
+        category_mapping = self.__parse_category_nodes_within_task_nodes(task_nodes)
         subject_category_mapping = {}
+        # for task_id, categories in category_mapping.items():
         for task_id, categories in list(category_mapping.items()):
             for subject in categories:
                 if subject in subject_category_mapping:
@@ -310,13 +300,13 @@ class XMLReader(object):
                 else:
                     cat = category.Category(subject)
                     subject_category_mapping[subject] = cat
-                self.__categorizables.setdefault(cat.id(), list()).append(
-                    task_id
-                )
+                self.__categorizables.setdefault(cat.id(), list()).append(task_id)
+        # return subject_category_mapping.values()
         return list(subject_category_mapping.values())
 
+    # @staticmethod
     def __parse_category_nodes_within_task_nodes(self, task_nodes):
-        """In tskversion <=13 category nodes were subnodes of task nodes."""
+        """ In tskversion <=13 category nodes were subnodes of task nodes. """
         category_mapping = {}
         for node in task_nodes:
             task_id = node.attrib["id"]
@@ -325,7 +315,7 @@ class XMLReader(object):
         return category_mapping
 
     def _parse_task_node(self, task_node):
-        """Recursively parse the node and return a task instance."""
+        """Recursively parse the node and return a task instance. """
 
         planned_start_datetime_attribute_name = (
             "startdate" if self.tskversion() <= 33 else "plannedstartdate"
@@ -389,8 +379,8 @@ class XMLReader(object):
         )  # pylint: disable=W0142
 
     def __parse_recurrence(self, task_node):
-        """Parse the recurrence from the node and return a recurrence
-        instance."""
+        """ Parse the recurrence from the node and return a recurrence
+            instance. """
         if self.__tskversion <= 19:
             parse_kwargs = self.__parse_recurrence_attributes_from_task_node
         else:
@@ -439,10 +429,9 @@ class XMLReader(object):
         )
 
     def __parse_note_node(self, note_node):
-        """Parse the attributes and child notes from the noteNode."""
-        kwargs = self.__parse_base_composite_attributes(
-            note_node, self.__parse_note_nodes
-        )
+        """ Parse the attributes and child notes from the noteNode. """
+        kwargs = self.__parse_base_composite_attributes(note_node,
+                                                        self.__parse_note_nodes)
         if self.__tskversion > 20:
             kwargs["attachments"] = self.__parse_attachments(note_node)
         return self.__save_modification_datetime(
@@ -479,18 +468,16 @@ class XMLReader(object):
 
         if self.__tskversion <= 20:
             attributes["attachments"] = (
-                self.__parse_attachments_before_version21(node)
-            )
+                self.__parse_attachments_before_version21(node))
         if self.__tskversion >= 22:
             attributes["status"] = int(node.attrib.get("status", "1"))
 
         return attributes
 
-    def __parse_base_composite_attributes(
-        self, node, parse_children, *parse_children_args
-    ):
-        """Same as __parse_base_attributes, but also parse children and
-        expandedContexts."""
+    def __parse_base_composite_attributes(self, node, parse_children,
+                                          *parse_children_args):
+        """ Same as __parse_base_attributes, but also parse children and
+            expandedContexts. """
         kwargs = self.__parse_base_attributes(node)
         kwargs["children"] = parse_children(node, *parse_children_args)
         expanded_contexts = node.attrib.get("expandedContexts", "")
@@ -498,11 +485,9 @@ class XMLReader(object):
         return kwargs
 
     def __parse_attachments_before_version21(self, parent):
-        """Parse the attachments from the node and return the attachment
-        instances."""
-        path, name = os.path.split(
-            os.path.abspath(self.__fd.name)
-        )  # pylint: disable=E1103
+        """ Parse the attachments from the node and return the attachment
+            instances. """
+        path, name = os.path.split(os.path.abspath(self.__fd.name))  # pylint: disable=E1103
         name = os.path.splitext(name)[0]
         attdir = os.path.normpath(os.path.join(path, name + "_attachments"))
 
@@ -512,31 +497,27 @@ class XMLReader(object):
                 args = (node.text,)
                 kwargs = dict()
             else:
-                args = (
-                    os.path.join(attdir, node.find("data").text),
-                    node.attrib["type"],
-                )
+                args = (os.path.join(attdir, node.find("data").text),
+                        node.attrib["type"])
                 description = self.__parse_description(node)
-                kwargs = dict(subject=description, description=description)
+                kwargs = dict(subject=description,
+                              description=description)
             try:
                 # pylint: disable=W0142
-                attachments.append(
-                    attachment.AttachmentFactory(*args, **kwargs)
-                )
+                attachments.append(attachment.AttachmentFactory(*args,
+                                                                **kwargs))
             except IOError:
                 # Mail attachment, file doesn't exist. Ignore this.
                 pass
         return attachments
 
     def __parse_effort_nodes(self, node):
-        """Parse all effort records from the node."""
-        return [
-            self.__parse_effort_node(effort_node)
-            for effort_node in node.findall("effort")
-        ]
+        """ Parse all effort records from the node. """
+        return [self.__parse_effort_node(effort_node)
+                for effort_node in node.findall("effort")]
 
     def __parse_effort_node(self, node):
-        """Parse an effort record from the node."""
+        """ Parse an effort record from the node. """
         kwargs = {}
         if self.__tskversion >= 22:
             kwargs["status"] = int(node.attrib.get("status", "1"))
@@ -549,16 +530,11 @@ class XMLReader(object):
         # task by the task itself. This way no events are sent for changing the
         # effort owner, which is good.
         # pylint: disable=W0142
-        return effort.Effort(
-            task=None,
-            start=date.parseDateTime(start),
-            stop=date.parseDateTime(stop),
-            description=description,
-            **kwargs
-        )
+        return effort.Effort(task=None, start=date.parseDateTime(start),
+                             stop=date.parseDateTime(stop), description=description, **kwargs)
 
     def __parse_syncml_node(self, nodes, guid):
-        """Parse the SyncML node from the nodes."""
+        """ Parse the SyncML node from the nodes. """
         syncml_config = createDefaultSyncConfig(guid)
 
         node_name = "syncmlconfig"
@@ -570,7 +546,7 @@ class XMLReader(object):
         return syncml_config
 
     def __parse_syncml_nodes(self, node, config_node):
-        """Parse the SyncML nodes from the node."""
+        """ Parse the SyncML nodes from the node. """
         for child_node in node:
             if child_node.tag == "property":
                 config_node.set(
@@ -587,12 +563,12 @@ class XMLReader(object):
                 self.__parse_syncml_nodes(child_node, child_config_node)
 
     def __parse_guid_node(self, node):
-        """Parse the GUID from the node."""
+        """ Parse the GUID from the node. """
         guid = self.__parse_text(node).strip()
         return guid if guid else generate()
 
     def __parse_attachments(self, node):
-        """Parse the attachments from the node."""
+        """ Parse the attachments from the node. """
         attachments = []
         for child_node in node.findall("attachment"):
             try:
@@ -602,14 +578,13 @@ class XMLReader(object):
         return attachments
 
     def __parse_attachment(self, node):
-        """Parse the attachment from the node."""
+        """ Parse the attachment from the node. """
         kwargs = self.__parse_base_attributes(node)
         kwargs["notes"] = self.__parse_note_nodes(node)
 
         if self.__tskversion <= 22:
-            path, name = os.path.split(
-                os.path.abspath(self.__fd.name)
-            )  # pylint: disable=E1103
+            path, name = os.path.split(os.path.abspath(
+                self.__fd.name))  # pylint: disable=E1103
             name, ext = os.path.splitext(name)
             attdir = os.path.normpath(
                 os.path.join(path, name + "_attachments")
@@ -631,6 +606,7 @@ class XMLReader(object):
                 ext = data_node.attrib["extension"]
 
                 location = sessiontempfile.get_temp_file(suffix=ext)
+                # file -> open ?
                 open(location, "wb").write(data.decode("base64"))
 
                 if os.name == "nt":
@@ -645,7 +621,7 @@ class XMLReader(object):
         )
 
     def __parse_description(self, node):
-        """Parse the description from the node."""
+        """ Parse the description from the node. """
         if self.__tskversion <= 6:
             description = node.attrib.get("description", "")
         else:
@@ -672,14 +648,15 @@ class XMLReader(object):
 
     @classmethod
     def __parse_datetime(cls, text):
-        """Parse a datetime from the text."""
+        """ Parse a datetime from the text. """
         return cls.__parse(text, date.parseDateTime, None)
 
     def __parse_font_description(self, text, default_value=None):
-        """Parse a font from the text. In case of failure, return the default
-        value."""
+        """ Parse a font from the text. In case of failure, return the default
+            value. """
         if text:
-            font = wx.FontFromNativeInfoString(text)
+            # font = wxadv.FontFromNativeInfoString(text)
+            font = wx.Font(text)
             if font and font.IsOk():
                 if font.GetPointSize() < 4:
                     font.SetPointSize(self.__default_font_size)
@@ -688,14 +665,14 @@ class XMLReader(object):
 
     @staticmethod
     def __parse_icon(text):
-        """Parse an icon name from the text."""
+        """ Parse an icon name from the text. """
         # Parse is a big word, we just need to fix one particular icon
         return "clock_alarm_icon" if text == "clock_alarm" else text
 
     @classmethod
     def __parse_boolean(cls, text, default_value=None):
-        """Parse a boolean from the text. In case of failure, return the
-        default value."""
+        """ Parse a boolean from the text. In case of failure, return the
+            default value. """
 
         def text_to_boolean(text):
             """Transform 'True' to True and 'False' to False, raise a
@@ -718,15 +695,15 @@ class XMLReader(object):
 
     @staticmethod
     def __parse(text, parse_function, default_value):
-        """Parse the text using the parse function. In case of failure, return
-        the default value."""
+        """ Parse the text using the parse function. In case of failure, return
+            the default value. """
         try:
             return parse_function(text)
         except ValueError:
             return default_value
 
     def __save_modification_datetime(self, item):
-        """Save the modification date time of the item for later restore."""
+        """ Save the modification Date time of the item for later restore. """
         self.__modification_datetimes[item] = item.modificationDateTime()
         return item
 
@@ -737,6 +714,7 @@ class ChangesXMLReader(object):
 
     def read(self):
         allChanges = dict()
+        # tree = eTree.parse(self.__fd)
         tree = ET.parse(self.__fd)
         for devNode in tree.getroot().findall("device"):
             id_ = devNode.attrib["guid"]
@@ -753,7 +731,7 @@ class ChangesXMLReader(object):
 
 class TemplateXMLReader(XMLReader):
     def read(self):
-        return super(TemplateXMLReader, self).read()[0][0]
+        return super().read()[0][0]
 
     def _parse_task_node(self, task_node):
         attrs = dict()
@@ -770,23 +748,19 @@ class TemplateXMLReader(XMLReader):
             if template_name in task_node.attrib:
                 if self.tskversion() < 32:
                     value = TemplateXMLReader.convert_old_format(
-                        task_node.attrib[template_name]
-                    )
+                        task_node.attrib[template_name])
                 else:
                     value = task_node.attrib[template_name]
                 attrs[new_name] = value
                 task_node.attrib[new_name] = str(
-                    nlTimeExpression.parseString(value).calculatedTime
-                )
+                    nlTimeExpression.parseString(value).calculatedTime)
             elif new_name not in attrs:
                 attrs[new_name] = None
         if "subject" in task_node.attrib:
             task_node.attrib["subject"] = translate(
                 task_node.attrib["subject"]
             )
-        parsed_task = super(TemplateXMLReader, self)._parse_task_node(
-            task_node
-        )
+        parsed_task = super()._parse_task_node(task_node)
         for name, value in list(attrs.items()):
             setattr(parsed_task, name + "tmpl", value)
         return parsed_task
@@ -806,9 +780,8 @@ class TemplateXMLReader(XMLReader):
         # Not a built in template:
         new_datetime = eval(expr, date.__dict__)
         if isinstance(new_datetime, date.date.RealDate):
-            new_datetime = date.DateTime(
-                new_datetime.year, new_datetime.month, new_datetime.day
-            )
+            new_datetime = date.DateTime(new_datetime.year, new_datetime.month,
+                                         new_datetime.day)
         delta = new_datetime - now()
         minutes = delta.minutes()
         if minutes < 0:

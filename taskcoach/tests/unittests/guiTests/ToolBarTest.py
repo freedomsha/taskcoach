@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 import test
-from unittests import dummy
-from taskcoachlib import gui, config
+from ...unittests import dummy
+from ....taskcoachlib import gui, config
 
 
 class ToolBar(gui.toolbar.ToolBar):
@@ -32,7 +32,7 @@ class ToolBarTest(test.wxTestCase):
         gui.init()
         settings = config.Settings(load=False)
         toolbar = ToolBar(self.frame, settings)
-        uiCommand = dummy.DummyUICommand(menuText="undo", bitmap="undo")
+        uiCommand = dummy.DummyUICommand(menuText='undo', bitmap='undo')
         toolId = toolbar.appendUICommand(uiCommand)
         self.assertNotEqual(wx.NOT_FOUND, toolbar.GetToolPos(toolId))
 
@@ -74,9 +74,7 @@ class ToolBarPerspectiveTest(test.wxTestCase):
 
                 class Test2(NoBitmapUICommand):
                     pass
-
                 return [Test1(), None, Test2(), 1]
-
         self.tbFrame = TestFrame()
         self.settings = config.Settings(load=False)
 
@@ -85,14 +83,14 @@ class ToolBarPerspectiveTest(test.wxTestCase):
 
     def test_empty(self):
         bar = gui.toolbar.ToolBar(self.tbFrame, self.settings)
-        self.assertEqual(bar.perspective(), "Test1,Separator,Test2,Spacer")
+        self.assertEqual(bar.perspective(), 'Test1,Separator,Test2,Spacer')
 
     def test_restrict(self):
-        self.tbFrame.toolbarPerspective = "Test1,Spacer"
+        self.tbFrame.toolbarPerspective = 'Test1,Spacer'
         bar = gui.toolbar.ToolBar(self.tbFrame, self.settings)
-        self.assertEqual(bar.perspective(), "Test1,Spacer")
+        self.assertEqual(bar.perspective(), 'Test1,Spacer')
 
     def test_does_not_exist(self):
-        self.tbFrame.toolbarPerspective = "Test1,Spacer,Test3"
+        self.tbFrame.toolbarPerspective = 'Test1,Spacer,Test3'
         bar = gui.toolbar.ToolBar(self.tbFrame, self.settings)
-        self.assertEqual(bar.perspective(), "Test1,Spacer")
+        self.assertEqual(bar.perspective(), 'Test1,Spacer')

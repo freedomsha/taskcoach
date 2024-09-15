@@ -16,10 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from builtins import object
 import wx
 import test
-from taskcoachlib import gui, config, persistence, operating_system
-from taskcoachlib.domain import category, attachment
+from ....taskcoachlib import gui, config, persistence, operating_system
+from ....taskcoachlib.domain import category, attachment
 
 
 class DummyEvent(object):
@@ -34,13 +35,9 @@ class CategoryEditorTest(test.wxTestCase):
         self.taskFile = persistence.TaskFile()
         self.categories = self.taskFile.categories()
         self.categories.extend(self.createCategories())
-        self.editor = gui.dialog.editor.CategoryEditor(
-            self.frame,
-            list(self.categories),
-            self.settings,
-            self.categories,
-            self.taskFile,
-        )
+        self.editor = gui.dialog.editor.CategoryEditor(self.frame,
+                                                       list(self.categories), self.settings, self.categories,
+                                                       self.taskFile)
 
     def tearDown(self):
         # CategoryEditor uses CallAfter for setting the focus, make sure those
@@ -55,8 +52,8 @@ class CategoryEditorTest(test.wxTestCase):
 
     def createCategories(self):
         # pylint: disable=W0201
-        self.category = category.Category("Category to edit")
-        self.attachment = attachment.FileAttachment("some attachment")
+        self.category = category.Category('Category to edit')
+        self.attachment = attachment.FileAttachment('some attachment')
         self.category.addAttachments(self.attachment)
         return [self.category]
 
@@ -79,31 +76,20 @@ class CategoryEditorTest(test.wxTestCase):
             page._subjectEntry.SetFocus()
 
     def testCreate(self):
-        self.assertEqual(
-            "Category to edit",
-            self.editor._interior[0]._subjectEntry.GetValue(),
-        )
+        self.assertEqual('Category to edit', self.editor._interior[0]._subjectEntry.GetValue())
 
     def testEditSubject(self):
-        self.setSubject("Done")
-        self.assertEqual("Done", self.category.subject())
+        self.setSubject('Done')
+        self.assertEqual('Done', self.category.subject())
 
     def testEditDescription(self):
-        self.setDescription("Description")
-        self.assertEqual("Description", self.category.description())
+        self.setDescription('Description')
+        self.assertEqual('Description', self.category.description())
 
     def testAddAttachment(self):
-        self.editor._interior[2].viewer.onDropFiles(
-            self.category, ["filename"]
-        )
-        self.assertTrue(
-            "filename"
-            in [att.location() for att in self.category.attachments()]
-        )
-        self.assertTrue(
-            "filename"
-            in [att.subject() for att in self.category.attachments()]
-        )
+        self.editor._interior[2].viewer.onDropFiles(self.category, ['filename'])
+        self.failUnless('filename' in [att.location() for att in self.category.attachments()])
+        self.failUnless('filename' in [att.subject() for att in self.category.attachments()])
 
     def testRemoveAttachment(self):
         self.editor._interior[2].viewer.select(self.category.attachments())
@@ -112,10 +98,8 @@ class CategoryEditorTest(test.wxTestCase):
 
     def testEditMutualExclusiveSubcategories(self):
         self.editor._interior[0]._exclusiveSubcategoriesCheckBox.SetValue(True)
-        self.editor._interior[0]._exclusiveSubcategoriesSync.onAttributeEdited(
-            DummyEvent()
-        )
-        self.assertTrue(self.category.hasExclusiveSubcategories())
+        self.editor._interior[0]._exclusiveSubcategoriesSync.onAttributeEdited(DummyEvent())
+        self.failUnless(self.category.hasExclusiveSubcategories())
 
     def testAddNote(self):
         viewer = self.editor._interior[1].viewer

@@ -16,39 +16,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import range
 from taskcoachlib import operating_system
 from taskcoachlib.widgets import itemctrl
 import wx.lib.mixins.listctrl
 
 
-class VirtualListCtrl(
-    itemctrl.CtrlWithItemsMixin,
-    itemctrl.CtrlWithColumnsMixin,
-    itemctrl.CtrlWithToolTipMixin,
-    wx.ListCtrl,
-):
-    def __init__(
-        self,
-        parent,
-        columns,
-        selectCommand=None,
-        editCommand=None,
-        itemPopupMenu=None,
-        columnPopupMenu=None,
-        resizeableColumn=0,
-        *args,
-        **kwargs
-    ):
-        super(VirtualListCtrl, self).__init__(
-            parent,
-            style=wx.LC_REPORT | wx.LC_VIRTUAL,
-            columns=columns,
-            resizeableColumn=resizeableColumn,
-            itemPopupMenu=itemPopupMenu,
-            columnPopupMenu=columnPopupMenu,
-            *args,
-            **kwargs
-        )
+class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
+                      itemctrl.CtrlWithToolTipMixin, wx.ListCtrl):
+    def __init__(self, parent, columns, selectCommand=None, editCommand=None,
+                 itemPopupMenu=None, columnPopupMenu=None, resizeableColumn=0,
+                 *args, **kwargs):
+        super().__init__(parent,
+                         style=wx.LC_REPORT | wx.LC_VIRTUAL, columns=columns,
+                         resizeableColumn=resizeableColumn, itemPopupMenu=itemPopupMenu,
+                         columnPopupMenu=columnPopupMenu, *args, **kwargs)
         self.__parent = parent
         self.bindEventHandlers(selectCommand, editCommand)
 
@@ -80,9 +62,8 @@ class VirtualListCtrl(
         return self.__parent.getItemTooltipData(domainObject)
 
     def getItemImage(self, domainObject, columnIndex=0):
-        return self.__parent.getItemImages(domainObject, columnIndex)[
-            wx.TreeItemIcon_Normal
-        ]
+        return self.__parent.getItemImages(domainObject,
+                                           columnIndex)[wx.TreeItemIcon_Normal]
 
     def OnGetItemText(self, rowIndex, columnIndex):
         item = self.getItemWithIndex(rowIndex)
@@ -110,11 +91,12 @@ class VirtualListCtrl(
             # FIXME: Is the right way to get the font here?
             # wxItemAttr required a font for initialization, so we give one
             font = self.GetFont()
-
-        item_attribute_arguments.append(font)
-
+        if font:
+            item_attribute_arguments.append(font)
         # We need to keep a reference to the item attribute to prevent it
         # from being garbage collected too soon:
+        # self.__item_attribute = wx.ListItemAttr(
+        #     *item_attribute_arguments)  # pylint: disable=W0142,W0201
         self.__item_attribute = wx.ItemAttr(
             *item_attribute_arguments
         )  # pylint: disable=W0142,W0201
@@ -125,8 +107,8 @@ class VirtualListCtrl(
         self.selectCommand(event)
 
     def onItemActivated(self, event):
-        """Override default behavior to attach the column clicked on
-        to the event so we can use it elsewhere."""
+        """ Override default behavior to attach the column clicked on
+            to the event so we can use it elsewhere. """
         window = self.GetMainWindow()
         if operating_system.isMac():
             window = window.GetChildren()[0]
@@ -137,9 +119,7 @@ class VirtualListCtrl(
             # otherwise the item was activated from the menu or by double
             # clicking on a portion of the tree view not containing an item.
             column = max(0, column)  # FIXME: Why can the column be -1?
-            event.columnName = self._getColumn(
-                column
-            ).name()  # pylint: disable=E1101
+            event.columnName = self._getColumn(column).name()  # pylint: disable=E1101
         self.editCommand(event)
 
     def RefreshAllItems(self, count):
@@ -148,11 +128,11 @@ class VirtualListCtrl(
             self.DeleteAllItems()
         else:
             # The VirtualListCtrl makes sure only visible items are updated
-            super(VirtualListCtrl, self).RefreshItems(0, count - 1)
+            super().RefreshItems(0, count - 1)
         self.selectCommand()
 
     def RefreshItems(self, *items):
-        """Refresh specific items."""
+        """ Refresh specific items. """
         if len(items) <= 7:
             for item in items:
                 self.RefreshItem(self.__parent.getIndexOfItem(item))
@@ -160,11 +140,9 @@ class VirtualListCtrl(
             self.RefreshAllItems(self.GetItemCount())
 
     def HitTest(self, xxx_todo_changeme, *args, **kwargs):
-        """Always return a three-tuple (item, flag, column)."""
+        """ Always return a three-tuple (item, flag, column). """
         (x, y) = xxx_todo_changeme
-        index, flags = super(VirtualListCtrl, self).HitTest(
-            (x, y), *args, **kwargs
-        )
+        index, flags = super().HitTest((x, y), *args, **kwargs)
         column = 0
         if self.InReportView():
             # Determine the column in which the user clicked
@@ -177,10 +155,8 @@ class VirtualListCtrl(
         return index, flags, column
 
     def curselection(self):
-        return [
-            self.getItemWithIndex(index)
-            for index in self.__curselection_indices()
-        ]
+        return [self.getItemWithIndex(index) \
+                for index in self.__curselection_indices()]
 
     def select(self, items):
         indices = [self.__parent.getIndexOfItem(item) for item in items]
@@ -190,15 +166,15 @@ class VirtualListCtrl(
             self.Focus(self.GetFirstSelected())
 
     def clear_selection(self):
-        """Unselect all selected items."""
+        """ Unselect all selected items. """
         for index in self.__curselection_indices():
             self.Select(index, False)
 
     def select_all(self):
-        """Select all items."""
+        """ Select all items. """
         for index in range(self.GetItemCount()):
             self.Select(index)
 
     def __curselection_indices(self):
-        """Return the indices of the currently selected items."""
+        """ Return the indices of the currently selected items. """
         return wx.lib.mixins.listctrl.getListCtrlSelection(self)

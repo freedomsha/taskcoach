@@ -23,6 +23,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+
 ##################################################################################################
 ###   A globally-unique identifier made up of time and ip and 8 digits for a counter:
 ###   each GUID is 40 characters wide
@@ -54,7 +55,7 @@
 # Sometime, 2002     Created the Python version of GUID, mirroring the Java version
 # November 24, 2003  Changed Python version to be more pythonic, took out object and made just a module
 # December 2, 2003   Fixed duplicating GUIDs.  Sometimes they duplicate if multiples are created
-#                    in the same millisecond (it checks the last 100 GUIDs now and has a larger random part)
+#                    in the same millisecond (it checks the last 100 GUIDs Now and has a larger random part)
 # December 9, 2003   Fixed MAX_RANDOM, which was going over sys.maxint
 # June 12, 2004      Allowed a custom IP address to be sent in rather than always using the
 #                    local IP address.
@@ -62,16 +63,19 @@
 #                    unique and more efficient, as long as they are created by only
 #                    on runtime on a given machine.  The counter part is after the time
 #                    part so it sorts correctly.
-# November 8, 2005   The counter variable now starts at a random long now and cycles
+# November 8, 2005   The counter variable Now starts at a random long Now and cycles
 #                    around.  This is in case two guids are created on the same
 #                    machine at the same millisecond (by different processes).  Even though
 #                    it is possible the GUID can be created, this makes it highly unlikely
 #                    since the counter will likely be different.
 # November 11, 2005  Fixed a bug in the new IP getting algorithm.  Also, use IPv6 range
 #                    for IP when we make it up (when it's no accessible)
-# November 21, 2005  Added better IP-finding code.  It finds IP address better now.
+# November 21, 2005  Added better IP-finding code.  It finds IP address better Now.
 # January 5, 2006    Fixed a small bug caused in old versions of python (random module use)
 
+# from __future__ import print_function
+# from builtins import str
+# from builtins import range
 import math
 import socket
 import random
@@ -80,13 +84,12 @@ import time
 import threading
 
 
-#############################
-###   global module variables
+############################
+# ##   global module variables
 
 # Makes a hex IP from a decimal dot-separated ip (eg: 127.0.0.1)
-make_hexip = lambda ip: "".join(
-    ["%04x" % int(i) for i in ip.split(".")]
-)  # leave space for ip v6 (65K in each sub)
+# make_hexip = lambda ip: ''.join(["%04x" % long(i) for i in ip.split('.')])  # leave space for ip v6 (65K in each sub)
+make_hexip = lambda ip: "".join(["%04x" % int(i) for i in ip.split(".")])  # leave space for ip v6 (65K in each sub)
 
 MAX_COUNTER = 0xFFFFFFFE
 counter = 0
@@ -108,8 +111,7 @@ except:  # if we don't have an ip, default to someting in the 10.x.x.x private r
 
 
 #################################
-###   Public module functions
-
+# ##   Public module functions
 
 def generate(ip=None):
     """Generates a new guid.  A guid is unique in space and time because it combines
@@ -132,12 +134,8 @@ def generate(ip=None):
         parts.append("%016x" % now)
 
         # counter part
-        if (
-            lasttime != now
-        ):  # time to start counter over since we have a different millisecond
-            firstcounter = int(
-                random.uniform(1, MAX_COUNTER)
-            )  # start at random position
+        if lasttime != now:  # time to start counter over since we have a different millisecond
+            firstcounter = int(random.uniform(1, MAX_COUNTER))  # start at random position
             counter = firstcounter
         counter += 1
         if counter > MAX_COUNTER:
@@ -156,7 +154,8 @@ def generate(ip=None):
 
 def extract_time(guid):
     """Extracts the time portion out of the guid and returns the
-    number of seconds since the epoch as a float"""
+       number of seconds since the epoch as a float"""
+    # return float(long(guid[0:16], 16)) / 1000.0
     return float(int(guid[0:16], 16)) / 1000.0
 
 
@@ -178,9 +177,7 @@ def extract_ip(guid):
 ### TESTING OF GUID CLASS ###
 if __name__ == "__main__":
     guids = []
-    for i in range(
-        10
-    ):  # calculate very fast so people can see the counter in action
+    for i in range(10):  # calculate very fast so people can see the counter in action
         guid = generate()
         guids.append(guid)
     for guid in guids:

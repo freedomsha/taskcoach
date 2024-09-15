@@ -16,13 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .singleton import *
-from .observer import *
-from .command import *
-from .composite import (
-    Composite,
-    ObservableComposite,
-    CompositeList,
-    CompositeSet,
-)
-from .metaclass import *
+from taskcoachlib.patterns.singleton import *
+from taskcoachlib.patterns.observer import *
+from taskcoachlib.patterns.command import *
+from taskcoachlib.patterns.composite import Composite, ObservableComposite, CompositeList, CompositeSet
+from taskcoachlib.patterns.metaclass import *

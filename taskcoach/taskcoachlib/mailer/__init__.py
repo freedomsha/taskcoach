@@ -16,7 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import wx, os, re, tempfile, urllib.request, urllib.parse, urllib.error, email, email.header
+# from builtins import map
+from io import open as file
+import wx
+import os
+import re
+import tempfile
+import email
+import email.header
+import urllib.parse
+# from taskcoachlib.thirdparty import chardet
 import chardet
 from taskcoachlib.tools import openfile
 from taskcoachlib.mailer.macmail import getSubjectOfMail
@@ -25,10 +34,11 @@ from taskcoachlib import operating_system
 
 
 def readMail(filename, readContent=True):
-    with open(filename, "r") as fd:
+    with file(filename, "r") as fd:  # str or bytes ?
+        # with open(filename, 'r') as fd:
         message = email.message_from_file(fd)
     subject = getSubject(message)
-    content = getContent(message) if readContent else ""
+    content = getContent(message) if readContent else ''
     return subject, content
 
 
@@ -81,7 +91,7 @@ def getContent(message):
 
 def openMailWithOutlook(filename):
     id_ = None
-    for line in open(filename, "r"):
+    for line in file(filename, "r"):
         if line.startswith("X-Outlook-ID:"):
             id_ = line[13:].strip()
             break
@@ -92,7 +102,6 @@ def openMailWithOutlook(filename):
         return False
 
     from win32com.client import GetActiveObject  # pylint: disable=F0401
-
     app = GetActiveObject("Outlook.Application")
     app.ActiveExplorer().Session.GetItemFromID(id_).Display()
 
@@ -103,10 +112,8 @@ def openMail(filename):
     if os.name == "nt":
         # Find out if Outlook is the so-called 'default' mailer.
         import winreg  # pylint: disable=F0401
-
-        key = winreg.OpenKey(
-            winreg.HKEY_CLASSES_ROOT, r"mailto\shell\open\command"
-        )
+        key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT,
+                             r"mailto\shell\open\command")
         try:
             value, type_ = winreg.QueryValueEx(key, "")
             if type_ in [winreg.REG_SZ, winreg.REG_EXPAND_SZ]:
@@ -139,9 +146,9 @@ def sendMail(to, subject, body, cc=None, openURL=openfile.openFile):
     # the user uses something else ?
 
     if not operating_system.isMac():
-        body = unicode_quote(body)  # Otherwise newlines disappear
-        cc = list(map(unicode_quote, cc))
-        to = list(map(unicode_quote, to))
+        body = urllib.parse.quote(body)  # Otherwise newlines disappear
+        cc = list(map(urllib.parse.quote, cc))
+        to = list(map(urllib.parse.quote, to))
 
     components = ["subject=%s" % subject, "body=%s" % body]
     if cc:

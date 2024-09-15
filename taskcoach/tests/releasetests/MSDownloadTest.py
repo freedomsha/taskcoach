@@ -16,7 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test, urllib.request, urllib.error, urllib.parse, re
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import str
+import test
+import urllib.request
+import urllib.error
+import urllib.parse
+import re
 from taskcoachlib import help  # pylint: disable=W0622
 
 

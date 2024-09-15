@@ -17,25 +17,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 import wx
 
 
 class UICommandContainerMixin(object):
-    """Mixin with wx.Menu or wx.ToolBar (sub)class."""
+    """ Mélange avec la (sous-)classe wx.Menu ou wx.ToolBar.
+    """
 
     def appendUICommands(self, *uiCommands):
+        """ Ajout de *uiCommand. """
         for uiCommand in uiCommands:
             if uiCommand is None:
                 self.AppendSeparator()
             elif isinstance(uiCommand, int):  # Toolbars only
                 self.AppendStretchSpacer(uiCommand)
+            # elif isinstance(uiCommand, (str, str)):
             elif isinstance(uiCommand, str):
+                # Ajoute un élément dans le menu
                 label = wx.MenuItem(self, text=uiCommand)
                 # must append item before disable to insure
                 # that internal object exists
+                # self.AppendItem(label)
                 self.Append(label)
                 label.Enable(False)
-            elif type(uiCommand) == type(()):  # This only works for menu's
+            # elif isinstance(type(uiCommand), type()):  # This only works for menu's
+            # TODO revenir sur mon choix:
+            # elif isinstance(uiCommand, type):
+            # ou garder celui de rainfornight :
+            elif type(uiCommand) == type(()):
                 menuTitle, menuUICommands = uiCommand[0], uiCommand[1:]
                 self.appendSubMenuWithUICommands(menuTitle, menuUICommands)
             else:
@@ -43,7 +53,6 @@ class UICommandContainerMixin(object):
 
     def appendSubMenuWithUICommands(self, menuTitle, uiCommands):
         from taskcoachlib.gui import menu
-
         subMenu = menu.Menu(self._window)
         self.appendMenu(menuTitle, subMenu)
         subMenu.appendUICommands(*uiCommands)  # pylint: disable=W0142

@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 from taskcoachlib import operating_system
 from wx.lib import masked
 import wx
@@ -29,7 +30,7 @@ class FixOverwriteSelectionMixin(object):
             # cursor is at the start of the field so that typing overwrites the
             # current field instead of moving to the next field:
             start, end = end, start
-        super(FixOverwriteSelectionMixin, self)._SetSelection(start, end)
+        super()._SetSelection(start, end)
 
     def _OnKeyDown(self, event):
         # Allow keyboard navigation in notebook. Just skipping the event does not work;
@@ -41,7 +42,7 @@ class FixOverwriteSelectionMixin(object):
         ):
             if self.GetParent().NavigateBook(event):
                 return
-        super(FixOverwriteSelectionMixin, self)._OnKeyDown(event)
+        super()._OnKeyDown(event)
 
 
 class TextCtrl(FixOverwriteSelectionMixin, masked.TextCtrl):
@@ -76,28 +77,19 @@ class AmountCtrl(FixOverwriteSelectionMixin, masked.NumCtrl):
 
 
 class TimeDeltaCtrl(TextCtrl):
-    """Masked edit control for entering or displaying time deltas of the
-    form <hour>:<minute>:<second>. Entering negative time deltas is not
-    allowed, displaying negative time deltas is allowed if the control
-    is read only."""
+    """ Masked edit control for entering or displaying time deltas of the
+        form <hour>:<minute>:<second>. Entering negative time deltas is not
+        allowed, displaying negative time deltas is allowed if the control
+        is read only. """
 
-    def __init__(
-        self,
-        parent,
-        hours,
-        minutes,
-        seconds,
-        readonly=False,
-        negative_value=False,
-        *args,
-        **kwargs
-    ):
+    def __init__(self, parent, hours, minutes, seconds, readonly=False,
+                 negative_value=False, *args, **kwargs):
         # If the control is read only (meaning it could potentially have to
         # show negative values) or if the value is actually negative, allow
         # the minus sign in the mask. Otherwise only allow for numbers.
         mask = "X{9}:##:##" if negative_value or readonly else "#{9}:##:##"
         hours = self.__hour_string(hours, negative_value)
-        super(TimeDeltaCtrl, self).__init__(
+        super().__init__(
             parent,
             mask=mask,
             formatcodes="FS",

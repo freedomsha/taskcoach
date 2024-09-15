@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# from builtins import object
 from taskcoachlib import patterns
 import weakref
 from taskcoachlib.thirdparty._weakrefset import WeakSet
@@ -25,7 +26,7 @@ class Attribute(object):
     __slots__ = ("__value", "__owner", "__setEvent")
 
     def __init__(self, value, owner, setEvent):
-        super(Attribute, self).__init__()
+        super().__init__()
         self.__value = value
         self.__owner = weakref.ref(owner)
         self.__setEvent = setEvent.__func__
@@ -51,7 +52,7 @@ class SetAttribute(object):
         "__addEvent",
         "__removeEvent",
         "__changeEvent",
-        "__setClass",
+        "__setClass"
     )
 
     def __init__(
@@ -61,7 +62,7 @@ class SetAttribute(object):
         addEvent=None,
         removeEvent=None,
         changeEvent=None,
-        weak=False,
+        weak=False
     ):
         self.__setClass = WeakSet if weak else set
         self.__set = self.__setClass(values) if values else self.__setClass()
@@ -69,10 +70,10 @@ class SetAttribute(object):
         self.__addEvent = (addEvent or self.__nullEvent).__func__
         self.__removeEvent = (removeEvent or self.__nullEvent).__func__
         self.__changeEvent = (changeEvent or self.__nullEvent).__func__
-
+        
     def get(self):
         return set(self.__set)
-
+    
     @patterns.eventSource
     def set(self, values, event=None):
         owner = self.__owner()
@@ -85,13 +86,11 @@ class SetAttribute(object):
             if added:
                 self.__addEvent(owner, event, *added)  # pylint: disable=W0142
             if removed:
-                self.__removeEvent(
-                    owner, event, *removed
-                )  # pylint: disable=W0142
+                self.__removeEvent(owner, event, *removed)  # pylint: disable=W0142
             if added or removed:
                 self.__changeEvent(owner, event, *set(self.__set))
             return True
-
+    
     @patterns.eventSource
     def add(self, values, event=None):
         owner = self.__owner()

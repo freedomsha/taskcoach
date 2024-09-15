@@ -266,8 +266,8 @@ class Field(object):
     def GetValue(self):
         return self.__value
 
-    def SetValue(self, value, notify=False):
-        if notify:
+    def SetValue(self, value, Notify=False):
+        if Notify:
             value = self.Observer().ValidateChange(self, value)
             if value is None:
                 return
@@ -584,7 +584,7 @@ class Entry(wx.Panel):
                         values.append((mt.group(0), self.Fields()[idx] if idx < len(self.Fields()) else NullField))
                     self.OnPaste(values)
                 finally:
-                    wx.TheClipboard.close()
+                    wx.TheClipboard.Close()
 
         isCopy = event.GetKeyCode() in [ord('c'), ord('C')]
         if '__WXMSW__' in wx.PlatformInfo or '__WXGTK__' in wx.PlatformInfo:
@@ -595,7 +595,7 @@ class Entry(wx.Panel):
                 try:
                     wx.TheClipboard.SetData(wx.TextDataObject(self.Format()))
                 finally:
-                    wx.TheClipboard.close()
+                    wx.TheClipboard.Close()
 
         if event.GetKeyCode() in [wx.WXK_RIGHT, wx.WXK_DECIMAL, wx.WXK_NUMPAD_DECIMAL, ord('.'), ord(',')]:
             self.FocusNext()
@@ -651,7 +651,7 @@ class Entry(wx.Panel):
             evt = EntryChoiceSelectedEvent(self, event.GetValue(), field=field)
             self.ProcessEvent(evt)
             if not evt.IsVetoed():
-                field.SetValue(evt.GetValue(), notify=True)
+                field.SetValue(evt.GetValue(), Notify=True)
             popup.Dismiss()
 
 
@@ -683,8 +683,8 @@ class NumericField(Field):
         dc.setFont(wx.SystemSettings.get_font(wx.SYS_DEFAULT_GUI_FONT))
         return dc.GetTextExtent('0' * max(self.__width, 1))
 
-    def SetValue(self, value, notify=False):
-        super().SetValue(int(value), notify=notify)
+    def SetValue(self, value, Notify=False):
+        super().SetValue(int(value), Notify=Notify)
 
     def PaintValue(self, dc, x, y, w, h):
         dc.setFont(wx.SystemSettings.get_font(wx.SYS_DEFAULT_GUI_FONT))
@@ -719,13 +719,13 @@ class NumericField(Field):
         if number >= 0 and number <= 9:
             if self.__state == 0:
                 self.__state = 1
-                self.SetValue(number, notify=True)
+                self.SetValue(number, Notify=True)
             elif self.__state == 1:
-                self.SetValue((self.GetValue() * 10 + number) % int(math.pow(10, self.__width)), notify=True)
+                self.SetValue((self.GetValue() * 10 + number) % int(math.pow(10, self.__width)), Notify=True)
             return True
 
         if event.GetKeyCode() in [wx.WXK_BACK, wx.WXK_DELETE, wx.WXK_NUMPAD_DELETE]:
-            self.SetValue(int(old_div(self.GetValue(), 10)), notify=True)
+            self.SetValue(int(old_div(self.GetValue(), 10)), Notify=True)
             return True
 
         return False
@@ -764,10 +764,10 @@ class EnumerationField(NumericField):
 
     def HandleKey(self, event):
         if event.GetKeyCode() == wx.WXK_UP:
-            self.SetValue(self.GetChoices()[(self.__index() + len(self.GetChoices()) - 1) % len(self.GetChoices())][1], notify=True)
+            self.SetValue(self.GetChoices()[(self.__index() + len(self.GetChoices()) - 1) % len(self.GetChoices())][1], Notify=True)
             return True
         if event.GetKeyCode() == wx.WXK_DOWN:
-            self.SetValue(self.GetChoices()[(self.__index() + 1) % len(self.GetChoices())][1], notify=True)
+            self.SetValue(self.GetChoices()[(self.__index() + 1) % len(self.GetChoices())][1], Notify=True)
             return True
         return super().HandleKey(event)
 
@@ -811,10 +811,10 @@ class AMPMField(EnumerationField):
 
     def HandleKey(self, event):
         if event.GetKeyCode() in [ord('a'), ord('A')]:
-            self.SetValue(0, notify=True)
+            self.SetValue(0, Notify=True)
             return True
         elif event.GetKeyCode() in [ord('p'), ord('P')]:
-            self.SetValue(1, notify=True)
+            self.SetValue(1, Notify=True)
             return True
         return super().HandleKey(event)
 
@@ -1019,8 +1019,8 @@ class TimeEntry(Entry):
         self.__relChoices = sender.SaveChoices()
         self.ProcessEvent(TimeChoicesChangedEvent(self, self.__relChoices))
 
-    def SetDateTime(self, dateTime, notify=False):
-        self.GetParent().SetDateTime(dateTime, notify=notify)
+    def SetDateTime(self, dateTime, Notify=False):
+        self.GetParent().SetDateTime(dateTime, Notify=Notify)
 
     def GetTime(self):
         hour = self.Field('hour').GetValue()
@@ -1032,8 +1032,8 @@ class TimeEntry(Entry):
 
         return datetime.time(hour=hour, minute=minute, second=second)
 
-    def SetTime(self, value, notify=False):
-        if notify:
+    def SetTime(self, value, Notify=False):
+        if Notify:
             evt = TimeChangeEvent(self, value)
             self.ProcessEvent(evt)
             if evt.IsVetoed():
@@ -1199,7 +1199,7 @@ class TimeEntry(Entry):
             wx.Bell()
             return
 
-        self.SetTime(dt, notify=True)
+        self.SetTime(dt, Notify=True)
 
 # }
 
@@ -1368,8 +1368,8 @@ class DateEntry(Entry):
                              month=self.Field('month').GetValue(),
                              day=self.Field('day').GetValue())
 
-    def SetDate(self, dt, notify=False):
-        if notify:
+    def SetDate(self, dt, Notify=False):
+        if Notify:
             evt = DateChangeEvent(self, dt)
             self.ProcessEvent(evt)
             if evt.IsVetoed():
@@ -1580,7 +1580,7 @@ class DateEntry(Entry):
             wx.Bell()
             return
 
-        self.SetDate(dt, notify=True)
+        self.SetDate(dt, Notify=True)
 
 # }
 
@@ -1783,7 +1783,7 @@ class _RelativeChoicePopup(_PopupWindow):
     def OnChoose(self, event):
         for delta, idSpan, idDel, btn in self.__lines:
             if idSpan == event.get_id():
-                self.GetParent().SetDateTime(self.__start + delta, notify=True)
+                self.GetParent().SetDateTime(self.__start + delta, Notify=True)
                 self.Dismiss()
                 break
 
@@ -1996,9 +1996,9 @@ class _CalendarPopup(_PopupWindow):
                 else:
                     self.__month -= 1
             elif event.GetX() < w - 48 + 32:
-                today = datetime.datetime.Now()
-                self.__year = today.year
-                self.__month = today.month
+                Today = datetime.datetime.Now()
+                self.__year = Today.year
+                self.__month = Today.month
             elif self.__month != 12 or self.__year != 9999:
                 if self.__month == 12:
                     self.__year += 1
@@ -2012,7 +2012,7 @@ class _CalendarPopup(_PopupWindow):
         for x, y, (year, month, day) in self.__days:
             if event.GetX() >= x and event.GetX() < x + self.__maxDim and \
                 event.GetY() >= y and event.GetY() < y + self.__maxDim:
-                self.GetParent().SetDate(datetime.Date(year=year, month=month, day=day), notify=True)
+                self.GetParent().SetDate(datetime.Date(year=year, month=month, day=day), Notify=True)
                 self.Dismiss()
                 break
 
@@ -2180,11 +2180,11 @@ class SmartDateTimeCtrl(wx.Panel):
             if event.GetKeyCode() in [ord('t'), ord('T')]:
                 # Today, same time
                 self.SetDateTime(datetime.datetime.combine(datetime.datetime.Now().Date(), self.GetDateTime().time()),
-                                 notify=True)
+                                 Notify=True)
                 return True
             elif event.GetKeyCode() in [ord('n'), ord('N')]:
                 # Now
-                self.SetDateTime(datetime.datetime.Now(), notify=True)
+                self.SetDateTime(datetime.datetime.Now(), Notify=True)
                 return True
         return False
 
@@ -2216,9 +2216,9 @@ class SmartDateTimeCtrl(wx.Panel):
             return datetime.datetime.combine(self.__dateCtrl.GetDate(), self.__timeCtrl.GetTime())
         return None
 
-    def SetDateTime(self, value, notify=False):
+    def SetDateTime(self, value, Notify=False):
         event = DateTimeChangeEvent(self, value)
-        if notify:
+        if Notify:
             self.ProcessEvent(event)
         if not event.IsVetoed():
             if value is None:

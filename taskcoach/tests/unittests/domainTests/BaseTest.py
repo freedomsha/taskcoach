@@ -40,9 +40,8 @@ class SynchronizedObjectTest(test.TestCase):
         self.assertEqual(expectedStatus, self.object.getStatus())
 
     def assertOneEventReceived(self, eventSource, eventType, *values):
-        self.assertEqual(
-            [patterns.Event(eventType, eventSource, *values)], self.events
-        )
+        self.assertEqual([patterns.Event(eventType, eventSource, *values)],
+                         self.events)
 
     def testInitialStatus(self):
         self.assertObjectStatus(base.SynchronizedObject.STATUS_NEW)
@@ -54,11 +53,9 @@ class SynchronizedObjectTest(test.TestCase):
     def testMarkDeletedNotification(self):
         self.registerObserver(self.object.markDeletedEventType())
         self.object.markDeleted()
-        self.assertOneEventReceived(
-            self.object,
-            self.object.markDeletedEventType(),
-            self.object.getStatus(),
-        )
+        self.assertOneEventReceived(self.object,
+                                    self.object.markDeletedEventType(),
+                                    self.object.getStatus())
 
     def testMarkNewObjectAsNotDeleted(self):
         self.object.cleanDirty()
@@ -73,11 +70,9 @@ class SynchronizedObjectTest(test.TestCase):
         self.object.markDeleted()
         self.registerObserver(self.object.markNotDeletedEventType())
         self.object.cleanDirty()
-        self.assertOneEventReceived(
-            self.object,
-            self.object.markNotDeletedEventType(),
-            self.object.getStatus(),
-        )
+        self.assertOneEventReceived(self.object,
+                                    self.object.markNotDeletedEventType(),
+                                    self.object.getStatus())
 
     def testSetStateToDeletedCausesNotification(self):
         self.object.markDeleted()
@@ -85,22 +80,18 @@ class SynchronizedObjectTest(test.TestCase):
         self.object.cleanDirty()
         self.registerObserver(self.object.markDeletedEventType())
         self.object.__setstate__(state)
-        self.assertOneEventReceived(
-            self.object,
-            self.object.markDeletedEventType(),
-            self.object.STATUS_DELETED,
-        )
+        self.assertOneEventReceived(self.object,
+                                    self.object.markDeletedEventType(),
+                                    self.object.STATUS_DELETED)
 
     def testSetStateToNotDeletedCausesNotification(self):
         state = self.object.__getstate__()
         self.object.markDeleted()
         self.registerObserver(self.object.markNotDeletedEventType())
         self.object.__setstate__(state)
-        self.assertOneEventReceived(
-            self.object,
-            self.object.markNotDeletedEventType(),
-            self.object.STATUS_NEW,
-        )
+        self.assertOneEventReceived(self.object,
+                                    self.object.markNotDeletedEventType(),
+                                    self.object.STATUS_NEW)
 
 
 class ObjectSubclass(base.Object):
@@ -112,11 +103,9 @@ class ObjectTest(test.TestCase):
         self.object = base.Object()
         self.subclassObject = ObjectSubclass()
         self.eventsReceived = []
-        for eventType in (
-            self.object.subjectChangedEventType(),
-            self.object.descriptionChangedEventType(),
-            self.object.appearanceChangedEventType(),
-        ):
+        for eventType in (self.object.subjectChangedEventType(),
+                          self.object.descriptionChangedEventType(),
+                          self.object.appearanceChangedEventType()):
             patterns.Publisher().registerObserver(self.onEvent, eventType)
 
     def onEvent(self, event):
@@ -158,7 +147,7 @@ class ObjectTest(test.TestCase):
         copy = self.object.copy()
         self.assertNotEqual(copy.id(), objectId)
 
-    # Creation date/time tests:
+    # Creation Date/time tests:
 
     def testSetCreationDateTimeOnCreation(self):
         creation_datetime = date.DateTime(2012, 12, 12, 10, 0, 0)
@@ -171,14 +160,13 @@ class ObjectTest(test.TestCase):
         minute = date.TimeDelta(seconds=60)
         self.assertTrue(now - minute < creation_datetime < now + minute)
 
-    # Modification date/time tests:
+    # Modification Date/time tests:
 
     def testSetModificationDateTimeOnCreation(self):
         modification_datetime = date.DateTime(2012, 12, 12, 10, 0, 0)
         domain_object = base.Object(modificationDateTime=modification_datetime)
-        self.assertEqual(
-            modification_datetime, domain_object.modificationDateTime()
-        )
+        self.assertEqual(modification_datetime,
+                         domain_object.modificationDateTime())
 
     def testModificationDateTimeIsNotSetWhenNotPassed(self):
         self.assertEqual(date.DateTime.min, self.object.modificationDateTime())
@@ -304,7 +292,7 @@ class ObjectTest(test.TestCase):
         self.object.__setstate__(newState)
         self.assertEqual(1, len(self.eventsReceived))
 
-    # Copy tests:
+    # copy tests:
 
     def testCopy_IdIsNotCopied(self):
         copy = self.object.copy()
@@ -396,7 +384,7 @@ class ObjectTest(test.TestCase):
         self.object.setBackgroundColor(wx.BLACK)
         self.assertEqual(1, len(self.eventsReceived))
 
-    # Font tests:
+        # Font tests:
 
     def testDefaultFont(self):
         self.assertEqual(None, self.object.font())
@@ -452,15 +440,11 @@ class ObjectTest(test.TestCase):
     # Event types:
 
     def testModificationEventTypes(self):
-        self.assertEqual(
-            [
-                self.object.subjectChangedEventType(),
-                self.object.descriptionChangedEventType(),
-                self.object.appearanceChangedEventType(),
-                self.object.orderingChangedEventType(),
-            ],
-            self.object.modificationEventTypes(),
-        )
+        self.assertEqual([self.object.subjectChangedEventType(),
+                          self.object.descriptionChangedEventType(),
+                          self.object.appearanceChangedEventType(),
+                          self.object.orderingChangedEventType()],
+                         self.object.modificationEventTypes())
 
 
 class CompositeObjectTest(test.TestCase):
@@ -549,8 +533,7 @@ class CompositeObjectTest(test.TestCase):
         self.assertEqual(wx.RED, self.child.foregroundColor(recursive=True))
 
     def testSubItemDoesNotUseParentForegroundColorIfItHasItsOwnForegroundColor(
-        self,
-    ):
+            self):
         self.addChild(fgColor=wx.RED)
         self.compositeObject.setForegroundColor(wx.BLUE)
         self.assertEqual(wx.RED, self.child.foregroundColor(recursive=True))
@@ -560,8 +543,7 @@ class CompositeObjectTest(test.TestCase):
         patterns.Publisher().registerObserver(
             self.onEvent,
             eventType=base.CompositeObject.appearanceChangedEventType(),
-            eventSource=self.child,
-        )
+            eventSource=self.child)
         self.compositeObject.setForegroundColor(wx.RED)
         self.assertEqual(1, len(self.eventsReceived))
 
@@ -571,8 +553,7 @@ class CompositeObjectTest(test.TestCase):
         self.assertEqual(wx.RED, self.child.backgroundColor(recursive=True))
 
     def testSubItemDoesNotUseParentBackgroundColorIfItHasItsOwnBackgroundColor(
-        self,
-    ):
+            self):
         self.addChild(bgColor=wx.RED)
         self.compositeObject.setBackgroundColor(wx.BLUE)
         self.assertEqual(wx.RED, self.child.backgroundColor(recursive=True))
@@ -582,8 +563,7 @@ class CompositeObjectTest(test.TestCase):
         patterns.Publisher().registerObserver(
             self.onEvent,
             eventType=base.CompositeObject.appearanceChangedEventType(),
-            eventSource=self.child,
-        )
+            eventSource=self.child)
         self.compositeObject.setBackgroundColor(wx.RED)
         self.assertEqual(1, len(self.eventsReceived))
 
@@ -602,8 +582,7 @@ class CompositeObjectTest(test.TestCase):
         patterns.Publisher().registerObserver(
             self.onEvent,
             eventType=base.CompositeObject.appearanceChangedEventType(),
-            eventSource=self.child,
-        )
+            eventSource=self.child)
         self.compositeObject.setFont(wx.SWISS_FONT)
         self.assertEqual(1, len(self.eventsReceived))
 
@@ -807,18 +786,14 @@ class CompositeObjectTest(test.TestCase):
         self.assertEqual([expectedEvent], self.eventsReceived)
 
     def testModificationEventTypes(self):
-        self.assertEqual(
-            [
-                self.compositeObject.addChildEventType(),
-                self.compositeObject.removeChildEventType(),
-                self.compositeObject.subjectChangedEventType(),
-                self.compositeObject.descriptionChangedEventType(),
-                self.compositeObject.appearanceChangedEventType(),
-                self.compositeObject.orderingChangedEventType(),
-                self.compositeObject.expansionChangedEventType(),
-            ],
-            self.compositeObject.modificationEventTypes(),
-        )
+        self.assertEqual([self.compositeObject.addChildEventType(),
+                          self.compositeObject.removeChildEventType(),
+                          self.compositeObject.subjectChangedEventType(),
+                          self.compositeObject.descriptionChangedEventType(),
+                          self.compositeObject.appearanceChangedEventType(),
+                          self.compositeObject.orderingChangedEventType(),
+                          self.compositeObject.expansionChangedEventType()],
+                         self.compositeObject.modificationEventTypes())
 
 
 class BaseCollectionTest(test.TestCase):
@@ -831,6 +806,5 @@ class BaseCollectionTest(test.TestCase):
     def testLookupIdWhenObjectIsInCollection(self):
         domainObject = base.CompositeObject()
         self.collection.append(domainObject)
-        self.assertEqual(
-            domainObject, self.collection.getObjectById(domainObject.id())
-        )
+        self.assertEqual(domainObject,
+                         self.collection.getObjectById(domainObject.id()))

@@ -19,6 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Not using agw.balloontip because it doesn't position properly and
 # lacks events
 
+# from __future__ import division
+# from builtins import object
+# from past.utils import old_div
 import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
 
@@ -27,25 +30,12 @@ class BalloonTip(wx.Frame):
     ARROWSIZE = 16
     MAXWIDTH = 300
 
-    def __init__(
-        self,
-        parent,
-        target,
-        message=None,
-        title=None,
-        bitmap=None,
-        getRect=None,
-    ):
+    def __init__(self, parent, target, message=None, title=None, bitmap=None, getRect=None):
         """Baloon tip."""
 
-        super(BalloonTip, self).__init__(
-            parent,
-            style=wx.NO_BORDER
-            | wx.FRAME_FLOAT_ON_PARENT
-            | wx.FRAME_NO_TASKBAR
-            | wx.FRAME_SHAPED
-            | wx.POPUP_WINDOW,
-        )
+        super().__init__(parent,
+                         style=wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT | wx.FRAME_NO_TASKBAR | wx.FRAME_SHAPED |
+                         wx.POPUP_WINDOW)
 
         wheat = wx.ColourDatabase().Find("WHEAT")
         self.SetBackgroundColour(wheat)
@@ -58,12 +48,8 @@ class BalloonTip(wx.Frame):
         vsizer = wx.BoxSizer(wx.VERTICAL)
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         if bitmap is not None:
-            hsizer.Add(
-                wx.StaticBitmap(self._interior, wx.ID_ANY, bitmap),
-                0,
-                wx.ALIGN_CENTRE | wx.ALL,
-                3,
-            )
+            hsizer.Add(wx.StaticBitmap(self._interior, wx.ID_ANY, bitmap), 0,
+                       wx.ALIGN_CENTRE | wx.ALL, 3)
         if title is not None:
             titleCtrl = wx.StaticText(self._interior, wx.ID_ANY, title)
             hsizer.Add(titleCtrl, 1, wx.ALL | wx.ALIGN_CENTRE, 3)
@@ -78,6 +64,7 @@ class BalloonTip(wx.Frame):
         self._interior.SetSizer(vsizer)
         self._interior.Fit()
 
+        # class Sizer(wx.PySizer):
         class Sizer(wx.Sizer):
             def __init__(self, interior, direction, offset):
                 self._interior = interior
@@ -120,9 +107,12 @@ class BalloonTip(wx.Frame):
         self.Close()
 
     def Position(self):
+        # w, h = self._interior.GetClientSizeTuple()
+        # https://docs.wxpython.org/wx.Window.html?highlight=getclientsize#wx.Window.GetClientSize
         w, h = self._interior.GetClientSize()
         h += self.ARROWSIZE
         if self._getRect is None:
+            # tw, th = self._target.GetSizeTuple()
             tw, th = self._target.GetSize()
             tx, ty = 0, 0
         else:
@@ -131,15 +121,16 @@ class BalloonTip(wx.Frame):
         dpyIndex = max(0, wx.Display.GetFromPoint(wx.Point(tx, ty)) or 0)
         rect = wx.Display(dpyIndex).GetClientArea()
 
-        x = max(
-            rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw / 2 - w / 2))
-        )
+        # x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw / 2 - w / 2)))
+        # x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + old_div(tw, 2) - old_div(w, 2))))
+        x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw // 2 - w // 2)))
         y = ty - h
         direction = "bottom"
         if y < rect.GetTop():
             y = ty + th
             direction = "top"
 
+        # mask = wx.EmptyBitmap(w, h)
         mask = wx.Bitmap(w, h)
         memDC = wx.MemoryDC()
         memDC.SelectObject(mask)
@@ -189,7 +180,11 @@ class BalloonTip(wx.Frame):
             self._sizer.SetDirection(direction)
         finally:
             memDC.SelectObject(wx.NullBitmap)
+        # self.SetDimensions(x, y, w, h)
         self.SetSize(x, y, w, h)
+        # self.SetShape(wx.RegionFromBitmapColour(mask, wx.Colour(0, 0, 0)))
+        # https://docs.wxpython.org/wx.Region.html#wx-region
+        # https://pythonhosted.org/wxPython/classic_vs_phoenix.html
         self.SetShape(wx.Region(mask, wx.Colour(0, 0, 0)))
         self.Layout()
 
@@ -205,19 +200,17 @@ class BalloonTipManager(object):
         self.__displaying = None
         self.__kwargs = dict()
         self.__shutdown = False
-        super(BalloonTipManager, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
+        # self.Bind(wx.EVT_CLOSE, self.__OnClose)
+        # Unresolved attribute reference 'Bind' for class 'BalloonTipManager'
+        # https://docs.wxpython.org/wx.PyEventBinder.html?highlight=bind#wx.PyEventBinder.Bind
+        # Bind() = wx.PyEventBinder.Bind()
+        # ou https://docs.wxpython.org/wx.EvtHandler.html?highlight=bind#wx.EvtHandler.Bind
+        # Bind = wx.EvtHandler.Bind()
         self.Bind(wx.EVT_CLOSE, self.__OnClose)
 
-    def AddBalloonTip(
-        self,
-        target,
-        message=None,
-        title=None,
-        bitmap=None,
-        getRect=None,
-        **kwargs
-    ):
+    def AddBalloonTip(self, target, message=None, title=None, bitmap=None, getRect=None, **kwargs):
         """Schedules a tip. Extra keyword arguments will be passed to L{OnBalloonTipShow} and L{OnBalloonTipClosed}."""
         for eTarget, eMessage, eTitle, eBitmap, eGetRect, eArgs in self.__tips:
             if (eTitle, eMessage) == (title, message):
@@ -227,17 +220,9 @@ class BalloonTipManager(object):
 
     def __Try(self):
         if self.__tips and not self.__shutdown and self.__displaying is None:
-            target, message, title, bitmap, getRect, kwargs = self.__tips.pop(
-                0
-            )
-            tip = BalloonTip(
-                self,
-                target,
-                message=message,
-                title=title,
-                bitmap=bitmap,
-                getRect=getRect,
-            )
+            target, message, title, bitmap, getRect, kwargs = self.__tips.pop(0)
+            tip = BalloonTip(self, target, message=message, title=title,
+                             bitmap=bitmap, getRect=getRect)
             self.__displaying = tip
             self.OnBalloonTipShow(**kwargs)
             self.__kwargs = kwargs
@@ -264,7 +249,7 @@ if __name__ == "__main__":
 
     class Frame(wx.Frame):
         def __init__(self):
-            super(Frame, self).__init__(None, wx.ID_ANY, "Test")
+            super().__init__(None, wx.ID_ANY, "Test")
 
             self.btn = wx.Button(self, wx.ID_ANY, "Show balloon")
             wx.EVT_BUTTON(self.btn, wx.ID_ANY, self.OnClick)
@@ -274,19 +259,19 @@ if __name__ == "__main__":
             self.Fit()
 
         def OnClick(self, event):
-            BalloonTip(
-                self,
-                self.btn,
-                """Your bones don't break, mine do. That's clear. Your cells react to bacteria and viruses differently than mine. You don't get sick, I do. That's also clear. But for some reason, you and I react the exact same way to water. We swallow it too fast, we choke. We get some in our lungs, we drown. However unreal it may seem, we are connected, you and I. We're on the same curve, just on opposite ends.""",
-                title="Title",
-                bitmap=wx.ArtProvider.GetBitmap(
-                    wx.ART_TIP, wx.ART_MENU, (16, 16)
-                ),
-            )
+            BalloonTip(self, self.btn, """Your bones don't break, mine do. That's clear. Your cells react to bacteria 
+                       and viruses differently than mine. You don't get sick, I do. That's also clear. But for some 
+                       reason, you and I react the exact same way to water. We swallow it too fast, we choke. We get 
+                       some in our lungs, we drown. However unreal it may seem, we are connected, you and I. We're on 
+                       the same curve, just on opposite ends.""", title="Title",
+                       # bitmap=wx.ArtProvider.getBitmap(wx.ART_TIP, wx.ART_MENU, (16, 16)))
+                       bitmap=wx.ArtProvider.GetBitmap(wx.ART_TIP, wx.ART_MENU, (16, 16)))
+
 
     class App(wx.App):
         def OnInit(self):
             Frame().Show()
             return True
+
 
     App(0).MainLoop()

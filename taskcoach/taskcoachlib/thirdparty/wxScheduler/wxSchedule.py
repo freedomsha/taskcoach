@@ -106,7 +106,7 @@ class wxSchedule( wx.EvtHandler ):
 
 	def Clone(self):
 		newSchedule = wxSchedule()
-		for name, value in list(self.GetData().items()):
+		for name, value in self.GetData().items():
 			setattr(newSchedule, name, value)
 		# start and end should be copied as well
 		newSchedule._start = copyDateTime(newSchedule._start)
@@ -159,7 +159,7 @@ class wxSchedule( wx.EvtHandler ):
 		"""
 		Set the color
 		"""
-		if category not in list(self.CATEGORIES.keys()):
+		if category not in self.CATEGORIES.keys():
 			raise ValueError("%s is not a valid category" % category)
 		
 		self._category = category
@@ -221,7 +221,7 @@ class wxSchedule( wx.EvtHandler ):
 		"""
 		Set the description
 		"""
-		if not isinstance( description, str ):
+		if not isinstance(description, basestring):
 			raise ValueError("Description can be only a str value")
 
 		self._description = description
@@ -269,7 +269,7 @@ class wxSchedule( wx.EvtHandler ):
 		""" 
 		Set the notes
 		"""
-		if not isinstance( notes, str ):
+		if not isinstance( notes, basestring ):
 			raise ValueError("notes can be only a str value")
 	   
 		self._notes = notes
