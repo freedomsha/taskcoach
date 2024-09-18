@@ -20,6 +20,8 @@ import wx
 
 
 class IdProvider(set):
+    """
+    """
     def get(self):
         if self:
             return self.pop()
