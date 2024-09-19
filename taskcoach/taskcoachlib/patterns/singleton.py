@@ -37,6 +37,6 @@ class Singleton(type):
         if class_.hasInstance():
             del class_.instance
 
-    def hasInstance(class_):
+    def hasInstance(class_) -> bool:
         """La (seule) instance a-t-elle déjà été créée ?"""
         return "instance" in class_.__dict__
