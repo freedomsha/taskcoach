@@ -35,19 +35,19 @@ class IdProvider(set):
     #     super().__init__()
     #     self._ids = set()
 
-    def get(self):
+    def get(self) -> int:
         """
         Obtenir un nouvel identifiant unique.
 
-        Cette méthode génère un nouvel identifiant unique en utilisant wx.NewIdRef() et l'ajoute
+        Cette méthode génère un nouvel identifiant unique en utilisant wx.ID_ANY (pas wx.NewIdRef()) et l'ajoute
         à l'ensemble des identifiants gérés par cette classe.
 
-        Returns:
-            int: Un nouvel identifiant unique.
+        Returns :
+            int : Un nouvel identifiant unique.
         """
         if self:
             return self.pop()
-        return wx.NewId()
+        # return wx.NewId()
         # # méthode dépréciée
         # # return wx.NewIdRef().GetId()
         # # new_id = wx.NewIdRef()
@@ -58,17 +58,17 @@ class IdProvider(set):
         # print(f"tclib.gui.newid.py IdProvider.get add: new_id = {new_id} for self: {self}")  # Ajout de journalisation
         # # return new_id
         # # return wx.NewIdRef()
-        # return wx.ID_ANY
+        return wx.ID_ANY
 
-    def put(self, id_):
+    def put(self, id_: int):
         """
         Libérer un identifiant.
 
         Cette méthode retire l'identifiant spécifié de l'ensemble des identifiants gérés par
         cette classe, le rendant disponible pour une réutilisation future.
 
-        Args:
-            id_ (int): L'identifiant à libérer.
+        Args :
+            id_ (int) : L'identifiant à libérer.
         """
         if id_ > 0:
             self.add(id_)
