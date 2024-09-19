@@ -15,6 +15,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+"""
+Ce module contient la définition de la classe ToolBar, qui représente une barre d'outils personnalisable dans l'interface utilisateur de Task Coach.
+
+La classe ToolBar hérite de la classe AuiToolBar de la bibliothèque wxPython et utilise la classe UICommand pour définir les commandes qui apparaissent sur la barre d'outils.
+
+La barre d'outils peut être personnalisée par l'utilisateur en utilisant le menu "Personnaliser" dans le menu "Affichage". Les choix de l'utilisateur sont enregistrés dans les préférences de l'application.
+
+La classe MainToolBar est une sous-classe de ToolBar qui est utilisée dans la fenêtre principale de Task Coach.
+
+La classe ToolBar est également utilisée dans les tests unitaires pour tester la fonctionnalité de la barre d'outils.
+"""
 
 # from future import standard_library
 
@@ -29,6 +40,11 @@ from taskcoachlib.gui import uicommand
 
 
 class _Toolbar(aui.AuiToolBar):
+    """
+    Une classe interne qui représente une barre d'outils basée sur la classe AuiToolBar de la bibliothèque wxPython.
+
+    Cette classe est utilisée comme base pour la classe ToolBar, qui ajoute des fonctionnalités de personnalisation à la barre d'outils.
+    """
     def __init__(self, parent, style):
         super().__init__(parent, agwStyle=aui.AUI_TB_NO_AUTORESIZE)
 
@@ -60,12 +76,38 @@ class _Toolbar(aui.AuiToolBar):
             super().SetMargins(*args)
 
     # @staticmethod
-    def MakeDisabledBitmap(self, bitmap):
+    def MakeDisabledBitmap(self, bitmap: wx.Bitmap) -> wx.Bitmap:
+        """
+        Crée une version en niveaux de gris d'un bitmap pour l'afficher en mode désactivé.
+
+        Args:
+            bitmap (wx.Bitmap): Le bitmap à convertir.
+
+        Returns:
+            wx.Bitmap: Le bitmap converti en niveaux de gris.
+        """
         return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
 
 
 class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
-    def __init__(self, window, settings, size=(32, 32)):
+    """
+    Une classe qui représente une barre d'outils personnalisable dans l'interface utilisateur de Task Coach.
+
+    Cette classe hérite de la classe _Toolbar et utilise la classe UICommand pour définir les commandes qui apparaissent sur la barre d'outils.
+
+    La barre d'outils peut être personnalisée par l'utilisateur en utilisant le menu "Personnaliser" dans le menu "Affichage". Les choix de l'utilisateur sont enregistrés dans les préférences de l'application.
+
+    La classe MainToolBar est une sous-classe de ToolBar qui est utilisée dans la fenêtre principale de Task Coach.
+    """
+    def __init__(self, window, settings, size: tuple = (32, 32)):
+        """
+        Initialise une nouvelle instance de la classe ToolBar.
+
+        Args:
+            window (wx.Window): La fenêtre parent de la barre d'outils.
+            settings (config.Settings): Les paramètres de configuration de l'application.
+            size (tuple, optional): La taille des icônes de la barre d'outils. La valeur par défaut est (32, 32).
+        """
         self.__window = window
         self.__settings = settings
         self.__visibleUICommands = list()
@@ -78,7 +120,10 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         self.loadPerspective(window.getToolBarPerspective())
 
     def Clear(self):
-        """The regular Clear method does not remove controls."""
+        """Efface la barre d'outils et tous les contrôles qu'elle contient.
+
+        Cette méthode est nécessaire car la méthode Clear de la classe AuiToolBar ne supprime pas les contrôles de la barre d'outils.
+        """
 
         if self.__visibleUICommands:  # May be None
             for uiCommand in self.__visibleUICommands:
@@ -100,7 +145,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         self.Clear()
         self.__visibleUICommands = self.__cache = None
 
-    def getToolIdByCommand(self, commandName):
+    def getToolIdByCommand(self, commandName: str) -> int:
         if commandName == "EditToolBarPerspective":
             return self.__customizeId
 
@@ -109,7 +154,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
                 return uiCommand.id
         return wx.ID_ANY
 
-    def _filterCommands(self, perspective, cache=True):
+    def _filterCommands(self, perspective: str, cache: bool = True) -> list:
         commands = list()
         if perspective:
             index = dict([(command.uniqueName(), command) for command in self.uiCommands(cache=cache) if
@@ -123,7 +168,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
             commands = list(self.uiCommands(cache=cache))
         return commands
 
-    def loadPerspective(self, perspective, customizable=True, cache=True):
+    def loadPerspective(self, perspective: str, customizable=True, cache=True):
         self.Clear()
 
         commands = self._filterCommands(perspective, cache=cache)
@@ -143,7 +188,12 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         self.appendUICommands(*commands)
         self.Realize()
 
-    def perspective(self):
+    def perspective(self) -> str:
+        """
+        Retourne la perspective actuelle de la barre d'outils sous forme de chaîne de caractères.
+
+        La perspective est une chaîne de caractères qui représente les commandes actuellement affichées sur la barre d'outils, dans l'ordre dans lequel elles apparaissent.
+        """
         names = list()
         for uiCommand in self.__visibleUICommands:
             if uiCommand is None:
@@ -154,36 +204,83 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
                 names.append(uiCommand.uniqueName())
         return ",".join(names)
 
-    def savePerspective(self, perspective):
+    def savePerspective(self, perspective: str):
+        """
+        Enregistre la perspective actuelle de la barre d'outils dans les préférences de l'application.
+
+        Args:
+            perspective (str): La perspective à enregistrer.
+        """
         self.loadPerspective(perspective)
         self.__window.saveToolBarPerspective(perspective)
 
-    def uiCommands(self, cache=True):
+    def uiCommands(self, cache: bool = True):
+        """
+        Retourne une liste de commandes UI à afficher sur la barre d'outils.
+
+        Cette méthode utilise la méthode createToolBarUICommands de la classe parent UICommandContainerMixin pour générer la liste de commandes UI.
+        """
         if self.__cache is None or not cache:
             self.__cache = self.__window.createToolBarUICommands()
         return self.__cache
 
     def visibleUICommands(self):
+        """
+        Retourne une liste des commandes UI actuellement affichées sur la barre d'outils.
+        """
         return self.__visibleUICommands[:]
 
     def AppendSeparator(self):
-        """ This little adapter is needed for
+        """
+        Ajoute un séparateur à la barre d'outils.
+
+        This little adapter is needed for
         uicommand.UICommandContainerMixin.appendUICommands"""
         self.AddSeparator()
 
-    def AppendStretchSpacer(self, proportion):
+    def AppendStretchSpacer(self, proportion: int):
+        """
+        Ajoute un espaceur extensible à la barre d'outils.
+
+        Args:
+            proportion (int): La proportion de l'espaceur extensible.
+        """
         self.AddStretchSpacer(proportion)
 
     def appendUICommand(self, uiCommand):
+        """
+        Ajoute une commande UI à la barre d'outils.
+
+        Args:
+            uiCommand (uicommand.UICommand): La commande UI à ajouter.
+        """
         return uiCommand.appendToToolBar(self)
 
 
 class MainToolBar(ToolBar):
+    """
+    Une sous-classe de ToolBar qui est utilisée dans la fenêtre principale de Task Coach.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise une nouvelle instance de la classe MainToolBar.
+
+        Args:
+            *args: Les arguments positionnels à passer à la méthode __init__ de la classe parent ToolBar.
+            **kwargs: Les arguments par mot-clé à passer à la méthode __init__ de la classe parent ToolBar.
+        """
         super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_SIZE, self._OnSize)
 
     def _OnSize(self, event):
+        """
+        Gestionnaire d'événements pour le redimensionnement de la fenêtre.
+
+        Cette méthode ajuste la taille de la barre d'outils en fonction de la taille de la fenêtre parent.
+
+        Args:
+            event (wx.SizeEvent): L'événement de redimensionnement.
+        """
         event.Skip()
         # On Windows XP, the sizes are off by 1 pixel. I fear that this value depends
         # on the user's config so let's take some margin.
