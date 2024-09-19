@@ -35,7 +35,7 @@ class List(list):
     même lorsque leur contenu est le même.
     """
 
-    def __eq__(self, other):
+    def __eq__(self, other: list) -> bool:
         """
         Comparez deux listes pour l'égalité.
 
@@ -55,7 +55,7 @@ class List(list):
         else:
             return list(self) == other
 
-    def removeItems(self, items):
+    def removeItems(self, items: list):
         """
         Supprimez plusieurs éléments de la liste.
 
@@ -139,8 +139,8 @@ class Event(object):
             else {type: {} if source is None else {source: values}}
         )
 
-    def __repr__(self):  # pragma: no cover
-        return "Event(%s)" % (self.__sourcesAndValuesByType)
+    def __repr__(self) -> str:  # pragma: no cover
+        return "Event(%s)" % (self.__sourcesAndValuesByType,)
 
     def __eq__(self, other):
         """
@@ -166,7 +166,7 @@ class Event(object):
         l'événement n'a qu'un seul type.
 
         Args :
-            source (objet ) : La source de l'événement.
+            source (objet) : La source de l'événement.
             *values : Valeurs supplémentaires associées à l'événement.
             **kwargs : arguments de mots-clés arbitraires (type : str, facultatif).
         """
@@ -181,7 +181,7 @@ class Event(object):
             tuple(currentValues)
         )
 
-    def type(self):
+    def type(self) -> str:
         """
         Renvoie le type d'événement.
 
@@ -195,7 +195,7 @@ class Event(object):
         """
         return list(self.types())[0] if self.types() else None
 
-    def types(self):
+    def types(self) -> set:
         """
         Renvoie l'ensemble des types d'événements que cet événement notifie.
 
@@ -204,7 +204,7 @@ class Event(object):
         """
         return set(self.__sourcesAndValuesByType.keys())
 
-    def sources(self, *types):
+    def sources(self, *types) -> set:
         """
         Renvoie l'ensemble de toutes les sources de cette instance d'événement, ou les sources
         pour des types d'événements spécifiques.
@@ -223,7 +223,7 @@ class Event(object):
             )
         return sources
 
-    def sourcesAndValuesByType(self):
+    def sourcesAndValuesByType(self) -> dict:
         """
         Renvoie toutes les données {type : {source : valeurs}}.
 
@@ -232,7 +232,7 @@ class Event(object):
         """
         return self.__sourcesAndValuesByType
 
-    def value(self, source=None, type=None):
+    def value(self, source=None, type=None) -> object:
         """
         Renvoie la valeur qui appartient à une source.
 
@@ -352,7 +352,7 @@ class MethodProxy(object):
         """
         self.method = method
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "MethodProxy(%s)" % self.method  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
@@ -368,7 +368,7 @@ class MethodProxy(object):
         """
         return self.method(*args, **kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """
         Comparez deux objets MethodProxy pour l'égalité.
 
@@ -384,7 +384,7 @@ class MethodProxy(object):
             and self.method.__func__ is other.method.__func__
         )
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         """
         Comparez deux objets MethodProxy pour l'inégalité.
 
@@ -396,7 +396,7 @@ class MethodProxy(object):
         """
         return not (self == other)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Obtenez le hachage du MethodProxy.
 
@@ -590,7 +590,7 @@ class Publisher(object, metaclass=singleton.Singleton):
                 observer(subEvent)
 
     @unwrapObservers
-    def observers(self, eventType=None):
+    def observers(self, eventType=None) -> set:
         """
         Obtenez les observateurs actuellement enregistrés. Spécifiez éventuellement
         un type d'événement spécifique pour obtenir des observateurs pour ce type d'événement uniquement.
@@ -676,7 +676,7 @@ class Decorator(Observer):
         self.__observable = observable
         super().__init__(*args, **kwargs)
 
-    def observable(self, recursive=False):
+    def observable(self, recursive: bool = False):
         """
         Obtenez l'instance observable encapsulée.
 
@@ -693,7 +693,7 @@ class Decorator(Observer):
                 pass
         return self.__observable
 
-    def __getattr__(self, attribute):
+    def __getattr__(self, attribute: str):
         """
         Déléguez l'accès aux attributs à l'instance observable encapsulée.
 
@@ -707,7 +707,7 @@ class Decorator(Observer):
 
 
 class ObservableCollection(object):
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Rendre les ObservableCollections appropriées comme clés dans les dictionnaires."""
         return hash(id(self))
 
@@ -715,19 +715,19 @@ class ObservableCollection(object):
         """Met en pause les Cycles."""
 
     @classmethod
-    def addItemEventType(class_):
+    def addItemEventType(class_) -> str:
         """Type d'événement utilisé pour informer les observateurs qu'un ou plusieurs éléments
         ont été ajoutés à la collection."""
         return "%s.add" % class_
 
     @classmethod
-    def removeItemEventType(class_):
+    def removeItemEventType(class_) -> str:
         """Type d'événement utilisé pour informer les observateurs qu'un ou plusieurs éléments
         ont été supprimés de la collection."""
         return "%s.remove" % class_
 
     @classmethod
-    def modificationEventTypes(class_):
+    def modificationEventTypes(class_) -> list[str]:
         try:
             eventTypes = super().modificationEventTypes()
         except AttributeError:
@@ -743,7 +743,7 @@ class ObservableSet(ObservableCollection, Set):
     ObservableSet est un ensemble qui avertit les observateurs lorsque des éléments sont ajoutés ou supprimés de l'ensemble.
     """
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """
         Compare cet ObservableSet avec un autre objet.
 
@@ -760,7 +760,7 @@ class ObservableSet(ObservableCollection, Set):
         return result
 
     # FIXME: Uniquement pour satisfaire registerObserver()
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Calcule la valeur de hachage pour cet ObservableSet.
 
@@ -909,15 +909,47 @@ class ObservableList(ObservableCollection, List):
 
 class CollectionDecorator(Decorator, ObservableCollection):
     """CollectionDecorator observe une ObservableCollection et est également une
-    ObservableCollection elle-même. Son but est de décorer une autre collection
+    ObservableCollection elle-même. Son but est de décorer une autre collection observable (comme une liste ou un ensemble)
     et d'ajouter des comportements, tels que le tri ou le filtrage.
     Les utilisateurs de cette classe ne devraient pas voir de différence entre
-    l'utilisation de la collection originale ou une version décorée."""
+    l'utilisation de la collection originale ou une version décorée.
+
+    Cette classe est une sous-classe de ObservableComposite qui décore une collection (liste, ensemble, etc.) et notifie les observateurs lorsqu'un élément est ajouté ou supprimé de la collection.
+
+    Les méthodes de cette classe sont des méthodes de délégation qui appellent les méthodes correspondantes de la collection sous-jacente.
+
+    Hérite de :
+        Decorator: Classe permettant de décorer un objet avec des comportements supplémentaires.
+        ObservableCollection: Collection observable qui notifie les observateurs des changements.
+
+    Attributs :
+        __freezeCount (int) : Compteur utilisé pour savoir si la collection est gelée (freeze) ou non.
+
+    Méthodes :
+        - freeze() : Gèle la collection et arrête temporairement les notifications aux observateurs.
+        - thaw() : Dégèle la collection et reprend les notifications.
+        - isFrozen() : Retourne True si la collection est gelée.
+        - detach() : Détache la collection et arrête d'observer les événements.
+        - onAddItem(event) : Méthode appelée lorsqu'un élément est ajouté à la collection observée.
+        - onRemoveItem(event) : Méthode appelée lorsqu'un élément est supprimé de la collection observée.
+        - extendSelf(items, event=None) : Ajoute des éléments à la collection décorée sans déléguer à la collection observée.
+        - removeItemsFromSelf(items, event=None) : Supprime des éléments de la collection décorée sans déléguer à la collection observée.
+    """
 
     def __init__(self, observedCollection, *args, **kwargs):
+        """
+        Initialise la CollectionDecorator en observant les événements d'ajout et de suppression d'éléments
+        dans la collection observable.
+
+        Args:
+            observedCollection (ObservableCollection): La collection à décorer et observer.
+            *args: Arguments supplémentaires pour l'initialisation.
+            **kwargs: Arguments nommés supplémentaires pour l'initialisation.
+        """
         super().__init__(observedCollection, *args, **kwargs)
         self.__freezeCount = 0
         observable = self.observable()
+        # Observe les événements d'ajout et de suppression dans la collection observable
         self.registerObserver(
             self.onAddItem,
             eventType=observable.addItemEventType(),
@@ -930,70 +962,140 @@ class CollectionDecorator(Decorator, ObservableCollection):
         )
         self.extendSelf(observable)
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
+        """Retourne une représentation sous forme de chaîne de la collection décorée."""
         return "%s(%s)" % (self.__class__, super().__repr__())
 
     def freeze(self):
+        """
+        Gèle la collection, arrêtant temporairement les notifications de changements aux observateurs.
+
+        Si la collection observée est elle-même un CollectionDecorator, appelle également la méthode freeze sur cette collection.
+        """
         if isinstance(self.observable(), CollectionDecorator):
             self.observable().freeze()
         self.__freezeCount += 1
 
     def thaw(self):
+        """
+        Dégèle la collection, permettant de reprendre les notifications de changements aux observateurs.
+
+        Si la collection observée est elle-même un CollectionDecorator, appelle également la méthode thaw sur cette collection.
+        """
         self.__freezeCount -= 1
         if isinstance(self.observable(), CollectionDecorator):
             self.observable().thaw()
 
-    def isFrozen(self):
+    def isFrozen(self) -> bool:
+        """
+        Vérifie si la collection est gelée.
+
+        Returns:
+            bool: True si la collection est gelée, sinon False.
+        """
         return self.__freezeCount != 0
 
     def detach(self):
+        """
+        Détache la collection de ses observateurs et arrête de recevoir les notifications des événements.
+
+        Cela inclut la suppression des observateurs pour les événements d'ajout et de suppression d'éléments.
+        """
         self.removeObserver(self.onAddItem)
         self.removeObserver(self.onRemoveItem)
         self.observable().detach()
         super().detach()
 
     def onAddItem(self, event):
-        """Le comportement par défaut consiste simplement à ajouter à
+        """
+        Méthode appelée lorsqu'un élément est ajouté à la collection observée.
+
+        Le comportement par défaut consiste simplement à ajouter à
         cette collection les éléments qui sont
         ajoutés à la collection d'origine.
-        Étendre pour ajouter un comportement."""
+        Par défaut, cette méthode ajoute également les éléments à cette collection décorée.
+        Étendre pour ajouter un comportement.
+        Peut être étendue pour ajouter un comportement spécifique lors de l'ajout.
+
+        Args :
+            event (Event) : L'événement d'ajout d'élément.
+        """
         self.extendSelf(list(event.values()))
 
     def onRemoveItem(self, event):
-        """Le comportement par défaut consiste simplement à supprimer également
+        """
+        Méthode appelée lorsqu'un élément est supprimé de la collection observée.
+
+        Le comportement par défaut consiste simplement à supprimer également
         de cette collection les éléments qui sont
         supprimés de la collection d'origine.
-        Étendre pour ajouter un comportement."""
+        Par défaut, cette méthode supprime également les éléments de cette collection décorée.
+        Étendre pour ajouter un comportement.
+        Peut être étendue pour ajouter un comportement spécifique lors de la suppression.
+
+        Args :
+            event (Event) : L'événement de suppression d'élément.
+        """
         self.removeItemsFromSelf(list(event.values()))
 
-    def extendSelf(self, items, event=None):
-        """Fournissez une méthode pour étendre cette collection sans déléguer à
-        la collection observée."""
+    def extendSelf(self, items: list, event=None):
+        """
+        Ajoute des éléments à cette collection décorée sans déléguer à la collection observée.
+
+        Fournit une méthode pour étendre cette collection sans déléguer à
+        la collection observée.
+
+        Args:
+            items (list): Liste des éléments à ajouter à la collection décorée.
+            event (Event, optionnel): L'événement associé à l'ajout des éléments."""
         return super().extend(items, event=event)
 
-    def removeItemsFromSelf(self, items, event=None):
-        """Fournissez une méthode pour supprimer des éléments de cette collection sans
-        déléguer à la collection observée."""
+    def removeItemsFromSelf(self, items: list, event=None):
+        """
+        Supprime des éléments de cette collection décorée sans déléguer à la collection observée.
+
+        Fournit une méthode pour supprimer des éléments de cette collection sans
+        déléguer à la collection observée.
+
+        Args:
+            items (list): Liste des éléments à supprimer de la collection décorée.
+            event (Event, optionnel): L'événement associé à la suppression des éléments."""
         return super().removeItems(items, event=event)
 
     # Déléguer les modifications à la collection observée
 
     def append(self, *args, **kwargs):
+        """Appelle la méthode append sur la collection observée."""
         return self.observable().append(*args, **kwargs)
 
     def extend(self, *args, **kwargs):
+        """Appelle la méthode extend sur la collection observée."""
         return self.observable().extend(*args, **kwargs)
 
     def remove(self, *args, **kwargs):
+        """Appelle la méthode remove sur la collection observée."""
         return self.observable().remove(*args, **kwargs)
 
     def removeItems(self, *args, **kwargs):
+        """Appelle la méthode removeItems sur la collection observée."""
         return self.observable().removeItems(*args, **kwargs)
 
 
 class ListDecorator(CollectionDecorator, ObservableList):
+    """
+    ListDecorator est une spécialisation de CollectionDecorator pour les listes observables.
+
+    Cette classe hérite de CollectionDecorator et ObservableList, permettant de décorer une liste observable
+    et d'ajouter des comportements supplémentaires tout en notifiant les observateurs des changements dans la liste.
+    """
     pass
 
 
 class SetDecorator(CollectionDecorator, ObservableSet):
+    """
+    SetDecorator est une spécialisation de CollectionDecorator pour les ensembles observables.
+
+    Cette classe hérite de CollectionDecorator et ObservableSet, permettant de décorer un ensemble observable
+    et d'ajouter des comportements supplémentaires tout en notifiant les observateurs des changements dans l'ensemble.
+    """
     pass
