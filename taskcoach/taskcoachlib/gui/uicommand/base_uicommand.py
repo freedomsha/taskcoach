@@ -31,15 +31,39 @@ from taskcoachlib.i18n import _
 
 
 class UICommand(object):
-    """ Base user interface command. An UICommand is some action that can be
-        associated with menu's and/or toolbars. It contains the menutext and
-        helptext to be displayed, code to deal with wx.EVT_UPDATE_UI and
-        methods to attach the command to a menu or toolbar. Subclasses should
-        implement doCommand() and optionally override enabled(). """
+    """
+    Commande d'interface utilisateur de base.
+
+    Une UICommand est une action qui peut être associée à des menus ou des barres d'outils.
+    Elle contient le texte du menu, l'aide contextuelle à afficher, et gère les événements
+    wx.EVT_UPDATE_UI. Les sous-classes doivent implémenter la méthode doCommand() et peuvent
+    remplacer enabled() pour personnaliser l'activation des commandes.
+
+    Attributs :
+        menuText (str): Texte du menu.
+        helpText (str): Texte d'aide.
+        bitmap (str): Icône à afficher pour l'élément de menu ou la barre d'outils.
+        bitmap2 (str): Icône secondaire pour les éléments de type ITEM_CHECK.
+        kind (wx.ItemKind): Type d'élément (normal, checkable, etc.).
+        id (int): Identifiant unique pour l'élément.
+        toolbar (wx.ToolBar): Barre d'outils associée.
+        menuItems (list): Liste des éléments de menu auxquels cette commande est associée.
+    """
 
     def __init__(self, menuText="", helpText="", bitmap="nobitmap",
                  kind=wx.ITEM_NORMAL, id=None, bitmap2=None,
                  *args, **kwargs):  # pylint: disable=W0622
+        """
+        Initialise la commande d'interface utilisateur.
+
+        Args:
+            menuText (str, optionnel): Le texte à afficher dans le menu. Par défaut à "".
+            helpText (str, optionnel): Le texte d'aide contextuelle. Par défaut à "".
+            bitmap (str, optionnel): L'icône du menu ou de la barre d'outils. Par défaut à "nobitmap".
+            kind (wx.ItemKind, optionnel): Le type d'élément (normal, checkable, etc.). Par défaut à wx.ITEM_NORMAL.
+            id (int, optionnel): L'identifiant de la commande. Si non spécifié, un identifiant unique sera généré.
+            bitmap2 (str, optionnel): Icône secondaire pour les éléments checkables. Par défaut à None.
+        """
         super().__init__()
         # menuText = menuText or '<%s>' % _('None')
         menuText = menuText or "<%s>" % _("None")
@@ -51,17 +75,19 @@ class UICommand(object):
         self.bitmap = bitmap
         self.bitmap2 = bitmap2
         self.kind = kind
-        self.id = IdProvider.get()
+        self.id = IdProvider.get()  # Obtient un identifiant unique
         self.toolbar = None
-        self.menuItems = []  # uiCommands can be used in multiple menu's
+        self.menuItems = []  # Les UIcommandes peuvent être utilisées dans plusieurs menus
 
     def __del__(self):
+        """ Libère l'identifiant lors de la destruction de l'objet. """
         IdProvider.put(self.id)
 
     def __eq__(self, other):
         return self is other
 
     def uniqueName(self):
+        """ Retourne le nom unique de la classe de commande. """
         return self.__class__.__name__
 
     def accelerators(self):
@@ -85,15 +111,24 @@ class UICommand(object):
         return []
 
     def addToMenu(self, menu, window, position=None):
-        """ Ajoute un sous-menu au Menu menu dans la fenêtre window à la fin en principe. """
+        """ Ajoute un sous-menu au Menu menu dans la fenêtre window à la fin en principe.
+
+        Args:
+            menu (wx.Menu): Le menu auquel ajouter la commande.
+            window (wx.Window): La fenêtre parent associée.
+            position (int, optionnel): La position dans le menu. Si non spécifiée, la commande est ajoutée à la fin.
+
+        Returns:
+            int: L'identifiant de l'élément de menu ajouté.
+        """
         # Un menuItem représente un élément dans un menu.
         # menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
         # test de chatGPT
-        print(f"tclib.gui.uicommand.base_uicommand essaye d'ajouter le sous-menu {self} dans le menu {menu} de la fenêtre {window} à la position {position}")
+        # print(f"tclib.gui.uicommand.base_uicommand essaye d'ajouter le sous-menu {self} dans le menu {menu} de la fenêtre {window} à la position {position}")
         try:
             menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
         except wx._core.wxAssertionError as e:
-            print(f"tclib.gui.uicommand.base_uicommand: Error creating MenuItem: {e}")
+            # print(f"tclib.gui.uicommand.base_uicommand: Error creating MenuItem: {e}")
             # Handle the error or create a new ID manually
             # new_id = wx.NewIdRef().GetId()
             new_id = wx.ID_ANY
@@ -111,6 +146,12 @@ class UICommand(object):
         return self.id
 
     def addBitmapToMenuItem(self, menuItem):
+        """
+        Ajoute une icône à l'élément de menu si applicable.
+
+        Args:
+            menuItem (wx.MenuItem): L'élément de menu auquel ajouter l'icône.
+        """
         if self.bitmap2 and self.kind == wx.ITEM_CHECK and not operating_system.isGTK():
             bitmap1 = self.__getBitmap(self.bitmap)
             bitmap2 = self.__getBitmap(self.bitmap2)
@@ -128,6 +169,15 @@ class UICommand(object):
         self.unbind(window, menuId)
 
     def appendToToolBar(self, toolbar):
+        """
+        Ajoute cette commande à une barre d'outils.
+
+        Args:
+            toolbar (wx.ToolBar): La barre d'outils à laquelle ajouter la commande.
+
+        Returns:
+            int: L'identifiant de l'élément de la barre d'outils ajouté.
+        """
         self.toolbar = toolbar
         bitmap = self.__getBitmap(self.bitmap, wx.ART_TOOLBAR,
                                   toolbar.GetToolBitmapSize())
@@ -143,6 +193,13 @@ class UICommand(object):
         return self.id
 
     def bind(self, window, itemId):
+        """
+        Lie la commande aux événements de menu ou de barre d'outils.
+
+        Args:
+            window (wx.Window): La fenêtre à laquelle lier les événements.
+            itemId (int): L'identifiant de l'élément de menu ou de barre d'outils.
+        """
         window.Bind(wx.EVT_MENU, self.onCommandActivate, id=itemId)
         window.Bind(wx.EVT_UPDATE_UI, self.onUpdateUI, id=itemId)
 
@@ -165,6 +222,15 @@ class UICommand(object):
         return self.onCommandActivate(*args, **kwargs)
 
     def doCommand(self, event):
+        """
+        Méthode à implémenter dans les sous-classes pour exécuter la commande.
+
+        Args:
+            event (wx.Event): L'événement déclenchant la commande.
+
+        Raises:
+            NotImplementedError: Si non implémenté dans la sous-classe.
+        """
         raise NotImplementedError  # pragma: no cover
 
     def onUpdateUI(self, event):
@@ -173,7 +239,17 @@ class UICommand(object):
             self.updateToolHelp()
 
     def enabled(self, event):  # pylint: disable=W0613
-        """ Can be overridden in a subclass. """
+        """
+        Détermine si la commande est activée.
+
+        Peut être remplacé dans une sous-classe.
+
+        Args:
+            event (wx.Event): L'événement wx lié.
+
+        Returns:
+            bool: True si la commande est activée, sinon False.
+        """
         return True
 
     def updateToolHelp(self):
@@ -215,6 +291,17 @@ class UICommand(object):
 
     # @staticmethod
     def __getBitmap(self, bitmapName, bitmapType=wx.ART_MENU, bitmapSize=(16, 16)):
+        """
+        Obtient une icône bitmap à partir du nom spécifié.
+
+        Args:
+            bitmapName (str): Le nom de l'icône.
+            bitmapType (wx.ArtID, optionnel): Le type d'icône (menu, barre d'outils). Par défaut à wx.ART_MENU.
+            bitmapSize (tuple, optionnel): La taille de l'icône. Par défaut à (16, 16).
+
+        Returns:
+            wx.Bitmap: L'icône bitmap obtenue, ou wx.NullBitmap en cas d'erreur.
+        """
         # return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
         try:
             return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)

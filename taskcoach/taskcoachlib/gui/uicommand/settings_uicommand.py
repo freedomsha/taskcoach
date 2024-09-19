@@ -55,24 +55,24 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
 
     def addToMenu(self, menu, window, position=None):
         """ Ajouter un sous_menu au menu"""
-        print(f"tclib.gui.uicommand.setings_uicommand.py BooleanSettingCommand.addToMenu essaie d'ajouter: self =",
-              repr(self), " au",
-              f"menu: {menu} dans window: {window}")
+         # print(f"tclib.gui.uicommand.setings_uicommand.py BooleanSettingCommand.addToMenu essaie d'ajouter: self =",
+         #      repr(self), " au",
+         #      f"menu: {menu} dans window: {window}")
         menuId = super().addToMenu(menu, window, position)
 
-        print(f'menuId: {menuId} ajouté' )
-        print(f'au menu: {menu} window: {window} position: {position}')
+        # print(f'menuId: {menuId} ajouté' )
+        # print(f'au menu: {menu} window: {window} position: {position}')
         # menuId: <wx._core.MenuItem object at 0x7f9bffc23ec0>
         # ce devrait être un nombre entier !
         try:
-            print(f"essaie try FindItemById de {menuId}")
+            # print(f"essaie try FindItemById de {menuId}")
             menuItem = menu.FindItemById(menuId)
-            print(f"résultat: menuItem: {menuItem}")
-            print(f"vérification de menuItem: {menuItem} avec {self.isSettingChecked}")
+            # print(f"résultat: menuItem: {menuItem}")
+            # print(f"vérification de menuItem: {menuItem} avec {self.isSettingChecked}")
             menuItem.Check(self.isSettingChecked())
         except TypeError as e:
             # menuItem = menu.FindItemById(menuId)  # ?
-            print(f"Error d'ajout de UI command au menu: {e}")
+            print(f"tclib.gui.uicommand.settings_uicommand l75: Error d'ajout de UI command au menu: {e}")
             # TypeError: Menu.FindItemById(): argument 1 has unexpected type 'MenuItem'
         return menuId
 
