@@ -126,7 +126,7 @@ class NumberedInstances(type):
         # return instance
 
     # Vieux code
-    def lowestUnusedNumber(cls):
+    def lowestUnusedNumber(cls) -> int:
         """Méthode qui renvoie le plus bas numéro d'instance inutilisé pour la classe.
         """
         # vieux code
@@ -167,7 +167,7 @@ def _generatemetaclass(bases, metas, priority):
     elif len(metabases) == 1:  # single metabase
         meta = metabases[0]
     else:  # multiple metabases
-        metaname = "_" + ''.join([m.__name__ for m in metabases])
+        metaname = "_" + "".join([m.__name__ for m in metabases])
         meta = makecls()(metaname, metabases, {})
     return metadic.setdefault(metabases, meta)
 
@@ -180,5 +180,5 @@ def makecls(*metas, **options):
     If priority is True, the given metaclasses have priority over the
     bases' metaclasses"""
 
-    priority = options.get('priority', False)  # default, no priority
+    priority = options.get("priority", False)  # default, no priority
     return lambda n, b, d: _generatemetaclass(b, metas, priority)(n, b, d)
