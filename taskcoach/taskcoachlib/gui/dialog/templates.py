@@ -91,7 +91,7 @@ Classes et méthodes utilisées
         self.SetButtonSizer(self._buttonSizer)
         self.Fit()
         self.SetMinSize(self.GetSize())  # Current size is min size
-        self._buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.ok)
+        self._buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.ok)  # TODO: gui.uicommand.base_uicommand.bind or Bind ?
         self.CentreOnParent()
 
     def createInterior(self, pane):
@@ -99,6 +99,9 @@ Classes et méthodes utilisées
         self.createTemplateEntries(pane)
 
     def createTemplateList(self, pane):
+        """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
+        en créant la liste d'arborescence.
+        """
         panel = sized_controls.SizedPanel(pane)
         panel.SetSizerType('horizontal')
         panel.SetSizerProps(expand=True, proportion=1)
@@ -126,6 +129,8 @@ Classes et méthodes utilisées
         panel.Fit()
 
     def createButton(self, parent, bitmapName, handler, enable=True):
+        """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
+        en créant les boutons."""
         bitmap = wx.ArtProvider.GetBitmap(bitmapName, size=(32, 32))
         button = wx.BitmapButton(parent, bitmap=bitmap)
         button.Bind(wx.EVT_BUTTON, handler)
@@ -133,6 +138,9 @@ Classes et méthodes utilisées
         return button
 
     def createTemplateEntries(self, pane):
+        """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
+        en créant les champs de saisie.
+        """
         panel = self._editPanel = sized_controls.SizedPanel(pane)
         panel.SetSizerType('form')
         panel.SetSizerProps(expand=True)
@@ -160,10 +168,12 @@ Classes et méthodes utilisées
         panel.Fit()
 
     def enableEditPanel(self, enable=True):
+        """Active ou désactive les champs d'édition en fonction de la sélection de l'utilisateur."""
         for ctrl in self._taskControls:
             ctrl.Enable(enable)
 
     def appendTemplate(self, parentItem, task):
+        """Ajoute un nouveau nœud à l'arbre des modèles de tâches."""
         # item = self._templateList.AppendItem(parentItem, task.subject(), data=wx.TreeItemData(task))
         item = self._templateList.Append(parentItem, task.subject(), data=task)
         for child in task.children():
@@ -171,6 +181,19 @@ Classes et méthodes utilisées
         return item
 
     def onValueChanged(self, event):
+        """Cette méthode gère les événements utilisateur, la modification du contenu d'un champ de saisie.
+        Elle met à jour l'état interne de l'application en conséquence.
+
+        Cette méthode est appelée à chaque fois que l'utilisateur modifie le contenu d'un champ de saisie. Son rôle est de :
+
+        Récupérer le modèle de tâche sélectionné : Elle utilise self._templateList.GetItemData(self._GetSelection()).GetData()
+        pour obtenir le modèle de tâche correspondant à l'élément sélectionné dans la liste.
+        Mettre à jour les propriétés du modèle de tâche : Elle modifie les propriétés du modèle de tâche en fonction des
+        nouvelles valeurs saisies dans les champs.
+        Par exemple, si l'utilisateur a modifié le sujet du modèle, la méthode met à jour la propriété subject du modèle.
+        Gérer les expressions temporelles : Pour les champs de saisie de dates, elle utilise la classe TimeExpressionEntry
+        pour vérifier la validité de l'expression saisie et la convertir au format approprié.
+        """
         event.Skip()
         if self._GetSelection().IsOk() and not self._changing:
             task = self._templateList.GetItemData(self._GetSelection()).GetData()
@@ -186,6 +209,9 @@ Classes et méthodes utilisées
         return self._templateList.GetSelection()
 
     def OnSelectionChanged(self, event):  # pylint: disable=W0613
+        """Cette méthode gère les événements utilisateur, la sélection d'un élément dans la liste.
+        Elle met à jour l'état interne de l'application en conséquence.
+        """
         self._changing = True
         try:
             selection = self._GetSelection()
@@ -215,12 +241,14 @@ Classes et méthodes utilisées
             self._changing = False
 
     def onDelete(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en supprimant des éléments."""
         task = self._templateList.GetItemData(self._GetSelection()).GetData()
         index = self._templates.tasks().index(task)
         self._templates.deleteTemplate(index)
         self._templateList.Delete(self._GetSelection())
 
     def OnUp(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en déplaçant des éléments."""
         selection = self._GetSelection()
         prev = self._templateList.GetPrevSibling(selection)
         prev = self._templateList.GetPrevSibling(prev)
@@ -239,6 +267,7 @@ Classes et méthodes utilisées
         self._templateList.SelectItem(item)
 
     def OnDown(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en déplaçant des éléments."""
         selection = self._GetSelection()
         next = self._templateList.GetNextSibling(selection)
         task = self._templateList.GetItemData(selection).GetData()
@@ -252,6 +281,7 @@ Classes et méthodes utilisées
         self._templateList.SelectItem(item)
 
     def onAdd(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en ajoutant des éléments."""
         template = Task(subject=_('New task template'))
         for name in ('plannedstartdatetmpl', 'duedatetmpl', 'completiondatetmpl',
                      'remindertmpl'):
@@ -260,5 +290,7 @@ Classes et méthodes utilisées
         self.appendTemplate(self._root, theTask)
 
     def ok(self, event):
+        """Cette méthode est appelée lorsque l'utilisateur clique sur le bouton "OK" de la boîte de dialogue.
+        Elle sauvegarde les modifications apportées aux modèles de tâches."""
         self._templates.save()
         event.Skip()
