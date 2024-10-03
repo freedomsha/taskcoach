@@ -50,6 +50,34 @@ class TimeExpressionEntry(wx.TextCtrl):
 
 
 class TemplatesDialog(sized_controls.SizedDialog):
+    """Cette classe implémente une boîte de dialogue pour la gestion des modèles de tâches dans l'application Task Coach.
+    
+    Elle permet de visualiser, modifier et supprimer des modèles de tâches existants, ainsi que d'en créer de nouveaux.
+
+Fonctionnalités principales
+
+    Affichage d'une liste d'arborescence pour parcourir les modèles de tâches.
+    Edition des propriétés d'un modèle de tâche sélectionné (sujet, dates de début, d'échéance, d'achèvement et de rappel).
+    Suppression d'un modèle de tâche sélectionné.
+    Déplacement d'un modèle de tâche vers le haut ou le bas dans la liste.
+    Ajout d'un nouveau modèle de tâche.
+    Sauvegarde des modifications apportées aux modèles de tâches.
+
+Classes et méthodes utilisées
+
+    TimeExpressionEntry : Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles.
+    createTemplateList : Crée la liste d'arborescence pour afficher les modèles de tâches.
+    createTemplateEntries : Crée les champs d'édition pour les propriétés d'un modèle de tâche.
+    enableEditPanel : Active ou désactive les champs d'édition en fonction de la sélection d'un modèle.
+    appendTemplate : Ajoute un modèle de tâche et ses enfants à la liste d'arborescence.
+    onValueChanged : Gère les modifications apportées aux champs d'édition d'un modèle de tâche.
+    OnSelectionChanged : Gère la sélection d'un modèle de tâche dans la liste, met à jour les champs d'édition et active/désactive les boutons de suppression et de déplacement.
+    onDelete : Supprime le modèle de tâche sélectionné.
+    OnUp : Déplace le modèle de tâche sélectionné vers le haut dans la liste.
+    OnDown : Déplace le modèle de tâche sélectionné vers le bas dans la liste.
+    onAdd : Ajoute un nouveau modèle de tâche vide à la liste.
+    ok : Sauvegarde les modifications apportées aux modèles de tâches lors de la validation de la boîte de dialogue.
+    """
     def __init__(self, settings, *args, **kwargs):
         self.settings = settings
         self._changing = False
