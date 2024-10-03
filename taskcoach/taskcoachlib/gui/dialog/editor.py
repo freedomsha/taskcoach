@@ -155,11 +155,23 @@ class Page(patterns.Observer, widgets.BookPage):
 
 
 class SubjectPage(Page):
+      """
+  This class represents the "Subject" page within the task editor dialog.
+  It provides controls for editing the subject, description, and displaying
+  creation and modification date/times for the selected task(s).
+  """
     pageName = "subject"
     pageTitle = _("Description")
     pageIcon = "pencil_icon"
 
     def __init__(self, items, parent, settings, *args, **kwargs):
+        """
+    Initializes the SubjectPage with the following arguments:
+
+    - items: A list of task objects representing the selected tasks.
+    - parent: The parent window of this page.
+    - settings: The application settings object.
+    """
         self._modificationTextEntry = None
         self._descriptionSync = None
         self._subjectSync = None
@@ -169,6 +181,10 @@ class SubjectPage(Page):
         super().__init__(items, parent, *args, **kwargs)
 
     def SetFocus(self):
+        """
+    Sets focus to the page, but avoids selecting the text control on GTK platforms
+    to prevent overriding the X selection.
+    """
         # Skip this on GTK because it selects the control's text, which
         # overrides the X selection. Simply commenting out the SetFocus() in
         # __load_perspective is not enough because the aui notebook calls this
@@ -177,9 +193,16 @@ class SubjectPage(Page):
             super().SetFocus()
 
     def focusTextControl(self):
+        """
+    Checks the application settings to determine if text controls should receive
+    focus on GTK platforms.
+    """
         return self._settings.getboolean("os_linux", "focustextentry")
 
     def addEntries(self):
+        """
+    Adds controls for subject, description, creation date/time, and modification date/time.
+    """
         self.addSubjectEntry()
         self.addDescriptionEntry()
         self.addCreationDateTimeEntry()
@@ -187,6 +210,11 @@ class SubjectPage(Page):
 
     def addSubjectEntry(self):
         # pylint: disable=W0201
+        """
+    Adds a single-line text control for editing the subject of the selected task(s).
+    It also creates an AttributeSync object to manage synchronization between the control
+    and the task object(s).
+    """
         current_subject = (
             self.items[0].subject()
             if len(self.items) == 1
@@ -210,6 +238,11 @@ class SubjectPage(Page):
 
     def addDescriptionEntry(self):
         # pylint: disable=W0201
+        """
+    Adds a multi-line text control for editing the description of the selected task(s).
+    It also creates an AttributeSync object to manage synchronization between the control
+    and the task object(s). Optionally sets a custom font based on application settings.
+    """
         def combined_description(items):
             return "[%s]\n\n" % _("Edit to change all descriptions") + "\n\n".join(
                 item.description() for item in items
@@ -245,6 +278,9 @@ class SubjectPage(Page):
         )
 
     def addCreationDateTimeEntry(self):
+        """Cette méthode ajoute des étiquettes affichant les dates de création des tâches sélectionnées.
+Elles calculent les dates minimale et maximale pour les tâches multiples et affichent un intervalle si nécessaire.
+Elles s'abonnent à des événements pour mettre à jour l'affichage de la date de modification lorsque celle-ci change."""
         creation_datetimes = [item.creationDateTime() for item in self.items]
         min_creation_datetime = min(creation_datetimes)
         max_creation_datetime = max(creation_datetimes)
@@ -260,6 +296,9 @@ class SubjectPage(Page):
         )
 
     def addModificationDateTimeEntry(self):
+        """Cette méthode ajoute des étiquettes affichant les dates de modification des tâches sélectionnées.
+Elles calculent les dates minimale et maximale pour les tâches multiples et affichent un intervalle si nécessaire.
+Elles s'abonnent à des événements pour mettre à jour l'affichage de la date de modification lorsque celle-ci change."""
         self._modificationTextEntry = wx.StaticText(
             self, label=self.__modification_text()
         )
@@ -279,6 +318,7 @@ class SubjectPage(Page):
                 )
 
     def __modification_text(self):
+        """Cette méthode privée calcule le texte à afficher pour la date de modification, en tenant compte des dates minimale et maximale."""
         modification_datetimes = [item.modificationDateTime() for item in self.items]
         min_modification_datetime = min(modification_datetimes)
         max_modification_datetime = max(modification_datetimes)
@@ -292,12 +332,15 @@ class SubjectPage(Page):
         return modification_text
 
     def onAttributeChanged(self, newValue, sender):
+        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change. Elles mettent à jour le texte de l'étiquette correspondante."""
         self._modificationTextEntry.SetLabel(self.__modification_text())
 
     def onAttributeChanged_Deprecated(self, *args, **kwargs):
+        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change. Elles mettent à jour le texte de l'étiquette correspondante."""
         self._modificationTextEntry.SetLabel(self.__modification_text())
 
     def close(self):
+        """Cette méthode est appelée lors de la fermeture de la page. Elle se désabonne des événements pour éviter les fuites de mémoire."""
         super().close()
         for eventType in self.items[0].modificationEventTypes():
             try:
@@ -307,6 +350,7 @@ class SubjectPage(Page):
         patterns.Publisher().removeObserver(self.onAttributeChanged_Deprecated)
 
     def entries(self):
+        """Cette méthode retourne un dictionnaire contenant des références vers les contrôles de la page, utilisé probablement pour la navigation ou d'autres fonctionnalités."""
         return dict(
             firstEntry=self._subjectEntry,
             subject=self._subjectEntry,
@@ -317,6 +361,14 @@ class SubjectPage(Page):
 
 
 class TaskSubjectPage(SubjectPage):
+      """
+      Cette classe hérite de SubjectPage et ajoute la gestion de la priorité.
+      
+      This class inherits from the SubjectPage class and is specifically designed
+      for editing the subject, description, and priority of task objects. 
+      It overrides the addEntries method to insert a priority entry between the
+      description and creation date/time entries.
+      """
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
@@ -324,6 +376,12 @@ class TaskSubjectPage(SubjectPage):
     #     self._priorityEntry = None
 
     def addEntries(self):
+        """ Ajoute les entrées de l'interface, en insérant le champ de priorité.
+        
+        This method overrides the addEntries method from the parent class SubjectPage.
+        It calls the parent's addEntries method to add subject, description, creation and modification date/time entries.
+        It then inserts a new method call self.addPriorityEntry() to add a control for editing the priority between the description and creation date/time.
+        """
         # Override to insert a priority entry between the description and the
         # creation Date/time entry
         self.addSubjectEntry()
@@ -334,6 +392,13 @@ class TaskSubjectPage(SubjectPage):
 
     def addPriorityEntry(self):
         # pylint: disable=W0201
+        """Ajoute un champ pour modifier la priorité de la tâche.
+        
+        This method adds a spin control (widgets.SpinCtrl) to the page for editing the priority of the selected task(s).
+        It retrieves the current priority of the first task (if only one is selected) or sets it to 0 (default).
+        It creates an AttributeSync object to synchronize the spin control value with the "priority" attribute of the task object(s).
+        It adds an entry label for "Priority" and the spin control to the page using self.addEntry.
+        """
         current_priority = self.items[0].priority() if len(self.items) == 1 else 0
         self._priorityEntry = widgets.SpinCtrl(
             self, size=(100, -1), value=current_priority
@@ -355,12 +420,21 @@ class TaskSubjectPage(SubjectPage):
         )
 
     def entries(self):
+        """Retourne un dictionnaire contenant les références aux contrôles.
+        
+        This method overrides the entries method from the parent class.
+        It calls the parent's entries method to get a dictionary containing references to existing controls.
+        It adds a new key-value pair to the dictionary, where the key is "priority" and the value is the reference to the spin control (self._priorityEntry).
+        It returns the updated dictionary containing references to all controls on the page.
+        """
         entries = super().entries()
         entries["priority"] = self._priorityEntry
         return entries
 
 
 class CategorySubjectPage(SubjectPage):
+    """Cette classe hérite de SubjectPage et ajoute la gestion des sous-catégories exclusives.
+    """
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
@@ -368,16 +442,22 @@ class CategorySubjectPage(SubjectPage):
     #     self._exclusiveSubcategoriesCheckBox = None
 
     def addEntries(self):
+        """
+    Ajoute les entrées de l'interface, en insérant le champ de sous-catégories exclusives.
+    """
         # Override to insert an exclusive subcategories entry
         # between the description and the creation Date/time entry
-        self.addSubjectEntry()
-        self.addDescriptionEntry()
-        self.addExclusiveSubcategoriesEntry()
-        self.addCreationDateTimeEntry()
-        self.addModificationDateTimeEntry()
+        self.addSubjectEntry()  # Sujet
+        self.addDescriptionEntry()  # Description
+        self.addExclusiveSubcategoriesEntry()  # Sous-catégories exclusives (ajouté ici)
+        self.addCreationDateTimeEntry()  # Date de création
+        self.addModificationDateTimeEntry()  # Date de modification
 
     def addExclusiveSubcategoriesEntry(self):
         # pylint: disable=W0201
+        """
+    Ajoute un champ pour définir si les sous-catégories doivent être exclusives.
+    """
         currentExclusivity = (
             self.items[0].hasExclusiveSubcategories() if len(self.items) == 1 else False
         )
