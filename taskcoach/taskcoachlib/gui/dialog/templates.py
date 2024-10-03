@@ -25,6 +25,7 @@ from wx.lib import sized_controls
 
 
 class TimeExpressionEntry(wx.TextCtrl):
+    """ Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
