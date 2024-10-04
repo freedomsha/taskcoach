@@ -141,7 +141,7 @@ def generate(ip=None):
         if counter > MAX_COUNTER:
             counter = 0
         lasttime = now
-        parts.append("%08x" % (counter))
+        parts.append("%08x" % counter)
 
         # ip part
         parts.append(hexip)
@@ -170,7 +170,7 @@ def extract_ip(guid):
     # there's probably a more elegant way to do this
     thisip = []
     for index in range(24, 40, 4):
-        thisip.append(str(int(guid[index : index + 4], 16)))
+        thisip.append(str(int(guid[index: index + 4], 16)))
     return ".".join(thisip)
 
 

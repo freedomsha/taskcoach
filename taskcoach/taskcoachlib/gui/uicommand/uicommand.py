@@ -17,6 +17,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Explication des classes :
+
+    HideCurrentColumn : Cette classe permet de masquer la colonne sous la souris, en utilisant la position actuelle de la souris pour déterminer quelle colonne masquer.
+    ViewColumn : Cette classe gère l'affichage ou le masquage d'une colonne spécifique en fonction du nom de la colonne.
+    ViewColumns : Cette classe permet de gérer plusieurs colonnes simultanément, en affichant ou en masquant un groupe de colonnes dans la visionneuse.
 """
 
 # from builtins import str
@@ -65,31 +71,79 @@ from functools import reduce
 
 
 class IOCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande d'entrée/sortie (IOCommand) de base qui gère les opérations d'entrée/sortie (comme ouvrir ou sauvegarder un fichier) via un contrôleur I/O.
+
+    Attributs :
+        iocontroller (IOController) : Le contrôleur I/O responsable des opérations sur les fichiers.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande IOCommand avec un contrôleur I/O fourni via les arguments.
+
+        Args:
+            iocontroller (IOController) : Contrôleur I/O chargé de gérer les fichiers.
+        """
         self.iocontroller = kwargs.pop("iocontroller", None)
         super().__init__(*args, **kwargs)
 
 
 class TaskListCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande spécifique à la gestion d'une liste de tâches. Utilisée pour manipuler et interagir avec une liste de tâches.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une liste de tâches fournie.
+
+        Args:
+            taskList (TaskList) : La liste des tâches à manipuler.
+        """
         self.taskList = kwargs.pop("taskList", None)
         super().__init__(*args, **kwargs)
 
 
 class EffortListCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande spécifique à la gestion d'une liste d'efforts (suivi du temps). Utilisée pour manipuler et interagir avec une liste d'efforts.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une liste d'efforts fournie.
+
+        Args:
+            effortList (EffortList) : La liste des efforts à manipuler.
+        """
         self.effortList = kwargs.pop("effortList", None)
         super().__init__(*args, **kwargs)
 
 
 class CategoriesCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande pour gérer les catégories. Utilisée pour interagir avec une liste de catégories.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une liste de catégories fournie.
+
+        Args :
+            categories (CategoryList) : La liste des catégories.
+        """
         self.categories = kwargs.pop("categories", None)
         super().__init__(*args, **kwargs)
 
 
 class NotesCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande pour gérer les notes. Utilisée pour interagir avec une liste de notes.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une liste de notes fournie.
+
+        Args :
+            notes (NoteList) : La liste des notes.
+        """
         self.notes = kwargs.pop("notes", None)
         super().__init__(*args, **kwargs)
 
@@ -101,11 +155,30 @@ class AttachmentsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
 
 
 class ViewerCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande pour interagir avec une visionneuse (viewer). Permet d'exécuter des actions liées à l'affichage d'une présentation de données.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une visionneuse fournie.
+
+        Args :
+            viewer (Viewer) : La visionneuse pour laquelle la commande est exécutée.
+        """
         self.viewer = kwargs.pop("viewer", None)
         super().__init__(*args, **kwargs)
 
+     #def __eq__(self, other) -> bool:
     def __eq__(self, other):
+        """
+        Compare cette commande avec une autre pour vérifier si elles sont égales. Deux commandes sont égales si elles partagent la même section de paramètres de la visionneuse.
+
+        Args :
+            other (ViewerCommand) : La commande avec laquelle comparer.
+
+        Returns :
+            bool : True si les commandes sont égales, False sinon.
+        """
         return (
             super().__eq__(other)
             and self.viewer.settingsSection() == other.viewer.settingsSection()
@@ -116,7 +189,13 @@ class ViewerCommand(base_uicommand.UICommand):  # pylint: disable=W0223
 
 
 class FileOpen(IOCommand):
+    """
+    Commande pour ouvrir un fichier. Utilise un contrôleur I/O pour ouvrir un fichier de tâche.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande d'ouverture de fichier avec des paramètres spécifiques pour l'interface utilisateur, comme le texte du menu et l'icône associée.
+        """
         super().__init__(
             menuText=_("&Open...\tCtrl+O"),
             helpText=help.fileOpen,
@@ -127,11 +206,30 @@ class FileOpen(IOCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande d'ouverture de fichier. Ouvre un fichier en utilisant le contrôleur I/O.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.iocontroller.open()
 
 
 class RecentFileOpen(IOCommand):
+    """
+    Commande pour ouvrir un fichier récemment utilisé. Utilise un contrôleur I/O pour ouvrir le fichier spécifié.
+
+    Attributs :
+        __filename (str) : Le chemin ou nom du fichier à ouvrir.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec le nom du fichier à ouvrir.
+
+        Args:
+            filename (str) : Le nom du fichier récent.
+            index (int) : L'indice dans la liste des fichiers récents.
+        """
         self.__filename = kwargs.pop("filename")
         index = kwargs.pop("index")
         super().__init__(
@@ -142,11 +240,22 @@ class RecentFileOpen(IOCommand):
         )
 
     def doCommand(self, event):
+        """Ouvre le fichier récent sélectionné."""
         self.iocontroller.open(self.__filename)
 
 
 class FileMerge(IOCommand):
+    """
+    Commande pour fusionner des tâches d'un autre fichier avec le fichier actuel.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de fusion.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Merge..."),
             helpText=_("Merge tasks from another file with the current file"),
@@ -156,11 +265,22 @@ class FileMerge(IOCommand):
         )
 
     def doCommand(self, event):
+        """Exécute la commande pour fusionner les tâches."""
         self.iocontroller.merge()
 
 
 class FileClose(IOCommand):
+    """
+    Commande pour fermer le fichier actuel.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de fermeture de fichier.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Close\tCtrl+W"),
             helpText=help.fileClose,
@@ -171,12 +291,23 @@ class FileClose(IOCommand):
         )
 
     def doCommand(self, event):
+        """Ferme le fichier et les éditeurs associés."""
         self.mainWindow().closeEditors()
         self.iocontroller.Close()
 
 
 class FileSave(IOCommand):
+    """
+    Commande pour sauvegarder le fichier actuel.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de sauvegarde.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Save\tCtrl+S"),
             helpText=help.fileSave,
@@ -187,14 +318,26 @@ class FileSave(IOCommand):
         )
 
     def doCommand(self, event):
+        """Sauvegarde le fichier actuel."""
         self.iocontroller.save()
 
     def enabled(self, event):
+        """Vérifie si la sauvegarde est nécessaire."""
         return self.iocontroller.needSave()
 
 
 class FileMergeDiskChanges(IOCommand):
+    """
+    Commande pour fusionner les changements sur disque avec le fichier actuel.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour fusionner les changements.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("Merge &disk changes\tShift-Ctrl-M"),
             helpText=help.fileMergeDiskChanges,
@@ -204,14 +347,26 @@ class FileMergeDiskChanges(IOCommand):
         )
 
     def doCommand(self, event):
+        """Fusionne les changements détectés sur disque."""
         self.iocontroller.mergeDiskChanges()
 
     def enabled(self, event):
+        """Active la commande si des changements ont été détectés sur disque."""
         return self.iocontroller.changedOnDisk()
 
 
 class FileSaveAs(IOCommand):
+    """
+    Commande pour sauvegarder le fichier actuel sous un autre nom.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de sauvegarde sous un autre nom.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("S&ave as...\tShift+Ctrl+S"),
             helpText=help.fileSaveAs,
@@ -222,13 +377,27 @@ class FileSaveAs(IOCommand):
         )
 
     def doCommand(self, event):
+        """Sauvegarde le fichier sous un autre nom."""
         self.iocontroller.saveas()
 
 
 class FileSaveSelection(
     mixin_uicommand.NeedsSelectedTasksMixin, IOCommand, ViewerCommand
 ):
+    """
+    Commande pour sauvegarder les tâches sélectionnées dans un nouveau fichier de tâches.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse de tâches utilisée pour obtenir les tâches sélectionnées.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de sauvegarde des tâches sélectionnées.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("Sa&ve selected tasks to new taskfile..."),
             helpText=_("Save the selected tasks to a separate taskfile"),
@@ -238,13 +407,27 @@ class FileSaveSelection(
         )
 
     def doCommand(self, event):
+        """Exécute la commande pour sauvegarder les tâches sélectionnées."""
         self.iocontroller.saveselection(self.viewer.curselection())
 
 
 class FileSaveSelectedTaskAsTemplate(
     mixin_uicommand.NeedsOneSelectedTaskMixin, IOCommand, ViewerCommand
 ):
+    """
+    Commande pour sauvegarder la tâche sélectionnée en tant que modèle de tâche.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour obtenir la tâche sélectionnée.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de sauvegarde de la tâche en tant que modèle.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("Save selected task as &template"),
             helpText=_("Save the selected task as a task template"),
@@ -254,11 +437,25 @@ class FileSaveSelectedTaskAsTemplate(
         )
 
     def doCommand(self, event):
+        """Exécute la commande pour sauvegarder la tâche sélectionnée en tant que modèle."""
         self.iocontroller.saveastemplate(self.viewer.curselection()[0])
 
 
 class FileImportTemplate(IOCommand):
+    """
+    Commande pour importer un modèle depuis un fichier de modèles.
+
+    Attributs :
+        iocontroller (IOController) : Le contrôleur utilisé pour gérer les fichiers.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande d'importation de modèle.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Import template..."),
             helpText=_("Import a new template from a template file"),
@@ -268,11 +465,25 @@ class FileImportTemplate(IOCommand):
         )
 
     def doCommand(self, event):
+        """Exécute la commande pour importer un modèle depuis un fichier."""
         self.iocontroller.importTemplate()
 
 
 class FileEditTemplates(settings_uicommand.SettingsCommand, base_uicommand.UICommand):
+    """
+    Commande pour éditer les modèles existants.
+
+    Attributs :
+        settings (Settings) : Les paramètres de l'application.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande d'édition des modèles.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("Edit templates..."),
             helpText=_("Edit existing templates"),
@@ -281,6 +492,7 @@ class FileEditTemplates(settings_uicommand.SettingsCommand, base_uicommand.UICom
         )
 
     def doCommand(self, event):
+        """Affiche la boîte de dialogue pour éditer les modèles existants."""
         templateDialog = dialog.templates.TemplatesDialog(
             self.settings, self.mainWindow(), title=_("Edit templates")
         )
@@ -288,7 +500,19 @@ class FileEditTemplates(settings_uicommand.SettingsCommand, base_uicommand.UICom
 
 
 class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
+    """
+    Commande pour purger définitivement les éléments supprimés (tâches et notes).
+
+    Utilisée lorsque l'on souhaite supprimer de manière irréversible des éléments marqués comme supprimés.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour purger les éléments supprimés.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Purge deleted items"),
             helpText=_(
@@ -301,6 +525,12 @@ class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
         )
 
     def doCommand(self, event):
+        """
+        Purge les éléments supprimés après confirmation de l'utilisateur.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         if (
             wx.MessageBox(
                 _(
@@ -321,10 +551,21 @@ Do you still want to purge?"""
 
 
 class PrintPageSetup(settings_uicommand.SettingsCommand, base_uicommand.UICommand):
-    """Action for changing page settings. The page settings are saved in the
-    application wide settings."""
+    """
+    Commande pour changer les paramètres de la page. Les paramètres de la page sont sauvegardés dans les réglages de l'application.
+
+    Attributs :
+        settings (Settings) : Les paramètres de l'application pour sauvegarder les configurations de la page.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec les options de texte et d'icône associées.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Page setup...\tShift+Ctrl+P"),
             helpText=help.printPageSetup,
@@ -335,6 +576,12 @@ class PrintPageSetup(settings_uicommand.SettingsCommand, base_uicommand.UIComman
         )
 
     def doCommand(self, event):
+        """
+        Ouvre une boîte de dialogue pour modifier les paramètres de la page et les applique aux réglages de l'application.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         printerSettings = printer.PrinterSettings(self.settings)
         pageSetupDialog = wx.PageSetupDialog(
             self.mainWindow(), printerSettings.pageSetupData
@@ -347,9 +594,21 @@ class PrintPageSetup(settings_uicommand.SettingsCommand, base_uicommand.UIComman
 
 
 class PrintPreview(ViewerCommand, settings_uicommand.SettingsCommand):
-    """Action for previewing a print of the current viewer."""
+    """
+    Commande pour afficher un aperçu de l'impression du contenu actuel de la visionneuse.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse de l'application dont le contenu sera imprimé.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec les options de texte et d'icône associées.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Print preview..."),
             helpText=_("Show a preview of what the print will look like"),
@@ -360,6 +619,12 @@ class PrintPreview(ViewerCommand, settings_uicommand.SettingsCommand):
         )
 
     def doCommand(self, event):
+        """
+        Affiche la fenêtre d'aperçu de l'impression avec deux versions de sortie pour l'impression.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         printout, printout2 = printer.Printout(
             self.viewer, self.settings, twoPrintouts=True
         )
@@ -373,9 +638,21 @@ class PrintPreview(ViewerCommand, settings_uicommand.SettingsCommand):
 
 
 class Print(ViewerCommand, settings_uicommand.SettingsCommand):
-    """Action for printing the contents of the current viewer."""
+    """
+    Commande pour imprimer le contenu actuel de la visionneuse.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse dont le contenu sera imprimé.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec les options de texte et d'icône associées.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Print...\tCtrl+P"),
             helpText=help.print_,
@@ -386,6 +663,12 @@ class Print(ViewerCommand, settings_uicommand.SettingsCommand):
         )
 
     def doCommand(self, event):
+        """
+        Ouvre une boîte de dialogue d'impression, configure les options, et imprime le contenu sélectionné ou l'intégralité du document.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         printerSettings = printer.PrinterSettings(self.settings)
         printDialogData = wx.PrintDialogData(printerSettings.printData)
         printDialogData.EnableSelection(True)
@@ -400,15 +683,23 @@ class Print(ViewerCommand, settings_uicommand.SettingsCommand):
         # If the user checks the selection radio button, the ToPage property
         # gets set to 1. Looks like a bug to me. The simple work-around is to
         # reset the ToPage property to the MaxPage value if necessary:
+        # Si l'utilisateur sélectionne l'option de sélection, ajuste les pages à imprimer:
         if wxPrinter.PrintDialogData.Selection:
             wxPrinter.PrintDialogData.ToPage = wxPrinter.PrintDialogData.MaxPage
         wxPrinter.Print(self.mainWindow(), printout, prompt=False)
 
 
 class FileExportCommand(IOCommand, settings_uicommand.SettingsCommand):
-    """Base class for export actions."""
+    """
+    Classe de base pour les actions d'exportation.
+
+    Permet d'exporter des éléments depuis une visionneuse vers différents formats de fichier.
+    """
 
     def doCommand(self, event):
+        """
+        Exécute la commande d'exportation. Ouvre la boîte de dialogue pour définir les options d'exportation et appelle la fonction d'exportation correspondante.
+        """
         exportDialog = self.getExportDialogClass()(
             self.mainWindow(), settings=self.settings
         )  # pylint: disable=E1101
@@ -421,13 +712,11 @@ class FileExportCommand(IOCommand, settings_uicommand.SettingsCommand):
 
     @staticmethod
     def getExportDialogClass():
-        """Return the class to be used for the export dialog."""
+        """Retourne la classe à utiliser pour la boîte de dialogue d'exportation."""
         raise NotImplementedError
 
     def exportFunction(self):
-        """Return a function that does the actual export. The function should
-        take the selected viewer as the first parameter and possibly a
-        number of keyword arguments for export options."""
+        """Retourne une fonction qui effectue l'exportation réelle. Cette fonction prend la visionneuse sélectionnée et les options d'exportation en paramètres."""
         raise NotImplementedError  # pragma: no cover
 
 
@@ -452,7 +741,9 @@ class FileManageBackups(IOCommand, settings_uicommand.SettingsCommand):
 
 
 class FileExportAsHTML(FileExportCommand):
-    """Action for exporting the contents of a viewer to HTML."""
+    """
+    Action pour exporter le contenu d'une visionneuse au format HTML.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -472,7 +763,9 @@ class FileExportAsHTML(FileExportCommand):
 
 
 class FileExportAsCSV(FileExportCommand):
-    """Action for exporting the contents of a viewer to CSV."""
+    """
+    Action pour exporter le contenu d'une visionneuse au format CSV.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -494,7 +787,9 @@ class FileExportAsCSV(FileExportCommand):
 
 
 class FileExportAsICalendar(FileExportCommand):
-    """Action for exporting the contents of a viewer to iCalendar format."""
+    """
+    Action pour exporter le contenu d'une visionneuse au format iCalendar.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -516,15 +811,17 @@ class FileExportAsICalendar(FileExportCommand):
         return dialog.export.ExportAsICalendarDialog
 
     @staticmethod
-    def exportableViewer(aViewer):
-        """Return whether the viewer can be exported to iCalendar format."""
+    def exportableViewer(aViewer) -> bool:
+        """Vérifie si la visionneuse peut être exportée au format iCalendar."""
         return aViewer.isShowingTasks() or (
             aViewer.isShowingEffort() and not aViewer.isShowingAggregatedEffort()
         )
 
 
 class FileExportAsTodoTxt(FileExportCommand):
-    """Action for exporting the contents of a viewer to Todo.txt format."""
+    """
+    Action pour exporter le contenu d'une visionneuse au format Todo.txt.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -549,15 +846,19 @@ class FileExportAsTodoTxt(FileExportCommand):
 
     @staticmethod
     def exportableViewer(aViewer):
-        """Return whether the viewer can be exported to Todo.txt format."""
+        """Vérifie si la visionneuse peut être exportée au format Todo.txt."""
         return aViewer.isShowingTasks()
 
 
 class FileImportCSV(IOCommand):
-    """Action for importing data from a CSV file into the current task
-    file."""
+    """
+    Action pour importer des données à partir d'un fichier CSV dans le fichier de tâches actuel.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande d'importation de CSV avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&Import CSV..."),
             helpText=_("Import tasks from a Comma Separated Values (CSV) file"),
@@ -567,6 +868,9 @@ class FileImportCSV(IOCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande d'importation de CSV. Ouvre une boîte de dialogue pour sélectionner un fichier CSV et lance l'importation.
+        """
         while True:
             filename = wx.FileSelector(_("Import CSV"), wildcard="*.csv")
             if filename:
@@ -588,10 +892,14 @@ class FileImportCSV(IOCommand):
 
 
 class FileImportTodoTxt(IOCommand):
-    """Action for importing data from a Todo.txt file into the current task
-    file."""
+    """
+    Action pour importer des données à partir d'un fichier Todo.txt dans le fichier de tâches actuel.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande d'importation de Todo.txt avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&Import Todo.txt..."),
             helpText=_("Import tasks from a Todo.txt (see todotxt.com) file"),
@@ -601,16 +909,25 @@ class FileImportTodoTxt(IOCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande d'importation de Todo.txt.
+
+        Ouvre une boîte de dialogue pour sélectionner un fichier Todo.txt et lance l'importation.
+        """
         filename = wx.FileSelector(_("Import Todo.txt"), wildcard="*.txt")
         if filename:
             self.iocontroller.importTodoTxt(filename)
 
 
 class FileSynchronize(IOCommand, settings_uicommand.SettingsCommand):
-    """Action for synchronizing the current task file with a SyncML
-    server."""
+    """
+    Action pour synchroniser le fichier de tâches actuel avec un serveur SyncML.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de synchronisation avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("S&yncML synchronization..."),
             helpText=_("Synchronize with a SyncML server"),
@@ -620,13 +937,21 @@ class FileSynchronize(IOCommand, settings_uicommand.SettingsCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande de synchronisation. Lance le processus de synchronisation avec le serveur SyncML configuré.
+        """
         self.iocontroller.synchronize()
 
 
 class FileQuit(base_uicommand.UICommand):
-    """Action for quitting the application."""
+    """
+    Action pour quitter l'application.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour quitter avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&Quit\tCtrl+Q"),
             helpText=help.fileQuit,
@@ -637,13 +962,28 @@ class FileQuit(base_uicommand.UICommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour quitter l'application. Ferme la fenêtre principale de l'application.
+        """
         self.mainWindow().Close(force=True)
 
 
 class EditUndo(base_uicommand.UICommand):
-    """Action for undoing the previous user action."""
+    """
+    Action pour annuler la dernière action effectuée par l'utilisateur.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour gérer les actions de l'utilisateur.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande d'annulation.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=self.getUndoMenuText(),
             helpText=help.editUndo,
@@ -655,11 +995,11 @@ class EditUndo(base_uicommand.UICommand):
 
     @staticmethod
     def getUndoMenuText():
-        """Return the menu text for the undo command, including a text
-        describing the previous user action."""
+        """Retourne le texte du menu pour la commande d'annulation, en incluant la description de la dernière action utilisateur."""
         return "%s\tCtrl+Z" % patterns.CommandHistory().undostr(_("&Undo"))
 
     def doCommand(self, event):
+        """Exécute la commande d'annulation en utilisant l'historique des commandes."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             windowWithFocus.Undo()
@@ -667,21 +1007,36 @@ class EditUndo(base_uicommand.UICommand):
             patterns.CommandHistory().undo()
 
     def onUpdateUI(self, event):
+        """Met à jour le texte du menu avec la dernière action utilisateur."""
         self.updateMenuText(self.getUndoMenuText())
         super().onUpdateUI(event)
 
     def enabled(self, event):
+        """Vérifie si l'annulation est disponible."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             return windowWithFocus.CanUndo()
         else:
+            # TODO: hasHistory is a list !? a bool was better ?
             return patterns.CommandHistory().hasHistory() and super().enabled(event)
 
 
 class EditRedo(base_uicommand.UICommand):
-    """Action for redoing the last undone user action."""
+    """
+    Action pour rétablir la dernière action annulée par l'utilisateur.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour gérer les actions utilisateur.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de rétablissement.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=self.getRedoMenuText(),
             helpText=help.editRedo,
@@ -692,12 +1047,12 @@ class EditRedo(base_uicommand.UICommand):
         )
 
     @staticmethod
-    def getRedoMenuText():
-        """Return the menu text for the redo command, including a text
-        describing the next user action."""
+    def getRedoMenuText() -> str:
+        """Retourne le texte du menu pour la commande de rétablissement, incluant une description de l'action suivante à rétablir."""
         return "%s\tCtrl+Y" % patterns.CommandHistory().redostr(_("&Redo"))
 
     def doCommand(self, event):
+        """Exécute la commande de rétablissement en utilisant l'historique des commandes."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             windowWithFocus.Redo()
@@ -705,22 +1060,36 @@ class EditRedo(base_uicommand.UICommand):
             patterns.CommandHistory().redo()
 
     def onUpdateUI(self, event):
+        """Met à jour le texte du menu avec la prochaine action à rétablir."""
         self.updateMenuText(self.getRedoMenuText())
         super().onUpdateUI(event)
 
     def enabled(self, event):
+        """Vérifie si le rétablissement est disponible."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             return windowWithFocus.CanRedo()
         else:
+            # Todo: hasFuture is a List ! not a bool !
             return patterns.CommandHistory().hasFuture() and super().enabled(event)
 
 
 class EditCut(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
-    """Action for cutting the currently selected item(s) to the
-    clipboard."""
+    """
+    Action pour couper les éléments sélectionnés et les placer dans le presse-papier.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour gérer les éléments.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de découpage.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("Cu&t\tCtrl+X"),
             helpText=help.editCut,
@@ -731,6 +1100,7 @@ class EditCut(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         )
 
     def doCommand(self, event):
+        """Exécute la commande de découpage."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             windowWithFocus.Cut()
@@ -739,18 +1109,31 @@ class EditCut(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             cutCommand.do()
 
     def enabled(self, event):
+        """Vérifie si le découpage est disponible."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
+            # Todo: CanCut can be None ! a bool would be better !?
             return windowWithFocus.CanCut()
         else:
             return super().enabled(event)
 
 
 class EditCopy(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
-    """Action for copying the currently selected item(s) to the
-    clipboard."""
+    """
+    Action pour copier les éléments sélectionnés dans le presse-papier.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour gérer les éléments.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de copie.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Copy\tCtrl+C"),
             helpText=help.editCopy,
@@ -760,6 +1143,7 @@ class EditCopy(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         )
 
     def doCommand(self, event):
+        """Exécute la commande de copie."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             windowWithFocus.Copy()
@@ -770,18 +1154,31 @@ class EditCopy(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             copyCommand.do()
 
     def enabled(self, event):
+        """Vérifie si la copie est disponible."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
+            # Todo: CanCut can be None ! a bool would be better !?
             return windowWithFocus.CanCopy()
         else:
             return super().enabled(event)
 
 
 class EditPaste(base_uicommand.UICommand):
-    """Action for pasting the item(s) in the clipboard into the current
-    taskfile."""
+    """
+    Action pour coller le(s) élément(s) du presse-papier dans le fichier de tâches actuel.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour coller les éléments.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de collage.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Paste\tCtrl+V"),
             helpText=help.editPaste,
@@ -792,6 +1189,7 @@ class EditPaste(base_uicommand.UICommand):
         )
 
     def doCommand(self, event):
+        """Exécute la commande de collage."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
             windowWithFocus.Paste()
@@ -800,18 +1198,32 @@ class EditPaste(base_uicommand.UICommand):
             pasteCommand.do()
 
     def enabled(self, event):
+        """Vérifie si le collage est disponible."""
         windowWithFocus = wx.Window.FindFocus()
         if isinstance(windowWithFocus, wx.TextCtrl):
+            # Todo: CanPaste can be None ! a bool would be better !?
             return windowWithFocus.CanPaste()
         else:
             return command.Clipboard() and super().enabled(event)
 
 
 class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerCommand):
-    """Action for pasting the item(s) in the clipboard into the current
-    taskfile, as a subitem of the currently selected item."""
+    """
+    Action pour coller les éléments du presse-papier dans le fichier de tâches actuel,
+    en tant que sous-élément de l'élément actuellement sélectionné.
+
+    Attributs :
+        viewer (Viewer) : La visionneuse utilisée pour coller les éléments en tant que sous-éléments.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec les options de menu et d'icône associées.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("P&aste as subitem\tShift+Ctrl+V"),
             helpText=help.editPasteAsSubitem,
@@ -821,10 +1233,16 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande de collage en tant que sous-élément.
+        """
         pasteCommand = command.PasteAsSubItemCommand(items=self.viewer.curselection())
         pasteCommand.do()
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Vérifie si le collage en tant que sous-élément est possible.
+        """
         if not (super().enabled(event) and command.Clipboard()):
             return False
         targetClass = self.viewer.curselection()[0].__class__
@@ -834,17 +1252,16 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
         ) or self.__targetIsTaskAndPastedIsEffort(targetClass, pastedClasses)
 
     @classmethod
-    def __targetIsTaskAndPastedIsEffort(cls, targetClass, pastedClasses):
-        """Return whether the target class is a task and the pasted classes
-        are all effort."""
+    def __targetIsTaskAndPastedIsEffort(cls, targetClass, pastedClasses) -> bool:
+        """Vérifie si la classe cible est une tâche et les éléments collés sont tous des efforts."""
         if targetClass != task.Task:
             return False
 
         return cls.__targetAndPastedAreEqual(effort.Effort, pastedClasses)
 
     @staticmethod
-    def __targetAndPastedAreEqual(targetClass, pastedClasses):
-        """Return whether the targetClass and pastedClasses are all equal."""
+    def __targetAndPastedAreEqual(targetClass, pastedClasses) -> bool:
+        """Vérifie si les classes de la cible et les éléments collés sont identiques."""
         for pastedClass in pastedClasses:
             if pastedClass != targetClass:
                 return False
@@ -852,9 +1269,21 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
 
 
 class EditPreferences(settings_uicommand.SettingsCommand):
-    """Action for bringing up the preferences dialog."""
+    """
+    Action pour ouvrir la boîte de dialogue des préférences.
+
+    Attributs :
+        settings (Settings) : Les paramètres de l'application.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande des préférences avec les options de menu et d'icône associées.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Preferences...\tAlt+P"),
             helpText=help.editPreferences,
@@ -864,7 +1293,14 @@ class EditPreferences(settings_uicommand.SettingsCommand):
             **kwargs
         )
 
-    def doCommand(self, event, show=True):  # pylint: disable=W0221
+    def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
+        """
+        Affiche la boîte de dialogue des préférences.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+            show (bool) : Indique si la boîte de dialogue doit être affichée.
+        """
         editor = dialog.preferences.Preferences(
             parent=self.mainWindow(), title=_("Preferences"), settings=self.settings
         )
@@ -872,9 +1308,18 @@ class EditPreferences(settings_uicommand.SettingsCommand):
 
 
 class EditSyncPreferences(IOCommand):
-    """Action for bringing up the synchronization preferences dialog."""
+    """
+    Action pour afficher les préférences de synchronisation SyncML.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande des préférences de synchronisation.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&SyncML preferences..."),
             helpText=_("Edit SyncML preferences"),
@@ -883,7 +1328,14 @@ class EditSyncPreferences(IOCommand):
             **kwargs
         )
 
-    def doCommand(self, event, show=True):  # pylint: disable=W0221
+    def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
+        """
+        Affiche la boîte de dialogue des préférences de synchronisation SyncML.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+            show (bool) : Indique si la boîte de dialogue doit être affichée.
+        """
         editor = dialog.syncpreferences.SyncMLPreferences(
             parent=self.mainWindow(),
             iocontroller=self.iocontroller,
@@ -893,9 +1345,24 @@ class EditSyncPreferences(IOCommand):
 
 
 class EditToolBarPerspective(settings_uicommand.SettingsCommand):
-    """Action for editing a customizable toolbar"""
+    """
+    Action pour éditer une barre d'outils personnalisable.
+
+    Attributs :
+        toolbar (wx.ToolBar) : La barre d'outils à personnaliser.
+        editorClass (Class) : La classe utilisée pour éditer la barre d'outils.
+    """
 
     def __init__(self, toolbar, editorClass, *args, **kwargs):
+        """
+        Initialise la commande pour personnaliser la barre d'outils.
+
+        Args :
+            toolbar (wx.ToolBar) : La barre d'outils à personnaliser.
+            editorClass (Class) : La classe utilisée pour éditer la barre d'outils.
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         self.__toolbar = toolbar
         self.__editorClass = editorClass
         super().__init__(
@@ -907,15 +1374,26 @@ class EditToolBarPerspective(settings_uicommand.SettingsCommand):
         )
 
     def doCommand(self, event):
+        """
+        Affiche la boîte de dialogue de personnalisation de la barre d'outils.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.__editorClass(
             self.__toolbar, self.settings, self.mainWindow(), _("Customize toolbar")
         ).ShowModal()
 
 
 class SelectAll(mixin_uicommand.NeedsItemsMixin, ViewerCommand):
-    """Action for selecting all items in a viewer."""
+    """
+    Action pour sélectionner tous les éléments dans une visionneuse.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour sélectionner tous les éléments avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&All\tCtrl+A"),
             helpText=help.editSelectAll,
@@ -926,24 +1404,34 @@ class SelectAll(mixin_uicommand.NeedsItemsMixin, ViewerCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour sélectionner tous les éléments visibles dans la visionneuse.
+        """
         windowWithFocus = wx.Window.FindFocus()
         if self.windowIsTextCtrl(windowWithFocus):
-            windowWithFocus.SetSelection(-1, -1)  # Select all text
+            windowWithFocus.SetSelection(-1, -1)  # Sélectionne tout le texte
         else:
             self.viewer.select_all()
 
     @staticmethod
-    def windowIsTextCtrl(window):
-        """Return whether the window is a text control."""
+    def windowIsTextCtrl(window) -> bool:
+        """
+        Vérifie si la fenêtre actuelle est un contrôle de texte.
+        """
         return isinstance(window, wx.TextCtrl) or isinstance(
             window, hypertreelist.EditCtrl
         )
 
 
 class ClearSelection(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
-    """Action for unselecting all items in a viewer."""
+    """
+    Action pour désélectionner tous les éléments dans une visionneuse.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour désélectionner tous les éléments avec les options de menu appropriées.
+        """
         super().__init__(
             menuText=_("&Clear selection"),
             helpText=_("Unselect all items"),
@@ -952,14 +1440,21 @@ class ClearSelection(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour désélectionner tous les éléments.
+        """
         self.viewer.clear_selection()
 
 
 class ResetFilter(ViewerCommand):
-    """Action for resetting all filters so that all items in all viewers
-    become visible."""
+    """
+    Action pour réinitialiser tous les filtres afin que tous les éléments deviennent visibles dans toutes les visionneuses.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour réinitialiser tous les filtres avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&Clear all filters\tShift-Ctrl-R"),
             helpText=help.resetFilter,
@@ -969,19 +1464,29 @@ class ResetFilter(ViewerCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour réinitialiser tous les filtres actifs dans la visionneuse.
+        """
         self.viewer.resetFilter()
 
     def enabled(self, event):
+        """
+        Vérifie si la commande est activée, c'est-à-dire s'il y a des filtres actifs à réinitialiser.
+        """
         return self.viewer.hasFilter()
 
 
 class ResetCategoryFilter(
     mixin_uicommand.NeedsAtLeastOneCategoryMixin, CategoriesCommand
 ):
-    """Action for resetting all category filters so that items are no longer
-    hidden if the don't belong to a certain category."""
+    """
+    Action pour réinitialiser tous les filtres de catégories afin que les éléments ne soient plus cachés en fonction des catégories.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour réinitialiser les filtres de catégories avec les options de menu appropriées.
+        """
         super().__init__(
             menuText=_("&Reset all categories\tCtrl-R"),
             helpText=help.resetCategoryFilter,
@@ -990,13 +1495,21 @@ class ResetCategoryFilter(
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour réinitialiser les filtres de catégories actifs.
+        """
         self.categories.resetAllFilteredCategories()
 
 
 class ToggleCategoryFilter(base_uicommand.UICommand):
-    """Action for toggling filtering on a specific category."""
+    """
+    Action pour activer ou désactiver le filtrage sur une catégorie spécifique.
+    """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de filtrage par catégorie avec les options de menu appropriées.
+        """
         self.category = kwargs.pop("category")
         subject = self.category.subject()
         # Would like to use wx.ITEM_RADIO for mutually exclusive categories, but
@@ -1018,27 +1531,46 @@ class ToggleCategoryFilter(base_uicommand.UICommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour activer ou désactiver le filtrage sur la catégorie spécifiée.
+        """
         self.category.setFiltered(event.IsChecked())
 
 
 class ViewViewer(settings_uicommand.SettingsCommand, ViewerCommand):
-    """Action for opening a new viewer of a specific class."""
+    """
+    Action pour ouvrir une nouvelle visionneuse d'une classe spécifique.
 
+    Attributs :
+        taskFile (TaskFile) : Le fichier de tâches utilisé par la visionneuse.
+        viewerClass (class) : La classe de la visionneuse à ouvrir.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour ouvrir une nouvelle visionneuse.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires, y compris 'taskFile' et 'viewerClass'.
+        """
         self.taskFile = kwargs.pop("taskFile")
         self.viewerClass = kwargs.pop("viewerClass")
         kwargs.setdefault("bitmap", self.viewerClass.defaultBitmap)
         super().__init__(*args, **kwargs)
 
     def doCommand(self, event):
+        """
+        Ouvre une nouvelle instance de la visionneuse spécifiée.
+        """
         from taskcoachlib.gui import viewer
 
         viewer.addOneViewer(self.viewer, self.taskFile, self.settings, self.viewerClass)
         self.increaseViewerCount()
 
     def increaseViewerCount(self):
-        """Increase the viewer count for the viewer class this command is
-        opening and store the viewer count in the settings."""
+        """
+        Augmente le compteur de la classe visionneuses ouvertes, ouvre et enregistre la valeur dans les paramètres.
+        """
         setting = self.viewerClass.__name__.lower() + "count"
         viewerCount = self.settings.getint("view", setting)
         self.settings.set("view", setting, str(viewerCount + 1))
@@ -1047,7 +1579,17 @@ class ViewViewer(settings_uicommand.SettingsCommand, ViewerCommand):
 class ViewEffortViewerForSelectedTask(
     settings_uicommand.SettingsCommand, ViewerCommand
 ):
+    """
+    Action pour ouvrir une visionneuse d'efforts pour les tâches sélectionnées.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour ouvrir une visionneuse d'efforts.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires, y compris 'taskFile'.
+        """
         from taskcoachlib.gui import viewer
 
         self.viewerClass = viewer.EffortViewerForSelectedTasks
@@ -1056,13 +1598,26 @@ class ViewEffortViewerForSelectedTask(
         super().__init__(*args, **kwargs)
 
     def doCommand(self, event):
+        """
+        Ouvre une visionneuse d'efforts pour les tâches sélectionnées.
+        """
         from taskcoachlib.gui import viewer
 
         viewer.addOneViewer(self.viewer, self.taskFile, self.settings, self.viewerClass)
 
 
 class RenameViewer(ViewerCommand):
+    """
+    Action pour renommer la visionneuse sélectionnée.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande de renommage de la visionneuse.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Rename viewer..."),
             helpText=_("Rename the selected viewer"),
@@ -1071,6 +1626,9 @@ class RenameViewer(ViewerCommand):
         )
 
     def doCommand(self, event):
+        """
+        Renomme la visionneuse active avec un nouveau nom.
+        """
         activeViewer = self.viewer.activeViewer()
         viewerNameDialog = wx.TextEntryDialog(
             self.mainWindow(),
@@ -1083,23 +1641,52 @@ class RenameViewer(ViewerCommand):
         viewerNameDialog.Destroy()
 
     def enabled(self, event):
+        """
+        Active la commande uniquement si une visionneuse est active.
+        """
         return bool(self.viewer.activeViewer())
 
 
 class ActivateViewer(ViewerCommand):
+    """
+    Action pour activer une autre visionneuse dans la direction spécifiée.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour changer de visionneuse.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         self.direction = kwargs.pop("forward")
         super().__init__(*args, **kwargs)
 
     def doCommand(self, event):
+        """
+        Change de visionneuse dans la direction spécifiée.
+        """
         self.viewer.containerWidget.advanceSelection(self.direction)
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Active la commande uniquement s'il y a plus d'une visionneuse.
+        """
         return self.viewer.containerWidget.viewerCount() > 1
 
 
 class HideCurrentColumn(ViewerCommand):
+    """
+    Action pour masquer la colonne actuellement sélectionnée dans la visionneuse.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour masquer la colonne sélectionnée.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Hide this column"),
             helpText=_("Hide the selected column"),
@@ -1108,19 +1695,41 @@ class HideCurrentColumn(ViewerCommand):
         )
 
     def doCommand(self, event):
+        """
+        Masque la colonne sélectionnée dans la visionneuse.
+
+        Exécute la commande pour masquer la colonne sélectionnée dans la visionneuse.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         columnPopupMenu = event.GetEventObject()
         self.viewer.hideColumn(columnPopupMenu.columnIndex)
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Vérifie si la commande peut être exécutée, en déterminant la colonne actuelle basée sur la position de la souris.
+
+        Args:
+            event (wx.Event) : L'événement pour lequel la disponibilité de la commande est vérifiée.
+
+        Returns:
+            bool : True si la colonne peut être masquée, sinon False.
+        """
         # Unfortunately the event (an UpdateUIEvent) does not give us any
         # information to determine the current column, so we have to find
         # the column ourselves. We use the current mouse position to do so.
         widget = (
             self.viewer.getWidget()
         )  # Must use method to make sure viewer dispatch works!
+        # Utilise une méthode pour garantir que la vue est bien dispatchée.
         x, y = widget.ScreenToClient(wx.GetMousePosition())
+        # Position actuelle de la souris.
         # Use wx.Point because CustomTreeCtrl assumes a wx.Point instance:
         columnIndex = widget.HitTest(wx.Point(x, y))[2]
+        # Détermine la colonne à partir de la position de la souris.
+
+        # Corrige un problème où -1 est retourné parfois pour la première colonne :
         # The TreeListCtrl returns -1 for the first column sometimes,
         # don't understand why. Work around as follows:
         if columnIndex == -1:
@@ -1129,28 +1738,72 @@ class HideCurrentColumn(ViewerCommand):
 
 
 class ViewColumn(ViewerCommand, settings_uicommand.UICheckCommand):
-    def isSettingChecked(self):
+    """
+    Action pour afficher ou masquer une colonne spécifique dans la visionneuse.
+
+    Cette commande contrôle la visibilité d'une colonne unique en fonction du nom de la colonne et de son état actuel (affiché ou masqué).
+    """
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si la colonne est actuellement visible.
+
+        Returns:
+            bool : True si la colonne est visible, sinon False.
+        """
         return self.viewer.isVisibleColumnByName(self.setting)
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour afficher ou masquer la colonne en fonction de l'état du menu.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.viewer.showColumnByName(self.setting, self._isMenuItemChecked(event))
 
 
 class ViewColumns(ViewerCommand, settings_uicommand.UICheckCommand):
-    def isSettingChecked(self):
+    """
+    Action pour afficher ou masquer un groupe de colonnes dans la visionneuse.
+
+    Cette commande contrôle la visibilité de plusieurs colonnes à la fois en fonction de leur nom.
+    """
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si toutes les colonnes du groupe sont actuellement visibles.
+
+        Returns:
+            bool : True si toutes les colonnes sont visibles, sinon False.
+        """
         for columnName in self.setting:
             if not self.viewer.isVisibleColumnByName(columnName):
                 return False
         return True
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour afficher ou masquer les colonnes en fonction de l'état du menu.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         show = self._isMenuItemChecked(event)
         for columnName in self.setting:
             self.viewer.showColumnByName(columnName, show)
 
 
 class ViewExpandAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
+    """
+    Action pour étendre tous les éléments dans une visionneuse arborescente.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour étendre tous les éléments.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Expand all items\tShift+Ctrl+E"),
             helpText=help.viewExpandAll,
@@ -1158,15 +1811,31 @@ class ViewExpandAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
             **kwargs
         )
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Active la commande uniquement s'il y a des éléments extensibles.
+        """
         return super().enabled(event) and self.viewer.isAnyItemExpandable()
 
     def doCommand(self, event):
+        """
+        Étend tous les éléments dans la visionneuse.
+        """
         self.viewer.expandAll()
 
 
 class ViewCollapseAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
+    """
+    Action pour réduire tous les éléments dans une visionneuse arborescente.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour réduire tous les éléments.
+
+        Args :
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("&Collapse all items\tShift+Ctrl+C"),
             helpText=help.viewCollapseAll,
@@ -1174,22 +1843,54 @@ class ViewCollapseAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
             **kwargs
         )
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Active la commande uniquement s'il y a des éléments réductibles.
+        """
         return super().enabled(event) and self.viewer.isAnyItemCollapsable()
 
     def doCommand(self, event):
+        """
+        Réduit tous les éléments dans la visionneuse.
+        """
         self.viewer.collapseAll()
 
 
 class ViewerSortByCommand(ViewerCommand, settings_uicommand.UIRadioCommand):
-    def isSettingChecked(self):
+    """
+    Action pour trier la visionneuse par une colonne spécifique.
+
+    Méthodes :
+        isSettingChecked() : Vérifie si la visionneuse est triée par la colonne spécifiée.
+        doCommand(event) : Trie la visionneuse par la colonne spécifiée.
+    """
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si la visionneuse est triée par la colonne spécifiée.
+
+        Returns:
+            bool : True si la visionneuse est triée par cette colonne, sinon False.
+        """
         return self.viewer.isSortedBy(self.value)
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour trier la visionneuse par la colonne spécifiée.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.viewer.sortBy(self.value)
 
 
 class ViewerSortOrderCommand(ViewerCommand, settings_uicommand.UICheckCommand):
+    """
+    Action pour définir l'ordre de tri de la visionneuse (ascendant ou descendant).
+
+    Méthodes :
+        isSettingChecked() : Vérifie si l'ordre de tri est ascendant.
+        doCommand(event) : Change l'ordre de tri en fonction de l'état du menu.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Ascending"),
@@ -1198,14 +1899,33 @@ class ViewerSortOrderCommand(ViewerCommand, settings_uicommand.UICheckCommand):
             **kwargs
         )
 
-    def isSettingChecked(self):
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si l'ordre de tri est ascendant.
+
+        Returns:
+            bool : True si l'ordre est ascendant, sinon False.
+        """
         return self.viewer.isSortOrderAscending()
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour changer l'ordre de tri.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.viewer.setSortOrderAscending(self._isMenuItemChecked(event))
 
 
 class ViewerSortCaseSensitive(ViewerCommand, settings_uicommand.UICheckCommand):
+    """
+    Action pour définir si le tri est sensible à la casse.
+
+    Méthodes :
+        isSettingChecked() : Vérifie si le tri est sensible à la casse.
+        doCommand(event) : Change la sensibilité à la casse du tri.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Sort &case sensitive"),
@@ -1217,14 +1937,33 @@ class ViewerSortCaseSensitive(ViewerCommand, settings_uicommand.UICheckCommand):
             **kwargs
         )
 
-    def isSettingChecked(self):
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si le tri est sensible à la casse.
+
+        Returns:
+            bool : True si le tri est sensible à la casse, sinon False.
+        """
         return self.viewer.isSortCaseSensitive()
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour activer ou désactiver la sensibilité à la casse du tri.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.viewer.setSortCaseSensitive(self._isMenuItemChecked(event))
 
 
 class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckCommand):
+    """
+    Action pour trier les tâches par statut (actif/inactif/terminé) en priorité.
+
+    Méthodes :
+        isSettingChecked() : Vérifie si le tri est effectué d'abord par statut.
+        doCommand(event) : Change la priorité de tri par statut.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Sort by status &first"),
@@ -1233,15 +1972,40 @@ class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckComma
             **kwargs
         )
 
-    def isSettingChecked(self):
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si les tâches sont triées d'abord par statut.
+
+        Returns:
+            bool : True si les tâches sont triées par statut en premier, sinon False.
+        """
         return self.viewer.isSortByTaskStatusFirst()
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour trier les tâches en premier par leur statut.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
         self.viewer.setSortByTaskStatusFirst(self._isMenuItemChecked(event))
 
 
 class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
+    """
+    Action pour masquer les tâches en fonction de leur statut.
+
+    Méthodes :
+        isSettingChecked() : Vérifie si les tâches avec un certain statut sont masquées.
+        doCommand(event) : Masque ou affiche les tâches en fonction de leur statut.
+    """
     def __init__(self, taskStatus, *args, **kwargs):
+        """
+        Initialise la commande avec le statut des tâches à masquer ou afficher.
+
+        Args:
+            taskStatus : Le statut des tâches (actif/inactif/terminé).
+        """
         self.__taskStatus = taskStatus
         super().__init__(
             menuText=taskStatus.hideMenuText,
@@ -1251,13 +2015,28 @@ class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
             **kwargs
         )
 
-    def uniqueName(self):
+    def uniqueName(self) -> str:
+        """
+        Retourne un nom unique pour cette commande en fonction du statut des tâches.
+        """
         return super().uniqueName() + "_" + str(self.__taskStatus)
 
-    def isSettingChecked(self):
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si les tâches avec le statut spécifié sont masquées.
+
+        Returns :
+            bool : True si ces tâches sont masquées, sinon False.
+        """
         return self.viewer.isHidingTaskStatus(self.__taskStatus)
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour masquer ou afficher les tâches avec le statut spécifié.
+
+        Args :
+            event (wx.Event) : L'événement déclencheur.
+        """
         if wx.GetKeyState(wx.WXK_SHIFT):
             self.viewer.showOnlyTaskStatus(self.__taskStatus)
         else:
@@ -1267,7 +2046,21 @@ class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
 
 
 class ViewerHideCompositeTasks(ViewerCommand, settings_uicommand.UICheckCommand):
+    """
+    Action pour masquer les tâches composites (ayant des sous-tâches).
+
+    Méthodes :
+        isSettingChecked() : Vérifie si les tâches composites sont masquées.
+        doCommand(event) : Masque ou affiche les tâches composites.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour masquer les tâches composites.
+
+        Args:
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
+        """
         super().__init__(
             menuText=_("Hide c&omposite tasks"),
             helpText=_("Show/hide tasks with subtasks in list mode"),
@@ -1275,18 +2068,45 @@ class ViewerHideCompositeTasks(ViewerCommand, settings_uicommand.UICheckCommand)
             **kwargs
         )
 
-    def isSettingChecked(self):
+    def isSettingChecked(self) -> bool:
+        """
+        Vérifie si les tâches composites sont actuellement masquées.
+
+        Returns:
+            bool : True si les tâches composites sont masquées, sinon False.
+        """
         return self.viewer.isHidingCompositeTasks()
 
-    def doCommand(self, event):
-        self.viewer.hideCompositeTasks(self._isMenuItemChecked(event))
+    def enabled(self, event) -> bool:
+        """
+        Active la commande uniquement si la visionneuse n'est pas en mode arborescence.
 
-    def enabled(self, event):
+        Returns:
+            bool : True si la visionneuse est en mode liste, sinon False.
+        """
         return not self.viewer.isTreeViewer()
+
+    def doCommand(self, event):
+        """
+        Exécute la commande pour masquer ou afficher les tâches composites.
+
+        Args:
+            event (wx.Event) : L'événement déclencheur.
+        """
+        self.viewer.hideCompositeTasks(self._isMenuItemChecked(event))
 
 
 class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
+    """
+    Commande pour modifier les éléments sélectionnés dans une visionneuse.
+
+    Cette commande permet d'ouvrir un éditeur pour modifier l'élément sélectionné
+    ou d'accepter les modifications dans un champ de texte en cours d'édition.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour éditer les éléments avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&Edit...\tRETURN"),
             helpText=_("Edit the selected item(s)"),
@@ -1295,7 +2115,14 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             **kwargs
         )
 
-    def doCommand(self, event, show=True):  # pylint: disable=W0221
+    def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
+        """
+        Exécute la commande pour ouvrir un éditeur d'éléments ou accepter les modifications d'un champ de texte.
+
+        Args :
+            event (wx.Event) : L'événement déclencheur.
+            show (bool) : Indique si l'éditeur doit être affiché.
+        """
         windowWithFocus = wx.Window.FindFocus()
         editCtrl = self.findEditCtrl(windowWithFocus)
         if editCtrl:
@@ -1312,7 +2139,13 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         )
         editor.Show(show)
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Vérifie si la commande est activée, c'est-à-dire s'il y a un élément sélectionné ou un champ en cours d'édition.
+
+        Args :
+            event (wx.Event) : L'événement déclencheur.
+        """
         windowWithFocus = wx.Window.FindFocus()
         if self.findEditCtrl(windowWithFocus):
             return True
@@ -1323,6 +2156,15 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
 
     # @staticmethod
     def findEditCtrl(self, windowWithFocus):
+        """
+        Trouve le contrôle d'édition actif si disponible.
+
+        Args :
+            windowWithFocus (wx.Window) : La fenêtre actuellement active.
+
+        Returns :
+            wx.Window : Le contrôle d'édition si trouvé, sinon None.
+        """
         while windowWithFocus:
             # if isinstance(windowWithFocus, thirdparty.hypertreelist.EditCtrl):
             if isinstance(windowWithFocus, hypertreelist.EditCtrl):
@@ -1332,6 +2174,23 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
 
 
 class EditTrackedTasks(TaskListCommand, settings_uicommand.SettingsCommand):
+    """
+    Modifier les tâches suivies.
+
+    Cette commande permet de modifier les tâches actuellement suivies.
+
+    Arguments :
+        * aucun
+
+    Paramètres :
+        * aucun
+
+    Retours :
+        * une boîte de dialogue d'édition de tâche
+
+    Exceptions :
+        * aucune
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Edit &tracked task...\tShift-Alt-T"),
@@ -1341,7 +2200,13 @@ class EditTrackedTasks(TaskListCommand, settings_uicommand.SettingsCommand):
             **kwargs
         )
 
-    def doCommand(self, event, show=True):
+    def doCommand(self, event, show: bool = True):
+        """
+        Ouvre la boîte de dialogue de modification de la tâche suivie.
+        :param event:
+        :param show:
+        :return:
+        """
         editTaskDialog = dialog.editor.TaskEditor(
             self.mainWindow(),
             self.taskList.tasksBeingTracked(),
@@ -1354,11 +2219,26 @@ class EditTrackedTasks(TaskListCommand, settings_uicommand.SettingsCommand):
         return editTaskDialog  # for testing purposes
 
     def enabled(self, event):
+        """
+        Vérifie si les tâches sont suivies.
+
+        :param event:
+        :return:
+        """
         return any(self.taskList.tasksBeingTracked())
 
 
 class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
+    """
+    Commande pour supprimer les éléments sélectionnés dans une visionneuse.
+
+    Cette commande permet de supprimer les éléments sélectionnés ou de simuler
+    une suppression de texte dans un champ de texte actif.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande pour supprimer les éléments avec les options de menu et d'icône appropriées.
+        """
         super().__init__(
             menuText=_("&Delete\tCtrl+DEL"),
             helpText=_("Delete the selected item(s)"),
@@ -1368,6 +2248,12 @@ class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour supprimer les éléments ou le texte sélectionné.
+
+        Args :
+            event (wx.Event) : L'événement déclencheur.
+        """
         windowWithFocus = wx.Window.FindFocus()
         if self.windowIsTextCtrl(windowWithFocus):
             # Simulate Delete key press
@@ -1380,7 +2266,13 @@ class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             deleteCommand = self.viewer.deleteItemCommand()
             deleteCommand.do()
 
-    def enabled(self, event):
+    def enabled(self, event) -> bool:
+        """
+        Vérifie si la commande est activée, c'est-à-dire si des éléments ou du texte peuvent être supprimés.
+
+        Args :
+            event (wx.Event) : L'événement déclencheur.
+        """
         windowWithFocus = wx.Window.FindFocus()
         if self.windowIsTextCtrl(windowWithFocus):
             return True
@@ -1388,7 +2280,16 @@ class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             return super().enabled(event)
 
     @staticmethod
-    def windowIsTextCtrl(window):
+    def windowIsTextCtrl(window) -> bool:
+        """
+        Vérifie si la fenêtre active est un contrôle de texte.
+
+        Args :
+            window (wx.Window) : La fenêtre active.
+
+        Returns :
+            bool : True si la fenêtre est un contrôle de texte, sinon False.
+        """
         return isinstance(window, wx.TextCtrl) or isinstance(
             window, hypertreelist.EditCtrl
         )

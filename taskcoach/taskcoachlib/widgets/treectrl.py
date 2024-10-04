@@ -20,12 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import operating_system
 # from ..thirdparty import customtreectrl as customtree, hypertreelist
 # from taskcoachlib.thirdparty import customtreectrl as customtree
+import wx
 # from wx import TreeCtrl as customtree
 from wx.lib.agw import customtreectrl as customtree
 from wx.lib.agw import hypertreelist
 from wx.lib.agw.ultimatelistctrl import UltimateListCtrl
 from taskcoachlib.widgets import itemctrl, draganddrop
-import wx
 
 
 # pylint: disable=E1101,E1103
@@ -33,17 +33,17 @@ import wx
 
 class BaseHyperTreeList(hypertreelist.HyperTreeList):
     def __init__(
-        self,
-        parent,
-        id=wx.ID_ANY,
-        pos=wx.DefaultPosition,
-        size=wx.DefaultSize,
-        style=0,
-        agwStyle=wx.TR_DEFAULT_STYLE,
-        validator=wx.DefaultValidator,
-        name="HyperTreeList",
-        *args,
-        **kwargs
+            self,
+            parent,
+            id=wx.ID_ANY,
+            pos=wx.DefaultPosition,
+            size=wx.DefaultSize,
+            style=0,
+            agwStyle=wx.TR_DEFAULT_STYLE,
+            validator=wx.DefaultValidator,
+            name="HyperTreeList",
+            *args,
+            **kwargs
     ):
         super().__init__(
             parent, id, pos, size, style, agwStyle, validator, name
@@ -66,9 +66,9 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         wx.CallAfter(self.MainWindow.Refresh)
 
     def GetSelections(self):  # pylint: disable=C0103
-        """ If the root item is hidden, it should never be selected.
-            Unfortunately, CustomTreeCtrl and HyperTreeList allow it to be
-            selected. Override GetSelections to fix that. """
+        """ Si l'élément racine est masqué, il ne doit jamais être sélectionné.
+            Malheureusement, CustomTreeCtrl et HyperTreeList permettent de le sélectionner.
+            Remplacez GetSelections pour résoudre ce problème."""
         selections = super().GetSelections()
         if self.HasFlag(wx.TR_HIDE_ROOT):
             root_item = self.GetRootItem()
@@ -77,8 +77,7 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         return selections
 
     def GetMainWindow(self, *args, **kwargs):  # pylint: disable=C0103
-        """ Have a local GetMainWindow so we can create a MainWindow
-        property. """
+        """ Avoir un GetMainWindow local afin que nous puissions créer une propriété MainWindow. """
         return super().GetMainWindow(*args, **kwargs)
 
     MainWindow = property(fget=GetMainWindow)
@@ -214,14 +213,20 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         self.StopEditing()
         self.__selection = self.curselection()
         self.DeleteAllItems()
-        self.__columns_with_images = [index for index in range(self.GetColumnCount()) if self.__adapter.hasColumnImages(index)]
+        self.__columns_with_images = [
+            index
+            for index in range(self.GetColumnCount())
+            if self.__adapter.hasColumnImages(index)
+        ]
         root_item = self.GetRootItem()
         if not root_item:
             root_item = self.AddRoot("Hidden root")
         self._addObjectRecursively(root_item)
         selections = self.GetSelections()
         if selections:
-            self.GetMainWindow()._current = self.GetMainWindow()._key_current = selections[0]
+            self.GetMainWindow()._current = (
+                self.GetMainWindow()._key_current
+            ) = selections[0]
             self.ScrollTo(selections[0])
         self.Thaw()
 
@@ -250,6 +255,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
     def _addObjectRecursively(self, parent_item, parent_object=None):
         for child_object in self.__adapter.children(parent_object):
             # child_item = self.AppendItem(parent_item, '',
+            # child_item = self.Append(parent_item, "",
             child_item = self.Append(parent_item, "",
                                      self.getItemCTType(child_object),
                                      data=child_object)
@@ -345,7 +351,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
 
     def OnDrop(self, drop_item, drag_items, part, column):
         drop_item = None if drop_item == self.GetRootItem() else \
-                   self.GetItemPyData(drop_item)
+            self.GetItemPyData(drop_item)
         drag_items = list(self.GetItemPyData(drag_item) for drag_item in drag_items)
         wx.CallAfter(self.dragAndDropCommand, drop_item, drag_items, part, column)
 
@@ -430,8 +436,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
     @staticmethod
     def __get_agw_style():
         agw_style = wx.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT | wx.TR_MULTIPLE \
-            | wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_FULL_ROW_HIGHLIGHT \
-            | customtree.TR_HAS_VARIABLE_ROW_HEIGHT
+                    | wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_FULL_ROW_HIGHLIGHT \
+                    | customtree.TR_HAS_VARIABLE_ROW_HEIGHT
         if operating_system.isMac():
             agw_style |= wx.TR_NO_LINES
         agw_style &= ~hypertreelist.TR_NO_HEADER
@@ -486,7 +492,8 @@ class CheckTreeCtrl(TreeListCtrl):
             children, meaning that only one child can be checked at a time. Use
             check boxes (ct_type == 1) otherwise. """
         if self.getIsItemCheckable(domain_object):
-            return 2 if self.getItemParentHasExclusiveChildren(domain_object) else 1
+            return 2 if self.getItemParentHasExclusiveChildren(domain_object)\
+                else 1
         else:
             return 0
 
@@ -507,10 +514,10 @@ class CheckTreeCtrl(TreeListCtrl):
         position = self.GetMainWindow().CalcUnscrolledPosition(event.GetPosition())
         item, flags, dummy_column = self.HitTest(position)
         if (
-            item
-            and item.GetType() == 2
-            and (flags & customtree.TREE_HITTEST_ONITEMCHECKICON)
-            and self.IsItemChecked(item)
+                item
+                and item.GetType() == 2
+                and (flags & customtree.TREE_HITTEST_ONITEMCHECKICON)
+                and self.IsItemChecked(item)
         ):
             self.__uncheck_item_recursively(item)
         else:

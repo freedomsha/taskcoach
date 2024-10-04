@@ -19,10 +19,46 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Module `editor.py` - Gère les pages d'édition des objets dans Task Coach.
+
+Ce module contient diverses classes pour représenter des pages d'édition pour différents
+types d'objets (tâches, catégories, notes, etc.) dans Task Coach. Il fournit également
+les mécanismes pour observer les changements sur ces objets et les refléter dans
+l'interface utilisateur.
+
+Classes :
+    Page : Classe de base pour les pages d'édition.
+    SubjectPage : Gère l'édition du sujet d'un objet.
+    TaskSubjectPage : Gère l'édition du sujet d'une tâche avec des priorités.
+    CategorySubjectPage : Gère l'édition des catégories.
+    AttachmentSubjectPage : Gère l'édition des pièces jointes.
+    TaskAppearancePage : Gère l'apparence d'une tâche.
+    DatesPage : Gère les dates liées aux tâches.
+    ProgressPage : Gère les informations de progression d'une tâche.
+    BudgetPage : Gère le budget associé à une tâche.
+    EffortPage : Gère l'effort d'une tâche.
+    CategoriesPage : Gère les catégories associées aux objets.
+    AttachmentsPage : Gère les pièces jointes associées à une tâche ou autre objet.
+    NotesPage : Gère les notes associées à un objet.
+    PrerequisitesPage : Gère les prérequis associés à une tâche.
+    TaskEditBook : Conteneur pour les pages d'édition des tâches.
+    CategoryEditBook : Conteneur pour les pages d'édition des catégories.
+    NoteEditBook : Conteneur pour les pages d'édition des notes.
+    AttachmentEditBook : Conteneur pour les pages d'édition des pièces jointes.
+    EffortEditBook : Gère l'édition des efforts.
+    Editor : Fenêtre principale de l'éditeur pour différents objets.
 """
 
 # from builtins import str
 # from builtins import range
+
+import wx
+import logging
+
+import os.path
+
 from taskcoachlib import widgets, patterns, command, operating_system, render
 from taskcoachlib.domain import task, date, note, attachment
 from taskcoachlib.gui import viewer, uicommand, windowdimensionstracker
@@ -49,8 +85,6 @@ from pubsub import pub
 #    from wx.lib.pubsub import pub
 from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
 from taskcoachlib.help.balloontips import BalloonTipManager
-import os.path
-import wx
 
 
 # Classe Page qui représente une page d'édition
@@ -59,11 +93,22 @@ class Page(patterns.Observer, widgets.BookPage):
     Classe de base pour les pages d'édition dans Task Coach.
 
     Gère l'affichage et la synchronisation des attributs des objets de domaine.
-    """
 
-    columns = 2
+    Attributs :
+        columns (int) : Nombre de colonnes dans la page.
+
+    Méthodes :
+        __init__(self, items, *args, **kwargs) : Initialise la page avec les objets à éditer.
+        selected(self) : Méthode appelée lorsque la page est sélectionnée.
+        addEntries(self) : Ajoute les entrées à la page (doit être implémentée par les sous-classes).
+        entries(self) : Retourne un dictionnaire des entrées par nom de colonne.
+        setFocusOnEntry(self, column_name) : Définit le focus sur une entrée spécifique.
+        close(self) : Ferme la page et libère les ressources.
+    """
+    columns = 2  # Par défaut, deux colonnes pour l'édition.
 
     def __init__(self, items, *args, **kwargs):
+        # def __init__(self, items: List, *args, **kwargs) -> None:
         """
         Initialise la page avec les éléments à éditer.
 
@@ -77,26 +122,45 @@ class Page(patterns.Observer, widgets.BookPage):
         self.fit()
 
     def selected(self):
-        """Méthode appelée lorsque la page est sélectionnée."""
-        pass
+        """Méthode appelée lorsque la page est sélectionnée.
+
+        Méthode appelée lorsque la page est sélectionnée dans l'interface utilisateur.
+        Peut être utilisée pour mettre à jour ou rafraîchir la page.
+        """
+        pass  # Implémentation des actions lors de la sélection de la page.
+
 
     def addEntries(self):
-        """Ajoute les entrées de la page. Doit être implémentée par les sous-classes."""
-        raise NotImplementedError
+        """Ajoute les entrées de la page. Doit être implémentée par les sous-classes.
+
+        Méthode à implémenter dans les sous-classes pour ajouter des champs d'entrée (widgets).
+        Cette méthode définit la logique spécifique à chaque type de page.
+        """
+        # raise NotImplementedError  # Méthode à implémenter par les sous-classes.
+        pass
 
     def entries(self):
         """Un mappage des noms de colonnes avec les entrées de cette page d'éditeur.
 
-        Retourne un dictionnaire des entrées de la page par nom de colonne."""
-        return dict()
+        Retourne un dictionnaire des entrées de la page par nom de colonne.
+
+        Retourne un dictionnaire contenant les champs d'entrée ajoutés à la page.
+
+        Returns :
+            dict : Les champs d'entrée ajoutés par `addEntries`."""
+        return dict()  # Retourne les champs d'édition.
+
 
     def setFocusOnEntry(self, column_name):
         """
         Définit le focus sur une entrée spécifique.
 
+        Définit le focus sur un champ d'entrée spécifique basé sur le nom de la colonne.
+
         Args:
-            column_name (str): Nom de la colonne de l'entrée.
+            column_name (str) : Le nom de la colonne de l'entrée sur laquelle positionner le focus.
         """
+        # Définit le focus sur une colonne particulière.
         try:
             the_entry = self.entries()[column_name]
         except KeyError:
@@ -141,7 +205,11 @@ class Page(patterns.Observer, widgets.BookPage):
         return True
 
     def close(self):
-        """Ferme la page et nettoie les ressources."""
+        """Ferme la page et nettoie les ressources.
+
+        Ferme la page d'édition et nettoie les ressources associées.
+        Peut être utilisé pour libérer les ressources graphiques ou observer les objets.
+        """
         self.removeInstance()
         for entry in list(self.entries().values()):
             if isinstance(entry, widgets.DateTimeCtrl):
@@ -155,11 +223,16 @@ class Page(patterns.Observer, widgets.BookPage):
 
 
 class SubjectPage(Page):
-      """
-  This class represents the "Subject" page within the task editor dialog.
-  It provides controls for editing the subject, description, and displaying
-  creation and modification date/times for the selected task(s).
-  """
+    """
+        Page d'édition pour modifier le sujet d'un objet dans Task Coach.
+
+        Cette page permet à l'utilisateur de modifier le champ "sujet" des objets,
+        qui peut représenter le titre ou la description courte de l'objet.
+
+        Méthodes :
+            addEntries(self) : Ajoute les champs d'entrée pour l'édition du sujet.
+            subject(self) : Retourne l'objet d'édition du sujet.
+        """
     pageName = "subject"
     pageTitle = _("Description")
     pageIcon = "pencil_icon"
@@ -201,20 +274,38 @@ class SubjectPage(Page):
 
     def addEntries(self):
         """
-    Adds controls for subject, description, creation date/time, and modification date/time.
-    """
+        Ajoute les champs d'entrée spécifiques pour l'édition du sujet.
+
+        Adds controls for subject, description, creation date/time, and modification date/time.
+        """
+        # Ajoute les widgets pour éditer le sujet.
         self.addSubjectEntry()
         self.addDescriptionEntry()
         self.addCreationDateTimeEntry()
         self.addModificationDateTimeEntry()
+        # TODO : à remplacer par
+        # self.addDateTimeEntries("Creation", "creationDateTime")
+        # self.addDateTimeEntries("Modification", "modificationDateTime")
 
+    # def subject(self):
+    #     """
+    #     Retourne l'objet sujet à éditer.
+    #
+    #     Returns:
+    #         Objet à éditer, généralement un texte.
+    #     """
+    #     pass
     def addSubjectEntry(self):
         # pylint: disable=W0201
-        """
-    Adds a single-line text control for editing the subject of the selected task(s).
+        """Adds a subject entry to the page.
+
+            Adds a single-line text control for editing the subject of the selected task(s).
     It also creates an AttributeSync object to manage synchronization between the control
     and the task object(s).
-    """
+
+        Returns:
+            None
+        """
         current_subject = (
             self.items[0].subject()
             if len(self.items) == 1
@@ -230,11 +321,43 @@ class SubjectPage(Page):
             wx.EVT_KILL_FOCUS,
             self.items[0].subjectChangedEventType(),
         )
+        # TODO: Ajoutez un commentaire pour expliquer le but de ce code:
         self.addEntry(
             _("Subject"),
             self._subjectEntry,
             flags=[wx.ALIGN_RIGHT, wx.EXPAND],
         )
+        # Add a comment to explain the purpose of this code
+
+    def __modification_text(self):
+        # def __modification_text(self) -> str:
+        """Calculates the modification text for the page.
+
+        Cette méthode privée calcule le texte à afficher pour la date de modification, en tenant compte des dates minimale et maximale.
+        """
+        modification_datetimes = [item.modificationDateTime() for item in self.items]
+        # TODO: A ESSAYER :
+        # modification_datetimes: List[datetime.datetime] = [
+        #     item.modificationDateTime() for item in self.items
+        # ]
+        # essai:
+        try:
+            return render.dateTime_range(min(modification_datetimes), max(modification_datetimes))
+        except ReferenceError as e:
+            logging.error(f"tclib.gui.dialog.editor: {str(e)}")
+            # vieux code:
+            min_modification_datetime = min(modification_datetimes)
+            max_modification_datetime = max(modification_datetimes)
+            modification_text = render.dateTime(
+                min_modification_datetime, humanReadable=True
+            )
+            if max_modification_datetime - min_modification_datetime > date.ONE_MINUTE:
+                modification_text += " - %s" % render.dateTime(
+                    max_modification_datetime, humanReadable=True
+                )
+            return modification_text
+
+
 
     def addDescriptionEntry(self):
         # pylint: disable=W0201
@@ -277,6 +400,12 @@ class SubjectPage(Page):
             flags=[wx.ALIGN_TOP | wx.ALIGN_RIGHT, wx.EXPAND],
         )
 
+    def addDateTimeEntries(self, label, attribute_name):
+        # TODO: remplacer les 2 fonctions suivantes pas celle-ci, régler le problème de dateTime_range
+        date_times = [getattr(item, attribute_name)() for item in self.items]
+        min_date, max_date = min(date_times), max(date_times)
+        date_text = render.dateTime_range(min_date, max_date)
+
     def addCreationDateTimeEntry(self):
         """Cette méthode ajoute des étiquettes affichant les dates de création des tâches sélectionnées.
 Elles calculent les dates minimale et maximale pour les tâches multiples et affichent un intervalle si nécessaire.
@@ -317,20 +446,6 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
                     eventSource=self.items[0],
                 )
 
-    def __modification_text(self):
-        """Cette méthode privée calcule le texte à afficher pour la date de modification, en tenant compte des dates minimale et maximale."""
-        modification_datetimes = [item.modificationDateTime() for item in self.items]
-        min_modification_datetime = min(modification_datetimes)
-        max_modification_datetime = max(modification_datetimes)
-        modification_text = render.dateTime(
-            min_modification_datetime, humanReadable=True
-        )
-        if max_modification_datetime - min_modification_datetime > date.ONE_MINUTE:
-            modification_text += " - %s" % render.dateTime(
-                max_modification_datetime, humanReadable=True
-            )
-        return modification_text
-
     def onAttributeChanged(self, newValue, sender):
         """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change. Elles mettent à jour le texte de l'étiquette correspondante."""
         self._modificationTextEntry.SetLabel(self.__modification_text())
@@ -361,14 +476,15 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
 
 
 class TaskSubjectPage(SubjectPage):
-      """
-      Cette classe hérite de SubjectPage et ajoute la gestion de la priorité.
-      
-      This class inherits from the SubjectPage class and is specifically designed
-      for editing the subject, description, and priority of task objects. 
-      It overrides the addEntries method to insert a priority entry between the
-      description and creation date/time entries.
-      """
+    """
+    Page d'édition pour le sujet et la priorité d'une tâche.
+
+    Cette classe hérite de SubjectPage et ajoute la gestion de la priorité.
+    Cette page permet de modifier le titre et la priorité d'une tâche dans Task Coach.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition du sujet et de la priorité.
+    """
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
@@ -376,12 +492,12 @@ class TaskSubjectPage(SubjectPage):
     #     self._priorityEntry = None
 
     def addEntries(self):
-        """ Ajoute les entrées de l'interface, en insérant le champ de priorité.
-        
-        This method overrides the addEntries method from the parent class SubjectPage.
-        It calls the parent's addEntries method to add subject, description, creation and modification date/time entries.
-        It then inserts a new method call self.addPriorityEntry() to add a control for editing the priority between the description and creation date/time.
         """
+        Ajoute les champs d'entrée pour le sujet et la priorité de la tâche.
+
+        Ajoute les entrées de l'interface, en insérant le champ de priorité.
+        """
+        # Ajoute les widgets pour éditer le sujet et la priorité de la tâche.
         # Override to insert a priority entry between the description and the
         # creation Date/time entry
         self.addSubjectEntry()
@@ -393,15 +509,18 @@ class TaskSubjectPage(SubjectPage):
     def addPriorityEntry(self):
         # pylint: disable=W0201
         """Ajoute un champ pour modifier la priorité de la tâche.
-        
+
         This method adds a spin control (widgets.SpinCtrl) to the page for editing the priority of the selected task(s).
         It retrieves the current priority of the first task (if only one is selected) or sets it to 0 (default).
         It creates an AttributeSync object to synchronize the spin control value with the "priority" attribute of the task object(s).
         It adds an entry label for "Priority" and the spin control to the page using self.addEntry.
         """
         current_priority = self.items[0].priority() if len(self.items) == 1 else 0
+        # Nous introduisons une constante nommée MAX_PRIORITY pour améliorer la lisibilité
+        # et faciliter la modification de la valeur de priorité maximale à l'avenir.
+        MAX_PRIORITY = 10
         self._priorityEntry = widgets.SpinCtrl(
-            self, size=(100, -1), value=current_priority
+            self, size=(100, -1), value=current_priority, min=0, max=MAX_PRIORITY
         )
         self._prioritySync = attributesync.AttributeSync(
             "priority",
@@ -421,7 +540,7 @@ class TaskSubjectPage(SubjectPage):
 
     def entries(self):
         """Retourne un dictionnaire contenant les références aux contrôles.
-        
+
         This method overrides the entries method from the parent class.
         It calls the parent's entries method to get a dictionary containing references to existing controls.
         It adds a new key-value pair to the dictionary, where the key is "priority" and the value is the reference to the spin control (self._priorityEntry).
@@ -433,8 +552,13 @@ class TaskSubjectPage(SubjectPage):
 
 
 class CategorySubjectPage(SubjectPage):
-    """Cette classe hérite de SubjectPage et ajoute la gestion des sous-catégories exclusives.
     """
+    Page d'édition pour le sujet des catégories.
+
+    Cette classe hérite de SubjectPage et ajoute la gestion des sous-catégories exclusives.
+    Cette page permet de modifier le titre d'une catégorie dans Task Coach.
+    """
+    # Utilise la logique d'édition du sujet de base.
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
@@ -548,6 +672,15 @@ class AttachmentSubjectPage(SubjectPage):
 
 
 class TaskAppearancePage(Page):
+    """
+    Page d'édition de l'apparence des tâches.
+
+    Cette page permet de modifier des éléments visuels liés aux tâches, comme la couleur,
+    la mise en forme, ou d'autres attributs visuels.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition de l'apparence.
+    """
     pageName = "appearance"
     pageTitle = _("Appearance")
     pageIcon = "palette_icon"
@@ -564,6 +697,9 @@ class TaskAppearancePage(Page):
     #     self._iconSync = None
 
     def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour modifier l'apparence de la tâche (couleur, style, etc.).
+        """
         self.addColorEntries()
         self.addFontEntry()
         self.addIconEntry()
@@ -641,6 +777,15 @@ class TaskAppearancePage(Page):
 
 
 class DatesPage(Page):
+    """
+    Page d'édition des dates d'une tâche.
+
+    Cette page permet de définir les dates importantes pour une tâche, comme la date de début,
+    la date d'échéance, ou d'autres dates spécifiques.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition des dates.
+    """
     pageName = "dates"
     pageTitle = _("Dates")
     pageIcon = "calendar_icon"
@@ -672,6 +817,9 @@ class DatesPage(Page):
         )
 
     def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour éditer les dates associées à la tâche.
+        """
         self.addDateEntries()
         self.addLine()
         self.addReminderEntry()
@@ -696,6 +844,13 @@ class DatesPage(Page):
         )
 
     def addDateEntry(self, label, taskMethodName):
+        # def add_date_entry(self, label: str, task_method_name: str) -> None:
+        """Adds a date entry to the page.
+
+        Args:
+            label: The label for the date entry.
+            taskMethodName: The name of the method used to get the date from the task.
+    """
         TaskMethodName = taskMethodName[0].capitalize() + taskMethodName[1:]
         dateTime = (
             getattr(self.items[0], taskMethodName)()
@@ -801,6 +956,14 @@ class DatesPage(Page):
 
 
 class ProgressPage(Page):
+    """
+    Page d'édition de la progression d'une tâche.
+
+    Cette page permet à l'utilisateur de suivre et modifier l'avancement d'une tâche.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition de la progression.
+    """
     pageName = "progress"
     pageTitle = _("Progress")
     pageIcon = "progress"
@@ -814,6 +977,9 @@ class ProgressPage(Page):
     #     self._shouldMarkCompletedSync = None
 
     def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour éditer les informations de progression.
+        """
         self.addProgressEntry()
         self.addBehaviorEntry()
 
@@ -887,6 +1053,15 @@ class ProgressPage(Page):
 
 
 class BudgetPage(Page):
+    """
+    Page d'édition du budget d'une tâche.
+
+    Cette page permet de gérer le budget alloué à une tâche, y compris les coûts prévus
+    et les dépenses réelles.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition du budget.
+    """
     pageName = "budget"
     pageTitle = _("Budget")
     pageIcon = "calculator_icon"
@@ -908,6 +1083,9 @@ class BudgetPage(Page):
         self.GetParent().NavigateBook(forward)
 
     def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour éditer le budget de la tâche.
+        """
         self.addBudgetEntries()
         self.addLine()
         self.addRevenueEntries()
@@ -1112,6 +1290,14 @@ class PageWithViewer(Page):
 
 
 class EffortPage(PageWithViewer):
+    """
+    Page d'édition de l'effort d'une tâche.
+
+    Permet de gérer l'effort alloué à une tâche, souvent utilisé pour le suivi du temps.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition de l'effort.
+    """
     pageName = "effort"
     pageTitle = _("Effort")
     pageIcon = "clock_icon"
@@ -1131,6 +1317,12 @@ class EffortPage(PageWithViewer):
         if hasattr(self, "viewer"):
             return dict(firstEntry=self.viewer, timeSpent=self.viewer)
         return dict()
+
+    def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour l'édition de l'effort consacré à une tâche.
+        """
+        pass
 
 
 class LocalCategoryViewer(viewer.BaseCategoryViewer):  # pylint: disable=W0223
@@ -1165,6 +1357,14 @@ class LocalCategoryViewer(viewer.BaseCategoryViewer):  # pylint: disable=W0223
 
 
 class CategoriesPage(PageWithViewer):
+    """
+    Page d'édition des catégories d'un objet.
+
+    Permet d'assigner des catégories à un objet comme une tâche ou une note.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition des catégories.
+    """
     pageName = "categories"
     pageTitle = _("Categories")
     pageIcon = "folder_blue_arrow_icon"
@@ -1174,6 +1374,9 @@ class CategoriesPage(PageWithViewer):
         super().__init__(*args, **kwargs)
 
     def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour gérer les catégories associées à l'objet.
+        """
         pass
 
     def selected(self):
@@ -1291,6 +1494,14 @@ class LocalNoteViewer(viewer.BaseNoteViewer):  # pylint: disable=W0223
 
 
 class NotesPage(PageWithViewer):
+    """
+    Page d'édition des notes d'un objet.
+
+    Permet d'ajouter ou modifier des notes attachées à un objet.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition des notes.
+    """
     pageName = "notes"
     pageTitle = _("Notes")
     pageIcon = "note_icon"
@@ -1321,6 +1532,12 @@ class NotesPage(PageWithViewer):
             return dict(firstEntry=self.viewer, notes=self.viewer)
         return dict()
 
+    # def addEntries(self):
+    #     """
+    #     Ajoute les champs d'entrée pour l'édition des notes associées à un objet.
+    #     """
+    #     pass
+
 
 class LocalPrerequisiteViewer(viewer.CheckableTaskViewer):  # pylint: disable=W0223
     # class LocalPrerequisiteViewer(CheckableTaskViewer):  # pylint: disable=W0223
@@ -1348,6 +1565,14 @@ class LocalPrerequisiteViewer(viewer.CheckableTaskViewer):  # pylint: disable=W0
 
 
 class PrerequisitesPage(PageWithViewer):
+    """
+    Page d'édition des prérequis d'une tâche.
+
+    Permet de définir des tâches prérequises à accomplir avant celle en cours.
+
+    Méthodes :
+        addEntries(self) : Ajoute les champs d'entrée pour l'édition des prérequis.
+    """
     pageName = "prerequisites"
     pageTitle = _("Prerequisites")
     pageIcon = "trafficlight_icon"
@@ -1357,6 +1582,9 @@ class PrerequisitesPage(PageWithViewer):
         super().__init__(*args, **kwargs)
 
     def addEntries(self):
+        """
+        Ajoute les champs d'entrée pour définir les prérequis d'une tâche.
+        """
         pass
 
     def selected(self):
@@ -1394,10 +1622,24 @@ class PrerequisitesPage(PageWithViewer):
 
 
 class EditBook(widgets.Notebook):
+    """
+    Fenêtre principale de l'éditeur dans Task Coach.
+
+    Cette fenêtre contient les différentes pages d'édition (sujet, apparence, dates, etc.)
+    pour modifier les objets de Task Coach.
+
+    Méthodes :
+        __init__(self, *args, **kwargs) : Initialise l'éditeur avec les objets à éditer.
+        addPages(self) : Ajoute les pages d'édition pour les objets.
+        close(self) : Ferme l'éditeur.
+    """
     allPageNames = ["subclass responsibility"]
     domainObject = "subclass responsibility"
 
     def __init__(self, parent, items, taskFile, settings, items_are_new):
+        """
+        Initialise l'éditeur avec les objets à éditer.
+        """
         self.items = items
         self.settings = settings
         super().__init__(parent)
@@ -1411,6 +1653,12 @@ class EditBook(widgets.Notebook):
             self.SetSelection(curSel)
 
     def addPages(self, task_file, items_are_new):
+        """
+        Ajoute les différentes pages d'édition à l'éditeur.
+
+        Ajoute les pages d'édition spécifiques à l'éditeur.
+        Chaque type d'objet (tâche, note, etc.) aura ses propres pages d'édition (sujet, apparence, etc.).
+        """
         page_names = self.settings.getlist(self.settings_section(), "pages")
         for page_name in page_names:
             page = self.createPage(page_name, task_file, items_are_new)
@@ -1617,9 +1865,16 @@ class EditBook(widgets.Notebook):
 
     def close_edit_book(self):
         """Close all pages in the edit book and save the current layout in
-        the settings."""
+        the settings.
+
+
+        Ferme l'éditeur et libère les ressources.
+
+        Ferme l'éditeur et libère les ressources associées.
+        Cette méthode est appelée lors de la fermeture de la fenêtre d'édition.
+        """
         for page in self:
-            page.close()
+            page.Close()
         self.__save_perspective()
 
 
@@ -1828,7 +2083,8 @@ class EffortEditBook(Page):
             self._settings.get("feature", "sdtcspans_effort")
         )
         # sdtc.EVT_TIME_CHOICES_CHANGE(self._stopDateTimeEntry, self.__onChoicesChanged)
-        self._stopDateTimeEntry.Bind(wx.adv.EVT_TIME_CHANGED, self.__onChoicesChanged)
+        # self._stopDateTimeEntry.Bind(wx.adv.EVT_TIME_CHANGED, self.__onChoicesChanged)
+        self._stopDateTimeEntry.Bind(sdtc.EVT_TIME_CHOICES_CHANGE, self.__onChoicesChanged)
 
         self.addEntry("", self._invalidPeriodMessage)
 

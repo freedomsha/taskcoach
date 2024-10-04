@@ -29,6 +29,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # standard_library.install_aliases()
 # from past.utils import old_div
 import math
+import wx
+import struct
+import tempfile
+
+# import wx.lib.scrolledpanel
 import wx.lib.agw.piectrl
 from taskcoachlib import operating_system
 from taskcoachlib import command, widgets, domain, render
@@ -39,6 +44,7 @@ from taskcoachlib.gui import uicommand, dialog
 import taskcoachlib.gui.menu
 # from taskcoachlib.gui.menu import *
 from taskcoachlib.i18n import _
+
 # try:
 from pubsub import pub
 
@@ -60,18 +66,21 @@ from taskcoachlib.gui.viewer import base
 from taskcoachlib.gui.viewer import inplace_editor
 from taskcoachlib.gui.viewer import mixin
 from taskcoachlib.gui.viewer import refresher
-import wx
-import struct
-import tempfile
-# import wx.lib.scrolledpanel
-
-
-
-
-
 
 
 class DueDateTimeCtrl(inplace_editor.DateTimeCtrl):
+    """
+    Contrôle de sélection de date et heure pour les dates d'échéance.
+
+    Ce contrôle est utilisé pour définir ou modifier la date d'échéance d'une tâche
+    en utilisant une sélection relative (par exemple, en fonction d'une autre date).
+
+    Méthodes :
+        __init__(self, parent, wxId, item, column, owner, value, **kwargs) :
+            Initialise le contrôle avec les paramètres fournis, notamment l'élément à éditer.
+        OnChoicesChange(self, event) :
+            Gère les événements de changement de sélection dans le contrôle de choix.
+    """
     def __init__(self, parent, wxId, item, column, owner, value, **kwargs):
         kwargs["relative"] = True
         kwargs["startDateTime"] = item.GetData().plannedStartDateTime()
@@ -86,6 +95,19 @@ class DueDateTimeCtrl(inplace_editor.DateTimeCtrl):
 
 
 class TaskViewerStatusMessages(object):
+    """
+    Génère les messages de statut affichés dans le visualiseur de tâches.
+
+    Ces messages incluent le nombre de tâches sélectionnées, visibles, totales
+    ainsi que le nombre de tâches en retard, inactives, ou terminées.
+
+    Méthodes :
+        __init__(self, viewer) :
+            Initialise la classe avec un visualiseur de tâches.
+        __call__(self) :
+            Retourne les messages de statut basés sur le nombre de tâches dans
+            différents états.
+    """
     template1 = _("Tasks: %d selected, %d visible, %d total")
     template2 = _("Status: %d overdue, %d late, %d inactive, %d completed")
 
@@ -115,6 +137,29 @@ class BaseTaskViewer(
     base.WithAttachmentsViewerMixin,
     base.TreeViewer,
 ):
+    """
+    Visualiseur de base pour les tâches.
+
+    Cette classe gère la visualisation des tâches sous forme d'arborescence,
+    et permet d'ajouter des filtres, des pièces jointes, et de rechercher
+    des tâches spécifiques.
+
+    Méthodes :
+        __init__(self, *args, **kwargs) :
+            Initialise le visualiseur et enregistre les observateurs nécessaires pour suivre les changements d'apparence.
+        detach(self) :
+            Détache le visualiseur et les observateurs associés.
+        _renderTimeSpent(self, *args, **kwargs) :
+            Rend le temps passé sous forme décimale ou standard.
+        onAppearanceSettingChange(self, value) :
+            Met à jour l'apparence des tâches en fonction des paramètres d'affichage.
+        domainObjectsToView(self) :
+            Retourne les objets de domaine (tâches) à visualiser.
+        createFilter(self, taskList) :
+            Crée un filtre pour les tâches à visualiser.
+        nrOfVisibleTasks(self) :
+            Retourne le nombre de tâches visibles.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.statusMessages = TaskViewerStatusMessages(self)
@@ -195,6 +240,25 @@ class BaseTaskViewer(
 
 
 class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
+    class BaseTaskTreeViewer(BaseTaskViewer):
+        """
+        Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.
+
+        Ce visualiseur est conçu pour afficher les tâches sous forme d'arbre
+        avec des rafraîchissements en temps réel toutes les secondes ou minutes.
+
+        Méthodes :
+            __init__(self, *args, **kwargs) :
+                Initialise le visualiseur avec des options supplémentaires pour rafraîchir les tâches.
+            detach(self) :
+                Détache les observateurs et arrête les rafraîchissements automatiques.
+            newItemDialog(self, *args, **kwargs) :
+                Ouvre une boîte de dialogue pour créer un nouvel élément (tâche ou sous-tâche).
+            editItemDialog(self, items, bitmap, columnName="", items_are_new=False) :
+                Ouvre une boîte de dialogue pour éditer les tâches sélectionnées.
+            createTaskPopupMenu(self) :
+                Crée le menu contextuel pour les tâches.
+        """
     defaultTitle = _("Tasks")
     defaultBitmap = "led_blue_icon"
 
@@ -380,6 +444,24 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
 
 
 class RootNode(object):
+    """
+     Classe de base pour représenter la racine d'une arborescence de tâches.
+
+     Elle permet d'obtenir les tâches à la racine et de gérer leur affichage,
+     ainsi que les attributs tels que les couleurs et les polices des éléments de tâche.
+
+     Attributs :
+         tasks : Liste des tâches à la racine de l'arborescence.
+
+     Méthodes :
+         __init__(self, tasks) : Initialise la racine avec les tâches données.
+         subject(self) : Retourne une chaîne vide (aucun sujet pour la racine).
+         children(self, recursive=False) : Retourne les tâches enfants.
+         foregroundColor(self, *args, **kwargs) : Retourne la couleur de premier plan.
+         backgroundColor(self, *args, **kwargs) : Retourne la couleur d'arrière-plan.
+         font(self, *args, **kwargs) : Retourne la police à utiliser pour afficher la tâche.
+         completed(self, *args, **kwargs) : Indique si une tâche est terminée.
+     """
     def __init__(self, tasks):
         self.tasks = tasks
 
@@ -415,6 +497,16 @@ class RootNode(object):
 
 
 class SquareMapRootNode(RootNode):
+    """
+    Classe représentant la racine d'une carte carrée des tâches.
+
+    Elle permet de calculer et d'obtenir des attributs spécifiques aux tâches
+    dans une vue sous forme de carte carrée, notamment pour des attributs comme
+    le budget ou le temps passé.
+
+    Méthodes :
+        __getattr__(self, attr) : Retourne un attribut calculé récursivement.
+    """
     def __getattr__(self, attr):
         def getTaskAttribute(recursive=True):
             if recursive:
@@ -438,6 +530,19 @@ class SquareMapRootNode(RootNode):
 
 
 class TimelineRootNode(RootNode):
+    """
+    Classe représentant la racine de l'arborescence dans une vue chronologique des tâches.
+
+    Cette classe trie les tâches en fonction de leur date de début planifiée et
+    permet de gérer l'affichage des tâches dans une chronologie.
+
+    Méthodes :
+        children(self, recursive=False) : Trie les enfants en fonction de leur date de début planifiée.
+        parallel_children(self, recursive=False) : Retourne les enfants parallèles (enfants directs).
+        sequential_children(self) : Retourne une liste vide (pas de tâches séquentielles ici).
+        plannedStartDateTime(self, recursive=False) : Retourne la date de début planifiée la plus tôt.
+        dueDateTime(self, recursive=False) : Retourne la date d'échéance la plus tardive.
+    """
     def children(self, recursive=False):
         children = super().children(recursive)
         children.sort(key=lambda task: task.plannedStartDateTime())
@@ -473,6 +578,24 @@ class TimelineRootNode(RootNode):
 
 
 class TimelineViewer(BaseTaskTreeViewer):
+    """
+    Visualiseur de la chronologie des tâches.
+
+    Affiche les tâches dans une vue chronologique avec des options pour les éditer,
+    les sélectionner, et voir leurs dates de début et d'échéance.
+
+    Méthodes :
+        __init__(self, *args, **kwargs) :
+            Initialise le visualiseur chronologique avec des paramètres spécifiques.
+        createWidget(self) :
+            Crée le widget chronologique pour afficher les tâches.
+        onEdit(self, item) :
+            Permet l'édition d'une tâche directement depuis la vue chronologique.
+        curselection(self) :
+            Retourne la sélection actuelle dans la chronologie.
+        bounds(self, item) :
+            Calcule les limites de temps d'un élémentdans la chronologie..
+    """
     defaultTitle = _("Timeline")
     defaultBitmap = "timelineviewer"
 
@@ -611,6 +734,22 @@ class TimelineViewer(BaseTaskTreeViewer):
 
 
 class SquareTaskViewer(BaseTaskTreeViewer):
+    """
+    Visualiseur des tâches sous forme de carte carrée.
+
+    Affiche les tâches sous forme de blocs carrés en fonction de critères
+    tels que le budget, le temps passé, ou la priorité.
+
+    Méthodes :
+        __init__(self, *args, **kwargs) :
+            Initialise le visualiseur avec les critères de tri et de rendu des tâches.
+        createWidget(self) :
+            Crée le widget de la carte carrée pour afficher les tâches.
+        orderBy(self, choice) :
+            Trie les tâches selon le critère choisi (budget, temps, etc.).
+        render(self, value) :
+            Rend la valeur associée à une tâche (par exemple, budget ou temps).
+    """
     defaultTitle = _("Task square map")
     defaultBitmap = "squaremapviewer"
 
@@ -799,6 +938,22 @@ class HierarchicalCalendarViewer(
     mixin.SortableViewerForTasksMixin,
     BaseTaskTreeViewer,
 ):
+    """
+    Visualiseur de calendrier hiérarchique.
+
+    Affiche les tâches dans un calendrier hiérarchisé en fonction de leurs dates de début
+    et d'échéance.
+
+    Méthodes :
+        createWidget(self) :
+            Crée le widget du calendrier hiérarchique.
+        onEdit(self, item) :
+            Permet l'édition des tâches directement depuis la vue du calendrier.
+        onCreate(self, dateTime, show=True) :
+            Crée une nouvelle tâche à une date spécifique.
+        atMidnight(self) :
+            Rafraîchit le calendrier à minuit pour mettre à jour les dates.
+    """
     defaultTitle = _("Hierarchical calendar")
     defaultBitmap = "calendar_icon"
 
@@ -1167,8 +1322,23 @@ class TaskViewer(
     mixin.NoteColumnMixin,
     mixin.AttachmentColumnMixin,
     base.SortableViewerWithColumns,
-    BaseTaskTreeViewer
+    BaseTaskTreeViewer,
 ):
+    """
+    Visualiseur de tâches standard dans Task Coach.
+
+    Ce visualiseur affiche les tâches sous forme d'arborescence avec des colonnes
+    personnalisables, triables et filtrables. Il permet également de gérer des
+    pièces jointes, des notes, et d'effectuer du glisser-déposer pour réorganiser
+    les tâches.
+
+    Méthodes :
+        __init__(self, *args, **kwargs) : Initialise le visualiseur de tâches avec les paramètres fournis.
+        activate(self) : Active le visualiseur et affiche une info-bulle pour le tri manuel.
+        isTreeViewer(self) : Détermine si le visualiseur est en mode arborescence.
+        curselectionIsInstanceOf(self, class_) : Vérifie si la sélection actuelle est une instance de la classe spécifiée.
+        createWidget(self) : Crée le widget de l'arborescence des tâches avec des menus contextuels.
+    """
     def __init__(self, *args, **kwargs):
         # self._instance_count = taskcoachlib.patterns.NumberedInstances.lowestUnusedNumber(self) + 1  pas sur
         kwargs.setdefault("settingsSection", "taskviewer")
@@ -2011,6 +2181,19 @@ class TaskViewer(
 
 
 class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
+    """
+    Visualiseur de tâches avec cases à cocher.
+
+    Ce visualiseur permet de cocher ou décocher des tâches dans une arborescence.
+    Il étend le `TaskViewer` en ajoutant des fonctionnalités liées à la gestion
+    des cases à cocher pour chaque tâche.
+
+    Méthodes :
+        createWidget(self) : Crée le widget d'affichage avec des cases à cocher pour les tâches.
+        onCheck(self, event, final) : Gère les événements liés au changement d'état des cases à cocher.
+        getIsItemChecked(self, task) : Vérifie si une tâche est cochée.
+        getItemParentHasExclusiveChildren(self, task) : Vérifie si une tâche parent a des enfants exclusifs.
+    """
     def createWidget(self):
         imageList = self.createImageList()  # Has side-effects
         self._columns = self._createColumns()
@@ -2043,6 +2226,18 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
 
 
 class TaskStatsViewer(BaseTaskViewer):  # pylint: disable=W0223
+    """
+    Visualiseur de statistiques sur les tâches.
+
+    Ce visualiseur affiche des statistiques sous forme de diagrammes circulaires
+    et autres graphiques, basées sur le statut des tâches (en retard, complétées, etc.).
+
+    Méthodes :
+        __init__(self, *args, **kwargs) : Initialise le visualiseur de statistiques avec les paramètres par défaut.
+        createWidget(self) : Crée le widget de diagramme circulaire pour afficher les statistiques.
+        initLegend(self, widget) : Initialise la légende du diagramme.
+        refresh(self) : Rafraîchit l'affichage du diagramme circulaire en fonction des paramètres actuels.
+    """
     defaultTitle = _("Task statistics")
     defaultBitmap = "charts_icon"
 

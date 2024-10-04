@@ -11,11 +11,11 @@ import wx
 from . import wxScheduleUtils as utils
 
 # if sys.version.startswith( "2.3" ):
-#	from sets import Set as set
+# 	from sets import Set as set
 # set() est intégré dans python 3
 xrange = range
 
-# Events 
+# Events
 wxEVT_COMMAND_SCHEDULE_ACTIVATED = wx.NewEventType()
 EVT_SCHEDULE_ACTIVATED = wx.PyEventBinder(wxEVT_COMMAND_SCHEDULE_ACTIVATED)
 
@@ -84,9 +84,11 @@ class wxSchedulerPaint(object):
 
         # The highlight colour is too dark
         color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
-        self._highlightColor = wx.Colour(int((color.Red() + 255) / 2),
-                                         int((color.Green() + 255) / 2),
-                                         int((color.Blue() + 255) / 2))
+        self._highlightColor = wx.Colour(
+            int((color.Red() + 255) / 2),
+            int((color.Green() + 255) / 2),
+            int((color.Blue() + 255) / 2),
+        )
 
         self.pageNumber = None
         self.pageCount = 1
@@ -124,7 +126,9 @@ class wxSchedulerPaint(object):
             self._scheduleDraggingState = 0
 
         elif self._scheduleDraggingState in [5, 6]:
-            coords = {5: self._computeStartCoords, 6: self._computeEndCoords}[self._scheduleDraggingState]
+            coords = {5: self._computeStartCoords, 6: self._computeEndCoords}[
+                self._scheduleDraggingState
+            ]
             _, _, dateTime = coords(point)
 
             sched = self._scheduleDragged[2]
@@ -146,28 +150,44 @@ class wxSchedulerPaint(object):
         if self._scheduleDraggingState in [0, 3, 4]:
             for sched, pointMin, pointMax in self._schedulesCoords:
                 if self._style == wxSCHEDULER_VERTICAL:
-                    if point.x > pointMin.x and point.x < pointMax.x:
+                    if pointMin.x < point.x < pointMax.x:
                         if abs(point.y - pointMin.y) < 4:
                             self._scheduleDraggingState = 3
                             self.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
-                            self._scheduleDragged = pointMin, pointMax, sched.GetClientData()
+                            self._scheduleDragged = (
+                                pointMin,
+                                pointMax,
+                                sched.GetClientData(),
+                            )
                             return
                         if abs(point.y - pointMax.y) < 4:
                             self._scheduleDraggingState = 4
                             self.SetCursor(wx.StockCursor(wx.CURSOR_SIZENS))
-                            self._scheduleDragged = pointMin, pointMax, sched.GetClientData()
+                            self._scheduleDragged = (
+                                pointMin,
+                                pointMax,
+                                sched.GetClientData(),
+                            )
                             return
                 else:
-                    if point.y > pointMin.y and point.y < pointMax.y:
+                    if pointMin.y < point.y < pointMax.y:
                         if abs(point.x - pointMin.x) < 4:
                             self._scheduleDraggingState = 3
                             self.SetCursor(wx.StockCursor(wx.CURSOR_SIZEWE))
-                            self._scheduleDragged = pointMin, pointMax, sched.GetClientData()
+                            self._scheduleDragged = (
+                                pointMin,
+                                pointMax,
+                                sched.GetClientData(),
+                            )
                             return
                         if abs(point.x - pointMax.x) < 4:
                             self._scheduleDraggingState = 4
                             self.SetCursor(wx.StockCursor(wx.CURSOR_SIZEWE))
-                            self._scheduleDragged = pointMin, pointMax, sched.GetClientData()
+                            self._scheduleDragged = (
+                                pointMin,
+                                pointMax,
+                                sched.GetClientData(),
+                            )
                             return
 
             if self._scheduleDraggingState in [3, 4]:
@@ -175,13 +195,18 @@ class wxSchedulerPaint(object):
                 self.SetCursor(wx.STANDARD_CURSOR)
                 self._scheduleDragged = None
         elif self._scheduleDraggingState in [5, 6]:
-            self._drawDragging(point,
-                               {5: self._computeStartCoords, 6: self._computeEndCoords}[self._scheduleDraggingState])
+            self._drawDragging(
+                point,
+                {5: self._computeStartCoords, 6: self._computeEndCoords}[
+                    self._scheduleDraggingState
+                ],
+            )
         elif self._scheduleDraggingState == 1:
             dx = abs(self._scheduleDraggingOrigin[0].x - point.x)
             dy = abs(self._scheduleDraggingOrigin[0].y - point.y)
-            if dx >= wx.SystemSettings.GetMetric(wx.SYS_DRAG_X) or \
-                    dy >= wx.SystemSettings.GetMetric(wx.SYS_DRAG_Y):
+            if dx >= wx.SystemSettings.GetMetric(
+                wx.SYS_DRAG_X
+            ) or dy >= wx.SystemSettings.GetMetric(wx.SYS_DRAG_Y):
                 self._scheduleDraggingState = 2
                 self._drawDragging(point, self._computeAllCoords)
         elif self._scheduleDraggingState == 2:
@@ -199,7 +224,10 @@ class wxSchedulerPaint(object):
             pp.x = self._bitmap.GetWidth() - 1
 
         for idx, (dt, pointMin, pointMax) in enumerate(self._datetimeCoords):
-            if pp.y >= pointMin.y and pp.y <= pointMax.y and pp.x >= pointMin.x and pp.x <= pointMax.x:
+            if (
+                    pointMin.y <= pp.y <= pointMax.y
+                        and pointMin.x <= pp.x <= pointMax.x
+            ):
                 break
         else:
             idx = -1
@@ -213,11 +241,19 @@ class wxSchedulerPaint(object):
 
             theTime = utils.copyDateTime(dt)
             if self._style == wxSCHEDULER_VERTICAL:
-                theTime.AddTS(wx.TimeSpan.Minutes(int(30.0 * (pp.y - pointMin.y) / (pointMax.y - pointMin.y))))
+                theTime.AddTS(
+                    wx.TimeSpan.Minutes(
+                        int(30.0 * (pp.y - pointMin.y) / (pointMax.y - pointMin.y))
+                    )
+                )
             else:
-                theTime.AddTS(wx.TimeSpan.Minutes(int(30.0 * (pp.x - pointMin.x) / (pointMax.x - pointMin.x))))
+                theTime.AddTS(
+                    wx.TimeSpan.Minutes(
+                        int(30.0 * (pp.x - pointMin.x) / (pointMax.x - pointMin.x))
+                    )
+                )
         else:
-            raise ValueError('Not found: %d %d' % (pp.x, pp.y))
+            raise ValueError("Not found: %d %d" % (pp.x, pp.y))
 
         return pp, theTime
 
@@ -273,8 +309,10 @@ class wxSchedulerPaint(object):
         firstTime = self._lstDisplayedHours[0]
         lastTime = self._lstDisplayedHours[-1]
 
-        if theTime.GetHour() == firstTime.GetHour() and \
-                theTime.GetMinute() == firstTime.GetMinute():
+        if (
+            theTime.GetHour() == firstTime.GetHour()
+            and theTime.GetMinute() == firstTime.GetMinute()
+        ):
             theTime.SubtractTS(wx.TimeSpan.Days(1))
             theTime.SetHour(lastTime.GetHour() + 1)
             theTime.SetMinute(0)
@@ -288,8 +326,9 @@ class wxSchedulerPaint(object):
             x *= mx
             y *= my
             rMin, rMax, _ = coords(self._scheduleDraggingPrevious)
-            self.RefreshRect(wx.Rect(rMin.x - x, rMin.y - y,
-                                     rMax.x - rMin.x, rMax.y - rMin.y))
+            self.RefreshRect(
+                wx.Rect(rMin.x - x, rMin.y - y, rMax.x - rMin.x, rMax.y - rMin.y)
+            )
             try:
                 wx.Yield()
             except:
@@ -314,9 +353,9 @@ class wxSchedulerPaint(object):
 
     def _findSchedule(self, point):
         """
-		Check if the point is on a schedule and return the schedule and its
-		coordinates
-		"""
+        Check if the point is on a schedule and return the schedule and its
+        coordinates
+        """
         for schedule, pointMin, pointMax in self._schedulesCoords:
             inX = (pointMin.x <= point.x) & (point.x <= pointMax.x)
             inY = (pointMin.y <= point.y) & (point.y <= pointMax.y)
@@ -333,11 +372,11 @@ class wxSchedulerPaint(object):
 
     def _getSchedInPeriod(schedules, start, end):
         """
-		Returns a list of copied schedules that intersect with
-		the  period  defined by	 'start'  and 'end'.  Schedule
-		start and end are trimmed so as to lie between 'start'
-		and 'end'.
-		"""
+        Returns a list of copied schedules that intersect with
+        the  period  defined by	 'start'  and 'end'.  Schedule
+        start and end are trimmed so as to lie between 'start'
+        and 'end'.
+        """
         results = []
 
         for schedule in schedules:
@@ -369,9 +408,9 @@ class wxSchedulerPaint(object):
 
     def _splitSchedules(self, schedules):
         """
-		Returns	 a list	 of lists  of schedules.  Schedules in
-		each list are guaranteed not to collide.
-		"""
+        Returns	 a list	 of lists  of schedules.  Schedules in
+        each list are guaranteed not to collide.
+        """
         results = []
         current = []
 
@@ -382,7 +421,9 @@ class wxSchedulerPaint(object):
             candidateSchedule = None
             minDelta = None
             for sched in schedules:
-                if sched.start.IsLaterThan(schedule.end) or sched.start.IsEqualTo(schedule.end):
+                if sched.start.IsLaterThan(schedule.end) or sched.start.IsEqualTo(
+                    schedule.end
+                ):
                     delta = sched.start.Subtract(schedule.end)
                     if minDelta is None or minDelta > delta:
                         minDelta = delta
@@ -400,16 +441,22 @@ class wxSchedulerPaint(object):
 
         return results
 
-    def _paintPeriod(self, drawer, start, daysCount, x, y, width, height, highlight=None):
+    def _paintPeriod(
+        self, drawer, start, daysCount, x, y, width, height, highlight=None
+    ):
         end = utils.copyDateTime(start)
         end.AddDS(wx.DateSpan(days=daysCount))
 
-        blocks = self._splitSchedules(self._getSchedInPeriod(self._schedules, start, end))
+        blocks = self._splitSchedules(
+            self._getSchedInPeriod(self._schedules, start, end)
+        )
         offsetY = 0
 
         if self._showOnlyWorkHour:
-            workingHours = [(self._startingHour, self._startingPauseHour),
-                            (self._endingPauseHour, self._endingHour)]
+            workingHours = [
+                (self._startingHour, self._startingPauseHour),
+                (self._endingPauseHour, self._endingHour),
+            ]
         else:
             workingHours = [(self._startingHour, self._endingHour)]
 
@@ -428,8 +475,13 @@ class wxSchedulerPaint(object):
             if theDay.IsSameDate(wx.DateTime.Now()):
                 if self._viewType != wxSCHEDULER_DAILY or daysCount >= 2:
                     color = self._highlightColor
-            drawer.DrawDayBackground(x + 1.0 * width / daysCount * dayN, y, 1.0 * width / daysCount, height,
-                                     highlight=color)
+            drawer.DrawDayBackground(
+                x + 1.0 * width / daysCount * dayN,
+                y,
+                1.0 * width / daysCount,
+                height,
+                highlight=color,
+            )
 
         if blocks:
             dayWidth = width / len(blocks)
@@ -440,17 +492,34 @@ class wxSchedulerPaint(object):
                 for schedule in block:
                     show = True
                     if self.pageNumber is not None:
-                        if self._schedulesPages.get(schedule.GetId(), None) != self.pageNumber:
+                        if (
+                            self._schedulesPages.get(schedule.GetId(), None)
+                            != self.pageNumber
+                        ):
                             show = False
 
                     if show:
                         if self._style == wxSCHEDULER_VERTICAL:
-                            xx, yy, w, h = drawer.DrawScheduleVertical(schedule, start, workingHours,
-                                                                       x + dayWidth * idx, y,
-                                                                       dayWidth, height)
+                            xx, yy, w, h = drawer.DrawScheduleVertical(
+                                schedule,
+                                start,
+                                workingHours,
+                                x + dayWidth * idx,
+                                y,
+                                dayWidth,
+                                height,
+                            )
                         elif self._style == wxSCHEDULER_HORIZONTAL:
-                            xx, yy, w, h = drawer.DrawScheduleHorizontal(schedule, start, daysCount, workingHours,
-                                                                         x, y + offsetY, width, height)
+                            xx, yy, w, h = drawer.DrawScheduleHorizontal(
+                                schedule,
+                                start,
+                                daysCount,
+                                workingHours,
+                                x,
+                                y + offsetY,
+                                width,
+                                height,
+                            )
                             maxDY = max(maxDY, h)
 
                         if self.pageNumber is None:
@@ -461,7 +530,9 @@ class wxSchedulerPaint(object):
 
                             self._schedulesPages[schedule.GetId()] = pageNo
 
-                        self._schedulesCoords.append((schedule, wx.Point(xx, yy), wx.Point(xx + w, yy + h)))
+                        self._schedulesCoords.append(
+                            (schedule, wx.Point(xx, yy), wx.Point(xx + w, yy + h))
+                        )
                     else:
                         schedule.Destroy()
 
@@ -489,19 +560,41 @@ class wxSchedulerPaint(object):
 
                 if self._minSize is None or not self._resizable:
                     if self._style == wxSCHEDULER_VERTICAL:
-                        self._datetimeCoords.append((utils.copyDateTime(theDay),
-                                                     wx.Point(x + 1.0 * width * dayN / daysCount,
-                                                              y + 1.0 * height * idx / nbHours),
-                                                     wx.Point(x + 1.0 * width * (dayN + 1) / daysCount,
-                                                              y + 1.0 * height * (idx + 1) / nbHours)))
+                        self._datetimeCoords.append(
+                            (
+                                utils.copyDateTime(theDay),
+                                wx.Point(
+                                    x + 1.0 * width * dayN / daysCount,
+                                    y + 1.0 * height * idx / nbHours,
+                                ),
+                                wx.Point(
+                                    x + 1.0 * width * (dayN + 1) / daysCount,
+                                    y + 1.0 * height * (idx + 1) / nbHours,
+                                ),
+                            )
+                        )
                     else:
-                        self._datetimeCoords.append((utils.copyDateTime(theDay),
-                                                     wx.Point(x + 1.0 * width * (nbHours * dayN + idx) / (
-                                                                 nbHours * daysCount),
-                                                              y),
-                                                     wx.Point(x + 1.0 * width * (nbHours * dayN + idx + 1) / (
-                                                                 nbHours * daysCount),
-                                                              y + height)))
+                        self._datetimeCoords.append(
+                            (
+                                utils.copyDateTime(theDay),
+                                wx.Point(
+                                    x
+                                    + 1.0
+                                    * width
+                                    * (nbHours * dayN + idx)
+                                    / (nbHours * daysCount),
+                                    y,
+                                ),
+                                wx.Point(
+                                    x
+                                    + 1.0
+                                    * width
+                                    * (nbHours * dayN + idx + 1)
+                                    / (nbHours * daysCount),
+                                    y + height,
+                                ),
+                            )
+                        )
 
         if isinstance(self, wx.ScrolledWindow) and self._showNow:
             now = wx.DateTime.Now()
@@ -519,13 +612,25 @@ class wxSchedulerPaint(object):
                             if idx != 0:
                                 if self._style == wxSCHEDULER_VERTICAL:
                                     yPrev = y + 1.0 * height * (idx - 1) / nbHours
-                                    delta = 1.0 * height / nbHours * now.Subtract(previous).GetSeconds() \
-                                            / theDay.Subtract(previous).GetSeconds()
+                                    delta = (
+                                        1.0
+                                        * height
+                                        / nbHours
+                                        * now.Subtract(previous).GetSeconds()
+                                        / theDay.Subtract(previous).GetSeconds()
+                                    )
                                     drawer.DrawNowHorizontal(x, yPrev + delta, width)
                                 else:
-                                    xPrev = x + 1.0 * width * (nbHours * dayN + idx - 1) / (nbHours * daysCount)
-                                    delta = 1.0 * width / (nbHours * daysCount) * now.Subtract(previous).GetSeconds() \
-                                            / theDay.Subtract(previous).GetSeconds()
+                                    xPrev = x + 1.0 * width * (
+                                        nbHours * dayN + idx - 1
+                                    ) / (nbHours * daysCount)
+                                    delta = (
+                                        1.0
+                                        * width
+                                        / (nbHours * daysCount)
+                                        * now.Subtract(previous).GetSeconds()
+                                        / theDay.Subtract(previous).GetSeconds()
+                                    )
                                     drawer.DrawNowVertical(xPrev + delta, y, height)
                             break
                         previous = utils.copyDateTime(theDay)
@@ -538,8 +643,8 @@ class wxSchedulerPaint(object):
 
     def _paintDay(self, drawer, day, x, y, width, height):
         """
-		Draw column schedules
-		"""
+        Draw column schedules
+        """
 
         start = utils.copyDateTime(day)
         start.SetHour(0)
@@ -566,15 +671,17 @@ class wxSchedulerPaint(object):
             w, h = width, 0
 
         if not (self._style == wxSCHEDULER_VERTICAL or self._drawHeaders):
-            hw, hh = drawer.DrawHours(x, y + h, width, height - h, self._style, includeText=includeText)
+            hw, hh = drawer.DrawHours(
+                x, y + h, width, height - h, self._style, includeText=includeText
+            )
             h += hh
 
         return w, h
 
     def _paintDaily(self, drawer, day, x, y, width, height):
         """
-		Display day schedules
-		"""
+        Display day schedules
+        """
 
         minWidth = minHeight = 0
 
@@ -587,8 +694,14 @@ class wxSchedulerPaint(object):
         if self._drawHeaders:
             maxDY = 0
             for idx in xrange(self._periodCount):
-                w, h = self._paintDailyHeaders(drawer, theDay, x + 1.0 * width / self._periodCount * idx, y,
-                                               1.0 * width / self._periodCount, height)
+                w, h = self._paintDailyHeaders(
+                    drawer,
+                    theDay,
+                    x + 1.0 * width / self._periodCount * idx,
+                    y,
+                    1.0 * width / self._periodCount,
+                    height,
+                )
                 maxDY = max(maxDY, h)
                 theDay.AddDS(wx.DateSpan(days=1))
             minHeight += maxDY
@@ -596,8 +709,15 @@ class wxSchedulerPaint(object):
             height -= maxDY
         else:
             for idx in xrange(self._periodCount):
-                self._paintDailyHeaders(drawer, theDay, x + 1.0 * width / self._periodCount * idx, y,
-                                        1.0 * width / self._periodCount, height, includeText=False)
+                self._paintDailyHeaders(
+                    drawer,
+                    theDay,
+                    x + 1.0 * width / self._periodCount * idx,
+                    y,
+                    1.0 * width / self._periodCount,
+                    height,
+                    includeText=False,
+                )
                 theDay.AddDS(wx.DateSpan(days=1))
 
         if self._style == wxSCHEDULER_VERTICAL:
@@ -610,8 +730,13 @@ class wxSchedulerPaint(object):
             else:
                 maxDY = 0
                 for idx in xrange(self._periodCount):
-                    _, h = drawer.DrawHours(x + 1.0 * width / self._periodCount * idx, y,
-                                            1.0 * width / self._periodCount, height, self._style)
+                    _, h = drawer.DrawHours(
+                        x + 1.0 * width / self._periodCount * idx,
+                        y,
+                        1.0 * width / self._periodCount,
+                        height,
+                        self._style,
+                    )
                     maxDY = max(maxDY, h)
                 w = 0
                 h = maxDY
@@ -629,14 +754,22 @@ class wxSchedulerPaint(object):
 
         if self._style == wxSCHEDULER_HORIZONTAL:
             # Use directly paintPeriod or pagination fails
-            w, h = self._paintPeriod(drawer, day, self._periodCount, x, y, width, height)
+            w, h = self._paintPeriod(
+                drawer, day, self._periodCount, x, y, width, height
+            )
         else:
             w = 0
             maxDY = 0
             theDay = utils.copyDateTime(day)
             for idx in xrange(self._periodCount):
-                dw, dh = self._paintDay(drawer, theDay, x + 1.0 * width / self._periodCount * idx, y,
-                                        1.0 * width / self._periodCount, height)
+                dw, dh = self._paintDay(
+                    drawer,
+                    theDay,
+                    x + 1.0 * width / self._periodCount * idx,
+                    y,
+                    1.0 * width / self._periodCount,
+                    height,
+                )
                 w += dw
                 maxDY = max(maxDY, dh)
                 theDay.AddDS(wx.DateSpan(days=1))
@@ -655,22 +788,32 @@ class wxSchedulerPaint(object):
         maxDY = 0
 
         for weekday in xrange(7):
-            theDay = utils.setToWeekDayInSameWeek(utils.copyDateTime(firstDay), weekday, self._weekstart)
+            theDay = utils.setToWeekDayInSameWeek(
+                utils.copyDateTime(firstDay), weekday, self._weekstart
+            )
             if theDay.IsSameDate(wx.DateTime.Now()):
                 color = self._highlightColor
             else:
                 color = None
-            w, h = drawer.DrawDayHeader(theDay, x + weekday * 1.0 * width / 7, y, 1.0 * width / 7, height,
-                                        highlight=color)
-            self._headerBounds.append((int(x + (weekday + 1) * 1.0 * width / 7), y, height))
+            w, h = drawer.DrawDayHeader(
+                theDay,
+                x + weekday * 1.0 * width / 7,
+                y,
+                1.0 * width / 7,
+                height,
+                highlight=color,
+            )
+            self._headerBounds.append(
+                (int(x + (weekday + 1) * 1.0 * width / 7), y, height)
+            )
             maxDY = max(maxDY, h)
 
         return maxDY
 
     def _paintWeekly(self, drawer, day, x, y, width, height):
         """
-		Display weekly schedule
-		"""
+        Display weekly schedule
+        """
 
         firstDay = utils.setToWeekDayInSameWeek(day, 0, self._weekstart)
         firstDay.SetHour(0)
@@ -688,9 +831,17 @@ class wxSchedulerPaint(object):
         if self._drawHeaders:
             theDay = utils.copyDateTime(day)
             for idx in xrange(self._periodCount):
-                maxDY = max(maxDY,
-                            self._paintWeeklyHeaders(drawer, theDay, x + 1.0 * width / self._periodCount * idx, y,
-                                                     1.0 * width / self._periodCount, height))
+                maxDY = max(
+                    maxDY,
+                    self._paintWeeklyHeaders(
+                        drawer,
+                        theDay,
+                        x + 1.0 * width / self._periodCount * idx,
+                        y,
+                        1.0 * width / self._periodCount,
+                        height,
+                    ),
+                )
                 theDay.AddDS(wx.DateSpan(weeks=1))
 
         if self._style == wxSCHEDULER_VERTICAL:
@@ -712,20 +863,34 @@ class wxSchedulerPaint(object):
 
             for idx in xrange(self._periodCount):
                 for weekday in xrange(7):
-                    theDay = utils.setToWeekDayInSameWeek(utils.copyDateTime(day), weekday, self._weekstart)
-                    self._paintDay(drawer, theDay, x + (weekday + 7 * idx) * 1.0 * width / 7 / self._periodCount, y,
-                                   1.0 * width / 7 / self._periodCount, height)
+                    theDay = utils.setToWeekDayInSameWeek(
+                        utils.copyDateTime(day), weekday, self._weekstart
+                    )
+                    self._paintDay(
+                        drawer,
+                        theDay,
+                        x + (weekday + 7 * idx) * 1.0 * width / 7 / self._periodCount,
+                        y,
+                        1.0 * width / 7 / self._periodCount,
+                        height,
+                    )
                 day.AddDS(wx.DateSpan(weeks=1))
 
-            return max(WEEK_SIZE_MIN.width * self._periodCount + LEFT_COLUMN_SIZE, width), max(WEEK_SIZE_MIN.height,
-                                                                                               height)
+            return max(
+                WEEK_SIZE_MIN.width * self._periodCount + LEFT_COLUMN_SIZE, width
+            ), max(WEEK_SIZE_MIN.height, height)
         else:
-            w, h = self._paintPeriod(drawer, firstDay, 7 * self._periodCount, x, y, width, height)
+            w, h = self._paintPeriod(
+                drawer, firstDay, 7 * self._periodCount, x, y, width, height
+            )
 
             minWidth += w
             minHeight += h
 
-            return max(self._periodWidth * self._periodCount + LEFT_COLUMN_SIZE, minWidth), minHeight
+            return (
+                max(self._periodWidth * self._periodCount + LEFT_COLUMN_SIZE, minWidth),
+                minHeight,
+            )
 
     def _paintMonthlyHeaders(self, drawer, day, x, y, width, height):
         if isinstance(self, wx.ScrolledWindow):
@@ -751,10 +916,17 @@ class wxSchedulerPaint(object):
                     color = self._highlightColor
                 else:
                     color = None
-                w, h = drawer.DrawSimpleDayHeader(theDay, x + 1.0 * idx * width / daysCount,
-                                                  y + h, 1.0 * width / daysCount, height,
-                                                  highlight=color)
-                self._headerBounds.append((x + 1.0 * (idx + 1) * width / daysCount, y + h, height))
+                w, h = drawer.DrawSimpleDayHeader(
+                    theDay,
+                    x + 1.0 * idx * width / daysCount,
+                    y + h,
+                    1.0 * width / daysCount,
+                    height,
+                    highlight=color,
+                )
+                self._headerBounds.append(
+                    (x + 1.0 * (idx + 1) * width / daysCount, y + h, height)
+                )
                 maxDY = max(maxDY, h)
 
             h += maxDY
@@ -763,8 +935,8 @@ class wxSchedulerPaint(object):
 
     def _paintMonthly(self, drawer, day, x, y, width, height):
         """
-		Draw month's calendar using calendar module functions
-		"""
+        Draw month's calendar using calendar module functions
+        """
 
         if self._drawHeaders:
             w, h = self._paintMonthlyHeaders(drawer, day, x, y, width, height)
@@ -797,20 +969,34 @@ class wxSchedulerPaint(object):
                         schedules = self._getSchedInPeriod(self._schedules, theDay, end)
 
                         if self._minSize is None or not self._resizable:
-                            self._datetimeCoords.append((utils.copyDateTime(theDay),
-                                                         wx.Point(d * cellW, w * cellH),
-                                                         wx.Point(d * cellW + cellW, w * cellH + cellH)))
+                            self._datetimeCoords.append(
+                                (
+                                    utils.copyDateTime(theDay),
+                                    wx.Point(d * cellW, w * cellH),
+                                    wx.Point(d * cellW + cellW, w * cellH + cellH),
+                                )
+                            )
 
-                    displayed = drawer.DrawSchedulesCompact(theDay, schedules, d * cellW,
-                                                            w * cellH + y, cellW, cellH,
-                                                            self._highlightColor)
+                    displayed = drawer.DrawSchedulesCompact(
+                        theDay,
+                        schedules,
+                        d * cellW,
+                        w * cellH + y,
+                        cellW,
+                        cellH,
+                        self._highlightColor,
+                    )
                     self._schedulesCoords.extend(displayed)
 
-                    for schedule in set(schedules) - set([sched for sched, _, _ in displayed]):
+                    for schedule in set(schedules) - set(
+                        [sched for sched, _, _ in displayed]
+                    ):
                         schedule.Destroy()
 
-            return (max(MONTH_CELL_SIZE_MIN.width * 7, width),
-                    max(MONTH_CELL_SIZE_MIN.height * (w + 1), height))
+            return (
+                max(MONTH_CELL_SIZE_MIN.width * 7, width),
+                max(MONTH_CELL_SIZE_MIN.height * (w + 1), height),
+            )
         else:
             day.SetDay(1)
             day.SetHour(0)
@@ -828,8 +1014,8 @@ class wxSchedulerPaint(object):
 
     def _processEvt(self, commandEvent, point):
         """
-		Process the command event passed at the given point
-		"""
+        Process the command event passed at the given point
+        """
         evt = wx.PyCommandEvent(commandEvent)
         _, _, sch = self._findSchedule(point)
         if isinstance(sch, wxSchedule):
@@ -875,7 +1061,10 @@ class wxSchedulerPaint(object):
         elif self._viewType == wxSCHEDULER_MONTHLY:
             minW, minH = MONTH_CELL_SIZE_MIN.width * 7, 0  # will be computed
 
-        if self._viewType == wxSCHEDULER_MONTHLY or self._style == wxSCHEDULER_HORIZONTAL:
+        if (
+            self._viewType == wxSCHEDULER_MONTHLY
+            or self._style == wxSCHEDULER_HORIZONTAL
+        ):
             memDC = wx.MemoryDC()
             bmp = wx.EmptyBitmap(1, 1)
             memDC.SelectObject(bmp)
@@ -893,8 +1082,13 @@ class wxSchedulerPaint(object):
                     size = self.GetSize()
 
                 # Actually, only the min height may vary...
-                _, minH = self.DoPaint(self._drawerClass(context, self._lstDisplayedHours),
-                                       0, 0, size.GetWidth(), 0)
+                _, minH = self.DoPaint(
+                    self._drawerClass(context, self._lstDisplayedHours),
+                    0,
+                    0,
+                    size.GetWidth(),
+                    0,
+                )
 
                 if self._style == wxSCHEDULER_HORIZONTAL:
                     if self._viewType == wxSCHEDULER_DAILY:
@@ -903,7 +1097,12 @@ class wxSchedulerPaint(object):
                         minW = self._periodWidth * 7
                     elif self._viewType == wxSCHEDULER_MONTHLY:
                         return wx.Size(
-                            self._periodWidth * wx.DateTime.GetNumberOfDaysInMonth(self.GetDate().GetMonth()), minH)
+                            self._periodWidth
+                            * wx.DateTime.GetNumberOfDaysInMonth(
+                                self.GetDate().GetMonth()
+                            ),
+                            minH,
+                        )
                 elif self._viewType == wxSCHEDULER_MONTHLY:
                     return wx.Size(minW, minH)
             finally:
@@ -949,8 +1148,13 @@ class wxSchedulerPaint(object):
                     context = memDC
                     context.SetFont(wx.NORMAL_FONT)
 
-                width, height = self.DoPaint(self._drawerClass(context, self._lstDisplayedHours),
-                                             0, 0, size.GetWidth(), size.GetHeight())
+                width, height = self.DoPaint(
+                    self._drawerClass(context, self._lstDisplayedHours),
+                    0,
+                    0,
+                    size.GetWidth(),
+                    size.GetHeight(),
+                )
             finally:
                 memDC.EndDrawing()
         finally:
@@ -984,15 +1188,23 @@ class wxSchedulerPaint(object):
                     context = memDC
                     context.SetFont(wx.NORMAL_FONT)
 
-                self._drawerClass(context, self._lstDisplayedHours)._DrawSchedule(schedule, *schedule.bounds)
+                self._drawerClass(context, self._lstDisplayedHours)._DrawSchedule(
+                    schedule, *schedule.bounds
+                )
             finally:
                 memDC.SelectObject(wx.NullBitmap)
 
             originX, originY = self.GetViewStart()
             unitX, unitY = self.GetScrollPixelsPerUnit()
             x, y, w, h = schedule.bounds
-            self.RefreshRect(wx.Rect(math.floor(x - originX * unitX) - 1, math.floor(y - originY * unitY) - 1,
-                                     math.ceil(w) + 2, math.ceil(h) + 2))
+            self.RefreshRect(
+                wx.Rect(
+                    math.floor(x - originX * unitX) - 1,
+                    math.floor(y - originY * unitY) - 1,
+                    math.ceil(w) + 2,
+                    math.ceil(h) + 2,
+                )
+            )
 
     def OnPaint(self, evt=None):
         # Do the draw
@@ -1011,46 +1223,46 @@ class wxSchedulerPaint(object):
 
     def SetResizable(self, value):
         """
-		Draw proportionally of actual space but not down on minimun sizes
-		The actual sze is retrieved by GetSize() method of derived object
-		"""
+        Draw proportionally of actual space but not down on minimun sizes
+        The actual sze is retrieved by GetSize() method of derived object
+        """
         self._resizable = bool(value)
 
     def SetStyle(self, style):
         """
-		Sets  the drawing  style.  Values  for 'style'	may be
-		wxSCHEDULER_VERTICAL	   (the	      default)	    or
-		wxSCHEDULER_HORIZONTAL.
-		"""
+        Sets  the drawing  style.  Values  for 'style'	may be
+        wxSCHEDULER_VERTICAL	   (the	      default)	    or
+        wxSCHEDULER_HORIZONTAL.
+        """
         self._style = style
         self.InvalidateMinSize()
         self.Refresh()
 
     def GetStyle(self):
         """
-		Returns the current drawing style.
-		"""
+        Returns the current drawing style.
+        """
         return self._style
 
     def SetHighlightColor(self, color):
         """
-		Sets the highlight color, i.e. the color used to draw
-		Today's background.
-		"""
+        Sets the highlight color, i.e. the color used to draw
+        Today's background.
+        """
 
         self._highlightColor = color
 
     def GetHighlightColor(self):
         """
-		Returns the current highlight color.
-		"""
+        Returns the current highlight color.
+        """
 
         return self._highlightColor
 
     def SetDrawer(self, drawerClass):
         """
-		Sets the drawer class.
-		"""
+        Sets the drawer class.
+        """
         self._drawerClass = drawerClass
         self.InvalidateMinSize()
         self.Refresh()
@@ -1074,11 +1286,11 @@ class wxSchedulerPaint(object):
 
     def SetHeaderPanel(self, panel):
         """
-		Call this with an instance of wx.Panel. The headers
-		will then be painted on this panel, and thus will be
-		unaffected by vertical scrolling. The panel will be
-		resized as needed.
-		"""
+        Call this with an instance of wx.Panel. The headers
+        will then be painted on this panel, and thus will be
+        unaffected by vertical scrolling. The panel will be
+        resized as needed.
+        """
 
         self._drawHeaders = False
         self._headerPanel = panel
@@ -1137,8 +1349,14 @@ class wxSchedulerPaint(object):
                 theDay = utils.copyDateTime(day)
                 maxDY = 0
                 for idx in xrange(self._periodCount):
-                    _, h = self._paintDailyHeaders(drawer, theDay, x + 1.0 * width / self._periodCount * idx, y,
-                                                   1.0 * width / self._periodCount, 36)
+                    _, h = self._paintDailyHeaders(
+                        drawer,
+                        theDay,
+                        x + 1.0 * width / self._periodCount * idx,
+                        y,
+                        1.0 * width / self._periodCount,
+                        36,
+                    )
                     maxDY = max(maxDY, h)
                     theDay.AddDS(wx.DateSpan(days=1))
                 h = maxDY
@@ -1149,8 +1367,14 @@ class wxSchedulerPaint(object):
                 theDay = utils.copyDateTime(day)
                 maxDY = 0
                 for idx in xrange(self._periodCount):
-                    h = self._paintWeeklyHeaders(drawer, theDay, x + 1.0 * width / self._periodCount * idx, y,
-                                                 1.0 * width / self._periodCount, 36)
+                    h = self._paintWeeklyHeaders(
+                        drawer,
+                        theDay,
+                        x + 1.0 * width / self._periodCount * idx,
+                        y,
+                        1.0 * width / self._periodCount,
+                        36,
+                    )
                     maxDY = max(maxDY, h)
                     theDay.AddDS(wx.DateSpan(weeks=1))
                 h = maxDY

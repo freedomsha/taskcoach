@@ -109,7 +109,7 @@ Verify "normal" operation.
                 infourl.code = response.status
                 infourl.msg = response.reason
                 return infourl
-            except socket.error, err:
+            except socket.error as err:
                 raise urllib2.URLError(err)
         else:
             return None

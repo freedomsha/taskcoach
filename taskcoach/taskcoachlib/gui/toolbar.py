@@ -39,11 +39,18 @@ from taskcoachlib.gui import uicommand
 # from taskcoachlib.gui.uicommand import uicommandcontainer
 
 
-class _Toolbar(aui.AuiToolBar):
+class _Toolbar(aui.auibar.AuiToolBar):
     """
     Une classe interne qui représente une barre d'outils basée sur la classe AuiToolBar de la bibliothèque wxPython.
 
     Cette classe est utilisée comme base pour la classe ToolBar, qui ajoute des fonctionnalités de personnalisation à la barre d'outils.
+
+    AuiToolBar est une barre d'outils entièrement dessinée par le propriétaire,
+    parfaitement intégrée au système de mise en page AUI. Cela permet le glisser-déposer des barres d'outils,
+    le comportement d'ancrage/flottant et la possibilité de définir des éléments de « débordement » dans la barre d'outils elle-même.
+
+    Le thème par défaut utilisé est AuiDefaultToolBarArt, qui offre une apparence moderne et brillante.
+    Le thème peut être modifié en appelant AuiToolBar.SetArtProvider.
     """
     def __init__(self, parent, style):
         super().__init__(parent, agwStyle=aui.AUI_TB_NO_AUTORESIZE)
@@ -76,14 +83,15 @@ class _Toolbar(aui.AuiToolBar):
             super().SetMargins(*args)
 
     # @staticmethod
-    def MakeDisabledBitmap(self, bitmap: wx.Bitmap) -> wx.Bitmap:
+    # def MakeDisabledBitmap(self, bitmap: wx.Bitmap) -> wx.Bitmap:
+    def MakeDisabledBitmap(self, bitmap):
         """
         Crée une version en niveaux de gris d'un bitmap pour l'afficher en mode désactivé.
 
-        Args:
+        Args :
             bitmap (wx.Bitmap): Le bitmap à convertir.
 
-        Returns:
+        Returns :
             wx.Bitmap: Le bitmap converti en niveaux de gris.
         """
         return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
@@ -103,7 +111,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         """
         Initialise une nouvelle instance de la classe ToolBar.
 
-        Args:
+        Args :
             window (wx.Window): La fenêtre parent de la barre d'outils.
             settings (config.Settings): Les paramètres de configuration de l'application.
             size (tuple, optional): La taille des icônes de la barre d'outils. La valeur par défaut est (32, 32).
@@ -125,7 +133,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         Cette méthode est nécessaire car la méthode Clear de la classe AuiToolBar ne supprime pas les contrôles de la barre d'outils.
         """
 
-        if self.__visibleUICommands:  # May be None
+        if self.__visibleUICommands:  # Peut-être aucun(None)
             for uiCommand in self.__visibleUICommands:
                 if uiCommand is not None and not isinstance(uiCommand, int):
                     uiCommand.unbind(self, uiCommand.id)
