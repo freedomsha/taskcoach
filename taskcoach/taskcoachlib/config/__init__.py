@@ -23,5 +23,5 @@ Le package de configuration contient
 """
 
 from taskcoachlib.config.settings import Settings
-from taskcoachlib.config.options import OptionParser, ApplicationOptionParser, OptionGroup
-# from taskcoachlib.config.arguments import ApplicationArgumentParser
+# from taskcoachlib.config.options import OptionParser, ApplicationOptionParser, OptionGroup
+from taskcoachlib.config.arguments import ApplicationArgumentParser

@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public LicenseClientToScreen
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import argparse
 # Programme principal
 # importer les bibliothèques permettant l'interface pour le système d'exploitation
 import os
@@ -87,10 +88,10 @@ Voir l'adresse pour plus d'information et de possibles résolution.
 
 
 def start():
-    """Traîte les options de ligne de commande et démarre l'application.
+    """Traîte les options (arguments) de ligne de commande et démarre l'application.
 
     Cette fonction traite les options de ligne de commande, initialise l'application
-    et démarre la boucle principale. Il gère également le profilage si l'option --profile
+    et démarre-lance la boucle principale. Il gère également le profilage si l'option --profile
     est spécifiée.
     """
 
@@ -100,7 +101,7 @@ def start():
         application
     )  # import des bibliothèques configurations-options et de l'application
 
-    options, args = config.ApplicationOptionParser().parse_args()
+    # options, args = config.ApplicationOptionParser().parse_args()
     # méthode de vérification des définitions des variables options et args de config avec optparse :
     # options = config.ApplicationArgumentParser().parser.parse_args()
     # avec argparse :
@@ -122,19 +123,26 @@ def start():
     # En particulier, les sous-analyseurs et les groupes mutuellement exclusifs
     # qui incluent à la fois des options et des positions ne sont pas pris en charge.
     # nouvelle méthode à essayer
+    # options: argparse.Namespace
+    # args: list[str]
     # options, args = config.ApplicationArgumentParser().parser.parse_known_intermixed_args()
+    parser = config.ApplicationArgumentParser()
+    options, args = parser.parse_args()
     # options, args = (
     #     config.ApplicationArgumentParser().parser.parse_known_args()
     # )
     # en utilisant l'astuce de The Namespace object dans https://docs.python.org/3.11/library/argparse.html
     # options = vars(tcoptions)
+    # options = vars(options)
     # print(vars(options), args)
     # print(f"taskcoach.py: options:{vars(options)} args:{args}")
     app = application.Application(
         options, args
     )  # définition de la variable app comme application avec options et args
     # app = application.Application(tcargs)
+    print(options.profile)
     if options.profile:
+        # if options["profile"]:
         import cProfile
 
         cProfile.runctx("app.start()", globals(), locals(), filename=".profile")

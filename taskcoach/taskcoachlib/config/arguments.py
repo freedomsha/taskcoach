@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import argparse
+from typing import List
 from taskcoachlib import meta
 
 
@@ -37,7 +38,7 @@ class ApplicationArgumentParser:
         avec des informations d'utilisation personnalisées.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """
             Initialisez l'analyseur d'arguments avec des informations d'utilisation personnalisées.
 
@@ -49,59 +50,67 @@ class ApplicationArgumentParser:
                 kwargs["usage"] (str) : message d'utilisation personnalisé décrivant
                 l'utilisation du programme.
         """
+        # 3 anciennes lignes :
         # kwargs["usage"] = "usage='%(prog)s [options] [.tsk file]'"
         # super().__init__(*args, **kwargs)
-        pass
+        # pass
+        # Initialisez l'ArgumentParser avec une description
+        self.parser = argparse.ArgumentParser(usage="%(prog)s [options] [.tsk file]",
+                                              description="Your friendly task manager")
 
-    # Initialisez l'ArgumentParser avec une description
-    parser = argparse.ArgumentParser(usage="%(prog)s [options] [.tsk file]", description="Your friendly task manager")
+        # Définir les arguments de la ligne de commande
+        self.parser.add_argument(
+            "--version",
+            action="version",
+            version=f"This version : {meta.data.name} {meta.data.version}",
+            help="Show program's version number and exit.",
+        )
+        self.parser.add_argument(
+            "--profile",
+            action="store_true",
+            default=False,
+            help="Enable profiling of the application.",
+        )
+        self.parser.add_argument(
+            "-s",
+            "--skipstart",
+            default=False,
+            action="store_true",
+            help=argparse.SUPPRESS,
+        )
+        self.parser.add_argument(
+            "-i",
+            "--ini",
+            dest="inifile",
+            help="Use the specified INIFILE for storing settings.",
+        )
+        self.parser.add_argument(
+            "-l",
+            "--language",
+            nargs=1,
+            dest="language",
+            type=str,
+            choices=sorted(
+                [
+                    lang
+                    for (lang, enabled) in meta.data.languages.values()
+                    if lang is not None
+                ]
+                + ["en"]
+            ),
+            help='Use the specified LANGUAGE for the GUI (e.g. "nl" or "fr").',
+        )
+        self.parser.add_argument(
+            "-p",
+            "--po",
+            nargs=1,
+            dest="pofile",
+            help="Use the specified POFILE for translation of the GUI.",
+        )
 
-    # Définir les arguments de la ligne de commande
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"This version : {meta.data.name} {meta.data.version}",
-        help="Show program's version number and exit.",
-    )
-    parser.add_argument(
-        "--profile",
-        action="store_true",
-        default=False,
-        help="Enable profiling of the application.",
-    )
-    parser.add_argument(
-        "-s",
-        "--skipstart",
-        default=False,
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "-i",
-        "--ini",
-        dest="inifile",
-        help="Use the specified INIFILE for storing settings.",
-    )
-    parser.add_argument(
-        "-l",
-        "--language",
-        nargs=1,
-        dest="language",
-        type=str,
-        choices=sorted(
-            [
-                lang
-                for (lang, enabled) in meta.data.languages.values()
-                if lang is not None
-            ]
-            + ["en"]
-        ),
-        help='Use the specified LANGUAGE for the GUI (e.g. "nl" or "fr").',
-    )
-    parser.add_argument(
-        "-p",
-        "--po",
-        nargs=1,
-        dest="pofile",
-        help="Use the specified POFILE for translation of the GUI.",
-    )
+    def parse_args(self, args: List[str] = None) -> argparse.Namespace:
+        # return self.parser.parse_args(args)
+        return self.parser.parse_known_intermixed_args(args)
+
+    def OptionGroup(self, *args, **kwargs):
+        return self.parser.add_argument_group(*args, **kwargs)
