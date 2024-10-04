@@ -25,13 +25,15 @@ from wx.lib import sized_controls
 
 
 class TimeExpressionEntry(wx.TextCtrl):
+    """ Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.__defaultColor = self.GetBackgroundColour()
         self.__invalidColor = wx.Colour(255, 128, 128)
 
-        wx.EVT_TEXT(self, wx.ID_ANY, self._onTextChanged)
+        # wx.EVT_TEXT(self, wx.ID_ANY, self._onTextChanged)
+        self.Bind(wx.EVT_TEXT, wx.ID_ANY, self._onTextChanged)
 
     @staticmethod
     def isValid(value):
@@ -49,6 +51,34 @@ class TimeExpressionEntry(wx.TextCtrl):
 
 
 class TemplatesDialog(sized_controls.SizedDialog):
+    """Cette classe implémente une boîte de dialogue pour la gestion des modèles de tâches dans l'application Task Coach.
+    
+    Elle permet de visualiser, modifier et supprimer des modèles de tâches existants, ainsi que d'en créer de nouveaux.
+
+Fonctionnalités principales
+
+    Affichage d'une liste d'arborescence pour parcourir les modèles de tâches.
+    Edition des propriétés d'un modèle de tâche sélectionné (sujet, dates de début, d'échéance, d'achèvement et de rappel).
+    Suppression d'un modèle de tâche sélectionné.
+    Déplacement d'un modèle de tâche vers le haut ou le bas dans la liste.
+    Ajout d'un nouveau modèle de tâche.
+    Sauvegarde des modifications apportées aux modèles de tâches.
+
+Classes et méthodes utilisées
+
+    TimeExpressionEntry : Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles.
+    createTemplateList : Crée la liste d'arborescence pour afficher les modèles de tâches.
+    createTemplateEntries : Crée les champs d'édition pour les propriétés d'un modèle de tâche.
+    enableEditPanel : Active ou désactive les champs d'édition en fonction de la sélection d'un modèle.
+    appendTemplate : Ajoute un modèle de tâche et ses enfants à la liste d'arborescence.
+    onValueChanged : Gère les modifications apportées aux champs d'édition d'un modèle de tâche.
+    OnSelectionChanged : Gère la sélection d'un modèle de tâche dans la liste, met à jour les champs d'édition et active/désactive les boutons de suppression et de déplacement.
+    onDelete : Supprime le modèle de tâche sélectionné.
+    OnUp : Déplace le modèle de tâche sélectionné vers le haut dans la liste.
+    OnDown : Déplace le modèle de tâche sélectionné vers le bas dans la liste.
+    onAdd : Ajoute un nouveau modèle de tâche vide à la liste.
+    ok : Sauvegarde les modifications apportées aux modèles de tâches lors de la validation de la boîte de dialogue.
+    """
     def __init__(self, settings, *args, **kwargs):
         self.settings = settings
         self._changing = False
@@ -61,7 +91,7 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self.SetButtonSizer(self._buttonSizer)
         self.Fit()
         self.SetMinSize(self.GetSize())  # Current size is min size
-        self._buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.ok)
+        self._buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.ok)  # TODO: gui.uicommand.base_uicommand.bind or Bind ?
         self.CentreOnParent()
 
     def createInterior(self, pane):
@@ -69,6 +99,9 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self.createTemplateEntries(pane)
 
     def createTemplateList(self, pane):
+        """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
+        en créant la liste d'arborescence.
+        """
         panel = sized_controls.SizedPanel(pane)
         panel.SetSizerType('horizontal')
         panel.SetSizerProps(expand=True, proportion=1)
@@ -96,6 +129,8 @@ class TemplatesDialog(sized_controls.SizedDialog):
         panel.Fit()
 
     def createButton(self, parent, bitmapName, handler, enable=True):
+        """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
+        en créant les boutons."""
         bitmap = wx.ArtProvider.GetBitmap(bitmapName, size=(32, 32))
         button = wx.BitmapButton(parent, bitmap=bitmap)
         button.Bind(wx.EVT_BUTTON, handler)
@@ -103,6 +138,9 @@ class TemplatesDialog(sized_controls.SizedDialog):
         return button
 
     def createTemplateEntries(self, pane):
+        """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
+        en créant les champs de saisie.
+        """
         panel = self._editPanel = sized_controls.SizedPanel(pane)
         panel.SetSizerType('form')
         panel.SetSizerProps(expand=True)
@@ -130,10 +168,12 @@ class TemplatesDialog(sized_controls.SizedDialog):
         panel.Fit()
 
     def enableEditPanel(self, enable=True):
+        """Active ou désactive les champs d'édition en fonction de la sélection de l'utilisateur."""
         for ctrl in self._taskControls:
             ctrl.Enable(enable)
 
     def appendTemplate(self, parentItem, task):
+        """Ajoute un nouveau nœud à l'arbre des modèles de tâches."""
         # item = self._templateList.AppendItem(parentItem, task.subject(), data=wx.TreeItemData(task))
         item = self._templateList.Append(parentItem, task.subject(), data=task)
         for child in task.children():
@@ -141,6 +181,19 @@ class TemplatesDialog(sized_controls.SizedDialog):
         return item
 
     def onValueChanged(self, event):
+        """Cette méthode gère les événements utilisateur, la modification du contenu d'un champ de saisie.
+        Elle met à jour l'état interne de l'application en conséquence.
+
+        Cette méthode est appelée à chaque fois que l'utilisateur modifie le contenu d'un champ de saisie. Son rôle est de :
+
+        Récupérer le modèle de tâche sélectionné : Elle utilise self._templateList.GetItemData(self._GetSelection()).GetData()
+        pour obtenir le modèle de tâche correspondant à l'élément sélectionné dans la liste.
+        Mettre à jour les propriétés du modèle de tâche : Elle modifie les propriétés du modèle de tâche en fonction des
+        nouvelles valeurs saisies dans les champs.
+        Par exemple, si l'utilisateur a modifié le sujet du modèle, la méthode met à jour la propriété subject du modèle.
+        Gérer les expressions temporelles : Pour les champs de saisie de dates, elle utilise la classe TimeExpressionEntry
+        pour vérifier la validité de l'expression saisie et la convertir au format approprié.
+        """
         event.Skip()
         if self._GetSelection().IsOk() and not self._changing:
             task = self._templateList.GetItemData(self._GetSelection()).GetData()
@@ -156,6 +209,9 @@ class TemplatesDialog(sized_controls.SizedDialog):
         return self._templateList.GetSelection()
 
     def OnSelectionChanged(self, event):  # pylint: disable=W0613
+        """Cette méthode gère les événements utilisateur, la sélection d'un élément dans la liste.
+        Elle met à jour l'état interne de l'application en conséquence.
+        """
         self._changing = True
         try:
             selection = self._GetSelection()
@@ -185,12 +241,14 @@ class TemplatesDialog(sized_controls.SizedDialog):
             self._changing = False
 
     def onDelete(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en supprimant des éléments."""
         task = self._templateList.GetItemData(self._GetSelection()).GetData()
         index = self._templates.tasks().index(task)
         self._templates.deleteTemplate(index)
         self._templateList.Delete(self._GetSelection())
 
     def OnUp(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en déplaçant des éléments."""
         selection = self._GetSelection()
         prev = self._templateList.GetPrevSibling(selection)
         prev = self._templateList.GetPrevSibling(prev)
@@ -209,6 +267,7 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self._templateList.SelectItem(item)
 
     def OnDown(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en déplaçant des éléments."""
         selection = self._GetSelection()
         next = self._templateList.GetNextSibling(selection)
         task = self._templateList.GetItemData(selection).GetData()
@@ -222,6 +281,7 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self._templateList.SelectItem(item)
 
     def onAdd(self, event):  # pylint: disable=W0613
+        """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en ajoutant des éléments."""
         template = Task(subject=_('New task template'))
         for name in ('plannedstartdatetmpl', 'duedatetmpl', 'completiondatetmpl',
                      'remindertmpl'):
@@ -230,5 +290,7 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self.appendTemplate(self._root, theTask)
 
     def ok(self, event):
+        """Cette méthode est appelée lorsque l'utilisateur clique sur le bouton "OK" de la boîte de dialogue.
+        Elle sauvegarde les modifications apportées aux modèles de tâches."""
         self._templates.save()
         event.Skip()
