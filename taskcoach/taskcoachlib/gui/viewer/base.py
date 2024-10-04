@@ -80,12 +80,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         """
         Initialise une nouvelle visionneuse.
 
-        Args:
-            parent (wx.Window): La fenêtre parente de la visionneuse.
-            taskFile (TaskFile): Le fichier de tâches à visualiser.
-            settings (Settings): Les paramètres de l'application.
-            *args: Arguments supplémentaires.
-            **kwargs: Arguments nommés supplémentaires.
+        Args :
+            parent (wx.Window) : La fenêtre parente de la visionneuse.
+            taskFile (TaskFile) : Le fichier de tâches à visualiser.
+            settings (Settings) : Les paramètres de l'application.
+            *args : Arguments supplémentaires.
+            **kwargs : Arguments nommés supplémentaires.
         """
         patterns.Observer.__init__(self)
         super().__init__(parent, -1)
@@ -171,7 +171,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def onEndIO(self, taskFile):
         """Termine les opérations de lecture/écriture dans le fichier de tâches."""
         self.__freezeCount -= 1
-        self.__presentation.thaw()
+        self.__presentation.thaw()  # TypeError: UltimateListCtrl.Append() got an unexpected keyword argument 'data'
         if self.__freezeCount == 0:
             self.refresh()
 
@@ -246,11 +246,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.presentation().detach()
         self.toolbar.detach()
 
-    def viewerStatusEventType(self) -> str:
+    def viewerStatusEventType(self):
+        # def viewerStatusEventType(self) -> str:
         """Retourne le type d'événement à utiliser pour les mises à jour de statut.
 
-        Returns:
-            str: Le type d'événement de mise à jour de statut.
+        Returns :
+            str : Le type d'événement de mise à jour de statut.
         """
         return "viewer%s.status" % id(self)
 
@@ -261,19 +262,20 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def statusMessages(self):
         return "", ""
 
-    def title(self) -> str:
+    def title(self):
+        # def title(self) -> str:
         """Retourne le titre actuel de la visionneuse.
 
-        Returns:
-            str: Le titre actuel de la visionneuse.
+        Returns :
+            str : Le titre actuel de la visionneuse.
         """
         return self.settings.get(self.settingsSection(), "title") or self.defaultTitle
 
     def setTitle(self, title):
         """Modifie le titre de la visionneuse.
 
-        Args:
-            title (str): Le nouveau titre à définir.
+        Args :
+            title (str) : Le nouveau titre à définir.
         """
         titleToSaveInSettings = "" if title == self.defaultTitle else title
         self.settings.set(self.settingsSection(), "title", titleToSaveInSettings)
@@ -290,11 +292,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def createWidget(self, *args):
         """Crée le widget utilisé pour afficher les objets. À implémenter dans les sous-classes.
 
-        Returns:
-            wx.Window: Le widget à utiliser pour l'affichage des objets.
+        Returns :
+            wx.Window : Le widget à utiliser pour l'affichage des objets.
 
-        Raises:
-            NotImplementedError: Si non implémenté dans une sous-classe.
+        Raises :
+            NotImplementedError : Si non implémenté dans une sous-classe.
         """
         raise NotImplementedError
 
@@ -354,8 +356,8 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def onNewItem(self, event):
         """Sélectionne un nouvel élément ajouté à la présentation.
 
-        Args:
-            event (Event): L'événement indiquant l'ajout d'un nouvel élément.
+        Args :
+            event (Event) : L'événement indiquant l'ajout d'un nouvel élément.
         """
         self.select(
             [item for item in list(event.values()) if item in self.presentation()]
@@ -426,8 +428,8 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def select(self, items):
         """Sélectionne des éléments dans la présentation.
 
-        Args:
-            items (list): Liste des objets à sélectionner.
+        Args :
+            items (list) : Liste des objets à sélectionner.
         """
         self.__curselection = items
         self.widget.select(items)
@@ -777,12 +779,13 @@ class ListViewer(Viewer):  # pylint: disable=W0223
      Dans ce cas, elle ne fait rien, car les contrôles de liste gèrent cette sélection automatiquement.
     """
     # @staticmethod
-    def isTreeViewer(self) -> bool:
+    def isTreeViewer(self):
+        # def isTreeViewer(self) -> bool:
         """
         Indique si la vue est une vue arborescente.
 
-        Returns:
-            bool: False, car cette vue est une vue en liste et non en arbre.
+        Returns :
+            bool : False, car cette vue est une vue en liste et non en arbre.
         """
         return False
 
@@ -790,33 +793,35 @@ class ListViewer(Viewer):  # pylint: disable=W0223
         """
         Itère sur les éléments visibles dans la présentation.
 
-        Yields:
-            object: Chaque objet visible dans la présentation.
+        Yields :
+            object : Chaque objet visible dans la présentation.
         """
         for item in self.presentation():
             yield item
 
-    def getItemWithIndex(self, index) -> object:
+    def getItemWithIndex(self, index):
+        # def getItemWithIndex(self, index) -> object:
         """
                 Récupère un élément spécifique dans la présentation en fonction de son index.
 
-                Args:
-                    index (int): L'index de l'élément à récupérer.
+                Args :
+                    index (int) : L'index de l'élément à récupérer.
 
-                Returns:
-                    object: L'objet à l'index spécifié.
+                Returns :
+                    object : L'objet à l'index spécifié.
                 """
         return self.presentation()[index]
 
-    def getIndexOfItem(self, item) -> int:
+    def getIndexOfItem(self, item):
+        # def getIndexOfItem(self, item) -> int:
         """
         Récupère l'index d'un élément spécifique dans la présentation.
 
-        Args:
-            item (object): L'objet dont on souhaite connaître l'index.
+        Args :
+            item (object) : L'objet dont on souhaite connaître l'index.
 
-        Returns:
-            int: L'index de l'objet dans la présentation.
+        Returns :
+            int : L'index de l'objet dans la présentation.
         """
         return self.presentation().index(item)
 
@@ -827,8 +832,8 @@ class ListViewer(Viewer):  # pylint: disable=W0223
         Cette méthode est spécifique aux contrôles de liste où la sélection
         est gérée automatiquement après la suppression d'éléments.
 
-        Args:
-            removedItems (list): La liste des éléments qui ont été supprimés.
+        Args :
+            removedItems (list) : La liste des éléments qui ont été supprimés.
         """
         pass  # Gestion automatique par les contrôles de liste.
 
@@ -913,43 +918,47 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         """Vérifie si un élément est collapsable."""
         return self.widget.isAnyItemCollapsable()
 
-    def isTreeViewer(self) -> bool:
+    def isTreeViewer(self):
+        # def isTreeViewer(self) -> bool:
         """Indique que cette vue est une vue arborescente.
 
-        Returns:
-            bool: True, car cette vue est une vue en arbre et non en liste."""
+        Returns :
+            bool : True, car cette vue est une vue en arbre et non en liste."""
         return True
 
-    def select(self, items: list):
+    def select(self, items):
+        # def select(self, items: list):
         """
         Sélectionne les éléments spécifiés et expande leurs parents de manière récursive.
 
-        Args:
-            items (list): La liste des éléments à sélectionner.
+        Args :
+            items (list) : La liste des éléments à sélectionner.
         """
         for item in items:
             self.__expandItemRecursively(item)
         self.refresh()
         super().select(items)
 
-    def __expandItemRecursively(self, item: object):
+    def __expandItemRecursively(self, item):
+        # def __expandItemRecursively(self, item: object):
         """
         Expande les parents de l'élément donné de manière récursive.
 
-        Args:
-            item (object): L'élément dont les parents doivent être expansés.
+        Args :
+            item (object) : L'élément dont les parents doivent être expansés.
         """
         parent = self.getItemParent(item)
         if parent:
             parent.expand(True, context=self.settingsSection(), notify=False)
             self.__expandItemRecursively(parent)
 
-    def selectNextItemsAfterRemoval(self, removedItems: list):
+    def selectNextItemsAfterRemoval(self, removedItems):
+        # def selectNextItemsAfterRemoval(self, removedItems: list):
         """
         Sélectionne les éléments suivants après la suppression de certains éléments.
 
-        Args:
-            removedItems (list): Liste des éléments supprimés.
+        Args :
+            removedItems (list) : Liste des éléments supprimés.
         """
         parents = [self.getItemParent(item) for item in removedItems]
         parents = [parent for parent in parents if parent in self.presentation()]
@@ -967,9 +976,9 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         """
         Met à jour la sélection actuelle et garde une trace de l'index sélectionné.
 
-        Args:
-            *args: Arguments supplémentaires pour la mise à jour de la sélection.
-            **kwargs: Arguments nommés pour la mise à jour.
+        Args :
+            *args : Arguments supplémentaires pour la mise à jour de la sélection.
+            **kwargs : Arguments nommés pour la mise à jour.
         """
         super().updateSelection(*args, **kwargs)
         curselection = self.curselection()
@@ -985,8 +994,8 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         """
         Itère sur les éléments visibles dans la présentation, y compris les enfants.
 
-        Yields:
-            object: Chaque élément visible et ses enfants.
+        Yields :
+            object : Chaque élément visible et ses enfants.
         """
 
         def yieldItemsAndChildren(items):
@@ -1001,52 +1010,56 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         for item in yieldItemsAndChildren(self.getRootItems()):
             yield item
 
-    def getRootItems(self) -> list:
+    def getRootItems(self):
+        # def getRootItems(self) -> list:
         """
         Retourne les éléments racines de la présentation.
 
         Autoriser le remplacement des rootItems.
 
-        Returns:
-            list: Liste des éléments racines.
+        Returns :
+            list : Liste des éléments racines.
         """
         return self.presentation().rootItems()
 
-    def getItemParent(self, item) -> object:
+    def getItemParent(self, item):
+        # def getItemParent(self, item) -> object:
         """
         Retourne le parent de l'élément donné.
 
         Autoriser le remplacement du parent d'un élément.
 
-        Args:
-            item (object): L'élément dont le parent est à retourner.
+        Args :
+            item (object) : L'élément dont le parent est à retourner.
 
-        Returns:
-            object: Le parent de l'élément.
+        Returns :
+            object : Le parent de l'élément.
         """
         return item.parent()
 
-    def getItemExpanded(self, item) -> bool:
+    def getItemExpanded(self, item):
+        # def getItemExpanded(self, item) -> bool:
         """
         Vérifie si un élément est expansé dans la vue actuelle.
 
-        Args:
-            item (object): L'élément à vérifier.
+        Args :
+            item (object) : L'élément à vérifier.
 
-        Returns:
-            bool: True si l'élément est expansé, False sinon.
+        Returns :
+            bool : True si l'élément est expansé, False sinon.
         """
         return item.isExpanded(context=self.settingsSection())
 
-    def children(self, parent=None) -> list:
+    def children(self, parent=None):
+        # def children(self, parent=None) -> list:
         """
          Retourne les enfants d'un élément donné.
 
-         Args:
-             parent (object, optionnel): L'élément parent. Si aucun parent n'est fourni, retourne les éléments racines.
+         Args :
+             parent (object, optionnel) : L'élément parent. Si aucun parent n'est fourni, retourne les éléments racines.
 
-         Returns:
-             list: Liste des enfants de l'élément parent, ou des éléments racines si aucun parent n'est spécifié.
+         Returns :
+             list : Liste des enfants de l'élément parent, ou des éléments racines si aucun parent n'est spécifié.
          """
         if parent:
             children = parent.children()
@@ -1057,15 +1070,16 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         else:
             return self.getRootItems()
 
-    def getItemText(self, item: object) -> str:
+    def getItemText(self, item):
+        # def getItemText(self, item: object) -> str:
         """
         Retourne le texte (sujet) associé à un élément.
 
-        Args:
-            item (object): L'élément dont le texte est à retourner.
+        Args :
+            item (object) : L'élément dont le texte est à retourner.
 
-        Returns:
-            str: Le texte (sujet) de l'élément.
+        Returns :
+            str : Le texte (sujet) de l'élément.
         """
         return item.subject()
 
@@ -1115,9 +1129,9 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Initialise la visionneuse avec des colonnes.
 
-        Args:
-            *args: Arguments supplémentaires pour l'initialisation.
-            **kwargs: Arguments nommés supplémentaires pour l'initialisation.
+        Args :
+            *args : Arguments supplémentaires pour l'initialisation.
+            **kwargs : Arguments nommés supplémentaires pour l'initialisation.
         """
         self.__initDone = False
         self._columns = []
@@ -1128,33 +1142,33 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         self.__initDone = True
         self.refresh()
 
-    def hasHideableColumns(self) -> bool:
+    def hasHideableColumns(self):
         """
         Indique si la visionneuse a des colonnes masquables.
 
-        Returns:
-            bool: True si certaines colonnes peuvent être masquées, sinon False.
+        Returns :
+            bool : True si certaines colonnes peuvent être masquées, sinon False.
         """
         return True
 
-    def hasOrderingColumn(self) -> bool:
+    def hasOrderingColumn(self):
         """
         Vérifie si une colonne de tri (ordering) est présente parmi les colonnes visibles.
 
-        Returns:
-            bool: True si une colonne "ordering" est visible, sinon False.
+        Returns :
+            bool : True si une colonne "ordering" est visible, sinon False.
         """
         for column in self.__visibleColumns:
             if column.name() == "ordering":
                 return True
         return False
 
-    def getColumnUICommands(self) -> list:
+    def getColumnUICommands(self):
         """
         Retourne les commandes de l'interface utilisateur pour gérer les colonnes.
 
-        Returns:
-            list: Liste des commandes UI pour les colonnes.
+        Returns :
+            list : Liste des commandes UI pour les colonnes.
         """
         if not self.__columnUICommands:
             self.__columnUICommands = self.createColumnUICommands()
@@ -1164,8 +1178,8 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Crée les commandes de l'interface utilisateur pour les colonnes.
 
-        Raises:
-            NotImplementedError: Si non implémenté dans une sous-classe.
+        Raises :
+            NotImplementedError : Si non implémenté dans une sous-classe.
         """
         raise NotImplementedError
 
@@ -1173,9 +1187,9 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Rafraîchit la vue si l'initialisation est terminée.
 
-        Args:
-            *args: Arguments supplémentaires pour la méthode de rafraîchissement.
-            **kwargs: Arguments nommés supplémentaires.
+        Args :
+            *args : Arguments supplémentaires pour la méthode de rafraîchissement.
+            **kwargs : Arguments nommés supplémentaires.
         """
         if self and self.__initDone:
             super().refresh(*args, **kwargs)
@@ -1194,8 +1208,8 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Initialise une colonne et détermine si elle doit être visible ou non.
 
-        Args:
-            column: La colonne à initialiser.
+        Args :
+            column : La colonne à initialiser.
         """
         if column.name() in self.settings.getlist(
             self.settingsSection(), "columnsalwaysvisible"
@@ -1214,9 +1228,9 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Affiche ou masque une colonne par son nom.
 
-        Args:
-            columnName (str): Le nom de la colonne à afficher ou masquer.
-            show (bool): True pour afficher, False pour masquer.
+        Args :
+            columnName (str) : Le nom de la colonne à afficher ou masquer.
+            show (bool) : True pour afficher, False pour masquer.
         """
         for column in self.hideableColumns():
             if columnName == column.name():
@@ -1229,10 +1243,10 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Affiche ou masque une colonne et met à jour la vue.
 
-        Args:
-            column: La colonne à afficher ou masquer.
-            show (bool): True pour afficher, False pour masquer.
-            refresh (bool): True pour rafraîchir la vue après l'opération.
+        Args :
+            column : La colonne à afficher ou masquer.
+            show (bool) : True pour afficher, False pour masquer.
+            refresh (bool) : True pour rafraîchir la vue après l'opération.
         """
         if column.name() == "ordering":
             self.widget.SetResizeColumn(1 if show else 0)
@@ -1261,69 +1275,75 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Masque une colonne visible par son index.
 
-        Args:
-            visibleColumnIndex (int): L'index de la colonne à masquer.
+        Args :
+            visibleColumnIndex (int) : L'index de la colonne à masquer.
         """
         column = self.visibleColumns()[visibleColumnIndex]
         self.showColumn(column, show=False)
 
-    def columns(self) -> list:
+    def columns(self):
+        # def columns(self) -> list:
         """
         Retourne toutes les colonnes disponibles dans la visionneuse.
 
-        Returns:
-            list: Liste des colonnes.
+        Returns :
+            list : Liste des colonnes.
         """
         return self._columns
 
-    def selectableColumns(self) -> list:
+    def selectableColumns(self):
+        # def selectableColumns(self) -> list:
         """
         Retourne les colonnes sélectionnables.
 
-        Returns:
-            list: Liste des colonnes sélectionnables.
+        Returns :
+            list : Liste des colonnes sélectionnables.
         """
         return self._columns
 
-    def isVisibleColumnByName(self, columnName: str) -> bool:
+    def isVisibleColumnByName(self, columnName):
+        # def isVisibleColumnByName(self, columnName: str) -> bool:
         """
         Vérifie si une colonne est visible par son nom.
 
-        Args:
-            columnName (str): Le nom de la colonne à vérifier.
+        Args :
+            columnName (str) : Le nom de la colonne à vérifier.
 
-        Returns:
-            bool: True si la colonne est visible, sinon False.
+        Returns :
+            bool : True si la colonne est visible, sinon False.
         """
         return columnName in [column.name() for column in self.__visibleColumns]
 
-    def isVisibleColumn(self, column) -> bool:
+    def isVisibleColumn(self, column):
+        # def isVisibleColumn(self, column) -> bool:
         """
         Vérifie si une colonne est visible.
 
-        Args:
-            column: La colonne à vérifier.
+        Args :
+            column : La colonne à vérifier.
 
-        Returns:
-            bool: True si la colonne est visible, sinon False.
+        Returns :
+            bool : True si la colonne est visible, sinon False.
         """
         return column in self.__visibleColumns
 
-    def visibleColumns(self) -> list:
+    def visibleColumns(self):
+        # def visibleColumns(self) -> list:
         """
         Retourne la liste des colonnes visibles.
 
-        Returns:
-            list: Liste des colonnes actuellement visibles.
+        Returns :
+            list : Liste des colonnes actuellement visibles.
         """
         return self.__visibleColumns
 
-    def hideableColumns(self) -> list:
+    def hideableColumns(self):
+        # def hideableColumns(self) -> list:
         """
         Retourne les colonnes qui peuvent être masquées.
 
-        Returns:
-            list: Liste des colonnes masquables.
+        Returns :
+            list : Liste des colonnes masquables.
         """
         return [
             column
@@ -1339,15 +1359,16 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         )
         return column.name() not in unhideableColumns
 
-    def getColumnWidth(self, columnName: str) -> int:
+    def getColumnWidth(self, columnName):
+        # def getColumnWidth(self, columnName: str) -> int:
         """
         Retourne la largeur d'une colonne par son nom.
 
-        Args:
-            columnName (str): Le nom de la colonne.
+        Args :
+            columnName (str) : Le nom de la colonne.
 
-        Returns:
-            int: La largeur de la colonne.
+        Returns :
+            int : La largeur de la colonne.
         """
         columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
         defaultWidth = (
@@ -1356,29 +1377,31 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         # Access to a protected member _DEFAULT_COL_WIDTH of a module
         return columnWidths.get(columnName, defaultWidth)
 
-    def onResizeColumn(self, column, width: int):
+    def onResizeColumn(self, column, width):
+        # def onResizeColumn(self, column, width: int):
         """
         Gère le redimensionnement d'une colonne et met à jour les paramètres.
 
-        Args:
-            column: La colonne redimensionnée.
-            width (int): La nouvelle largeur de la colonne.
+        Args :
+            column : La colonne redimensionnée.
+            width (int) : La nouvelle largeur de la colonne.
         """
         columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
         columnWidths[column.name()] = width
         self.settings.setdict(self.settingsSection(), "columnwidths", columnWidths)
 
-    def validateDrag(self, dropItem, dragItems, columnIndex: int) -> bool:
+    def validateDrag(self, dropItem, dragItems, columnIndex):
+        # def validateDrag(self, dropItem, dragItems, columnIndex: int) -> bool:
         """
         Valide si un élément peut être déplacé (drag and drop) dans une colonne.
 
-        Args:
-            dropItem: L'élément où l'élément est déposé.
-            dragItems: Les éléments en cours de déplacement.
-            columnIndex (int): L'index de la colonne affectée.
+        Args :
+            dropItem : L'élément où l'élément est déposé.
+            dragItems : Les éléments en cours de déplacement.
+            columnIndex (int) : L'index de la colonne affectée.
 
-        Returns:
-            bool: True si le déplacement est valide, sinon False.
+        Returns :
+            bool : True si le déplacement est valide, sinon False.
         """
         if columnIndex == -1 or self.visibleColumns()[columnIndex].name() != "ordering":
             return None  # Normal behavior
@@ -1418,32 +1441,34 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
 
         return True
 
-    def getItemText(self, item, column=None) -> str:
+    def getItemText(self, item, column=None):
+        # def getItemText(self, item, column=None) -> str:
         """
         Retourne le texte d'un élément pour une colonne spécifique.
 
-        Args:
-            item: L'élément dont on veut obtenir le texte.
-            column: La colonne à utiliser pour récupérer le texte.
+        Args :
+            item : L'élément dont on veut obtenir le texte.
+            column : La colonne à utiliser pour récupérer le texte.
 
-        Returns:
-            str: Le texte de l'élément pour la colonne spécifiée.
+        Returns :
+            str : Le texte de l'élément pour la colonne spécifiée.
         """
         if column is None:
             column = 1 if self.hasOrderingColumn() else 0
         column = self.visibleColumns()[column]
         return column.render(item)
 
-    def getItemImages(self, item, column: int = 0) -> dict:
+    def getItemImages(self, item, column=0):
+        # def getItemImages(self, item, column: int = 0) -> dict:
         """
         Retourne les images associées à un élément pour une colonne spécifique.
 
-        Args:
-            item: L'élément dont on veut obtenir les images.
-            column (int): L'index de la colonne.
+        Args :
+            item : L'élément dont on veut obtenir les images.
+            column (int) : L'index de la colonne.
 
-        Returns:
-            dict: Dictionnaire des images associées à l'élément.
+        Returns :
+            dict : Dictionnaire des images associées à l'élément.
         """
         column = self.visibleColumns()[column]
         return column.imageIndices(item)
@@ -1452,23 +1477,24 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         """
         Vérifie si une colonne contient des images.
 
-        Args:
-            column (int?): La colonne à vérifier.
+        Args :
+            column (int?) : La colonne à vérifier.
 
-        Returns:
-            bool: True si la colonne contient des images, sinon False.
+        Returns :
+            bool : True si la colonne contient des images, sinon False.
         """
         return self.visibleColumns()[column].hasImages()
 
-    def subjectImageIndices(self, item) -> dict:
+    def subjectImageIndices(self, item):
+        # def subjectImageIndices(self, item) -> dict:
         """
         Retourne les indices des images associées au sujet d'un élément.
 
-        Args:
-            item: L'élément dont on veut obtenir les indices d'images.
+        Args :
+            item : L'élément dont on veut obtenir les indices d'images.
 
-        Returns:
-            dict: Dictionnaire des indices d'images associés.
+        Returns :
+            dict : Dictionnaire des indices d'images associés.
         """
         normalIcon = item.icon(recursive=True)
         selectedIcon = item.selectedIcon(recursive=True) or normalIcon
@@ -1479,12 +1505,13 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
             wx.TreeItemIcon_Expanded: selectedImageIndex,
         }
 
-    def __startObserving(self, eventTypes: list):
+    def __startObserving(self, eventTypes):
+        # def __startObserving(self, eventTypes: list):
         """
         Commence à observer les événements spécifiés pour les colonnes visibles.
 
-        Args:
-            eventTypes (list): Liste des types d'événements à observer.
+        Args :
+            eventTypes (list) : Liste des types d'événements à observer.
         """
         for eventType in eventTypes:
             if eventType.startswith("pubsub"):
@@ -1494,12 +1521,13 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
                     self.onAttributeChanged_Deprecated, eventType=eventType
                 )
 
-    def __stopObserving(self, eventTypes: list):
+    def __stopObserving(self, eventTypes):
+        # def __stopObserving(self, eventTypes: list):
         """
         Arrête d'observer les événements spécifiés pour les colonnes qui ne sont plus visibles.
 
-        Args:
-            eventTypes (list): Liste des types d'événements à arrêter d'observer.
+        Args :
+            eventTypes (list) : Liste des types d'événements à arrêter d'observer.
         """
         # Collecte les types d'événements auxquels les colonnes visibles sont encore intéressées
         # Collect the event types that the currently visible columns are
@@ -1516,28 +1544,30 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
                         self.onAttributeChanged_Deprecated, eventType=eventType
                     )
 
-    def renderCategories(self, item: object) -> str:
+    def renderCategories(self, item):
+        # def renderCategories(self, item: object) -> str:
         """
         Rendre les catégories associées à un élément donné.
 
-        Args:
-            item (object): L'élément dont on veut afficher les catégories.
+        Args :
+            item (object) : L'élément dont on veut afficher les catégories.
 
-        Returns:
-            str: Une chaîne contenant les catégories de l'élément.
+        Returns :
+            str : Une chaîne contenant les catégories de l'élément.
         """
         return self.renderSubjectsOfRelatedItems(item, item.categories)
 
-    def renderSubjectsOfRelatedItems(self, item: object, getItems) -> str:
+    def renderSubjectsOfRelatedItems(self, item, getItems):
+        # def renderSubjectsOfRelatedItems(self, item: object, getItems) -> str:
         """
         Rendre les sujets des éléments liés (catégories ou autres relations).
 
-        Args:
-            item (object): L'élément pour lequel on veut afficher les sujets liés.
-            getItems (callable): Fonction pour récupérer les éléments liés.
+        Args :
+            item (object) : L'élément pour lequel on veut afficher les sujets liés.
+            getItems (callable) : Fonction pour récupérer les éléments liés.
 
-        Returns:
-            str: Une chaîne des sujets des éléments liés.
+        Returns :
+            str : Une chaîne des sujets des éléments liés.
         """
         subjects = []
         ownItems = getItems(recursive=False)
@@ -1557,59 +1587,63 @@ Concernant les méthodes isTreeViewer et getItemExpanded :
         return " ".join(subjects)
 
     @staticmethod
-    def renderSubjects(items: list) -> str:
+    def renderSubjects(items):
+        # def renderSubjects(items: list) -> str:
         """
         Rendre les sujets d'une liste d'éléments.
 
-        Args:
-            items (list): Liste des éléments dont on veut obtenir les sujets.
+        Args :
+            items (list) : Liste des éléments dont on veut obtenir les sujets.
 
-        Returns:
-            str: Une chaîne contenant les sujets des éléments, triés par ordre alphabétique.
+        Returns :
+            str : Une chaîne contenant les sujets des éléments, triés par ordre alphabétique.
         """
         subjects = [item.subject(recursive=True) for item in items]
         return ", ".join(sorted(subjects))
 
     @staticmethod
-    def renderCreationDateTime(item: object, humanReadable: bool = True) -> str:
+    def renderCreationDateTime(item, humanReadable=True):
+        # def renderCreationDateTime(item: object, humanReadable: bool = True) -> str:
         """
         Rendre la date et l'heure de création d'un élément.
 
-        Args:
-            item (object): L'élément dont on veut afficher la date de création.
-            humanReadable (bool): Indique si la date doit être formatée de manière lisible.
+        Args :
+            item (object) : L'élément dont on veut afficher la date de création.
+            humanReadable (bool) : Indique si la date doit être formatée de manière lisible.
 
-        Returns:
-            str: La date et l'heure de création de l'élément.
+        Returns :
+            str : La date et l'heure de création de l'élément.
         """
         return render.dateTime(item.creationDateTime(), humanReadable=humanReadable)
 
     @staticmethod
-    def renderModificationDateTime(item: object, humanReadable: bool = True) -> str:
+    def renderModificationDateTime(item, humanReadable=True):
+        # def renderModificationDateTime(item: object, humanReadable: bool = True) -> str:
         """
         Rendre la date et l'heure de modification d'un élément.
 
-        Args:
-            item (object): L'élément dont on veut afficher la date de modification.
-            humanReadable (bool): Indique si la date doit être formatée de manière lisible.
+        Args :
+            item (object) : L'élément dont on veut afficher la date de modification.
+            humanReadable (bool) : Indique si la date doit être formatée de manière lisible.
 
-        Returns:
-            str: La date et l'heure de modification de l'élément.
+        Returns :
+            str : La date et l'heure de modification de l'élément.
         """
         return render.dateTime(
             item.modificationDateTime(), humanReadable=humanReadable
         )
 
-    def isItemCollapsed(self, item: object) -> bool:
+    def isItemCollapsed(self, item):
+        # def isItemCollapsed(self, item: object) -> bool:
         # pylint: disable=E1101
         """
         Vérifie si un élément est réduit dans la vue actuelle (uniquement pertinent pour les vues arborescentes).
 
-        Args:
-            item (object): L'élément à vérifier.
+        Args :
+            item (object) : L'élément à vérifier.
 
-        Returns:
-            bool: True si l'élément est réduit, False sinon.
+        Returns :
+            bool : True si l'élément est réduit, False sinon.
         """
         return (
             not self.getItemExpanded(item)
@@ -1697,11 +1731,12 @@ class SortableViewerWithColumns(
         """
         self.widget.showSortOrder(self.imageIndex[self.getSortOrderImage()])
 
-    def getSortOrderImage(self) -> str:
+    def getSortOrderImage(self):
+        # def getSortOrderImage(self) -> str:
         """
         Retourne l'image associée à la direction du tri.
 
-        Returns:
-            str: Le nom de l'icône pour indiquer le tri ascendant ou descendant.
+        Returns :
+            str : Le nom de l'icône pour indiquer le tri ascendant ou descendant.
         """
         return "arrow_up_icon" if self.isSortOrderAscending() else "arrow_down_icon"
