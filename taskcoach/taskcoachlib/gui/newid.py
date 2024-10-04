@@ -35,7 +35,8 @@ class IdProvider(set):
     #     super().__init__()
     #     self._ids = set()
 
-    def get(self) -> int:
+    # def get(self) -> int:
+    def get(self):
         """
         Obtenir un nouvel identifiant unique.
 
@@ -60,7 +61,8 @@ class IdProvider(set):
         # # return wx.NewIdRef()
         return wx.ID_ANY
 
-    def put(self, id_: int):
+    # def put(self, id_: int):
+    def put(self, id_):
         """
         Libérer un identifiant.
 

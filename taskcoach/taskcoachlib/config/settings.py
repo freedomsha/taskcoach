@@ -16,17 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib import meta, patterns, operating_system
-from taskcoachlib.i18n import _
-# from taskcoachlib.thirdparty.pubsub import pub
-# https://pypubsub.readthedocs.io/en/v4.0.3/
-from pubsub import pub
-from taskcoachlib.workarounds import ExceptionAsUnicode
 import configparser
 import os
 import sys
 import wx
 import shutil
+
+# from taskcoachlib.thirdparty.pubsub import pub
+# https://pypubsub.readthedocs.io/en/v4.0.3/
+from pubsub import pub
+
+from taskcoachlib import meta, patterns, operating_system
+from taskcoachlib.i18n import _
+from taskcoachlib.workarounds import ExceptionAsUnicode
 from . import defaults
 
 
@@ -39,25 +41,27 @@ class UnicodeAwareConfigParser(configparser.RawConfigParser):
     """
 
     def set(self, section, setting, value):  # pylint: disable=W0222
+        # def set(self, section: str, setting: str, value: str | None):  # pylint: disable=W0222
         """
         Définissez une valeur de configuration dans la section spécifiée.
 
-        Args:
+        Args :
             section (str) : le nom de la section.
             setting (str) : le nom du paramètre.
-            value : la valeur à définir .
+            value : la valeur à définir.
         """
         configparser.RawConfigParser.set(self, section, setting, value)
 
     def get(self, section, setting):  # pylint: disable=W0221
+        # def get(self, section: str, setting: str) -> str:  # pylint: disable=W0221
         """
         Obtenez une valeur de configuration à partir de la section spécifiée.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             setting (str) : Le nom du paramètre.
 
-        Returns:
+        Returns :
             La valeur de configuration.
         """
         return configparser.RawConfigParser.get(self, section, setting)
@@ -79,7 +83,7 @@ class CachingConfigParser(UnicodeAwareConfigParser):
 
         Crée un attribut d'instance (dictionnaire) : __cachedValues
 
-        Args:
+        Args :
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
         """
@@ -92,11 +96,11 @@ class CachingConfigParser(UnicodeAwareConfigParser):
 
         Crée un attribut d'instance (dictionnaire) : __cachedValues
 
-        Args:
+        Args :
             *args : chemins de fichiers à lire.
             **kwargs : arguments de mot-clé supplémentaires.
 
-        Returns:
+        Returns :
             bool : True en cas de succès, False sinon.
         """
         self.__cachedValues = dict()
@@ -120,11 +124,11 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         """
         Obtenez une valeur de configuration à partir du cache ou lisez-la si elle n'est pas mise en cache.
 
-        Args:
+        Args :
             section (str) : le nom de la section.
             setting (str) : le nom du paramètre.
 
-        Returns:
+        Returns :
             La valeur de configuration.
         """
         cache, key = self.__cachedValues, (section, setting)
@@ -147,7 +151,7 @@ class Settings(CachingConfigParser):
         """
         Initialisez l'objet Paramètres.
 
-        Args:
+        Args :
             load (bool, optional) : s'il faut charger les paramètres à partir du fichier. La valeur par défaut est True.
             iniFile (str, optional) : le chemin d'accès au fichier .ini. La valeur par défaut est Aucun.
             *args : arguments supplémentaires.
@@ -188,7 +192,7 @@ class Settings(CachingConfigParser):
 
         Crée un attribut saveIniFileInProgramDir qui prend la valeur de value.
 
-        Args:
+        Args :
             value (bool) : s'il faut enregistrer le fichier .ini dans le répertoire du programme.
         """
         saveIniFileInProgramDir = value
@@ -214,7 +218,7 @@ class Settings(CachingConfigParser):
         """
         Définissez l'état de chargement du fichier de paramètres.
 
-        Args:
+        Args :
             message (str) : Le message d'erreur en cas d'échec du chargement.
         """
         self.set("file", "inifileloaded", "False" if message else "True")
@@ -238,11 +242,11 @@ class Settings(CachingConfigParser):
         """
         Ajoutez une nouvelle section aux paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             copyFromSection (str, optional) : La section à partir de laquelle copier les valeurs. La valeur par défaut est Aucun.
 
-        Returns:
+        Returns :
             bool : Vrai si la section a été ajoutée avec succès.
         """
         result = super(Settings, self).add_section(section)
@@ -252,10 +256,11 @@ class Settings(CachingConfigParser):
         return result
 
     def getRawValue(self, section, option):
+        # def getRawValue(self, section: str, option: str):
         """
         Obtenez une valeur brute (non évaluée) à partir des paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
@@ -265,10 +270,11 @@ class Settings(CachingConfigParser):
         return super(Settings, self).get(section, option)
 
     def init(self, section, option, value):
+        # def init(self, section: str, option: str, value):
         """
         Initialisez un paramètre avec une valeur donnée.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
             value : La valeur à définir.
@@ -279,14 +285,15 @@ class Settings(CachingConfigParser):
         return super(Settings, self).set(section, option, value)
 
     def get(self, section, option):
+        # def get(self, section: str, option: str):
         """
         Obtenez une valeur à partir des paramètres, de la gestion des valeurs par défaut et des anciens formats de fichier .ini.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             La valeur du paramètre.
         """
         try:
@@ -298,14 +305,15 @@ class Settings(CachingConfigParser):
         return result
 
     def getDefault(self, section, option):
+        # def getDefault(self, section: str, option: str):
         """
         Obtenez la valeur par défaut pour un paramètre donné.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             La valeur par défaut.
         """
         defaultSectionKey = section.strip("0123456789")
@@ -319,15 +327,16 @@ class Settings(CachingConfigParser):
             raise configparser.NoOptionError((option, defaultSection))
 
     def _ensureMinimum(self, section, option, result):
+        # def _ensureMinimum(self, section: str, option: str, result):
         """
         Assurez-vous qu'une valeur de paramètre répond aux exigences minimales.
 
-        Args:
+        Args :
             section (str) : le nom de la section.
             option (str) : le nom de l'option.
             result : la valeur à vérifier.
 
-        Returns:
+        Returns :
             La valeur result, garantissant qu'elle répond aux exigences minimales.
         """
         if section in defaults.minimum and option in defaults.minimum[section]:
@@ -335,15 +344,16 @@ class Settings(CachingConfigParser):
         return result
 
     def _fixValuesFromOldIniFiles(self, section, option, result):
+        # def _fixValuesFromOldIniFiles(self, section: str, option: str, result):
         """
         Corrigez les paramètres des anciens fichiers TaskCoach.ini qui ne sont plus valides.
 
-        Args:
+        Args :
             section (str) : le nom de la section.
             option (str) : le nom de l'option.
             result : La valeur à corriger.
 
-        Returns:
+        Returns :
             La valeur result corrigée.
         """
         original = result
@@ -413,16 +423,17 @@ class Settings(CachingConfigParser):
         return result
 
     def set(self, section, option, value, new=False):  # pylint: disable=W0221
+        # def set(self, section: str, option: str, value, new: bool = False) -> bool:  # pylint: disable=W0221
         """
         Définissez une valeur dans les paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
             value : La valeur à définir.
             new (bool, optional) : s'il s'agit d'une nouvelle option. La valeur par défaut est False.
 
-        Returns:
+        Returns :
             bool : True si la valeur a été définie avec succès.
         """
         if new:
@@ -440,15 +451,16 @@ class Settings(CachingConfigParser):
             return False
 
     def setboolean(self, section, option, value):
+        # def setboolean(self, section: str, option: str, value: bool) -> bool:
         """
         Définissez une valeur booléenne dans les paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
             value (bool) : La valeur à définir.
 
-        Returns:
+        Returns :
             bool : Vrai si la valeur a été définie avec succès.
         """
         if self.set(section, option, str(value)):
@@ -457,15 +469,16 @@ class Settings(CachingConfigParser):
     setvalue = settuple = setlist = setdict = setint = setboolean
 
     def settext(self, section, option, value):
+        # def settext(self, section: str, option: str, value):
         """
         Définissez une valeur de texte dans les paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
             value (str) : La valeur à définir.
 
-        Returns:
+        Returns :
             bool : Vrai si la valeur a été définie avec succès.
         """
         if self.set(section, option, value):
@@ -475,11 +488,11 @@ class Settings(CachingConfigParser):
         """
         Obtenez une valeur de liste à partir des paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             list : La valeur de la liste.
         """
         return self.getEvaluatedValue(section, option, eval)
@@ -487,6 +500,7 @@ class Settings(CachingConfigParser):
     getvalue = gettuple = getdict = getlist
 
     def getint(self, section, option):
+        # def getint(self, section, option) -> int:
         """
         Obtenez une valeur entière à partir des paramètres.
 
@@ -500,43 +514,46 @@ class Settings(CachingConfigParser):
         return self.getEvaluatedValue(section, option, int)
 
     def getboolean(self, section, option):
+        # def getboolean(self, section, option) -> bool:
         """
         Obtenez une valeur booléenne à partir des paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             bool : La valeur booléenne.
         """
         return self.getEvaluatedValue(section, option, self.evalBoolean)
 
     def gettext(self, section, option):
+        # def gettext(self, section, option) -> str:
         """
         Obtenez une valeur de texte à partir des paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             str : la valeur du texte.
         """
         return self.get(section, option)
 
     @staticmethod
     def evalBoolean(stringValue):
+        # def evalBoolean(stringValue: str) -> bool:
         """
         Évalue une chaîne en tant que valeur booléenne.
 
-        Args:
+        Args :
             stringValue (str) : La valeur de la chaîne.
 
-        Returns:
+        Returns :
             bool : La valeur booléenne évaluée.
 
-        Raises:
+        Raises :
             ValueError : Relève un message d'erreur si la chaîne n'est pas une valeur booléenne valide.
         """
         if stringValue in ("True", "False"):
@@ -549,16 +566,19 @@ class Settings(CachingConfigParser):
     def getEvaluatedValue(
         self, section, option, evaluate=eval, showerror=wx.MessageBox
     ):
+        # def getEvaluatedValue(
+        #         self, section: str, option: str, evaluate=eval, showerror=wx.MessageBox
+        # ):
         """
         Obtenez une valeur à partir des paramètres et évaluez-la.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
             evaluate (fonction, optional) : La fonction pour évaluer la valeur. La valeur par défaut est eval.
             showerror (fonction, optional) : la fonction pour afficher les erreurs. La valeur par défaut est wx.MessageBox.
 
-        Returns:
+        Returns :
             La valeur évaluée.
         """
         stringValue = self.get(section, option)
@@ -592,7 +612,7 @@ class Settings(CachingConfigParser):
         """
         Enregistrez les paramètres dans un fichier.
 
-        Args:
+        Args :
             showerror (fonction, optional) : La fonction pour afficher les erreurs. La valeur par défaut est le fichier wx.MessageBox.
             file (fonction, optional) : la fonction pour ouvrir les fichiers. Par défaut, ouvrir.
         """
@@ -626,13 +646,14 @@ class Settings(CachingConfigParser):
             )
 
     def filename(self, forceProgramDir=False):
+        # def filename(self, forceProgramDir: bool = False) -> str:
         """
         Obtenez le nom de fichier du fichier .ini.
 
-        Args:
+        Args :
             forceProgramDir (bool, optional) : s'il faut forcer l'enregistrement dans le répertoire du programme. La valeur par défaut est False.
 
-        Returns:
+        Returns :
             str : Le nom du fichier .ini.
         """
         if self.__iniFileSpecifiedOnCommandLine:
@@ -710,7 +731,7 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire du programme.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au répertoire du programme.
         """
         path = sys.argv[0]
@@ -722,10 +743,10 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire de configuration.
 
-        Args:
+        Args :
             environ (dict) : Les variables d'environnement.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au répertoire de configuration.
         """
         try:
@@ -765,11 +786,11 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire de données.
 
-        Args:
+        Args :
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
 
-        Returns:
+        Returns :
             str : le chemin d'accès au répertoire de données.
         """
         forceGlobal = kwargs.pop("forceGlobal", False)
@@ -828,11 +849,11 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire de données.
 
-        Args:
+        Args :
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
 
-        Returns:
+        Returns :
             str : le chemin d'accès au répertoire de données.
         """
         return self._pathToDataDir(*args, **kwargs)[0]
@@ -841,7 +862,7 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire des modèles.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au répertoire des modèles.
         """
         try:
@@ -854,7 +875,7 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire des modèles.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au répertoire des modèles.
         """
         return self._pathToTemplatesDir()[0]
@@ -863,7 +884,7 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire des sauvegardes.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au répertoire des sauvegardes.
         """
         return self._pathToDataDir("backups")[0]
@@ -872,10 +893,10 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin obsolète vers le répertoire de configuration.
 
-        Args:
+        Args :
             environ (dict) : Les variables d'environnement.
 
-        Return:s
+        Returns :
             str : Le chemin obsolète vers le répertoire de configuration.
         """
         try:
@@ -892,10 +913,10 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin obsolète vers le répertoire des modèles.
 
-        Args:
+        Args :
             doCreate (bool, optional) : s'il faut créer le répertoire s'il n'existe pas. La valeur par défaut est True.
 
-        Returns:
+        Returns :
             str : le chemin obsolète vers le répertoire des modèles.
         """
         path = os.path.join(self.path(), "taskcoach-templates")
@@ -922,7 +943,7 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au fichier .ini spécifié sur la ligne de commande.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au fichier .ini spécifié sur la ligne de commande.
         """
         return os.path.dirname(self.__iniFileSpecifiedOnCommandLine) or "."
@@ -931,10 +952,10 @@ class Settings(CachingConfigParser):
         """
         Génère le nom de fichier du fichier .ini.
 
-        Args:
+        Args :
             forceProgramDir (bool) : s'il faut forcer l'enregistrement dans le répertoire du programme.
 
-        Returns:
+        Returns :
             str : Le nom de fichier généré du fichier .ini.
         """
         return os.path.join(
@@ -989,11 +1010,12 @@ class Settings(CachingConfigParser):
         except:
             pass
 
-    def __hash__(self) -> int:
+    def __hash__(self):
+        # def __hash__(self) -> int:
         """
         Obtenez le hachage de l'objet Paramètres.
 
-        Returns:
+        Returns :
             int : L'id de hachage de l'objet Paramètres.
         """
         return id(self)

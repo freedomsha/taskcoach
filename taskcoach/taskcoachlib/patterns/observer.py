@@ -35,7 +35,8 @@ class List(list):
     même lorsque leur contenu est le même.
     """
 
-    def __eq__(self, other: list) -> bool:
+    # def __eq__(self, other: list) -> bool:
+    def __eq__(self, other):
         """
         Comparez deux listes pour l'égalité.
 
@@ -47,7 +48,7 @@ class List(list):
         Args:
             other (Liste ou liste) : La liste avec laquelle comparer.
 
-        Returns:
+        Returns :
             bool : True si les listes sont égales, False sinon.
         """
         if isinstance(other, List):
@@ -55,7 +56,8 @@ class List(list):
         else:
             return list(self) == other
 
-    def removeItems(self, items: list):
+    # def removeItems(self, items: list):
+    def removeItems(self, items):
         """
         Supprimez plusieurs éléments de la liste.
 
@@ -139,7 +141,8 @@ class Event(object):
             else {type: {} if source is None else {source: values}}
         )
 
-    def __repr__(self) -> str:  # pragma: no cover
+    # def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         return "Event(%s)" % (self.__sourcesAndValuesByType,)
 
     def __eq__(self, other):
@@ -181,38 +184,40 @@ class Event(object):
             tuple(currentValues)
         )
 
-    def type(self) -> str:
+    # def type(self) -> str:
+    def type(self):
         """
         Renvoie le type d'événement.
 
         S'il existe plusieurs types d'événements, cette méthode
         renvoie un type d'événement arbitraire. Cette méthode est utile si
-        l'appelant est sûr que cette instance d'événement a exactement un type d'événement
-        .
+        l'appelant est sûr que cette instance d'événement a exactement un type d'événement.
 
-        Returns:
+        Returns :
             str : Le type d'événement.
         """
         return list(self.types())[0] if self.types() else None
 
-    def types(self) -> set:
+    # def types(self) -> set:
+    def types(self):
         """
         Renvoie l'ensemble des types d'événements que cet événement notifie.
 
-        Returns:
+        Returns :
             set : l'ensemble des types d'événements.
         """
         return set(self.__sourcesAndValuesByType.keys())
 
-    def sources(self, *types) -> set:
+    # def sources(self, *types) -> set:
+    def sources(self, *types):
         """
         Renvoie l'ensemble de toutes les sources de cette instance d'événement, ou les sources
         pour des types d'événements spécifiques.
 
-        Args:
+        Args :
             *types : types d'événements spécifiques à filtrer.
 
-        Returns:
+        Returns :
             set : L'ensemble des sources.
         """
         types = types or self.types()
@@ -223,16 +228,18 @@ class Event(object):
             )
         return sources
 
-    def sourcesAndValuesByType(self) -> dict:
+    # def sourcesAndValuesByType(self) -> dict:
+    def sourcesAndValuesByType(self):
         """
         Renvoie toutes les données {type : {source : valeurs}}.
 
-        Returns:
+        Returns :
             dict : Les données de l'événement.
         """
         return self.__sourcesAndValuesByType
 
-    def value(self, source=None, type=None) -> object:
+    # def value(self, source=None, type=None) -> object:
+    def value(self, source=None, type=None):
         """
         Renvoie la valeur qui appartient à une source.
 
@@ -243,11 +250,11 @@ class Event(object):
         arbitraire. Cette dernière option est utile si l'appelant est sûr
         qu'il n'y a qu'une seule source.
 
-        Args:
+        Args :
             source (object, facultatif) : La source de l'événement.
             type (str, facultatif) : Le type d'événement.
 
-        Returns:
+        Returns :
             object : La valeur associée à la source.
         """
         return self.values(source, type)[0]
@@ -260,11 +267,11 @@ class Event(object):
         les valeurs d'une source arbitraire. Cette dernière option est utile si
         l'appelant est sûr qu'il n'y a qu'une seule source.
 
-        Args:
+        Args :
             source (object, facultatif) : La source de l'événement.
             type (str, facultatif) : Le type d'événement.
 
-        Returns:
+        Returns :
             liste : Les valeurs associées à la source.
         """
         type = type or self.type()
@@ -275,10 +282,10 @@ class Event(object):
         """
         Créez un nouvel événement qui contient un sous-ensemble des données de cet événement.
 
-        Args:
+        Args :
             *typesAndSources : Tuples de (type, source).
 
-        Returns:
+        Returns :
             Événement : L'événement de sous-ensemble.
         """
         subEvent = self.__class__()
@@ -313,10 +320,10 @@ def eventSource(f):
     Cela permet d'envoyer un seul événement
     pour des chaînes de plusieurs méthodes dont chacune doit envoyer un événement.
 
-    Args:
+    Args :
         f (fonction) : La méthode pour décorer.
 
-    Returns:
+    Returns :
         fonction : La méthode décorée.
     """
 
@@ -347,7 +354,7 @@ class MethodProxy(object):
         """
         Initialisez la méthode MethodProxy.
 
-        Args:
+        Args :
             method (fonction) : La méthode à envelopper.
         """
         self.method = method
@@ -359,23 +366,24 @@ class MethodProxy(object):
         """
         Appelez la méthode encapsulée.
 
-        Args:
+        Args :
             *args : liste d'arguments de longueur variable.
             **kwargs : arguments de mots clés arbitraires.
 
-        Returns:
+        Returns :
             objet : le résultat de l’appel de méthode.
         """
         return self.method(*args, **kwargs)
 
-    def __eq__(self, other) -> bool:
+    # def __eq__(self, other) -> bool:
+    def __eq__(self, other):
         """
         Comparez deux objets MethodProxy pour l'égalité.
 
-        Args:
+        Args :
             other (MethodProxy) : Le MethodProxy avec lequel comparer.
 
-        Returns:
+        Returns :
             bool : True si les MethodProxies sont égaux, False sinon .
         """
         return (
@@ -384,23 +392,25 @@ class MethodProxy(object):
             and self.method.__func__ is other.method.__func__
         )
 
-    def __ne__(self, other) -> bool:
+    # def __ne__(self, other) -> bool:
+    def __ne__(self, other):
         """
         Comparez deux objets MethodProxy pour l'inégalité.
 
-        Args:
+        Args :
             other (MethodProxy) : Le MethodProxy avec lequel comparer.
 
-        Returns:
+        Returns :
             bool : True si les MethodProxies ne sont pas égaux, False sinon.
         """
         return not (self == other)
 
-    def __hash__(self) -> int:
+    # def __hash__(self) -> int:
+    def __hash__(self):
         """
         Obtenez le hachage du MethodProxy.
 
-        Returns:
+        Returns :
             int : Le hachage du MethodProxy.
         """
         # Can't use self.method.__self__ for the hash, it might be mutable
@@ -430,10 +440,10 @@ def wrapObserver(decoratedMethod):
     Enveloppez l'argument de l'observateur (supposé être le premier après self) dans
     une classe MethodProxy.
 
-    Args:
+    Args :
         decoratedMethod (fonction) : La méthode à décorer.
 
-    Returns:
+    Returns :
         fonction : La méthode décorée.
     """
 
@@ -449,10 +459,10 @@ def unwrapObservers(decoratedMethod):
     """
     Déballez les observateurs renvoyés de leur classe MethodProxy.
 
-    Args:
+    Args :
         decoratedMethod (fonction) : La méthode à décorer.
 
-    Returns:
+    Returns :
         fonction : La méthode décorée.
     """
 
@@ -485,13 +495,17 @@ class Publisher(object, metaclass=singleton.Singleton):
         """
         super().__init__(*args, **kwargs)
         self.clear()
+        self.__observers = {}
 
     def clear(self):
         """
         Effacer le registre des observateurs. Principalement à des fins de tests.
         """
         # observers = {(eventType, eventSource): set(callbacks)}
-        self.__observers = {}  # pylint: disable=W0201
+        try:
+            self.__observers.clear()
+        except:
+            self.__observers = {}  # pylint: disable=W0201
 
     @wrapObserver
     def registerObserver(self, observer, eventType, eventSource=None):
@@ -502,7 +516,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         passe une source d'événement spécifique, l'observer n'est appelé que lorsque l'événement
         provient de la source d'événement spécifiée.
 
-        Args:
+        Args :
             observer (fonction) : la méthode de rappel de l'observateur.
             eventType (str) : le type d'événement à observer.
             eventSource (object, facultatif) : la source d'événement à observer.
@@ -590,15 +604,16 @@ class Publisher(object, metaclass=singleton.Singleton):
                 observer(subEvent)
 
     @unwrapObservers
-    def observers(self, eventType=None) -> set:
+    # def observers(self, eventType=None) -> set:
+    def observers(self, eventType=None):
         """
         Obtenez les observateurs actuellement enregistrés. Spécifiez éventuellement
         un type d'événement spécifique pour obtenir des observateurs pour ce type d'événement uniquement.
 
-        Args:
+        Args :
             eventType (str, facultatif) : le type d'événement par lequel filtrer les observateurs.
 
-        Returns:
+        Returns :
             set : L'ensemble des observateurs.
         """
         if eventType:
@@ -626,7 +641,7 @@ class Observer(object):
         """
         Enregistrez un observateur.
 
-        Args:
+        Args :
             observer (function) : La méthode de rappel de l'observateur.
             *args : liste d'arguments de longueur variable.
             **kwargs : arguments de mots clés arbitraires.
@@ -676,11 +691,11 @@ class Decorator(Observer):
         self.__observable = observable
         super().__init__(*args, **kwargs)
 
-    def observable(self, recursive: bool = False):
+    def observable(self, recursive=False):
         """
         Obtenez l'instance observable encapsulée.
 
-        Args:
+        Args :
             recursive (bool, facultatif) : Si True, obtenez l'observable de niveau supérieur.
 
         Renvoie :
@@ -693,21 +708,22 @@ class Decorator(Observer):
                 pass
         return self.__observable
 
-    def __getattr__(self, attribute: str):
+    def __getattr__(self, attribute):
         """
         Déléguez l'accès aux attributs à l'instance observable encapsulée.
 
-        Args:
+        Args :
             attribute (str) : le nom de l'attribut.
 
-        Returns:
+        Returns :
             Any : la valeur de l'attribut.
         """
         return getattr(self.observable(), attribute)
 
 
 class ObservableCollection(object):
-    def __hash__(self) -> int:
+    # def __hash__(self) -> int:
+    def __hash__(self):
         """Rendre les ObservableCollections appropriées comme clés dans les dictionnaires."""
         return hash(id(self))
 
@@ -715,19 +731,22 @@ class ObservableCollection(object):
         """Met en pause les Cycles."""
 
     @classmethod
-    def addItemEventType(class_) -> str:
+    # def addItemEventType(class_) -> str:
+    def addItemEventType(class_):
         """Type d'événement utilisé pour informer les observateurs qu'un ou plusieurs éléments
         ont été ajoutés à la collection."""
-        return "%s.add" % class_
+        return f"{class_}.add"
 
     @classmethod
-    def removeItemEventType(class_) -> str:
+    # def removeItemEventType(class_) -> str:
+    def removeItemEventType(class_):
         """Type d'événement utilisé pour informer les observateurs qu'un ou plusieurs éléments
         ont été supprimés de la collection."""
-        return "%s.remove" % class_
+        return f"{class_}.remove"
 
     @classmethod
-    def modificationEventTypes(class_) -> list[str]:
+    # def modificationEventTypes(class_) -> list[str]:
+    def modificationEventTypes(class_):
         try:
             eventTypes = super().modificationEventTypes()
         except AttributeError:
@@ -743,11 +762,12 @@ class ObservableSet(ObservableCollection, Set):
     ObservableSet est un ensemble qui avertit les observateurs lorsque des éléments sont ajoutés ou supprimés de l'ensemble.
     """
 
-    def __eq__(self, other) -> bool:
+    # def __eq__(self, other) -> bool:
+    def __eq__(self, other):
         """
         Compare cet ObservableSet avec un autre objet.
 
-        Args:
+        Args :
             other : L'objet à comparer.
 
         Renvoie :
@@ -760,11 +780,12 @@ class ObservableSet(ObservableCollection, Set):
         return result
 
     # FIXME: Uniquement pour satisfaire registerObserver()
-    def __hash__(self) -> int:
+    # def __hash__(self) -> int:
+    def __hash__(self):
         """
         Calcule la valeur de hachage pour cet ObservableSet.
 
-        Returns:
+        Returns :
             int : la valeur de hachage.
         """
         return hash(id(self))
@@ -774,7 +795,7 @@ class ObservableSet(ObservableCollection, Set):
         """
         Ajoute un élément à ObservableList.
 
-        Args:
+        Args :
             item : L'élément à ajouter.
             event : Événement facultatif associé à l'opération.
         """
@@ -826,7 +847,7 @@ class ObservableSet(ObservableCollection, Set):
         """
         Efface tous les éléments de l’événement ObservableSet.
 
-        Args:
+        Args :
             event : événement facultatif associé à l’opération.
         """
         if not self:
@@ -845,7 +866,7 @@ class ObservableList(ObservableCollection, List):
         """
         Ajoute un élément à ObservableList.
 
-        Args:
+        Args :
             item : L'élément à ajouter.
             event : Événement facultatif associé à l'opération.
         """
@@ -857,13 +878,13 @@ class ObservableList(ObservableCollection, List):
         """
         Étend l'ObservableList avec plusieurs éléments.
 
-        Args:
+        Args :
             items : itérable des éléments à ajouter.
             event : événement facultatif associé à l'opération.
         """
         if not items:
             return
-        super(ObservableList, self).extend(items)
+        super().extend(items)
         event.addSource(self, *items, **dict(type=self.addItemEventType()))
 
     @eventSource
@@ -941,7 +962,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         Initialise la CollectionDecorator en observant les événements d'ajout et de suppression d'éléments
         dans la collection observable.
 
-        Args:
+        Args :
             observedCollection (ObservableCollection): La collection à décorer et observer.
             *args: Arguments supplémentaires pour l'initialisation.
             **kwargs: Arguments nommés supplémentaires pour l'initialisation.
@@ -962,9 +983,10 @@ class CollectionDecorator(Decorator, ObservableCollection):
         )
         self.extendSelf(observable)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    # def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self):  # pragma: no cover
         """Retourne une représentation sous forme de chaîne de la collection décorée."""
-        return "%s(%s)" % (self.__class__, super().__repr__())
+        return f"{self.__class__}({super().__repr__()})"
 
     def freeze(self):
         """
@@ -986,12 +1008,13 @@ class CollectionDecorator(Decorator, ObservableCollection):
         if isinstance(self.observable(), CollectionDecorator):
             self.observable().thaw()
 
-    def isFrozen(self) -> bool:
+    # def isFrozen(self) -> bool:
+    def isFrozen(self):
         """
         Vérifie si la collection est gelée.
 
-        Returns:
-            bool: True si la collection est gelée, sinon False.
+        Returns :
+            bool : True si la collection est gelée, sinon False.
         """
         return self.__freezeCount != 0
 
@@ -1038,26 +1061,26 @@ class CollectionDecorator(Decorator, ObservableCollection):
         """
         self.removeItemsFromSelf(list(event.values()))
 
-    def extendSelf(self, items: list, event=None):
+    def extendSelf(self, items, event=None):
         """
         Ajoute des éléments à cette collection décorée sans déléguer à la collection observée.
 
         Fournit une méthode pour étendre cette collection sans déléguer à
         la collection observée.
 
-        Args:
-            items (list): Liste des éléments à ajouter à la collection décorée.
-            event (Event, optionnel): L'événement associé à l'ajout des éléments."""
+        Args :
+            items (list) : Liste des éléments à ajouter à la collection décorée.
+            event (Event, optionnel) : L'événement associé à l'ajout des éléments."""
         return super().extend(items, event=event)
 
-    def removeItemsFromSelf(self, items: list, event=None):
+    def removeItemsFromSelf(self, items, event=None):
         """
         Supprime des éléments de cette collection décorée sans déléguer à la collection observée.
 
         Fournit une méthode pour supprimer des éléments de cette collection sans
         déléguer à la collection observée.
 
-        Args:
+        Args :
             items (list): Liste des éléments à supprimer de la collection décorée.
             event (Event, optionnel): L'événement associé à la suppression des éléments."""
         return super().removeItems(items, event=event)

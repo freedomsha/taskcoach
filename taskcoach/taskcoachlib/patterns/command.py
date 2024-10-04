@@ -62,6 +62,7 @@ class Command(object):
         pass
 
     def __str__(self):
+        # def __str__(self) -> str:
         """
         Renvoie une représentation sous forme de chaîne de la commande.
 
@@ -141,6 +142,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         Renvoie :
             list : La liste des commandes exécutées.
         """
+        # renvoie une liste, un bool ne serait pas mieux ?
         return self.__history
 
     def getHistory(self):
@@ -162,6 +164,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         return self.__future
 
     def getFuture(self):
+        # def getFuture(self) -> list:
         """
         Obtenez la liste des commandes qui peuvent être rétablies.
 
@@ -171,10 +174,11 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         return self.__future
 
     def _extendLabel(self, label, commandList):
+        # def _extendLabel(self, label: str, commandList: list) -> str:
         """
         Prolongez l'étiquette avec le nom de la dernière commande de la liste des commandes.
 
-        Args:
+        Args :
             label (str) : L'étiquette à étendre.
             commandList (list) : La liste des commandes.
 
@@ -187,10 +191,11 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         return label
 
     def undostr(self, label="Undo"):
+        # def undostr(self, label="Undo") -> str:
         """
         Obtenez une étiquette de chaîne pour l'opération d'annulation.
 
-        Args:
+        Args :
             label (str) : L'étiquette de base pour l'opération d'annulation.
 
         Renvoie :
@@ -199,10 +204,11 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         return self._extendLabel(label, self.__history)
 
     def redostr(self, label="Redo"):
+        # def redostr(self, label: str = "Redo") -> str:
         """
         Obtenez une étiquette de chaîne pour l'opération de rétablissement.
 
-        Args:
+        Args :
             label (str) : L'étiquette de base pour l'opération de rétablissement.
 
         Renvoie :

@@ -142,10 +142,10 @@ class Composite(object):
         """
         Obtenez les frères et sœurs du composite.
 
-        Args:
+        Args :
             recursive (bool, facultatif) : Si True, obtenez tous les descendants des frères et sœurs de manière récursive.
 
-        Returns:
+        Returns :
             list : La liste de frères et sœurs.
         """
         parent = self.parent()
@@ -183,7 +183,7 @@ class Composite(object):
         """
         Ajoutez un composite enfant.
 
-        Args:
+        Args :
             child (Composite) : Le composite enfant à ajouter.
         """
         self.__children.append(child)
@@ -193,7 +193,7 @@ class Composite(object):
         """
         Supprimer un composite enfant.
 
-        Args:
+        Args :
             child (Composite) : Le composite enfant à supprimer.
         """
         self.__children.remove(child)

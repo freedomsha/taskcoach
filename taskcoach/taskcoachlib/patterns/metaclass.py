@@ -73,6 +73,7 @@ class NumberedInstances(type):
 
     # Attribut de classe count est un dictionnaire
     count = dict()
+    # count: dict[<type>, <type>] = ...
 
     # ChatGPT ajoute __init__
     # def __init__(cls, name, bases, dct):
@@ -126,7 +127,8 @@ class NumberedInstances(type):
         # return instance
 
     # Vieux code
-    def lowestUnusedNumber(cls) -> int:
+    def lowestUnusedNumber(cls):
+        # def lowestUnusedNumber(cls) -> int:
         """Méthode qui renvoie le plus bas numéro d'instance inutilisé pour la classe.
         """
         # vieux code
@@ -152,6 +154,7 @@ class NumberedInstances(type):
 
 
 metadic = {}
+# metadic: dict[<type>, <type>] = ...
 
 
 def _generatemetaclass(bases, metas, priority):

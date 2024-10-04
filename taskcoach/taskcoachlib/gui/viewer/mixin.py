@@ -446,6 +446,7 @@ class SortableViewerForTasksMixin(
         super().sortBy(sortKey)
 
     def isSortByTaskStatusFirst(self):
+        # def isSortByTaskStatusFirst(self) -> bool:
         return self.settings.getboolean(
             self.settingsSection(), "sortbystatusfirst"
         )
@@ -465,6 +466,7 @@ class SortableViewerForTasksMixin(
         return options
 
     def createSortOrderUICommands(self):
+        # def createSortOrderUICommands(self) -> list:
         commands = super().createSortOrderUICommands()
         commands.append(uicommand.ViewerSortByTaskStatusFirst(viewer=self))
         return commands

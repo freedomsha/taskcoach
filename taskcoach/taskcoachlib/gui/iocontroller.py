@@ -252,11 +252,13 @@ class IOController(object):
         if not filename:
             return
         self.__updateDefaultPath(filename)
+        # TODO: code à remplacer (trop complexe):
         if fileExists(filename):
             self.__closeUnconditionally()
             self.__addRecentFile(filename)
             try:
-                try:
+                try:  # self._Application__wx_app.traits={AttributeError}AttributeError("'IOController' object has no attribute '_Application__wx_app'")
+                    # En fait, j'ai un problème avec /gui/uicommand/base_uicommand.py, gui/iocontroller.py et gui/viewer.base.py . En gros:  self._Application__wx_app.traits={AttributeError}AttributeError("'IOController' object has no attribute '_Application__wx_app'")
                     self.__taskFile.load(filename, lock=lock,
                                          breakLock=breakLock)
                 except:  # pas finally sinon tout s'arrête.
@@ -299,6 +301,80 @@ class IOController(object):
             else:
                 showerror(errorMessage, **self.__errorMessageOptions)
             self.__removeRecentFile(filename)
+        # TODO: Essayer de remplacer par: (revoir la logique)
+        # if file_exists(filename):
+        #         try:
+        #             self.__task_file.load(filename, lock=lock, break_lock=break_lock)
+        #         except (lockfile.LockTimeout, lockfile.LockFailed) as e:
+        #             self._handle_lock_error(filename, e, showerror)
+        #         except persistence.xml.reader.XMLReaderTooNewException as e:
+        #             self._handle_xml_reader_error(filename, e, showerror)
+        #         except Exception as e:
+        #             self._handle_generic_error(filename, e, showerror)
+        #         else:
+        #             self.__message_callback(...)
+        # ou:
+        # try:
+        #     if fileExists(filename):
+        #         self.__closeUnconditionally()
+        #         self.__addRecentFile(filename)
+        #         self.__taskFile.load(filename, lock=lock, breakLock=breakLock)
+        #         # ...
+        #     else:
+        #         raise FileNotFoundError(f"File not found: {filename}")
+        # except (lockfile.LockTimeout, lockfile.LockFailed) as e:
+        #     self._handleLockError(filename, e, showerror)
+        # except persistence.xml.reader.XMLReaderTooNewException as e:
+        #     self._handleTooNewError(filename, e, showerror)
+        # except Exception as e:
+        #     self._handleGenericError(filename, e, showerror)
+        # ou
+        # try:
+        #     with self.__task_file.lock(filename, break_lock=break_lock, lock=lock):
+        #         self.__task_file.load(filename)
+        #         self.__message_callback(_("Loaded %(nrtasks)d tasks from %(filename)s") % {
+        #             "nrtasks": len(self.__task_file.tasks()),
+        #             "filename": filename,
+        #         })
+        # except lockfile.LockTimeout:
+        #     # Handle lock timeout error
+        #     pass
+        # except persistence.xml.reader.XMLReaderTooNewException:
+        #     # Handle XML reader error
+        #     pass
+        # except Exception as e:
+        #     # Log the error and display a user-friendly message
+        #     logging.exception("Error opening file: %s", filename)
+        #     showerror(_("Error opening file: %s"), **self.__error_message_options)
+
+    # def _handle_lock_error(self, filename, exception, showerror):
+    #     # ... handle lock-related errors
+    #     pass
+    #
+    # def _handle_too_new_error(self, filename, exception, showerror):
+    #     # ... handle XML reader too new errors
+    #     pass
+    #
+    # def _handle_generic_error(self, filename, exception, showerror):
+    #     # ... handle generic errors
+    #     pass
+
+    # ou:
+
+    # def _handle_lock_error(self, filename, exception, showerror):
+    #     # Handle lock-related errors
+    #     logging.error("Error opening file: %s", str(exception))
+    #     # ... show appropriate error message to user ...
+    #
+    # def _handle_xml_reader_error(self, filename, exception, showerror):
+    #     # Handle XML reader errors
+    #     logging.error("Error parsing XML file: %s", str(exception))
+    #     # ... show appropriate error message to user ...
+    #
+    # def _handle_generic_error(self, filename, exception, showerror):
+    #     # Handle generic errors
+    #     logging.error("An unexpected error occurred: %s", str(exception))
+    #     # ... show appropriate error message to user ...
 
     def merge(self, filename=None, showerror=wx.MessageBox):
         """Méthode permet de fusionner un fichier de tâches avec le fichier courant.
@@ -721,12 +797,12 @@ class IOController(object):
         Les tâches et les catégories sont stockées dans l'objet "self.__taskFile".
 
         Les paramètres supplémentaires peuvent être passés à la méthode "read" de la classe "CSVReader".
-"""
+        """
         persistence.CSVReader(self.__taskFile.tasks(),
                               self.__taskFile.categories()).read(**kwargs)
 
     def importTodoTxt(self, filename):
-        """Importe des données au format Todo.txt dans la tâche en cours d'édition.
+        r"""Importe des données au format Todo.txt dans la tâche en cours d'édition.
 
         Les données sont lues à partir d'un fichier Todo.txt
         en utilisant la classe "TodoTxtReader" de l'objet "persistence".
@@ -734,7 +810,7 @@ class IOController(object):
         Les tâches et les catégories sont stockées dans l'objet "self.__taskFile".
 
         Le nom de fichier doit être fourni en paramètre.
-"""
+        """
         persistence.TodoTxtReader(self.__taskFile.tasks(),
                                   self.__taskFile.categories()).read(filename)
 
@@ -783,7 +859,7 @@ class IOController(object):
 
     # @staticmethod
     def __syncReport(self, msg):
-        """Affiche un message d'erreur dans une boîte de dialogue de rapport de synchronisation.
+        r"""Affiche un message d'erreur dans une boîte de dialogue de rapport de synchronisation.
 
          Le message est fourni en paramètre "msg".
 
@@ -874,7 +950,7 @@ class IOController(object):
         Si l'utilisateur confirme l'écrasement, le nom de fichier est retourné.
 
         Sinon, la fonction retourne "None".
-"""
+        """
         filename = wx.FileSelector(title, flags=flag,
                                    **fileDialogOpts)  # pylint: disable=W0142
         if filename and (flag & wx.FD_SAVE):
@@ -907,7 +983,7 @@ class IOController(object):
 
         Si le fichier à écraser est utilisé pour l'import ou l'export automatique,
         les fichiers correspondants sont supprimés s'ils existent.
-"""
+        """
         result = wx.MessageBox(_("A file named %s already exists.\n"
                                  "Do you want to replace it?") % filename,
                                title,
@@ -946,7 +1022,7 @@ class IOController(object):
         Si l'utilisateur annule, la fonction retourne "False".
 
         Si l'utilisateur choisit de fermer sans sauvegarder ou si la sauvegarde réussit, la fonction retourne "True".
-"""
+        """
         result = wx.MessageBox(_("You have unsaved changes.\n"
                                  "Save before closing?"), _("%s: save changes?") % meta.name,
                                style=wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION | wx.YES_DEFAULT)
@@ -966,7 +1042,7 @@ class IOController(object):
         Si l'utilisateur choisit de casser le verrouillage, la fonction retourne "True".
 
         Sinon, la fonction retourne "False".
-"""
+        """
         result = wx.MessageBox(_("""Cannot open %s because it is locked.
 
 This means either that another instance of TaskCoach
@@ -989,7 +1065,7 @@ Break the lock?""") % filename,
         Si l'utilisateur choisit d'ouvrir le fichier sans verrouillage, la fonction retourne "True".
 
         Sinon, la fonction retourne "False".
-"""
+        """
         result = wx.MessageBox(_("Cannot acquire a lock because locking is not "
                                  "supported\non the location of %s.\n"
                                  "Open %s unlocked?") % (filename, filename),
@@ -1007,7 +1083,7 @@ Break the lock?""") % filename,
         L'historique des commandes est effacé.
 
         La mémoire est nettoyée avec la fonction "gc.collect()".
-"""
+        """
         self.__messageCallback(_("Closed %s") % self.__taskFile.filename())
         self.__taskFile.close()
         patterns.CommandHistory().clear()
@@ -1019,7 +1095,7 @@ Break the lock?""") % filename,
         Le message contient le nombre de tâches sauvegardées et le nom de fichier de la tâche en cours d'édition.
 
         Le message est affiché en appelant la méthode "__messageCallback".
-"""
+        """
         self.__messageCallback(_("Saved %(nrtasks)d tasks to %(filename)s") %
                                {"nrtasks": len(savedFile.tasks()),
                                 "filename": savedFile.filename()})
@@ -1033,7 +1109,7 @@ Break the lock?""") % filename,
         Les options de la boîte de dialogue d'erreur sont stockées dans l'objet "self.__errorMessageOptions".
 
         Le nom de l'application est obtenu à partir de l'objet "meta".
-"""
+        """
         showerror(_("Cannot open %(filename)s\n"
                     "because it was created by a newer version of %(name)s.\n"
                     "Please upgrade %(name)s.") %
