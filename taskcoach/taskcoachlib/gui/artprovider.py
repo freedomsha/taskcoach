@@ -14,6 +14,25 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Module ArtProvider pour Task Coach.
+
+Ce module gère la fourniture et la manipulation des icônes et images pour l'interface utilisateur de Task Coach.
+Il utilise la classe wx.ArtProvider pour fournir des bitmaps et icônes avec la possibilité de superposer des images
+ou d'ajuster les canaux alpha (transparence) des bitmaps.
+
+Classes :
+---------
+- ArtProvider : Sous-classe de wx.ArtProvider, responsable de la création de bitmaps à partir de fichiers d'icônes, avec des fonctionnalités de superposition et de manipulation des canaux alpha.
+- IconProvider : Singleton gérant un cache d'icônes pour éviter les fuites de mémoire dans les objets GDI. Fournit des icônes dans différentes tailles pour divers usages (boutons, menus, etc.).
+
+Fonctions :
+-----------
+- iconBundle(iconTitle) : Crée un groupe d'icônes à partir d'un titre d'icône, avec plusieurs tailles pour différentes résolutions.
+- getIcon(iconTitle) : Renvoie l'icône correspondant au titre donné, en utilisant un cache pour optimiser la gestion mémoire.
+- init() : Initialise l'ArtProvider avec certaines options spécifiques à la plateforme, notamment sous Windows pour désactiver certains remappages d'icônes.
+
+Les fonctions internes telles que `convertAlphaToMask` gèrent des détails spécifiques à l'affichage, comme la conversion des canaux alpha en masques pour certaines plateformes comme GTK.
 """
 
 # from __future__ import division
@@ -28,8 +47,18 @@ import wx
 from taskcoachlib.gui import icons  # where?
 
 
+# Création d'un nouveau fournisseur d'images
 class ArtProvider(wx.ArtProvider):
+    """Sous-classe de wx.ArtProvider, responsable de la création de bitmaps à partir de fichiers d'icônes,
+     avec des fonctionnalités de superposition et de manipulation des canaux alpha.
+
+     wx.ArtProvider est une classe qui gère la manière dont wxPython trouve et affiche les images (art) utilisées dans l'interface."""
+    # Voir la méthode : https://docs.wxpython.org/wx.ArtProvider.html
+    # Penser à Retirer le fournisseur d'images de la pile avec :
+    # wx.ArtProvider.Pop()
     def CreateBitmap(self, artId, artClient, size):
+        # La méthode CreateIconBundle est similaire à CreateBitmap mais peut être utilisée lorsqu'un bitmap (ou une icône) existe en plusieurs tailles.
+        # Si l'Id contient "+", séparer en deux noms d'image.
         if "+" in artId:
             w, h = size
             main, overlay = artId.split("+")
@@ -37,7 +66,7 @@ class ArtProvider(wx.ArtProvider):
             overlayImage = self._CreateBitmap(overlay, artClient, size
                                               ).ConvertToImage()  # type: wx.Image
             # overlayImage.Rescale(int(old_div(w, 2)), int(old_div(h, 2)), wx.IMAGE_QUALITY_HIGH)
-            overlayImage.Rescale(int(w // 2), int(h // 2), wx.IMAGE_QUALITY_HIGH)
+            overlayImage.Rescale(w // 2, h // 2, wx.IMAGE_QUALITY_HIGH)
             # overlayAlpha = overlayImage.GetAlphaData()
             # AttributeError: 'Image' object has no attribute 'GetAlphaData'
             # if overlayImage.HasAlpha():
@@ -47,7 +76,7 @@ class ArtProvider(wx.ArtProvider):
             #    # Handle the case where there is no alpha channel
             #     overlayAlpha = None
             # overlayAlpha = overlayImage.GetAlphaBuffer()  # TODO: a essayer (starofrainnight)
-            overlayBitmap = overlayImage.ConvertToBitmap()
+            overlayBitmap = overlayImage.ConvertToBitmap()  # self._Application__wx_app.Traits={AttributeError}AttributeError("'ArtProvider' object has no attribute '_Application__wx_app'")
 
             mainImage = self._CreateBitmap(main, artClient, size
                                            ).ConvertToImage()  # type: wx.Image
@@ -84,7 +113,7 @@ class ArtProvider(wx.ArtProvider):
             dstDC.SelectObject(mainBitmap)
             try:
                 # dstDC.DrawBitmap(overlayBitmap, w - int(old_div(w, 2)), h - int(old_div(h, 2)), True)
-                dstDC.DrawBitmap(overlayBitmap, w - int(w // 2), h - int(h // 2), True)
+                dstDC.DrawBitmap(overlayBitmap, w - (w // 2), h - (h // 2), True)
             finally:
                 dstDC.SelectObject(wx.NullBitmap)
             mainImage = mainBitmap.ConvertToImage()
@@ -135,7 +164,11 @@ class ArtProvider(wx.ArtProvider):
 
 # class IconProvider(metaclass=patterns.Singleton):
 class IconProvider(object, metaclass=patterns.Singleton):
+    """Singleton gérant un cache d'icônes pour éviter les fuites de mémoire dans les objets GDI.
+     Fournit des icônes dans différentes tailles pour divers usages (boutons, menus, etc.)."""
     def __init__(self):
+        """Initialise l'ArtProvider avec certaines options spécifiques à la plateforme,
+         notamment sous Windows pour désactiver certains remappages d'icônes."""
         self.__iconCache = dict()
         if operating_system.isMac():
             self.__iconSizeOnCurrentPlatform = 128
@@ -146,7 +179,8 @@ class IconProvider(object, metaclass=patterns.Singleton):
 
     def getIcon(self, iconTitle):
         """ Renvoie l'icône. Utilisez un cache pour éviter la fuite du
-        nombre d'objets GDI. """
+        nombre d'objets GDI.
+        """
         try:
             return self.__iconCache[iconTitle]
         except KeyError:
@@ -155,7 +189,8 @@ class IconProvider(object, metaclass=patterns.Singleton):
             return icon
 
     def iconBundle(self, iconTitle):
-        """ Créez un groupe d'icônes avec des icônes de différentes tailles. """
+        """ Créez un groupe d'icônes avec des icônes de différentes tailles.
+        """
         bundle = wx.IconBundle()
         for size in (16, 22, 32, 48, 64, 128):
             bundle.AddIcon(self.getIconFromArtProvider(iconTitle, size))
@@ -176,24 +211,38 @@ class IconProvider(object, metaclass=patterns.Singleton):
             iconTitle, wx.ART_FRAME_ICON, (size, size)
         )
         bitmap = ArtProvider.convertAlphaToMask(bitmap)
-        return wx.IconFromBitmap(bitmap)
-        # return wx.Icon(bitmap)
+        # return wx.IconFromBitmap(bitmap)
+        return wx.Icon(bitmap)
 
 
 def iconBundle(iconTitle):
+    """Crée un groupe d'icônes à partir d'un titre d'icône, avec plusieurs tailles pour différentes résolutions."""
     return IconProvider().iconBundle(iconTitle)
 
 
 def getIcon(iconTitle):
+    """Renvoie l'icône correspondant au titre donné, en utilisant un cache pour optimiser la gestion mémoire."""
     return IconProvider().getIcon(iconTitle)
 
 
 def init():
+    """Initialise l'ArtProvider avec certaines options spécifiques à la plateforme,
+     notamment sous Windows pour désactiver certains remappages d'icônes."""
+    # wx.ArtProvider.PushProvider() était une méthode utilisée pour temporairement
+    # remplacer le fournisseur d'images par défaut par un autre,
+    # ce qui permettait de personnaliser l'apparence des éléments de l'interface.
+    # Remplacé par Push.
     if operating_system.isWindows() and wx.DisplayDepth() >= 32:
         wx.SystemOptions.SetOption("msw.remap", "0")  # pragma: no cover
+    # Pousser le nouveau fournisseur d'images sur la pile:
     try:
+        # Ancienne méthode
         wx.ArtProvider.PushProvider(ArtProvider())  # pylint: disable=E1101
+        # PushProvider n'existe pas voir Push ou PushBack
+        # wx.ArtProvider.Push(ArtProvider())
+        # wx.ArtProvider.PushBack(ArtProvider())
     except AttributeError:
+        # Nouvelle méthode Python3:
         wx.ArtProvider.Push(ArtProvider())
 
 
