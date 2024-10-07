@@ -98,7 +98,7 @@ class Menu(wx.Menu, uicommand.UICommandContainerMixin):
         self._window.Unbind(wx.EVT_MENU, id=menuItem.GetId())
         # get_id Return an identifier for the table.
         # self._window.Unbind(wx.EVT_UPDATE_UI, id=menuItem.get_id())
-        self._window.Unbind(wx.EVT_UPDATE_UI, id=menuItem.GetId())
+        self._window.Unbind(wx.EVT_UPDATE_UI, id=menuItem.get_id())
         # Ajout de journalisation:
         print(f" destruction de: menuItem = {menuItem} de self: {self} avec id: {id}")
         super().DestroyItem(menuItem)
