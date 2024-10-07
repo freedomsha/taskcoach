@@ -14,6 +14,19 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Module `menu.py` - Gestion des menus dans Task Coach.
+
+Ce module contient les classes pour gérer les différents types de menus utilisés dans Task Coach,
+tels que les menus contextuels, les menus dynamiques, et les menus de la barre d'outils.
+Il permet de configurer et de manipuler les éléments de menu, et d'ajouter des commandes UI.
+
+Classes :
+    - Menu : Classe de base pour les menus.
+    - DynamicMenu : Un menu qui se met à jour automatiquement.
+    - MainMenu : Le menu principal de l'application Task Coach.
+    - FileMenu, ExportMenu, ImportMenu, etc. : Différentes classes pour gérer des menus spécifiques comme le menu Fichier, Exporter, Importer, etc.
+
 """
 
 # from builtins import object
@@ -39,6 +52,26 @@ import os
 
 
 class Menu(wx.Menu, uicommand.UICommandContainerMixin):
+    """
+    Classe de base pour les menus dans Task Coach.
+
+    Cette classe gère les éléments de menu, les accélérateurs, et les commandes UI associées.
+
+    Attributs :
+        _window : Référence à la fenêtre principale.
+        _accels : Liste des accélérateurs du menu.
+        _observers : Liste des observateurs liés au menu.
+
+    Méthodes :
+        __init__(self, window) : Initialise le menu.
+        DestroyItem(self, menuItem) : Supprime un élément du menu.
+        clearMenu(self) : Supprime tous les éléments du menu.
+        appendUICommand(self, uiCommand) : Ajoute une commande UI au menu.
+        appendMenu(self, text, subMenu, bitmap=None) : Ajoute un sous-menu.
+        invokeMenuItem(self, menuItem) : Invoque un élément de menu de manière programmatique.
+        openMenu(self) : Ouvre le menu de manière programmatique.
+        accelerators(self) : Retourne la liste des accéléra- teurs.
+    """
     # Veiller à la Libération des identifiants lors de la destruction des éléments de menu
     def __init__(self, window):
         super().__init__()
@@ -50,7 +83,12 @@ class Menu(wx.Menu, uicommand.UICommandContainerMixin):
         return self.GetMenuItemCount()  # wx. Returns the number of items in the menu.
 
     def DestroyItem(self, menuItem):
-        """ Supprime une élément de menu."""
+        """
+        Supprime un élément de menu.
+    
+        Args:
+            menuItem (wx.MenuItem) : L'élément de menu à supprimer.
+        """
         # Un menuItem représente un élément dans un menu.
         print(
             f"tclib.gui.menu.py Menu.DestroyItem essaie de retirer: menuItem = {menuItem} de self: {self} avec id: {id}")
@@ -112,7 +150,14 @@ class Menu(wx.Menu, uicommand.UICommandContainerMixin):
         return cmd
 
     def appendMenu(self, text, subMenu, bitmap=None):
-        """ Ajoute un (sous-)menu. """
+        """
+        Ajoute un sous-menu au menu.
+    
+        Args:
+            text (str) : Le texte du sous-menu.
+            subMenu (wx.Menu) : Le sous-menu à ajouter.
+            bitmap (str, optionnel) : Un bitmap optionnel pour l'icône du sous-menu.
+        """
         # Nouvelle ligne conseillée par chatGPT
         # subMenuId = IdProvider.get()  # Obtenir un identifiant unique
         subMenuItem = wx.MenuItem(self, id=IdProvider.get(), text=text, subMenu=subMenu)
@@ -151,12 +196,22 @@ class Menu(wx.Menu, uicommand.UICommandContainerMixin):
 
 
 class DynamicMenu(Menu):
-    """ A menu that registers for events and then updates itself whenever the
-        event is fired. """
+    """Un menu dynamique qui s'enregistre pour des événements et se met à jour automatiquement.
+    
+    A menu that registers for events and then updates itself whenever the event is fired.
+
+    Méthodes :
+        __init__(self, window, parentMenu=None, labelInParentMenu="") :
+            Initialise le menu dynamique.
+        registerForMenuUpdate(self) :
+            Méthode abstraite pour enregistrer le menu aux événements de mise à jour.
+        onUpdateMenu(self, newValue, sender) : Met à jour le menu lorsque l'événement est déclenché.
+        updateMenu(self) : Met à jour les éléments du menu.
+    """
 
     def __init__(self, window, parentMenu=None, labelInParentMenu=""):
-        """ Initialize the menu. labelInParentMenu is needed to be able to
-            find this menu in its parentMenu. """
+        """ Initialise le menu. labelInParentMenu est nécessaire pour pouvoir
+        trouvez ce menu dans son parentMenu. """
         super(DynamicMenu, self).__init__(window)
         self._parentMenu = parentMenu
         self._labelInParentMenu = self.__GetLabelText(labelInParentMenu)
@@ -164,45 +219,45 @@ class DynamicMenu(Menu):
         self.updateMenu()
 
     def registerForMenuUpdate(self):
-        """ Subclasses are responsible for binding an event to onUpdateMenu so
-            that the menu gets a chance to update itself at the right time. """
+        """ Les sous-classes sont chargées de lier un événement à onUpdateMenu afin
+        que le menu ait la possibilité de se mettre à jour au bon moment """
         raise NotImplementedError
 
     def onUpdateMenu(self, newValue, sender):
-        """ This event handler should be called at the right times so that
-            the menu has a chance to update itself. """
-        try:  # Prepare for menu or window to be destroyed
-            self.updateMenu()
+        """ Ce gestionnaire d'événements doit être appelé au bon moment afin que
+        le menu ait une chance de se mettre à jour. """
+        # try:  # Préparez-vous à ce que le menu ou la fenêtre soit détruit
+        self.updateMenu()
         # except wx.PyDeadObjectError:
-        except RuntimeError:
-            pass
+        # except RuntimeError:
+        #     pass
 
     def onUpdateMenu_Deprecated(self, event=None):
-        """ This event handler should be called at the right times so that
-            the menu has a chance to update itself. """
-        # If this is called by wx, 'skip' the event so that other event
-        # handlers get a chance too:
+        """ Ce gestionnaire d'événements doit être appelé au bon moment afin que
+        le menu ait une chance de se mettre à jour. """
+        # Si ceci est appelé par wx, 'ignorez' l'événement afin que l'autre événement
+        # gestionnaires ait également une chance:
         if event and hasattr(event, "Skip"):
             event.Skip()
             if event.GetMenu() != self._parentMenu:
                 return
-        try:  # Prepare for menu or window to be destroyed
-            self.updateMenu()
+        # try:  # Vous prépare à ce que le menu ou la fenêtre soit détruit
+        self.updateMenu()
         # except wx.PyDeadObjectError:
         # except RuntimeError:
-        except:  # TODO: a essayer
-            pass
+        # except:  # TODO: a essayer
+        #     pass
 
     def updateMenu(self):
-        """ Updating the menu consists of two steps: updating the menu item
-            of this menu in its parent menu, e.g. to enable or disable it, and
-            updating the menu items of this menu. """
+        """ La mise à jour du menu se compose de deux étapes: mettre à jour l'élément de menu
+        de ce menu dans son menu parent, par ex. pour l'activer ou le désactiver, et
+        la mise à jour des éléments de menu de ce menu. """
         self.updateMenuItemInParentMenu()
         self.updateMenuItems()
 
     def updateMenuItemInParentMenu(self):
-        """ Enable or disable the menu item in the parent menu, depending on
-            what enabled() returns. """
+        """ Renvoie Activer ou désactiver l'élément de menu dans le menu parent en fonction de
+        ce qui est activé(). """
         if self._parentMenu:
             myId = self.myId()
             if myId != wx.NOT_FOUND:
@@ -210,12 +265,7 @@ class DynamicMenu(Menu):
                 # TypeError: Menu.Enable(): argument 1 has unexpected type 'NoneType'
 
     def myId(self):
-        """ Return the id of our menu item in the parent menu. """
-        # '' Renvoie l'identifiant de notre élément de menu dans le menu parent. ''
-        # I'd rather use wx.Menu.FindItem, but it seems that that
-        # method currently does not work for menu items with accelerators
-        # (wxPython 2.8.6 on Ubuntu). When that is fixed replace the 7
-        # lines below with this one:
+        """ Renvoie l'identifiant de notre élément de menu dans le menu parent. """
         # Je préfère utiliser wx.Menu.FindItem, mais
         # il semble que cette méthode ne fonctionne actuellement pas
         # pour les éléments de menu avec accélérateurs (wxPython 2.8.6 sur Ubuntu).
@@ -230,21 +280,21 @@ class DynamicMenu(Menu):
         # return myId
 
     def updateMenuItems(self):
-        """ Update the menu items of this menu. """
+        """ Met à jour les éléments de menu de ce menu. """
         pass
 
     def enabled(self):
-        """ Return a boolean indicating whether this menu should be enabled in
-            its parent menu. This method is called by
-            updateMenuItemInParentMenu(). It returns True by default. Override
-            in a subclass as needed."""
+        """ Renvoie un booléen indiquant si ce menu doit être activé dans
+        son menu parent. Cette méthode est appelée par
+        updateMenuItemInParentMenu(). Il renvoie True par défaut. Outrepasser
+        dans une sous-classe selon les besoins."""
         return True
 
     @staticmethod
     def __GetLabelText(menuText):
-        """Remove accelerators from the menuText. This is necessary because on
-        some platforms '&' is changed into '_' so menuTexts would compare
-        different even though they are really the same."""
+        """Supprimez les accélérateurs du menuTexte. Ceci est nécessaire car sur
+        certaines plates-formes '&' sont remplacés par '_' afin que les menuTexts puissent être comparés
+        différents même s'ils sont en réalité les mêmes."""
         return menuText.replace("&", "").replace("_", "")
 
 
@@ -258,7 +308,8 @@ class DynamicMenuThatGetsUICommandsFromViewer(DynamicMenu):
     def registerForMenuUpdate(self):
         # Refill the menu whenever the menu is opened, because the menu might
         # depend on the status of the viewer:
-        self._window.Bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)
+        # self._window.Bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)  # ancien
+        self._window.bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)  # j'essaie d'utiliser celui de window
 
     def updateMenuItems(self):
         newCommands = self.getUICommands()
@@ -280,6 +331,15 @@ class DynamicMenuThatGetsUICommandsFromViewer(DynamicMenu):
 
 
 class MainMenu(wx.MenuBar):
+    """
+    Menu principal de Task Coach.
+
+    Ce menu regroupe plusieurs menus, tels que le menu Fichier, Éditer, Voir, et Aide, ainsi que leurs sous-menus respectifs.
+
+    Méthodes :
+        __init__(self, mainwindow, settings, iocontroller, viewerContainer, taskFile) :
+            Initialise la barre de menu principale avec tous les sous-menus.
+    """
     def __init__(self, mainwindow, settings, iocontroller, viewerContainer,
                  taskFile):
         super().__init__()
@@ -313,6 +373,19 @@ class MainMenu(wx.MenuBar):
 
 
 class FileMenu(Menu):
+    """
+    Menu Fichier dans Task Coach.
+
+    Ce menu contient des options telles que Ouvrir, Enregistrer, Importer, Exporter, etc.
+
+    Méthodes :
+        __init__(self, mainwindow, settings, iocontroller, viewerContainer) :
+            Initialise le menu Fichier.
+        onOpenMenu(self, event) :
+            Gère l'ouverture du menu pour insérer les fichiers récents.
+        __insertRecentFileMenuItems(self) : Insère les fichiers récents dans le menu.
+        __removeRecentFileMenuItems(self) : Supprime les fichiers récents du menu.
+    """
     def __init__(self, mainwindow, settings, iocontroller, viewerContainer):
         super().__init__(mainwindow)
         self.__settings = settings
@@ -403,6 +476,15 @@ class FileMenu(Menu):
 
 
 class ExportMenu(Menu):
+    """
+    Menu Exporter dans Task Coach.
+
+    Ce menu contient des options pour exporter des tâches au format HTML, CSV, iCalendar, etc.
+
+    Méthodes :
+        __init__(self, mainwindow, iocontroller, settings) :
+            Initialise le menu Exporter.
+    """
     def __init__(self, mainwindow, iocontroller, settings):
         super().__init__(mainwindow)
         kwargs = dict(iocontroller=iocontroller, settings=settings)
@@ -415,6 +497,15 @@ class ExportMenu(Menu):
 
 
 class ImportMenu(Menu):
+    """
+    Menu Importer dans Task Coach.
+
+    Ce menu contient des options pour importer des tâches à partir de fichiers CSV, TodoTxt, etc.
+
+    Méthodes :
+        __init__(self, mainwindow, iocontroller) :
+            Initialise le menu Importer.
+    """
     def __init__(self, mainwindow, iocontroller):
         super().__init__(mainwindow)
         self.appendUICommands(
@@ -423,6 +514,18 @@ class ImportMenu(Menu):
 
 
 class TaskTemplateMenu(DynamicMenu):
+    """
+    Menu des modèles de tâches dans Task Coach.
+
+    Ce menu permet de gérer les modèles de tâches enregistrés et d'en créer de nouvelles à partir de ces modèles.
+
+    Méthodes :
+        registerForMenuUpdate(self) : Enregistre le menu pour recevoir les événements de mise à jour.
+        onTemplatesSaved(self) : Met à jour le menu lorsque les modèles sont enregistrés.
+        updateMenuItems(self) : Met à jour les éléments du menu.
+        fillMenu(self, uiCommands) : Remplit le menu avec les commandes UI.
+        getUICommands(self) : Récupère les commandes UI liées aux modèles de tâches.
+    """
     def __init__(self, mainwindow, taskList, settings):
         self.settings = settings
         self.taskList = taskList
@@ -506,6 +609,15 @@ activatePreviousViewerId = wx.NewId()
 
 
 class ViewMenu(Menu):
+    """
+    Menu Voir dans Task Coach.
+
+    Ce menu contient des options pour gérer l'affichage, les modes de vue, les filtres, les colonnes, etc.
+
+    Méthodes :
+        __init__(self, mainwindow, settings, viewerContainer, taskFile) :
+            Initialise le menu Voir avec divers sous-menus comme les options d'affichage et les colonnes.
+    """
     def __init__(self, mainwindow, settings, viewerContainer, taskFile):
         super().__init__(mainwindow)
         self.appendMenu(
@@ -1004,6 +1116,15 @@ class StartEffortForTaskMenu(DynamicMenu):
 
 
 class TaskPopupMenu(Menu):
+    """
+    Menu contextuel pour les tâches dans Task Coach.
+
+    Ce menu contextuel est utilisé pour afficher des options d'action sur les tâches telles que couper, copier, coller, ajouter une note, etc.
+
+    Méthodes :
+        __init__(self, mainwindow, settings, tasks, efforts, categories, taskViewer) :
+            Initialise le menu contextuel des tâches.
+    """
     def __init__(self, mainwindow, settings, tasks, efforts, categories, taskViewer):
         super().__init__(mainwindow)
         # Les commandes de menu sont ici :
