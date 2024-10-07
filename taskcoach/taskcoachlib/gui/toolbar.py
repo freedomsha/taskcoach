@@ -14,8 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-"""
+
 Ce module contient la définition de la classe ToolBar, qui représente une barre d'outils personnalisable dans l'interface utilisateur de Task Coach.
 
 La classe ToolBar hérite de la classe AuiToolBar de la bibliothèque wxPython et utilise la classe UICommand pour définir les commandes qui apparaissent sur la barre d'outils.
