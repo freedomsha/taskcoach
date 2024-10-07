@@ -212,7 +212,7 @@ class DynamicMenu(Menu):
     def __init__(self, window, parentMenu=None, labelInParentMenu=""):
         """ Initialise le menu. labelInParentMenu est nécessaire pour pouvoir
         trouvez ce menu dans son parentMenu. """
-        super(DynamicMenu, self).__init__(window)
+        super().__init__(window)
         self._parentMenu = parentMenu
         self._labelInParentMenu = self.__GetLabelText(labelInParentMenu)
         self.registerForMenuUpdate()
