@@ -55,6 +55,7 @@ class _Toolbar(aui.auibar.AuiToolBar):
         super().__init__(parent, agwStyle=aui.AUI_TB_NO_AUTORESIZE)
 
     def AddLabelTool(self, id, label, bitmap1, bitmap2, kind, **kwargs):
+        """Ajoute un outil à la barre d'outils. Il s'agit de la version complète d'wx.lib.agw.aui.auibar.AuiToolBar.AddTool."""
         long_help_string = kwargs.pop("longHelp", "")
         short_help_string = kwargs.pop("shortHelp", "")
         bitmap2 = self.MakeDisabledBitmap(bitmap1)
@@ -63,19 +64,59 @@ class _Toolbar(aui.auibar.AuiToolBar):
         super().AddTool(id, label, bitmap1, bitmap2, kind,
                         short_help_string, long_help_string, None, None)
 
-    def GetToolState(self, toolid):
-        return self.GetToolToggled(toolid)
+    def GetToolState(self, tool_id):
+        """ wx.lib.agw.aui.auibar.AuiToolBar.GetToolToggle indique si un outil est activé ou non.
+        
+        Parameters:
+            tool_id (integer) – the toolbar item identifier.
+        """
+        # Cela s'applique uniquement à un outil qui a été spécifié comme outil toggle(à bascule).
+        return self.GetToolToggled(tool_id)
 
     def SetToolBitmapSize(self, size):
+        """ Définit la taille par défaut de chaque bitmap d'outil. La taille bitmap par défaut est de 16 x 15 pixels.
+
+            Parameters:
+            
+                size (wx.Size) – the size of the bitmaps in the toolbar.
+        """
         self.__size = size
+        # TODO : à remplacer par 
 
     def GetToolBitmapSize(self):
+        """ Renvoie la taille du bitmap attendue par la barre d'outils. La taille bitmap par défaut est de 16 x 15 pixels.
+        """
         return self.__size
+        # TODO : à remplacer par wx.GetToolBitmapSize(self) inclut dans AuiToolBar
+        # return self.GetToolBitmapSize()
+        # return GetToolBitmapSize(self)
 
     def GetToolSize(self):
+        """ Renvoie la taille du bitmap. La taille bitmap par défaut est de 16 x 15 pixels.
+        """
         return self.__size
 
+
     def SetMargins(self, *args):
+        """
+        Définissez les valeurs à utiliser comme marges pour la barre d'outils.
+
+        Paramètres :
+        
+            x (int) – marge gauche, marge droite et valeur de séparation inter-outils ;
+            
+            y (int) – marge supérieure, marge inférieure et valeur de séparation inter-outils.
+
+        ou
+        
+            left (int) – la marge gauche de la barre d'outils;
+            
+            right (int) – la marge droite de la barre d'outils;
+            
+            top (int) – la marge supérieure de la barre d'outils;
+            
+            bottom (int) – la marge inférieure de la barre d’outils.
+        """
         if len(args) == 2:
             super().SetMarginsXY(args[0], args[1])
         else:
@@ -93,6 +134,14 @@ class _Toolbar(aui.auibar.AuiToolBar):
         Returns :
             wx.Bitmap: Le bitmap converti en niveaux de gris.
         """
+        # Penser à utiliser SetToolDisabledBitmap(self, tool_id, bitmap) qui
+        # Définit le bitmap de l'outil désactivé pour l'outil identifié par tool_id.
+
+        # Paramètres :
+        
+        # tool_id (entier) – l'identifiant de l'outil ;
+        
+        # bitmap (wx.Bitmap) – le nouveau bitmap désactivé pour l'élément de la barre d'outils.
         return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
 
 
@@ -129,6 +178,7 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
     def Clear(self):
         """Efface la barre d'outils et tous les contrôles qu'elle contient.
 
+        Supprime tous les outils de AuiToolBar.
         Cette méthode est nécessaire car la méthode Clear de la classe AuiToolBar ne supprime pas les contrôles de la barre d'outils.
         """
 
@@ -152,7 +202,8 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         self.Clear()
         self.__visibleUICommands = self.__cache = None
 
-    def getToolIdByCommand(self, commandName: str) -> int:
+    # def getToolIdByCommand(self, commandName: str) -> int:
+    def getToolIdByCommand(self, commandName):
         if commandName == "EditToolBarPerspective":
             return self.__customizeId
 
@@ -161,7 +212,8 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
                 return uiCommand.id
         return wx.ID_ANY
 
-    def _filterCommands(self, perspective: str, cache: bool = True) -> list:
+    # def _filterCommands(self, perspective: str, cache: bool = True) -> list:
+    def _filterCommands(self, perspective, cache=True):  
         commands = list()
         if perspective:
             index = dict([(command.uniqueName(), command) for command in self.uiCommands(cache=cache) if
@@ -175,7 +227,8 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
             commands = list(self.uiCommands(cache=cache))
         return commands
 
-    def loadPerspective(self, perspective: str, customizable=True, cache=True):
+    # def loadPerspective(self, perspective: str, customizable=True, cache=True):
+    def loadPerspective(self, perspective, customizable=True, cache=True):
         self.Clear()
 
         commands = self._filterCommands(perspective, cache=cache)
@@ -193,9 +246,10 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
             commands.append(None)  # Errr...
 
         self.appendUICommands(*commands)
-        self.Realize()
+        self.Realize()  # Réalise la barre d'outils. Cette fonction doit être appelée après avoir ajouté des outils.
 
-    def perspective(self) -> str:
+    # def perspective(self) -> str:
+    def perspective(self):
         """
         Retourne la perspective actuelle de la barre d'outils sous forme de chaîne de caractères.
 
@@ -211,7 +265,8 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
                 names.append(uiCommand.uniqueName())
         return ",".join(names)
 
-    def savePerspective(self, perspective: str):
+    # def savePerspective(self, perspective: str):
+    def savePerspective(self, perspective):
         """
         Enregistre la perspective actuelle de la barre d'outils dans les préférences de l'application.
 
@@ -221,7 +276,8 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
         self.loadPerspective(perspective)
         self.__window.saveToolBarPerspective(perspective)
 
-    def uiCommands(self, cache: bool = True):
+    # def uiCommands(self, cache: bool = True):
+    def uiCommands(self, cache=True):
         """
         Retourne une liste de commandes UI à afficher sur la barre d'outils.
 
@@ -239,13 +295,14 @@ class ToolBar(_Toolbar, uicommand.UICommandContainerMixin):
 
     def AppendSeparator(self):
         """
-        Ajoute un séparateur à la barre d'outils.
+        Ajoute un séparateur à la barre d'outils pour espacer les groupes d'outils.
 
         This little adapter is needed for
         uicommand.UICommandContainerMixin.appendUICommands"""
         self.AddSeparator()
 
-    def AppendStretchSpacer(self, proportion: int):
+    # def AppendStretchSpacer(self, proportion: int):
+    def AppendStretchSpacer(self, proportion):
         """
         Ajoute un espaceur extensible à la barre d'outils.
 
@@ -295,6 +352,11 @@ class MainToolBar(ToolBar):
             wx.CallAfter(self.GetParent().SendSizeEvent)
 
     def Realize(self):
+        """wx.lib.agw.aui.auibar.AuiToolBar.Relize Réalise la barre d'outils.
+        
+        Cette fonction doit être appelée après avoir ajouté des outils.
+        """
+        # voir wx.lib.agw.aui.auibar.AuiToolBar.SetAGWWindowStyleFlag
         self._agwStyle &= ~aui.AUI_TB_NO_AUTORESIZE
         super().Realize()
         self._agwStyle |= aui.AUI_TB_NO_AUTORESIZE
