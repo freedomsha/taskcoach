@@ -646,9 +646,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         cutCommand = uicommand.EditCut(viewer=self)
         copyCommand = uicommand.EditCopy(viewer=self)
         pasteCommand = uicommand.EditPaste()
-        cutCommand.bind(self, wx.ID_CUT)
-        copyCommand.bind(self, wx.ID_COPY)
-        pasteCommand.bind(self, wx.ID_PASTE)
+        # cutCommand.bind(self, wx.ID_CUT)
+        cutCommand.Bind(self, wx.ID_CUT)
+        # copyCommand.bind(self, wx.ID_COPY)
+        copyCommand.Bind(self, wx.ID_COPY)
+        # pasteCommand.bind(self, wx.ID_PASTE)
+        pasteCommand.Bind(self, wx.ID_PASTE)
         return cutCommand, copyCommand, pasteCommand
 
     def createCreationToolBarUICommands(self):
