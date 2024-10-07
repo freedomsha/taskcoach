@@ -594,8 +594,8 @@ class SelectMenu(Menu):
 
 
 # Ancienne ligne (obsolète)
-activateNextViewerId = wx.NewId()
-activatePreviousViewerId = wx.NewId()
+# activateNextViewerId = wx.NewId()
+# activatePreviousViewerId = wx.NewId()
 
 # Nouvelle ligne (correcte)
 # activateNextViewerId = wx.Window.NewControlId()
@@ -604,8 +604,8 @@ activatePreviousViewerId = wx.NewId()
 # activateNextViewerId = wx.NewIdRef()
 # activatePreviousViewerId = wx.NewIdRef()
 
-# activateNextViewerId = wx.ID_ANY()
-# activatePreviousViewerId = wx.ID_ANY()
+activateNextViewerId = wx.ID_ANY()
+activatePreviousViewerId = wx.ID_ANY()
 
 
 class ViewMenu(Menu):
