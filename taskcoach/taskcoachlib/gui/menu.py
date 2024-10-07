@@ -308,8 +308,8 @@ class DynamicMenuThatGetsUICommandsFromViewer(DynamicMenu):
     def registerForMenuUpdate(self):
         # Refill the menu whenever the menu is opened, because the menu might
         # depend on the status of the viewer:
-        # self._window.Bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)  # ancien
-        self._window.bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)  # j'essaie d'utiliser celui de window
+        self._window.Bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)  # ancien
+        # self._window.bind(wx.EVT_MENU_OPEN, self.onUpdateMenu_Deprecated)  # j'essaie d'utiliser celui de window sauf que wx.EVT_MENU_OPEN n'est pas une fenêtre.
 
     def updateMenuItems(self):
         newCommands = self.getUICommands()
