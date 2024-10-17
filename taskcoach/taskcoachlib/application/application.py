@@ -182,6 +182,9 @@ class RedirectedOutput(object):
 class wxApp(wx.App):
     """Classe App pour wxpython"""
     # {AttributeError}AttributeError("'ArtProvider' object has no attribute '_Application__wx_app'")
+    # Pour pouvoir lancer un interface graphique wxPython,
+    # on doit obligatoirement passer par un objet chargé de créer l'instance de la classe principale de l'interface (le Top Level).
+    # Cet objet doit lui-même être construit et dériver de la classe wx.App 
 
     def __init__(self, sessionCallback, reopenCallback, *args, **kwargs):
         self.sessionCallback = sessionCallback
@@ -195,6 +198,9 @@ class wxApp(wx.App):
         self.reopenCallback()
 
     def OnInit(self):
+        # La classe wx.App est initialisée différemment des classes Python classiques.
+        # Ce n'est pas la méthode __init__() qui doit être implémentée,
+        # mais une méthode OnInit() sans paramètre (sauf le mot clé self qui lui permet de s'auto-référencer).
         """Fonction-méthode qui gère la sortie standard renvoie true sur l'initialisation.
 
         Initialise l'application et gère la redirection de sortie standard sur des plates-formes spécifiques.
@@ -205,6 +211,11 @@ class wxApp(wx.App):
         Returns:
             bool: True on successful initialization.
         """
+        # La séquence d'initialisation de la méthode OnInit() est alors toujours la même : 
+        #    fen = Bonjour("Exemple 1")  # Création d'une instance de la fenêtre principale.
+        #    fen.Show(True)  # Affichage de la fenêtre par la méthode Show() dérivée de la classe wx.Window.
+        #    self.SetTopWindow(fen)  # Désignation de la fenêtre en tant que principale par la méthode SetTopWindow() spécifique à la classe wx.App
+        #    return True  # Retour de la valeur True marquant la fin de l'initialisation
         # voir https://docs.python.org/fr/3.11/library/sys.html#sys.stdout
         if operating_system.isWindows():
             self.Bind(wx.EVT_QUERY_END_SESSION, self.onQueryEndSession)
@@ -439,7 +450,7 @@ en sauvegardant les paramètres et l'état de l'application."""
             self.__message_checker = meta.DeveloperMessageChecker(self.settings)
             self.__message_checker.start()
         self.__copy_default_templates()
-        self.mainwindow.Show()
+        self.mainwindow.Show()  # ligne qui devrait être dans OnInit
         # vieux code
         #  from twisted.internet import reactor
         #         reactor.run()
