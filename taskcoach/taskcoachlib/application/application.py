@@ -533,7 +533,7 @@ en sauvegardant les paramètres et l'état de l'application."""
             self.iocontroller = gui.IOController(self.taskFile, self.displayMessage,
                                                  self.settings, splash)
             self.mainwindow = gui.MainWindow(self.iocontroller, self.taskFile,
-                                             self.settings, splash=splash)
+                                             self.settings, splash=splash)  # Création de la fenêtre Principale
             self.__wx_app.SetTopWindow(self.mainwindow)
             self.__init_spell_checking()
             if not self.settings.getboolean("file", "inifileloaded"):
