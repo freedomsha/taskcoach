@@ -532,10 +532,12 @@ en sauvegardant les paramètres et l'état de l'application."""
             self.__auto_backup = persistence.AutoBackup(self.settings)
             self.iocontroller = gui.IOController(self.taskFile, self.displayMessage,
                                                  self.settings, splash)
-            # Création de la fenêtre Principale (objet de gui.mainwindow.MainWindow):
+            # Création d'une instance de la fenêtre Principale (objet de gui.mainwindow.MainWindow):
             # ligne qui devrait être la première dans OnInit:
             self.mainwindow = gui.MainWindow(self.iocontroller, self.taskFile,
                                              self.settings, splash=splash)
+            # Désignation de la fenêtre en tant que principale par la méthode SetTopWindow() spécifique à la classe wx.App
+            # ligne qui devrait être en 3e position dans OnInit:
             self.__wx_app.SetTopWindow(self.mainwindow)
             self.__init_spell_checking()
             if not self.settings.getboolean("file", "inifileloaded"):
