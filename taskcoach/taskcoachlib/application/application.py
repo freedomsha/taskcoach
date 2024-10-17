@@ -450,7 +450,7 @@ en sauvegardant les paramètres et l'état de l'application."""
             self.__message_checker = meta.DeveloperMessageChecker(self.settings)
             self.__message_checker.start()
         self.__copy_default_templates()
-        self.mainwindow.Show()  # ligne qui devrait être dans OnInit
+        self.mainwindow.Show()  # ligne qui devrait être la 2e dans OnInit
         # vieux code
         #  from twisted.internet import reactor
         #         reactor.run()
@@ -532,8 +532,10 @@ en sauvegardant les paramètres et l'état de l'application."""
             self.__auto_backup = persistence.AutoBackup(self.settings)
             self.iocontroller = gui.IOController(self.taskFile, self.displayMessage,
                                                  self.settings, splash)
+            # Création de la fenêtre Principale (objet de gui.mainwindow.MainWindow):
+            # ligne qui devrait être la première dans OnInit:
             self.mainwindow = gui.MainWindow(self.iocontroller, self.taskFile,
-                                             self.settings, splash=splash)  # Création de la fenêtre Principale
+                                             self.settings, splash=splash)
             self.__wx_app.SetTopWindow(self.mainwindow)
             self.__init_spell_checking()
             if not self.settings.getboolean("file", "inifileloaded"):
