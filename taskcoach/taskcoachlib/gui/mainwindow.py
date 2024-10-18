@@ -319,6 +319,7 @@ If this happens again, please make a copy of your TaskCoach.ini file """
                 child.Close()
 
     def onClose(self, event):
+        # TODO : A revoir https://docs.wxpython.org/wx.CloseEvent.html
         # print("Resetting IdProvider...")
         # IdProvider.reset()
         self.closeEditors()
