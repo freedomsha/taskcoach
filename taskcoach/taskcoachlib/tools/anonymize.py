@@ -21,21 +21,21 @@ import os
 
 
 def anonymize(filename):
-    """ Anonymize the file specified by the filename by reading its contents,
-        replacing the contents with X's and saving the anonymized contents to
-        a copy of the file. """
+    """ Anonymiser le fichier spécifié par le nom de fichier en lisant son contenu,
+        remplacer le contenu par des X et enregistrer le contenu anonymisé dans
+        une copie du dossier. """
 
     def anonymize_string(string):
-        """Return an anonymized version of the string."""
+        """Renvoie une version anonymisée de la chaîne."""
         return "X" * len(string)
 
     def anonymize_text(text):
-        """Return an anonymized version of the text, keeping the line
-        breaks."""
+        """Renvoie une version anonymisée du texte, en gardant la ligne
+        pauses."""
         return "\n".join([anonymize_string(line) for line in text.split("\n")])
 
     def anonymize_node(node):
-        """ Recursively anonymize the node and all of its child nodes. """
+        """ Anonymisez de manière récursive le nœud et tous ses nœuds enfants. """
         for child in node:
             anonymize_node(child)
 
