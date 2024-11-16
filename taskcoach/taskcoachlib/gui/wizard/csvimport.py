@@ -168,6 +168,7 @@ class CSVImportOptionsPage(wiz.WizardPageSimple):
             try:
                 # file -> open ?
                 # unresolved attribute reference decode for class str or encode for class bytes
+                # TODO : éclaircir cette ligne !
                 fp.write(file(self.filename, 'rU').read().encode(self.encoding).decode('UTF-8'))
                 fp.seek(0)
 
