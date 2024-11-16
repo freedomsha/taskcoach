@@ -134,6 +134,7 @@ class CSVImportOptionsPage(wiz.WizardPageSimple):
         self.encoding = chardet.detect(file(filename, 'rb').read())['encoding']
         self.OnOptionChanged(None)
 
+        # TODO: remettre des Bind ? pas forcément ! Ce sont des gestionnaires d'événements.
         wx.EVT_CHOICE(self.delimiter, wx.ID_ANY, self.OnOptionChanged)
         wx.EVT_CHOICE(self.quoteChar, wx.ID_ANY, self.OnOptionChanged)
         wx.EVT_CHECKBOX(self.importSelectedRowsOnly, wx.ID_ANY, self.OnOptionChanged)
