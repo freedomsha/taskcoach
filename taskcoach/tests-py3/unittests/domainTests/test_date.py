@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2021 Task Coach developers <developers@taskcoach.org>
 
@@ -14,13 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from builtins import str
+# from builtins import str
 import time
 import datetime
 
-import tctest
+from ... import tctest
 from taskcoachlib.domain import date
 
 
@@ -30,7 +30,7 @@ class DateTest(tctest.TestCase):
         self.assertEqual(2003, adate.year)
         self.assertEqual(1, adate.month)
         self.assertEqual(1, adate.day)
-        self.assertEqual('2003-01-01', str(adate))
+        self.assertEqual("2003-01-01", str(adate))
 
     def testCreateInvalidDate(self):
         self.assertRaises(ValueError, date.Date, 2003, 2, 31)
@@ -44,7 +44,7 @@ class DateTest(tctest.TestCase):
         self.assertEqual(None, adate.year)
         self.assertEqual(None, adate.month)
         self.assertEqual(None, adate.day)
-        self.assertEqual('', str(adate))
+        self.assertEqual("", str(adate))
 
     def testCreateInfiniteDateWithMaxValues(self):
         maxDate = datetime.date.max
@@ -81,26 +81,27 @@ class DateTest(tctest.TestCase):
         self.assertTrue(date1 > date2)
 
     def testAddManyDays(self):
-        self.assertEqual(date.Date(2003, 1, 1),
-                         date.Date(2002, 1, 1) + date.ONE_YEAR)
+        self.assertEqual(date.Date(2003, 1, 1), date.Date(2002, 1, 1) + date.ONE_YEAR)
 
     def testSubstractTwoDates_ZeroDifference(self):
-        self.assertEqual(date.TimeDelta(),
-                         date.Date(2004, 2, 29) - date.Date(2004, 2, 29))
+        self.assertEqual(
+            date.TimeDelta(), date.Date(2004, 2, 29) - date.Date(2004, 2, 29)
+        )
 
     def testSubstractTwoDates_YearDifference(self):
-        self.assertEqual(date.TimeDelta(days=365),
-                         date.Date(2004, 2, 29) + date.ONE_YEAR - date.Date(2004, 2, 29))
+        self.assertEqual(
+            date.TimeDelta(days=365),
+            date.Date(2004, 2, 29) + date.ONE_YEAR - date.Date(2004, 2, 29),
+        )
 
     def testSubstractTwoDates_Infinite(self):
-        self.assertEqual(date.TimeDelta.max,
-                         date.Date() - date.Date(2004, 2, 29))
+        self.assertEqual(date.TimeDelta.max, date.Date() - date.Date(2004, 2, 29))
 
     def testSubstractTwoDates_BothInfinite(self):
         self.assertEqual(date.TimeDelta(), date.Date() - date.Date())
 
     def testFormat1900(self):
-        self.assertEqual(date.DateTime(2, 5, 19, 0, 0, 0).strftime('%Y%m%d'), '20519')
+        self.assertEqual(date.DateTime(2, 5, 19, 0, 0, 0).strftime("%Y%m%d"), "20519")
 
 
 class FactoriesTest(tctest.TestCase):
@@ -121,5 +122,5 @@ class FactoriesTest(tctest.TestCase):
         self.assertEqual(date.Date(2004, 2, 29), parsed)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tctest.main()

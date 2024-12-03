@@ -21,7 +21,7 @@ import time
 import datetime
 import re
 # import timedelta  # pylint: disable=W0402
-from datetime import timedelta
+from taskcoachlib.domain.date import timedelta
 from taskcoachlib import patterns
 from .fix import StrftimeFix
 
@@ -81,7 +81,8 @@ class InfiniteDate(datetime.date, metaclass=patterns.Singleton):
 def parseDate(dateString, default=None):
     try:
         # return Date(*[int(part) for part in dateString.split('-')])
-        return Date(*[string.atoi(part) for part in dateString.split("-")])
+        return Date(*[int(part) for part in dateString.split("-")])
+        # return Date(*[string.atoi(part) for part in dateString.split("-")])
     except ValueError:
         if default:
             return default
