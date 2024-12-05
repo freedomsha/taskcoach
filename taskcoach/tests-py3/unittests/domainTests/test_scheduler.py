@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import time
 
-import tctest
+from ... import tctest
 from taskcoachlib.domain import date
 
 
@@ -37,6 +37,7 @@ class SchedulerTest(tctest.TestCase):
         self.assertTrue(self.scheduler.is_scheduled(self.callback))
         t0 = time.time()
         from twisted.internet import reactor
+
         while time.time() - t0 < 2.1:
             reactor.iterate()
         self.assertFalse(self.scheduler.is_scheduled(self.callback))
@@ -49,6 +50,7 @@ class SchedulerTest(tctest.TestCase):
         self.assertFalse(self.scheduler.is_scheduled(self.callback))
         t0 = time.time()
         from twisted.internet import reactor
+
         while time.time() - t0 < 1.2:
             reactor.iterate()
         self.assertEqual(self.callCount, 0)
@@ -58,6 +60,7 @@ class SchedulerTest(tctest.TestCase):
         self.scheduler.schedule(self.callback, pastDate)
         self.assertFalse(self.scheduler.is_scheduled(self.callback))
         from twisted.internet import reactor
+
         reactor.iterate()
         self.assertFalse(self.scheduler.is_scheduled(self.callback))
         self.assertEqual(self.callCount, 1)
@@ -67,6 +70,7 @@ class SchedulerTest(tctest.TestCase):
         try:
             t0 = time.time()
             from twisted.internet import reactor
+
             while time.time() - t0 < 2.1:
                 reactor.iterate()
             self.assertEqual(self.callCount, 2)
