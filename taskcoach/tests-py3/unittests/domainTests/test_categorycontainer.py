@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,9 +14,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import tctest
+from ... import tctest
 from taskcoachlib import config
 from taskcoachlib.domain import category, task
 
@@ -25,8 +25,8 @@ class CategoryContainerTest(tctest.TestCase):
     def setUp(self):
         task.Task.settings = config.Settings(load=False)
         self.categories = category.CategoryList()
-        self.category = category.Category('Unfiltered category')
-        self.filteredCategory = category.Category('Filtered category', filtered=True)
+        self.category = category.Category("Unfiltered category")
+        self.filteredCategory = category.Category("Filtered category", filtered=True)
 
     def testAddExistingCategory_WithoutTasks(self):
         self.categories.append(self.category)
@@ -77,12 +77,16 @@ class CategoryContainerTest(tctest.TestCase):
         self.categories.extend([self.category, self.filteredCategory])
         self.assertEqual([self.filteredCategory], self.categories.filteredCategories())
 
-    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingBothFiltered(self):
+    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingBothFiltered(
+        self,
+    ):
         self.categories.extend([self.category, self.filteredCategory])
         self.category.setFiltered(True)
         self.assertEqual(2, len(self.categories.filteredCategories()))
 
-    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingNoneFiltered(self):
+    def testFilteredCategoriesAfterAddingOneFilteredAndOneUnfilteredCategoryAndMakingNoneFiltered(
+        self,
+    ):
         self.categories.extend([self.category, self.filteredCategory])
         self.filteredCategory.setFiltered(False)
         self.assertFalse(self.categories.filteredCategories())
