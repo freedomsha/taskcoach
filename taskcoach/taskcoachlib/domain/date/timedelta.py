@@ -269,6 +269,43 @@ ONE_YEAR = TimeDelta(days=365)
 
 
 def parseTimeDelta(string):
+    """
+    Fonctionnalité:
+
+La méthode parseTimeDelta est conçue pour analyser une chaîne de caractères représentant un intervalle de temps au format heures:minutes:secondes et la convertir en un objet TimeDelta.
+
+Fonctionnement étape par étape:
+
+    Analyse de la chaîne de caractères:
+        La méthode tente de diviser la chaîne de caractères en trois parties (heures, minutes, secondes) en utilisant le caractère :.
+        Chaque partie est convertie en un entier.
+
+    Gestion des erreurs:
+        Si une erreur se produit lors de l'analyse de la chaîne (par exemple, si le format n'est pas correct), la méthode capture l'exception ValueError et initialise les heures, minutes et secondes à zéro.
+
+    Création de l'objet TimeDelta:
+        Un nouvel objet TimeDelta est créé en utilisant les valeurs extraites de la chaîne de caractères (ou les valeurs par défaut si une erreur s'est produite).
+
+Exemple d'utilisation:
+Python
+
+interval_string = "2:30:15"
+delta = parseTimeDelta(interval_string)
+print(delta)  # Output: 2:30:15
+
+Utilisez ce code avec précaution.
+
+Cas d'utilisation:
+
+Cette méthode peut être utile dans diverses situations, notamment :
+
+    Parsing d'intervalles de temps à partir de chaînes de caractères: Par exemple, pour analyser des durées spécifiées par l'utilisateur.
+    Conversion de chaînes de temps en objets TimeDelta: Pour faciliter les calculs et manipulations d'intervalles de temps.
+
+En résumé, la méthode parseTimeDelta offre une manière simple et flexible de convertir des chaînes de caractères représentant des intervalles de temps en objets TimeDelta utilisables dans votre application.
+    :param string:
+    :return:
+    """
     try:
         hours, minutes, seconds = [int(x) for x in string.split(":")]
     except ValueError:
