@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from builtins import str
-from builtins import object
-import tctest
+# from builtins import str
+# from builtins import object
+from ... import tctest
 from taskcoachlib import config
 from taskcoachlib.domain import task, date, effort
 
@@ -30,16 +30,18 @@ class CommonTaskRelationshipManagerTestsMixin(object):
         now = self.now = date.Now()
         self.yesterday = now - date.ONE_DAY
         self.tomorrow = now + date.ONE_DAY
-        self.parent = task.Task('parent')
-        self.child = task.Task('child')
+        self.parent = task.Task("parent")
+        self.child = task.Task("child")
         self.parent.addChild(self.child)
         self.child.setParent(self.parent)
-        self.child2 = task.Task('child2', plannedStartDateTime=now)
-        self.grandchild = task.Task('grandchild', plannedStartDateTime=now)
-        settings.set('behavior', 'markparentcompletedwhenallchildrencompleted',
-            str(self.markParentCompletedWhenAllChildrenCompleted))
-        self.taskList = task.TaskList([self.parent, self.child2,
-                                       self.grandchild])
+        self.child2 = task.Task("child2", plannedStartDateTime=now)
+        self.grandchild = task.Task("grandchild", plannedStartDateTime=now)
+        settings.set(
+            "behavior",
+            "markparentcompletedwhenallchildrencompleted",
+            str(self.markParentCompletedWhenAllChildrenCompleted),
+        )
+        self.taskList = task.TaskList([self.parent, self.child2, self.grandchild])
 
     # completion Date
 
@@ -102,43 +104,48 @@ class CommonTaskRelationshipManagerTestsMixin(object):
     # recurrence
 
     def testMarkParentCompletedStopsChildRecurrence(self):
-        self.child.setRecurrence(date.Recurrence('daily'))
+        self.child.setRecurrence(date.Recurrence("daily"))
         self.parent.setCompletionDateTime()
         self.assertFalse(self.child.recurrence())
 
     def testRecurringChildIsCompletedWhenParentIsCompleted(self):
-        self.child.setRecurrence(date.Recurrence('daily'))
+        self.child.setRecurrence(date.Recurrence("daily"))
         self.parent.setCompletionDateTime()
         self.assertTrue(self.child.completed())
 
     def shouldMarkCompletedWhenAllChildrenCompleted(self, parent):
-        return parent.shouldMarkCompletedWhenAllChildrenCompleted() == True or \
-            (parent.shouldMarkCompletedWhenAllChildrenCompleted() == None and \
-             self.markParentCompletedWhenAllChildrenCompleted == True)
+        return parent.shouldMarkCompletedWhenAllChildrenCompleted() == True or (
+            parent.shouldMarkCompletedWhenAllChildrenCompleted() == None
+            and self.markParentCompletedWhenAllChildrenCompleted == True
+        )
 
     def testMarkLastChildCompletedMakesParentRecur(self):
         self.parent.setPlannedStartDateTime(self.now)
-        self.parent.setRecurrence(date.Recurrence('weekly'))
+        self.parent.setRecurrence(date.Recurrence("weekly"))
         self.child.setCompletionDateTime(self.now)
         expectedPlannedStartDateTime = self.now
         if self.shouldMarkCompletedWhenAllChildrenCompleted(self.parent):
             expectedPlannedStartDateTime += date.TimeDelta(days=7)
-        self.assertAlmostEqual(expectedPlannedStartDateTime.toordinal(),
-                               self.parent.plannedStartDateTime().toordinal())
+        self.assertAlmostEqual(
+            expectedPlannedStartDateTime.toordinal(),
+            self.parent.plannedStartDateTime().toordinal(),
+        )
 
     def testMarkLastChildCompletedMakesParentRecur_AndThusChildToo(self):
         self.child.setPlannedStartDateTime(self.now)
-        self.parent.setRecurrence(date.Recurrence('weekly'))
+        self.parent.setRecurrence(date.Recurrence("weekly"))
         self.parent.setPlannedStartDateTime(self.now)
         self.child.setCompletionDateTime(self.now)
         expectedPlannedStartDateTime = self.now
         if self.shouldMarkCompletedWhenAllChildrenCompleted(self.parent):
             expectedPlannedStartDateTime += date.TimeDelta(days=7)
-        self.assertAlmostEqual(expectedPlannedStartDateTime.toordinal(),
-                               self.child.plannedStartDateTime().toordinal())
+        self.assertAlmostEqual(
+            expectedPlannedStartDateTime.toordinal(),
+            self.child.plannedStartDateTime().toordinal(),
+        )
 
     def testMarkLastChildCompletedMakesParentRecur_AndThusChildIsNotCompleted(self):
-        self.parent.setRecurrence(date.Recurrence('weekly'))
+        self.parent.setRecurrence(date.Recurrence("weekly"))
         self.child.setCompletionDateTime()
         if self.shouldMarkCompletedWhenAllChildrenCompleted(self.parent):
             self.assertFalse(self.child.completed())
@@ -146,7 +153,7 @@ class CommonTaskRelationshipManagerTestsMixin(object):
             self.assertTrue(self.child.completed())
 
     def testMarkLastGrandChildCompletedMakesParentRecur(self):
-        self.parent.setRecurrence(date.Recurrence('weekly'))
+        self.parent.setRecurrence(date.Recurrence("weekly"))
         self.parent.setPlannedStartDateTime(self.now)
         self.child.addChild(self.grandchild)
         self.grandchild.setParent(self.child)
@@ -154,22 +161,28 @@ class CommonTaskRelationshipManagerTestsMixin(object):
         expectedPlannedStartDateTime = self.now
         if self.shouldMarkCompletedWhenAllChildrenCompleted(self.parent):
             expectedPlannedStartDateTime += date.TimeDelta(days=7)
-        self.assertAlmostEqual(expectedPlannedStartDateTime.toordinal(),
-                               self.parent.plannedStartDateTime().toordinal())
+        self.assertAlmostEqual(
+            expectedPlannedStartDateTime.toordinal(),
+            self.parent.plannedStartDateTime().toordinal(),
+        )
 
     def testMarkLastGrandChildCompletedMakesParentRecur_AndThusGrandChildToo(self):
-        self.parent.setRecurrence(date.Recurrence('weekly'))
+        self.parent.setRecurrence(date.Recurrence("weekly"))
         self.child.addChild(self.grandchild)
         self.grandchild.setParent(self.child)
         self.grandchild.setCompletionDateTime(self.now)
         expectedPlannedStartDateTime = self.now
         if self.shouldMarkCompletedWhenAllChildrenCompleted(self.parent):
             expectedPlannedStartDateTime += date.TimeDelta(days=7)
-        self.assertAlmostEqual(expectedPlannedStartDateTime.toordinal(),
-                               self.grandchild.plannedStartDateTime().toordinal())
+        self.assertAlmostEqual(
+            expectedPlannedStartDateTime.toordinal(),
+            self.grandchild.plannedStartDateTime().toordinal(),
+        )
 
-    def testMarkLastChildCompletedMakesParentRecur_AndThusGrandChildIsNotCompleted(self):
-        self.parent.setRecurrence(date.Recurrence('weekly'))
+    def testMarkLastChildCompletedMakesParentRecur_AndThusGrandChildIsNotCompleted(
+        self,
+    ):
+        self.parent.setRecurrence(date.Recurrence("weekly"))
         self.child.addChild(self.grandchild)
         self.grandchild.setParent(self.child)
         self.grandchild.setCompletionDateTime()
@@ -180,10 +193,10 @@ class CommonTaskRelationshipManagerTestsMixin(object):
 
 
 class MarkParentTaskCompletedTestsMixin(object):
-    ''' Tests where we expect to parent task to be marked completed, based on
-        the fact that all children are completed. This happens when the global
-        setting is on and task is indifferent or the task specific setting is
-        on. '''
+    """Tests where we expect to parent task to be marked completed, based on
+    the fact that all children are completed. This happens when the global
+    setting is on and task is indifferent or the task specific setting is
+    on."""
 
     def testMarkOnlyChildCompleted(self):
         self.child.setCompletionDateTime()
@@ -211,10 +224,10 @@ class MarkParentTaskCompletedTestsMixin(object):
 
 
 class DontMarkParentTaskCompletedTestsMixin(object):
-    ''' Tests where we expect the parent task not to be marked completed when
-        all children are completed. This should be the case when the global
-        setting is off and task is indifferent or when the task specific
-        setting is off. '''
+    """Tests where we expect the parent task not to be marked completed when
+    all children are completed. This should be the case when the global
+    setting is off and task is indifferent or when the task specific
+    setting is off."""
 
     def testMarkOnlyChildCompletedDoesNotMarkParentCompleted(self):
         self.child.setCompletionDateTime()
@@ -241,21 +254,27 @@ class DontMarkParentTaskCompletedTestsMixin(object):
         self.assertFalse(self.parent.completed())
 
 
-class MarkParentCompletedAutomaticallyIsOn(CommonTaskRelationshipManagerTestsMixin,
-                                           MarkParentTaskCompletedTestsMixin,
-                                           tctest.TestCase):
+class MarkParentCompletedAutomaticallyIsOn(
+    CommonTaskRelationshipManagerTestsMixin,
+    MarkParentTaskCompletedTestsMixin,
+    tctest.TestCase,
+):
     markParentCompletedWhenAllChildrenCompleted = True
 
 
-class MarkParentCompletedAutomaticallyIsOff(CommonTaskRelationshipManagerTestsMixin,
-                                            DontMarkParentTaskCompletedTestsMixin,
-                                            tctest.TestCase):
+class MarkParentCompletedAutomaticallyIsOff(
+    CommonTaskRelationshipManagerTestsMixin,
+    DontMarkParentTaskCompletedTestsMixin,
+    tctest.TestCase,
+):
     markParentCompletedWhenAllChildrenCompleted = False
 
 
-class MarkParentCompletedAutomaticallyIsOnButTaskSettingIsOff( \
-        CommonTaskRelationshipManagerTestsMixin, tctest.TestCase,
-        DontMarkParentTaskCompletedTestsMixin):
+class MarkParentCompletedAutomaticallyIsOnButTaskSettingIsOff(
+    CommonTaskRelationshipManagerTestsMixin,
+    tctest.TestCase,
+    DontMarkParentTaskCompletedTestsMixin,
+):
     markParentCompletedWhenAllChildrenCompleted = True
 
     def setUp(self):
@@ -264,9 +283,11 @@ class MarkParentCompletedAutomaticallyIsOnButTaskSettingIsOff( \
             eachTask.setShouldMarkCompletedWhenAllChildrenCompleted(False)
 
 
-class MarkParentCompletedAutomaticallyIsOffButTaskSettingIsOn( \
-        CommonTaskRelationshipManagerTestsMixin, tctest.TestCase,
-        MarkParentTaskCompletedTestsMixin):
+class MarkParentCompletedAutomaticallyIsOffButTaskSettingIsOn(
+    CommonTaskRelationshipManagerTestsMixin,
+    tctest.TestCase,
+    MarkParentTaskCompletedTestsMixin,
+):
     markParentCompletedWhenAllChildrenCompleted = False
 
     def setUp(self):
