@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,9 +14,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import tctest
+from ... import tctest
 from taskcoachlib import patterns, config
 from taskcoachlib.domain import task, effort, date
 
@@ -30,14 +30,19 @@ class EffortListTest(tctest.TestCase):
         self.taskList = task.TaskList()
         self.effortList = effort.EffortList(self.taskList)
         self.taskList.append(self.task)
-        patterns.Publisher().registerObserver(self.onEvent,
-                                              eventType=self.effortList.addItemEventType(),
-                                              eventSource=self.effortList)
-        patterns.Publisher().registerObserver(self.onEvent,
-                                              eventType=self.effortList.removeItemEventType(),
-                                              eventSource=self.effortList)
-        self.effort = effort.Effort(self.task, date.DateTime(2004, 1, 1),
-            date.DateTime(2004, 1, 2))
+        patterns.Publisher().registerObserver(
+            self.onEvent,
+            eventType=self.effortList.addItemEventType(),
+            eventSource=self.effortList,
+        )
+        patterns.Publisher().registerObserver(
+            self.onEvent,
+            eventType=self.effortList.removeItemEventType(),
+            eventSource=self.effortList,
+        )
+        self.effort = effort.Effort(
+            self.task, date.DateTime(2004, 1, 1), date.DateTime(2004, 1, 2)
+        )
 
     def testCreate(self):
         self.assertEqual(0, len(self.effortList))
@@ -99,7 +104,7 @@ class EffortListTest(tctest.TestCase):
         self.assertEqual(now, self.effortList.maxDateTime())
 
     def testNrTracking(self):
-        self.assertEqual(0, self.effortList.nr_being_tracked())
+        self.assertEqual(0, self.effortList.nrBeingTracked())
 
     def testOriginalLength(self):
         self.assertEqual(0, self.effortList.originalLength())
@@ -112,8 +117,9 @@ class EffortListTest(tctest.TestCase):
 
     def testRemoveAllItems(self):
         self.task.addEffort(self.effort)
-        effort2 = effort.Effort(self.task, date.DateTime(2005, 1, 1),
-                                           date.DateTime(2005, 1, 2))
+        effort2 = effort.Effort(
+            self.task, date.DateTime(2005, 1, 1), date.DateTime(2005, 1, 2)
+        )
         self.task.addEffort(effort2)
         self.effortList.removeItems([effort2, self.effort])
         self.assertEqual(0, len(self.effortList))
@@ -128,7 +134,7 @@ class EffortListTest(tctest.TestCase):
 
     def testRemoveTaskWithEffort(self):
         self.task.addEffort(self.effort)
-        anotherTask = task.Task('Another task without effort')
+        anotherTask = task.Task("Another task without effort")
         self.taskList.append(anotherTask)
         self.assertEqual(1, len(self.effortList))
         self.taskList.remove(self.task)
@@ -136,7 +142,7 @@ class EffortListTest(tctest.TestCase):
 
     def testRemoveTaskWithoutEffort(self):
         self.task.addEffort(self.effort)
-        anotherTask = task.Task('Another task without effort')
+        anotherTask = task.Task("Another task without effort")
         self.taskList.append(anotherTask)
         self.assertEqual(1, len(self.effortList))
         self.taskList.remove(anotherTask)
@@ -144,7 +150,7 @@ class EffortListTest(tctest.TestCase):
 
     def testChangeTask(self):
         self.task.addEffort(self.effort)
-        anotherTask = task.Task('Another task without effort')
+        anotherTask = task.Task("Another task without effort")
         self.taskList.append(anotherTask)
         self.assertEqual(1, len(self.effortList))
         self.effort.setTask(anotherTask)
