@@ -20,10 +20,10 @@ from taskcoachlib import patterns
 
 
 def DomainObjectOwnerMetaclass(name, bases, ns):
-    """Cette métaclasse fait d'une classe le propriétaire de certains objets de domaine
-    . L'attribut __ownedType__ de la classe doit être une chaîne
-    . Pour chaque type, les méthodes suivantes seront ajoutées à la classe
-    (en supposant ici un type 'Foo'):
+    """Cette métaclasse fait d'une classe le propriétaire de certains objets de domaine.
+    L'attribut __ownedType__ de la classe doit être une chaîne.
+    Pour chaque type, les méthodes suivantes seront ajoutées à la classe
+    (en supposant ici un type 'Foo') :
 
       - __init__, __getstate__, __setstate__, __getcopystate__, __setcopystate__
       - addFoo, removeFoo, addFoos, removeFoos
@@ -48,6 +48,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         # NB: we use a simple list here. Maybe we should use a container type.
         setattr(instance, "_%s__%ss" % (name, klass.__ownedType__.lower()),
                 kwargs.pop(klass.__ownedType__.lower() + "s", []))
+        # super(klass, instance).__new__(klass)
         super(klass, instance).__init__(*args, **kwargs)
 
     klass.__init__ = constructor
@@ -207,7 +208,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
 #
 #
 # class NoteOwner(metaclass=DomainObjectOwnerMetaclass):
-#     """ Mixin class for (other) domain objects that may contain notes. """
+#     """ Classe Mixin pour les (autres) objets de domaine pouvant contenir des notes. """
 #
 #     __ownedType__ = "Note"
 #
@@ -227,6 +228,6 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
 #
 #
 # class AttachmentOwner(metaclass=DomainObjectOwnerMetaclass):
-#     """Mixin class for other domain objects that may have attachments"""
+#     """Classe Mixin pour d'autres objets de domaine pouvant avoir des pièces jointes."""
 #
 #     __ownedType__ = "Attachment"
