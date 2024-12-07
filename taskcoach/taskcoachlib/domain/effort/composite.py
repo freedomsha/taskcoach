@@ -190,11 +190,15 @@ class CompositeEffort(BaseCompositeEffort):
             super().mayContain(effort)
 
     def description(self):
-        if len(set(effort.description() for effort in self._getEfforts(False))) == 1:
-            return self._getEfforts(False)[0].description()
-        effortDescriptions = [effort.description() for effort in
+        # if len(set(effort.description() for effort in self._getEfforts(False))) == 1:
+        if len(set(effort.getDescription() for effort in self._getEfforts(False))) == 1:
+            # return self._getEfforts(False)[0].description()
+            return self._getEfforts(False)[0].getDescription()
+        # effortDescriptions = [effort.description() for effort in
+        effortDescriptions = [effort.getDescription() for effort in
                                sorted(self._getEfforts(False),
-                                      key=lambda effort: effort.getStart()) if effort.description()]
+                                      # key=lambda effort: effort.getStart()) if effort.description()]
+                                      key=lambda effort: effort.getStart()) if effort.getDescription()]
         return "\n".join(effortDescriptions)
 
     def onAppearanceChanged(self, event):

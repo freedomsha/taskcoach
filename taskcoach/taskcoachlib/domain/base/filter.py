@@ -107,8 +107,11 @@ class SearchFilter(Filter):
         searchString = kwargs.pop("searchString", "")
         matchCase = kwargs.pop("matchCase", False)
         includeSubItems = kwargs.pop("includeSubItems", False)
+        # self.__includeSubItems = includeSubItems = kwargs.pop("includeSubItems", False)
         searchDescription = kwargs.pop("searchDescription", False)
+        # self.__searchDescription = searchDescription = kwargs.pop("searchDescription", False)
         regularExpression = kwargs.pop("regularExpression", False)
+        # self.__regularExpression = regularExpression = kwargs.pop("regularExpression", False)
 
         self.setSearchFilter(searchString, matchCase=matchCase,
                              includeSubItems=includeSubItems,
@@ -169,7 +172,8 @@ class SearchFilter(Filter):
     def __itemOwnText(self, item):
         text = item.subject()
         if self.__searchDescription:
-            text += item.description()
+            # text += item.description()
+            text += item.getDescription()
         return text
 
 
