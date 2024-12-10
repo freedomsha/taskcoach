@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import object
-from io import open as file  # j'ai ajouté
+# from io import open as file  # j'ai ajouté
+from io import open  # j'ai ajouté
 import os
 import pickle
 import tempfile
@@ -30,8 +31,8 @@ from taskcoachlib.persistence.xml import TemplateXMLWriter, TemplateXMLReader
 
 
 class TemplateList(object):
-    def __init__(self, path, TemplateReader=TemplateXMLReader, openFile=file):
-        # def __init__(self, path, TemplateReader=TemplateXMLReader, openFile=open):
+    # def __init__(self, path, TemplateReader=TemplateXMLReader, openFile=file):
+    def __init__(self, path, TemplateReader=TemplateXMLReader, openFile=open):
         self._path = path
         self._templates = self._readTemplates(TemplateReader, openFile)
         self._toDelete = []
@@ -51,7 +52,7 @@ class TemplateList(object):
             return
         try:
             return TemplateReader(fd).read()
-        except:  # else ?
+        except Exception:  # else ?
             pass
         finally:
             fd.close()
@@ -64,19 +65,19 @@ class TemplateList(object):
         listName = os.path.join(self._path, "list.pickle")
         if os.path.exists(listName):
             try:
-                filenames = pickle.load(file(listName, "rb"))
-                # filenames = pickle.load(open(listName, 'rb'))
-            except:
+                # filenames = pickle.load(file(listName, "rb"))
+                filenames = pickle.load(open(listName, "rb"))
+            except Exception:
                 pass
         return filenames
 
     def save(self):
-        pickle.dump([name for task, name in self._templates], file(os.path.join(self._path, "list.pickle"), "wb"))
-        # pickle.dump([name for task, name in self._templates], open(os.path.join(self._path, 'list.pickle'), 'wb'))
+        # pickle.dump([name for task, name in self._templates], file(os.path.join(self._path, "list.pickle"), "wb"))
+        pickle.dump([name for task, name in self._templates], open(os.path.join(self._path, "list.pickle"), "wb"))
 
         for task, name in self._templates:
-            templateFile = file(os.path.join(self._path, name), "w")
-            # templateFile = open(os.path.join(self._path, name), 'w')
+            # templateFile = file(os.path.join(self._path, name), "w")
+            templateFile = open(os.path.join(self._path, name), "w")
             writer = TemplateXMLWriter(templateFile)
             writer.write(task)
             templateFile.close()
@@ -89,13 +90,13 @@ class TemplateList(object):
     def addTemplate(self, task):
         handle, filename = tempfile.mkstemp(".tsktmpl", dir=self._path)
         os.close(handle)
-        templateFile = file(filename, "w")
-        # template_file = open(filename, 'w')
+        # templateFile = file(filename, "w")
+        templateFile = open(filename, "w")
         writer = TemplateXMLWriter(templateFile)
         writer.write(task.copy())
         templateFile.close()
-        theTask = TemplateXMLReader(file(filename, "r")).read()
-        # the_task = TemplateXMLReader(open(filename, 'rU')).read()
+        # theTask = TemplateXMLReader(file(filename, "rU")).read()
+        theTask = TemplateXMLReader(open(filename, "r")).read()
         self._templates.append((theTask, os.path.split(filename)[-1]))
         return theTask
 
