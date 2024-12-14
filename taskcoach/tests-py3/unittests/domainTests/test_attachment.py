@@ -20,7 +20,7 @@ import os
 from pubsub import pub
 
 from ... import tctest
-from taskcoachlib.domain import attachment
+from taskcoachlib.domain.attachment import attachment
 
 
 class GetRelativePathTest(tctest.TestCase):
