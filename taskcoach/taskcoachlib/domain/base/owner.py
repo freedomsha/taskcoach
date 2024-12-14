@@ -187,7 +187,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         # event.addSource(instance, *objects,
         #                 **dict(type=changedEventType(instance.__class__)))
         event.addSource(instance, *objects, type=generate_event_name(""))
-        print(f"Événement envoyé par changedEvent: {event}")
+        # print(f"Événement envoyé par changedEvent: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:
@@ -199,7 +199,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         # event.addSource(instance, *objects,
         #                 **dict(type=addedEventType(instance.__class__)))
         event.addSource(instance, *objects, type=generate_event_name(".added"))
-        print(f"Événement envoyé par addedEvent: {event}")
+        # print(f"Événement envoyé par addedEvent: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:
@@ -211,7 +211,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         # event.addSource(instance, *objects,
         #                 **dict(type=removedEventType(instance.__class__)))
         event.addSource(instance, *objects, type=generate_event_name(".removed"))
-        print(f"Événement envoyé par removedEvent: {event}")
+        # print(f"Événement envoyé par removedEvent: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:
@@ -249,7 +249,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         getattr(instance, _attribute_name("")).append(ownedObject)
         changedEvent(instance, event, ownedObject)
         addedEvent(instance, event, ownedObject)
-        print(f"Événement envoyé par addObject: {event}")
+        # print(f"Événement envoyé par addObject: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:
@@ -271,7 +271,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         event = kwargs.pop("event", None)
         changedEvent(instance, event, *ownedObjects)
         addedEvent(instance, event, *ownedObjects)
-        print(f"Événement envoyé par addObjects: {event}")
+        # print(f"Événement envoyé par addObjects: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:
@@ -314,7 +314,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         event = kwargs.pop("event", None)
         changedEvent(instance, event, *ownedObjects)
         removedEvent(instance, event, *ownedObjects)
-        print(f"Événement envoyé par removeObjects: {event}")
+        # print(f"Événement envoyé par removeObjects: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:

@@ -80,8 +80,8 @@ class OwnerTest(tctest.TestCase):
         # self.events = {}
 
     def onEvent(self, event):
-        print(f"Événement capturé par onEvent: {event}")
-        print(f"Structure : {event.__dict__}")
+        # print(f"Événement capturé par onEvent: {event}")
+        # print(f"Structure : {event.__dict__}")
         self.events.append(event)
 
     # pylint: disable=E1101
@@ -125,7 +125,7 @@ class OwnerTest(tctest.TestCase):
         # self.assertIn(self.owner.foosChangedEventType(), self.events[0].keys())
         # event_data = self.events[0].__dict__
         event_data = self.events[0].sourcesAndValuesByType()  # Accède aux données de l'événement
-        print(f"Événement capturé par testAddFoos_NotificationTriggered (bonnes données ?): {event_data}")
+        # print(f"Événement capturé par testAddFoos_NotificationTriggered (bonnes données ?): {event_data}")
         # Vérifie si la clé attendue existe
         self.assertIn(self.owner.foosChangedEventType(), event_data.keys())
 
