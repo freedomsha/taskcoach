@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import range
-from builtins import object
-import tctest
+# from builtins import range
+# from builtins import object
+from ... import tctest
 from taskcoachlib import patterns
 
 
