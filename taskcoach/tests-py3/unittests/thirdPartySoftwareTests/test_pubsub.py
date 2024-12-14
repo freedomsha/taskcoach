@@ -17,8 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from pubsub import pub
-
-import tctest
+from ... import tctest
 
 
 class PubSubTest(tctest.TestCase):
