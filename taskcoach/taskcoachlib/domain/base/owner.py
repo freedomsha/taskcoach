@@ -289,7 +289,7 @@ def DomainObjectOwnerMetaclass(name, bases, ns):
         getattr(instance, _attribute_name("")).remove(ownedObject)
         changedEvent(instance, event, ownedObject)
         removedEvent(instance, event, ownedObject)
-        print(f"Événement envoyé par removeObject: {event}")
+        # print(f"Événement envoyé par removeObject: {event}")
 
         # Forcer l'ajout explicite de la source
         if event is not None:
