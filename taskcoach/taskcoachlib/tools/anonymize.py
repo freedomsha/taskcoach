@@ -57,6 +57,7 @@ def anonymize(filename):
             node.text = "XXX"  # pylint: disable=W0511
 
         if node.tag == "attachment" and "location" in node.attrib:
+            # be careful : location stay location not getLocation or other else
             node.attrib["location"] = anonymize_string(node.attrib["location"])
 
     # tree = ET.parse(file(filename, 'rb'))
