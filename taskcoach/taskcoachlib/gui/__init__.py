@@ -24,10 +24,11 @@ from .mainwindow import MainWindow
 from .dialog.editor import TaskEditor, EffortEditor, CategoryEditor
 from .dialog.preferences import Preferences
 from .iocontroller import IOController
-# from .mainwindow import MainWindow
+from .mainwindow import MainWindow
 from .remindercontroller import ReminderController
 from .artprovider import init, itemImages
 from .taskbaricon import TaskBarIcon
+from . import viewer
 
 
 # __all__ = ["artprovider", "dialog", "icons", "idlecontroller", "iocontroller", "iphone", "mainwindow", "menu", "newid", "printer", "remindercontroller", "splash", "status", "toolbar", "uicommand", "viewer", "windowdimensionstracker", "wizard"]
