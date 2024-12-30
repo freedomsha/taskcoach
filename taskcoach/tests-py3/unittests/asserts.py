@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,12 +14,12 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import zip
-from builtins import object
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import zip
+# from builtins import object
 from taskcoachlib import patterns
 
 
@@ -113,7 +113,13 @@ class CommandAssertsMixin(object):
         self.redo()
         assertDone()
 
-class Mixin(CommandAssertsMixin, TaskAssertsMixin, EffortAssertsMixin,
-            TaskListAssertsMixin, EffortListAssertsMixin,
-            NoteContainerAssertsMixin):
+
+class Mixin(
+    CommandAssertsMixin,
+    TaskAssertsMixin,
+    EffortAssertsMixin,
+    TaskListAssertsMixin,
+    EffortListAssertsMixin,
+    NoteContainerAssertsMixin,
+):
     pass
