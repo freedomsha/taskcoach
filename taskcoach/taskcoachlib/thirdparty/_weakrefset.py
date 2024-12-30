@@ -3,7 +3,9 @@
 # by abc.py to load everything else at startup.
 
 # from builtins import object
-from _weakref import ref
+# from _weakref import ref
+from weakref import ref
+# from weakref import WeakSet
 
 __all__ = ["WeakSet"]
 
