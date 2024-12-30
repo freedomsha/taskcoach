@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
