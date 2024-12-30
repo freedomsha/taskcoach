@@ -92,6 +92,15 @@ Dependencies:
 # from builtins import map  # Unused import statement 'from builtins import map'
 # from builtins import object
 
+import calendar
+import locale
+import logging
+import os
+import re
+import sys
+# import threading  # Unused import
+import time
+import wx
 # try:
 from pubsub import pub
 # except ImportError:
@@ -99,20 +108,11 @@ from pubsub import pub
 #       # from ..thirdparty.pubsub import pub
 #    except ImportError:
 #        from wx.lib.pubsub import pub
+from io import open
 
-import locale
-import logging
-import os
-import sys
-import time
-import wx
-import calendar
-import re
-import threading
-from io import open as file
-
-from taskcoachlib import workarounds  # pylint: disable=W0611  unused import statement
+# from taskcoachlib import workarounds  # pylint: disable=W0611  unused import statement
 from taskcoachlib import patterns, operating_system
+
 # nouveau :
 from taskcoachlib.i18n import _
 from taskcoachlib.config import Settings
@@ -141,8 +141,8 @@ class RedirectedOutput(object):
         # Si l'argument-fichier à utiliser n'existe pas
         if self.__handle is None:
             # le définir comme l'ouverture pour écriture du fichier taskcoachlog.txt
-            self.__handle = file(self.__path, "a+")
-            # self.__handle = open(self.__path, 'a+')
+            # self.__handle = file(self.__path, 'a+')
+            self.__handle = open(self.__path, "a+")
             # écrire la Date et l'heure actuelle dans taskcoachlog.txt
             # self.__handle.write("============= %s\n" % time.ctime())
             # self.__handle.write("============= {}\n".format(time.ctime()))
