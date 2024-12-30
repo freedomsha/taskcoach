@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 from taskcoachlib.gui.dialog import developer_message
-# from taskcoachlib.gui.dialog import editor
+from taskcoachlib.gui.dialog import editor
 from taskcoachlib.gui.dialog import entry
 from taskcoachlib.gui.dialog import export
 from taskcoachlib.gui.dialog import preferences
