@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import object
 from taskcoachlib import patterns
 import weakref
-from taskcoachlib.thirdparty._weakrefset import WeakSet
+# from taskcoachlib.thirdparty._weakrefset import WeakSet
+from weakref import WeakSet  # En test!
 
 
 class Attribute(object):
