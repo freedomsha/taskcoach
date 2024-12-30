@@ -20,21 +20,21 @@ from taskcoachlib.domain import base
 
 
 class AttachmentOwner(object, metaclass=base.DomainObjectOwnerMetaclass):
-    """Mixin class for other domain objects that may have attachments"""
+    """Classe Mixin pour d'autres objets de domaine pouvant avoir des pièces jointes."""
 
     # __metaclass__ = base.DomainObjectOwnerMetaclass
     __ownedType__ = "Attachment"
 
-    # @classmethod
-    # def attachmentAddedEventType(cls):
-    #     # like taskcoachlib/patterns/observer/addItemEventType
-    #     # and taskcoachlib/domain/base/owner/noteAddedEventType
-    #     # return '%s.add' % cls
-    #     pass
-    #
-    # @classmethod
-    # def attachmentRemovedEventType(cls):
-    #     # like taskcoachlib/patterns/observer/removeItemEventType
-    #     # and taskcoachlib/domain/base/owner/noteRemovedEventType
-    #     # return '%s.remove' % cls
-    #     pass
+    @classmethod
+    def attachmentAddedEventType(class_):
+        # like taskcoachlib/patterns/observer/addItemEventType
+        # and taskcoachlib/domain/base/owner/noteAddedEventType
+        # return '%s.add' % cls
+        pass
+
+    @classmethod
+    def attachmentRemovedEventType(class_):
+        # like taskcoachlib/patterns/observer/removeItemEventType
+        # and taskcoachlib/domain/base/owner/noteRemovedEventType
+        # return '%s.remove' % cls
+        pass
