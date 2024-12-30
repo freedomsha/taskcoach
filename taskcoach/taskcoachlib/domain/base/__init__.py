@@ -23,3 +23,6 @@ from .filter import Filter, SearchFilter, SelectedItemsFilter, DeletedFilter
 from .sorter import Sorter, TreeSorter
 from .owner import DomainObjectOwnerMetaclass
 # from .owner import DomainObjectOwnerMetaclass, NoteOwner, AttachmentOwner
+# Où sont ces deux dernières classes ?
+# NoteOwner est dans domain.note.noteowner
+# et AttachmentOwner est dans domain.attachment.attachmentowner
