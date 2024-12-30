@@ -18,32 +18,33 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import zip
-from builtins import object
+# from builtins import zip
+# from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import attachment
-from . import base, noteCommands
+from . import base
+# from . import noteCommands
 
 
 class EditAttachmentLocationCommand(base.BaseCommand):
-    pluralName = _('Edit location of attachments')
+    pluralName = _("Edit location of attachments")
     singularName = _('Edit attachment "%s" location')
 
     def __init__(self, *args, **kwargs):
-        self.__newLocation = kwargs.pop('newValue')
-        super(EditAttachmentLocationCommand, self).__init__(*args, **kwargs)
+        self.__newLocation = kwargs.pop("newValue")
+        super().__init__(*args, **kwargs)
         self.__oldLocations = [item.location() for item in self.items]
 
     @patterns.eventSource
     def do_command(self, event=None):
-        super(EditAttachmentLocationCommand, self).do_command()
+        super().do_command()
         for item in self.items:
             item.setLocation(self.__newLocation)
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        super(EditAttachmentLocationCommand, self).undo_command()
+        super().undo_command()
         for item, oldLocation in zip(self.items, self.__oldLocations):
             item.setLocation(oldLocation)
 
@@ -52,14 +53,15 @@ class EditAttachmentLocationCommand(base.BaseCommand):
 
 
 class AddAttachmentCommand(base.BaseCommand):
-    pluralName = _('Add attachment')
-    singularName = _('Add attachment to "%s"')
+    pluralName = _("Add attachment")
+    singularName = _("Add attachment to '%s'")
 
     def __init__(self, *args, **kwargs):
         self.owners = []
-        self.__attachments = kwargs.get('attachments',
-                                        [attachment.FileAttachment('', subject=_('New attachment'))])
-        super(AddAttachmentCommand, self).__init__(*args, **kwargs)
+        self.__attachments = kwargs.get(
+            "attachments", [attachment.FileAttachment("", subject=_("New attachment"))]
+        )
+        super().__init__(*args, **kwargs)
         self.owners = self.items
         self.items = self.__attachments
         self.save_modification_datetimes()
@@ -77,28 +79,30 @@ class AddAttachmentCommand(base.BaseCommand):
     def removeAttachments(self, event=None):
         kwargs = dict(event=event)
         for owner in self.owners:
-            owner.removeAttachments(*self.__attachments, **kwargs)  # pylint: disable=W0142
+            owner.removeAttachments(
+                *self.__attachments, **kwargs
+            )  # pylint: disable=W0142
 
     def do_command(self):
-        super(AddAttachmentCommand, self).do_command()
+        super().do_command()
         self.addAttachments()
 
     def undo_command(self):
-        super(AddAttachmentCommand, self).undo_command()
+        super().undo_command()
         self.removeAttachments()
 
     def redo_command(self):
-        super(AddAttachmentCommand, self).redo_command()
+        super().redo_command()
         self.addAttachments()
 
 
 class RemoveAttachmentCommand(base.BaseCommand):
-    pluralName = _('Remove attachment')
-    singularName = _('Remove attachment to "%s"')
+    pluralName = _("Remove attachment")
+    singularName = _("Remove attachment to '%s'")
 
     def __init__(self, *args, **kwargs):
-        self._attachments = kwargs.pop('attachments')
-        super(RemoveAttachmentCommand, self).__init__(*args, **kwargs)
+        self._attachments = kwargs.pop("attachments")
+        super().__init__(*args, **kwargs)
 
     @patterns.eventSource
     def addAttachments(self, event=None):
@@ -110,18 +114,20 @@ class RemoveAttachmentCommand(base.BaseCommand):
     def removeAttachments(self, event=None):
         kwargs = dict(event=event)
         for item in self.items:
-            item.removeAttachments(*self._attachments, **kwargs)  # pylint: disable=W0142
+            item.removeAttachments(
+                *self._attachments, **kwargs
+            )  # pylint: disable=W0142
 
     def do_command(self):
-        super(RemoveAttachmentCommand, self).do_command()
+        super().do_command()
         self.removeAttachments()
 
     def undo_command(self):
-        super(RemoveAttachmentCommand, self).undo_command()
+        super().undo_command()
         self.addAttachments()
 
     def redo_command(self):
-        super(RemoveAttachmentCommand, self).redo_command()
+        super().redo_command()
         self.removeAttachments()
 
 
@@ -141,4 +147,5 @@ class CutAttachmentCommand(base.CutCommandMixin, RemoveAttachmentCommand):
             def removeItems(self, attachments):  # utilisé souvent !
                 for item in self.__items:
                     item.removeAttachments(*attachments)
+
         return Wrapper(self.items)
