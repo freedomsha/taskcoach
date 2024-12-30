@@ -125,8 +125,8 @@ class RedirectedOutput(object):
     ]
 
     def __init__(self):
-        """Fonction qui initialise l'argument-fichier à utiliser et l'argument du chemin du fichier taskcoachlog.txt"""
-        # Argument-fichier à utiliser
+        """Fonction qui initialise l'argument du fichier à utiliser et l'argument du chemin du fichier taskcoachlog.txt"""
+        # Argument fichier à utiliser
         self.__handle = None
         # chemin de taskcoachlog.txt
         self.__path = os.path.join(Settings.pathToDocumentsDir(), "taskcoachlog.txt")
@@ -158,9 +158,11 @@ class RedirectedOutput(object):
 
     def close(self):
         """Fonction-méthode pour fermer taskcoachlig.txt"""
+        # si l'Argument-fichier à utiliser existe, le fermer et le rendre inaccessible.
         if self.__handle is not None:
             self.__handle.close()
             self.__handle = None
+            # self.__path = None
 
     def summary(self):
         """Fonction-méthode pour afficher une info sur ce qu'il vient d'être écrit dans taskcoachlog.txt"""
@@ -179,13 +181,13 @@ class RedirectedOutput(object):
 
 # pylint: disable=W0404
 
-
 class wxApp(wx.App):
     """Classe App pour wxpython"""
+
     # {AttributeError}AttributeError("'ArtProvider' object has no attribute '_Application__wx_app'")
     # Pour pouvoir lancer un interface graphique wxPython,
     # on doit obligatoirement passer par un objet chargé de créer l'instance de la classe principale de l'interface (le Top Level).
-    # Cet objet doit lui-même être construit et dériver de la classe wx.App 
+    # Cet objet doit lui-même être construit et dériver de la classe wx.App
 
     def __init__(self, sessionCallback, reopenCallback, *args, **kwargs):
         self.sessionCallback = sessionCallback
@@ -212,7 +214,7 @@ class wxApp(wx.App):
         Returns:
             bool: True on successful initialization.
         """
-        # La séquence d'initialisation de la méthode OnInit() est alors toujours la même : 
+        # La séquence d'initialisation de la méthode OnInit() est alors toujours la même :
         #    fen = Bonjour("Exemple 1")  # Création d'une instance de la fenêtre principale.
         #    fen.Show(True)  # Affichage de la fenêtre par la méthode Show() dérivée de la classe wx.Window.
         #    self.SetTopWindow(fen)  # Désignation de la fenêtre en tant que principale par la méthode SetTopWindow() spécifique à la classe wx.App
@@ -258,6 +260,7 @@ class wxApp(wx.App):
         Cependant, son implémentation spécifique dépend de vos besoins.
         """
         pass
+
     # dans le fichier application.py pourtant elle est utilisée dans les tests et dans quitApplication
 
 
@@ -270,14 +273,14 @@ class Application(object, metaclass=patterns.Singleton):
     Gère le lancement et l'arrêt de l'application,
     ainsi que l'initialisation de ses différents composants.
 
-La méthode initTwisted initialise et lance le réacteur Twisted,
-qui permet de gérer les événements asynchrones de l'application.
+    La méthode initTwisted initialise et lance le réacteur Twisted,
+    qui permet de gérer les événements asynchrones de l'application.
 
-La méthode start lance l'application en affichant la fenêtre principale
-et en démarrant la boucle d'événements de Twisted.
+    La méthode start lance l'application en affichant la fenêtre principale
+    et en démarrant la boucle d'événements de Twisted.
 
-La méthode quitApplication permet de quitter l'application
-en sauvegardant les paramètres et l'état de l'application."""
+    La méthode quitApplication permet de quitter l'application
+    en sauvegardant les paramètres et l'état de l'application."""
 
     def __init__(self, options=None, args=None, **kwargs):
         """La méthode init est appelée avant le démarrage de l'application.
@@ -412,6 +415,7 @@ en sauvegardant les paramètres et l'état de l'application."""
         # voir https://stackoverflow.com/questions/6526923/stop-twisted-reactor-on-a-condition
         # from twisted.internet import reactor, error
         from twisted.internet import reactor, error
+
         try:
             reactor.stop()  # cannot find stop in reactor, but don't use yourApp.ExitMainLoop()
         except error.ReactorNotRunning:
@@ -420,11 +424,11 @@ en sauvegardant les paramètres et l'état de l'application."""
             pass
 
     def registerApp(self):
-        """Fonction-méthode pour Enregistrez l'instance d'application avec Twisted:
-        """
+        """Fonction-méthode pour Enregistrez l'instance d'application avec Twisted:"""
         # try:
         # (3/5)Twisted, when Wxapp has been created :
         from twisted.internet import reactor
+
         # voir peut-etre aussi twisted.internet.wxreactor.WxReactor !
         # (4/5)Twisted :
         reactor.registerWxApp(self.__wx_app)
@@ -444,6 +448,7 @@ en sauvegardant les paramètres et l'état de l'application."""
         """
         # pylint: disable=W0201
         from taskcoachlib import meta
+
         if self.settings.getboolean("version", "notify"):
             self.__version_checker = meta.VersionChecker(self.settings)
             self.__version_checker.start()
@@ -457,6 +462,7 @@ en sauvegardant les paramètres et l'état de l'application."""
         #         reactor.run()
         # (3/5)Twisted :
         from twisted.internet import reactor
+
         # voir https://github.com/twisted/twisted/blob/63df84e454978bd7a2d57ed292913384ca352e1a/src/twisted/internet/wxreactor.py#L74
         # start the event loop:
         # Démarre la boucle des événements:
@@ -493,8 +499,7 @@ en sauvegardant les paramètres et l'état de l'application."""
         # twisted.internet.wxsupport.wxRunner.run
 
     def __copy_default_templates(self):
-        """Copie les modèles par défaut qui n'existent pas encore dans le répertoire de modèles de l'utilisateur.
-        """
+        """Copie les modèles par défaut qui n'existent pas encore dans le répertoire de modèles de l'utilisateur."""
 
         # class getDefaultTemplates créé par templates.in/make.py
         from taskcoachlib.persistence import getDefaultTemplates  # créé par templates.in/make
@@ -556,14 +561,16 @@ en sauvegardant les paramètres et l'état de l'application."""
             return False
 
     def __init_config(self, load_settings):
-        """ Fonction-méthode d'initialisation de la configuration.
+        """Fonction-méthode d'initialisation de la configuration.
 
-        Args:
-            load_settings (bool): Charger les paramètres de l'application.
+        Args :
+            load_settings (bool) : Charger les paramètres de l'application.
         """
         try:
             from taskcoachlib import config
+
             ini_file = self._options.inifile if self._options else None
+            # est-ce qu'il existe un fichier inifile ? si non load_settings is False !
             # AttributeError: 'Values' object has no attribute 'inifile'
             # AttributeError: 'Namespace' object has no attribute 'inifile'
             # pylint: disable=W0201
@@ -573,7 +580,7 @@ en sauvegardant les paramètres et l'état de l'application."""
             raise
 
     def __init_language(self):
-        """ Initialisez la traduction actuelle. """
+        """Initialisez la traduction actuelle."""
         try:
             from taskcoachlib import i18n
             i18n.Translator(self.determine_language(self._options, self.settings))
@@ -581,18 +588,17 @@ en sauvegardant les paramètres et l'état de l'application."""
             logging.error("application.py: Erreur lors de l'initialisation de la langue: %s", str(e))
 
     @staticmethod
-    def determine_language(
-            options, settings, locale=locale):  # pylint: disable=W0621
+    def determine_language(options, settings, locale=locale):  # pylint: disable=W0621
         # Shadows name 'locale' from outer scope
         """Détermine la langue locale utilisée.
 
-        Args:
-            options: Options de la ligne de commande.
-            settings: Paramètres de l'application.
-            locale: Module locale (par défaut, le module locale standard).
+        Args :
+            options : Options de la ligne de commande.
+            settings : Paramètres de l'application.
+            locale : Module locale (par défaut, le module locale standard).
 
-        Returns:
-            str: La langue locale à utiliser.
+        Returns :
+            str : La langue locale à utiliser.
         """
         language = None
         if options:
@@ -611,6 +617,7 @@ en sauvegardant les paramètres et l'état de l'application."""
             if language == "C":
                 # TODO: essayer:
                 # locale.setlocale(locale.LC_ALL, "C")
+                # language = locale.setlocale(locale.LC_ALL, "C")
                 language = None
         if not language:
             # Fall back on what the majority of our users use
@@ -627,18 +634,16 @@ en sauvegardant les paramètres et l'état de l'application."""
         attachment.Attachment.settings = self.settings
 
     def __init_application(self):
-        """ Fonction-méthode qui règle les paramètres nom et auteurs de l'application."""
+        """Fonction-méthode qui règle les paramètres nom et auteurs de l'application."""
         from taskcoachlib import meta
         # Attributs d'instance
         self.__wx_app.SetAppName(meta.name)
         self.__wx_app.SetVendorName(meta.author)
 
     def __init_spell_checking(self):
-        """ Fonction-méthode qui règle-initialise """
-        self.on_spell_checking(
-            self.settings.getboolean("editor", "maccheckspelling"))
-        pub.subscribe(
-            self.on_spell_checking, "settings.editor.maccheckspelling")
+        """Fonction-méthode qui règle-initialise."""
+        self.on_spell_checking(self.settings.getboolean("editor", "maccheckspelling"))
+        pub.subscribe(self.on_spell_checking, "settings.editor.maccheckspelling")
 
     def on_spell_checking(self, value):
         """Fonction-méthode qui utilise SystemOptions qui stocke les paires option/valeur que wxWidgets lui-même
@@ -694,8 +699,7 @@ en sauvegardant les paramètres et l'état de l'application."""
 
     @staticmethod
     def __create_mutex():
-        """Sous Windows, créez un mutex pour qu'InnoSetup puisse vérifier si l'application est en cours d'exécution.
-        """
+        """Sous Windows, créez un mutex pour qu'InnoSetup puisse vérifier si l'application est en cours d'exécution."""
         if operating_system.isWindows():
             import ctypes
             from taskcoachlib import meta
@@ -703,7 +707,7 @@ en sauvegardant les paramètres et l'état de l'application."""
             ctypes.windll.kernel32.CreateMutexA(None, False, meta.filename)
 
     def __create_task_bar_icon(self):
-        """ Fonction-Méthode pour créer une icône avec menu dans la barre de tâche. """
+        """Fonction-Méthode pour créer une icône avec menu dans la barre de tâche."""
         if self.__can_create_task_bar_icon():
             from taskcoachlib.gui import taskbaricon, menu
 
@@ -728,19 +732,19 @@ en sauvegardant les paramètres et l'état de l'application."""
 
     @staticmethod
     def __close_splash(splash):
-        """ Fonction-méthode si splash. """
+        """Fonction-méthode si splash."""
         if splash:
             splash.Destroy()
 
     def __show_tips(self):
-        """ Fonction-méthode d'affichage des fenêtres d'astuces. """
+        """Fonction-méthode d'affichage des fenêtres d'astuces."""
         if self.settings.getboolean("window", "tips"):
             from taskcoachlib import help  # pylint: disable=W0622
 
             help.showTips(self.mainwindow, self.settings)
 
     def __warn_user_that_ini_file_was_not_loaded(self):
-        """ Fonction-méthode pour avertir l'utilisateur que le fichier ini n'a pas été démarré."""
+        """Fonction-méthode pour avertir l'utilisateur que le fichier ini n'a pas été démarré."""
         from taskcoachlib import meta
 
         reason = self.settings.get("file", "inifileloaderror")
@@ -752,7 +756,7 @@ en sauvegardant les paramètres et l'état de l'application."""
         self.settings.setboolean("file", "inifileloaded", True)  # Reset
 
     def displayMessage(self, message):
-        """ Fonction-méthode pour afficher le message. """
+        """Fonction-méthode pour afficher le message."""
         self.mainwindow.displayMessage(message)
 
     def on_end_session(self):
@@ -772,11 +776,11 @@ en sauvegardant les paramètres et l'état de l'application."""
             logging.error("application.py: Erreur lors de la fermeture de la session: %s", str(e))
 
     def on_reopen_app(self):
-        """ Fonction-méthode pour rouvrir l'application. """
+        """Fonction-méthode pour rouvrir l'application."""
         self.taskBarIcon.onTaskbarClick(None)
 
     def quitApplication(self, force=False):
-        """ Fonction-méthode pour quitter l'application.
+        """Fonction-méthode pour quitter l'application.
 
         Quitte l'application en sauvegardant les paramètres et l'état de l'application.
 
@@ -785,7 +789,7 @@ en sauvegardant les paramètres et l'état de l'application."""
 
         Returns :
             bool : True si l'application a été arrêtée avec succès, False sinon.
-      """
+        """
         if not self.iocontroller.close(force=force):
             return False
         # Rappelez-vous sur quoi l'utilisateur travaillait :
