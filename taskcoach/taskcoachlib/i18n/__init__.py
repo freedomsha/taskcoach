@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import builtins
 import sys
 # from imp import load_source as Load_Source # obsolète à remplacer par importlib.
 # Pour imp.load_source remplacer par importlib.machinery.SourceFileLoader
@@ -27,7 +28,6 @@ import wx
 from gettext import *
 from taskcoachlib import patterns, operating_system
 from . import po2dict  # XXXFIXME get rid of this later
-import builtins
 
 
 class Translator(metaclass=patterns.Singleton):
@@ -173,7 +173,7 @@ def currentLanguageIsRightToLeft():
 
 def translate(string):
     # print('translate est évité pour les tests')
-    return str(string)  # ligne pour continuer les tests. A retirer après.
+    return str(string)  # Ligne pour continuer les tests. À retirer après.
     # return Translator().translate(string)
     # Parameter 'language' unfilled
     # TypeError: Translator.translate() missing 1 required positional argument: 'string'
