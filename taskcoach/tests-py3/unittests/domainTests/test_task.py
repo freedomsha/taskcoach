@@ -655,10 +655,6 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
         child = task.Task(plannedStartDateTime=self.yesterday)
         child.setRecurrence(date.Recurrence("monthly"))
         self.task.addChild(child)
-        self.assertEqual(originalPlannedStartDateTime,
-                         self.task.plannedStartDateTime())
-        self.assertEqual(self.yesterday,
-                         self.task.plannedStartDateTime(recursive=True))
         self.assertEqual(originalPlannedStartDateTime, self.task.plannedStartDateTime())
         self.assertEqual(self.yesterday, self.task.plannedStartDateTime(recursive=True))
         self.assertEqual(self.yesterday, child.plannedStartDateTime())
@@ -670,10 +666,6 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
         child = task.Task(actualStartDateTime=self.yesterday)
         child.setRecurrence(date.Recurrence("monthly"))
         self.task.addChild(child)
-        self.assertEqual(originalActualStartDateTime,
-                         self.task.actualStartDateTime())
-        self.assertEqual(self.yesterday,
-                         self.task.actualStartDateTime(recursive=True))
         self.assertEqual(originalActualStartDateTime, self.task.actualStartDateTime())
         self.assertEqual(self.yesterday, self.task.actualStartDateTime(recursive=True))
         self.assertEqual(self.yesterday, child.actualStartDateTime())
