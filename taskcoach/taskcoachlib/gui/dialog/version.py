@@ -44,7 +44,8 @@ class VersionDialog(sized_controls.SizedDialog):  # pylint: disable=R0904,R0901
         buttonSizer = self.CreateStdDialogButtonSizer(wx.OK)
         self.SetButtonSizer(buttonSizer)
         self.Fit()
-        buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.onClose)
+        # buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.onClose)  # par quoi remplacer ?
+        buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.onClose)
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def createInterior(self, pane):
