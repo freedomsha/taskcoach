@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,14 +14,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-from builtins import str
+# from builtins import str
 import wx
 from pubsub import pub
 
-import tctest
-from unittests import asserts
+from ... import tctest
+from .. import asserts
 from taskcoachlib import patterns, config
 from taskcoachlib.domain import task, effort, date, category
 
@@ -31,8 +31,9 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         super().setUp()
         task.Task.settings = config.Settings(load=False)
         self.task = task.Task()
-        self.effort = effort.Effort(self.task, start=date.DateTime(2004, 1, 1),
-            stop=date.DateTime(2004, 1, 2))
+        self.effort = effort.Effort(
+            self.task, start=date.DateTime(2004, 1, 1), stop=date.DateTime(2004, 1, 2)
+        )
         self.task.addEffort(self.effort)
         self.events = []
 
@@ -47,11 +48,14 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
 
     def testCreate(self):
         self.assertEqual(self.task, self.effort.task())
-        self.assertEqual('', self.effort.description())
+        self.assertEqual("", self.effort.getDescription())
 
     def testStr(self):
-        self.assertEqual('Effort(%s, %s, %s)' % (self.effort.task(),
-                                                 self.effort.getStart(), self.effort.getStop()), str(self.effort))
+        self.assertEqual(
+            "Effort(%s, %s, %s)"
+            % (self.effort.task(), self.effort.getStart(), self.effort.getStop()),
+            str(self.effort),
+        )
 
     def testDuration(self):
         self.assertEqual(date.TimeDelta(days=1), self.effort.duration())
@@ -122,10 +126,11 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         self.assertEqual([(self.effort.duration(), self.effort)], events)
 
     def testNotificationForSetDescription(self):
-        patterns.Publisher().registerObserver(self.onEvent,
-                                              eventType=effort.Effort.descriptionChangedEventType())
-        self.effort.setDescription('description')
-        self.assertEqual('description', self.events[0].value())
+        patterns.Publisher().registerObserver(
+            self.onEvent, eventType=effort.Effort.descriptionChangedEventType()
+        )
+        self.effort.setDescription("description")
+        self.assertEqual("description", self.events[0].value())
 
     def testNotificationForSetTask(self):
         events = []
@@ -195,8 +200,9 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         effortPeriod = effort.Effort(self.task)
         currentTime = date.DateTime.now()
         now = lambda: currentTime
-        self.assertEqual(now() - effortPeriod.getStart(),
-                         effortPeriod.duration(now=now))
+        self.assertEqual(
+            now() - effortPeriod.getStart(), effortPeriod.duration(now=now)
+        )
 
     def testState(self):
         state = self.effort.__getstate__()
@@ -209,7 +215,7 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         copyEffort = self.effort.copy()
         self.assertEqualEfforts(copyEffort, self.effort)
         self.assertEqual(copyEffort.description(),
-            self.effort.description())
+                         self.effort.description())
 
     def testCopyHasDifferentId(self):
         copyEffort = self.effort.copy()
@@ -221,17 +227,19 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         self.assertEqual(copyEffort.getStatus(), copyEffort.STATUS_NEW)
 
     def testDescription(self):
-        self.effort.setDescription('description')
-        self.assertEqual('description', self.effort.description())
+        self.effort.setDescription("description")
+        self.assertEqual("description", self.effort.description())
 
     def testDescription_Constructor(self):
-        newEffort = effort.Effort(self.task, description='description')
-        self.assertEqual('description', newEffort.description())
+        newEffort = effort.Effort(self.task, description="description")
+        self.assertEqual("description", newEffort.description())
 
     def testSetStop_None(self):
         self.effort.setStop()
         now = date.Now()
-        self.assertTrue(now - date.ONE_SECOND < self.effort.getStop() < now + date.ONE_SECOND)
+        self.assertTrue(
+            now - date.ONE_SECOND < self.effort.getStop() < now + date.ONE_SECOND
+        )
 
     def testSetStop_Infinite(self):
         self.effort.setStop(date.DateTime.max)
@@ -272,8 +280,7 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
     def testRevenue_HourlyFee(self):
         self.task.setHourlyFee(100)
         self.task.addEffort(self.effort)
-        self.assertEqual(self.effort.duration().hours() * 100,
-            self.effort.revenue())
+        self.assertEqual(self.effort.duration().hours() * 100, self.effort.revenue())
 
     def testRevenue_FixedFee_OneEffort(self):
         self.task.setFixedFee(1000)
@@ -288,9 +295,13 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
     def testRevenue_FixedFee_TwoEfforts(self):
         self.task.setFixedFee(1000)
         self.task.addEffort(self.effort)
-        self.task.addEffort(effort.Effort(self.task,
-                                          date.DateTime(2005, 1, 1, 10, 0),
-                                          date.DateTime(2005, 1, 1, 22, 0)))
+        self.task.addEffort(
+            effort.Effort(
+                self.task,
+                date.DateTime(2005, 1, 1, 10, 0),
+                date.DateTime(2005, 1, 1, 22, 0),
+            )
+        )
         self.assertEqual(0, self.effort.revenue())
 
     def testSubject(self):
@@ -300,15 +311,19 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         self.assertEqual(self.task.categories(), self.effort.categories())
 
     def testCategories(self):
-        self.task.addCategory(category.Category('C'))
+        self.task.addCategory(category.Category("C"))
         self.assertEqual(self.task.categories(), self.effort.categories())
 
     def testModificationEventTypes(self):  # pylint: disable=E1003
-        self.assertEqual(super(effort.Effort, self.effort).modificationEventTypes() + \
-                         [self.effort.taskChangedEventType(),
-                          self.effort.startChangedEventType(),
-                          self.effort.stopChangedEventType()],
-                         self.effort.modificationEventTypes())
+        self.assertEqual(
+            super(effort.Effort, self.effort).modificationEventTypes()
+            + [
+                self.effort.taskChangedEventType(),
+                self.effort.startChangedEventType(),
+                self.effort.stopChangedEventType(),
+            ],
+            self.effort.modificationEventTypes(),
+        )
 
 
 class EffortWithoutTaskTest(tctest.TestCase):
@@ -329,7 +344,8 @@ class EffortWithoutTaskTest(tctest.TestCase):
         self.assertEqual(self.task, self.effort.task())
 
     def testSettingTask_CausesNoNotification(self):
-        patterns.Publisher().registerObserver(self.onEvent,
-                                              self.effort.taskChangedEventType())
+        patterns.Publisher().registerObserver(
+            self.onEvent, self.effort.taskChangedEventType()
+        )
         self.effort.setTask(self.task)
         self.assertFalse(self.events)
