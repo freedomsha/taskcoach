@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .wxSchedulerConstants import *
+# from .wxSchedulerConstants import *
+from .wxSchedulerConstants import (DAY_BACKGROUND_BRUSH,
+                                   DAY_SIZE_MIN,
+                                   FOREGROUND_PEN,
+                                   LEFT_COLUMN_SIZE,
+                                   SCHEDULE_INSIDE_MARGIN,
+                                   SCHEDULER_BACKGROUND_BRUSH,
+                                   SCHEDULE_OUTSIDE_MARGIN,
+                                   wxSCHEDULER_VERTICAL)
+# from . import wxSchedulerConstants as wxSC
 from .wxScheduleUtils import copyDateTime
 from .wxTimeFormat import wxTimeFormat
 
@@ -114,10 +123,17 @@ class wxDrawer(object):
                 self.context.SetPen(self.context.CreatePen(pen))
 
                 brush = self.context.CreateLinearGradientBrush(
-                    x, y, x + w, y + h, schedule.color, SCHEDULER_BACKGROUND_BRUSH()
+                    x,
+                    y,
+                    x + w,
+                    y + h,
+                    schedule.color,
+                    SCHEDULER_BACKGROUND_BRUSH(),
                 )
                 self.context.SetBrush(brush)
-                self.context.DrawRoundedRectangle(x, y, w, h, SCHEDULE_INSIDE_MARGIN)
+                self.context.DrawRoundedRectangle(
+                    x, y, w, h, SCHEDULE_INSIDE_MARGIN
+                )
 
             if schedule.complete is not None:
                 if h is not None:
@@ -147,7 +163,8 @@ class wxDrawer(object):
                                 x + SCHEDULE_INSIDE_MARGIN,
                                 y + offsetY,
                                 x
-                                + (w - 2 * SCHEDULE_INSIDE_MARGIN) * schedule.complete,
+                                + (w - 2 * SCHEDULE_INSIDE_MARGIN)
+                                * schedule.complete,
                                 y + offsetY + 10,
                                 wx.Colour(0, 0, 255),
                                 wx.Colour(0, 255, 255),
@@ -220,7 +237,10 @@ class wxDrawer(object):
                         self.context.DrawRectangle(
                             x + SCHEDULE_INSIDE_MARGIN,
                             y + offsetY,
-                            int((w - 2 * SCHEDULE_INSIDE_MARGIN) * schedule.complete),
+                            int(
+                                (w - 2 * SCHEDULE_INSIDE_MARGIN)
+                                * schedule.complete
+                            ),
                             10,
                         )
 
@@ -398,6 +418,7 @@ class wxDrawer(object):
             context.DrawText(" ".join(words), x + offsetX, y)
             return th + SCHEDULE_INSIDE_MARGIN
 
+        idx = 0
         dpyWords = []
         remaining = w - offsetX
         totalW = 0
@@ -443,7 +464,7 @@ class wxDrawer(object):
                 x,
                 ny,
                 w,
-                None if h is None else h - (ny - y),
+                None if h is None else h - (ny - y),  # Cannot find reference '-' in 'None'
             )
 
         return th + SCHEDULE_INSIDE_MARGIN
@@ -452,7 +473,7 @@ class wxDrawer(object):
         """
         Truncate text at desired width
         """
-        MORE_SIGNAL = "..."
+        MORE_SIGNAL = "..."  # F841 Local variable `MORE_SIGNAL` is assigned to but never used
         SEPARATOR = " "
 
         textlist = list()  # List returned by this method
@@ -502,7 +523,7 @@ class wxDrawer(object):
         return textlist
 
 
-class BackgroundDrawerDCMixin(object):
+class BackgroundDrawerDCMixin(wxDrawer, wx.DC):
     """
     Mixin to draw day background with a DC.
     """
@@ -518,7 +539,7 @@ class BackgroundDrawerDCMixin(object):
         self.context.DrawRectangle(x, y - 1, w, h + 1)
 
 
-class HeaderDrawerDCMixin(object):
+class HeaderDrawerDCMixin(wxDrawer, wx.DC):
     """
     A mixin to draw headers with a regular DC.
     """
@@ -591,10 +612,11 @@ class HeaderDrawerDCMixin(object):
 
             for schedule in schedules:
                 if schedule.start.Format("%H%M") != "0000":
-                    description = "%s %s" % (
-                        wxTimeFormat.FormatTime(schedule.start, includeMinutes=True),
-                        schedule.description,
-                    )
+                    # description = "%s %s" % (
+                    #     wxTimeFormat.FormatTime(schedule.start, includeMinutes=True),
+                    #     schedule.description,
+                    # )
+                    description = f"{wxTimeFormat.FormatTime(self, schedule.start, includeMinutes=True)} {schedule.description}"
                 else:
                     description = schedule.description
                 description = self._shrinkText(
@@ -625,7 +647,7 @@ class HeaderDrawerDCMixin(object):
         return results
 
 
-class BackgroundDrawerGCMixin(object):
+class BackgroundDrawerGCMixin(wxDrawer):
     """
     Mixin to draw day background with a GC.
     """
@@ -652,7 +674,7 @@ class BackgroundDrawerGCMixin(object):
         self.context.DrawRectangle(x, y - 1, w, h + 1)
 
 
-class HeaderDrawerGCMixin(object):
+class HeaderDrawerGCMixin(wxDrawer):
     """
     A mixin to draw headers with a GraphicsContext.
     """
@@ -760,12 +782,13 @@ class HeaderDrawerGCMixin(object):
 
                 for schedule in schedules:
                     if schedule.start.Format("%H%M") != "0000":
-                        description = "%s %s" % (
-                            wxTimeFormat.FormatTime(
-                                schedule.start, includeMinutes=True
-                            ),
-                            schedule.description,
-                        )
+                        # description = "%s %s" % (
+                        #     wxTimeFormat.FormatTime(
+                        #         schedule.start, includeMinutes=True
+                        #     ),
+                        #     schedule.description,
+                        # )
+                        description = f"{wxTimeFormat.FormatTime(self, schedule.start, includeMinutes=True)} {schedule.description}"
                     else:
                         description = schedule.description
                     description = self._shrinkText(
@@ -809,7 +832,7 @@ class HeaderDrawerGCMixin(object):
             font.SetWeight(fweight)
 
 
-class HeaderDrawerMixin(object):
+class HeaderDrawerMixin(HeaderDrawerDCMixin):
     """
     A mixin that draws header using the _DrawHeader method.
     """
@@ -911,7 +934,10 @@ class wxBaseDrawer(
                 else:
                     if direction == wxSCHEDULER_VERTICAL:
                         self.context.DrawLine(
-                            x + LEFT_COLUMN_SIZE, y + i * hourH, x + w, y + i * hourH
+                            x + LEFT_COLUMN_SIZE,
+                            y + i * hourH,
+                            x + w,
+                            y + i * hourH,
                         )
                     else:
                         self.context.DrawLine(
@@ -920,7 +946,10 @@ class wxBaseDrawer(
 
             if direction == wxSCHEDULER_VERTICAL:
                 self.context.DrawLine(
-                    x + LEFT_COLUMN_SIZE - 1, y, x + LEFT_COLUMN_SIZE - 1, y + h
+                    x + LEFT_COLUMN_SIZE - 1,
+                    y,
+                    x + LEFT_COLUMN_SIZE - 1,
+                    y + h,
                 )
                 return LEFT_COLUMN_SIZE, max(h, DAY_SIZE_MIN.height)
             else:
@@ -957,7 +986,12 @@ class wxFancyDrawer(
     def DrawHours(self, x, y, w, h, direction, includeText=True):
         if direction == wxSCHEDULER_VERTICAL:
             brush = self.context.CreateLinearGradientBrush(
-                x, y, x + w, y + h, SCHEDULER_BACKGROUND_BRUSH(), DAY_BACKGROUND_BRUSH()
+                x,
+                y,
+                x + w,
+                y + h,
+                SCHEDULER_BACKGROUND_BRUSH(),
+                DAY_BACKGROUND_BRUSH(),
             )
             self.context.SetBrush(brush)
             self.context.DrawRectangle(x, y, LEFT_COLUMN_SIZE, h)
@@ -1031,7 +1065,10 @@ class wxFancyDrawer(
 
             if direction == wxSCHEDULER_VERTICAL:
                 self.context.DrawLines(
-                    [(x + LEFT_COLUMN_SIZE - 1, y), (x + LEFT_COLUMN_SIZE - 1, y + h)]
+                    [
+                        (x + LEFT_COLUMN_SIZE - 1, y),
+                        (x + LEFT_COLUMN_SIZE - 1, y + h),
+                    ]
                 )
                 return LEFT_COLUMN_SIZE, max(h, DAY_SIZE_MIN.height)
             else:
