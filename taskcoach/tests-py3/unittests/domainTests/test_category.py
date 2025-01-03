@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
 
@@ -14,11 +14,11 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import wx
 
-import tctest
+from ... import tctest
 from taskcoachlib import patterns
 from taskcoachlib.domain import category, categorizable, note, date
 
@@ -26,27 +26,29 @@ from taskcoachlib.domain import category, categorizable, note, date
 class CategoryTest(tctest.TestCase):
     def setUp(self):
         super().setUp()
-        self.category = category.Category(subject='category')
-        self.subCategory = category.Category(subject='subcategory')
-        self.categorizable = categorizable.CategorizableCompositeObject(subject='parent')
-        self.child = categorizable.CategorizableCompositeObject(subject='child')
+        self.category = category.Category(subject="category")
+        self.subCategory = category.Category(subject="subcategory")
+        self.categorizable = categorizable.CategorizableCompositeObject(
+            subject="parent"
+        )
+        self.child = categorizable.CategorizableCompositeObject(subject="child")
 
     # State:
 
     def testGetState_Subject(self):
-        self.assertEqual('category', self.category.__getstate__()['subject'])
+        self.assertEqual("category", self.category.__getstate__()["subject"])
 
     def testGetState_Description(self):
-        self.assertEqual('', self.category.__getstate__()['description'])
+        self.assertEqual("", self.category.__getstate__()["description"])
 
     def testGetState_ForegroundColor(self):
-        self.assertEqual(None, self.category.__getstate__()['fgColor'])
+        self.assertEqual(None, self.category.__getstate__()["fgColor"])
 
     def testGetState_BackgroundColor(self):
-        self.assertEqual(None, self.category.__getstate__()['bgColor'])
+        self.assertEqual(None, self.category.__getstate__()["bgColor"])
 
     def testGetState_ExclusiveSubcategories(self):
-        self.assertEqual(False, self.category.__getstate__()['exclusiveSubcategories'])
+        self.assertEqual(False, self.category.__getstate__()["exclusiveSubcategories"])
 
     def testSetState_ExclusiveSubcategories(self):
         state = self.category.__getstate__()
@@ -55,16 +57,27 @@ class CategoryTest(tctest.TestCase):
         self.assertFalse(self.category.hasExclusiveSubcategories())
 
     def testSetState_OneNotification(self):
-        newState = dict(subject='New subject', description='New description',
-                        fgColor=wx.WHITE, bgColor=wx.RED, font=wx.SWISS_FONT,
-                        status=self.category.STATUS_DELETED,
-                        parent=None, children=[self.subCategory], id=self.category.id(),
-                        categorizables=[self.categorizable], notes=[],
-                        attachments=[], filtered=True, exclusiveSubcategories=True,
-                        icon='icon', selectedIcon='selected',
-                        creationDateTime=date.Now(),
-                        modificationDateTime=date.Now(),
-                        ordering=42)
+        newState = dict(
+            subject="New subject",
+            description="New description",
+            fgColor=wx.WHITE,
+            bgColor=wx.RED,
+            font=wx.SWISS_FONT,
+            status=self.category.STATUS_DELETED,
+            parent=None,
+            children=[self.subCategory],
+            id=self.category.id(),
+            categorizables=[self.categorizable],
+            notes=[],
+            attachments=[],
+            filtered=True,
+            exclusiveSubcategories=True,
+            icon="icon",
+            selectedIcon="selected",
+            creationDateTime=date.Now(),
+            modificationDateTime=date.Now(),
+            ordering=42,
+        )
         for eventType in self.category.modificationEventTypes():
             self.registerObserver(eventType)
         self.category.__setstate__(newState)
@@ -73,18 +86,17 @@ class CategoryTest(tctest.TestCase):
     # Subject:
 
     def testCreateWithSubject(self):
-        self.assertEqual('category', self.category.subject())
+        self.assertEqual("category", self.category.subject())
 
     def testSetSubject(self):
-        self.category.setSubject('New')
-        self.assertEqual('New', self.category.subject())
+        self.category.setSubject("New")
+        self.assertEqual("New", self.category.subject())
 
     def testSetSubjectNotification(self):
         eventType = category.Category.subjectChangedEventType()
         self.registerObserver(eventType)
-        self.category.setSubject('New')
-        self.assertEqual([patterns.Event(eventType, self.category, 'New')],
-            self.events)
+        self.category.setSubject("New")
+        self.assertEqual([patterns.Event(eventType, self.category, "New")], self.events)
 
     def testSetSubjectCausesNoNotificationWhenNewSubjectEqualsOldSubject(self):
         eventType = category.Category.subjectChangedEventType()
@@ -95,8 +107,8 @@ class CategoryTest(tctest.TestCase):
     # Description:
 
     def testCreateWithDescription(self):
-        aCategory = category.Category('subject', description='Description')
-        self.assertEqual('Description', aCategory.description())
+        aCategory = category.Category("subject", description="Description")
+        self.assertEqual("Description", aCategory.description())
 
     # Categorizables:
 
@@ -105,8 +117,9 @@ class CategoryTest(tctest.TestCase):
 
     def testAddCategorizable(self):
         self.category.addCategorizable(self.categorizable)
-        self.assertEqual(set([self.categorizable]),
-                         self.category.categorizables())
+        # self.assertEqual(set([self.categorizable]),
+        #                  self.category.categorizables())
+        self.assertEqual({self.categorizable}, self.category.categorizables())
 
     def testAddCategorizableDoesNotAddCategoryToCategorizable(self):
         self.category.addCategorizable(self.categorizable)
@@ -115,8 +128,7 @@ class CategoryTest(tctest.TestCase):
     def testAddCategorizableTwice(self):
         self.category.addCategorizable(self.categorizable)
         self.category.addCategorizable(self.categorizable)
-        self.assertEqual(set([self.categorizable]),
-                         self.category.categorizables())
+        self.assertEqual({self.categorizable}, self.category.categorizables())
 
     def testRemoveCategorizable(self):
         self.category.addCategorizable(self.categorizable)
@@ -130,18 +142,19 @@ class CategoryTest(tctest.TestCase):
         self.assertFalse(self.categorizable.categories())
 
     def testCreateWithCategorizable(self):
-        cat = category.Category('category', [self.categorizable])
-        self.assertEqual(set([self.categorizable]), cat.categorizables())
+        cat = category.Category("category", [self.categorizable])
+        self.assertEqual({self.categorizable}, cat.categorizables())
 
     def testCreateWithCategorizableDoesNotSetCategorizableCategories(self):
-        category.Category('category', [self.categorizable])
+        category.Category("category", [self.categorizable])
         self.assertEqual(set([]), self.categorizable.categories())
 
     def testAddCategorizableToSubCategory(self):
         self.category.addChild(self.subCategory)
         self.subCategory.addCategorizable(self.categorizable)
-        self.assertEqual(set([self.categorizable]),
-                         self.category.categorizables(recursive=True))
+        self.assertEqual(
+            {self.categorizable}, self.category.categorizables(recursive=True)
+        )
 
     # Subcategories:
 
@@ -150,7 +163,7 @@ class CategoryTest(tctest.TestCase):
         self.assertEqual([self.subCategory], self.category.children())
 
     def testCreateWithSubCategories(self):
-        cat = category.Category('category', children=[self.subCategory])
+        cat = category.Category("category", children=[self.subCategory])
         self.assertEqual([self.subCategory], cat.children())
 
     def testParentOfSubCategory(self):
@@ -163,15 +176,14 @@ class CategoryTest(tctest.TestCase):
     # Equality:
 
     def testEquality_SameSubjectAndNoParents(self):
-        self.assertNotEqual(category.Category(self.category.subject()),
-                            self.category)
-        self.assertNotEqual(self.category,
-                            category.Category(self.category.subject()))
+        self.assertNotEqual(category.Category(self.category.subject()), self.category)
+        self.assertNotEqual(self.category, category.Category(self.category.subject()))
 
     def testEquality_SameSubjectDifferentParents(self):
         self.category.addChild(self.subCategory)
-        self.assertNotEqual(category.Category(self.subCategory.subject()),
-                            self.subCategory)
+        self.assertNotEqual(
+            category.Category(self.subCategory.subject()), self.subCategory
+        )
 
     # Filter:
 
@@ -187,13 +199,13 @@ class CategoryTest(tctest.TestCase):
         self.assertFalse(self.category.isFiltered())
 
     def testSetFilteredViaConstructor(self):
-        filteredCategory = category.Category('test', filtered=True)
+        filteredCategory = category.Category("test", filtered=True)
         self.assertTrue(filteredCategory.isFiltered())
 
     # copy:
 
     def testCopy_SubjectIsCopied(self):
-        self.category.setSubject('New subject')
+        self.category.setSubject("New subject")
         copy = self.category.copy()
         self.assertEqual(copy.subject(), self.category.subject())
 
@@ -209,11 +221,11 @@ class CategoryTest(tctest.TestCase):
     # pylint: disable=E1101
 
     def testCopy_SubjectIsDifferentFromOriginalSubject(self):
-        self.subCategory.setSubject('New subject')
+        self.subCategory.setSubject("New subject")
         self.category.addChild(self.subCategory)
         copy = self.category.copy()
-        self.subCategory.setSubject('Other subject')
-        self.assertEqual('New subject', copy.children()[0].subject())
+        self.subCategory.setSubject("Other subject")
+        self.assertEqual("New subject", copy.children()[0].subject())
 
     def testCopy_FilteredStatusIsCopied(self):
         self.category.setFiltered()
@@ -325,25 +337,27 @@ class CategoryTest(tctest.TestCase):
     # Icon:
 
     def testIconChangedNotification(self):
-        eventType = categorizable.CategorizableCompositeObject.appearanceChangedEventType()
+        eventType = (
+            categorizable.CategorizableCompositeObject.appearanceChangedEventType()
+        )
         self.registerObserver(eventType)
         self.category.addCategorizable(self.categorizable)
-        self.category.setIcon('icon')
-        self.assertEqual([patterns.Event(eventType, self.categorizable)],
-                         self.events)
+        self.category.setIcon("icon")
+        self.assertEqual([patterns.Event(eventType, self.categorizable)], self.events)
 
     def testSelectedIconChangedNotification(self):
-        eventType = categorizable.CategorizableCompositeObject.appearanceChangedEventType()
+        eventType = (
+            categorizable.CategorizableCompositeObject.appearanceChangedEventType()
+        )
         self.registerObserver(eventType)
         self.category.addCategorizable(self.categorizable)
-        self.category.setSelectedIcon('icon')
-        self.assertEqual([patterns.Event(eventType, self.categorizable)],
-                         self.events)
+        self.category.setSelectedIcon("icon")
+        self.assertEqual([patterns.Event(eventType, self.categorizable)], self.events)
 
     # Notes:
 
     def testAddNote(self):
-        aNote = note.Note(subject='Note')
+        aNote = note.Note(subject="Note")
         self.category.addNote(aNote)
         self.assertEqual([aNote], self.category.notes())
 
@@ -362,15 +376,14 @@ class CategoryTest(tctest.TestCase):
         self.assertFalse(self.category.hasExclusiveSubcategories())
 
     def testCreateWithExclusiveSubcategories(self):
-        aCategory = category.Category('subject', exclusiveSubcategories=True)
+        aCategory = category.Category("subject", exclusiveSubcategories=True)
         self.assertTrue(aCategory.hasExclusiveSubcategories())
 
     def testExclusiveSubcategoriesNotification(self):
         eventType = category.Category.exclusiveSubcategoriesChangedEventType()
         self.registerObserver(eventType)
         self.category.makeSubcategoriesExclusive()
-        self.assertEqual([patterns.Event(eventType, self.category, True)],
-            self.events)
+        self.assertEqual([patterns.Event(eventType, self.category, True)], self.events)
 
     def testNoExclusiveSubcategoriesNotificationWhenNotChanged(self):
         eventType = category.Category.exclusiveSubcategoriesChangedEventType()
@@ -393,12 +406,14 @@ class CategoryTest(tctest.TestCase):
 
     # Event types:
 
-    def testModificationEventTypes(self): # pylint: disable=E1003
-        self.assertEqual(super(category.Category,
-                               self.category).modificationEventTypes() + \
-                         [self.category.filterChangedEventType(),
-                          self.category.categorizableAddedEventType(),
-                          self.category.categorizableRemovedEventType(),
-                          self.category.exclusiveSubcategoriesChangedEventType()],
-                         self.category.modificationEventTypes())
-
+    def testModificationEventTypes(self):  # pylint: disable=E1003
+        self.assertEqual(
+            super(category.Category, self.category).modificationEventTypes()
+            + [
+                self.category.filterChangedEventType(),
+                self.category.categorizableAddedEventType(),
+                self.category.categorizableRemovedEventType(),
+                self.category.exclusiveSubcategoriesChangedEventType(),
+            ],
+            self.category.modificationEventTypes(),
+        )
