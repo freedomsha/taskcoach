@@ -4477,6 +4477,7 @@ class DialogCommand(base_uicommand.UICommand):
         self._dialogText = kwargs.pop("dialogText")
         self._direction = kwargs.pop("direction", None)
         self.closed = True
+        self.dialog = None
         super().__init__(*args, **kwargs)
 
     def doCommand(self, event):
@@ -4493,7 +4494,7 @@ class DialogCommand(base_uicommand.UICommand):
             self._dialogText,
             bitmap=self.bitmap,
             direction=self._direction,
-        )
+        )  # TODO : Instance attribute dialog defined outside __init__ : pourquoi défini ici ?
         for event in wx.EVT_CLOSE, wx.EVT_BUTTON:
             self.dialog.Bind(event, self.onClose)
         # (lie les événements de fermeture et de bouton à la méthode onClose)
@@ -5031,6 +5032,7 @@ class Search(ViewerCommand, settings_uicommand.SettingsCommand):
     - `doCommand (self, event)` : Cette méthode n'est pas utilisée dans cette classe.
     """
     def __init__(self, *args, **kwargs):
+        self.searchControl = None
         self.__bound = False
         super().__init__(*args, helpText=_("Search"), **kwargs)
         assert self.viewer.isSearchable()
@@ -5158,6 +5160,7 @@ class ToolbarChoiceCommandMixin(object):
     - `enable (enable=True)` : Active ou désactive le contrôle de choix.
     """
     def __init__(self, *args, **kwargs):
+        self.currentChoice = None
         self.choiceCtrl = None
         super().__init__(*args, **kwargs)
 
