@@ -3,7 +3,10 @@
 
 from .wxSchedule import wxSchedule
 from .wxDrawer import wxBaseDrawer, wxFancyDrawer
-from .wxSchedulerCore import *
+from .wxSchedulerConstants import wxSCHEDULER_VERTICAL, wxSCHEDULER_HORIZONTAL, DAY_SIZE_MIN, LEFT_COLUMN_SIZE, \
+    MONTH_CELL_SIZE_MIN, SCHEDULER_BACKGROUND_BRUSH, FOREGROUND_PEN, WEEK_SIZE_MIN, wxSCHEDULER_DAILY, \
+    wxSCHEDULER_WEEKLY, wxSCHEDULER_MONTHLY
+# from .wxSchedulerCore import *
 import calendar
 import math
 import sys
@@ -29,9 +32,10 @@ wxEVT_COMMAND_PERIODWIDTH_CHANGED = wx.NewEventType()
 EVT_PERIODWIDTH_CHANGED = wx.PyEventBinder(wxEVT_COMMAND_PERIODWIDTH_CHANGED)
 
 
-class wxSchedulerSizer(wx.PySizer):
+# class wxSchedulerSizer(wx.PySizer):  # PySizer deprecated , use Sizer instead
+class wxSchedulerSizer(wx.Sizer):
     def __init__(self, minSizeCallback):
-        super(wxSchedulerSizer, self).__init__()
+        super().__init__()
 
         self._minSizeCallback = minSizeCallback
 
@@ -43,7 +47,7 @@ class wxSchedulerSizer(wx.PySizer):
 class wxSchedulerPaint(object):
 
     def __init__(self, *args, **kwds):
-        super(wxSchedulerPaint, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
 
         self._resizable = False
         self._style = wxSCHEDULER_VERTICAL
