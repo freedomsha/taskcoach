@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import object
 import wx
+from taskcoachlib.gui import menu
 
 
 class UICommandContainerMixin(object):
@@ -27,8 +28,13 @@ class UICommandContainerMixin(object):
 
     def appendUICommands(self, *uiCommands):
         """ Ajout de *uiCommand. """
+        # print(f"tclib.gui.uicommand.uicommandcontainer Appending UI commands: {uiCommands}")  # Débogage
+        # uicommands : taskcoachlib.gui.uicommand.uicommand.EditCut, EditCopy, EditPaste, EditPasteAsSubItem, Edit,
+        # Delete, AddAtachment, OpenAllAttachments, AddNote, OpenAllNotes, Mail,...
         for uiCommand in uiCommands:
             if uiCommand is None:
+                # print(f"tclib.gui.uicommand.uicommandcontainer Appending UI command: {uiCommand}")  # Débogage
+                # print(f"tclib.gui.uicommand.uicommandcontainer Appending command: {command.__class__.__name__}")
                 self.AppendSeparator()
             elif isinstance(uiCommand, int):  # Toolbars only
                 self.AppendStretchSpacer(uiCommand)
@@ -36,23 +42,32 @@ class UICommandContainerMixin(object):
             elif isinstance(uiCommand, str):
                 # Ajoute un élément dans le menu
                 label = wx.MenuItem(self, text=uiCommand)
-                # must append item before disable to insure
-                # that internal object exists
-                # self.AppendItem(label)
-                self.Append(label)
+                # doit ajouter un élément avant de le désactiver pour assurer
+                # que l'objet interne existe
+                self.AppendItem(label)
+                # self.Append(label)
                 label.Enable(False)
             # elif isinstance(type(uiCommand), type()):  # This only works for menu's
             # TODO revenir sur mon choix:
             # elif isinstance(uiCommand, type):
             # ou garder celui de rainfornight :
-            elif type(uiCommand) == type(()):
+            # elif type(uiCommand) == type(()):
+            elif isinstance(uiCommand, tuple):
                 menuTitle, menuUICommands = uiCommand[0], uiCommand[1:]
                 self.appendSubMenuWithUICommands(menuTitle, menuUICommands)
             else:
-                self.appendUICommand(uiCommand)
+                self.appendUICommands(uiCommand)  # [Previous line repeated 972 more times]
+            # RecursionError: maximum recursion depth exceeded
+        #        print(f"Appending UI command: {uiCommand}")  # Débogage
+        #        cmd = uiCommand.addToMenu(self, self._window)
+        #        print(f"Command added to menu: {cmd}")  # Débogage
+        #        self._accels.extend(uiCommand.accelerators())
+        #        if isinstance(uiCommand, patterns.Observer):
+        #            self._observers.append(uiCommand)
+        #        return cmd
 
     def appendSubMenuWithUICommands(self, menuTitle, uiCommands):
-        from taskcoachlib.gui import menu
+        # from taskcoachlib.gui import menu
         subMenu = menu.Menu(self._window)
         self.appendMenu(menuTitle, subMenu)
         subMenu.appendUICommands(*uiCommands)  # pylint: disable=W0142
