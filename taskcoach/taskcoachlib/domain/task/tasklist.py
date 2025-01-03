@@ -58,7 +58,12 @@ class TaskList(TaskListQueryMixin, categorizable.CategorizableContainer):
         return result
 
     def originalLength(self):
-        """ Provide a way for bypassing the __len__ method of decorators. """
+        """
+        Fournir un moyen de contourner la méthode __len__ des décorateurs.
+
+        :return int:
+        """
+
         return len([t for t in self if not t.isDeleted()])
 
     def minPriority(self):
