@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .wxSchedulerCore import *
-import wx.lib.scrolledpanel as scrolled
+# from .wxSchedulerCore import *
 import time
+import wx
+import wx.lib.scrolledpanel as scrolled
+from .wxSchedulerCore import wxSchedulerCore
+from . import wxSchedule
 
 
 class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
@@ -11,7 +14,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
 
-        super(wxScheduler, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
 
         # timerId = wx.NewId()
         # NewId is deprecieted
@@ -70,7 +73,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self.Refresh()
             try:
                 wx.Yield()
-            except:
+            except Exception:
                 pass
         finally:
             self._refreshing = False
@@ -89,7 +92,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         else:
             self.DrawBuffer()
             self.GetSizer().FitInside(self)
-            super(wxScheduler, self).Refresh()
+            super().Refresh()
             self._dirty = False
 
     def Freeze(self):
@@ -102,7 +105,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
 
     def SetResizable(self, value):
         """ Call derived method and force wxDC refresh. """
-        super(wxScheduler, self).SetResizable(value)
+        super().SetResizable(value)
         self.InvalidateMinSize()
         self.Refresh()
 
@@ -121,7 +124,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         bindSc = set(self._schBind)
 
         for sc in (currentSc - bindSc):
-            sc.Bind(EVT_SCHEDULE_CHANGE, self.OnScheduleChanged)
+            sc.Bind(wxSchedule.EVT_SCHEDULE_CHANGE, self.OnScheduleChanged)
             self._schBind.append(sc)
 
     def _getEventCoordinates(self, event):
@@ -141,7 +144,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         return coords
 
     def SetViewType(self, view=None):
-        super(wxScheduler, self).SetViewType(view)
+        super().SetViewType(view)
         self.InvalidateMinSize()
         self.Refresh()
 
