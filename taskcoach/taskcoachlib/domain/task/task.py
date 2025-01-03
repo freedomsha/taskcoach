@@ -36,7 +36,7 @@ import wx
 
 
 # class Task(base.NoteOwner, base.AttachmentOwner,
-class Task(note.NoteOwner, attachment.AttachmentOwner,
+class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
            categorizable.CategorizableCompositeObject):
     maxDateTime = date.DateTime()
 
@@ -363,8 +363,11 @@ class Task(note.NoteOwner, attachment.AttachmentOwner,
 
     @classmethod
     def timeLeftSortEventTypes(class_):
-        """ The event types that influence the time left sort order. """
-        return (class_.dueDateTimeChangedEventType(),)
+        """ Types d'événements qui influencent l'ordre de tri du temps restant. """
+        # return (class_.dueDateTimeChangedEventType(),)
+        # return class_.dueDateTimeChangedEventType()
+        # Pour les erreurs de type, assurez-vous que les valeurs retournées correspondent au type attendu.
+        return [class_.dueDateTimeChangedEventType(),]
 
     # Actual start Date
 
@@ -402,8 +405,10 @@ class Task(note.NoteOwner, attachment.AttachmentOwner,
 
     @classmethod
     def actualStartDateTimeSortEventTypes(class_):
-        """ The event types that influence the actual start Date time sort order. """
-        return (class_.actualStartDateTimeChangedEventType(),)
+        """ Types d'événements qui influencent l'ordre de tri de la date et de l'heure de début réel."""
+        # return (class_.actualStartDateTimeChangedEventType(),)
+        return class_.actualStartDateTimeChangedEventType()
+        # return [class_.actualStartDateTimeChangedEventType(),]
 
     # Completion Date
 
@@ -706,8 +711,10 @@ class Task(note.NoteOwner, attachment.AttachmentOwner,
 
     @classmethod
     def budgetSortEventTypes(class_):  # cls ?
-        """ The event types that influence the budget sort order. """
-        return (class_.budgetChangedEventType(),)
+        """ Types d'événements qui influencent l'ordre de tri du budget. """
+        # return (class_.budgetChangedEventType(),)
+        return class_.budgetChangedEventType()
+        # return [class_.budgetChangedEventType(),]
 
     # Budget left
 
@@ -734,8 +741,10 @@ class Task(note.NoteOwner, attachment.AttachmentOwner,
 
     @classmethod
     def budgetLeftSortEventTypes(class_):  # cls ?
-        """ The event types that influence the budget left sort order. """
-        return (class_.budgetLeftChangedEventType(),)
+        """ Types d'événements qui influencent l'ordre de tri du budget restant."""
+        # return (class_.budgetLeftChangedEventType(),)
+        return class_.budgetLeftChangedEventType()
+        # return [class_.budgetLeftChangedEventType(),]
 
     # Foreground color
 
