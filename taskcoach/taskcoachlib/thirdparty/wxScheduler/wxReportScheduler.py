@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .wxSchedulerPrint import *
+# from .wxSchedulerPrint import *
+from .wxSchedulerPrint import wxSchedulerPrint
 import calendar
 import wx
 
