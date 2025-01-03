@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import chr
 # from builtins import str
 # from builtins import range
-from taskcoachlib import i18n, operating_system
-import wx
 import webbrowser
+import wx
+from taskcoachlib import i18n, operating_system
 
 
 UNICODE_CONTROL_CHARACTERS_TO_WEED = {}
