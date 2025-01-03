@@ -1067,12 +1067,27 @@ class LockedTaskFile(TaskFile):
                     location, mountPoint, fsType, options, a, b = (
                         line.strip().split()
                     )
-                except:
+                except Exception:
                     pass
                 if os.path.abspath(path).startswith(
                     mountPoint
                 ) and fsType.startswith("fuse."):
                     return True
+            # essayer de remplacer par :
+            # try:
+            #     # with garantit que le fichier proc/mounts sera fermé correctement, même en cas d'erreur.
+            #     with open("/proc/mounts", "r", encoding="utf-8") as mounts_file:
+            #         for line in mounts_file:
+            #             try:
+            #                 location, mount_point, fs_type, options, _, _ = line.strip().split()
+            #                 if os.path.abspath(path).startswith(mount_point) and fs_type.startswith("fuse."):
+            #                     return True
+            #             except ValueError:
+            #                 # Ignorer les lignes mal formées dans /proc/mounts
+            #                 continue
+            # except (FileNotFoundError, PermissionError) as e:
+            #     # Gérer les erreurs de lecture du fichier /proc/mounts
+            #     print(f"tclib.persistence.taskfile.LockedTaskFile.__isFuse: Erreur lors de la lecture de /proc/mounts: {e}")
         return False
 
     def __isCloud(self, filename):
