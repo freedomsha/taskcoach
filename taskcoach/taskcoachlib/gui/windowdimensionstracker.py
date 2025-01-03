@@ -30,7 +30,7 @@ class _Tracker(object):
         self.__settings = settings
         self.__section = section
 
-    def set_setting(self, setting, value):
+    def set_setting(self, setting, value) -> None:
         """ Store the value for the setting in the settings. """
         self.__settings.setvalue(self.__section, setting, value)
 
@@ -66,7 +66,7 @@ class WindowSizeAndPositionTracker(_Tracker):
         self.set_setting("maximized", maximized)
         event.Skip()
 
-    def on_change_position(self, event):
+    def on_change_position(self, event) -> None:
         """ Handle a move event by saving the new position of the window in
             the settings. """
         if not self._window.IsMaximized():
@@ -77,13 +77,13 @@ class WindowSizeAndPositionTracker(_Tracker):
                 self.set_setting("position", event.GetPosition())
         event.Skip()
 
-    def on_maximize(self, event):
+    def on_maximize(self, event) -> None:
         """ Handle a maximize event by saving the window maximization state in
             the settings. """
         self.set_setting("maximized", True)
         event.Skip()
 
-    def __set_dimensions(self):
+    def __set_dimensions(self) -> None:
         """ Set the window position and size based on the settings. """
         x, y = self.get_setting("position")  # pylint: disable=C0103
         width, height = self.get_setting("size")
@@ -137,7 +137,7 @@ class WindowDimensionsTracker(WindowSizeAndPositionTracker):
             return False
         return self.get_setting("iconized")
 
-    def save_position(self):
+    def save_position(self) -> None:
         """ Save the position of the window in the settings. """
         iconized = self._window.IsIconized()
         self.set_setting("iconized", iconized)
