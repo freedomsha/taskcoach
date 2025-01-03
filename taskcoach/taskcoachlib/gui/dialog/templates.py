@@ -14,46 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-import wx
-from taskcoachlib.domain.task import Task
-from taskcoachlib import persistence, operating_system
-from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
-from wx.lib import sized_controls
+Classe principale : TemplatesDialog
 
-
-class TimeExpressionEntry(wx.TextCtrl):
-    """ Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.__defaultColor = self.GetBackgroundColour()
-        self.__invalidColor = wx.Colour(255, 128, 128)
-
-        # wx.EVT_TEXT(self, wx.ID_ANY, self._onTextChanged)
-        self.Bind(wx.EVT_TEXT, wx.ID_ANY, self._onTextChanged)
-
-    @staticmethod
-    def isValid(value):
-        if value:
-            try:
-                res = nlTimeExpression.parseString(value)
-            except:
-                return False  # pylint: disable=W0702
-            return 'calculatedTime' in res
-        return True  # Empty is valid.
-
-    def _onTextChanged(self, event):
-        event.Skip()
-        self.SetBackgroundColour(self.__defaultColor if self.isValid(self.GetValue()) else self.__invalidColor)
-
-
-class TemplatesDialog(sized_controls.SizedDialog):
-    """Cette classe implémente une boîte de dialogue pour la gestion des modèles de tâches dans l'application Task Coach.
-    
-    Elle permet de visualiser, modifier et supprimer des modèles de tâches existants, ainsi que d'en créer de nouveaux.
+Cette classe implémente une boîte de dialogue pour la gestion des modèles de tâches dans l'application Task Coach. Elle permet de visualiser, modifier et supprimer des modèles de tâches existants, ainsi que d'en créer de nouveaux.
 
 Fonctionnalités principales
 
@@ -78,20 +42,105 @@ Classes et méthodes utilisées
     OnDown : Déplace le modèle de tâche sélectionné vers le bas dans la liste.
     onAdd : Ajoute un nouveau modèle de tâche vide à la liste.
     ok : Sauvegarde les modifications apportées aux modèles de tâches lors de la validation de la boîte de dialogue.
+
+Méthodes liées à l'interface utilisateur :
+
+    createTemplateList, createTemplateEntries, createButton : Ces méthodes sont responsables de la construction de l'interface graphique de la boîte de dialogue, en créant les différents éléments tels que la liste d'arborescence, les champs de saisie et les boutons.
+    enableEditPanel : Active ou désactive les champs d'édition en fonction de la sélection de l'utilisateur.
+    appendTemplate : Ajoute un nouveau nœud à l'arbre des modèles de tâches.
+
+Méthodes liées à la gestion des modèles de tâches :
+
+    onValueChanged, OnSelectionChanged : Ces méthodes gèrent les événements utilisateur, tels que la modification du contenu d'un champ de saisie ou la sélection d'un élément dans la liste. Elles mettent à jour l'état interne de l'application en conséquence.
+    onDelete, OnUp, OnDown, onAdd : Ces méthodes permettent à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en supprimant, déplaçant ou ajoutant des éléments.
+    ok : Cette méthode est appelée lorsque l'utilisateur clique sur le bouton "OK" de la boîte de dialogue. Elle sauvegarde les modifications apportées aux modèles de tâches.
+"""
+
+import wx
+from taskcoachlib.domain.task import Task
+from taskcoachlib import persistence, operating_system
+from taskcoachlib.i18n import _
+from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
+from wx.lib import sized_controls
+
+
+class TimeExpressionEntry(wx.TextCtrl):
+    """Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.__defaultColor = self.GetBackgroundColour()
+        self.__invalidColor = wx.Colour(255, 128, 128)
+
+        # wx.EVT_TEXT(self, wx.ID_ANY, self._onTextChanged)
+        self.Bind(wx.EVT_TEXT, wx.ID_ANY, self._onTextChanged)
+
+    @staticmethod
+    def isValid(value):
+        if value:
+            try:
+                res = nlTimeExpression.parseString(value)
+            except Exception:
+                return False  # pylint: disable=W0702
+            return "calculatedTime" in res
+        return True  # Empty is valid.
+
+    def _onTextChanged(self, event):
+        event.Skip()
+        self.SetBackgroundColour(
+            self.__defaultColor
+            if self.isValid(self.GetValue())
+            else self.__invalidColor
+        )
+
+
+class TemplatesDialog(sized_controls.SizedDialog):
+    """Cette classe implémente une boîte de dialogue pour la gestion des modèles de tâches dans l'application Task Coach.
+
+        Elle permet de visualiser, modifier et supprimer des modèles de tâches existants, ainsi que d'en créer de nouveaux.
+
+    Fonctionnalités principales
+
+        Affichage d'une liste d'arborescence pour parcourir les modèles de tâches.
+        Edition des propriétés d'un modèle de tâche sélectionné (sujet, dates de début, d'échéance, d'achèvement et de rappel).
+        Suppression d'un modèle de tâche sélectionné.
+        Déplacement d'un modèle de tâche vers le haut ou le bas dans la liste.
+        Ajout d'un nouveau modèle de tâche.
+        Sauvegarde des modifications apportées aux modèles de tâches.
+
+    Classes et méthodes utilisées
+
+        TimeExpressionEntry : Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles.
+        createTemplateList : Crée la liste d'arborescence pour afficher les modèles de tâches.
+        createTemplateEntries : Crée les champs d'édition pour les propriétés d'un modèle de tâche.
+        enableEditPanel : Active ou désactive les champs d'édition en fonction de la sélection d'un modèle.
+        appendTemplate : Ajoute un modèle de tâche et ses enfants à la liste d'arborescence.
+        onValueChanged : Gère les modifications apportées aux champs d'édition d'un modèle de tâche.
+        OnSelectionChanged : Gère la sélection d'un modèle de tâche dans la liste, met à jour les champs d'édition et active/désactive les boutons de suppression et de déplacement.
+        onDelete : Supprime le modèle de tâche sélectionné.
+        OnUp : Déplace le modèle de tâche sélectionné vers le haut dans la liste.
+        OnDown : Déplace le modèle de tâche sélectionné vers le bas dans la liste.
+        onAdd : Ajoute un nouveau modèle de tâche vide à la liste.
+        ok : Sauvegarde les modifications apportées aux modèles de tâches lors de la validation de la boîte de dialogue.
     """
+
     def __init__(self, settings, *args, **kwargs):
         self.settings = settings
         self._changing = False
-        super().__init__(style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-                         *args, **kwargs)
+        super().__init__(
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER, *args, **kwargs
+        )
         pane = self.GetContentsPane()
-        pane.SetSizerType('vertical')
+        pane.SetSizerType("vertical")
         self.createInterior(pane)
         self._buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(self._buttonSizer)
         self.Fit()
         self.SetMinSize(self.GetSize())  # Current size is min size
-        self._buttonSizer.GetAffirmativeButton().bind(wx.EVT_BUTTON, self.ok)  # TODO: gui.uicommand.base_uicommand.bind or Bind ?
+        self._buttonSizer.GetAffirmativeButton().bind(
+            wx.EVT_BUTTON, self.ok
+        )  # TODO: gui.uicommand.base_uicommand.bind or Bind ?
         self.CentreOnParent()
 
     def createInterior(self, pane):
@@ -101,16 +150,25 @@ Classes et méthodes utilisées
     def createTemplateList(self, pane):
         """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
         en créant la liste d'arborescence.
+
+        :param pane:
+        :return:
         """
-        panel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType('horizontal')
+        panel = sized_controls.SizedPanel(pane)  # revoir l'implémentation
+        panel.SetSizerType("horizontal")
+
         panel.SetSizerProps(expand=True, proportion=1)
-        self._templateList = wx.TreeCtrl(panel, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE)
+        # self._templateList = wx.TreeCtrl(
+        #     panel, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE
+        # )
+        self._templateList = wx.TreeCtrl(
+            panel, -1, style=wx.TR_HAS_BUTTONS | wx.TR_HIDE_ROOT | wx.TR_SINGLE
+        )
         self._templateList.SetMinSize((300, 200))
         self._templateList.SetSizerProps(expand=True, proportion=1)
         self._templateList.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelectionChanged)
         self._templates = persistence.TemplateList(self.settings.pathToTemplatesDir())
-        self._root = self._templateList.AddRoot('Root')
+        self._root = self._templateList.AddRoot("Root")
         for task in self._templates.tasks():
             item = self.appendTemplate(self._root, task)
             if operating_system.isMac():
@@ -121,11 +179,15 @@ Classes et méthodes utilisées
 
     def createTemplateListButtons(self, pane):
         panel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType('vertical')
-        self._btnDelete = self.createButton(panel, 'cross_red_icon', self.onDelete, enable=False)
-        self._btnUp = self.createButton(panel, 'arrow_up_icon', self.OnUp, enable=False)
-        self._btnDown = self.createButton(panel, 'arrow_down_icon', self.OnDown, enable=False)
-        self._btnAdd = self.createButton(panel, 'symbol_plus_icon', self.onAdd)
+        panel.SetSizerType("vertical")
+        self._btnDelete = self.createButton(
+            panel, "cross_red_icon", self.onDelete, enable=False
+        )
+        self._btnUp = self.createButton(panel, "arrow_up_icon", self.OnUp, enable=False)
+        self._btnDown = self.createButton(
+            panel, "arrow_down_icon", self.OnDown, enable=False
+        )
+        self._btnAdd = self.createButton(panel, "symbol_plus_icon", self.onAdd)
         panel.Fit()
 
     def createButton(self, parent, bitmapName, handler, enable=True):
@@ -142,27 +204,32 @@ Classes et méthodes utilisées
         en créant les champs de saisie.
         """
         panel = self._editPanel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType('form')
+        panel.SetSizerType("form")
         panel.SetSizerProps(expand=True)
-        label = wx.StaticText(panel, label=_('Subject'))
-        label.SetSizerProps(valign='center')
+        label = wx.StaticText(panel, label=_("Subject"))
+        label.SetSizerProps(valign="center")
         self._subjectCtrl = wx.TextCtrl(panel)
-        label = wx.StaticText(panel, label=_('Planned start Date'))
-        label.SetSizerProps(valign='center')
+        label = wx.StaticText(panel, label=_("Planned start Date"))
+        label.SetSizerProps(valign="center")
         self._plannedStartDateTimeCtrl = TimeExpressionEntry(panel)
-        label = wx.StaticText(panel, label=_('Due Date'))
-        label.SetSizerProps(valign='center')
+        label = wx.StaticText(panel, label=_("Due Date"))
+        label.SetSizerProps(valign="center")
         self._dueDateTimeCtrl = TimeExpressionEntry(panel)
-        label = wx.StaticText(panel, label=_('Completion Date'))
-        label.SetSizerProps(valign='center')
+        label = wx.StaticText(panel, label=_("Completion Date"))
+        label.SetSizerProps(valign="center")
         self._completionDateTimeCtrl = TimeExpressionEntry(panel)
-        label = wx.StaticText(panel, label=_('Reminder'))
-        label.SetSizerProps(valign='center')
+        label = wx.StaticText(panel, label=_("Reminder"))
+        label.SetSizerProps(valign="center")
         self._reminderDateTimeCtrl = TimeExpressionEntry(panel)
-        self._taskControls = (self._subjectCtrl, self._plannedStartDateTimeCtrl, self._dueDateTimeCtrl,
-                              self._completionDateTimeCtrl, self._reminderDateTimeCtrl)
+        self._taskControls = (
+            self._subjectCtrl,
+            self._plannedStartDateTimeCtrl,
+            self._dueDateTimeCtrl,
+            self._completionDateTimeCtrl,
+            self._reminderDateTimeCtrl,
+        )
         for ctrl in self._taskControls:
-            ctrl.SetSizerProps(valign='center', expand=True)
+            ctrl.SetSizerProps(valign="center", expand=True)
             ctrl.Bind(wx.EVT_TEXT, self.onValueChanged)
         self.enableEditPanel(False)
         panel.Fit()
@@ -173,9 +240,9 @@ Classes et méthodes utilisées
             ctrl.Enable(enable)
 
     def appendTemplate(self, parentItem, task):
-        """Ajoute un nouveau nœud à l'arbre des modèles de tâches."""
+        """Ajouter un nouveau nœud à l'arbre des modèles de tâches."""
         # item = self._templateList.AppendItem(parentItem, task.subject(), data=wx.TreeItemData(task))
-        item = self._templateList.Append(parentItem, task.subject(), data=task)
+        item = self._templateList.Append(parentItem, task.subject(), data=task)  # Unresolved attribute reference 'Append' for class 'TreeCtrl'
         for child in task.children():
             self.appendTemplate(item, child)
         return item
@@ -186,23 +253,30 @@ Classes et méthodes utilisées
 
         Cette méthode est appelée à chaque fois que l'utilisateur modifie le contenu d'un champ de saisie. Son rôle est de :
 
-        Récupérer le modèle de tâche sélectionné : Elle utilise self._templateList.GetItemData(self._GetSelection()).GetData()
-        pour obtenir le modèle de tâche correspondant à l'élément sélectionné dans la liste.
-        Mettre à jour les propriétés du modèle de tâche : Elle modifie les propriétés du modèle de tâche en fonction des
-        nouvelles valeurs saisies dans les champs.
-        Par exemple, si l'utilisateur a modifié le sujet du modèle, la méthode met à jour la propriété subject du modèle.
-        Gérer les expressions temporelles : Pour les champs de saisie de dates, elle utilise la classe TimeExpressionEntry
-        pour vérifier la validité de l'expression saisie et la convertir au format approprié.
+        - Récupérer le modèle de tâche sélectionné : Elle utilise self._templateList.GetItemData(self._GetSelection()).GetData()
+          pour obtenir le modèle de tâche correspondant à l'élément sélectionné dans la liste.
+        - Mettre à jour les propriétés du modèle de tâche : Elle modifie les propriétés du modèle de tâche en fonction des
+          nouvelles valeurs saisies dans les champs.
+          Par exemple, si l'utilisateur a modifié le sujet du modèle, la méthode met à jour la propriété subject du modèle.
+        - Gérer les expressions temporelles : Pour les champs de saisie de dates, elle utilise la classe TimeExpressionEntry
+          pour vérifier la validité de l'expression saisie et la convertir au format approprié.
+
+        :param event: Événement à sauter.
+        :return:
         """
         event.Skip()
         if self._GetSelection().IsOk() and not self._changing:
             task = self._templateList.GetItemData(self._GetSelection()).GetData()
             task.setSubject(self._subjectCtrl.GetValue())
-            for ctrl, name in [(self._plannedStartDateTimeCtrl, 'plannedstartdatetmpl'),
-                               (self._dueDateTimeCtrl, 'duedatetmpl'),
-                               (self._completionDateTimeCtrl, 'completiondatetmpl'),
-                               (self._reminderDateTimeCtrl, 'remindertmpl')]:
+            for ctrl, name in [
+                (self._plannedStartDateTimeCtrl, "plannedstartdatetmpl"),
+                (self._dueDateTimeCtrl, "duedatetmpl"),
+                (self._completionDateTimeCtrl, "completiondatetmpl"),
+                (self._reminderDateTimeCtrl, "remindertmpl"),
+            ]:
+                # Si la classe pour la saisie d'expressions temporelles est valide pour chacune des 4 valeurs
                 if TimeExpressionEntry.isValid(ctrl.GetValue()):
+                    # Régler l'attribut name de l'objet task sur la valeur saisie ou None.
                     setattr(task, name, ctrl.GetValue() or None)
 
     def _GetSelection(self):
@@ -218,25 +292,33 @@ Classes et méthodes utilisées
             selectionOk = selection.IsOk() and selection != self._root
             selectionAtRoot = False
             if selectionOk:
-                selectionAtRoot = (self._templateList.GetItemParent(selection) == self._root)
+                selectionAtRoot = (
+                    self._templateList.GetItemParent(selection) == self._root
+                )
             self._btnDelete.Enable(selectionAtRoot)
-            self._btnUp.Enable(selectionAtRoot and self._templateList.GetPrevSibling(selection).IsOk())
-            self._btnDown.Enable(selectionAtRoot and self._templateList.GetNextSibling(selection).IsOk())
+            self._btnUp.Enable(
+                selectionAtRoot and self._templateList.GetPrevSibling(selection).IsOk()
+            )
+            self._btnDown.Enable(
+                selectionAtRoot and self._templateList.GetNextSibling(selection).IsOk()
+            )
             self.enableEditPanel(selectionOk)
             if selectionOk:
                 task = self._templateList.GetItemData(selection).GetData()
                 if task is None:
                     for ctrl in self._taskControls:
-                        ctrl.SetValue(u'')
+                        ctrl.SetValue("")
                 else:
                     self._subjectCtrl.SetValue(task.subject())
-                    self._plannedStartDateTimeCtrl.SetValue(task.plannedstartdatetmpl or u'')
-                    self._dueDateTimeCtrl.SetValue(task.duedatetmpl or u'')
-                    self._completionDateTimeCtrl.SetValue(task.completiondatetmpl or u'')
-                    self._reminderDateTimeCtrl.SetValue(task.remindertmpl or u'')
+                    self._plannedStartDateTimeCtrl.SetValue(
+                        task.plannedstartdatetmpl or ""
+                    )
+                    self._dueDateTimeCtrl.SetValue(task.duedatetmpl or "")
+                    self._completionDateTimeCtrl.SetValue(task.completiondatetmpl or "")
+                    self._reminderDateTimeCtrl.SetValue(task.remindertmpl or "")
             else:
                 for ctrl in self._taskControls:
-                    ctrl.SetValue(u'')
+                    ctrl.SetValue("")
         finally:
             self._changing = False
 
@@ -256,7 +338,9 @@ Classes et méthodes utilisées
         self._templateList.Delete(selection)
         if prev.IsOk():
             # item = self._templateList.InsertItem(self._root, prev, task.subject(), data=wx.TreeItemData(task))
-            item = self._templateList.InsertItem(self._root, prev, task.subject(), data=task)
+            item = self._templateList.InsertItem(
+                self._root, prev, task.subject(), data=task
+            )
         else:
             # item = self._templateList.PrependItem(self._root, task.subject(), data=wx.TreeItemData(task))
             item = self._templateList.PrependItem(self._root, task.subject(), data=task)
@@ -273,7 +357,9 @@ Classes et méthodes utilisées
         task = self._templateList.GetItemData(selection).GetData()
         self._templateList.Delete(selection)
         # item = self._templateList.InsertItem(self._root, next, task.subject(), data=wx.TreeItemData(task))
-        item = self._templateList.InsertItem(self._root, next, task.subject(), data=task)
+        item = self._templateList.InsertItem(
+            self._root, next, task.subject(), data=task
+        )
         for child in task.children():
             self.appendTemplate(item, child)
         index = self._templates.tasks().index(task)
@@ -282,9 +368,13 @@ Classes et méthodes utilisées
 
     def onAdd(self, event):  # pylint: disable=W0613
         """Cette méthode permet à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en ajoutant des éléments."""
-        template = Task(subject=_('New task template'))
-        for name in ('plannedstartdatetmpl', 'duedatetmpl', 'completiondatetmpl',
-                     'remindertmpl'):
+        template = Task(subject=_("New task template"))
+        for name in (
+            "plannedstartdatetmpl",
+            "duedatetmpl",
+            "completiondatetmpl",
+            "remindertmpl",
+        ):
             setattr(template, name, None)
         theTask = self._templates.addTemplate(template)
         self.appendTemplate(self._root, theTask)
