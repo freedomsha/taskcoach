@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import wx
+import atexit
+import time
+import traceback
 
 
 def timeFunction(func):
     """Decorator which displays the total time a function used at exit, grouped by stack frame."""
-    import atexit
-    import time
-    import traceback
 
     func.elapsed = dict()
 
