@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .wxSchedulerCore import *
+from .wxSchedulerCore import wxSchedulerCore
 
 
 class wxSchedulerPrint(wxSchedulerCore):
 
     def __init__(self, dc):
-        super(wxSchedulerPrint, self).__init__()
+        super().__init__()
 
         self.SetDc(dc)
 
