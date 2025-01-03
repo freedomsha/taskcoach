@@ -262,13 +262,13 @@ class SelectedItemsFilterTest(tctest.TestCase):
 
     def testAddChild(self):
         self.list.append(self.child)
-        self.assertTrue(self.child in self.filter)
+        self.assertTrue(self.child in self.filter)  # not true ?
 
     def testAddChildWithGrandchild(self):
         grandchild = task.Task(parent=self.child)
         self.child.addChild(grandchild)
         self.list.append(self.child)
-        self.assertTrue(grandchild in self.filter)
+        self.assertTrue(grandchild in self.filter)  # not True ?
 
     def testRemoveSelectedItem(self):
         self.list.remove(self.task)
