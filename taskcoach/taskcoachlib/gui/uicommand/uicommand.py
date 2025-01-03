@@ -215,6 +215,7 @@ class FileOpen(IOCommand):
             *args,
             **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileOpen command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -223,7 +224,12 @@ class FileOpen(IOCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        self.iocontroller.open()
+        print("tclib.gui.uicommand.FileOpen.doCommand() called")  # Débogage
+        try:
+            self.iocontroller.open()
+        except Exception as e:
+            print("gui.uicommand.uicommand.FileOpen.doCommand error")
+            print(f"Error opening file: {e}")  # Débogage
 
 
 class RecentFileOpen(IOCommand):
@@ -245,10 +251,12 @@ class RecentFileOpen(IOCommand):
         self.__filename = kwargs.pop("filename")
         index = kwargs.pop("index")
         super().__init__(
-            menuText="%d %s" % (index, self.__filename),
+            # menuText="%d %s" % (index, self.__filename),
+            menuText=f"{index:d} {self.__filename}",
             helpText=_("Open %s") % self.__filename,
+            # helpText=_(f"Open {self.__filename}"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -276,6 +284,7 @@ class FileMerge(IOCommand):
             *args,
             **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileMerge command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour fusionner les tâches."""
@@ -301,8 +310,9 @@ class FileClose(IOCommand):
             bitmap="Close",
             id=wx.ID_CLOSE,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileClose command initialized")  # Débogage
 
     def doCommand(self, event):
         """Ferme le fichier et les éditeurs associés."""
@@ -329,8 +339,9 @@ class FileSave(IOCommand):
             bitmap="save",
             id=wx.ID_SAVE,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileSave command initialized")  # Débogage
 
     def doCommand(self, event):
         """Sauvegarde le fichier actuel."""
@@ -359,8 +370,9 @@ class FileMergeDiskChanges(IOCommand):
             helpText=help.fileMergeDiskChanges,
             bitmap="mergedisk",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileMergeDiskChanges command initialized")  # Débogage
 
     def doCommand(self, event):
         """Fusionne les changements détectés sur disque."""
@@ -390,8 +402,9 @@ class FileSaveAs(IOCommand):
             bitmap="saveas",
             id=wx.ID_SAVEAS,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileSaveAs command initialized")  # Débogage
 
     def doCommand(self, event):
         """Sauvegarde le fichier sous un autre nom."""
@@ -421,8 +434,9 @@ class FileSaveSelection(
             helpText=_("Save the selected tasks to a separate taskfile"),
             bitmap="saveselection",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileSaveSelection command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour sauvegarder les tâches sélectionnées."""
@@ -452,8 +466,9 @@ class FileSaveSelectedTaskAsTemplate(
             helpText=_("Save the selected task as a task template"),
             bitmap="saveselection",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileSaveSelectedTaskAsTemplate command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour sauvegarder la tâche sélectionnée en tant que modèle."""
@@ -481,8 +496,9 @@ class FileImportTemplate(IOCommand):
             helpText=_("Import a new template from a template file"),
             bitmap="fileopen",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileImportTemplate command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour importer un modèle depuis un fichier."""
@@ -509,8 +525,9 @@ class FileEditTemplates(settings_uicommand.SettingsCommand, base_uicommand.UICom
             menuText=_("Edit templates..."),
             helpText=_("Edit existing templates"),
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileEditTemplates command initialized")  # Débogage
 
     def doCommand(self, event):
         """Affiche la boîte de dialogue pour éditer les modèles existants."""
@@ -543,8 +560,9 @@ class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
             ),
             bitmap="delete",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FilePurgeDeletedItems command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -594,8 +612,9 @@ class PrintPageSetup(settings_uicommand.SettingsCommand, base_uicommand.UIComman
             bitmap="pagesetup",
             id=wx.ID_PRINT_SETUP,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.PrintPageSetup command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -637,8 +656,9 @@ class PrintPreview(ViewerCommand, settings_uicommand.SettingsCommand):
             bitmap="printpreview",
             id=wx.ID_PREVIEW,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.PrintPreview command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -681,8 +701,9 @@ class Print(ViewerCommand, settings_uicommand.SettingsCommand):
             bitmap="print",
             id=wx.ID_PRINT,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.Print command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -748,8 +769,9 @@ class FileManageBackups(IOCommand, settings_uicommand.SettingsCommand):
             menuText=_("Manage backups..."),
             helpText=_("Manage all task file backups"),
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileManageBackups command initialized")  # Débogage
 
     def doCommand(self, event):
         dlg = dialog.BackupManagerDialog(
@@ -809,8 +831,9 @@ class FileExportAsHTML(FileExportCommand):
             helpText=_("Export items from a viewer in HTML format"),
             bitmap="exportashtml",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileExportAsHTML command initialized")  # Débogage
 
     @staticmethod
     def getExportDialogClass():
@@ -833,8 +856,9 @@ class FileExportAsCSV(FileExportCommand):
             ),
             bitmap="exportascsv",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileExportAsCSV command initialized")  # Débogage
 
     @staticmethod
     def getExportDialogClass():
@@ -855,8 +879,9 @@ class FileExportAsICalendar(FileExportCommand):
             helpText=_("Export items from a viewer in iCalendar format"),
             bitmap="exportasvcal",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileExportAsICalendar command initialized")  # Débogage
 
     def exportFunction(self):
         return self.iocontroller.exportAsICalendar
@@ -889,8 +914,9 @@ class FileExportAsTodoTxt(FileExportCommand):
             ),
             bitmap="exportascsv",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileExportAsTodoTxt command initialized")  # Débogage
 
     def exportFunction(self):
         return self.iocontroller.exportAsTodoTxt
@@ -922,8 +948,9 @@ class FileImportCSV(IOCommand):
             helpText=_("Import tasks from a Comma Separated Values (CSV) file"),
             bitmap="exportascsv",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileImportCSV command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -963,8 +990,9 @@ class FileImportTodoTxt(IOCommand):
             helpText=_("Import tasks from a Todo.txt (see todotxt.com) file"),
             bitmap="exportascsv",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileImportTodoTxt command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -991,8 +1019,9 @@ class FileSynchronize(IOCommand, settings_uicommand.SettingsCommand):
             helpText=_("Synchronize with a SyncML server"),
             bitmap="arrows_looped_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileSynchronize command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1016,8 +1045,9 @@ class FileQuit(base_uicommand.UICommand):
             bitmap="exit",
             id=wx.ID_EXIT,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.FileQuit command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1048,8 +1078,9 @@ class EditUndo(base_uicommand.UICommand):
             bitmap="undo",
             id=wx.ID_UNDO,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditUndo command initialized")  # Débogage
 
     @staticmethod
     def getUndoMenuText():
@@ -1101,13 +1132,15 @@ class EditRedo(base_uicommand.UICommand):
             bitmap="redo",
             id=wx.ID_REDO,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditRedo command initialized")  # Débogage
 
     @staticmethod
     def getRedoMenuText() -> str:
         """Retourne le texte du menu pour la commande de rétablissement, incluant une description de l'action suivante à rétablir."""
-        return "%s\tCtrl+Y" % patterns.CommandHistory().redostr(_("&Redo"))
+        # return "%s\tCtrl+Y" % patterns.CommandHistory().redostr(_("&Redo"))
+        return f"{patterns.CommandHistory().redostr(_('&Redo'))}\tCtrl+Y"
 
     def doCommand(self, event):
         """Exécute la commande de rétablissement en utilisant l'historique des commandes."""
@@ -1154,8 +1187,9 @@ class EditCut(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             bitmap="cut",
             # id=wx.ID_CUT,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditCut command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande de découpage."""
@@ -1197,8 +1231,9 @@ class EditCopy(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             helpText=help.editCopy,
             bitmap="copy",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditCopy command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande de copie."""
@@ -1243,8 +1278,9 @@ class EditPaste(base_uicommand.UICommand):
             bitmap="paste",
             id=wx.ID_PASTE,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditPaste command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande de collage."""
@@ -1287,8 +1323,9 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
             helpText=help.editPasteAsSubitem,
             bitmap="pasteintotask",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditPasteAsSubItem command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1348,8 +1385,9 @@ class EditPreferences(settings_uicommand.SettingsCommand):
             bitmap="wrench_icon",
             id=wx.ID_PREFERENCES,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditPreferences command initialized")  # Débogage
 
     def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
         """
@@ -1383,8 +1421,9 @@ class EditSyncPreferences(IOCommand):
             helpText=_("Edit SyncML preferences"),
             bitmap="arrows_looped_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditSyncPreferences command initialized")  # Débogage
 
     def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
         """
@@ -1428,8 +1467,9 @@ class EditToolBarPerspective(settings_uicommand.SettingsCommand):
             bitmap="cogwheel_icon",
             menuText=_("Customize"),
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.EditToolBarPerspective command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1458,8 +1498,9 @@ class SelectAll(mixin_uicommand.NeedsItemsMixin, ViewerCommand):
             bitmap="selectall",
             id=wx.ID_SELECTALL,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.SelectAll command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1494,8 +1535,9 @@ class ClearSelection(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             menuText=_("&Clear selection"),
             helpText=_("Unselect all items"),
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.ClearSelection command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1518,8 +1560,9 @@ class ResetFilter(ViewerCommand):
             helpText=help.resetFilter,
             bitmap="viewalltasks",
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.ResetFilter command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1549,8 +1592,9 @@ class ResetCategoryFilter(
             menuText=_("&Reset all categories\tCtrl-R"),
             helpText=help.resetCategoryFilter,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.ResetCategoryFilter command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1585,8 +1629,9 @@ class ToggleCategoryFilter(base_uicommand.UICommand):
             helpText=_("Show/hide items belonging to %s") % subject,
             kind=kind,
             *args,
-            **kwargs
+            **kwargs,
         )
+        print("tclib.gui.uicommand.uicommand.ToggleCategoryFilter command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1683,7 +1728,7 @@ class RenameViewer(ViewerCommand):
             menuText=_("&Rename viewer..."),
             helpText=_("Rename the selected viewer"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -1741,6 +1786,7 @@ class HideCurrentColumn(ViewerCommand):
     """
     Action pour masquer la colonne actuellement sélectionnée dans la visionneuse.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande pour masquer la colonne sélectionnée.
@@ -1753,7 +1799,7 @@ class HideCurrentColumn(ViewerCommand):
             menuText=_("&Hide this column"),
             helpText=_("Hide the selected column"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -1860,6 +1906,7 @@ class ViewExpandAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
     """
     Action pour étendre tous les éléments dans une visionneuse arborescente.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande pour étendre tous les éléments.
@@ -1872,7 +1919,7 @@ class ViewExpandAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
             menuText=_("&Expand all items\tShift+Ctrl+E"),
             helpText=help.viewExpandAll,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def enabled(self, event) -> bool:
@@ -1905,7 +1952,7 @@ class ViewCollapseAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
             menuText=_("&Collapse all items\tShift+Ctrl+C"),
             helpText=help.viewCollapseAll,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def enabled(self, event) -> bool:
@@ -1963,7 +2010,7 @@ class ViewerSortOrderCommand(ViewerCommand, settings_uicommand.UICheckCommand):
             menuText=_("&Ascending"),
             helpText=_("Sort ascending (checked) or descending (unchecked)"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def isSettingChecked(self) -> bool:
@@ -2002,7 +2049,7 @@ class ViewerSortCaseSensitive(ViewerCommand, settings_uicommand.UICheckCommand):
                 "(checked) or insensitive (unchecked)"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def isSettingChecked(self) -> bool:
@@ -2038,7 +2085,7 @@ class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckComma
             menuText=_("Sort by status &first"),
             helpText=_("Sort tasks by status (active/inactive/completed) " "first"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def isSettingChecked(self) -> bool:
@@ -2082,7 +2129,7 @@ class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
             helpText=taskStatus.hideHelpText,
             bitmap=taskStatus.getHideBitmap(kwargs["settings"]),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def uniqueName(self) -> str:
@@ -2136,7 +2183,7 @@ class ViewerHideCompositeTasks(ViewerCommand, settings_uicommand.UICheckCommand)
             menuText=_("Hide c&omposite tasks"),
             helpText=_("Show/hide tasks with subtasks in list mode"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def isSettingChecked(self) -> bool:
@@ -2184,7 +2231,7 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             helpText=_("Edit the selected item(s)"),
             bitmap="edit",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
@@ -2270,7 +2317,7 @@ class EditTrackedTasks(TaskListCommand, settings_uicommand.SettingsCommand):
             helpText=_("Edit the currently tracked task(s)"),
             bitmap="edit",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show: bool = True):
@@ -2318,7 +2365,7 @@ class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             helpText=_("Delete the selected item(s)"),
             bitmap="delete",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -2469,7 +2516,7 @@ Points à considérer
             categories=self.categoriesForTheNewTask(),
             prerequisites=self.prerequisitesForTheNewTask(),
             dependencies=self.dependenciesForTheNewTask(),
-            **kwargs
+            **kwargs,
         )
         # Exécution de la commande de création de tâche :
         #             Exécute la commande NewTaskCommand pour créer la nouvelle tâche dans la liste de tâches.
@@ -2773,7 +2820,7 @@ class NewTaskWithSelectedCategories(TaskNew, ViewerCommand):
             menuText=_("New task with selected &categories..."),
             helpText=_("Insert a new task with the selected categories checked"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def categoriesForTheNewTask(self):
@@ -2805,7 +2852,7 @@ class NewTaskWithSelectedTasksAsPrerequisites(
                 "Insert a new task with the selected tasks as prerequisite tasks"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def prerequisitesForTheNewTask(self):
@@ -2835,7 +2882,7 @@ class NewTaskWithSelectedTasksAsDependencies(
             menuText=_("New task with selected tasks as &dependents..."),
             helpText=_("Insert a new task with the selected tasks as dependent tasks"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def dependenciesForTheNewTask(self):
@@ -2875,7 +2922,7 @@ class NewSubItem(mixin_uicommand.NeedsOneSelectedCompositeItemMixin, ViewerComma
             helpText=_("Insert a new subitem of the selected item"),
             bitmap="newsub",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
@@ -2913,7 +2960,7 @@ class TaskMarkActive(
             menuText=_("Mark task &active\tAlt+RETURN"),
             helpText=_("Mark the selected task(s) active"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -2950,7 +2997,7 @@ class TaskMarkInactive(
             menuText=_("Mark task &inactive\tCtrl+Alt+RETURN"),
             helpText=_("Mark the selected task(s) inactive"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -2987,7 +3034,7 @@ class TaskMarkCompleted(
             menuText=_("Mark task &completed\tCtrl+RETURN"),
             helpText=_("Mark the selected task(s) completed"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3022,7 +3069,7 @@ class TaskMaxPriority(
             helpText=help.taskMaxPriority,
             bitmap="maxpriority",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3049,7 +3096,7 @@ class TaskMinPriority(
             helpText=help.taskMinPriority,
             bitmap="minpriority",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3076,7 +3123,7 @@ class TaskIncPriority(
             helpText=help.taskIncreasePriority,
             bitmap="incpriority",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3103,7 +3150,7 @@ class TaskDecPriority(
             helpText=help.taskDecreasePriority,
             bitmap="decpriority",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3269,7 +3316,7 @@ class ToggleCategory(mixin_uicommand.NeedsSelectedCategorizableMixin, ViewerComm
             helpText=_("Toggle %s") % subject,
             kind=kind,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3338,7 +3385,7 @@ class Mail(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             helpText=help.mailItem,
             bitmap="envelope_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(
@@ -3441,7 +3488,7 @@ class AddNote(
             helpText=help.addNote,
             bitmap="note_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
@@ -3483,7 +3530,7 @@ class OpenAllNotes(
             helpText=help.openAllNotes,
             bitmap="edit",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3527,7 +3574,7 @@ class EffortNew(
             menuText=effortList.newItemMenuText,
             helpText=effortList.newItemHelpText,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show=True):
@@ -3584,7 +3631,7 @@ class EffortStart(
             menuText=_("&Start tracking effort\tCtrl-T"),
             helpText=help.effortStart,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3619,7 +3666,7 @@ class EffortStartForEffort(
                 "Start tracking effort for the task(s) of the selected effort(s)"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3658,7 +3705,7 @@ class EffortStartForTask(TaskListCommand):
             menuText="&" + subject.replace("&", "&&"),
             helpText=_("Start tracking effort for %s") % subject,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -3684,7 +3731,7 @@ class EffortStartButton(mixin_uicommand.PopupButtonMixin, TaskListCommand):
             menuText=_("&Start tracking effort"),
             helpText=_("Select a task via the menu and start tracking effort for it"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def createPopupMenu(self):
@@ -3781,7 +3828,7 @@ Points clés:
             helpText=self.defaultHelpText,
             kind=wx.ITEM_CHECK,
             *args,
-            **kwargs
+            **kwargs,
         )
         self.__tracker = effort.EffortListTracker(self.effortList)
         for subtype in ["", ".added", ".removed"]:
@@ -3954,7 +4001,7 @@ class CategoryNew(CategoriesCommand, settings_uicommand.SettingsCommand):
             menuText=_("New category...\tCtrl-G"),
             helpText=help.categoryNew,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
@@ -4049,7 +4096,7 @@ class NoteNew(NotesCommand, settings_uicommand.SettingsCommand, ViewerCommand):
             helpText=self.helpText,
             bitmap="new",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
@@ -4242,7 +4289,7 @@ class AddAttachment(
             helpText=help.addAttachment,
             bitmap="paperclip_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -4329,7 +4376,7 @@ class AttachmentOpen(
             menuText=attachments.openItemMenuText,
             helpText=attachments.openItemHelpText,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, showerror=wx.MessageBox):  # pylint: disable=W0221
@@ -4378,7 +4425,7 @@ class OpenAllAttachments(
             helpText=help.openAllAttachments,
             bitmap="paperclip_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event, showerror=wx.MessageBox):  # pylint: disable=W0221
@@ -4521,7 +4568,7 @@ class Help(DialogCommand):
             dialogText=help.helpHTML,
             id=wx.ID_HELP,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4553,7 +4600,7 @@ class Tips(settings_uicommand.SettingsCommand):
             helpText=_("Tips about the program"),
             bitmap="lamp_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -4594,7 +4641,7 @@ class Anonymize(IOCommand):
             menuText=_("Anonymize"),
             helpText=_("Anonymize a task file to attach it to a bug report"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -4661,7 +4708,7 @@ class HelpAbout(DialogCommand):
             id=wx.ID_ABOUT,
             bitmap="led_blue_information_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4683,7 +4730,7 @@ class HelpLicense(DialogCommand):
             direction=wx.Layout_LeftToRight,
             bitmap="document_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4717,7 +4764,7 @@ class CheckForUpdate(settings_uicommand.SettingsCommand):
             helpText=_("Check for the availability of a new version of %s") % meta.name,
             bitmap="box_icon",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -4795,7 +4842,7 @@ class FAQ(URLCommand):
             bitmap="led_blue_questionmark_icon",
             url=meta.faq_url,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4822,7 +4869,7 @@ class ReportBug(URLCommand):
             bitmap="bug_icon",
             url=meta.known_bugs_url,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4849,7 +4896,7 @@ class RequestFeature(URLCommand):
             bitmap="cogwheel_icon",
             url=meta.feature_request_url,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4874,7 +4921,7 @@ class RequestSupport(URLCommand):
             bitmap="life_ring_icon",
             url=meta.support_request_url,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4899,7 +4946,7 @@ class HelpTranslate(URLCommand):
             bitmap="person_talking_icon",
             url=meta.translations_url,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4924,7 +4971,7 @@ class Donate(URLCommand):
             bitmap="heart_icon",
             url=meta.donate_url,
             *args,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -4945,7 +4992,7 @@ class MainWindowRestore(base_uicommand.UICommand):
             helpText=_("Restore the window to its previous state"),
             bitmap="restore",
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -5270,7 +5317,7 @@ class TaskViewerTreeOrListChoice(
                 "When checked, show tasks as tree, " "otherwise show tasks as list"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def appendToToolBar(self, *args, **kwargs):
@@ -5360,7 +5407,7 @@ class CategoryViewerFilterChoice(
                 "otherwise on any checked category"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def appendToToolBar(self, *args, **kwargs):
@@ -5486,7 +5533,7 @@ class CalendarViewerConfigure(ViewerCommand):
             helpText=self.helpText,
             bitmap=self.bitmap,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -5522,7 +5569,7 @@ class CalendarViewerNavigationCommand(ViewerCommand):
             helpText=self.helpText,
             bitmap=self.bitmap,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -5577,7 +5624,7 @@ class HierarchicalCalendarViewerNextPeriod(ViewerCommand):
             helpText=self.helpText,
             bitmap=self.bitmap,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -5607,7 +5654,7 @@ class HierarchicalCalendarViewerPreviousPeriod(ViewerCommand):
             helpText=self.helpText,
             bitmap=self.bitmap,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -5637,7 +5684,7 @@ class HierarchicalCalendarViewerToday(ViewerCommand):
             helpText=self.helpText,
             bitmap=self.bitmap,
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def doCommand(self, event):
@@ -5663,7 +5710,7 @@ class ToggleAutoColumnResizing(settings_uicommand.UICheckCommand, ViewerCommand)
                 "When checked, automatically resize columns to fill" " available space"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
         wx.CallAfter(self.updateWidget)
 
@@ -5841,7 +5888,7 @@ class AlwaysRoundUp(settings_uicommand.UICheckCommand, ViewerCommand):
             menuText=_("&Always round up"),
             helpText=_("Always round up to the next rounding increment"),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def appendToToolBar(self, toolbar):
@@ -5917,7 +5964,7 @@ class ConsolidateEffortsPerTask(settings_uicommand.UICheckCommand, ViewerCommand
                 "Consolidate all efforts per task to a single effort before rounding"
             ),
             *args,
-            **kwargs
+            **kwargs,
         )
 
     def appendToToolBar(self, toolbar):
