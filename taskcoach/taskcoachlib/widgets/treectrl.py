@@ -25,6 +25,7 @@ import wx
 from wx.lib.agw import customtreectrl as customtree
 from wx.lib.agw import hypertreelist
 from wx.lib.agw.ultimatelistctrl import UltimateListCtrl
+from wx.lib.agw.ultimatelistctrl import UltimateListCtrl, UltimateListMainWindow
 from taskcoachlib.widgets import itemctrl, draganddrop
 
 
@@ -84,7 +85,7 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
 
     def HitTest(self, point):  # pylint: disable=W0221, C0103
         """ Always return a three-tuple (item, flags, column). """
-        if type(point) == type(()):
+        if type(point) == type(()):  # isinstance (tuple ?)
             point = wx.Point(point[0], point[1])
         hit_test_result = super().HitTest(point)
         if len(hit_test_result) == 2:
@@ -256,9 +257,10 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         for child_object in self.__adapter.children(parent_object):
             # child_item = self.AppendItem(parent_item, '',
             # child_item = self.Append(parent_item, "",
-            child_item = self.Append(parent_item, "",
-                                     self.getItemCTType(child_object),
-                                     data=child_object)
+            # AppendItem est utilisé dans wx !
+            child_item = self.AppendItem(parent_item, "",
+                                         self.getItemCTType(child_object),
+                                         data=child_object)
             self._refreshObjectMinimally(child_item, child_object)
             expanded = self.__adapter.getItemExpanded(child_object)
             if expanded:
@@ -278,7 +280,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
 
     def __refresh_aspects(self, aspects, *args, **kwargs):
         for aspect in aspects:
-            refresh_aspect = getattr(self, "_refresh%s" % aspect)
+            # refresh_aspect = getattr(self, "_refresh%s" % aspect)
+            refresh_aspect = getattr(self, f"_refresh{aspect}")
             refresh_aspect(*args, **kwargs)
 
     def _refreshItemType(self, item, domain_object, check=False):
@@ -345,7 +348,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         if event.GetKeyCode() == wx.WXK_RETURN:
             self.editCommand(event)
         elif event.GetKeyCode() == wx.WXK_F2 and self.GetSelections():
-            self.EditLabel(self.GetSelections()[0], column=0)
+            self.EditLabel(self.GetSelections()[0], column=0)  # TODO :
         else:
             event.Skip()
 
