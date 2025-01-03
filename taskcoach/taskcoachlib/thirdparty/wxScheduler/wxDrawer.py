@@ -36,7 +36,8 @@ class wxDrawer(object):
         while True:
             font.SetPointSize(pointSize)
             _, th = self.context.GetTextExtent(
-                " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
             )
             if th <= height:
                 return
@@ -50,7 +51,8 @@ class wxDrawer(object):
             font.SetPointSize(pointSize)
             self.context.SetFont(font)
             tw, _ = self.context.GetTextExtent(
-                " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
             )
             if tw <= width:
                 return
@@ -871,7 +873,7 @@ class HeaderDrawerMixin(HeaderDrawerDCMixin):
 
 
 class wxBaseDrawer(
-    BackgroundDrawerDCMixin, HeaderDrawerDCMixin, HeaderDrawerMixin, wxDrawer
+    HeaderDrawerMixin, HeaderDrawerDCMixin, BackgroundDrawerDCMixin, wxDrawer
 ):
     """
     Concrete subclass of wxDrawer; regular style.
@@ -894,13 +896,13 @@ class wxBaseDrawer(
                 hourH = 1.0 * h / len(self.displayedHours)
                 self.AdjustFontForHeight(font, hourH)
                 hourW, _ = self.context.GetTextExtent(
-                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
                 )
             else:
                 hourW = 1.0 * w / len(self.displayedHours)
                 self.AdjustFontForWidth(font, int(hourW * 2 * 0.9))
                 _, hourH = self.context.GetTextExtent(
-                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
                 )
 
             if not includeText:
@@ -917,7 +919,8 @@ class wxBaseDrawer(
                         )
                         if includeText:
                             self.context.DrawText(
-                                wxTimeFormat.FormatTime(hour),
+                                # wxTimeFormat.FormatTime(hour),
+                                wxTimeFormat.FormatTime(self, hour),
                                 x + LEFT_COLUMN_SIZE - hourW - 5,
                                 y + i * hourH,
                             )
@@ -927,7 +930,8 @@ class wxBaseDrawer(
                         )
                         if includeText:
                             self.context.DrawText(
-                                wxTimeFormat.FormatTime(hour),
+                                # wxTimeFormat.FormatTime(hour),
+                                wxTimeFormat.FormatTime(self, hour),
                                 x + i * hourW + 5,
                                 y + hourH * 0.25,
                             )
@@ -1010,13 +1014,15 @@ class wxFancyDrawer(
                 hourH = 1.0 * h / len(self.displayedHours)
                 self.AdjustFontForHeight(font, hourH)
                 hourW, _ = self.context.GetTextExtent(
-                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
                 )
             else:
                 hourW = 1.0 * w / len(self.displayedHours)
                 self.AdjustFontForWidth(font, int(hourW * 2 * 0.9))
                 _, hourH = self.context.GetTextExtent(
-                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
                 )
 
             if not includeText:
@@ -1033,7 +1039,8 @@ class wxFancyDrawer(
                         )
                         if includeText:
                             self.context.DrawText(
-                                " " + wxTimeFormat.FormatTime(hour),
+                                # " " + wxTimeFormat.FormatTime(hour),
+                                " " + wxTimeFormat.FormatTime(self, hour),
                                 x + LEFT_COLUMN_SIZE - hourW - 10,
                                 y + i * hourH,
                             )
@@ -1046,7 +1053,8 @@ class wxFancyDrawer(
                         )
                         if includeText:
                             self.context.DrawText(
-                                wxTimeFormat.FormatTime(hour),
+                                # wxTimeFormat.FormatTime(hour),
+                                wxTimeFormat.FormatTime(self, hour),
                                 x + i * hourW + 5,
                                 y + hourH * 0.25,
                             )
