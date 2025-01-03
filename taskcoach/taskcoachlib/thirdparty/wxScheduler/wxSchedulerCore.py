@@ -1,10 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .wxSchedule import *
-from .wxSchedulerConstants import *
-from .wxSchedulerPaint import *
 import wx
+# from .wxSchedule import *
+from .wxSchedule import wxSchedule, EVT_SCHEDULE_CHANGE
+
+# from .wxSchedulerConstants import *
+from .wxSchedulerConstants import (
+    wxSCHEDULER_WEEKSTART_MONDAY,
+    wxSCHEDULER_DAILY,
+    wxSCHEDULER_WEEKLY,
+    wxSCHEDULER_MONTHLY,
+    wxSCHEDULER_TODAY,
+    wxSCHEDULER_NEXT,
+    wxSCHEDULER_PREV,
+)
+
+# from .wxSchedulerPaint import *
+from .wxSchedulerPaint import wxSchedulerPaint
 from . import wxScheduleUtils as utils
 
 
@@ -65,7 +78,7 @@ class wxSchedulerCore(wxSchedulerPaint):
     def _calculateWorkHour(self):
         """
         Do the calculation for work hour
-        TO-DO: Make a better calculation!!
+        TODO: Make a better calculation!!
         """
 
         # Update the current Date according to
