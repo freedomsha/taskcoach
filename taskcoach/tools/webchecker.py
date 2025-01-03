@@ -414,7 +414,7 @@ class Checker:
             return
         try:
             page = self.getpage(url_pair)
-        except sgmllib.SGMLParseError as msg:
+        except sgmllib3k.SGMLParseError as msg:
             msg = self.sanitize(msg)
             self.note(0, "Error parsing %s: %s",
                       self.format_url(url_pair), msg)
@@ -639,8 +639,9 @@ class Checker:
         elif isinstance(msg, tuple):
             # https://copyprogramming.com/howto/how-to-determine-the-type-of-class-instance?utm_content=cmp-true
             # InstanceType n'existe plus sur python 3, InstanceType n'est plus nécessaire et a été éliminé.
-            if (len(msg) >= 4 and msg[0] == "http error" and
-                    isinstance(msg[3], InstanceType)):
+            # if (len(msg) >= 4 and msg[0] == "http error" and
+            #         isinstance(msg[3], InstanceType)):
+            if len(msg) >= 4 and msg[0] == "http error":
                 # Remove the Message instance -- it may contain
                 # a file object which prevents pickling.
                 msg = msg[:3] + msg[4:]
