@@ -16,21 +16,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import zip
-from taskcoachlib.domain import effort, date
+# from builtins import zip
+from taskcoachlib.domain.effort import Effort
+from taskcoachlib.domain import date
 from taskcoachlib.i18n import _
 from . import base
 
 
 class NewEffortCommand(base.BaseCommand):
-    plural_name = _('New efforts')
+    plural_name = _("New efforts")
     singular_name = _('New effort of "%s"')
 
     def __init__(self, *args, **kwargs):
         self.__tasks = []
-        super(NewEffortCommand, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__tasks = self.items
-        self.items = self.efforts = [effort.Effort(task) for task in self.items]
+        self.items = self.efforts = [Effort(task) for task in self.items]
         self.__oldActualStartDateTimes = {}
         self.save_modification_datetimes()
 
@@ -41,16 +42,19 @@ class NewEffortCommand(base.BaseCommand):
         return effort.task().subject()
 
     def do_command(self):
-        super(NewEffortCommand, self).do_command()
+        super().do_command()
         for effort in self.efforts:  # pylint: disable=W0621
             task = effort.task()
-            if task not in self.__oldActualStartDateTimes and effort.getStart() < task.actualStartDateTime():
+            if (
+                task not in self.__oldActualStartDateTimes
+                and effort.getStart() < task.actualStartDateTime()
+            ):
                 self.__oldActualStartDateTimes[task] = task.actualStartDateTime()
                 task.setActualStartDateTime(effort.getStart())
             task.addEffort(effort)
 
     def undo_command(self):
-        super(NewEffortCommand, self).undo_command()
+        super().undo_command()
         for effort in self.efforts:  # pylint: disable=W0621
             task = effort.task()
             task.removeEffort(effort)
@@ -62,7 +66,7 @@ class NewEffortCommand(base.BaseCommand):
 
 
 class DeleteEffortCommand(base.DeleteCommand):
-    plural_name = _('Delete efforts')
+    plural_name = _("Delete efforts")
     singular_name = _('Delete effort "%s"')
 
     def modified_items(self):
@@ -70,11 +74,11 @@ class DeleteEffortCommand(base.DeleteCommand):
 
 
 class EditTaskCommand(base.BaseCommand):
-    plural_name = _('Change task of effort')
+    plural_name = _("Change task of effort")
     singular_name = _('Change task of "%s" effort')
 
     def __init__(self, *args, **kwargs):
-        self.__task = kwargs.pop('newValue')
+        self.__task = kwargs.pop("newValue")
         self.__oldTasks = []
         super().__init__(*args, **kwargs)
         self.__oldTasks = [item.task() for item in self.items]
@@ -90,7 +94,7 @@ class EditTaskCommand(base.BaseCommand):
 
     def undo_command(self):
         super().undo_command()
-        for item, oldTask in zip(self.items, self.__oldTasks):
+        for item, oldTask in zip(self.items, self.__oldTasks):  # TODO : list(zip ?
             item.setTask(oldTask)
 
     def redo_command(self):
@@ -98,25 +102,29 @@ class EditTaskCommand(base.BaseCommand):
 
 
 class EditEffortStartDateTimeCommand(base.BaseCommand):
-    plural_name = _('Change effort start Date and time')
+    plural_name = _("Change effort start Date and time")
     singular_name = _('Change effort start Date and time of "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__datetime = kwargs.pop('newValue')
+        self.__datetime = kwargs.pop("newValue")
         super().__init__(*args, **kwargs)
         self.__oldDateTimes = [item.getStart() for item in self.items]
         self.__oldActualStartDateTimes = {}
 
     def canDo(self):
         maxDateTime = date.DateTime()
-        return super().canDo() and \
-            all(self.__datetime < (item.getStop() or maxDateTime) for item in self.items)
+        return super().canDo() and all(
+            self.__datetime < (item.getStop() or maxDateTime) for item in self.items
+        )
 
     def do_command(self):
         for item in self.items:
             item.setStart(self.__datetime)
             task = item.task()
-            if task not in self.__oldActualStartDateTimes and self.__datetime < task.actualStartDateTime():
+            if (
+                task not in self.__oldActualStartDateTimes
+                and self.__datetime < task.actualStartDateTime()
+            ):
                 self.__oldActualStartDateTimes[task] = task.actualStartDateTime()
                 task.setActualStartDateTime(self.__datetime)
 
@@ -133,17 +141,18 @@ class EditEffortStartDateTimeCommand(base.BaseCommand):
 
 
 class EditEffortStopDateTimeCommand(base.BaseCommand):
-    plural_name = _('Change effort stop Date and time')
+    plural_name = _("Change effort stop Date and time")
     singular_name = _('Change effort stop Date and time of "%s"')
 
     def __init__(self, *args, **kwargs):
-        self.__datetime = kwargs.pop('newValue')
+        self.__datetime = kwargs.pop("newValue")
         super().__init__(*args, **kwargs)
         self.__oldDateTimes = [item.getStop() for item in self.items]
 
     def canDo(self):
-        return super().canDo() and \
-            all(self.__datetime > item.getStart() for item in self.items)
+        return super().canDo() and all(
+            self.__datetime > item.getStart() for item in self.items
+        )
 
     def do_command(self):
         for item in self.items:
