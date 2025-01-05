@@ -21,11 +21,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    from .. import base
 # except ImportError:
 from taskcoachlib.domain import base
+#  Importe la métaclasse DomainObjectOwnerMetaclass depuis le module taskcoachlib.domain.base
 
 
 class NoteOwner(object, metaclass=base.DomainObjectOwnerMetaclass):
-    """ Mixin class for (other) domain objects that may contain notes. """
+    # class NoteOwner(object, metaclass=base.DomainObjectOwnerMetaclass, __ownedType__="Note"):
+    # Cela signifie que la classe bénéficiera des fonctionnalités de gestion des objets possédés
+    # (notes dans ce cas) fournies par la métaclasse.
+    """Classe Mixin pour les (autres) objets de domaine pouvant contenir des notes."""
 
     # __metaclass__ = base.DomainObjectOwnerMetaclass
-    # lequel NoteOwner utiliser ? domain/note/noteowner ou domain/base/owner ?
+    # TODO: lequel NoteOwner utiliser ? domain/note/noteowner ou domain/base/owner ?
+    # domain/base/owner sert de base metaclass pour les classes utilisant DomainObjectOwnerMetaclass
     __ownedType__ = "Note"
+    # Cet attribut est explicitement défini à 'Note'.
+    # Il indique à la métaclasse que la classe peut posséder des objets de type Note.
+
+    # Il faudra juste compléter les méthodes noteAddedEventType et noteRemovedEventType
+    # pour qu'elles retournent les types d'événements appropriés.
+    @classmethod
+    def noteAddedEventType(class_):
+        # like taskcoachlib/patterns/observer/addItemEventType
+        # and taskcoachlib/domain/attachment/attachmentowner/attachmentAddedEventType
+        # return f"{class_}.add"  # TODO : à essayer
+        # return f"{class_}.noteAdded"  # TODO: a essayer
+        # return f"{class_}.note.add  # ?
+        # return f"{class_}.noteAdd"  # TODO: a essayer
+        pass
+
+    @classmethod
+    def noteRemovedEventType(class_):
+        # like taskcoachlib/patterns/observer/removeItemEventType
+        # and taskcoachlib/domain/attachment/attachmentowner/attachmentRemovedEventType
+        # return f"{cls}.remove"
+        # return f"{cls}.attachmentRemoved"  # TODO: a essayer
+        pass
