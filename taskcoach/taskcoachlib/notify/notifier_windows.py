@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .notifier import AbstractNotifier
 import tempfile
 import os
 import wx
+from .notifier import AbstractNotifier
 from taskcoachlib.thirdparty import snarl
 
 
@@ -30,7 +30,7 @@ class SnarlNotifier(AbstractNotifier):
     def isAvailable(self):
         try:
             return bool(snarl.snGetVersion())
-        except:
+        except Exception:
             return False
 
     def notify(self, title, summary, bitmap, **kwargs):
