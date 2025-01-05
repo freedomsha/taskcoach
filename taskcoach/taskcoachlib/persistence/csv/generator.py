@@ -20,10 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # standard_library.install_aliases()
 # from builtins import object
+import io
 from taskcoachlib.i18n import _
 from taskcoachlib import render
 from taskcoachlib.domain import date
-import io
 
 
 def extendedWithAncestors(selection):
