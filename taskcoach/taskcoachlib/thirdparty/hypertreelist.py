@@ -824,7 +824,8 @@ class TreeListHeaderWindow(wx.Window):
         w, dummy = self._owner.CalcUnscrolledPosition(w, 0)
         # dc.SetBackgroundMode(wx.TRANSPARENT)
         # dc.SetBackgroundMode(wx.BRUSHSTYLE_TRANSPARENT)
-        dc.SetBackgroundMode(wx.PENSTYLE_TRANSPARENT)
+        # dc.SetBackgroundMode(wx.PENSTYLE_TRANSPARENT)
+        dc.SetBackgroundMode(wx.TRANSPARENT_BRUSH)
 
         numColumns = self.GetColumnCount()
 
@@ -839,7 +840,7 @@ class TreeListHeaderWindow(wx.Window):
             params = wx.HeaderButtonParams()
 
             column = self.GetColumn(i)
-            params.m_labelColour = column.GetColour()  # Property 'm_labelColour' cannot be set
+            params.m_labelColour = column.GetColour()  # Property of HeaderButtonParams 'm_labelColour' cannot be set
             params.m_labelFont = column.GetFont()  # Property 'm_labelColour' cannot be set
 
             wCol = column.GetWidth()
@@ -850,7 +851,7 @@ class TreeListHeaderWindow(wx.Window):
             if i == self._hotTrackCol:
                 flags |= wx.CONTROL_CURRENT
 
-            params.m_labelText = column.GetText() # Property 'm_labelColour' cannot be set
+            params.m_labelText = column.GetText()  # Property 'm_labelColour' cannot be set
             params.m_labelAlignment = column.GetAlignment()  # Property 'm_labelColour' cannot be set
 
             image = column.GetImage()
@@ -1406,7 +1407,7 @@ class TreeListItem(GenericTreeItem):
             # evaluate if y-pos is okay
             h = theCtrl.GetLineHeight(self)
 
-            if point.y >= self._y and point.y <= self._y + h:
+            if self._y <= point.y <= self._y + h:
 
                 maincol = theCtrl.GetMainColumn()
 
@@ -1499,7 +1500,7 @@ class TreeListItem(GenericTreeItem):
                     if not header_win.IsColumnShown(j):
                         continue
                     w = header_win.GetColumnWidth(j)
-                    if (j != maincol) and (point.x >= x and point.x < x + w):
+                    if (j != maincol) and (x <= point.x < x + w):
                         # flags |= wx.TREE_HITTEST_ONITEMCOLUMN
                         # https://docs.wxpython.org/wx.TreeCtrl.html?highlight=tree%20hittest#wx.TreeCtrl.HitTest
                         flags |= (
@@ -1653,7 +1654,8 @@ class TreeListItem(GenericTreeItem):
 
         column = (column is not None and [column] or [self._owner.GetMainColumn()])[0]
 
-        if type(self._wnd) != type([]):
+        # if type(self._wnd) != type([]):
+        if not isinstance(self._wnd, []):
             self._wnd = [self._wnd]
 
         if column < len(self._wnd):
