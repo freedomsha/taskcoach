@@ -113,7 +113,7 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         return UnicodeAwareConfigParser.read(self, *args, **kwargs)
         # Alors read ou readfp ?
 
-    def set(self, section, setting, value):
+    def set(self, section, setting, value=None):
         """
         Définissez une valeur de configuration et mettez-la en cache.
 
@@ -127,7 +127,7 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         self.__cachedValues[(section, setting)] = value
         UnicodeAwareConfigParser.set(self, section, setting, value)
 
-    def get(self, section, setting):
+    def get(self, section, setting, *, raw=False, vars=None):
         """
         Obtenez une valeur de configuration à partir du cache ou lisez-la si elle n'est pas mise en cache.
 
@@ -176,7 +176,7 @@ class Settings(CachingConfigParser):
             try:
                 if not self.read(self.filename(forceProgramDir=True)):
                     self.read(self.filename())
-                errorMessage = ""
+                # errorMessage = ""
             except configparser.ParsingError as errorMessage:
                 # Ignorez les exceptions et utilisez simplement les valeurs par défaut.
                 # Enregistrez également l'échec dans les paramètres :
@@ -291,7 +291,7 @@ class Settings(CachingConfigParser):
         """
         return super().set(section, option, value)
 
-    def get(self, section, option):
+    def get(self, section, option, raise_on_missing=False, *, raw=False, vars=None):
         # def get(self, section: str, option: str):
         """
         Obtenez une valeur à partir des paramètres, de la gestion des valeurs par défaut et des anciens formats de fichier .ini.
@@ -306,7 +306,10 @@ class Settings(CachingConfigParser):
         try:
             result = super().get(section, option)
         except (configparser.NoOptionError, configparser.NoSectionError):
-            return self.getDefault(section, option)
+            if raise_on_missing:
+                raise  # Raise for tests
+            else:
+                return self.getDefault(section, option)  # Use default for normal use
         result = self._fixValuesFromOldIniFiles(section, option, result)
         result = self._ensureMinimum(section, option, result)
         return result
@@ -323,16 +326,43 @@ class Settings(CachingConfigParser):
 
         Returns :
             La valeur par défaut.
+            Obtenez la valeur par défaut pour un paramètre donné.
+            La valeur par défaut ou la valeur trouvée dans le dictionnaire
+            ou None si elle n'est pas trouvée.
+
+        Raises :
+            configparser.NoSectionError : Si la section n'existe pas.
+            configparser.NoOptionError : Si l'option n'existe pas dans la section.
         """
-        defaultSectionKey = section.strip("0123456789")
+        # Optimisations possibles :
+        # Mémoïsation: Si la méthode getDefault est appelée fréquemment avec les mêmes arguments,
+        # vous pouvez envisager d'implémenter une cache pour éviter de recalculer les valeurs par défaut.
+        # Profilage: Utiliser un profileur pour identifier les goulots d'étranglement
+        # et optimiser les parties les plus lentes du code.
+        if not section or not option:
+            raise ValueError("Section et option doivent être des chaînes non vides.")
+
+        defaultSectionKey = section.strip("0123456789")  # Suppression des chiffres non pertinents
+        # try:
+        #     defaultSection = defaults.defaults[defaultSectionKey]
+        # except KeyError:
+        #     raise configparser.NoSectionError(defaultSectionKey)
+        # try:
+        #     return defaultSection[option]
+        # except KeyError:
+        #     raise configparser.NoOptionError((option, defaultSection))
+        # Nouveau code:
         try:
             defaultSection = defaults.defaults[defaultSectionKey]
-        except KeyError:
-            raise configparser.NoSectionError(defaultSectionKey)
-        try:
-            return defaultSection[option]
-        except KeyError:
-            raise configparser.NoOptionError((option, defaultSection))
+            return defaultSection.get(option)
+        except KeyError as e:
+            if e.args[0] == defaultSectionKey:
+                raise configparser.NoSectionError(defaultSectionKey)
+            else:
+                raise configparser.NoOptionError((option, defaultSection))
+        # Autres améliorations possibles :
+        #     Validation des entrées : Vérifier que section et option sont des chaînes non vides.
+        #     Utilisation d'un logger : Enregistrer les appels à la fonction et les erreurs éventuelles dans un fichier de log.
 
     def _ensureMinimum(self, section, option, result):
         # def _ensureMinimum(self, section: str, option: str, result):
@@ -453,8 +483,9 @@ class Settings(CachingConfigParser):
         else:
             currentValue = self.get(section, option)
         if value != currentValue:
-            super(Settings, self).set(section, option, value)
-            patterns.Event("%s.%s" % (section, option), self, value).send()
+            super().set(section, option, value)
+            # patterns.Event("%s.%s" % (section, option), self, value).send()
+            patterns.Event(f"{section}.{option}", self, value).send()
             return True
         else:
             return False
@@ -464,7 +495,7 @@ class Settings(CachingConfigParser):
         """
         Définissez une valeur booléenne dans les paramètres.
 
-        Args :
+        Args :, *, raw=False, vars=None
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
             value (bool) : La valeur à définir.
@@ -510,7 +541,7 @@ class Settings(CachingConfigParser):
 
     getvalue = gettuple = getdict = getlist
 
-    def getint(self, section, option):
+    def getint(self, section, option, *, raw=False, vars=None):
         # def getint(self, section, option) -> int:
         """
         Obtenez une valeur entière à partir des paramètres.
@@ -524,7 +555,7 @@ class Settings(CachingConfigParser):
         """
         return self.getEvaluatedValue(section, option, int)
 
-    def getboolean(self, section, option):
+    def getboolean(self, section, option, *, raw=False, vars=None):
         # def getboolean(self, section, option) -> bool:
         """
         Obtenez une valeur booléenne à partir des paramètres.
@@ -715,33 +746,35 @@ class Settings(CachingConfigParser):
         Returns :
             str : Le chemin d'accès au répertoire des documents.
         """
-        if operating_system.isWindows():
-            from win32com.shell import shell, shellcon
-
-            try:
-                return shell.SHGetSpecialFolderPath(
-                    None, shellcon.CSIDL_PERSONAL
-                )
-            except:
-                # Yes, one of the documented ways to get this sometimes fail with "Unspecified error". Not sure
-                # this will work either.
-                # Update: There are cases when it doesn't work either; see support request #410...
-                try:
-                    return shell.SHGetFolderPath(
-                        None, shellcon.CSIDL_PERSONAL, None, 0
-                    )  # SHGFP_TYPE_CURRENT not in shellcon
-                except:
-                    return os.getcwd()  # Fuck this
-        elif operating_system.isMac():
-            import Carbon.Folder, Carbon.Folders, Carbon.File
-
-            pathRef = Carbon.Folder.FSFindFolder(
-                Carbon.Folders.kUserDomain,
-                Carbon.Folders.kDocumentsFolderType,
-                True,
-            )
-            return Carbon.File.pathname(pathRef)
-        elif operating_system.isGTK():
+        # if operating_system.isWindows():
+        #     from win32com.shell import shell, shellcon
+        #
+        #     try:
+        #         return shell.SHGetSpecialFolderPath(
+        #             None, shellcon.CSIDL_PERSONAL
+        #         )
+        #     except:
+        #         # Yes, one of the documented ways to get this sometimes fail with "Unspecified error". Not sure
+        #         # this will work either.
+        #         # Update: There are cases when it doesn't work either; see support request #410...
+        #         try:
+        #             return shell.SHGetFolderPath(
+        #                 None, shellcon.CSIDL_PERSONAL, None, 0
+        #             )  # SHGFP_TYPE_CURRENT not in shellcon
+        #         except:
+        #             return os.getcwd()  # Fuck this
+        # elif operating_system.isMac():
+        #     import Carbon.Folder
+        #     import Carbon.Folders
+        #     import Carbon.File
+        #
+        #     pathRef = Carbon.Folder.FSFindFolder(
+        #         Carbon.Folders.kUserDomain,
+        #         Carbon.Folders.kDocumentsFolderType,
+        #         True,
+        #     )
+        #     return Carbon.File.pathname(pathRef)
+        if operating_system.isGTK():
             try:
                 from PyKDE4.kdeui import KGlobalSettings
             except ImportError:
@@ -779,27 +812,27 @@ class Settings(CachingConfigParser):
                 from xdg import BaseDirectory
 
                 path = BaseDirectory.save_config_path(meta.name)
-            elif operating_system.isMac():
-                import Carbon.Folder
-                import Carbon.Folders
-                import Carbon.File
-
-                pathRef = Carbon.Folder.FSFindFolder(
-                    Carbon.Folders.kUserDomain,
-                    Carbon.Folders.kPreferencesFolderType,
-                    True,
-                )
-                path = Carbon.File.pathname(pathRef)
-                # XXXFIXME: should we release pathRef ? Doesn't seem so since I get a SIGSEGV if I try.
-            elif operating_system.isWindows():
-                from win32com.shell import shell, shellcon
-
-                path = os.path.join(
-                    shell.SHGetSpecialFolderPath(
-                        None, shellcon.CSIDL_APPDATA, True
-                    ),
-                    meta.name,
-                )
+            # elif operating_system.isMac():
+            #     import Carbon.Folder
+            #     import Carbon.Folders
+            #     import Carbon.File
+            #
+            #     pathRef = Carbon.Folder.FSFindFolder(
+            #         Carbon.Folders.kUserDomain,
+            #         Carbon.Folders.kPreferencesFolderType,
+            #         True,
+            #     )
+            #     path = Carbon.File.pathname(pathRef)
+            #     # XXXFIXME: should we release pathRef ? Doesn't seem so since I get a SIGSEGV if I try.
+            # elif operating_system.isWindows():
+            #     from win32com.shell import shell, shellcon
+            #
+            #     path = os.path.join(
+            #         shell.SHGetSpecialFolderPath(
+            #             None, shellcon.CSIDL_APPDATA, True
+            #         ),
+            #         meta.name,
+            #     )
             else:
                 path = self.pathToConfigDir_deprecated(environ=environ)
         except Exception:  # Fallback to old dir
@@ -823,46 +856,46 @@ class Settings(CachingConfigParser):
             from xdg import BaseDirectory
 
             path = BaseDirectory.save_data_path(meta.name)
-        elif operating_system.isMac():
-            from Carbon import Folder
-            from Carbon import Folders
-            from Carbon import File
-
-            pathRef = Folder.FSFindFolder(
-                Folders.kUserDomain,
-                Folders.kApplicationSupportFolderType,
-                True,
-            )
-            path = File.pathname(pathRef)
-            # XXXFIXME: should we release pathRef ? Doesn't seem so since I get a SIGSEGV if I try.
-            path = os.path.join(path, meta.name)
-        elif operating_system.isWindows():
-            if self.__iniFileSpecifiedOnCommandLine and not forceGlobal:
-                path = self.pathToIniFileSpecifiedOnCommandLine()
-            else:
-                from win32com.shell import shell, shellcon
-
-                path = os.path.join(
-                    shell.SHGetSpecialFolderPath(
-                        None, shellcon.CSIDL_APPDATA, True
-                    ),
-                    meta.name,
-                )
+        # elif operating_system.isMac():
+        #     from Carbon import Folder
+        #     from Carbon import Folders
+        #     from Carbon import File
+        #
+        #     pathRef = Folder.FSFindFolder(
+        #         Folders.kUserDomain,
+        #         Folders.kApplicationSupportFolderType,
+        #         True,
+        #     )
+        #     path = File.pathname(pathRef)
+        #     # XXXFIXME: should we release pathRef ? Doesn't seem so since I get a SIGSEGV if I try.
+        #     path = os.path.join(path, meta.name)
+        # elif operating_system.isWindows():
+        #     if self.__iniFileSpecifiedOnCommandLine and not forceGlobal:
+        #         path = self.pathToIniFileSpecifiedOnCommandLine()
+        #     else:
+        #         from win32com.shell import shell, shellcon
+        #
+        #         path = os.path.join(
+        #             shell.SHGetSpecialFolderPath(
+        #                 None, shellcon.CSIDL_APPDATA, True
+        #             ),
+        #             meta.name,
+        #         )
         else:  # Errr...
             path = self.path()
 
-        if operating_system.isWindows():
-            # Follow shortcuts.
-            from win32com.client import Dispatch
-
-            shell = Dispatch("WScript.Shell")
-            for component in args:
-                path = os.path.join(path, component)
-                if os.path.exists(path + ".lnk"):
-                    shortcut = shell.CreateShortcut(path + ".lnk")
-                    path = shortcut.TargetPath
-        else:
-            path = os.path.join(path, *args)
+        # if operating_system.isWindows():
+        #     # Follow shortcuts.
+        #     from win32com.client import Dispatch
+        #
+        #     shell = Dispatch("WScript.Shell")
+        #     for component in args:
+        #         path = os.path.join(path, component)
+        #         if os.path.exists(path + ".lnk"):
+        #             shortcut = shell.CreateShortcut(path + ".lnk")
+        #             path = shortcut.TargetPath
+        # else:
+        path = os.path.join(path, *args)
 
         exists = os.path.exists(path)
         if not exists:
@@ -947,16 +980,16 @@ class Settings(CachingConfigParser):
         """
         path = os.path.join(self.path(), "taskcoach-templates")
 
-        if operating_system.isWindows():
-            # Under Windows, check for a shortcut and follow it if it
-            # exists.
-
-            if os.path.exists(path + ".lnk"):
-                from win32com.client import Dispatch  # pylint: disable=F0401
-
-                shell = Dispatch("WScript.Shell")
-                shortcut = shell.CreateShortcut(path + ".lnk")
-                return shortcut.TargetPath
+        # if operating_system.isWindows():
+        #     # Under Windows, check for a shortcut and follow it if it
+        #     # exists.
+        #
+        #     if os.path.exists(path + ".lnk"):
+        #         from win32com.client import Dispatch  # pylint: disable=F0401
+        #
+        #         shell = Dispatch("WScript.Shell")
+        #         shortcut = shell.CreateShortcut(path + ".lnk")
+        #         return shortcut.TargetPath
 
         if doCreate:
             try:
@@ -1011,11 +1044,12 @@ class Settings(CachingConfigParser):
         if exists:
             return
         if oldPath != newPath:
-            if operating_system.isWindows() and os.path.exists(
-                oldPath + ".lnk"
-            ):
-                shutil.move(oldPath + ".lnk", newPath + ".lnk")
-            elif os.path.exists(oldPath):
+            # if operating_system.isWindows() and os.path.exists(
+            #     oldPath + ".lnk"
+            # ):
+            #     shutil.move(oldPath + ".lnk", newPath + ".lnk")
+            # elif os.path.exists(oldPath):
+            if os.path.exists(oldPath):
                 # pathToTemplatesDir() has created the directory
                 try:
                     os.rmdir(newPath)
