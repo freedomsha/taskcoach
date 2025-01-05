@@ -185,6 +185,7 @@ class CalendarConfigDialog(sized_controls.SizedDialog):
         settings.set(
             section,
             "highlightcolor",
-            "%d,%d,%d" % (color.Red(), color.Green(), color.Blue()),
+            # "%d,%d,%d" % (color.Red(), color.Green(), color.Blue()),
+            f"{color.Red():d},{color.Green():d},{color.Blue():d}",
         )
         self.EndModal(wx.ID_OK)
