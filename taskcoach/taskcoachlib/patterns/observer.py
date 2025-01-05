@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from . import singleton
+from collections.abc import Iterable
 from taskcoachlib.patterns import singleton
 import functools
 # from taskcoachlib.thirdparty.pubsub import pub
@@ -45,8 +46,8 @@ class List(list):
         utilisées comme collections d'objets de domaine. Lorsqu'il est comparé à d'autres types,
         le contenu est comparé.
 
-        Args:
-            other (Liste ou liste) : La liste avec laquelle comparer.
+        Args :
+            other (List ou list) : La liste avec laquelle comparer.
 
         Returns :
             bool : True si les listes sont égales, False sinon.
@@ -65,7 +66,7 @@ class List(list):
         ObservableList pour pouvoir générer une seule notification
         lors de la suppression de plusieurs éléments.
 
-        Args:
+        Args :
             items (list) : Les éléments à supprimer.
         """
         for item in items:
@@ -76,13 +77,29 @@ class List(list):
 
 class Set(set):
     """
+    Sous-classe de `set` qui restreint les arguments lors de l'instanciation.
+
     Une sous-classe d'ensemble utilisée pour les collections d'objets de domaine.
     Garantit que les arguments de mot-clé ne sont pas transmis à la classe d'ensemble de base.
-    Le type d'ensemble intégré n'aime pas les arguments de mot-clé, donc pour le garder
-    , il est heureux que nous ne le fassions pas. Je ne les transmets pas.
+    Le type d'ensemble intégré n'aime pas les arguments de mot-clé, donc pour le garder,
+    il est heureux que nous ne le fassions pas. Je ne les transmets pas.
+
+    Cette classe est conçue pour éviter les erreurs potentielles liées à l'utilisation
+    d'arguments de mot-clé avec la classe `set` de base. En forçant l'utilisation
+    d'un seul argument positionnel (optionnel) correspondant à un itérable,
+    on garantit un comportement plus prévisible.
     """
 
     def __new__(class_, iterable=None, *args, **kwargs):
+        # # return set.__new__(class_, iterable)
+        #
+        # if iterable is None:
+        #     return set.__new__(class_)
+        # else:
+        #     return set.__new__(class_, iterable)
+        #
+        if iterable is not None and not isinstance(iterable, Iterable):
+            raise TypeError("iterable must be an iterable")
         return set.__new__(class_, iterable)
 
     def __cmp__(self, other):
@@ -92,10 +109,10 @@ class Set(set):
         Si set.__cmp__ est appelé, nous obtenons une TypeError dans Python 2.5, donc
         appelez set.__eq__ à la place
 
-        Args:
+        Args :
             other (Set or set) : L'ensemble à comparer.
 
-        Returns:
+        Returns :
             int : 0 si les ensembles sont égaux, -1 sinon.
         """
         if self == other:
@@ -130,20 +147,26 @@ class Event(object):
         """
         Initialisez l'événement.
 
-        Args:
+        Args :
             type (str, facultatif) : le type d'événement.
             source (object, facultatif) : la source de l'événement.
             *values : valeurs supplémentaires associées à l'événement.
         """
+        # self.__sourcesAndValuesByType = {} if type is None else \
+        #     {type: {} if source is None else {source: values}}
+
+        # TODO : problème d'utilisation de __sourcesAndValuesByType !
         self.__sourcesAndValuesByType = (
-            {}
+            dict()
             if type is None
-            else {type: {} if source is None else {source: values}}
-        )
+            # else {type: {} if source is None else {source: values}}
+            else {type: dict() if source is None else {source: values}}
+        )  # dict or set ?
 
     # def __repr__(self) -> str:  # pragma: no cover
     def __repr__(self):  # pragma: no cover
-        return "Event(%s)" % (self.__sourcesAndValuesByType,)
+        # return "Event(%s)" % (self.__sourcesAndValuesByType,)
+        return f"Event({self.__sourcesAndValuesByType})"
 
     def __eq__(self, other):
         """
@@ -151,10 +174,10 @@ class Event(object):
 
         Les événements sont comparables lorsque toutes leurs données sont égales.
 
-        Args:
+        Args :
             other (event) : L'événement avec lequel comparer.
 
-        Returns:
+        Returns :
             bool : vrai si les événements sont égaux, faux sinon.
         """
         return self.sourcesAndValuesByType() == other.sourcesAndValuesByType()
@@ -171,9 +194,16 @@ class Event(object):
         Args :
             source (objet) : La source de l'événement.
             *values : Valeurs supplémentaires associées à l'événement.
-            **kwargs : arguments de mots-clés arbitraires (type : str, facultatif).
+            **kwargs : Arguments de mots-clés arbitraires (type : str, facultatif).
         """
-        eventType = kwargs.pop("type", self.type())
+        # eventType = kwargs.pop('type', self.type())
+        # currentValues = set(self.__sourcesAndValuesByType.setdefault(eventType, {}).setdefault(source, tuple()))
+        # currentValues |= set(values)
+        # self.__sourcesAndValuesByType.setdefault(eventType, {})[source] = tuple(currentValues)
+
+        # TODO : à vérifier problèmes dans les tests
+        eventType = kwargs.pop("type", self.type())  # Définit le type d'événement
+        # print(f"Event: Ajout de source : {source}, type : {eventType}, valeurs : {values}")
         currentValues = set(
             self.__sourcesAndValuesByType.setdefault(eventType, {}).setdefault(
                 source, tuple()
@@ -183,6 +213,7 @@ class Event(object):
         self.__sourcesAndValuesByType.setdefault(eventType, {})[source] = (
             tuple(currentValues)
         )
+        # self.__sourcesAndValuesByType[eventType][source] = tuple(currentValues)
 
     # def type(self) -> str:
     def type(self):
@@ -220,12 +251,15 @@ class Event(object):
         Returns :
             set : L'ensemble des sources.
         """
-        types = types or self.types()
+        types = types or self.types()  # Utilise tous les types si aucun n'est spécifié
         sources = set()
         for type in types:
             sources |= set(
                 self.__sourcesAndValuesByType.get(type, dict()).keys()
             )
+            # sources |= set(
+            #     self.__sourcesAndValuesByType.get(type, {}).keys()
+            # )
         return sources
 
     # def sourcesAndValuesByType(self) -> dict:
@@ -272,7 +306,7 @@ class Event(object):
             type (str, facultatif) : Le type d'événement.
 
         Returns :
-            liste : Les valeurs associées à la source.
+            list : Les valeurs associées à la source.
         """
         type = type or self.type()
         source = source or list(self.__sourcesAndValuesByType[type].keys())[0]
@@ -286,22 +320,22 @@ class Event(object):
             *typesAndSources : Tuples de (type, source).
 
         Returns :
-            Événement : L'événement de sous-ensemble.
+            Event : L'événement de sous-ensemble.
         """
         subEvent = self.__class__()
-        for type, source in typesAndSources:
-            sourcesToAdd = self.sources(type)
+        for type_s, source in typesAndSources:
+            sourcesToAdd = self.sources(type_s)
             if source is not None:
                 # Make sure source is actually in self.sources(type):
-                sourcesToAdd &= set([source])
+                # sourcesToAdd &= set([source])
                 # TODO: try this
-                # sourcesToAdd &= {source}
+                sourcesToAdd &= {source}
             kwargs = dict(
-                type=type
+                type=type_s  # TODO : type=type ou type=source ?
             )  # Python doesn't allow type=type after *values
             for eachSource in sourcesToAdd:
                 subEvent.addSource(
-                    eachSource, *self.values(eachSource, type), **kwargs
+                    eachSource, *self.values(eachSource, type_s), **kwargs
                 )  # pylint: disable=W0142
         return subEvent
 
@@ -309,7 +343,15 @@ class Event(object):
         """
         Envoyez cet événement aux observateurs du(des) type(s) de cet événement.
         """
-        Publisher().notifyObservers(self)
+        # Publisher().notifyObservers(self)
+        if getattr(self, "_sending", False):
+            print("Event send : Cycle détecté dans les événements.")
+            return
+        self._sending = True
+        try:
+            Publisher().notifyObservers(self)
+        finally:
+            self._sending = False
 
 
 def eventSource(f):
@@ -324,7 +366,7 @@ def eventSource(f):
         f (fonction) : La méthode pour décorer.
 
     Returns :
-        fonction : La méthode décorée.
+        function : La méthode décorée.
     """
 
     @functools.wraps(f)
@@ -504,7 +546,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         # observers = {(eventType, eventSource): set(callbacks)}
         try:
             self.__observers.clear()
-        except:
+        except Exception:
             self.__observers = {}  # pylint: disable=W0201
 
     @wrapObserver
@@ -587,11 +629,11 @@ class Publisher(object, metaclass=singleton.Singleton):
         if not event.sources():
             return
         # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
-        observers = dict()  # {observer: set([(type, source), ...])}
+        observers = dict()  # {observer: set([(type, source), ...])}  liste set ou dict ?
         types = event.types()
         # Inclure les observateurs non inscrits pour une source d'événement spécifique :
-        # sources = event.sources() | {None}
-        sources = event.sources() | set([None])
+        sources = event.sources() | {None}
+        # sources = event.sources() | set([None])
         eventTypesAndSources = [
             (type, source) for source in sources for type in types
         ]
@@ -604,8 +646,8 @@ class Publisher(object, metaclass=singleton.Singleton):
                 observer(subEvent)
 
     @unwrapObservers
-    # def observers(self, eventType=None) -> set:
     def observers(self, eventType=None):
+        # def observers(self, eventType=None) -> set:
         """
         Obtenez les observateurs actuellement enregistrés. Spécifiez éventuellement
         un type d'événement spécifique pour obtenir des observateurs pour ce type d'événement uniquement.
@@ -656,7 +698,7 @@ class Observer(object):
         Args:
             observer (function) : La méthode de rappel de l'observateur.
             *args : liste d'arguments de longueur variable.
-            **kwargs : arguments de mots clés arbitraires.
+            **kwargs : Arguments de mots clés arbitraires.
         """
         self.__observers.discard(observer)
         Publisher().removeObserver(observer, *args, **kwargs)
@@ -745,8 +787,8 @@ class ObservableCollection(object):
         return f"{class_}.remove"
 
     @classmethod
-    # def modificationEventTypes(class_) -> list[str]:
     def modificationEventTypes(class_):
+        # def modificationEventTypes(class_) -> list[str]:
         try:
             eventTypes = super().modificationEventTypes()
         except AttributeError:
@@ -768,14 +810,17 @@ class ObservableSet(ObservableCollection, Set):
         Compare cet ObservableSet avec un autre objet.
 
         Args :
-            other : L'objet à comparer.
+            other : L'objet à comparer avec 'self.__class__'.
 
         Renvoie :
             bool : True si les objets sont égaux, False sinon.
         """
+        # Si l'objet est une instance ou instance fille de self.
         if isinstance(other, self.__class__):
+            # le résultat de la comparaison de self avec other.
             result = self is other
         else:
+            # sinon, le résultat est la comparaison de other avec la liste des itérables dans self.
             result = list(self) == other
         return result
 
@@ -992,7 +1037,8 @@ class CollectionDecorator(Decorator, ObservableCollection):
         """
         Gèle la collection, arrêtant temporairement les notifications de changements aux observateurs.
 
-        Si la collection observée est elle-même un CollectionDecorator, appelle également la méthode freeze sur cette collection.
+        Si la collection observée est elle-même un CollectionDecorator,
+        elle appelle également la méthode freeze sur cette collection.
         """
         if isinstance(self.observable(), CollectionDecorator):
             self.observable().freeze()
@@ -1070,7 +1116,8 @@ class CollectionDecorator(Decorator, ObservableCollection):
 
         Args :
             items (list) : Liste des éléments à ajouter à la collection décorée.
-            event (Event, optionnel) : L'événement associé à l'ajout des éléments."""
+            event (Event, optionnel) : L'événement associé à l'ajout des éléments.
+        """
         return super().extend(items, event=event)
 
     def removeItemsFromSelf(self, items, event=None):
@@ -1081,8 +1128,9 @@ class CollectionDecorator(Decorator, ObservableCollection):
         déléguer à la collection observée.
 
         Args :
-            items (list): Liste des éléments à supprimer de la collection décorée.
-            event (Event, optionnel): L'événement associé à la suppression des éléments."""
+            items (list) : Liste des éléments à supprimer de la collection décorée.
+            event (Event, optionnel) : L'événement associé à la suppression des éléments.
+        """
         return super().removeItems(items, event=event)
 
     # Déléguer les modifications à la collection observée
