@@ -55,14 +55,16 @@ Classes :
 # from builtins import range
 
 import wx
-import logging
+# import logging
 
 import os.path
 
 from taskcoachlib import widgets, patterns, command, operating_system, render
 from taskcoachlib.domain import task, date, note, attachment
-from taskcoachlib.gui import viewer, uicommand, windowdimensionstracker
-# import taskcoachlib.gui.viewer.effort
+# from taskcoachlib.gui import uicommand, windowdimensionstracker
+from taskcoachlib.gui.uicommand import uicommand
+from taskcoachlib.gui import windowdimensionstracker
+# import taskcoachlib.gui.viewer
 from taskcoachlib.gui.viewer.effort import EffortViewer
 from taskcoachlib.gui.viewer.attachment import AttachmentViewer
 from taskcoachlib.gui.viewer.note import BaseNoteViewer
@@ -112,8 +114,8 @@ class Page(patterns.Observer, widgets.BookPage):
         """
         Initialise la page avec les éléments à éditer.
 
-        Args:
-            items (list): Liste des objets de domaine à éditer.
+        Args :
+            items (list) : Liste des objets de domaine à éditer.
         """
         self.items = items
         # self.__observers = []
@@ -344,7 +346,8 @@ class SubjectPage(Page):
         try:
             return render.dateTime_range(min(modification_datetimes), max(modification_datetimes))
         except ReferenceError as e:
-            logging.error(f"tclib.gui.dialog.editor: {str(e)}")
+            # logging.error(f"tclib.gui.dialog.editor: {str(e)}")
+            print(f"tclib.gui.dialog.editor: {str(e)}")
             # vieux code:
             min_modification_datetime = min(modification_datetimes)
             max_modification_datetime = max(modification_datetimes)
@@ -606,15 +609,47 @@ class CategorySubjectPage(SubjectPage):
 
 
 class AttachmentSubjectPage(SubjectPage):
+    """
+       Classe de page d'édition pour les pièces jointes.
+
+       Cette classe hérite de `SubjectPage` et fournit des champs d'édition spécifiques aux pièces jointes, y compris :
+
+       * Sujet (hérité de `SubjectPage`)
+       * Emplacement du fichier
+       * Description (hérité de `SubjectPage`)
+       * Date/heure de création (hérité de `SubjectPage`)
+       * Date/heure de modification (hérité de `SubjectPage`)
+
+       La classe ajoute un champ d'édition supplémentaire pour l'emplacement du fichier de la pièce jointe.
+       Elle gère également la synchronisation de l'emplacement avec l'objet de tâche sous-jacent à l'aide de la classe `attributesync.AttributeSync`.
+
+       Attributs :
+           _locationSync (attributesync.AttributeSync, optionnel): Objet de synchronisation pour l'attribut "getLocation" des pièces jointes.
+           _locationEntry (widgets.SingleLineTextCtrl): Champ de saisie pour l'emplacement du fichier de la pièce jointe.
+
+       Méthodes :
+           addEntries (self) :
+               Ajoute les champs d'édition spécifiques aux pièces jointes.
+
+           addLocationEntry (self) :
+               Ajoute un champ d'édition pour l'emplacement du fichier de la pièce jointe. Gère également la synchronisation de l'emplacement avec l'objet de tâche.
+
+           onSelectLocation (self, event) :
+               Permet à l'utilisateur de sélectionner un fichier à l'aide d'un sélecteur de pièces jointes. Met à jour le champ d'emplacement et le sujet en conséquence.
+       """
+
     # j'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
+    # Objet de synchronisation pour l'attribut "location" des pièces jointes.
     #     self._locationSync = None
+    # Champ de saisie pour l'emplacement du fichier de la pièce jointe.
     #     self._locationEntry = None
 
     def addEntries(self):
-        # Override to insert a location entry between the subject and
-        # description entry
+        """Ajoute les champs d'édition spécifiques aux pièces jointes."""
+        # Remplacer pour insérer une entrée d'emplacement entre le sujet et
+        # l'entrée de description
         self.addSubjectEntry()
         self.addLocationEntry()
         self.addDescriptionEntry()
@@ -622,6 +657,8 @@ class AttachmentSubjectPage(SubjectPage):
         self.addModificationDateTimeEntry()
 
     def addLocationEntry(self):
+        """Ajoute un champ d'édition pour l'emplacement du fichier de la pièce jointe.
+         Gère également la synchronisation de l'emplacement avec l'objet de tâche."""
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         # pylint: disable=W0201
@@ -630,7 +667,9 @@ class AttachmentSubjectPage(SubjectPage):
             if len(self.items) == 1
             else _("Edit to change location of all attachments")
         )
+        # Objet de synchronisation pour l'attribut "location" des pièces jointes.
         self._locationEntry = widgets.SingleLineTextCtrl(panel, current_location)
+        # Champ de saisie pour l'emplacement du fichier de la pièce jointe.
         self._locationSync = attributesync.AttributeSync(
             "location",
             self._locationEntry,
@@ -650,6 +689,8 @@ class AttachmentSubjectPage(SubjectPage):
         self.addEntry(_("Location"), panel, flags=[None, wx.ALL | wx.EXPAND])
 
     def onSelectLocation(self, event):  # pylint: disable=W0613
+        """Permet à l'utilisateur de sélectionner un fichier à l'aide d'un sélecteur de pièces jointes.
+         Met à jour le champ d'emplacement et le sujet en conséquence."""
         base_path = self._settings.get("file", "lastattachmentpath")
         if not base_path:
             base_path = os.getcwd()
@@ -679,7 +720,7 @@ class TaskAppearancePage(Page):
     la mise en forme, ou d'autres attributs visuels.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition de l'apparence.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition de l'apparence.
     """
     pageName = "appearance"
     pageTitle = _("Appearance")
@@ -784,7 +825,7 @@ class DatesPage(Page):
     la date d'échéance, ou d'autres dates spécifiques.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition des dates.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition des dates.
     """
     pageName = "dates"
     pageTitle = _("Dates")
@@ -845,11 +886,11 @@ class DatesPage(Page):
 
     def addDateEntry(self, label, taskMethodName):
         # def add_date_entry(self, label: str, task_method_name: str) -> None:
-        """Adds a date entry to the page.
+        """Ajoute une entrée de date à la page.
 
-        Args:
-            label: The label for the date entry.
-            taskMethodName: The name of the method used to get the date from the task.
+        Args :
+            label : L'étiquette de l'entrée de date.
+            taskMethodName : Le nom de la méthode utilisée pour obtenir la date de la tâche.
     """
         TaskMethodName = taskMethodName[0].capitalize() + taskMethodName[1:]
         dateTime = (
@@ -962,7 +1003,7 @@ class ProgressPage(Page):
     Cette page permet à l'utilisateur de suivre et modifier l'avancement d'une tâche.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition de la progression.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition de la progression.
     """
     pageName = "progress"
     pageTitle = _("Progress")
@@ -1060,7 +1101,7 @@ class BudgetPage(Page):
     et les dépenses réelles.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition du budget.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition du budget.
     """
     pageName = "budget"
     pageTitle = _("Budget")
@@ -1296,7 +1337,7 @@ class EffortPage(PageWithViewer):
     Permet de gérer l'effort alloué à une tâche, souvent utilisé pour le suivi du temps.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition de l'effort.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition de l'effort.
     """
     pageName = "effort"
     pageTitle = _("Effort")
@@ -1304,7 +1345,7 @@ class EffortPage(PageWithViewer):
 
     def createViewer(self, taskFile, settings, settingsSection):
         # TODO: remplacer viewer.EffortViewer par EffortViewer
-        return viewer.EffortViewer(
+        return EffortViewer(
             self,
             taskFile,
             settings,
@@ -1325,7 +1366,7 @@ class EffortPage(PageWithViewer):
         pass
 
 
-class LocalCategoryViewer(viewer.BaseCategoryViewer):  # pylint: disable=W0223
+class LocalCategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
     # AttributeError: partially initialized module 'taskcoachlib.gui.viewer' has no attribute 'BaseCategoryViewer'
     # (most likely due to a circular import)
     def __init__(self, items, *args, **kwargs):
@@ -1341,16 +1382,16 @@ class LocalCategoryViewer(viewer.BaseCategoryViewer):  # pylint: disable=W0223
         return False
 
     def onCheck(self, event, final):
-        """Here we keep track of the items checked by the user so that these
-        items remain checked when refreshing the viewer."""
+        """Ici, nous gardons une trace des éléments cochés par l'utilisateur afin que ces éléments
+        restent cochés lors de l'actualisation de la visionneuse.."""
         if final:
             category = self.widget.GetItemPyData(
                 event.GetItem()
             )  # TODO: try GetItemData
             command.ToggleCategoryCommand(None, self.__items, category=category).do()
 
-    # def createCategoryPopupMenu(self, localOnly=True):  # pylint: disable=W0221
-    def createCategoryPopupMenu(self):  # pylint: disable=W0221
+    def createCategoryPopupMenu(self, localOnly=True):  # pylint: disable=W0221
+        # def createCategoryPopupMenu(self):  # pylint: disable=W0221
         # Signature of method 'LocalCategoryViewer.createCategoryPopupMenu()'
         # does not match signature of the base method in class 'BaseCategoryViewer'
         return super().createCategoryPopupMenu(True)
@@ -1361,15 +1402,41 @@ class CategoriesPage(PageWithViewer):
     Page d'édition des catégories d'un objet.
 
     Permet d'assigner des catégories à un objet comme une tâche ou une note.
+    Cette classe permet d'assigner des catégories à un objet comme une tâche ou une note. Elle hérite de la classe `PageWithViewer` qui gère l'affichage d'un visualiseur de contenu.
+
+    Attributs :
+        __realized (bool) : Indique si les champs d'édition ont été ajoutés (évite les doublons d'ajout).
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition des catégories.
+        __init__(self, *args, **kwargs):
+            Initialise la page d'édition des catégories.
+
+        addEntries (self) :
+            Ajoute les champs d'entrée pour l'édition des catégories.
+
+        selected (self) :
+            Gère la sélection de la page et ajoute les champs d'édition seulement lors du premier affichage.
+
+        createViewer (self, taskFile, settings, settingsSection) :
+            Crée le visualiseur de catégories associé à l'objet.
+
+        onCategoryChanged (self, event) :
+            Rafraîchit les éléments affichés dans le visualiseur de catégories en fonction des modifications.
+
+        entries (self) :
+            Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur de catégories (si affiché).
     """
+    # Constantes :
+    # Nom interne de la page ("categories") :
     pageName = "categories"
+    # Titre affiché à l'utilisateur ("Catégories") :
     pageTitle = _("Categories")
+    # Nom de l'icône associée à la page ("folder_blue_arrow_icon") :
     pageIcon = "folder_blue_arrow_icon"
 
     def __init__(self, *args, **kwargs):
+        """Initialise la page d'édition des catégories."""
+        # Indique si les champs d'édition ont été ajoutés (évite les doublons d'ajout) :
         self.__realized = False
         super().__init__(*args, **kwargs)
 
@@ -1386,6 +1453,7 @@ class CategoriesPage(PageWithViewer):
             self.fit()
 
     def createViewer(self, taskFile, settings, settingsSection):
+        """Crée le visualiseur de catégories associé à l'objet."""
         assert len(self.items) == 1
         item = self.items[0]
         for eventType in (
@@ -1405,19 +1473,53 @@ class CategoriesPage(PageWithViewer):
         )
 
     def onCategoryChanged(self, event):
+        """Rafraîchit les éléments affichés dans le visualiseur de catégories en fonction des modifications."""
         self.viewer.refreshItems(*list(event.values()))
 
     def entries(self):
+        """Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur de catégories (si affiché)."""
         if self.__realized and hasattr(self, "viewer"):
             return dict(firstEntry=self.viewer, categories=self.viewer)
         return dict()
 
 
-class LocalAttachmentViewer(viewer.AttachmentViewer):  # pylint: disable=W0223
-    # class LocalAttachmentViewer(AttachmentViewer):  # pylint: disable=W0223
+class LocalAttachmentViewer(AttachmentViewer):  # pylint: disable=W0223
+    # class LocalAttachmentViewer(viewer.AttachmentViewer):  # pylint: disable=W0223
+    """
+    Classe de visualiseur d'attachements locaux.
+
+    Cette classe hérite de la classe `AttachmentViewer` et est spécialisée pour gérer les pièces jointes locales.
+
+    Attributs :
+        attachmentOwner : L'objet propriétaire des pièces jointes (par exemple, une tâche).
+
+    Méthodes :
+        newItemCommand (self, *args, **kwargs) :
+            Crée une commande pour ajouter une nouvelle pièce jointe à l'objet propriétaire.
+
+        deleteItemCommand (self) :
+            Crée une commande pour supprimer les pièces jointes sélectionnées.
+
+        cutItemCommand (self) :
+            Crée une commande pour couper les pièces jointes sélectionnées.
+
+    Note :
+        La classe LocalAttachmentViewer hérite de la classe AttachmentViewer,
+        qui est une classe de base définie taskcoachlib.gui.viewer.attachment,
+        et LocalAttachmentViewer en hérite pour bénéficier de certaines fonctionnalités communes.
+
+        La classe AttachmentViewer gère l'affichage, le tri, la recherche,
+        et l'interaction avec les pièces jointes associées aux tâches.
+        Elle permet également la gestion des colonnes et des menus contextuels pour les pièces jointes.
+
+        Les méthodes newItemCommand, deleteItemCommand et cutItemCommand
+        sont spécifiques aux opérations sur les pièces jointes locales
+        et sont redéfinies dans cette classe.
+    """
     # AttributeError: partially initialized module 'taskcoachlib.gui.viewer'
     # has no attribute 'AttachmentViewer' (most likely due to a circular import)
     def __init__(self, *args, **kwargs):
+        # L'objet propriétaire des pièces jointes (par exemple, une tâche) :
         self.attachmentOwner = kwargs.pop("owner")
         attachments = attachment.AttachmentList(self.attachmentOwner.attachments())
         super(LocalAttachmentViewer, self).__init__(
@@ -1425,27 +1527,60 @@ class LocalAttachmentViewer(viewer.AttachmentViewer):  # pylint: disable=W0223
         )
 
     def newItemCommand(self, *args, **kwargs):
+        """Crée une commande pour ajouter une nouvelle pièce jointe à l'objet propriétaire."""
         return command.AddAttachmentCommand(
             None, [self.attachmentOwner], *args, **kwargs
         )
 
     def deleteItemCommand(self):
+        """Crée une commande pour supprimer les pièces jointes sélectionnées."""
         return command.RemoveAttachmentCommand(
             None, [self.attachmentOwner], attachments=self.curselection()
         )
 
     def cutItemCommand(self):
+        """Crée une commande pour couper les pièces jointes sélectionnées."""
         return command.CutAttachmentCommand(
             None, [self.attachmentOwner], attachments=self.curselection()
         )
 
 
 class AttachmentsPage(PageWithViewer):
+    """
+     Page d'édition des pièces jointes d'un objet.
+
+     Cette classe hérite de `PageWithViewer` et gère l'affichage et l'édition des pièces jointes associées à un objet.
+
+     Attributs :
+         pageName (str) : Nom interne de la page ("attachments").
+         pageTitle (str) : Titre affiché à l'utilisateur ("Attachments").
+         pageIcon (str) : Nom de l'icône associée à la page ("paperclip_icon").
+
+     Méthodes :
+         createViewer (self, taskFile, settings, settingsSection) :
+             Crée un visualiseur d'attachements local pour l'objet.
+
+         onAttachmentsChanged (self, event) :
+             Rafraîchit le visualiseur d'attachements lorsque la liste des pièces jointes change.
+
+         entries (self) :
+             Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur d'attachements.
+     """
+    # Attributs :
+    # Nom interne de la page ("attachments") :
     pageName = "attachments"
+    # Titre affiché à l'utilisateur ("Attachments") :
     pageTitle = _("Attachments")
+    # Nom de l'icône associée à la page ("paperclip_icon") :
     pageIcon = "paperclip_icon"
 
     def createViewer(self, taskFile, settings, settingsSection):
+        """Crée un visualiseur d'attachements local pour l'objet.
+
+        Cette méthode crée un LocalAttachmentViewer pour afficher
+        et gérer les pièces jointes de l'objet.
+        Elle s'assure également d'observer les changements
+        dans la liste des pièces jointes afin de mettre à jour le visualiseur."""
         assert len(self.items) == 1
         item = self.items[0]
         self.registerObserver(
@@ -1463,31 +1598,79 @@ class AttachmentsPage(PageWithViewer):
         )
 
     def onAttachmentsChanged(self, event):  # pylint: disable=W0613
+        """Rafraîchit le visualiseur d'attachements lorsque la liste des pièces jointes change.
+
+        Cette méthode est appelée lorsque la liste des pièces jointes change.
+        Elle met à jour le visualiseur pour refléter les modifications."""
         self.viewer.domainObjectsToView().clear()
         self.viewer.domainObjectsToView().extend(self.items[0].attachments())
 
     def entries(self):
+        """Renvoie un dictionnaire contenant les éléments d'entrée de la page,
+        y compris le visualiseur d'attachements.
+
+        Cette méthode renvoie un dictionnaire contenant les éléments d'entrée de la page,
+        y compris le visualiseur d'attachements,
+        qui sera utilisé pour l'affichage dans la boîte de dialogue d'édition."""
         if hasattr(self, "viewer"):
             return dict(firstEntry=self.viewer, attachments=self.viewer)
         return dict()
 
 
-class LocalNoteViewer(viewer.BaseNoteViewer):  # pylint: disable=W0223
-    # class LocalNoteViewer(BaseNoteViewer):  # pylint: disable=W0223
+class LocalNoteViewer(BaseNoteViewer):  # pylint: disable=W0223
+    # class LocalNoteViewer(viewer.BaseNoteViewer):  # pylint: disable=W0223
+    """
+    Classe de visualiseur de notes locales.
+
+    Cette classe hérite de la classe `BaseNoteViewer` et est spécialisée pour gérer les notes locales.
+
+    Attributs :
+        __note_owner : L'objet propriétaire des notes (par exemple, une tâche).
+
+    Méthodes :
+        newItemCommand (self, *args, **kwargs) :
+            Crée une commande pour ajouter une nouvelle note à l'objet propriétaire.
+
+        newSubItemCommand (self) :
+            Crée une commande pour ajouter une note enfant à la note sélectionnée.
+
+        deleteItemCommand (self) :
+            Crée une commande pour supprimer les notes sélectionnées.
+
+    Explication :
+
+    Héritage : La classe LocalNoteViewer hérite de la classe BaseNoteViewer,
+    qui fournit probablement des fonctionnalités communes pour l'affichage et la modification des notes.
+
+    Propriété des notes : L'attribut __note_owner stocke une référence
+    à l'objet propriétaire des notes.
+    Cela permet au visualiseur de gérer correctement la création,
+    la suppression et la modification de notes.
+
+    Création de commandes : Les méthodes newItemCommand, newSubItemCommand et deleteItemCommand
+    créent des objets de commande spécifiques pour gérer respectivement la création,
+    la suppression et la création de sous-notes.
+    Ces commandes sont probablement utilisées pour exécuter les actions correspondantes au sein de l'application.
+    """
+    # from taskcoachlib.gui.viewer
     def __init__(self, *args, **kwargs):
+        # L'objet propriétaire des notes (par exemple, une tâche) :
         self.__note_owner = kwargs.pop("owner")
         notes = note.NoteContainer(self.__note_owner.notes())
         super().__init__(notesToShow=notes, *args, **kwargs)
 
     def newItemCommand(self, *args, **kwargs):
+        """Crée une commande pour ajouter une nouvelle note à l'objet propriétaire."""
         return command.AddNoteCommand(None, [self.__note_owner])
 
     def newSubItemCommand(self):
+        """Crée une commande pour ajouter une note enfant à la note sélectionnée."""
         return command.AddSubNoteCommand(
             None, self.curselection(), owner=self.__note_owner
         )
 
     def deleteItemCommand(self):
+        """Crée une commande pour supprimer les notes sélectionnées."""
         return command.RemoveNoteCommand(
             None, [self.__note_owner], notes=self.curselection()
         )
@@ -1498,15 +1681,49 @@ class NotesPage(PageWithViewer):
     Page d'édition des notes d'un objet.
 
     Permet d'ajouter ou modifier des notes attachées à un objet.
+    Cette classe permet d'ajouter, modifier et supprimer des notes associées à un objet.
+    Elle hérite de la classe `PageWithViewer` pour gérer l'affichage et l'édition des notes.
+
+    Attributs :
+        pageName (str) : Nom interne de la page ("notes").
+        pageTitle (str) : Titre affiché à l'utilisateur ("Notes").
+        pageIcon (str) : Nom de l'icône associée à la page ("note_icon").
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition des notes.
+        createViewer (self, taskFile, settings, settingsSection) :
+            Crée un visualiseur de notes local pour l'objet.
+
+        onNotesChanged (self, event) :
+            Rafraîchit le visualiseur de notes lorsque la liste des notes change.
+
+        entries (self) : Ajoute les champs d'entrée pour l'édition des notes.
+            Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur de notes.
+
+    Explication :
+
+    Héritage de PageWithViewer : Cette classe hérite de PageWithViewer
+    pour bénéficier des fonctionnalités de base de la page d'édition.
+
+    Création du Visualiseur de Notes : La méthode createViewer
+    crée un LocalNoteViewer pour afficher et gérer les notes associées à l'objet.
+
+    Gestion des Changements de Notes : La méthode onNotesChanged est appelée
+    lorsque la liste des notes change, ce qui permet de rafraîchir le visualiseur pour refléter les modifications.
+
+    Affichage des Éléments : La méthode entries renvoie un dictionnaire contenant
+    les éléments d'entrée de la page, y compris le visualiseur de notes,
+    qui sera utilisé pour l'affichage dans la boîte de dialogue d'édition.
     """
+    # Attributs :
+    # Nom interne de la page ("notes") :
     pageName = "notes"
+    # Titre affiché à l'utilisateur ("Notes") :
     pageTitle = _("Notes")
+    # Nom de l'icône associée à la page ("note_icon") :
     pageIcon = "note_icon"
 
     def createViewer(self, taskFile, settings, settingsSection):
+        """Crée un visualiseur de notes local pour l'objet."""
         assert len(self.items) == 1
         item = self.items[0]
         self.registerObserver(
@@ -1524,10 +1741,12 @@ class NotesPage(PageWithViewer):
         )
 
     def onNotesChanged(self, event):  # pylint: disable=W0613
+        """Rafraîchit le visualiseur de notes lorsque la liste des notes change."""
         self.viewer.domainObjectsToView().clear()
         self.viewer.domainObjectsToView().extend(self.items[0].notes())
 
     def entries(self):
+        """Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur de notes."""
         if hasattr(self, "viewer"):
             return dict(firstEntry=self.viewer, notes=self.viewer)
         return dict()
@@ -1539,19 +1758,52 @@ class NotesPage(PageWithViewer):
     #     pass
 
 
-class LocalPrerequisiteViewer(viewer.CheckableTaskViewer):  # pylint: disable=W0223
-    # class LocalPrerequisiteViewer(CheckableTaskViewer):  # pylint: disable=W0223
+class LocalPrerequisiteViewer(CheckableTaskViewer):  # pylint: disable=W0223
+    # class LocalPrerequisiteViewer(viewer.CheckableTaskViewer):  # pylint: disable=W0223
+    """
+    Classe de visualiseur de prérequis locaux.
+
+    Cette classe hérite de `CheckableTaskViewer` et est spécialisée pour gérer les prérequis des tâches.
+
+    Attributs :
+        __items : La liste des tâches dont on gère les prérequis.
+
+    Méthodes :
+        getIsItemChecked (self, item) :
+            Détermine si une tâche donnée est sélectionnée comme prérequis.
+
+        getIsItemCheckable (self, item) :
+            Détermine si une tâche donnée peut être sélectionnée comme prérequis.
+
+        onCheck (self, event, final) :
+            Gère l'événement de sélection/désélection d'une tâche en tant que prérequis.
+
+    Explication :
+
+    Héritage : cette classe hérite de CheckableTaskViewer, qui fournit la fonctionnalité de base pour afficher une liste de tâches avec des cases à cocher.
+
+    Propriété des tâches : l'attribut __items stocke la liste des tâches dont les prérequis sont gérés.
+
+    Cocher/décocher des tâches : les méthodes getIsItemChecked et getIsItemCheckable déterminent l'état de vérification initial et si une tâche peut être cochée ou décochée.
+
+    Gestion des modifications de vérification : la méthode onCheck est déclenchée lorsqu'un utilisateur coche ou décoche une tâche. Il crée et exécute une TogglePrerequisiteCommand pour mettre à jour les prérequis de la tâche.
+    """
+    # from taskcoachlib.gui.viewer
     def __init__(self, items, *args, **kwargs):
+        # La liste des tâches dont on gère les prérequis.
         self.__items = items
         super().__init__(*args, **kwargs)
 
     def getIsItemChecked(self, item):
+        """Détermine si une tâche donnée est sélectionnée comme prérequis."""
         return item in self.__items[0].prerequisites()
 
     def getIsItemCheckable(self, item):
+        """Détermine si une tâche donnée peut être sélectionnée comme prérequis."""
         return item not in self.__items
 
     def onCheck(self, event, final):
+        """Gère l'événement de sélection/désélection d'une tâche en tant que prérequis."""
         item = self.widget.GetItemPyData(event.GetItem())  # TODO: test with GetItemData
         is_checked = event.GetItem().IsChecked()
         if is_checked != self.getIsItemChecked(item):
@@ -1571,7 +1823,7 @@ class PrerequisitesPage(PageWithViewer):
     Permet de définir des tâches prérequises à accomplir avant celle en cours.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition des prérequis.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition des prérequis.
     """
     pageName = "prerequisites"
     pageTitle = _("Prerequisites")
@@ -1588,6 +1840,7 @@ class PrerequisitesPage(PageWithViewer):
         pass
 
     def selected(self):
+        """Gère la sélection de la page et ajoute les champs d'édition seulement lors du premier affichage."""
         if not self.__realized:
             self.__realized = True
             super().addEntries()
@@ -1628,10 +1881,33 @@ class EditBook(widgets.Notebook):
     Cette fenêtre contient les différentes pages d'édition (sujet, apparence, dates, etc.)
     pour modifier les objets de Task Coach.
 
-    Méthodes :
-        __init__(self, *args, **kwargs) : Initialise l'éditeur avec les objets à éditer.
-        addPages(self) : Ajoute les pages d'édition pour les objets.
-        close(self) : Ferme l'éditeur.
+    Objectif :
+        Cette classe sert de fenêtre principale pour modifier divers objets
+        dans Task Coach, tels que des tâches, des notes, etc.
+        Elle fournit une interface à onglets avec différentes pages
+        pour modifier divers aspects de l'objet.
+
+    Méthodes clés :
+
+        __init__ (self, *args, **kwargs) : initialise l'éditeur avec les objets à modifier.
+        addPages (self) : ajoute les pages pertinentes à l'éditeur en fonction du type d'objet et des paramètres configurés.
+        NavigateBook : navigue entre les différentes pages de l'éditeur.
+        onPageChanged : Gère les événements de changement de page, en s'assurant que la page active est correctement initialisée.
+        getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index.
+        __get_minimum_page_size : Calcule la taille minimale de l'éditeur en fonction de la taille de ses pages.
+        __pages_to_create : Détermine quelles pages doivent être incluses dans l'éditeur en fonction du type d'objet et du mode d'édition.
+        __should_create_page : Vérifie si une page spécifique doit être créé en fonction du type d'objet et du mode d'édition.
+        __page_supports_mass_editing (page_name) : Indique si la page_module prend en charge la modification de plusieurs éléments à la fois.
+        createPage : crée la page appropriée en fonction du nom de la page et du type d'objet.
+        create_subject_page : crée la page sujet pour modifier le titre de l'objet.
+        setFocus : Définit le focus sur un contrôle spécifique sur une page spécifique.
+        isDisplayingItemOrChildOfItem : Vérifie si un élément donné est en cours de modification ou si l'un de ses enfants est en cours de modification.
+        perspective : Renvoie la configuration de mise en page actuelle de l'éditeur.
+        __load_perspective : charge la configuration de mise en page enregistrée pour l'éditeur.
+        __save_perspective : enregistre la configuration de mise en page actuelle pour une utilisation ultérieure.
+        settings_section : renvoie le nom de la section des paramètres pour la configuration actuelle de l'éditeur.
+        __create_settings_section : crée un nouvelle section de paramètres si elle n'existe pas.
+        close_edit_book : ferme l'éditeur et enregistre la mise en page actuelle.
     """
     allPageNames = ["subclass responsibility"]
     domainObject = "subclass responsibility"
@@ -1647,6 +1923,7 @@ class EditBook(widgets.Notebook):
         self.__load_perspective(items_are_new)
 
     def NavigateBook(self, forward):
+        """Naviguer entre les différentes pages de l'éditeur."""
         curSel = self.GetSelection()
         curSel = curSel + 1 if forward else curSel - 1
         if 0 <= curSel < self.GetPageCount():
@@ -1657,6 +1934,7 @@ class EditBook(widgets.Notebook):
         Ajoute les différentes pages d'édition à l'éditeur.
 
         Ajoute les pages d'édition spécifiques à l'éditeur.
+        Ajoute les pages pertinentes à l'éditeur en fonction du type d'objet et des paramètres configurés.
         Chaque type d'objet (tâche, note, etc.) aura ses propres pages d'édition (sujet, apparence, etc.).
         """
         page_names = self.settings.getlist(self.settings_section(), "pages")
@@ -1667,6 +1945,7 @@ class EditBook(widgets.Notebook):
         self.SetMinSize((width, self.GetHeightForPageHeight(height)))
 
     def onPageChanged(self, event):
+        """Gère les événements de changement de page, en s'assurant que la page active est correctement initialisée. """
         self.GetPage(
             event.Selection
         ).selected()  # Unresolved attribute reference 'Selection' for class 'Event'->events
@@ -1676,18 +1955,21 @@ class EditBook(widgets.Notebook):
             wx.GetTopLevelParent(self).Raise()
 
     def getPage(self, page_name):
+        """getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index. """
         index = self.getPageIndex(page_name)
         if index is not None:
             return self[index]
         return None
 
     def getPageIndex(self, page_name):
+        """getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index. """
         for index in range(self.GetPageCount()):
             if page_name == self[index].pageName:
                 return index
         return None
 
     def __get_minimum_page_size(self):
+        """Calcule la taille minimale de l'éditeur en fonction de la taille de ses pages. """
         min_widths, min_heights = [], []
         for page in self:
             min_width, min_height = page.GetMinSize()
@@ -1696,6 +1978,7 @@ class EditBook(widgets.Notebook):
         return max(min_widths), max(min_heights)
 
     def __pages_to_create(self):
+        """Détermine quelles pages doivent être incluses dans l'éditeur en fonction du type d'objet et du mode d'édition. """
         return [
             page_name
             for page_name in self.allPageNames
@@ -1703,6 +1986,7 @@ class EditBook(widgets.Notebook):
         ]
 
     def __should_create_page(self, page_name):
+        """ Vérifie si une page spécifique doit être créé en fonction du type d'objet et du mode d'édition. """
         return (
             self.__page_supports_mass_editing(page_name)
             if len(self.items) > 1
@@ -1711,11 +1995,13 @@ class EditBook(widgets.Notebook):
 
     @staticmethod
     def __page_supports_mass_editing(page_name):
-        """Return whether the_module page supports editing multiple items
-        at once."""
+        """Indique si la page_module prend en charge la modification de plusieurs éléments
+        à la fois."""
         return page_name in ("subject", "dates", "progress", "budget", "appearance")
 
     def createPage(self, page_name, task_file, items_are_new):
+        """Crée la page appropriée en fonction du nom de la page et du type d'objet. """
+        # TODO : changer la méthode. sans les if serait plus rapide !
         if page_name == "subject":
             return self.create_subject_page()
         elif page_name == "dates":
@@ -1768,47 +2054,56 @@ class EditBook(widgets.Notebook):
             return TaskAppearancePage(self.items, self)
 
     def create_subject_page(self):
+        """crée la page sujet pour modifier le titre de l'objet. """
         return SubjectPage(self.items, self, self.settings)
 
     def setFocus(self, columnName):
-        """Select the correct page of the editor and correct control on a page
-        based on the column that the user double clicked."""
+        """Définit le focus sur un contrôle spécifique sur une page spécifique.
+
+        Sélectionnez la bonne page de l'éditeur et le contrôle correct sur une page
+        en fonction de la colonne sur laquelle l'utilisateur a double-cliqué."""
         page = 0
         for page_index in range(self.GetPageCount()):
-            if columnName in self[page_index].entries():
+            if columnName in self[page_index].entries():  # Unresolved attribute reference 'entries' for class 'Window'
                 page = page_index
                 break
         self.SetSelection(page)
         self[page].setFocusOnEntry(columnName)
 
     def isDisplayingItemOrChildOfItem(self, targetItem):
+        """Vérifie si un élément donné est en cours de modification
+        ou si l'un de ses enfants est en cours de modification. """
         ancestors = []
         for item in self.items:
             ancestors.extend(item.ancestors())
         return targetItem in self.items + ancestors
 
     def perspective(self):
-        """Return the perspective for the notebook."""
+        """Renvoie la perspective du bloc-notes.
+
+        Renvoie la configuration de mise en page actuelle de l'éditeur."""
         return self.settings.gettext(self.settings_section(), "perspective")
 
     def __load_perspective(self, items_are_new=False):
-        """Load the perspective (layout) for the current combination of visible
-        pages from the settings."""
+        """charge la configuration de mise en page enregistrée pour l'éditeur.
+
+        Chargez la perspective (mise en page) pour la combinaison actuelle de pages visibles
+        à partir des paramètres."""
         perspective = self.perspective()
         if perspective:
             try:
                 self.LoadPerspective(perspective)
-            except:  # pylint: disable=W0702  finally not except
+            except Exception:  # pylint: disable=W0702  finally not except
                 pass
         if items_are_new:
             current_page = (
                 self.getPageIndex("subject") or 0
-            )  # For new items, start at the subject page.
+            )  # Pour les nouveaux éléments, commencez par la page sujet.
         else:
-            # Although the active/current page is written in the perspective
-            # string (a + before the number of the active page), the current
-            # page is not set when restoring the perspective. This does it by
-            # hand:
+            # Bien que la page active/actuelle soit écrite dans la chaîne perspective
+            # (un + avant le numéro de la page active), la page actuelle
+            # n'est pas définie lors de la restauration de la perspective.
+            # Ça le fait à la main :
             try:
                 current_page = int(
                     perspective.split("@")[0].split("+")[1].split(",")[0]
@@ -1824,33 +2119,39 @@ class EditBook(widgets.Notebook):
                 page.selected()
 
     def __save_perspective(self):
-        """Save the current perspective of the editor in the settings.
-        Multiple perspectives are supported, for each set of visible pages.
-        This allows different perspectives for e.g. single item editors and
-        multi-item editors."""
+        """enregistre la configuration de mise en page actuelle pour une utilisation ultérieure.
+
+        Enregistrez la perspective actuelle de l'éditeur dans les paramètres.
+        Plusieurs perspectives sont prises en charge, pour chaque ensemble de pages visibles.
+        Cela permet différentes perspectives, par ex. éditeurs à élément unique et
+        éditeurs à éléments multiples."""
         page_names = [self[index].pageName for index in range(self.GetPageCount())]
         section = self.settings_section()
         self.settings.settext(section, "perspective", self.SavePerspective())
         self.settings.setlist(section, "pages", page_names)
 
     def settings_section(self):
-        """Create the settings section for this dialog if necessary and
-        return it."""
+        """Renvoie le nom de la section des paramètres pour la configuration actuelle de l'éditeur.
+
+        Créez la section des paramètres pour cette boîte de dialogue si nécessaire et
+        renvoyez-la."""
         section = self.__settings_section_name()
         if not self.settings.has_section(section):
             self.__create_settings_section(section)
         return section
 
     def __settings_section_name(self):
-        """Return the section name of this notebook. The name of the section
-        depends on the visible pages so that different variants of the
-        notebook store their settings in different sections."""
+        """Renvoie le nom de la section de ce bloc-notes. Le nom de la section
+        dépend des pages visibles afin que différentes variantes du carnet
+        stockent leurs paramètres dans différentes sections."""
         page_names = self.__pages_to_create()
         sorted_page_names = "_".join(sorted(page_names))
         return "%sdialog_with_%s" % (self.domainObject, sorted_page_names)
 
     def __create_settings_section(self, section):
-        """Create the section and initialize the options in the section."""
+        """Créez la section et initialisez les options dans la section.
+
+        Crée un nouvelle section de paramètres si elle n'existe pas."""
         self.settings.add_section(section)
         for option, value in list(
             dict(
@@ -1864,13 +2165,11 @@ class EditBook(widgets.Notebook):
             self.settings.init(section, option, value)
 
     def close_edit_book(self):
-        """Close all pages in the edit book and save the current layout in
-        the settings.
+        """Fermez toutes les pages du livre d'édition et enregistrez la mise en page actuelle dans
+        les paramètres.
 
 
-        Ferme l'éditeur et libère les ressources.
-
-        Ferme l'éditeur et libère les ressources associées.
+        Ferme l'éditeur, enregistre la mise en page actuelle et libère les ressources associées.
         Cette méthode est appelée lors de la fermeture de la fenêtre d'édition.
         """
         for page in self:
@@ -1879,6 +2178,21 @@ class EditBook(widgets.Notebook):
 
 
 class TaskEditBook(EditBook):
+    """
+    Classe d'édition spécifique pour les tâches.
+
+    Cette classe hérite de `EditBook` et fournit des pages d'édition spécifiques aux tâches, telles que :
+        - Sujet
+        - Dates
+        - Prérequis
+        - Progression
+        - Catégories
+        - Budget
+        - Effort
+        - Notes
+        - Pièces jointes
+        - Apparence
+    """
     allPageNames = [
         "subject",
         "dates",
@@ -1898,6 +2212,15 @@ class TaskEditBook(EditBook):
 
 
 class CategoryEditBook(EditBook):
+    """
+    Classe d'édition spécifique pour les catégories.
+
+    Cette classe hérite de `EditBook` et fournit des pages d'édition spécifiques aux catégories, telles que :
+        - Sujet
+        - Notes
+        - Pièces jointes
+        - Apparence
+    """
     allPageNames = ["subject", "notes", "attachments", "appearance"]
     domainObject = "category"
 
@@ -1906,11 +2229,30 @@ class CategoryEditBook(EditBook):
 
 
 class NoteEditBook(EditBook):
+    """
+    Classe d'édition spécifique pour les notes.
+
+    Cette classe hérite de `EditBook` et fournit des pages d'édition spécifiques aux notes, telles que :
+        - Sujet
+        - Catégories
+        - Pièces jointes
+        - Apparence
+    """
     allPageNames = ["subject", "categories", "attachments", "appearance"]
     domainObject = "note"
 
 
 class AttachmentEditBook(EditBook):
+    """
+    Classe d'édition spécifique pour les pièces jointes.
+
+    Cette classe hérite de `EditBook` et fournit des pages d'édition spécifiques aux pièces jointes, telles que :
+        - Sujet
+        - Notes
+        - Apparence
+
+    Cette classe redéfinie la méthode `isDisplayingItemOrChildOfItem` pour s'assurer que seules les pièces jointes directement sélectionnées sont prises en compte.
+    """
     allPageNames = ["subject", "notes", "appearance"]
     domainObject = "attachment"
 
@@ -1922,12 +2264,55 @@ class AttachmentEditBook(EditBook):
 
 
 class EffortEditBook(Page):
+    """
+Cette classe fournit un éditeur spécialisé pour l'édition des entrées d'effort.
+Il hérite de la classe Page de base et ajoute des fonctionnalités spécifiques pour modifier les détails de l'effort.
+
+Principales fonctionnalités :
+
+    Sélection de tâches : permet à l'utilisateur de sélectionner la tâche associée à l'effort.
+    Démarrer et Modification de l'heure d'arrêt : fournit des contrôles pour définir les heures de début et de fin de l'effort, y compris les options de temps relatif.
+    Modification de la description : permet de modifier la description de l'effort.
+    Modification des tâches : permet à l'utilisateur de modifier le tâche directement depuis l'éditeur d'effort.
+
+Méthodes :
+
+    __init__ : Initialise l'éditeur avec les efforts et le fichier de tâches donnés.
+    __onChoicesConfigChanged :
+    getPage :
+    settings_section (self) : Renvoie la section des paramètres pour la boîte de dialogue d'effort.
+    perspective (self) : Renvoie la perspective de la boîte de dialogue d'effort.
+    addEntries : Ajoute les différentes entrées (tâche, heure de début, heure d'arrêt time, description) à l'éditeur.
+    __add_task_entry : ajoute l'entrée de sélection de tâche.
+    __onStartDateTimeChanged (self, value) :
+    __onChoicesChanged (self, event) :
+    __add_start_and_stop_entries : ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif.
+    __create_start_from_last_effort_button : crée un bouton pour démarrer l'effort à partir du dernier effort arrêté.
+    __create_stop_now_button : Crée un bouton pour arrêter l'effort en cours.
+    __create_invalid_period_message : Crée un message à afficher si l'heure de début est après l'heure d'arrêt.
+    onStartFromLastEffort : Gère l'événement de démarrage de l'effort depuis le dernier effort arrêté.
+    onStopNow : Gère l'événement d'arrêt de l'effort en cours.
+    onStopDateTimeChanged : Gère les modifications apportées à l'heure d'arrêt, en s'assurant que l'heure de début n'est pas ultérieure.
+    onDateTimeChanged : Gère les modifications apportées à l'heure de début ou de fin et met à jour le message de période invalide.
+    __update_invalid_period_message : Met à jour le message de période invalide en fonction des heures de début et de fin.
+    __is_period_valid (self) : Indique si la période actuelle est valide, c'est-à-dire que la date et l'heure de début sont antérieures à la date et à l'heure de fin.
+    onEditTask : Ouvre l'éditeur de tâches pour la tâche sélectionnée.
+    addDescriptionEntry : Ajoute l'entrée de description.
+    setFocus : Définit le focus sur une entrée spécifique.
+    isDisplayingItemOrChildOfItem : Détermine si un élément donné est en cours de modification.
+    entries : Renvoie les entrées clés de l'éditeur.
+    close_edit_book : Ferme l'éditeur sans actions spécifiques.
+
+        Cette classe fournit une interface conviviale pour modifier les détails de l'effort,
+        y compris la sélection des tâches, le suivi du temps et l'édition de la description.
+    """
     domainObject = "effort"
     columns = 3
 
     def __init__(
         self, parent, efforts, taskFile, settings, items_are_new, *args, **kwargs
     ):  # pylint: disable=W0613
+        """Initialise l'éditeur avec les efforts et le fichier de tâches donnés."""
         self._effortList = taskFile.efforts()
         task_list = taskFile.tasks()
         self._taskList = task.TaskList(task_list)
@@ -1950,27 +2335,30 @@ class EffortEditBook(Page):
 
     # @staticmethod
     def settings_section(self):
-        """Return the settings section for the effort dialog."""
-        # Since the effort dialog has no tabs, the settings section does not
-        # depend on the visible tabs.
-        # return "effort dialog"
+        """Renvoie la section des paramètres pour la boîte de dialogue d'effort."""
+        # Puisque la boîte de dialogue d'effort n'a pas d'onglets, la section des paramètres ne
+        # dépend des onglets visibles.
+        # renvoie la "boîte de dialogue d'effort"
         return "effortdialog"
 
     # @staticmethod
     def perspective(self):
-        """Return the perspective for the effort dialog."""
-        # Since the effort dialog has no tabs, the perspective is always the
-        # same and the value does not matter.
+        """Renvoie la perspective de la boîte de dialogue d'effort."""
+        # Puisque la boîte de dialogue d'effort n'a pas d'onglets, la perspective est toujours la
+        # la même et la valeur n'a pas d'importance.
         return "effort dialog perspective"
 
     def addEntries(self):
+        """Ajoute les différentes entrées (tâche, heure de début, heure d'arrêt time, description) à l'éditeur."""
         self.__add_task_entry()
         self.__add_start_and_stop_entries()
         self.addDescriptionEntry()
 
     def __add_task_entry(self):
-        """Add an entry for changing the task that this effort record
-        belongs to."""
+        """Ajoute l'entrée de sélection de tâche.
+
+        Ajoutez une entrée pour modifier la tâche à laquelle appartient cet enregistrement d'effort.
+        """
         # pylint: disable=W0201,W0212
         panel = wx.Panel(self)
         current_task = self.items[0].task()
@@ -2010,6 +2398,7 @@ class EffortEditBook(Page):
 
     def __add_start_and_stop_entries(self):
         # pylint: disable=W0201,W0142
+        """ ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif. """
         date_time_entry_kw_args = dict(showSeconds=True)
         flags = [
             None,
@@ -2084,11 +2473,12 @@ class EffortEditBook(Page):
         )
         # sdtc.EVT_TIME_CHOICES_CHANGE(self._stopDateTimeEntry, self.__onChoicesChanged)
         # self._stopDateTimeEntry.Bind(wx.adv.EVT_TIME_CHANGED, self.__onChoicesChanged)
-        self._stopDateTimeEntry.Bind(sdtc.EVT_TIME_CHOICES_CHANGE, self.__onChoicesChanged)
+        self._stopDateTimeEntry.Bind(sdtc.EVT_TIME_CHOICES_CHANGE, self.__onChoicesChanged)  # TODO : à vérifier
 
         self.addEntry("", self._invalidPeriodMessage)
 
     def __create_start_from_last_effort_button(self):
+        """Crée un bouton pour démarrer l'effort à partir du dernier effort arrêté."""
         button = wx.Button(self, label=_("Start tracking from last stop time"))
         self.Bind(wx.EVT_BUTTON, self.onStartFromLastEffort, button)
         if self._effortList.maxDateTime() is None:
@@ -2096,11 +2486,13 @@ class EffortEditBook(Page):
         return button
 
     def __create_stop_now_button(self):
+        """Crée un bouton pour arrêter l'effort en cours."""
         button = wx.Button(self, label=_("Stop tracking now"))
         self.Bind(wx.EVT_BUTTON, self.onStopNow, button)
         return button
 
     def __create_invalid_period_message(self):
+        """Crée un message à afficher si l'heure de début est après l'heure d'arrêt."""
         text = wx.StaticText(self, label="")
         font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         font.SetWeight(wx.FONTWEIGHT_BOLD)
@@ -2108,6 +2500,7 @@ class EffortEditBook(Page):
         return text
 
     def onStartFromLastEffort(self, event):  # pylint: disable=W0613
+        """Gère l'événement de démarrage de l'effort depuis le dernier effort arrêté."""
         maxDateTime = self._effortList.maxDateTime()
         if self._startDateTimeEntry.GetValue() != maxDateTime:
             self._startDateTimeEntry.SetValue(self._effortList.maxDateTime())
@@ -2115,24 +2508,29 @@ class EffortEditBook(Page):
         self.onDateTimeChanged(event)
 
     def onStopNow(self, event):
+        """Gère l'événement d'arrêt de l'effort en cours."""
         command.StopEffortCommand(self._effortList, self.items).do()
 
     def onStopDateTimeChanged(self, *args, **kwargs):
+        """Gère les modifications apportées à l'heure d'arrêt, en s'assurant que l'heure de début n'est pas ultérieure."""
         self.onDateTimeChanged(*args, **kwargs)
 
     def __onStopDateTimeChanged(self, new_value):
-        # The actual start Date/time was not changed (the command class checks that) if
-        # if was greater than the stop Date/time then, so make sure it is if everything is
-        # OK Now.
+        """Gère les modifications apportées à l'heure d'arrêt, en s'assurant que l'heure de début n'est pas ultérieure."""
+        # La date/heure de début réelle n'a pas été modifiée (la classe de commande vérifie que) si
+        # c'était supérieure à la date/heure d'arrêt, alors assurez-vous que c'est le cas si tout est
+        # OK Maintenant.
         command.EditEffortStartDateTimeCommand(
             None, self.items, newValue=self._startDateTimeEntry.GetValue()
         ).do()
 
     def onDateTimeChanged(self, event):
+        """Gère les modifications apportées à l'heure de début ou de fin et met à jour le message de période invalide."""
         event.Skip()
         self.__update_invalid_period_message()
 
     def __update_invalid_period_message(self):
+        """Met à jour le message de période invalide en fonction des heures de début et de fin."""
         message = (
             ""
             if self.__is_period_valid()
@@ -2141,8 +2539,8 @@ class EffortEditBook(Page):
         self._invalidPeriodMessage.SetLabel(message)
 
     def __is_period_valid(self):
-        """Return whether the current period is valid, i.e. the start Date
-        and time is earlier than the stop Date and time."""
+        """Indique si la période actuelle est valide, c'est-à-dire que la date et l'heure de début
+        sont antérieures à la date et à l'heure de fin."""
         try:
             return (
                 self._startDateTimeEntry.GetValue() < self._stopDateTimeEntry.GetValue()
@@ -2151,6 +2549,7 @@ class EffortEditBook(Page):
             return True  # Entries not created yet
 
     def onEditTask(self, event):  # pylint: disable=W0613
+        """Ouvre l'éditeur de tâches pour la tâche sélectionnée."""
         task_to_edit = self._taskEntry.GetValue()
         TaskEditor(
             None, [task_to_edit], self._settings, self._taskFile.tasks(), self._taskFile
@@ -2158,11 +2557,13 @@ class EffortEditBook(Page):
 
     def addDescriptionEntry(self):
         # pylint: disable=W0201
+        """Ajoute l'entrée de description."""
         def combined_description(items):
             distinctDescriptions = set(item.description() for item in items)
             if len(distinctDescriptions) == 1 and distinctDescriptions.pop():
                 return items[0].description()
             lines = ["[%s]" % _("Edit to change all descriptions")]
+            # lines = [f"[{_('Edit to change all descriptions')}]"]
             lines.extend(item.description() for item in items if item.description())
             return "\n\n".join(lines)
 
@@ -2190,15 +2591,18 @@ class EffortEditBook(Page):
         self.addEntry(_("Description"), self._descriptionEntry, growable=True)
 
     def setFocus(self, column_name):
+        """Définit le focus sur une entrée spécifique."""
         self.setFocusOnEntry(column_name)
 
     def isDisplayingItemOrChildOfItem(self, item):
+        """Détermine si un élément donné est en cours de modification."""
         if hasattr(item, "setTask"):
             return self.items[0] == item  # Regular effort
         else:
             return item.mayContain(self.items[0])  # Composite effort
 
     def entries(self):
+        """Renvoie les entrées clés de l'éditeur."""
         return dict(
             firstEntry=self._startDateTimeEntry,
             task=self._taskEntry,
@@ -2209,18 +2613,67 @@ class EffortEditBook(Page):
         )
 
     def close_edit_book(self):
+        """Ferme l'éditeur sans actions spécifiques."""
         pass
 
 
 class Editor(BalloonTipManager, widgets.Dialog):
+    """Cette classe sert de classe de base pour divers éditeurs dans Task Coach,
+    fournissant un cadre pour gérer le processus d'édition,
+    gérer les entrées de l'utilisateur et se coordonner avec le modèle de données sous-jacent.
+
+    Principales caractéristiques :
+
+        - Interface à onglets : fournit une interface à onglets avec différentes pages pour modifier divers aspects de l'objet.
+        - Gestion des événements : gère les événements tels que la fermeture de la fenêtre, la suppression de tâches et les modifications de sujet.
+        - Gestion de la minuterie : gère une minuterie sur macOS pour gérer les problèmes potentiels de fermeture de fenêtre.
+        - Création de commandes d'interface utilisateur : crée des commandes d'interface utilisateur pour les actions courantes telles que l'annulation, le rétablissement et un nouvel effort.
+        - Gestion des perspectives : enregistre et charge la mise en page et la configuration de l'éditeur.
+
+    Méthodes :
+
+        __init__ : initialise l'éditeur avec les éléments, les paramètres et le fichier de tâches donnés. Il configure également les gestionnaires d'événements et crée les commandes de l'interface utilisateur.
+        addPages : ajoute les pages pertinentes à l'éditeur en fonction du type d'objet et des paramètres configurés.
+        onPageChanged : gère les événements de changement de page, garantissant que la page active est correctement initialisée.
+        getPage et getPageIndex : méthodes d'assistance pour récupérer une page par son nom ou son index.
+        __get_minimum_page_size : Calcule la taille minimale de l'éditeur en fonction des tailles de ses pages.
+        __pages_to_create : détermine quelles pages doivent être incluses dans l'éditeur en fonction du type d'objet et du mode d'édition.
+        __should_create_page : vérifie si une page spécifique doit être créée en fonction du type d'objet et du mode d'édition.
+        createPage : crée la page appropriée en fonction du nom de la page et du type d'objet.
+        create_subject_page : crée la page sujet pour modifier le titre de l'objet.
+        setFocus : définit le focus sur un contrôle spécifique sur une page spécifique.
+        isDisplayingItemOrChildOfItem : vérifie si un élément donné est en cours de modification ou si l'un de ses enfants est en cours de modification.
+        perspective : renvoie la configuration de mise en page actuelle de l'éditeur.
+        __load_perspective : charge la configuration de mise en page enregistrée pour l'éditeur.
+        __save_perspective : enregistre la configuration de mise en page actuelle pour une utilisation future.
+        settings_section : renvoie le nom de la section des paramètres pour la configuration actuelle de l'éditeur.
+        __create_settings_section : crée une nouvelle section de paramètres si elle n'existe pas.
+        close_edit_book : ferme l'éditeur et enregistre la mise en page actuelle.
+
+        __on_timer : gère l'événement de minuterie sur macOS pour garantir une fermeture correcte de la fenêtre.
+        __create_ui_commands : crée des commandes d'interface utilisateur pour annuler, rétablir et nouvel effort.
+        createInterior :
+        on_close_editor :
+        on_activate :
+        on_item_removed : gère l'événement de suppression d'un élément, en fermant l'éditeur si nécessaire.
+        __close_if_item_is_deleted :
+        on_subject_changed : gère l'événement de modification du sujet et met à jour le titre de la fenêtre.
+        __title : renvoie le titre approprié pour l'éditeur en fonction du nombre d'éléments en cours de modification.
+
+    Cette classe fournit un cadre flexible et personnalisable pour modifier différents types d'objets dans Task Coach,
+    garantissant une expérience utilisateur cohérente dans différents scénarios d'édition.
+    """
     # Gestion du 'wx.Timer' pour macOS
     EditBookClass = (
         lambda *args: "Subclass responsibility"
-    )  # PEP 8: E731 do not assign a lambda expression, use a def
+    )  # TODO: PEP 8: E731 do not assign a lambda expression, use a def
     singular_title = "Subclass responsibility %s"
     plural_title = "Subclass responsibility"
 
     def __init__(self, parent, items, settings, container, task_file, *args, **kwargs):
+        """Initialise l'éditeur avec les éléments, les paramètres et le fichier de tâches donnés.
+        Il configure également les gestionnaires d'événements et crée les commandes de l'interface utilisateur.
+        """
         self._items = items
         self._settings = settings
         self._taskFile = task_file
@@ -2285,14 +2738,16 @@ class Editor(BalloonTipManager, widgets.Dialog):
         )
 
     def __on_timer(self, event):
+        """Gère l'événement de minuterie sur macOS pour garantir une fermeture correcte de la fenêtre."""
         if not self.IsShown():
             self.Close()
 
     def __create_ui_commands(self):
-        # FIXME: keyboard shortcuts are hardcoded here, but they can be
-        # changed in the translations
-        # FIXME: there are more keyboard shortcuts that don't work in dialogs
-        # at the moment, like DELETE
+        """Crée des commandes d'interface utilisateur pour annuler, rétablir et nouvel effort."""
+        # FIXME: les raccourcis clavier sont codés en dur ici, mais ils peuvent être
+        # modifiés dans les traductions
+        # FIXME: il y a d'autres raccourcis clavier qui ne fonctionnent pas dans les boîtes de dialogue
+        # pour le moment, comme DELETE
         self.__new_effort_id = IdProvider.get()
         table = wx.AcceleratorTable(
             [
@@ -2352,7 +2807,9 @@ class Editor(BalloonTipManager, widgets.Dialog):
         event.Skip()
 
     def on_item_removed(self, event):
-        """L'élément que nous modifions ou l'un de ses ancêtres a été supprimé ou
+        """Gère l'événement de suppression d'un élément, en fermant l'éditeur si nécessaire.
+
+        L'élément que nous modifions ou l'un de ses ancêtres a été supprimé ou
         est masqué par un filtre. Si l'élément est réellement supprimé, fermez l'onglet
         de l'élément concerné et fermez tout l'éditeur s'il ne reste plus d'onglets
         ."""
@@ -2369,9 +2826,11 @@ class Editor(BalloonTipManager, widgets.Dialog):
                 break
 
     def on_subject_changed(self, event):  # pylint: disable=W0613
+        """Gère l'événement de modification du sujet et met à jour le titre de la fenêtre."""
         self.SetTitle(self.__title())
 
     def __title(self):
+        """Renvoie le titre approprié pour l'éditeur en fonction du nombre d'éléments en cours de modification."""
         return (
             self.plural_title
             if len(self._items) > 1
