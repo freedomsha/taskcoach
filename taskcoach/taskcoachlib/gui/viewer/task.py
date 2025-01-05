@@ -33,14 +33,14 @@ import wx
 import struct
 import tempfile
 
-# import wx.lib.scrolledpanel
+from wx.lib.scrolledpanel import ScrolledPanel
 import wx.lib.agw.piectrl
 from taskcoachlib import operating_system
 from taskcoachlib import command, widgets, domain, render
 from taskcoachlib.domain import task, date
-from taskcoachlib.gui import uicommand, dialog
-# from taskcoachlib.gui import dialog
-# import taskcoachlib.gui.uicommand
+# from taskcoachlib.gui import uicommand, dialog
+from taskcoachlib.gui import dialog
+from taskcoachlib.gui.uicommand import uicommand
 import taskcoachlib.gui.menu
 # from taskcoachlib.gui.menu import *
 from taskcoachlib.i18n import _
@@ -2368,7 +2368,8 @@ else:
             )
 
         def createWidget(self):
-            self.scrolled_panel = wx.lib.scrolledpanel.ScrolledPanel(self, -1)
+            # self.scrolled_panel = wx.lib.scrolledpanel.ScrolledPanel(self, -1)
+            self.scrolled_panel = ScrolledPanel(self, -1)
 
             self.vbox = wx.BoxSizer(wx.VERTICAL)
             self.hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -2471,12 +2472,12 @@ else:
             indegree = graph.degree(type="in")
             if indegree:
                 max_i_degree = max(indegree)
-            # visual_style["vertex_size"] = [(i_deg/max_i_degree) * 20 + vert_w
-            # visual_style["vertex_size"] = [(i_deg//max_i_degree) * 20 + vert_w
-            visual_style["vertex_size"] = [
-                (i_deg // max_i_degree) * 20 + vert_w
-                for i_deg, vert_w in zip(indegree, vertices_w)
-            ]
+                # visual_style["vertex_size"] = [(i_deg/max_i_degree) * 20 + vert_w
+                # visual_style["vertex_size"] = [(i_deg//max_i_degree) * 20 + vert_w
+                visual_style["vertex_size"] = [
+                    (i_deg // max_i_degree) * 20 + vert_w
+                    for i_deg, vert_w in zip(indegree, vertices_w)
+                ]
 
             return graph, visual_style
 
