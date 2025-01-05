@@ -27,22 +27,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import wx
 from taskcoachlib import patterns, widgets, command, render
 from taskcoachlib.i18n import _
-from taskcoachlib.gui import uicommand, toolbar, artprovider
-from wx.lib.agw import hypertreelist
+from taskcoachlib.gui import uicommand
+from taskcoachlib.gui import toolbar, artprovider
 # try:
 #    from taskcoachlib.thirdparty.agw import hypertreelist
 # except ImportError:
 #    from agw import hypertreelist
 # try:
-from pubsub import pub
-
+from wx.lib.agw import hypertreelist
 # except ImportError:
 #    from taskcoachlib.thirdparty.pubsub import pub
 # else:
 #    from wx.lib.pubsub import pub
+from pubsub import pub
+
 from taskcoachlib.widgets import ToolTipMixin
 from . import mixin
 
+# debug the metaclass :
 # print('le mro de patterns.Observer est ', patterns.Observer.__mro__)
 # print('le mro de wx.Panel est ', wx.Panel.__mro__)
 # print('le mro de patterns.NumberedInstances est ', patterns.NumberedInstances.__mro__)
@@ -320,15 +322,19 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         return self.widget
 
     def SetFocus(self, *args, **kwargs):
-        try:
+        # try:
+        #     self.widget.SetFocus(*args, **kwargs)
+        # except wx.PyDeadObjectError:
+        #     # https://stackoverflow.com/questions/34202195/import-pydeadobjecterror-with-wx-version-3-0-3
+        #     # https://wxpython.org/Phoenix/docs/html/MigrationGuide.html#wx-pydeadobjecterror-runtimeerror
+        #     # try with:
+        #     # if someWindow:
+        #     #     someWindow.doSomething()
+        #     # except RuntimeError:
+        #     pass
+        if self.widget:
             self.widget.SetFocus(*args, **kwargs)
-        except wx.PyDeadObjectError:
-            # https://stackoverflow.com/questions/34202195/import-pydeadobjecterror-with-wx-version-3-0-3
-            # https://wxpython.org/Phoenix/docs/html/MigrationGuide.html#wx-pydeadobjecterror-runtimeerror
-            # try with:
-            # if someWindow:
-            #     someWindow.doSomething()
-            # except RuntimeError:
+        else:
             pass
 
     # @staticmethod
@@ -646,12 +652,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         cutCommand = uicommand.EditCut(viewer=self)
         copyCommand = uicommand.EditCopy(viewer=self)
         pasteCommand = uicommand.EditPaste()
-        # cutCommand.bind(self, wx.ID_CUT)
-        cutCommand.Bind(self, wx.ID_CUT)
-        # copyCommand.bind(self, wx.ID_COPY)
-        copyCommand.Bind(self, wx.ID_COPY)
-        # pasteCommand.bind(self, wx.ID_PASTE)
-        pasteCommand.Bind(self, wx.ID_PASTE)
+        cutCommand.bind(self, wx.ID_CUT)
+        # cutCommand.Bind(self, wx.ID_CUT)
+        copyCommand.bind(self, wx.ID_COPY)
+        # copyCommand.Bind(self, wx.ID_COPY)
+        pasteCommand.bind(self, wx.ID_PASTE)
+        # pasteCommand.Bind(self, wx.ID_PASTE)
         return cutCommand, copyCommand, pasteCommand
 
     def createCreationToolBarUICommands(self):
