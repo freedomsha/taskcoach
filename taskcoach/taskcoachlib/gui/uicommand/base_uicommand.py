@@ -155,7 +155,7 @@ class UICommand(object):
         self.bind(window, self.id)  # Lie la commande aux événements de menu ou de barre d'outils.
         return self.id
 
-    def addBitmapToMenuItem(self, menuItem):
+    def addBitmapToMenuItem(self, menuItem) -> None:
         """
         Ajoute une icône à l'élément de menu si applicable.
 
@@ -169,7 +169,7 @@ class UICommand(object):
         elif self.bitmap and self.kind == wx.ITEM_NORMAL:
             menuItem.SetBitmap(self.__getBitmap(self.bitmap))
 
-    def removeFromMenu(self, menu, window):
+    def removeFromMenu(self, menu, window) -> None:
         for menuItem in self.menuItems:
             if menuItem.GetMenu() == menu:
                 self.menuItems.remove(menuItem)
@@ -196,13 +196,15 @@ class UICommand(object):
         #               shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
         #               longHelp = self.helpText)
         toolbar.AddLabelTool(self.id, "",
-                             bitmap, wx.NullBitmap, self.kind,
+                             bitmap,
+                             wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType !
+                             self.kind,
                              shortHelp=wx.MenuItem.GetLabelText(self.menuText),
                              longHelp=self.helpText)
         self.bind(toolbar, self.id)
         return self.id
 
-    def bind(self, window, itemId):
+    def bind(self, window, itemId) -> None:
         """
         Lie la commande aux événements de menu ou de barre d'outils.
 
@@ -238,8 +240,8 @@ class UICommand(object):
     def __call__(self, *args, **kwargs):
         return self.onCommandActivate(*args, **kwargs)
 
-    # def doCommand(self, event):
-    def doCommand(self, event, *args, **kwargs):
+    def doCommand(self, event):
+        # def doCommand(self, event, *args, **kwargs):
         """
         Méthode à implémenter dans les sous-classes pour exécuter la commande.
 
@@ -254,7 +256,7 @@ class UICommand(object):
         # ...
         raise NotImplementedError  # pragma: no cover
 
-    def onUpdateUI(self, event):
+    def onUpdateUI(self, event) -> None:
         event.Enable(bool(self.enabled(event)))
         if self.toolbar and (not self.helpText or self.menuText == "?"):
             self.updateToolHelp()
@@ -271,9 +273,9 @@ class UICommand(object):
         Returns :
             bool : True si la commande est activée, sinon False.
         """
-        # return True
+        return True
         # Ajouter des vérifications supplémentaires en fonction des besoins
-        return super().enabled(event)  # Améliore la réactivité
+        # return super().enabled(event)  # Améliore la réactivité
 
     def updateToolHelp(self):
         if not self.toolbar:
@@ -328,8 +330,8 @@ class UICommand(object):
         Returns :
             wx.Bitmap : L'icône bitmap obtenue, ou wx.NullBitmap en cas d'erreur.
 
-        Raises:
-            FileNotFoundError: Si l'icône n'est pas trouvée.
+        Raises :
+            FileNotFoundError : Si l'icône n'est pas trouvée.
         """
         # return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
         try:
