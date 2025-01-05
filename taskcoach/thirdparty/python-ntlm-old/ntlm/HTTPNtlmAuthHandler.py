@@ -18,6 +18,7 @@ from urllib import addinfourl
 import ntlm
 import string
 
+
 class AbstractNtlmAuthHandler:
     def __init__(self, password_mgr=None, debuglevel=0):
         if password_mgr is None:
@@ -87,7 +88,7 @@ class AbstractNtlmAuthHandler:
                 infourl.code = response.status
                 infourl.msg = response.reason
                 return infourl
-            except socket.error, err:
+            except socket.error as err:
                 raise urllib2.URLError(err)
         else:
             return None
