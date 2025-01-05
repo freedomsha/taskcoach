@@ -22,9 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import zip
 from taskcoachlib import command, widgets, domain, render
-from taskcoachlib.domain import effort, date
+from taskcoachlib.domain.effort import (BaseCompositeEffort, CompositeEffort,
+                                        Effort, EffortAggregator, EffortList,
+                                        EffortSorter)
+from taskcoachlib.domain import date
 from taskcoachlib.domain.base import filter  # pylint: disable=W0622
-from taskcoachlib.gui import uicommand, dialog
+from taskcoachlib.gui.uicommand import uicommand
+from taskcoachlib.gui import dialog
 import taskcoachlib.gui.menu
 
 # from taskcoachlib.gui.menu import *
@@ -53,7 +57,7 @@ class EffortViewer(
 ):
     defaultTitle = _("Effort")
     defaultBitmap = "clock_icon"
-    SorterClass = effort.EffortSorter
+    SorterClass = EffortSorter
 
     def __init__(self, parent, taskFile, settings, *args, **kwargs):
         kwargs.setdefault("settingsSection", "effortviewer")
@@ -65,13 +69,13 @@ class EffortViewer(
         self.__domainObjectsToView = None
         super().__init__(parent, taskFile, settings, *args, **kwargs)
         self.secondRefresher = refresher.SecondRefresher(
-            self, effort.Effort.trackingChangedEventType()
+            self, Effort.trackingChangedEventType()
         )
         self.aggregation = settings.get(self.settingsSection(), "aggregation")
         self.__initModeToolBarUICommands()
         self.registerObserver(
             self.onAttributeChanged_Deprecated,
-            eventType=effort.Effort.appearanceChangedEventType(),
+            eventType=Effort.appearanceChangedEventType(),
         )
         pub.subscribe(
             self.onRoundingChanged, "settings.%s.round" % self.settingsSection()
@@ -161,7 +165,7 @@ class EffortViewer(
         return True
 
     def curselectionIsInstanceOf(self, class_):
-        return class_ == effort.Effort
+        return class_ == Effort
 
     def on_aggregation_changed(self, value):
         self.__show_effort_aggregation(value)
@@ -226,9 +230,9 @@ class EffortViewer(
         - per week ('week'), or
         - per month ('month')."""
         if aggregation == "details":
-            aggregator = effort.EffortList(taskList)
+            aggregator = EffortList(taskList)
         else:
-            aggregator = effort.EffortAggregator(taskList, aggregation=aggregation)
+            aggregator = EffortAggregator(taskList, aggregation=aggregation)
         return aggregator
 
     def createWidget(self):
@@ -276,21 +280,21 @@ class EffortViewer(
                     (
                         "period",
                         _("Period"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         self.__renderPeriod,
                         uicommand.ViewerSortByCommand(viewer=self, value="period"),
                     ),
                     (
                         "task",
                         _("Task"),
-                        effort.Effort.taskChangedEventType(),
+                        Effort.taskChangedEventType(),
                         lambda effort: effort.task().subject(recursive=True),
                         None,
                     ),
                     (
                         "description",
                         _("Description"),
-                        effort.Effort.descriptionChangedEventType(),
+                        Effort.descriptionChangedEventType(),
                         lambda effort: effort.description(),
                         None,
                     ),
@@ -319,25 +323,25 @@ class EffortViewer(
                     (
                         "timeSpent",
                         _("Time spent"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         self.__renderTimeSpent,
                     ),
                     (
                         "totalTimeSpent",
                         _("Total time spent"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         self.__renderTotalTimeSpent,
                     ),
                     (
                         "revenue",
                         _("Revenue"),
-                        effort.Effort.revenueChangedEventType(),
+                        Effort.revenueChangedEventType(),
                         self.__renderRevenue,
                     ),
                     (
                         "totalRevenue",
                         _("Total revenue"),
-                        effort.Effort.revenueChangedEventType(),
+                        Effort.revenueChangedEventType(),
                         self.__renderTotalRevenue,
                     ),
                 )
@@ -356,43 +360,43 @@ class EffortViewer(
                     (
                         "monday",
                         _("Monday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 0),
                     ),
                     (
                         "tuesday",
                         _("Tuesday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 1),
                     ),
                     (
                         "wednesday",
                         _("Wednesday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 2),
                     ),
                     (
                         "thursday",
                         _("Thursday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 3),
                     ),
                     (
                         "friday",
                         _("Friday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 4),
                     ),
                     (
                         "saturday",
                         _("Saturday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 5),
                     ),
                     (
                         "sunday",
                         _("Sunday"),
-                        effort.Effort.durationChangedEventType(),
+                        Effort.durationChangedEventType(),
                         lambda effort: self.__renderTimeSpentOnDay(effort, 6),
                     ),
                 ]
@@ -710,7 +714,7 @@ class EffortViewer(
     def __renderTimeSpent(self, anEffort):
         """Return a rendered version of the effort duration."""
         kwargs = dict()
-        if isinstance(anEffort, effort.BaseCompositeEffort):
+        if isinstance(anEffort, BaseCompositeEffort):
             kwargs["rounding"] = self.__round_precision()
             kwargs["roundUp"] = self.__always_round_up()
         duration = anEffort.duration(**kwargs)
@@ -747,7 +751,7 @@ class EffortViewer(
         """Return a rendered version of the duration of the effort on a
         specific day."""
         kwargs = dict()
-        if isinstance(anEffort, effort.BaseCompositeEffort):
+        if isinstance(anEffort, BaseCompositeEffort):
             kwargs["rounding"] = self.__round_precision()
             kwargs["roundUp"] = self.__always_round_up()
             kwargs["consolidate"] = self.__consolidate_efforts_per_task()
@@ -764,7 +768,7 @@ class EffortViewer(
 
     def getItemTooltipData(self, item):
         result = super().getItemTooltipData(item)
-        if isinstance(item, effort.CompositeEffort) and len(item):
+        if isinstance(item, CompositeEffort) and len(item):
             details = [_("Details:")]
             for theEffort in item:
                 details.append(
