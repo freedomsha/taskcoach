@@ -107,6 +107,69 @@ Améliorations possibles
 Conclusion préliminaire
 
     La classe SynchronizedObject fournit une base solide pour gérer l'état d'un objet et notifier les changements. Cependant, il y a quelques points qui pourraient être améliorés pour la rendre plus robuste et plus facile à utiliser.
+
+Excellente décomposition du code ! Votre analyse a identifié avec précision les composants clés et les domaines potentiels d'amélioration de la classe Object.
+Principaux points à retenir de votre analyse :
+
+    Classe complète : la classe Object sert de classe de base polyvalente pour divers types d'objets au sein de l'application, fournissant une base solide pour la gestion des attributs, des états et des événements.
+    Synchronisation et événements : la classe de base SynchronizedObject et le mécanisme piloté par les événements jouent un rôle crucial dans le suivi des modifications des objets et dans la notification des personnes intéressées. parties.
+    Attributs personnalisés : la classe Attribute offre un moyen flexible de gérer les attributs d'objet et leurs événements associés.
+    Sérialisation : les méthodes __getstate__ et __setstate__ gèrent la sérialisation et la désérialisation des objets, permettant ainsi aux objets d'être enregistrés et restaurés.
+    Tri : La classe fournit diverses fonctions de tri basées sur différents attributs.
+
+Domaines d’amélioration et de discussion supplémentaires :
+
+1. SynchronizedObject et Thread Synchronization :
+
+    Clarifier le mécanisme de synchronisation : si SynchronizedObject est effectivement destiné à la synchronisation des threads, il serait avantageux de fournir plus de détails sur les mécanismes sous-jacents, tels que les verrous ou autres primitives de synchronisation.
+    Envisagez le threading module : le module de thread intégré de Python offre une variété de primitives de synchronisation qui peuvent être exploitées pour la gestion d'objets thread-safe.
+
+2. Attributs personnalisés :
+
+    Validation d'attribut : envisagez d'ajouter une validation à la classe Attribute pour garantir que les valeurs attribuées respectent des types de données ou des contraintes spécifiques.
+    Héritage d'attributs personnalisés : explorez la possibilité de créer une hiérarchie de classes d'attributs personnalisées. pour gérer différents types d'attributs (par exemple, numérique, chaîne, date).
+
+3. Système d'événements :
+
+    Propagation des événements : déterminez la manière dont les événements sont propagés au sein de l'application. Existe-t-il un bus d'événements central ou chaque objet gère-t-il ses propres abonnements aux événements ?
+    Données d'événement : envisagez d'enrichir les données d'événement avec un contexte supplémentaire, tel que les anciennes et les nouvelles valeurs d'un attribut.
+    Événements asynchrones : explorez l'utilisation de mécanismes de gestion d'événements asynchrones pour les opérations non bloquantes.
+
+4. Sérialisation :
+
+    Gestion des versions : implémentez un mécanisme de gestion des versions pour les données sérialisées afin de gérer les modifications de la structure de l'objet au fil du temps.
+    Sérialiseurs personnalisés : envisagez d'utiliser un sérialiseur personnalisé (par exemple, JSON, YAML) pour contrôler le format de sérialisation. et optimiser les performances.
+
+5. Astuces de type :
+
+    Saisie progressive : introduisez progressivement des astuces de type pour améliorer la lisibilité et la maintenabilité du code.
+    Vérificateurs de type statiques : envisagez d'utiliser un vérificateur de type statique comme mypy pour renforcer la sécurité des types.
+
+6. Tests :
+
+    Tests unitaires : rédigez des tests unitaires complets pour couvrir divers scénarios et cas extrêmes.
+    Tests basés sur les propriétés : explorez l'utilisation d'outils de test basés sur les propriétés comme Hypothesis pour générer un large éventail de cas de test.
+
+7. Documentation :
+
+    Docstrings : améliorez les docstrings pour fournir des explications plus détaillées sur les méthodes et les classes.
+    Commentaires : ajoutez des commentaires pour clarifier les sections de code complexes ou non évidentes.
+
+Questions et suggestions spécifiques :
+
+    _long_zero : Cette variable semble être utilisée pour assurer la compatibilité avec Python 2 et 3 concernant les types entiers. Cependant, avec l'avènement de Python 3, cela pourrait devenir redondant.
+    __repr__ : bien que le renvoi du sujet soit une valeur par défaut raisonnable, envisagez de fournir une représentation plus informative, en particulier à des fins de débogage.
+    customAttributes : explorez en utilisant une représentation plus structurée. approche pour stocker des attributs personnalisés, tels qu'un dictionnaire ou une classe personnalisée.
+    Types d'événements : envisagez d'utiliser une approche plus structurée pour définir des types d'événements, tels qu'une énumération ou une classe. hierarchie.
+    modificationEventTypes : le code commenté suggère qu'il aurait pu y avoir un plan pour un mécanisme d'héritage d'événements plus sophistiqué. Il serait intéressant d'étudier les raisons de le commenter.
+
+Considérations supplémentaires :
+
+    Performance : Si les performances sont une préoccupation critique, profilez le code pour identifier les goulots d'étranglement et optimisez-le en conséquence.
+    Maintenabilité : efforcez-vous d'adopter un style de codage cohérent et utilisez des noms de variables significatifs pour améliorer la lisibilité du code.
+    Extensibilité : concevez la classe pour qu'elle puisse être facilement étendue avec de nouvelles fonctionnalités et personnalisations.
+
+En abordant ces points, vous pouvez améliorer davantage la classe Object et la rendre plus robuste, maintenable et adaptable aux exigences futures.
 """
 
 from taskcoachlib import patterns
@@ -142,15 +205,16 @@ class SynchronizedObject(object):
             **kwargs: Arbitrary keyword arguments.
         """
         self.__status = kwargs.pop("status", self.STATUS_NEW)
-        # super().__init__(*args, **kwargs)
-        super().__init__()
+        super().__init__(*args, **kwargs)
+        # super().__init__()
 
     @classmethod
     def markDeletedEventType(class_):
         """
         Obtenir le type d'événement pour marquer un objet comme supprimé.
 
-        :returns str: Le type d'événement pour marquer un objet comme supprimé.
+        Returns :
+            str : Le type d'événement pour marquer un objet comme supprimé.
         """
         return "object.markdeleted"
 
@@ -159,7 +223,8 @@ class SynchronizedObject(object):
         """
         Obtenir le type d'événement pour marquer un objet comme non supprimé.
 
-        :return str: Type d'événement permettant de marquer un objet comme non supprimé.
+        Return :
+            str : Type d'événement permettant de marquer un objet comme non supprimé.
         """
         return "object.marknotdeleted"
 
@@ -170,7 +235,7 @@ class SynchronizedObject(object):
         :returns dict: L'état de l'objet.
         """
         try:
-            state = super().__getstate__()
+            state = super().__getstate__()  # TODO : problème !
         except AttributeError:
             state = dict()
 
@@ -182,14 +247,15 @@ class SynchronizedObject(object):
         """
         Définir l'état de l'objet à partir de la désérialisation.
 
-        :param dict state: L’état à définir.
-        :param event: L'événement associé à la définition de l'état.
+        Args :
+            state (dict) : L’état à définir.
+            event (event) : L'événement associé à la définition de l'état.
         """
         try:
             super().__setstate__(state, event=event)
         except AttributeError:
             pass
-        if state["status"] != self.__status:
+        if state["status"] != self.__status:  # TODO: utiliser les différents cas !
             if state["status"] == self.STATUS_CHANGED:
                 self.markDirty(event=event)
             elif state["status"] == self.STATUS_DELETED:
@@ -198,6 +264,7 @@ class SynchronizedObject(object):
                 self.markNew(event=event)
             elif state["status"] == self.STATUS_NONE:
                 self.cleanDirty(event=event)
+
 
     def getStatus(self):
         """
@@ -213,8 +280,9 @@ class SynchronizedObject(object):
         """
         Marquez l'objet comme sale (modifié).
 
-        :param bool force: (optional) Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
-        :param event event: L'événement associé au marquage de l'objet comme sale.
+        Args :
+            force(bool) : (optional) Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
+            event(event) : L'événement associé au marquage de l'objet comme sale.
         """
         if not self.setStatusDirty(force):
             return
@@ -224,9 +292,11 @@ class SynchronizedObject(object):
         """
         Définissez le statut de l'objet comme sale (modifié).
 
-        :param bool force: (optional) Forcer la définition du statut comme sale. La valeur par défaut est False.
+        Args :
+            force(bool) : (optional) Forcer la définition du statut comme sale. La valeur par défaut est False.
 
-        :returns bool: True si le statut a été modifié et non supprimé, False dans le cas contraire.
+        Returns :
+            bool : True si le statut a été modifié et non supprimé, False dans le cas contraire.
         """
         oldStatus = self.__status
         if self.__status == self.STATUS_NONE or force:
@@ -326,8 +396,12 @@ class SynchronizedObject(object):
         return self.__status == self.STATUS_DELETED
 
     def __getcopystate__(self):
+        # Voir https://docs.python.org/3.12/library/pickle.html#object.__getstate__
+        # faut-il le réimplémenter ?
+        # return NotImplemented  # Non
         pass
 
+# méthode à ajouter ? oui ou non ?
     @classmethod
     def modificationEventTypes(class_):
         pass
@@ -804,9 +878,9 @@ class Object(SynchronizedObject):
         """
         Définissez la couleur d'arrière-plan de l'objet.
 
-        Args:
-            color: La couleur à définir.
-            event: L'événement associé à la définition de la couleur.
+        Args :
+            color : La couleur à définir.
+            event : L'événement associé à la définition de la couleur.
         """
         self.__bgColor.set(color, event=event)
 
@@ -814,9 +888,10 @@ class Object(SynchronizedObject):
         """
         Obtenez la couleur d'arrière-plan de l'objet.
 
-        :param bool recursive: (optionnal) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
+        Args :
+            recursive(bool) : (optionnal) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
 
-        :return: La couleur d’arrière-plan.
+        Return : La couleur d’arrière-plan.
         """
         # L'argument 'récursif' n'est pas réellement utilisé ici, mais certains codes
         # supposent des objets composites là où il n'y en a pas. Il s'agit de
@@ -919,49 +994,49 @@ class Object(SynchronizedObject):
 
         :return list: La liste des types d'événements.
         """
-        # try:
-        #     # eventTypes = super(Object, class_).modificationEventTypes()
-        #     eventTypes = super().modificationEventTypes()
-        #     # TypeError: SynchronizedObject.modificationEventTypes() missing 1 required positional argument: 'self'
-        #     # @classmethod def cmeth(cls, arg):
-        #     #  super().cmeth(arg)
-        # except TypeError:  # TD: pas sûr de ses 2 lignes
-        #     eventTypes = super().modificationEventTypes(class_)  # Unexpected argument !
-        # except AttributeError:
-        #     # except AttributeError or TypeError:
-        #     # eventTypes = ()
-        #     eventTypes = list()
-        # if eventTypes is None:
-        #     eventTypes = list()
-        # return eventTypes + [
-        #     class_.subjectChangedEventType(),
-        #     class_.descriptionChangedEventType(),
-        #     class_.appearanceChangedEventType(),
-        #     class_.orderingChangedEventType(),
-        # ]
-        # Révision :
-
-        # La fonction hasattr vérifie si la classe parent a une méthode modificationEventTypes.
-        # If the parent class has a modificationEventTypes method, call it
-        if hasattr(super(), "modificationEventTypes"):
-            # parent_events = super().modificationEventTypes(
-            #     class_()
-            # )  # changement avec initialisation de l'instance
-            parent_events = super().modificationEventTypes()  # changement de la méthode de classe
-
-        else:
-            # Si la classe parent ne possède pas la méthode, une liste vide est utilisée par défaut.
-            parent_events = []
-        # if parent_events is None:
-        #     parent_events = []
-        parent_events = list(parent_events or [])
-        # Les types d'événements du parent sont combinés avec les types d'événements spécifiques de la classe Object.
-        return parent_events + [
+        try:
+            # eventTypes = super(Object, class_).modificationEventTypes()
+            eventTypes = super().modificationEventTypes()
+            # TypeError: SynchronizedObject.modificationEventTypes() missing 1 required positional argument: 'self'
+            # @classmethod def cmeth(cls, arg):
+            #  super().cmeth(arg)
+        except TypeError:  # TD: pas sûr de ses 2 lignes
+            eventTypes = super().modificationEventTypes(class_)  # Unexpected argument !
+        except AttributeError:
+            # except AttributeError or TypeError:
+            # eventTypes = ()
+            eventTypes = list()
+        if eventTypes is None:
+            eventTypes = list()
+        return eventTypes + [
             class_.subjectChangedEventType(),
             class_.descriptionChangedEventType(),
             class_.appearanceChangedEventType(),
             class_.orderingChangedEventType(),
         ]
+        # # Révision :
+        #
+        # # La fonction hasattr vérifie si la classe parent a une méthode modificationEventTypes.
+        # # If the parent class has a modificationEventTypes method, call it
+        # if hasattr(super(), "modificationEventTypes"):
+        #     # parent_events = super().modificationEventTypes(
+        #     #     class_()
+        #     # )  # changement avec initialisation de l'instance
+        #     parent_events = super().modificationEventTypes()  # changement de la méthode de classe
+        #
+        # else:
+        #     # Si la classe parent ne possède pas la méthode, une liste vide est utilisée par défaut.
+        #     parent_events = []
+        # # if parent_events is None:
+        # #     parent_events = []
+        # parent_events = list(parent_events or [])
+        # # Les types d'événements du parent sont combinés avec les types d'événements spécifiques de la classe Object.
+        # return parent_events + [
+        #     class_.subjectChangedEventType(),
+        #     class_.descriptionChangedEventType(),
+        #     class_.appearanceChangedEventType(),
+        #     class_.orderingChangedEventType(),
+        # ]
 
 
 class CompositeObject(Object, patterns.ObservableComposite):
@@ -983,24 +1058,26 @@ class CompositeObject(Object, patterns.ObservableComposite):
         self.__expandedContexts = set(kwargs.pop("expandedContexts", []))
         super().__init__(*args, **kwargs)
 
-    def __getcopystate__(self):
+    def __getcopystate__(self) -> dict:
         """
         Renvoie un dictionnaire qui peut être transmis à __init__ lors de la création
         d'une copie de l'objet composite.
 
-        :returns dict state: Le dictionnaire d'état pour créer une copie.
+        Returns :
+            state(dict) : Le dictionnaire d'état pour créer une copie.
         """
         state = super().__getcopystate__()
         state.update(dict(expandedContexts=self.expandedContexts()))
         return state
 
     @classmethod
-    def monitoredAttributes(class_):
+    def monitoredAttributes(class_) -> list[str]:
         # def monitoredAttributes(cls):
         """
         Obtenir la liste des attributs surveillés.
 
-        :returns list: The list of monitored attributes.
+        Returns :
+            list : The list of monitored attributes.
         """
         return Object.monitoredAttributes() + ["expandedContexts"]
 
@@ -1029,8 +1106,8 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Gérer l'événement de changement de sujet.
 
-        Args:
-            event: L'événement.
+        Args :
+            event : L'événement.
         """
         super().subjectChangedEvent(event)
         for child in self.children():
@@ -1043,8 +1120,11 @@ class CompositeObject(Object, patterns.ObservableComposite):
 
         Fonction à passer à list.sort lors du tri par sujet.
 
-        Returns:
-            function: La fonction de tri.
+        Args :
+            **kwargs :
+
+        Returns :
+            function : La fonction de tri.
         """
         recursive = kwargs.get("treeMode", False)
         if kwargs.get("sortCaseSensitive", False):
@@ -1169,10 +1249,10 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez la couleur de premier plan de l'objet composite.
 
-        Args:
-            recursive (bool, optional): S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
+        Args :
+            recursive (bool, optional) : S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
 
-        Returns:
+        Returns :
             La couleur de premier plan.
         """
         myFgColor = super().foregroundColor()
@@ -1185,9 +1265,10 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez la couleur d'arrière-plan de l'objet composite.
 
-        :param bool recursive: (optional) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
+        Args :
+            recursive(bool) : (optional) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
 
-        :return: La couleur d’arrière-plan.
+        Return : La couleur d’arrière-plan.
         """
         myBgColor = super().backgroundColor()
         if not myBgColor and recursive and self.parent():
@@ -1199,10 +1280,10 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez la police de l'objet composite.
 
-        Args:
-            recursive (bool, optional): S'il faut obtenir la police de manière récursive. La valeur par défaut est False.
+        Args :
+            recursive (bool, optional) : S'il faut obtenir la police de manière récursive. La valeur par défaut est False.
 
-        Returns:
+        Returns :
             La police.
         """
         myFont = super().font()
@@ -1215,10 +1296,10 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez l'icône de l'objet composite.
 
-        Args:
-            recursive (bool, optional): S'il faut obtenir l'icône de manière récursive. La valeur par défaut est False.
+        Args :
+            recursive (bool, optional) : S'il faut obtenir l'icône de manière récursive. La valeur par défaut est False.
 
-        Returns:
+        Returns :
             L'icône.
         """
         myIcon = super().icon()
@@ -1232,10 +1313,10 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez l'icône sélectionnée de l'objet composite.
 
-        Args:
-            recursive (bool, optional): S'il faut obtenir l'icône sélectionnée de manière récursive. La valeur par défaut est False.
+        Args :
+            recursive (bool, optional) : S'il faut obtenir l'icône sélectionnée de manière récursive. La valeur par défaut est False.
 
-        Returns:
+        Returns :
             L'icône sélectionnée.
         """
         myIcon = super().selectedIcon()
@@ -1249,11 +1330,11 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez l'icône au pluriel ou au singulier selon que l'objet a ou non des enfants.
 
-        Args:
-            myIcon: L'icône de base.
-            native (bool, optional): Si l'icône provient des paramètres utilisateur. La valeur par défaut est True.
+        Args :
+            myIcon : L'icône de base.
+            native (bool, optional) : Si l'icône provient des paramètres utilisateur. La valeur par défaut est True.
 
-        Returns:
+        Returns :
             L'icône plurielle ou singulière.
         """
         hasChildren = any(child for child in self.children() if not child.isDeleted())
@@ -1271,8 +1352,8 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Obtenez les types d'événements pour les événements de modification.
 
-        Returns:
-            list: La liste des types d'événements.
+        Returns :
+            list : La liste des types d'événements.
         """
         # return super().modificationEventTypes() + [class_.expansionChangedEventType()]
         # parent_events = super().modificationEventTypes()
@@ -1317,8 +1398,8 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Marquez l'objet composite et ses enfants comme supprimés.
 
-        Args:
-            event: L'événement associé au marquage de l'objet comme supprimé.
+        Args :
+            event : L'événement associé au marquage de l'objet comme supprimé.
         """
         super().markDeleted(event=event)
         for child in self.children():
@@ -1329,8 +1410,8 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Marquez l'objet composite et ses enfants comme nouveaux.
 
-        Args:
-            event: L'événement associé au marquage de l'objet comme nouveau.
+        Args :
+            event : L'événement associé au marquage de l'objet comme nouveau.
         """
         super().markNew(event=event)
         for child in self.children():
@@ -1341,9 +1422,9 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Marquez l'objet composite et ses enfants comme sales (modifiés).
 
-        Args:
-            force (bool, optional): Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
-            event: L'événement associé au marquage de l'objet comme sale.
+        Args :
+            force (bool, optional) : Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
+            event : L'événement associé au marquage de l'objet comme sale.
         """
         super().markDirty(force, event=event)
         for child in self.children():
@@ -1354,8 +1435,8 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         Marque l'objet composite et ses enfants comme non sales (None).
 
-        Args:
-            event: L'événement associé au marquage de l'objet comme non sale.
+        Args :
+            event : L'événement associé au marquage de l'objet comme non sale.
         """
         super().cleanDirty(event=event)
         for child in self.children():
