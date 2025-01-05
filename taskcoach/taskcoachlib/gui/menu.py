@@ -43,15 +43,16 @@ from pubsub import pub
 # except ImportError:
 #    from wx.lib.pubsub import pub
 from taskcoachlib.gui.newid import IdProvider
-from taskcoachlib.gui import uicommand
+# from taskcoachlib.gui import uicommand
 from taskcoachlib.gui import viewer
-# from taskcoachlib.gui.uicommand import uicommandcontainer
+from taskcoachlib.gui.uicommand import uicommand
+from taskcoachlib.gui.uicommand import uicommandcontainer
 import taskcoachlib.gui.viewer
 import wx
 import os
 
 
-class Menu(wx.Menu, uicommand.UICommandContainerMixin):
+class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):
     """
     Classe de base pour les menus dans Task Coach.
 
@@ -604,8 +605,8 @@ class SelectMenu(Menu):
 # activateNextViewerId = wx.NewIdRef()
 # activatePreviousViewerId = wx.NewIdRef()
 
-activateNextViewerId = wx.ID_ANY()
-activatePreviousViewerId = wx.ID_ANY()
+activateNextViewerId = wx.ID_ANY
+activatePreviousViewerId = wx.ID_ANY
 
 
 class ViewMenu(Menu):
@@ -1189,7 +1190,8 @@ class EffortPopupMenu(Menu):
             uicommand.EffortStartForEffort(
                 viewer=effortViewer, taskList=tasks),
             uicommand.EffortStop(
-                viewer=effortViewer, effortList=efforts, taskList=tasks))
+                viewer=effortViewer, effortList=efforts, taskList=tasks),
+        )
 
 
 class CategoryPopupMenu(Menu):
