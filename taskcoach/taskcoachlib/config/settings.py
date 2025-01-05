@@ -25,23 +25,28 @@ import shutil
 # from taskcoachlib.thirdparty.pubsub import pub
 # https://pypubsub.readthedocs.io/en/v4.0.3/
 from pubsub import pub
-
+from typing import Dict, Any
 from taskcoachlib import meta, patterns, operating_system
 from taskcoachlib.i18n import _
-from taskcoachlib.workarounds import ExceptionAsUnicode
+# from taskcoachlib.workarounds import ExceptionAsUnicode  # unused import
 from . import defaults
 
 
 class UnicodeAwareConfigParser(configparser.RawConfigParser):
+    # class UnicodeAwareConfigParser(configparser.ConfigParser(interpolation=None)):
     """
     Un ConfigParser personnalisé qui gère les chaînes Unicode.
 
     Cette classe hérite de RawConfigParser et fournit des méthodes
     compatibles Unicode pour définir et obtenir des valeurs de configuration.
     """
+    # Note
+    #
+    # Pensez plutôt à utiliser ConfigParser qui vérifie les types de valeurs à stocker en interne.
+    # Si vous ne souhaitez pas d'interpolation, vous pouvez utiliser ConfigParser(interpolation=None).
 
-    def set(self, section, setting, value):  # pylint: disable=W0222
-        # def set(self, section: str, setting: str, value: str | None):  # pylint: disable=W0222
+    def set(self, section, setting, value=None):  # pylint: disable=W0222
+        # def set(self, section: str, setting: str, value: str | None = None):  # pylint: disable=W0222
         """
         Définissez une valeur de configuration dans la section spécifiée.
 
@@ -52,8 +57,8 @@ class UnicodeAwareConfigParser(configparser.RawConfigParser):
         """
         configparser.RawConfigParser.set(self, section, setting, value)
 
-    def get(self, section, setting):  # pylint: disable=W0221
-        # def get(self, section: str, setting: str) -> str:  # pylint: disable=W0221
+    def get(self, section, setting, *, raw=False, vars=None):  # pylint: disable=W0221
+        # def get(self, section: str, setting: str, *, raw: bool = False, vars=None) -> str:  # pylint: disable=W0221
         """
         Obtenez une valeur de configuration à partir de la section spécifiée.
 
@@ -65,6 +70,7 @@ class UnicodeAwareConfigParser(configparser.RawConfigParser):
             La valeur de configuration.
         """
         return configparser.RawConfigParser.get(self, section, setting)
+        # return configparser.ConfigParser(interpolation=None).get(self, section, setting)
 
 
 class CachingConfigParser(UnicodeAwareConfigParser):
@@ -105,6 +111,7 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         """
         self.__cachedValues = dict()
         return UnicodeAwareConfigParser.read(self, *args, **kwargs)
+        # Alors read ou readfp ?
 
     def set(self, section, setting, value):
         """
@@ -112,7 +119,7 @@ class CachingConfigParser(UnicodeAwareConfigParser):
 
         Crée un attribut d'instance (dictionnaire) : __cachedValues
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             setting (str) : Le nom du paramètre.
             value : La valeur à définir.
@@ -133,9 +140,7 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         """
         cache, key = self.__cachedValues, (section, setting)
         if key not in cache:
-            cache[key] = UnicodeAwareConfigParser.get(
-                self, *key
-            )  # pylint: disable=W0142
+            cache[key] = UnicodeAwareConfigParser.get(self, *key)  # pylint: disable=W0142
         return cache[key]
 
 
@@ -176,7 +181,9 @@ class Settings(CachingConfigParser):
                 # Ignorez les exceptions et utilisez simplement les valeurs par défaut.
                 # Enregistrez également l'échec dans les paramètres :
                 self.initializeWithDefaults()
-            self.setLoadStatus(ExceptionAsUnicode(errorMessage))
+                # errorMessage = str(errorMessage)
+            # self.setLoadStatus(ExceptionAsUnicode(errorMessage))
+            self.setLoadStatus(errorMessage)
         else:
             # Supposons que si les paramètres ne doivent pas être chargés, nous
             # devrions également rester silencieux (c'est-à-dire que nous sommes probablement en mode test) :
@@ -199,7 +206,7 @@ class Settings(CachingConfigParser):
         if not saveIniFileInProgramDir:
             try:
                 os.remove(self.generatedIniFilename(forceProgramDir=True))
-            except:
+            except Exception:
                 return  # pylint: disable=W0702
 
     def initializeWithDefaults(self):
@@ -212,7 +219,7 @@ class Settings(CachingConfigParser):
             self.add_section(section)
             for key, value in list(settings.items()):
                 # Don't Notify observers while we are initializing
-                super(Settings, self).set(section, key, value)
+                super().set(section, key, value)
 
     def setLoadStatus(self, message):
         """
@@ -249,10 +256,10 @@ class Settings(CachingConfigParser):
         Returns :
             bool : Vrai si la section a été ajoutée avec succès.
         """
-        result = super(Settings, self).add_section(section)
+        result = super().add_section(section)
         if copyFromSection:
             for name, value in self.items(copyFromSection):
-                super(Settings, self).set(section, name, value)
+                super().set(section, name, value)
         return result
 
     def getRawValue(self, section, option):
@@ -264,10 +271,10 @@ class Settings(CachingConfigParser):
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             str : La valeur brute.
         """
-        return super(Settings, self).get(section, option)
+        return super().get(section, option)
 
     def init(self, section, option, value):
         # def init(self, section: str, option: str, value):
@@ -279,10 +286,10 @@ class Settings(CachingConfigParser):
             option (str) : Le nom de l'option.
             value : La valeur à définir.
 
-        Returns:
+        Returns :
             bool : vrai si la valeur a été définie avec succès.
         """
-        return super(Settings, self).set(section, option, value)
+        return super().set(section, option, value)
 
     def get(self, section, option):
         # def get(self, section: str, option: str):
@@ -297,7 +304,7 @@ class Settings(CachingConfigParser):
             La valeur du paramètre.
         """
         try:
-            result = super(Settings, self).get(section, option)
+            result = super().get(section, option)
         except (configparser.NoOptionError, configparser.NoSectionError):
             return self.getDefault(section, option)
         result = self._fixValuesFromOldIniFiles(section, option, result)
@@ -305,13 +312,14 @@ class Settings(CachingConfigParser):
         return result
 
     def getDefault(self, section, option):
-        # def getDefault(self, section: str, option: str):
+        # def getDefault(self, section: str, option: str) -> Any:
         """
         Obtenez la valeur par défaut pour un paramètre donné.
 
         Args :
-            section (str) : Le nom de la section.
+            section (str) : Le nom de la section (les chiffres sont ignorés).
             option (str) : Le nom de l'option.
+            default (Any, optional) : Valeur par défaut à retourner si l'option n'est pas trouvée.
 
         Returns :
             La valeur par défaut.
@@ -375,13 +383,14 @@ class Settings(CachingConfigParser):
                 result += "Time"
             try:
                 eval(result)
-            except:
+            except Exception:
                 sortKeys = [result]
                 try:
                     ascending = self.getboolean(section, "sortascending")
-                except:
+                except Exception:
                     ascending = True
-                result = '["%s%s"]' % (("" if ascending else "-"), result)
+                # result = '["%s%s"]' % (("" if ascending else "-"), result)
+                result = f'["{("" if ascending else "-")}{result}"]'
         elif option == "columns":
             columns = [
                 (col + "Time" if col in taskDateColumns else col)
@@ -419,10 +428,10 @@ class Settings(CachingConfigParser):
                     columns.remove("ordering")
             result = str(columns)
         if result != original:
-            super(Settings, self).set(section, option, result)
+            super().set(section, option, result)
         return result
 
-    def set(self, section, option, value, new=False):  # pylint: disable=W0221
+    def set(self, section, option, value=None, new=False):  # pylint: disable=W0221
         # def set(self, section: str, option: str, value, new: bool = False) -> bool:  # pylint: disable=W0221
         """
         Définissez une valeur dans les paramètres.
@@ -464,7 +473,8 @@ class Settings(CachingConfigParser):
             bool : Vrai si la valeur a été définie avec succès.
         """
         if self.set(section, option, str(value)):
-            pub.sendMessage("settings.%s.%s" % (section, option), value=value)
+            # pub.sendMessage("settings.%s.%s" % (section, option), value=value)
+            pub.sendMessage(f"settings.{section}.{option}", value=value)
 
     setvalue = settuple = setlist = setdict = setint = setboolean
 
@@ -482,7 +492,8 @@ class Settings(CachingConfigParser):
             bool : Vrai si la valeur a été définie avec succès.
         """
         if self.set(section, option, value):
-            pub.sendMessage("settings.%s.%s" % (section, option), value=value)
+            # pub.sendMessage("settings.%s.%s" % (section, option), value=value)
+            pub.sendMessage(f"settings.{section}.{option}", value=value)
 
     def getlist(self, section, option):
         """
@@ -504,11 +515,11 @@ class Settings(CachingConfigParser):
         """
         Obtenez une valeur entière à partir des paramètres.
 
-        Args:
+        Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
 
-        Returns:
+        Returns :
             int : la valeur entière.
         """
         return self.getEvaluatedValue(section, option, int)
@@ -560,7 +571,8 @@ class Settings(CachingConfigParser):
             return "True" == stringValue
         else:
             raise ValueError(
-                "invalid literal for Boolean value: '%s'" % stringValue
+                # "invalid literal for Boolean value: '%s'" % stringValue
+                f"invalid literal for Boolean value: '{stringValue}'"
             )
 
     def getEvaluatedValue(
@@ -587,14 +599,20 @@ class Settings(CachingConfigParser):
         except Exception as exceptionMessage:  # pylint: disable=W0703
             message = "\n".join(
                 [
-                    _("Error while reading the %s-%s setting from %s.ini.")
-                    % (section, option, meta.filename),
-                    _("The value is: %s") % stringValue,
-                    _("The error is: %s") % exceptionMessage,
+                    # _("Error while reading the %s-%s setting from %s.ini.")
+                    # % (section, option, meta.filename),
+                    _(f"Error while reading the {section}-{option} setting from {meta.filename}.ini."),
+                    # _("The value is: %s") % stringValue,
+                    _(f"The value is: {stringValue}"),
+                    # _("The error is: %s") % exceptionMessage,
+                    _(f"The error is: {exceptionMessage}"),
+                    # _(
+                    #     "%s will use the default value for the setting and should proceed normally."
+                    # )
+                    # % meta.name,
                     _(
-                        "%s will use the default value for the setting and should proceed normally."
-                    )
-                    % meta.name,
+                        f"{meta.name} will use the default value for the setting and should proceed normally."
+                    ),
                 ]
             )
             showerror(
@@ -614,14 +632,19 @@ class Settings(CachingConfigParser):
 
         Args :
             showerror (fonction, optional) : La fonction pour afficher les erreurs. La valeur par défaut est le fichier wx.MessageBox.
-            file (fonction, optional) : la fonction pour ouvrir les fichiers. Par défaut, ouvrir.
+            file (fonction, optional) : la fonction pour ouvrir les fichiers. Par défaut, open.
         """
         self.set("version", "python", sys.version)
+        # self.set(
+        #     "version",
+        #     "wxpython",
+        #     "%s-%s @ %s"
+        #     % (wx.VERSION_STRING, wx.PlatformInfo[2], wx.PlatformInfo[1]),
+        # )
         self.set(
             "version",
             "wxpython",
-            "%s-%s @ %s"
-            % (wx.VERSION_STRING, wx.PlatformInfo[2], wx.PlatformInfo[1]),
+            f"{wx.VERSION_STRING}-{wx.PlatformInfo[2]} @ {wx.PlatformInfo[1]}",
         )
         self.set("version", "pythonfrozen", str(hasattr(sys, "frozen")))
         self.set("version", "current", meta.data.version)
@@ -631,7 +654,7 @@ class Settings(CachingConfigParser):
             path = self.path()
             if not os.path.exists(path):
                 os.mkdir(path)
-            tmpFile = open(self.filename() + ".tmp", "w")
+            tmpFile = file(self.filename() + ".tmp", "w")
             self.write(tmpFile)
             tmpFile.close()
             if os.path.exists(self.filename()):
@@ -639,8 +662,9 @@ class Settings(CachingConfigParser):
             os.rename(self.filename() + ".tmp", self.filename())
         except Exception as message:  # pylint: disable=W0703
             showerror(
-                _("Error while saving %s.ini:\n%s\n")
-                % (meta.filename, message),
+                # _("Error while saving %s.ini:\n%s\n")
+                # % (meta.filename, message),
+                _(f"Error while saving {meta.filename}.ini:\n{message}\n"),
                 caption=_("Save error"),
                 style=wx.ICON_ERROR,
             )
@@ -688,7 +712,7 @@ class Settings(CachingConfigParser):
         """
         Obtenez le chemin d'accès au répertoire des documents.
 
-        Returns:
+        Returns :
             str : Le chemin d'accès au répertoire des documents.
         """
         if operating_system.isWindows():
@@ -778,7 +802,7 @@ class Settings(CachingConfigParser):
                 )
             else:
                 path = self.pathToConfigDir_deprecated(environ=environ)
-        except:  # Fallback to old dir
+        except Exception:  # Fallback to old dir
             path = self.pathToConfigDir_deprecated(environ=environ)
         return path
 
@@ -867,7 +891,7 @@ class Settings(CachingConfigParser):
         """
         try:
             return self._pathToDataDir("templates")
-        except:
+        except Exception:
             pass  # Fallback on old path
         return self.pathToTemplatesDir_deprecated(), True
 
@@ -904,12 +928,14 @@ class Settings(CachingConfigParser):
         except Exception:
             path = os.path.expanduser("~")  # pylint: disable=W0702
             if path == "~":
-                # path not expanded: apparently, there is no home dir
+                # chemin non développé : apparemment, il n'y a pas de répertoire personnel
                 path = os.getcwd()
+            # path = os.path.join(path, '.%s' % meta.filename)
             path = os.path.join(path, f".{meta.filename}")
         return operating_system.decodeSystemString(path)
 
     def pathToTemplatesDir_deprecated(self, doCreate=True):
+        # def pathToTemplatesDir_deprecated(self, doCreate: bool = True) -> str:
         """
         Obtenez le chemin obsolète vers le répertoire des modèles.
 
@@ -958,11 +984,13 @@ class Settings(CachingConfigParser):
         Returns :
             str : Le nom de fichier généré du fichier .ini.
         """
+        # return os.path.join(self.path(forceProgramDir), '%s.ini' % meta.filename)
         return os.path.join(
             self.path(forceProgramDir), f"{meta.filename}.ini"
         )
 
     def migrateConfigurationFiles(self):
+        # def migrateConfigurationFiles(self) -> None:
         """
         Migrez les fichiers de configuration vers de nouveaux emplacements si nécessaire.
         """
@@ -991,23 +1019,26 @@ class Settings(CachingConfigParser):
                 # pathToTemplatesDir() has created the directory
                 try:
                     os.rmdir(newPath)
-                except:
+                except Exception:
                     pass
                 shutil.move(oldPath, newPath)
         # Ini file
+        # oldPath = os.path.join(self.pathToConfigDir_deprecated(environ=os.environ), '%s.ini' % meta.filename)
+        # newPath = os.path.join(self.pathToConfigDir(environ=os.environ), '%s.ini' % meta.filename)
         oldPath = os.path.join(
             self.pathToConfigDir_deprecated(environ=os.environ),
             f"{meta.filename}.ini",
         )
         newPath = os.path.join(
-            self.pathToConfigDir(environ=os.environ), f"{meta.filename}.ini"
+            self.pathToConfigDir(environ=os.environ),
+            f"{meta.filename}.ini",
         )
         if newPath != oldPath and os.path.exists(oldPath):
             shutil.move(oldPath, newPath)
         # Cleanup
         try:
             os.rmdir(self.pathToConfigDir_deprecated(environ=os.environ))
-        except:
+        except Exception:
             pass
 
     def __hash__(self):
