@@ -22,35 +22,36 @@ from . import base
 
 
 class ToggleCategoryCommand(base.BaseCommand):
-    plural_name = _('Toggle category')
+    plural_name = _("Toggle category")
     singular_name = _('Toggle category of "%s"')
-    
+
     def __init__(self, *args, **kwargs):
-        self.category = kwargs.pop('category')
-        super(ToggleCategoryCommand, self).__init__(*args, **kwargs)
-        # super().__init__(*args, **kwargs)
-        # Keep track of previous category per categorizable in case of mutual 
+        self.category = kwargs.pop("category")
+        # super(ToggleCategoryCommand, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        # Keep track of previous category per categorizable in case of mutual
         # exclusive categories:
         self.__previous_categories = dict()
         # When some items are in the category and some are not, only toggle
         # the items that are not in the category.
-        items_not_in_category = [item for item in self.items
-                                 if self.category not in item.categories()]
+        items_not_in_category = [
+            item for item in self.items if self.category not in item.categories()
+        ]
         if 0 < len(items_not_in_category) < len(self.items):
             self.items = items_not_in_category
-        
+
     def do_command(self):
-        super(ToggleCategoryCommand, self).do_command()
-        # super().doCommand()
+        # super(ToggleCategoryCommand, self).doCommand()
+        super().do_command()
         self.toggle_category()
-        
+
     def undo_command(self):
-        super(ToggleCategoryCommand, self).undo_command()
-        # super().undo_command()
+        # super(ToggleCategoryCommand, self).undo_command()
+        super().undo_command()
         self.toggle_category()
-        
+
     redo_command = do_command
-    
+
     @patterns.eventSource
     def toggle_category(self, event=None):
         for categorizable in self.items:
@@ -60,45 +61,50 @@ class ToggleCategoryCommand(base.BaseCommand):
             else:
                 self.link_category(self.category, categorizable, event)
                 self.unlink_previous_categories(categorizable, event)
-        
+
     def unlink_previous_categories(self, categorizable, event):
-        """ Remove categorizable from any mutually exclusive categories it might
-            belong to. """
+        """Supprimez le catégorisable de toutes les catégories mutuellement exclusives auxquelles il pourrait
+        appartenir."""
         if self.category.isMutualExclusive():
             parent = self.category.parent()
             if parent in categorizable.categories() and not parent.isMutualExclusive():
                 self.unlink_previous_category(parent, categorizable, event)
             else:
-                self.unlink_previous_mutual_exclusive_category(self.category.siblings(recursive=True),
-                                                               categorizable, event)
+                self.unlink_previous_mutual_exclusive_category(
+                    self.category.siblings(recursive=True), categorizable, event
+                )
         if self.category.hasExclusiveSubcategories():
-            self.unlink_previous_mutual_exclusive_category(self.category.children(), categorizable, event)
-                
-    def unlink_previous_mutual_exclusive_category(self, categories, categorizable, event):
-        """ Look for the category that categorizable belongs to and remove
-            categorizable from it. """
+            self.unlink_previous_mutual_exclusive_category(
+                self.category.children(), categorizable, event
+            )
+
+    def unlink_previous_mutual_exclusive_category(
+        self, categories, categorizable, event
+    ):
+        """Recherchez la catégorie à laquelle appartient catégorisable et supprimez-la
+        catégorisable."""
         for category in categories:
             if categorizable in category.categorizables():
                 self.unlink_previous_category(category, categorizable, event)
-                
+
     def unlink_previous_category(self, category, categorizable, event):
-        """ Remove categorizable from category, but remember the category so
-            it can be restored later. """
+        """Remove categorizable from category, but remember the category so
+        it can be restored later."""
         self.unlink_category(category, categorizable, event)
         self.__previous_categories.setdefault(categorizable, []).append(category)
-            
+
     def relink_previous_categories(self, categorizable, event):
-        """ Re-add categorizable to its previous categories. """
+        """Re-add categorizable to its previous categories."""
         if categorizable in self.__previous_categories:
             for previous_category in self.__previous_categories[categorizable]:
                 self.link_category(previous_category, categorizable, event)
 
     def link_category(self, category, categorizable, event):  # Method may be 'static'
-        """ Make categorizable belong to category. """
+        """Make categorizable belong to category."""
         category.addCategorizable(categorizable, event=event)
         categorizable.addCategory(category, event=event)
-        
+
     def unlink_category(self, category, categorizable, event):  # Method may be 'static'
-        """ Make categorizable no longer belong to category. """
+        """Make categorizable no longer belong to category."""
         category.removeCategorizable(categorizable, event=event)
         categorizable.removeCategory(category, event=event)
