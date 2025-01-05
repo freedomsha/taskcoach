@@ -44,8 +44,8 @@ class CSVReader(object):
     def createReader(self, fp, dialect, hasHeaders):
         reader = csv.reader(fp, dialect=dialect)
         if hasHeaders:
-            # reader.next()
-            next(reader)
+            reader.next()  # TODO : how ?
+            # next(reader)
         return reader
 
     def read(self, **kwargs):
@@ -81,7 +81,7 @@ class CSVReader(object):
             hourlyFee = 0.0
             percentComplete = 0
 
-            for idx, fieldValue in enumerate(line):
+            for idx, fieldValue in enumerate(line):  # TODO :
                 if kwargs["mappings"][idx] == _("ID"):
                     id_ = fieldValue.decode("UTF-8")  # unresolved attribute reference decode for class str
                     # id_ = fieldValue.encode('UTF-8')
@@ -222,7 +222,7 @@ class CSVReader(object):
             return None
         try:
             dateTime = dparser.parse(fieldValue.decode("UTF-8"),
-                                      dayfirst=dayfirst, fuzzy=True).replace(tzinfo=None)
+                                     dayfirst=dayfirst, fuzzy=True).replace(tzinfo=None)
             hour, minute, second = dateTime.hour, dateTime.minute, dateTime.second
             if 0 == hour == minute == second:
                 hour = defaultHour
@@ -230,5 +230,5 @@ class CSVReader(object):
                 second = defaultSecond
             return DateTime(dateTime.year, dateTime.month, dateTime.day,
                             hour, minute, second)
-        except:  # pylint: disable=W0702
+        except Exception:  # pylint: disable=W0702
             return None
