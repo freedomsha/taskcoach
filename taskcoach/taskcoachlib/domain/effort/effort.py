@@ -29,7 +29,7 @@ from . import base as baseeffort
 import weakref
 
 
-class Effort(baseeffort.BaseEffort, base.Object):
+class Effort(baseeffort.BaseEffort, base.object.Object):
     def __init__(self, task=None, start=None, stop=None, *args, **kwargs):
         super().__init__(task, start or date.DateTime.now(), stop,
                          *args, **kwargs)
@@ -37,10 +37,10 @@ class Effort(baseeffort.BaseEffort, base.Object):
 
     def setTask(self, task):
         if self._task is None:
-            # We haven't been fully initialised yet, so allow setting of the
-            # task, without notifying observers. Also, don't call addEffort()
-            # on the new task, because we assume setTask was invoked by the
-            # new task itself.
+            # Nous n'avons pas encore été complètement initialisés, alors autorisez le paramétrage de la tâche,
+            # sans en avertir les observateurs. De plus, n'appelez pas addEffort()
+            # sur la nouvelle tâche, car nous supposons que setTask a été invoqué par la
+            # nouvelle tâche elle-même.
             self._task = None if task is None else weakref.ref(task)
             return
         if task in (self.task(), None):
