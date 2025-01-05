@@ -27,7 +27,9 @@ def openFile(filename):
         desktop.open(filename)
     except OSError:
         if platform.system() == "Linux":
-            if os.system('xdg-open "%s"' % filename):
-                raise OSError('Unable to open "%s"')
+            # if os.system('xdg-open "%s"' % filename):
+            if os.system(f'xdg-open "{filename}"'):
+                # raise OSError('Unable to open "%s"')
+                raise OSError(f"Unable to open \"{filename}\"")
         else:
             raise
