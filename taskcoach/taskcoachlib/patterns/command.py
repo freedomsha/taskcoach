@@ -33,36 +33,36 @@ class Command(object):
         __str__() : renvoie une représentation sous forme de chaîne de la commande.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initialisez la commande.
 
-        Args:
-            *args : liste d'arguments de longueur variable.
-            **kwargs : arguments de mots clés arbitraires.
+        Args :
+            *args : Liste d'arguments de longueur variable.
+            **kwargs : Arguments de mots clés arbitraires.
         """
-        super(Command, self).__init__()  # object.__init__ takes no arguments
+        super().__init__()  # object.__init__ takes no arguments
 
-    def do(self):
+    def do(self) -> None:
         """
         Exécutez la commande et ajoutez-la à l’historique des commandes.
         """
         CommandHistory().append(self)
 
-    def undo(self):
+    def undo(self) -> None:
         """
         Annulez la commande.
         """
         pass
 
-    def redo(self):
+    def redo(self) -> None:
         """
         Refaites la commande.
         """
         pass
 
-    def __str__(self):
-        # def __str__(self) -> str:
+    # def __str__(self):
+    def __str__(self) -> str:
         """
         Renvoie une représentation sous forme de chaîne de la commande.
 
@@ -93,24 +93,24 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         redostr(label) ) : Obtenez une étiquette de chaîne pour l’opération de rétablissement.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialisez l'historique des commandes avec des listes vides pour l'historique et les commandes futures.
         """
         self.__history = []
         self.__future = []
 
-    def append(self, command):
+    def append(self, command) -> None:
         """
         Ajoutez une commande à l'historique et effacez les futures commandes.
 
-        Args:
-            commande (Command) : La commande à ajouter à l'historique.
+        Args :
+            command (Command) : La commande à ajouter à l'historique.
         """
         self.__history.append(command)
         del self.__future[:]
 
-    def undo(self):
+    def undo(self) -> None:
         """
         Annulez la dernière commande et ajoutez-la à la liste des commandes futures.
         """
@@ -119,7 +119,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
             command.undo()
             self.__future.append(command)
 
-    def redo(self):
+    def redo(self) -> None:
         """
         Refaites la dernière commande annulée et ajoutez-la à l'historique.
         """
@@ -128,7 +128,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
             command.redo()
             self.__history.append(command)
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Effacez l’historique des commandes et les commandes futures.
         """
@@ -190,7 +190,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
             label += commandName.lower()
         return label
 
-    def undostr(self, label="Undo"):
+    def undostr(self, label: str = "Undo"):
         # def undostr(self, label="Undo") -> str:
         """
         Obtenez une étiquette de chaîne pour l'opération d'annulation.
@@ -203,7 +203,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         """
         return self._extendLabel(label, self.__history)
 
-    def redostr(self, label="Redo"):
+    def redostr(self, label: str = "Redo"):
         # def redostr(self, label: str = "Redo") -> str:
         """
         Obtenez une étiquette de chaîne pour l'opération de rétablissement.
