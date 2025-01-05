@@ -18,17 +18,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 class Singleton(type):
-    """Métaclasse Singleton. A utiliser en définissant la métaclasse d'une classe Singleton,
+    """Métaclasse Singleton. À utiliser en définissant la métaclasse d'une classe Singleton,
     par exemple : class ThereCanBeOnlyOne(metaclass=Singleton).
     """
 
     def __call__(class_, *args, **kwargs):
+        """
+        Appelée lorsque l'instance est "appelée" en fonction;
+        si cette méthode est définie,
+        x(arg1, arg2, ...) se traduit grossièrement par type(x).__call__(x, arg1, ...).
+        La classe object elle-même ne fournit pas cette méthode.
+
+        :param *args: Liste d'arguments de longueur variable.
+        :param **kwargs: Arguments de mots clés arbitraires.
+        :return:
+        """
         if not class_.hasInstance():
-            # ols line :
             # pylint: disable=W0201
             class_.instance = super().__call__(*args, **kwargs)
-            # New line python 3 :
-            # class_.instance = super().__call__(*args, **kwargs)
         return class_.instance
 
     def deleteInstance(class_):
