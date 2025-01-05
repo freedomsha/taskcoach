@@ -54,7 +54,8 @@ def str_to_key56(key_str):
     # if not type(key_str) == six.binary_type:
     #    # TODO rsanders high - figure out how to make this not necessary
     #    key_str = key_str.encode('ascii')
-    if type(key_str) != type(""):
+    # if type(key_str) != type(""):
+    if not isinstance(key_str, str):
         # rise DESException, 'ERROR. Wrong key type.'
         pass
 
