@@ -35,13 +35,13 @@ import wx
 
 
 class ViewerContainer(object):
-    """ ViewerContainer is a container of viewers. It has a containerWidget
-        that displays the viewers. The containerWidget is assumed to be
-        an AUI managed frame. The ViewerContainer knows which of its viewers
-        is active and dispatches method calls to the active viewer or to the
-        first viewer that can handle the method. This allows other GUI
-        components, e.g. menu's, to talk to the ViewerContainer as were
-        it a regular viewer. """
+    """ ViewerContainer est un conteneur de visionneuses. Il possède un conteneurWidget
+        qui affiche les visionneuses. Le conteneurWidget est supposé être
+        une trame gérée par AUI. Le ViewerContainer sait lequel de ses visualiseurs
+        est actif et distribue les appels de méthode au visualiseur actif ou au premier visualiseur
+        capable de gérer la méthode. Cela permet à d'autres composants GUI,
+        par ex. menu, pour parler au ViewerContainer comme s'il s'agissait
+        d'un spectateur régulier. """
         
     def __init__(self, containerWidget, settings, *args, **kwargs):
         self.containerWidget = containerWidget
@@ -55,8 +55,7 @@ class ViewerContainer(object):
         self._notifyActiveViewer = True
 
     def advanceSelection(self, forward):
-        """ Activate the next viewer if forward is true else the previous
-            viewer. """
+        """ Activez la visionneuse suivante si le transfert est vrai, sinon la visionneuse précédente. """
         if len(self.viewers) <= 1:
             return  # Not enough viewers to advance selection
         active_viewer = self.activeViewer()
@@ -70,11 +69,11 @@ class ViewerContainer(object):
         
     # @staticmethod
     def isViewerContainer(self):
-        """ Return whether this is a viewer container or an actual viewer. """
+        """ Indique s'il s'agit d'un conteneur de visionneuse ou d'une visionneuse réelle. """
         return True
 
     def __bind_event_handlers(self):
-        """ Register for pane closing, activating and floating events. """
+        """ Inscrivez-vous aux événements de fermeture, d'activation et de flottement du volet."""
         self.containerWidget.Bind(aui.EVT_AUI_PANE_CLOSE, self.onPageClosed)
         self.containerWidget.Bind(aui.EVT_AUI_PANE_ACTIVATED,
                                   self.onPageChanged)
@@ -87,27 +86,28 @@ class ViewerContainer(object):
         return len(self.viewers)
 
     def addViewer(self, viewer, floating=False):
-        """ Add a new pane with the specified viewer. """
-        self.containerWidget.addPane(viewer, viewer.title(), floating=floating)
+        """ Ajoute un nouveau volet avec la visionneuse spécifiée. """
+        name = viewer.settingsSection()  # Nouvelle ligne
+        self.containerWidget.addPane(viewer, viewer.title(), name, floating=floating)  # TypeError: DummyMainWindow.addPane() got multiple values for argument 'floating'
         self.viewers.append(viewer)
         if len(self.viewers) == 1:
             self.activateViewer(viewer)
         pub.subscribe(self.onStatusChanged, viewer.viewerStatusEventType())
         
     def closeViewer(self, viewer):
-        """ Close the specified viewer. """
+        """ Ferme la visionneuse spécifiée. """
         if viewer == self.activeViewer():
             self.advanceSelection(False)
         pane = self.containerWidget.manager.GetPane(viewer)
         self.containerWidget.manager.ClosePane(pane)
     
     def __getattr__(self, attribute):
-        """ Forward unknown attributes to the active viewer or the first
-            viewer if there is no active viewer. """
+        """ Transférez les attributs inconnus au visualiseur actif ou au premier visualiseur
+            s'il n'y a pas de visualiseur actif. """
         return getattr(self.activeViewer() or self.viewers[0], attribute)
 
     def activeViewer(self):
-        """ Return the active (selected) viewer. """
+        """ Renvoie la visionneuse active (sélectionnée). """
         all_panes = self.containerWidget.manager.GetAllPanes()
         for pane in all_panes:
             if pane.IsToolbar():
@@ -121,7 +121,7 @@ class ViewerContainer(object):
         return None
         
     def activateViewer(self, viewer_to_activate):
-        """ Activate (select) the specified viewer. """
+        """ Active (sélectionne) la visionneuse spécifiée. """
         self.containerWidget.manager.ActivatePane(viewer_to_activate)
         paneInfo = self.containerWidget.manager.GetPane(viewer_to_activate)
         if paneInfo.IsNotebookPage():
@@ -129,7 +129,7 @@ class ViewerContainer(object):
         self.sendViewerStatusEvent()
 
     def __del__(self):
-        pass  # Don't forward del to one of the viewers.
+        pass  # Ne transmettez pas le message Del à l'un des viewers.
     
     def onStatusChanged(self, viewer):
         if self.activeViewer() == viewer:
@@ -152,11 +152,11 @@ class ViewerContainer(object):
             return
         window = wx.Window.FindFocus()
         if operating_system.isMacOsXTiger_OrOlder() and window is None:
-            # If the SearchCtrl has focus on Mac OS X Tiger,
-            # wx.Window.FindFocus returns None. If we would continue,
-            # the focus would be set to the active viewer right away,
-            # making it impossible for the user to type in the search
-            # control.
+            # Si SearchCtrl a le focus sur Mac OS X Tiger,
+            # wx.Window.FindFocus renvoie Aucun. Si nous continuions,
+            # le focus serait immédiatement placé sur le spectateur actif,
+            # ce qui rendrait impossible pour l'utilisateur de saisir
+            # le contrôle de recherche.
             return
         while window:
             if window == self.activeViewer():
@@ -170,30 +170,28 @@ class ViewerContainer(object):
             return
         window = event.GetPane().window
         if hasattr(window, "GetPage"):
-            # Window is a notebook, Close each of its pages
+            # window est un carnet, fermez chacune de ses pages
             for pageIndex in range(window.GetPageCount()):
                 self.__close_viewer(window.GetPage(pageIndex))
         else:
-            # Window is a viewer, Close it
+            # window est une visionneuse, fermez-la
             self.__close_viewer(window)
-        # Make sure we have an active viewer
+        # Assurez-vous que nous avons un spectateur actif
         if not self.activeViewer():
             self.activateViewer(self.viewers[0])
         event.Skip()
 
     def __close_viewer(self, viewer):
-        """ Close the specified viewer and unsubscribe all its event
-            handlers. """
-        # When closing an AUI managed frame, we get two Close events,
-        # be prepared:
+        """ Fermez la visionneuse spécifiée et désabonnez tous ses gestionnaires d'événements. """
+        # Lors de la fermeture d'une trame gérée par AUI, nous obtenons deux événements Close,
+        # soyez prêt :
         if viewer in self.viewers:
             self.viewers.remove(viewer)
             viewer.detach()
 
     @staticmethod
     def onPageFloated(event):
-        """ Give floating pane accelerator keys for activating next and previous
-            viewer. """
+        """ Donnez des touches d'accélération du volet flottant pour activer la visionneuse suivante et précédente."""
         viewer = event.GetPane().window
         table = wx.AcceleratorTable([(wx.ACCEL_CTRL, wx.WXK_PAGEDOWN,
                                      taskcoachlib.gui.menu.activateNextViewerId),
