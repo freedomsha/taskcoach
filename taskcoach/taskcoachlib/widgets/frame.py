@@ -59,7 +59,12 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         x, y = window.GetPosition()
         # x, y = window.ClientToScreenXY(x, y)
         # AttributeError: 'TaskViewer' object has no attribute 'ClientToScreenXY'. Did you mean: 'ClientToScreen'?
-        x, y = window.ClientToScreen(x, y)
+        # Debug: ClientToScreen cannot work when toplevel window is not shown
+        if window.Shown:
+            x, y = window.ClientToScreen(x, y)  # TODO : j'ai ClientToScreen cannot work when toplevel window is not shown même si window.shown est True
+            # pour window CategoryViewer (gui.viewer.category.CategoryViewer)
+        else:
+            print("frame.py: Debug: ClientToScreen cannot work when toplevel window is not shown")
         paneInfo = aui.AuiPaneInfo()
         paneInfo = paneInfo.CloseButton(True).Floatable(True).\
             Name(name).Caption(caption).Right().\
