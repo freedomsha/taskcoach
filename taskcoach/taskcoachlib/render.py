@@ -309,14 +309,16 @@ elif desktop.get_desktop() == "KDE4":
             return str(KGlobal.locale().formatDate(qtdt, 0))
 
 
-timeFunc = lambda dt, minutes=True, seconds=False: operating_system.decodeSystemString(
-    rawTimeFunc(dt, minutes=minutes, seconds=seconds)
-)
+# timeFunc = lambda dt, minutes=True, seconds=False: operating_system.decodeSystemString(
+#     rawTimeFunc(dt, minutes=minutes, seconds=seconds)
+# )
+def timeFunc(dt, minutes=True, seconds=False):
+    return operating_system.decodeSystemString(rawTimeFunc(dt, minutes=minutes, seconds=seconds))
 
-dateTimeFunc = lambda dt=None, humanReadable=False: "%s %s" % (
-    dateFunc(dt, humanReadable=humanReadable),
-    timeFunc(dt)
-)
+
+# dateTimeFunc = lambda dt=None, humanReadable=False: f"{dateFunc(dt, humanReadable=humanReadable)} {timeFunc(dt)}"
+def dateTimeFunc(dt=None, humanReadable=False):
+    return f"{dateFunc(dt, humanReadable=humanReadable)} {timeFunc(dt)}"
 
 
 def date(aDateTime, humanReadable=False):
@@ -392,7 +394,8 @@ def month(dateTime):
 def weekNumber(dateTime):
     # Would have liked to use dateTime.strftime('%Y-%U'), but the week number
     # is one off in 2004
-    return "%d-%d" % (dateTime.year, dateTime.weeknumber())
+    # return "%d-%d" % (dateTime.year, dateTime.weeknumber())
+    return f"{dateTime.year:d}-{dateTime.weeknumber():d}"
 
 
 def monetaryAmount(aFloat):
@@ -406,7 +409,8 @@ def monetaryAmount(aFloat):
 
 def percentage(aFloat):
     """ Afficher un pourcentage. """
-    return "" if round(aFloat, 0) == 0 else "%.0f%%" % aFloat
+    # return "" if round(aFloat, 0) == 0 else "%.0f%%" % aFloat
+    return "" if round(aFloat, 0) == 0 else f"{aFloat:.0f}%"
 
 
 def exception(exception, instance):
@@ -427,4 +431,5 @@ def exception(exception, instance):
                     result.append(val)
             return str(result)
     except UnicodeEncodeError:
-        return "<class %s>" % str(exception)
+        # return "<class %s>" % str(exception)
+        return f"<class {str(exception)}>"
