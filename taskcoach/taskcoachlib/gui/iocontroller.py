@@ -186,13 +186,19 @@ class IOController(object):
         Returns :
             None
             """
+        filename = None
         if commandLineArgs:
             # Si un argument de ligne de commande est présent, on considère
             # que c'est le nom du fichier à ouvrir.
             if isinstance(commandLineArgs, str):
                 filename = commandLineArgs[0]
             else:
-                filename = commandLineArgs[0].decode(sys.getfilesystemencoding())
+                try:
+                    filename = commandLineArgs[0].decode(sys.getfilesystemencoding())
+                except Exception:
+                    # filename = commandLineArgs[0].encode(sys.getfilesystemencoding())
+                    print("tclib.gui.iocontroller.IOController.openAfterStart can't open file")
+                    wx.MessageBox("MessageBox: tclib.gui.iocontroller.IOController.openAfterStart can't open file")
             # commandLineArgs[0] est le premier argument de la ligne de commande,
             # qui est une chaîne de caractères encodée en bytes.
             # La méthode decode() est appelée sur cette chaîne de caractères
