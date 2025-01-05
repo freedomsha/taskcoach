@@ -21,7 +21,8 @@ from builtins import next
 from builtins import range
 from taskcoachlib import meta
 from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty import chardet
+# from taskcoachlib.thirdparty import chardet
+import chardet
 from io import open as file
 import wx
 import csv
