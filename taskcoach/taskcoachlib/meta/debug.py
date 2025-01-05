@@ -77,16 +77,20 @@ def profile_call(func):
 def signature(func, args, kwargs, result):
     func = func.__name__
     result = str(result)
+    # TODO : à vérifier
     try:
-        return "%s(%s, %s) -> %s" % (func, str(args), str(kwargs), result)
-    except:
-        return "%s(...) -> %s" % (func, result)  # pylint: disable=W0702
+        # return "%s(%s, %s) -> %s" % (func, str(args), str(kwargs), result)
+        return f"{func}({str(args)}, {str(kwargs)}) -> {result}"
+    except Exception:
+        # return "%s(...) -> %s" % (func, result)  # pylint: disable=W0702
+        return f"{func}(...) -> {result}"  # pylint: disable=W0702
 
 
 def format_traceback(frame):
     result = []
     filename, lineno, caller, context = frame[1:5]
-    result.append('  File "%s", line %s, in %s' % (filename, lineno, caller))
+    # result.append('  File "%s", line %s, in %s' % (filename, lineno, caller))
+    result.append(f"  File '{filename}', line {lineno}, in {caller}")
     for line in context:
         result.append(line[:-1])
     return "\n".join(result) + "\n"
