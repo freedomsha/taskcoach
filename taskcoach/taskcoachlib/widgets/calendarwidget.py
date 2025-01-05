@@ -19,10 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from __future__ import division
 # from past.utils import old_div
 import wx
-from taskcoachlib.thirdparty.wxScheduler import (wxScheduler, wxSchedule, EVT_SCHEDULE_ACTIVATED, EVT_SCHEDULE_RIGHT_CLICK,
-                                                 EVT_SCHEDULE_DCLICK, EVT_PERIODWIDTH_CHANGED, wxReportScheduler, wxTimeFormat)
-from taskcoachlib.thirdparty.wxScheduler.wxSchedulerConstants import (wxSCHEDULER_WEEKSTART_MONDAY,
-                                                                      wxSCHEDULER_WEEKSTART_SUNDAY)
+from taskcoachlib.thirdparty.wxScheduler import (wxScheduler, wxSchedule,
+                                                 wxReportScheduler, wxTimeFormat)
+from taskcoachlib.thirdparty.wxScheduler.wxSchedulerPaint import (
+    EVT_SCHEDULE_ACTIVATED,
+    EVT_SCHEDULE_RIGHT_CLICK,
+    EVT_SCHEDULE_DCLICK,
+    EVT_PERIODWIDTH_CHANGED)
+from taskcoachlib.thirdparty.wxScheduler.wxSchedulerConstants import (
+    wxSCHEDULER_WEEKSTART_MONDAY,
+    wxSCHEDULER_WEEKSTART_SUNDAY)
 from taskcoachlib.domain import date
 from taskcoachlib.widgets import draganddrop
 from taskcoachlib import command, render
