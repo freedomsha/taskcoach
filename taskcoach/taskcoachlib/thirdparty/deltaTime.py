@@ -1,19 +1,21 @@
-from __future__ import print_function
 # deltaTime.py
 #
-# Parser to convert a conversational time reference such as "in a minute" or 
-# "noon Tomorrow" and convert it to a Python datetime.  The returned
-# ParseResults object contains the results name "timeOffset" containing
-# the timedelta, and "calculatedTime" containing the computed time relative 
-# to datetime.Now().
+# Analyseur pour convertir une référence temporelle conversationnelle telle que "dans une minute" ou
+# "midi demain" et la convertir en date/heure Python.  L'objet ParseResults renvoyé
+# contient le nom des résultats "timeOffset" contenant
+# le timedelta et "calculatedTime" contenant le temps calculé relatif
+# à datetime.Now().
 #
 # Copyright 2010, by Paul McGuire
 #
 
+# from __future__ import print_function
 # from builtins import map
 # from past.builtins import basestring
 from datetime import datetime, timedelta
-from pyparsing import *
+# from pyparsing import *
+from pyparsing import (CaselessLiteral, Combine, Group, nums, oneOf, Optional,
+                       replaceWith, Suppress, Word)
 import calendar
 
 __all__ = ["nlTimeExpression"]
@@ -89,8 +91,10 @@ def convertToAbsTime(toks):
                 ss = 0
             else:
                 hh, mm, ss = (hhmmss.HH % 12), hhmmss.MM, hhmmss.SS
-                if not mm: mm = 0
-                if not ss: ss = 0
+                if not mm:
+                    mm = 0
+                if not ss:
+                    ss = 0
                 if toks.timeOfDay.ampm == "pm":
                     hh += 12
             timeOfDay = timedelta(0, (hh * 60 + mm) * 60 + ss, 0)
@@ -212,7 +216,8 @@ if __name__ == "__main__":
     next Sunday at 2pm""".splitlines()
 
     for t in tests:
-        print(t, "(relative to %s)" % datetime.now())
+        # print(t, "(relative to %s)" % datetime.now())
+        print(t, f"(relative to {datetime.now()})")
         res = nlTimeExpression.parseString(t)
         if "calculatedTime" in res:
             print(res.calculatedTime)
