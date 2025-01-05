@@ -162,8 +162,8 @@ class Composite(object):
         """
         Créez une copie du composite.
 
-        Renvoie :
-            Composite : le composite copié.
+        Returns :
+            Composite : Le composite copié.
         """
         kwargs["parent"] = self.parent()
         kwargs["children"] = [child.copy() for child in self.children()]
@@ -173,7 +173,7 @@ class Composite(object):
         """
         Créez un nouveau composite enfant.
 
-        Renvoie :
+        Returns :
             Composite : le nouveau composite enfant.
         """
         kwargs["parent"] = self
@@ -232,9 +232,9 @@ class ObservableComposite(Composite):
         """
         Ajoutez un composite enfant avec notification d'événement.
 
-        Args:
+        Args :
             child (Composite) : Le composite enfant à ajouter.
-            event (Événement, facultatif) : L'événement à notifier.
+            event (Event, facultatif) : L'événement à notifier.
         """
         super().addChild(child)
         self.addChildEvent(event, child)
@@ -264,11 +264,11 @@ class ObservableComposite(Composite):
         """
         Supprimer un composite enfant avec notification d'événement.
 
-        Args:
+        Args :
             child (Composite) : Le composite enfant à supprimer.
             event (Event, facultatif) : L'événement à notifier.
         """
-        super(ObservableComposite, self).removeChild(child)
+        super().removeChild(child)
         self.removeChildEvent(event, child)
 
     def removeChildEvent(self, event, *children):
@@ -316,19 +316,19 @@ class CompositeCollection(object):
     Une collection d'objets composites.
 
     Méthodes :
-        append(composite) : ajoutez un composite à la collection.
-        extend(composites) : ajoutez plusieurs composites à la collection.
-        remove(composite ) : Supprimez un composite de la collection.
-        removeItems(composites) : Supprimez plusieurs composites de la collection.
-        rootItems() : Obtenez les éléments racine de la collection.
-        allItemsSorted() : Obtenez tous les éléments triés par hiérarchie.
+        append (composite) : ajoutez un composite à la collection.
+        extend (composites) : ajoutez plusieurs composites à la collection.
+        remove (composite) : Supprimez un composite de la collection.
+        removeItems (composites) : Supprimez plusieurs composites de la collection.
+        rootItems () : Obtenez les éléments racine de la collection.
+        allItemsSorted () : Obtenez tous les éléments triés par hiérarchie.
     """
 
     def __init__(self, initList=None, *args, **kwargs):
         """
         Initialisez la collection avec une liste facultative de composites initiaux.
 
-        Args:
+        Args :
             initList (liste, facultatif) : liste initiale de composites.
         """
         super().__init__(*args, **kwargs)
@@ -338,7 +338,7 @@ class CompositeCollection(object):
         """
         Ajoutez un composite à la collection.
 
-        Args:
+        Args :
             composite (Composite) : Le composite à ajouter.
             event (Event, facultatif) : L'événement à notifier.
         """
