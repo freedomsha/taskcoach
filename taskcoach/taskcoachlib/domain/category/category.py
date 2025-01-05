@@ -21,7 +21,7 @@ from taskcoachlib.domain import base, note, attachment
 
 
 class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject):
-    def __init__(self, subject, categorizables=None, children=None,
+    def __init__(self, subject="", categorizables=None, children=None,
                  filtered=False, parent=None, description="",
                  exclusiveSubcategories=False, *args, **kwargs):
         super().__init__(subject=subject, children=children or [],
@@ -93,7 +93,7 @@ class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject)
             state["exclusiveSubcategories"], event=event
         )
 
-    def __getcopystate__(self):
+    def __getcopystate__(self) -> dict:
         state = super().__getcopystate__()
         state.update(dict(categorizables=self.__categorizables.get(),
                           filtered=self.__filtered))
