@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from taskcoachlib import operating_system
 
-
+# TODO: changer les import !
 if operating_system.isWindows():
     from .notifier_windows import *
-    from .notifier_growl import *
+    from .notifier_growl import GrowlNotifier
 elif operating_system.isMac():
-    from .notifier_growl import *
+    from .notifier_growl import GrowlNotifier
 
 from .notifier_universal import *
 
-from .notifier import *
+from .notifier import AbstractNotifier
