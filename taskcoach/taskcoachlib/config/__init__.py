@@ -14,14 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-"""
+
 Le package de configuration contient
- des classes liées aux options configurables par l'utilisateur
-  qui sont enregistrées dans le fichier TaskCoach.ini,
-   y compris toutes les valeurs par défaut des options.
+des classes liées aux options configurables par l'utilisateur
+qui sont enregistrées dans le fichier TaskCoach.ini,
+y compris toutes les valeurs par défaut des options.
 """
 
-from taskcoachlib.config.settings import Settings
+from taskcoachlib.config.settings import Settings as Settings  # noqa: E402
 # from taskcoachlib.config.options import OptionParser, ApplicationOptionParser, OptionGroup
-from taskcoachlib.config.arguments import ApplicationArgumentParser
+from taskcoachlib.config.arguments import ApplicationArgumentParser as ApplicationArgumentParser  # noqa: E402
