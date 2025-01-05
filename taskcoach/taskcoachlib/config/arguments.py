@@ -82,6 +82,7 @@ class ApplicationArgumentParser:
             "-i",
             "--ini",
             dest="inifile",
+            action="store",
             help="Use the specified INIFILE for storing settings.",
         )
         self.parser.add_argument(
@@ -89,6 +90,7 @@ class ApplicationArgumentParser:
             "--language",
             nargs=1,
             dest="language",
+            action="store",
             type=str,
             choices=sorted(
                 [
@@ -105,6 +107,7 @@ class ApplicationArgumentParser:
             "--po",
             nargs=1,
             dest="pofile",
+            action="store",
             help="Use the specified POFILE for translation of the GUI.",
         )
 
