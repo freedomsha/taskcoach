@@ -36,7 +36,7 @@ class BaseEffort(object):
         super().__init__(*args, **kwargs)
 
     def task(self):
-        return None if self._task is None else self._task()
+        return None if self._task is None else self._task()  # TODO: avec ou sans parenthèses ? attention confusion!
 
     def parent(self):
         # Efforts don't have real parents since they are not composite. 
