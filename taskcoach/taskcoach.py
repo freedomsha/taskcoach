@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 Task Coach - Your friendly task manager
@@ -14,11 +15,16 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public LicenseClientToScreen
+You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import argparse
+
 # Programme principal
+# importer la bibliothèque pour enregistrer les événements
+# voir https://docs.python.org/fr/3.12/library/logging.html pour son implantation
+# import logging
+# log = logging.getLogger(__name__)
+
 # importer les bibliothèques permettant l'interface pour le système d'exploitation
 import os
 
@@ -32,10 +38,10 @@ os.environ["XLIB_SKIP_ARGB_VISUALS"] = "1"
 # Cela prévient un message de la console quand wx.lib.masked
 # est importé de taskcoachlib.widget sur Ubuntu 12.04 64bits
 
-try:
-    from mx import DateTime  # Essayer d'importer la Class DateTime,
-except ImportError:
-    pass  # si erreur ne rien faire
+# try:
+#     from mx import DateTime  # Essayer d'importer la Class DateTime,
+# except ImportError:
+#     pass  # si erreur ne rien faire
 
 
 if not hasattr(sys, "frozen"):
@@ -44,16 +50,16 @@ if not hasattr(sys, "frozen"):
     # wxpython: wxversion non integre sur python3 donc à ignorer :
     # remplacé par wx.__version__ donc ne plus importer wxversion.
     # https://docs.python.org/fr/3/howto/pyporting.html
-    try:
-        import wxversion  # in python 3 try with wx.__version__
-        # from wx.core import __version__ as wxversion  # ?
-
-        wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True)
-        # __version__.select(["2.8-unicode", "3.0"], optionsRequired=True)
-    except ImportError:
-        # There is no wxversion for py3
-        # Il n'y a aucun wxversion pour py3
-        pass
+    # try:
+    #     import wxversion  # in python 3 try with wx.__version__
+    #     # from wx.core import __version__ as wxversion  # ?
+    #
+    #     wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True)
+    #     # __version__.select(["2.8-unicode", "3.0"], optionsRequired=True)
+    # except ImportError:
+    #     # There is no wxversion for py3
+    #     # Il n'y a aucun wxversion pour py3
+    #     pass
     # except AttributeError:
     #    print(
     #        'wxversion.select(["2.8-unicode", "3.0"], optionsRequired=True) AttributeError: '
@@ -73,16 +79,16 @@ if not hasattr(sys, "frozen"):
             0, "/usr/share/pyshared"
         )  # ajoute à la variable d'environnement PYTHONPATH
         try:
-            import taskcoachlib  # pylint: disable=W0611
+            import taskcoachlib  # pylint: disable=W0611  # noqa: F401
         except ImportError:
             # si erreur écrire une erreur dans le log et sortir
             sys.stderr.write(
                 """ERROR: cannot import the library 'taskcoachlib'.
-Please see https://answers.launchpad.net/taskcoach/+faq/1063
-for more information and possible resolutions.
-ERREUR: Impossible d'importer la librairie 'taskcoachlib'.
-Voir l'adresse pour plus d'information et de possibles résolution.
-"""
+                Please see https://answers.launchpad.net/taskcoach/+faq/1063
+                for more information and possible resolutions.
+                ERREUR: Impossible d'importer la librairie 'taskcoachlib'.
+                Voir l'adresse pour plus d'information et de possibles résolution.
+                """
             )
             sys.exit(1)  # quitte le programme suite à une erreur autre que syntaxe
 
@@ -96,10 +102,10 @@ def start():
     """
 
     # pylint: disable=W0404
-    from taskcoachlib import (
-        config,
-        application
-    )  # import des bibliothèques configurations-options et de l'application
+    from taskcoachlib import application
+    from taskcoachlib import config
+    # from taskcoachlib.config import arguments
+    # import des bibliothèques configurations-options et de l'application
 
     # options, args = config.ApplicationOptionParser().parse_args()
     # méthode de vérification des définitions des variables options et args de config avec optparse :
@@ -140,7 +146,7 @@ def start():
         options, args
     )  # définition de la variable app comme application avec options et args
     # app = application.Application(tcargs)
-    print(options.profile)
+    print("taskcoach.py: options.profile:", options.profile)
     if options.profile:
         # if options["profile"]:
         import cProfile
