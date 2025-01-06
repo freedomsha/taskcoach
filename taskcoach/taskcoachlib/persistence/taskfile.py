@@ -1055,10 +1055,10 @@ class LockedTaskFile(TaskFile):
         """
         Vérifiez si un chemin donné est un système de fichiers FUSE.
 
-        Args:
+        Args :
             path (str) : Le chemin à vérifier.
 
-        Returns:
+        Returns :
             bool : True si le chemin est un système de fichiers FUSE. Système de fichiers FUSE, False sinon.
         """
         if operating_system.isGTK() and os.path.exists("/proc/mounts"):
