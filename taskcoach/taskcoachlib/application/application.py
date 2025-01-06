@@ -320,6 +320,7 @@ class Application(object, metaclass=patterns.Singleton):
             print(f"application.py: Error initializing Twisted: {e}")
             wx.MessageBox(f"application.py Application.__init__: Error initializing Twisted: {e}",
                           "Error", wx.OK | wx.ICON_ERROR)
+        print("application.Application.__init__: Twisted initialized")
         self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=False)
         self.registerApp()
         self.init(**kwargs)  # passe mais n'atteint pas la suite ! goto l540
