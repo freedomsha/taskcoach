@@ -47,10 +47,12 @@ class MessageDialog(sized_controls.SizedDialog):  # pylint: disable=R0904,R0901
         self.SetButtonSizer(button_sizer)
         self.Fit()
         self.CentreOnParent()
-        # button_sizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.on_close)
-        wxhelper.getButtonFromStdDialogButtonSizer(
-            button_sizer, wx.ID_OK
-        ).Bind(wx.EVT_BUTTON, self.on_close)
+        button_sizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.on_close)
+        # AttributeError: 'StdDialogButtonSizer' object has no attribute 'GetAffirmativeButton'. Did you mean: 'SetAffirmativeButton'?
+        # wxhelper.getButtonFromStdDialogButtonSizer(
+        #     button_sizer, wx.ID_OK
+        # ).Bind(wx.EVT_BUTTON, self.on_close)  # TODO : no attribute getButtonFromStdDialogButtonSizer
+        # AttributeError: module 'wxhelper' has no attribute 'getButtonFromStdDialogButtonSizer'
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
     def __create_message(self, pane):
