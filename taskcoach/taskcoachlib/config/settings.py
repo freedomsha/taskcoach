@@ -176,14 +176,15 @@ class Settings(CachingConfigParser):
             try:
                 if not self.read(self.filename(forceProgramDir=True)):
                     self.read(self.filename())
-                # errorMessage = ""
+                errorMessage = ""
             except configparser.ParsingError as errorMessage:
                 # Ignorez les exceptions et utilisez simplement les valeurs par défaut.
                 # Enregistrez également l'échec dans les paramètres :
                 self.initializeWithDefaults()
                 # errorMessage = str(errorMessage)
             # self.setLoadStatus(ExceptionAsUnicode(errorMessage))
-            self.setLoadStatus(errorMessage)
+            self.setLoadStatus(errorMessage)  # UnboundLocalError: cannot access local variable 'errorMessage' where it is not associated with a value
+
         else:
             # Supposons que si les paramètres ne doivent pas être chargés, nous
             # devrions également rester silencieux (c'est-à-dire que nous sommes probablement en mode test) :
