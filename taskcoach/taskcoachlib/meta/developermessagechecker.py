@@ -30,15 +30,15 @@ class DeveloperMessageChecker(threading.Thread):
         self.__call_after = call_after or self.__wx_call_after
         super().__init__()
 
-    # @staticmethod
-    def _set_daemon(self):
+    @staticmethod  # TODO : vérifie s'il faut le commenter ou non
+    def _set_daemon():
         return True  # Don't block application exit
 
     def run(self, show=True):  # pylint: disable=W0221
         # what do you want to do ?
         try:
-            message, url = self.__get_message()
-        except:  # pylint: disable=W0702
+            message, url = self.__get_message()  # urllib.error.URLError: <urlopen error [Errno -2] Nom ou service inconnu>
+        except Exception:  # pylint: disable=W0702
             return  # Whatever goes wrong, ignore it.
         if self.__message_is_new(message):  # this code is unreachable
             return self.__notify_user(message, url, show)
