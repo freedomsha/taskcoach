@@ -89,23 +89,23 @@ def getContent(message):
         return ""
 
 
-def openMailWithOutlook(filename):
-    id_ = None
-    for line in file(filename, "r"):
-        if line.startswith("X-Outlook-ID:"):
-            id_ = line[13:].strip()
-            break
-        elif line.strip() == "":
-            break
-
-    if id_ is None:
-        return False
-
-    from win32com.client import GetActiveObject  # pylint: disable=F0401
-    app = GetActiveObject("Outlook.Application")
-    app.ActiveExplorer().Session.GetItemFromID(id_).Display()
-
-    return True
+# def openMailWithOutlook(filename):
+#     id_ = None
+#     for line in file(filename, "r"):
+#         if line.startswith("X-Outlook-ID:"):
+#             id_ = line[13:].strip()
+#             break
+#         elif line.strip() == "":
+#             break
+#
+#     if id_ is None:
+#         return False
+#
+#     from win32com.client import GetActiveObject  # pylint: disable=F0401
+#     app = GetActiveObject("Outlook.Application")
+#     app.ActiveExplorer().Session.GetItemFromID(id_).Display()
+#
+#     return True
 
 
 def openMail(filename):
@@ -116,13 +116,13 @@ def openMail(filename):
                              r"mailto\shell\open\command")
         try:
             value, type_ = winreg.QueryValueEx(key, "")
-            if type_ in [winreg.REG_SZ, winreg.REG_EXPAND_SZ]:
-                if "outlook.exe" in value.lower():
-                    try:
-                        if openMailWithOutlook(filename):
-                            return
-                    except:
-                        pass
+            # if type_ in [winreg.REG_SZ, winreg.REG_EXPAND_SZ]:
+            #     if "outlook.exe" in value.lower():
+            #         try:
+            #             if openMailWithOutlook(filename):
+            #                 return
+            #         except Exception:
+            #             pass
         finally:
             winreg.CloseKey(key)
 
