@@ -101,8 +101,8 @@ class SpinCtrl(wx.Panel):
         # within the min/max range.
         self._textCtrl.SetValue(str(self.GetValue()))
 
-    # GetValue = property(GetValue, SetValue)
-    Value = property(GetValue, SetValue)
+    GetValue = property(GetValue, SetValue)  # TODO : faire un choix ou les deux ?
+    # Value = property(GetValue, SetValue)
 
     def GetMax(self):
         return self._spinButton.GetMax()
