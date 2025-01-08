@@ -24,8 +24,9 @@ import wx
 # from wx import TreeCtrl as customtree
 from wx.lib.agw import customtreectrl as customtree
 from wx.lib.agw import hypertreelist
-from wx.lib.agw.ultimatelistctrl import UltimateListCtrl
 from wx.lib.agw.ultimatelistctrl import UltimateListCtrl, UltimateListMainWindow
+# TODO : voir si on peux utiliser TreeListCtrl
+from wx.dataview import TreeListCtrl
 from taskcoachlib.widgets import itemctrl, draganddrop
 
 
@@ -169,12 +170,23 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         self.__user_double_clicked = False
         self.__columns_with_images = []
         self.__default_font = wx.NORMAL_FONT
+        # ajout d'attribut :
+        self.selectCommand = selectCommand
+        self.editCommand = editCommand
+        self.dragAndDropCommand = dragAndDropCommand
         kwargs.setdefault("resizeableColumn", 0)
         super().__init__(parent, style=self.__get_style(),
                          agwStyle=self.__get_agw_style(), columns=columns,
                          itemPopupMenu=itemPopupMenu,
                          columnPopupMenu=columnPopupMenu, *args, **kwargs)
         self.bindEventHandlers(selectCommand, editCommand, dragAndDropCommand)
+
+        # # TODO:
+        # # AttributeError: 'TreeListCtrl' object has no attribute '_mainWin'
+        # # donc test de cette ligne copié de ultimatelistctrl.__init__
+        # self._mainWin = UltimateListMainWindow(self, wx.ID_ANY, wx.Point(0, 0), wx.DefaultSize, self.__get_style(), self.__get_agw_style())
+        # # AttributeError: 'TreeListCtrl' object has no attribute '_headerWin'
+        # self._headerWin = None
 
     def bindEventHandlers(self, selectCommand, editCommand, dragAndDropCommand):
         # pylint: disable=W0201
@@ -482,6 +494,8 @@ class CheckTreeCtrl(TreeListCtrl):
         # self.GetMainWindow().bind(wx.EVT_LEFT_DOWN, self.onMouseLeftDown)
         # AttributeError: 'TreeListMainWindow' object has no attribute 'bind'
         self.GetMainWindow().Bind(wx.EVT_LEFT_DOWN, self.onMouseLeftDown)
+        # self._mainWin = self.MainWindow()  # TODO : Test car attribut manquant
+        # mais TypeError: 'TreeListMainWindow' object is not callable
         self.getIsItemCheckable = (
             parent.getIsItemCheckable
             if hasattr(parent, "getIsItemCheckable")
@@ -489,6 +503,14 @@ class CheckTreeCtrl(TreeListCtrl):
         )
         self.getIsItemChecked = parent.getIsItemChecked
         self.getItemParentHasExclusiveChildren = parent.getItemParentHasExclusiveChildren
+        # AttributeError: 'TreeListCtrl' object has no attribute '_mainWin'
+        # donc test de cette ligne copié de ultimatelistctrl.__init__
+        # self._mainWin = UltimateListMainWindow(self, wx.ID_ANY, wx.Point(0, 0), wx.DefaultSize, self.__get_style(),
+        #                                        self.__get_agw_style())
+        # AttributeError: 'CheckTreeCtrl' object has no attribute '_CheckTreeCtrl__get_style'
+        # self._mainWin = None
+        # AttributeError: 'CheckTreeCtrl' object has no attribute '_headerWin'
+        # self._headerWin = None
 
     def getItemCTType(self, domain_object):
         """ Use radio buttons (ct_type == 2) when the object has "exclusive"
