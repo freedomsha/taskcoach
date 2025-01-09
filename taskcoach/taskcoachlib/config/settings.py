@@ -322,7 +322,7 @@ class Settings(CachingConfigParser):
         return super().set(section, option, value)
 
     # def get(self, section, option, raise_on_missing=False, *, raw=False, vars=None):
-    def get(self, section, option):
+    def get(self, section, option,raise_on_missing=False):
         # def get(self, section: str, option: str):
         """
         Obtenez une valeur à partir des paramètres, de la gestion des valeurs par défaut et des anciens formats de fichier .ini.
@@ -340,14 +340,20 @@ class Settings(CachingConfigParser):
         try:
             result = super().get(section, option)
         except configparser.NoSectionError:
-            raise
+            if raise_on_missing:
+                raise
+            else:
+                return self.getDefault(section, option)
         except configparser.NoOptionError:
-            # if raise_on_missing:
-            raise  # Raise for tests
-            # else:
-            #     return self.getDefault(section, option)  # Use default for normal use
+            if raise_on_missing:
+                raise  # Raise for tests
+            else:
+                return self.getDefault(section, option)  # Use default for normal use
         except KeyError:
-            raise configparser.NoOptionError(option, section)
+            if raise_on_missing:
+                raise configparser.NoOptionError(option, section)
+            else:
+                return self.getDefault(section, option)
 
         result = self._fixValuesFromOldIniFiles(section, option, result)
         result = self._ensureMinimum(section, option, result)
@@ -398,7 +404,7 @@ class Settings(CachingConfigParser):
             if e.args[0] == defaultSectionKey:
                 raise configparser.NoSectionError(defaultSectionKey)
             else:
-                raise configparser.NoOptionError((option, defaultSection))
+                raise configparser.NoOptionError(option, defaultSectionKey)
         # Autres améliorations possibles :
         #     Validation des entrées : Vérifier que section et option sont des chaînes non vides.
         #     Utilisation d'un logger : Enregistrer les appels à la fonction et les erreurs éventuelles dans un fichier de log.

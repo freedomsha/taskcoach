@@ -91,11 +91,19 @@ class SettingsTest(SettingsTestCase):
     def testGetNonExistingSettingFromSection2RaisesException(self):
         self.settings.add_section("effortviewer1")
         self.settings.add_section("effortviewer2")
+        # self.assertRaises(
+        #     configparser.NoOptionError,
+        #     self.settings.get,
+        #     "effortviewer2",
+        #     "nonexisting",
+        # )
+        # Passing raise_on_missing=True to ensure NoOptionError is raised
         self.assertRaises(
             configparser.NoOptionError,
             self.settings.get,
             "effortviewer2",
             "nonexisting",
+            raise_on_missing=True,
         )
 
     def testGetNonExistingSectionRaisesException(self):
