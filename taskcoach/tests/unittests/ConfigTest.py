@@ -29,11 +29,14 @@ from pubsub import pub
 
 
 class SettingsTestCase(test.TestCase):
+    def __init__(self):
+        self.settings = None
+
     def setUp(self):
-        self.settings = config.Settings(load=False)
+        self.settings = config.settings.Settings(load=False)
 
     def tearDown(self):
-        super(SettingsTestCase, self).tearDown()
+        super().tearDown()
         del self.settings
 
 

@@ -62,9 +62,22 @@ class UnicodeAwareConfigParser(configparser.RawConfigParser):
         """
         Obtenez une valeur de configuration à partir de la section spécifiée.
 
+        Obtenez une valeur d'option pour une section donnée.
+        Si `vars` est fourni, il doit s'agir d'un dictionnaire.
+        L'option est recherchée dans `vars` (si fourni), `section` et dans `DEFAULTSECT` dans cet ordre.
+        Si la clé n'est pas trouvée et que `fallback` est fourni, elle est utilisée comme valeur de secours.
+        `None` peut être fourni comme valeur `fallback`.
+
+        Si l'interpolation est activée et que l'argument facultatif « raw » est False,
+        toutes les interpolations sont développées dans les valeurs de retour.
+
+        Arguments « raw », « vars » et `fallback` sont uniquement des mots-clé.
+
         Args :
             section (str) : Le nom de la section.
             setting (str) : Le nom du paramètre.
+            raw (bool) :
+            vars : Dictionnaire
 
         Returns :
             La valeur de configuration.
@@ -131,9 +144,22 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         """
         Obtenez une valeur de configuration à partir du cache ou lisez-la si elle n'est pas mise en cache.
 
+        Obtenez une valeur d'option pour une section donnée.
+        Si `vars` est fourni, il doit s'agir d'un dictionnaire.
+        L'option est recherchée dans `vars` (si fourni), `section` et dans `DEFAULTSECT` dans cet ordre.
+        Si la clé n'est pas trouvée et que `fallback` est fourni, elle est utilisée comme valeur de secours.
+        `None` peut être fourni comme valeur `fallback`.
+
+        Si l'interpolation est activée et que l'argument facultatif « raw » est False,
+        toutes les interpolations sont développées dans les valeurs de retour.
+
+        Arguments « raw », « vars » et `fallback` sont uniquement des mots-clé.
+
         Args :
             section (str) : le nom de la section.
             setting (str) : le nom du paramètre.
+            raw (bool) :
+            vars : Dictionnaire
 
         Returns :
             La valeur de configuration.
@@ -170,6 +196,8 @@ class Settings(CachingConfigParser):
         self.__loadAndSave = load
         self.__iniFileSpecifiedOnCommandLine = iniFile
         self.migrateConfigurationFiles()
+        # Ensure errorMessage is initialized
+        errorMessage = None
         if load:
             # Tout d'abord, essayez de charger le fichier de paramètres depuis le répertoire du programme,
             # si cela échoue, chargez le fichier de paramètres depuis le répertoire des paramètres
@@ -177,13 +205,14 @@ class Settings(CachingConfigParser):
                 if not self.read(self.filename(forceProgramDir=True)):
                     self.read(self.filename())
                 errorMessage = ""
-            except configparser.ParsingError as errorMessage:
+            except configparser.ParsingError as e:
                 # Ignorez les exceptions et utilisez simplement les valeurs par défaut.
                 # Enregistrez également l'échec dans les paramètres :
                 self.initializeWithDefaults()
-                # errorMessage = str(errorMessage)
-            # self.setLoadStatus(ExceptionAsUnicode(errorMessage))
-            self.setLoadStatus(errorMessage)  # UnboundLocalError: cannot access local variable 'errorMessage' where it is not associated with a value
+                errorMessage = str(e)
+            finally:
+                # self.setLoadStatus(ExceptionAsUnicode(errorMessage))
+                self.setLoadStatus(errorMessage)  # UnboundLocalError: cannot access local variable 'errorMessage' where it is not associated with a value
 
         else:
             # Supposons que si les paramètres ne doivent pas être chargés, nous
@@ -292,7 +321,8 @@ class Settings(CachingConfigParser):
         """
         return super().set(section, option, value)
 
-    def get(self, section, option, raise_on_missing=False, *, raw=False, vars=None):
+    # def get(self, section, option, raise_on_missing=False, *, raw=False, vars=None):
+    def get(self, section, option):
         # def get(self, section: str, option: str):
         """
         Obtenez une valeur à partir des paramètres, de la gestion des valeurs par défaut et des anciens formats de fichier .ini.
@@ -300,17 +330,25 @@ class Settings(CachingConfigParser):
         Args :
             section (str) : Le nom de la section.
             option (str) : Le nom de l'option.
+            raise_on_missing (bool) :
+            raw (bool) :
+            vars :
 
         Returns :
             La valeur du paramètre.
         """
         try:
             result = super().get(section, option)
-        except (configparser.NoOptionError, configparser.NoSectionError):
-            if raise_on_missing:
-                raise  # Raise for tests
-            else:
-                return self.getDefault(section, option)  # Use default for normal use
+        except configparser.NoSectionError:
+            raise
+        except configparser.NoOptionError:
+            # if raise_on_missing:
+            raise  # Raise for tests
+            # else:
+            #     return self.getDefault(section, option)  # Use default for normal use
+        except KeyError:
+            raise configparser.NoOptionError(option, section)
+
         result = self._fixValuesFromOldIniFiles(section, option, result)
         result = self._ensureMinimum(section, option, result)
         return result
