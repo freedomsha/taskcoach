@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 import unittest
-# import logging
+import logging
 import gettext
 import platform
 
@@ -42,8 +42,8 @@ _PLATFORM_MAP = {
 
 
 def skipOnPlatform(*platforms):
-    """ Decorator for unit tests that are to be skipped on specific
-        platforms. """
+    """ Décorateur pour les tests unitaires qui doivent être ignorés sur des plates-formes spécifiques.
+    """
     def wrapper(func):
         if platform.system() in [_PLATFORM_MAP[name] for name in platforms]:
             # return lambda self, *args, **kwargs: self.skipTest("platform is %s" % wx.Platform)
