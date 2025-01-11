@@ -164,11 +164,11 @@ class CommonTestsMixin(object):
         self.treeCtrl.RefreshAllItems(1)
         item = self.getFirstTreeItem()
         self.treeCtrl.SelectItem(item)
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
         self.children[None] = [self.item0]
         self.treeCtrl.RefreshAllItems(1)
         item = self.getFirstTreeItem()
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
 
     def testRetainSelectionWhenEditingSubTask(self):
         self.children[None] = [self.item0]
@@ -176,43 +176,43 @@ class CommonTestsMixin(object):
         self.treeCtrl.RefreshAllItems(2)
         item = self.getFirstTreeItem()
         self.treeCtrl.SelectItem(item)
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
         self.children[self.item0] = [self.item0_0]
         self.treeCtrl.RefreshAllItems(2)
         item = self.getFirstTreeItem()
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
 
     def testRetainSelectionWhenAddingSubTask(self):
         self.children[None] = [self.item0]
         self.treeCtrl.RefreshAllItems(1)
         item = self.getFirstTreeItem()
         self.treeCtrl.SelectItem(item)
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
         self.children[self.item0] = [self.item0_0]
         self.treeCtrl.RefreshAllItems(2)
         item = self.getFirstTreeItem()
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
 
     def testRetainSelectionWhenAddingSubTask_TwoToplevelTasks(self):
         self.children[None] = [self.item0, self.item1]
         self.treeCtrl.RefreshAllItems(2)
         item = self.getFirstTreeItem()
         self.treeCtrl.SelectItem(item)
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
         self.children[self.item0] = [self.item0_0]
         self.treeCtrl.RefreshAllItems(3)
         item = self.getFirstTreeItem()
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
 
     def testRemovingASelectedItemDoesNotMakeAnotherOneSelected(self):
         self.children[None] = [self.item0, self.item1]
         self.treeCtrl.RefreshAllItems(2)
         item = self.getFirstTreeItem()
         self.treeCtrl.SelectItem(item)
-        self.failUnless(self.treeCtrl.IsSelected(item))
+        self.assertTrue(self.treeCtrl.IsSelected(item))
         self.children[None] = [self.item1]
         self.treeCtrl.RefreshAllItems(1)
-        self.failIf(self.treeCtrl.curselection())
+        self.assertFalse(self.treeCtrl.curselection())
 
     def testRefreshItem(self):
         self.children[None] = [self.item0]
@@ -222,34 +222,34 @@ class CommonTestsMixin(object):
         self.assertEqual("item 0", self.treeCtrl.GetItemText(item))
 
     def testIsAnyItemCollapsable_NoItems(self):
-        self.failIf(self.treeCtrl.isAnyItemCollapsable())
+        self.assertFalse(self.treeCtrl.isAnyItemCollapsable())
 
     def testIsAnyItemExpandable_NoItems(self):
-        self.failIf(self.treeCtrl.isAnyItemExpandable())
+        self.assertFalse(self.treeCtrl.isAnyItemExpandable())
 
     def testIsAnyItemCollapsable_OneItem(self):
         self.children[None] = [self.item0]
         self.treeCtrl.RefreshAllItems(1)
-        self.failIf(self.treeCtrl.isAnyItemCollapsable())
+        self.assertFalse(self.treeCtrl.isAnyItemCollapsable())
 
     def testIsAnyItemExpandable_OneItem(self):
         self.children[None] = [self.item0]
         self.treeCtrl.RefreshAllItems(1)
-        self.failIf(self.treeCtrl.isAnyItemExpandable())
+        self.assertFalse(self.treeCtrl.isAnyItemExpandable())
 
     def testIsAnyItemCollapsable_OneCollapsedParent(self):
         self.children[None] = [self.item0]
         self.children[self.item0] = [self.item0_0]
         self.collapsedItems.append(self.item0)
         self.treeCtrl.RefreshAllItems(2)
-        self.failIf(self.treeCtrl.isAnyItemCollapsable())
+        self.assertFalse(self.treeCtrl.isAnyItemCollapsable())
 
     def testIsAnyItemExpandable_OneCollapsedParent(self):
         self.children[None] = [self.item0]
         self.children[self.item0] = [self.item0_0]
         self.collapsedItems.append(self.item0)
         self.treeCtrl.RefreshAllItems(2)
-        self.failUnless(self.treeCtrl.isAnyItemExpandable())
+        self.assertTrue(self.treeCtrl.isAnyItemExpandable())
 
     def testIsAnyItemCollapsable_OneExpandedParent(self):
         self.children[None] = [self.item0]
@@ -257,7 +257,7 @@ class CommonTestsMixin(object):
         self.treeCtrl.RefreshAllItems(2)
         parent = self.getFirstTreeItem()
         self.treeCtrl.Expand(parent)
-        self.failUnless(self.treeCtrl.isAnyItemCollapsable())
+        self.assertTrue(self.treeCtrl.isAnyItemCollapsable())
 
     def testIsAnyItemExpandable_OneExpandedParent(self):
         self.children[None] = [self.item0]
@@ -265,7 +265,7 @@ class CommonTestsMixin(object):
         self.treeCtrl.RefreshAllItems(2)
         parent = self.getFirstTreeItem()
         self.treeCtrl.Expand(parent)
-        self.failIf(self.treeCtrl.isAnyItemExpandable())
+        self.assertFalse(self.treeCtrl.isAnyItemExpandable())
 
 
 class TreeListCtrlTest(TreeCtrlTestCase, CommonTestsMixin):
@@ -315,7 +315,7 @@ class CheckTreeCtrlTest(TreeCtrlTestCase, CommonTestsMixin):
         parent = self.getFirstTreeItem()
         self.treeCtrl.CheckItem(parent)
         child = self.treeCtrl.GetItemChildren(parent)[0]
-        self.failIf(child.IsChecked())
+        self.assertFalse(child.IsChecked())
 
     def testCheckParentOfMutualExclusiveChildrenUnchecksAllChildren(self):
         self.children[None] = [self.item0]
@@ -327,7 +327,7 @@ class CheckTreeCtrlTest(TreeCtrlTestCase, CommonTestsMixin):
         self.treeCtrl.CheckItem(children[0])
         self.treeCtrl.CheckItem(parent)
         for child in children:
-            self.failIf(child.IsChecked())
+            self.assertFalse(child.IsChecked())
 
     def testCheckParentOfMutualExclusiveChildrenUnchecksAllChildrenRecursively(self):
         self.children[None] = [self.item0]
@@ -340,7 +340,7 @@ class CheckTreeCtrlTest(TreeCtrlTestCase, CommonTestsMixin):
         grandchild = children[1]
         self.treeCtrl.CheckItem(grandchild)
         self.treeCtrl.CheckItem(parent)
-        self.failIf(grandchild.IsChecked())
+        self.assertFalse(grandchild.IsChecked())
 
     def testCheckMutualExclusiveChildUnchecksParent(self):
         self.children[None] = [self.item0]
@@ -351,4 +351,4 @@ class CheckTreeCtrlTest(TreeCtrlTestCase, CommonTestsMixin):
         children = self.treeCtrl.GetItemChildren(parent)
         self.treeCtrl.CheckItem(parent)
         self.treeCtrl.CheckItem(children[0])
-        self.failIf(self.treeCtrl.IsItemChecked(parent))  # pylint: disable=E1101
+        self.assertFalse(self.treeCtrl.IsItemChecked(parent))  # pylint: disable=E1101

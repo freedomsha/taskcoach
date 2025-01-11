@@ -66,6 +66,12 @@ class DummyUICommand(base_uicommand.UICommand):  # pylint: disable=W0223
     section = "view"
     setting = "setting"
 
+    def __init__(self, menuText="", helpText="", bitmap="nobitmap",
+                 kind=wx.ITEM_NORMAL, id=None, bitmap2=None,
+                 *args, **kwargs):
+        super().__init__(menuText, helpText, bitmap, kind, id, bitmap2, args, kwargs)
+        self.activated = None
+
     def onCommandActivate(self, event):
         self.activated = True  # pylint: disable=W0201
 
@@ -73,6 +79,10 @@ class DummyUICommand(base_uicommand.UICommand):  # pylint: disable=W0223
 class ViewerWithDummyWidget(viewer_base.Viewer):  # pylint: disable=W0223
     defaultTitle = "ViewerWithDummyWidget"
     defaultBitmap = ""
+
+    def __init__(self, parent, taskFile, settings, *args, **kwargs):
+        super().__init__(parent, taskFile, settings, args, kwargs)
+        self._columns = None
 
     def domainObjectsToView(self):
         return self.taskFile.tasks()
