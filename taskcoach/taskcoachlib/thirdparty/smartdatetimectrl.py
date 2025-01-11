@@ -1128,7 +1128,8 @@ class TimeEntry(Entry):
                 'Invalid format "%s" (original exception: "%s")' % (debugInfo, e)
             )
 
-        EVT_ENTRY_CHOICE_SELECTED(self, self.__OnHourSelected)
+        # EVT_ENTRY_CHOICE_SELECTED(self, self.__OnHourSelected)
+        self.Bind(EVT_ENTRY_CHOICE_SELECTED, self.__OnHourSelected)
 
     def Format(self):
         return self.__formatter(self.GetTime())
@@ -1586,7 +1587,8 @@ class DateEntry(Entry):
 
         self.__calendar = None
 
-        wx.EVT_LEFT_UP(self, self.__OnLeftUp)
+        # wx.EVT_LEFT_UP(self, self.__OnLeftUp)
+        self.Bind(wx.EVT_LEFT_UP, self.__OnLeftUp)
         if "__WXMAC__" in wx.PlatformInfo:
             wx.EVT_KILL_FOCUS(self, self.__OnKillFocus)
 
@@ -2565,12 +2567,20 @@ class SmartDateTimeCtrl(wx.Panel):
         self.__label = None
         if self.__enableNone:
             self.__checkbox = _CheckBox(self, label)
-            wx.EVT_CHECKBOX(self.__checkbox, wx.ID_ANY, self.OnToggleNone)
-            sizer.Add(self.__checkbox, 0, wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE, 3)
+            # wx.EVT_CHECKBOX(self.__checkbox, wx.ID_ANY, self.OnToggleNone)
+            # méthode dépréciée, utiliser plutôt Bind.
+            self.__checkbox.Bind(wx.EVT_CHECKBOX, self.OnToggleNone)
+            # sizer.Add(self.__checkbox, 0, wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE, 3)
+            # Vous avez simplement besoin de supprimer wx.ALIGN_CENTRE parce que wx.EXPAND l'annulera de toute façon.
+            # Si vous avez besoin de centrer l'élément dans un autre contexte,
+            # vous pouvez ajouter ces flags dans le parent sizer ou
+            # manipuler les options différemment pour s'adapter aux besoins spécifiques de votre interface utilisateur.
+            sizer.Add(self.__checkbox, 0, wx.ALL | wx.EXPAND, 3)
             self.__label = self.__checkbox
         elif label:
             self.__label = wx.StaticText(self, wx.ID_ANY, label)
-            sizer.Add(self.__label, 0, wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE, 3)
+            # sizer.Add(self.__label, 0, wx.ALL | wx.EXPAND | wx.ALIGN_CENTRE, 3)
+            sizer.Add(self.__label, 0, wx.ALL | wx.EXPAND, 3)
 
         dateTime = value or datetime.datetime.now()
 
@@ -2614,11 +2624,16 @@ class SmartDateTimeCtrl(wx.Panel):
         if self.__enableNone and value is None:
             self.Enable(False)
 
-        EVT_DATE_CHANGE(self, self.OnDateChange)
-        EVT_TIME_CHANGE(self, self.OnTimeChange)
-        EVT_TIME_CHOICES_CHANGE(self.__timeCtrl, self.__OnChoicesChange)
-        EVT_TIME_NEXT_DAY(self, self.OnNextDay)
-        EVT_TIME_PREV_DAY(self, self.OnPrevDay)
+        # EVT_DATE_CHANGE(self, self.OnDateChange)
+        self.Bind(EVT_DATE_CHANGE, self.OnDateChange)
+        # EVT_TIME_CHANGE(self, self.OnTimeChange)
+        self.Bind(EVT_TIME_CHANGE, self.OnTimeChange)
+        # EVT_TIME_CHOICES_CHANGE(self.__timeCtrl, self.__OnChoicesChange)
+        self.__timeCtrl.Bind(EVT_TIME_CHOICES_CHANGE, self.__OnChoicesChange)
+        # EVT_TIME_NEXT_DAY(self, self.OnNextDay)
+        self.Bind(EVT_TIME_NEXT_DAY, self.OnNextDay)
+        # EVT_TIME_PREV_DAY(self, self.OnPrevDay)
+        self.Bind(EVT_TIME_PREV_DAY, self.OnPrevDay)
 
     def __OnPopupRelativeChoices(self, event):
         self.__timeCtrl.PopupRelativeChoices()

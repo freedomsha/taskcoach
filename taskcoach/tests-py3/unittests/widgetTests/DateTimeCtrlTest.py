@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import object
 from ... import tctest
 import locale
+from importlib import reload
 from taskcoachlib import widgets, render
 from taskcoachlib.domain import date
 
