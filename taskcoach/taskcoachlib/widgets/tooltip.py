@@ -25,7 +25,8 @@ import textwrap
 
 class ToolTipMixin(object):
     """ Sous-classez ceci et remplacez OnBeforeShowToolTip pour fournir
-    une info-bulle dynamique sur un contrôle. """
+    une info-bulle dynamique sur un contrôle.
+    """
 
     def __init__(self, *args, **kwargs):
         self.__enabled = kwargs.pop('tooltipsEnabled', True)
