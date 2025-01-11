@@ -1,4 +1,4 @@
-'''
+"""
 Task Coach - Your friendly task manager
 Copyright (C) 2004-2021 Task Coach developers <developers@taskcoach.org>
 
@@ -14,15 +14,16 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
-import tctest
+from .. import tctest
 import taskcoachlib.mailer
 
 
 class TestMailer(tctest.TestCase):
     def testWriteMail(self):
         def openURL(mailtoString):
-            self.mailtoString = mailtoString # pylint: disable=W0201
-        taskcoachlib.mailer.sendMail('to', 'subject', 'body', openURL=openURL)
-        self.assertTrue(self.mailtoString.startswith('mailto:'))
+            self.mailtoString = mailtoString  # pylint: disable=W0201
+
+        taskcoachlib.mailer.sendMail("to", "subject", "body", openURL=openURL)
+        self.assertTrue(self.mailtoString.startswith("mailto:"))
