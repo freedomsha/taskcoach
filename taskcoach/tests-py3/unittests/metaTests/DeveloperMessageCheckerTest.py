@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from future import standard_library
+import io
 from taskcoachlib import config, meta
 from ...unittests import dummy
-import io
 
 # standard_library.install_aliases()
 from ... import tctest
