@@ -68,7 +68,7 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
                  consolidate=False):
         if consolidate:
             totalEffort = sum((self.__doRound(effort.duration(), 0, False) for effort in
-                                self._getEfforts(recursive)), date.TimeDelta())
+                               self._getEfforts(recursive)), date.TimeDelta())
             return totalEffort.round(seconds=rounding, alwaysUp=roundUp)
         return sum((self.__doRound(effort.duration(), rounding, roundUp) for effort in
                     self._getEfforts(recursive)), date.TimeDelta())
@@ -190,15 +190,15 @@ class CompositeEffort(BaseCompositeEffort):
             super().mayContain(effort)
 
     def description(self):
-        # if len(set(effort.description() for effort in self._getEfforts(False))) == 1:
-        if len(set(effort.getDescription() for effort in self._getEfforts(False))) == 1:
-            # return self._getEfforts(False)[0].description()
-            return self._getEfforts(False)[0].getDescription()
-        # effortDescriptions = [effort.description() for effort in
-        effortDescriptions = [effort.getDescription() for effort in
-                               sorted(self._getEfforts(False),
-                                      # key=lambda effort: effort.getStart()) if effort.description()]
-                                      key=lambda effort: effort.getStart()) if effort.getDescription()]
+        if len(set(effort.description() for effort in self._getEfforts(False))) == 1:
+            # if len(set(effort.getDescription() for effort in self._getEfforts(False))) == 1:
+            return self._getEfforts(False)[0].description()
+            # return self._getEfforts(False)[0].getDescription()
+        # effortDescriptions = [effort.getDescription() for effort in
+        effortDescriptions = [effort.description() for effort in
+                              sorted(self._getEfforts(False),
+                              key=lambda effort: effort.getStart()) if effort.description()]
+        # key=lambda effort: effort.getStart()) if effort.getDescription()]
         return "\n".join(effortDescriptions)
 
     def onAppearanceChanged(self, event):
