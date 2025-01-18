@@ -20,11 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # standard_library.install_aliases()
 # from builtins import zip
 # from builtins import object
+from taskcoachlib import patterns
 
 
 class TaskListAssertsMixin(object):
     def assertTaskList(self, expected):
         self.assertEqualLists(expected, self.taskList)
+        # self.assertListEqual(expected, self.taskList)
         self.assertAllChildrenInTaskList()
 
     def assertAllChildrenInTaskList(self):
@@ -52,13 +54,15 @@ class NoteContainerAssertsMixin(object):
 class EffortAssertsMixin(object):
     def assertEqualEfforts(self, effort1, effort2):
         self.assertEqual(effort1.task(), effort2.task())
+        #                                ^^^^^^^^^^^^^^
+        # TypeError: 'Task' object is not callable in test_effort.py
         self.assertEqual(effort1.getStart(), effort2.getStart())
         self.assertEqual(effort1.getStop(), effort2.getStop())
         self.assertEqual(effort1.description(), effort2.description())
 
 
 class TaskAssertsMixin(object):
-    def failUnlessParentAndChild(self, parent, child):
+    def assertTrueParentAndChild(self, parent, child):
         self.assertTrue(child in parent.children())
         self.assertTrue(child.parent() == parent)
 
@@ -105,7 +109,7 @@ class TaskAssertsMixin(object):
 
 class CommandAssertsMixin(object):
     def assertHistoryAndFuture(self, expectedHistory, expectedFuture):
-        from taskcoachlib import patterns
+        # from taskcoachlib import patterns
 
         commands = patterns.CommandHistory()
         self.assertEqual(expectedHistory, commands.getHistory())
