@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from __future__ import absolute_import
 
-from unittests import asserts
+from tests.unittests import asserts
 from .CommandTestCase import CommandTestCase
 from taskcoachlib import command, config
 from taskcoachlib.domain import task, effort, date
