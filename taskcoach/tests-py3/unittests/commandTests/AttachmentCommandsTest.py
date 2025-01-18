@@ -19,12 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from __future__ import absolute_import
 #
 # from builtins import object
+
+from .CommandTestCase import CommandTestCase
+# from ... import tctest
+# from ...unittests import asserts
 from taskcoachlib import command
 from taskcoachlib.domain import attachment, task, note, category
-from .CommandTestCase import CommandTestCase
 
 
 class AddAttachmentTestsMixin(object):
+    def __init__(self):
+        self.attachment = None
+
     def addAttachment(self, selectedItems=None):
         self.attachment = attachment.FileAttachment(
             "attachment"
@@ -59,9 +65,15 @@ class AddAttachmentTestsMixin(object):
 
 class AddAttachmentTestCase(CommandTestCase):
     ItemClass = ContainerClass = lambda subject: "Subclass responsibility"
+    # @staticmethod
+    # def ItemClass(subject):
+    #     return "Subclass responsibility"
+    #
+    # def ContainerClass(subject):
+    #     return "Subclass responsibility"
 
     def setUp(self):
-        super(AddAttachmentTestCase, self).setUp()
+        super().setUp()
         self.item1 = self.ItemClass(subject="item1")
         self.item2 = self.ItemClass(subject="item2")
         self.container = self.ContainerClass([self.item1, self.item2])
