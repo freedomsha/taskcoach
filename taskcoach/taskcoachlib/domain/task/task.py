@@ -29,7 +29,8 @@ from taskcoachlib.domain.attribute.icon import getImageOpen
 #    from wx.lib.pubsub import pub
 # except ModuleNotFoundError:
 from pubsub import pub
-from taskcoachlib.thirdparty._weakrefset import WeakSet
+# from taskcoachlib.thirdparty._weakrefset import WeakSet
+from _weakrefset import WeakSet
 from . import status
 import weakref
 import wx
@@ -217,7 +218,7 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
             # The removed child was the last uncompleted child
             self.setCompletionDateTime(date.Now())
         self.recomputeAppearance(recursive=False, event=event)
-        child.recomputeAppearance(recursive=True, event=event)
+        child.recomputeAppearance(recursive=True, event=event)  # Unresolved attribute reference 'recomputeAppearance' for class 'Composite'
 
     def childChangeEvent(self, child, wasTracking, event):
         childHasTimeSpent = child.timeSpent(recursive=True)
@@ -488,7 +489,7 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
 
     @classmethod
     def completionDateTimeSortEventTypes(class_):
-        """ The event types that influence the completion Date time sort order. """
+        """ Types d'événements qui influencent l'ordre de tri de la date et de l'heure d'achèvement. """
         return (class_.completionDateTimeChangedEventType(),)
 
     def onMarkParentCompletedWhenAllChildrenCompletedChanged(self, value):
