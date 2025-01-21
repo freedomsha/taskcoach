@@ -16,9 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import object
-from ... import test, wx
-from ....taskcoachlib.widgets import tooltip
+# from builtins import object
+from ... import tctest
+import wx
+from taskcoachlib.widgets import tooltip
 
 
 class ToolTipUnderTest(tooltip.ToolTipMixin, wx.Frame):  # pylint: disable=W0223
@@ -34,11 +35,11 @@ class DummyToolTipWindow(object):
     def Show(self, *args):
         self.rect = args
 
-    def GetSizeTuple(self):
+    def GetSize(self):
         return self.size
 
 
-class ToolTipMixinTestCase(test.TestCase):
+class ToolTipMixinTestCase(tctest.TestCase):
     def setUp(self):
         self.tooltipMixin = ToolTipUnderTest(None)
 
@@ -49,36 +50,38 @@ class ToolTipMixinTestCase(test.TestCase):
 
     def testReallyBigTip(self):
         width, height = wx.ClientDisplayRect()[2:]
-        tipWindow = DummyToolTipWindow((2*width, 2*height))
+        tipWindow = DummyToolTipWindow((2 * width, 2 * height))
         self.tooltipMixin.DoShowTip(0, 0, tipWindow)
-        self.assertEqual((5, 5, 2*width, height-10), tipWindow.rect)
+        self.assertEqual((5, 5, 2 * width, height - 10), tipWindow.rect)
 
     def testTipThatFallsOfBottomOfScreen(self):
         _, displayY, _, height = wx.ClientDisplayRect()
         tipWindow = DummyToolTipWindow((10, 100))
-        self.tooltipMixin.DoShowTip(0, height-10, tipWindow)
-        self.assertEqual((0, height-105+displayY, 10, 100), tipWindow.rect)
+        self.tooltipMixin.DoShowTip(0, height - 10, tipWindow)
+        self.assertEqual((0, height - 105 + displayY, 10, 100), tipWindow.rect)
 
 
 class SimpleToolTipUnderTest(tooltip.SimpleToolTip):
     def _calculateLineSize(self, dc, line):
-        """ Make sure the unittest doesn't depend on the platform font size. """
+        """Make sure the unittest doesn't depend on the platform font size."""
         return 10, 20
 
 
-class SimpleToolTipTestCase(test.wxTestCase):
+class SimpleToolTipTestCase(tctest.wxTestCase):
     def setUp(self):
         self.tip = SimpleToolTipUnderTest(self.frame)
 
     def testOneShortLine(self):
-        self.tip.SetData([(None, ['First line'])])
-        self.assertEqual([(None, ['First line'])], self.tip.data)
+        self.tip.SetData([(None, ["First line"])])
+        self.assertEqual([(None, ["First line"])], self.tip.data)
 
     def testOneLongLine(self):
-        self.tip.SetData([(None, ['First line '*10])])
-        self.assertEqual([(None, [('First line '*7).strip(),
-                                  ('First line '*3).strip()])], self.tip.data)
+        self.tip.SetData([(None, ["First line " * 10])])
+        self.assertEqual(
+            [(None, [("First line " * 7).strip(), ("First line " * 3).strip()])],
+            self.tip.data,
+        )
 
     def testCalculateSize(self):
-        self.tip.SetData([(None, ['First line'])])
+        self.tip.SetData([(None, ["First line"])])
         self.assertEqual(wx.Size(16, 27), self.tip._calculateSize())
