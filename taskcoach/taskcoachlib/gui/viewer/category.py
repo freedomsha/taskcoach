@@ -28,7 +28,7 @@ from taskcoachlib import command, widgets
 from taskcoachlib.domain import category
 from taskcoachlib.i18n import _
 # from taskcoachlib.gui import uicommand, dialog, menu
-from taskcoachlib.gui import uicommand
+from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui import dialog
 # from taskcoachlib.gui.dialog.editor import CategoryEditor  # circular import
 import taskcoachlib.gui.menu
@@ -142,8 +142,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 """
         # pylint: disable=W0142,E1101
         kwargs = dict(resizeCallback=self.onResizeColumn)
-        columns = [
-            widgets.Column(
+        columns = [widgets.Column(
                 "ordering",
                 "",
                 category.Category.orderingChangedEventType(),
@@ -153,8 +152,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 imageIndicesCallback=self.orderingImageIndices,
                 renderCallback=lambda category: "",
                 width=self.getColumnWidth("ordering")
-            ),
-            widgets.Column(
+            ), widgets.Column(
                 "subject",
                 _("Subject"),
                 category.Category.subjectChangedEventType(),
@@ -166,8 +164,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 editCallback=self.onEditSubject,
                 editControl=inplace_editor.SubjectCtrl,
                 **kwargs
-            ),
-            widgets.Column(
+            ), widgets.Column(
                 "description",
                 _("Description"),
                 category.Category.descriptionChangedEventType(),
@@ -179,8 +176,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 editCallback=self.onEditDescription,
                 editControl=inplace_editor.DescriptionCtrl,
                 **kwargs
-            ),
-            widgets.Column(
+            ), widgets.Column(
                 "attachments",
                 "",
                 category.Category.attachmentsChangedEventType(),  # pylint: disable=E1101
@@ -190,10 +186,10 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 headerImageIndex=self.imageIndex["paperclip_icon"],
                 renderCallback=lambda category: "",
                 **kwargs
-            )
-        ]
-        columns.append(
-            widgets.Column(
+            # )]
+            # columns.append(
+            # widgets.Column(
+            ), widgets.Column(
                 "notes",
                 "",
                 category.Category.notesChangedEventType(),  # pylint: disable=E1101
@@ -203,9 +199,9 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 headerImageIndex=self.imageIndex["note_icon"],
                 renderCallback=lambda category: "",
                 **kwargs
-            )
-        )
-        columns.append(
+            ),
+            # )
+            # columns.append(
             widgets.Column(
                 "creationDateTime",
                 _("Creation date"),
@@ -215,9 +211,9 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                     viewer=self, value="creationDateTime"
                 ),
                 **kwargs
-            )
-        )
-        columns.append(
+            ),
+            # )
+            # columns.append(
             widgets.Column(
                 "modificationDateTime",
                 _("Modification date"),
@@ -228,8 +224,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 ),
                 *category.Category.modificationEventTypes(),
                 **kwargs
-            )
-        )
+            )]
         return columns
 
     def createCreationToolBarUICommands(self):

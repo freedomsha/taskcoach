@@ -1340,7 +1340,7 @@ class TaskViewer(
         createWidget(self) : Crée le widget de l'arborescence des tâches avec des menus contextuels.
     """
     def __init__(self, *args, **kwargs):
-        # self._instance_count = taskcoachlib.patterns.NumberedInstances.lowestUnusedNumber(self) + 1  pas sur
+        # self._instance_count = taskcoachlib.patterns.NumberedInstances.lowestUnusedNumber(self) + 1  # pas sur !
         kwargs.setdefault("settingsSection", "taskviewer")
         super().__init__(*args, **kwargs)
         if self.isVisibleColumnByName("timeLeft"):
@@ -2507,10 +2507,12 @@ else:
 
         @inlineCallbacks
         def _refresh(self):
+            bitmap = None
             while self._needsUpdate:
                 # Compute this in main thread because of concurrent access issues
                 graph, visual_style = self.form_depend_graph()
                 self._needsUpdate = False  # Any new refresh starting here should trigger a new iteration
+
                 if graph.get_edgelist():
                     self._updating = True
                     try:

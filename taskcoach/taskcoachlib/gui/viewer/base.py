@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import wx
 from taskcoachlib import patterns, widgets, command, render
 from taskcoachlib.i18n import _
-from taskcoachlib.gui import uicommand
+from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui import toolbar, artprovider
 # try:
 #    from taskcoachlib.thirdparty.agw import hypertreelist
@@ -68,10 +68,10 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         Une visionneuse affiche les objets du domaine (par exemple, les tâches ou les efforts) au moyen d'un widget
         comme un ListCtrl ou un TreeListCtrl. Cette classe gère la présentation et l'interaction avec ces objets.
 
-        Attributs:
-            defaultTitle (str): Le titre par défaut de la visionneuse.
-            defaultBitmap (str): L'icône par défaut pour la visionneuse.
-            viewerImages (list): Les images utilisées pour afficher les objets de la visionneuse.
+        Attributs :
+            defaultTitle (str) : Le titre par défaut de la visionneuse.
+            defaultBitmap (str) : L'icône par défaut pour la visionneuse.
+            viewerImages (list) : Les images utilisées pour afficher les objets de la visionneuse.
     """
 
     defaultTitle = "Subclass responsibility"

@@ -89,10 +89,11 @@ from taskcoachlib.gui import (
     idlecontroller,
     remindercontroller,
     toolbar,
-    uicommand,
+    # uicommand,
     viewer,
     windowdimensionstracker,
 )
+from taskcoachlib.gui.uicommand import uicommand
 from .viewer import addViewers, ViewerContainer, viewerTypes
 from taskcoachlib.gui.newid import IdProvider
 
@@ -379,7 +380,7 @@ class MainWindow(
         """
         self._create_viewer_container()
         viewer.addViewers(self.viewer, self.taskFile, self.settings)
-        # factory.AddViewers(self.viewer, self.taskFile, self.settings)
+        # viewer.factory.addViewers(self.viewer, self.taskFile, self.settings)
         self._create_status_bar()
         self.__create_menu_bar()
         self.__create_reminder_controller()
@@ -748,44 +749,44 @@ If this happens again, please make a copy of your TaskCoach.ini file
         #     (par exemple, des timers, des threads en arrière-plan) n'empêche l'application de se fermer.
 
         # Ancien code :
-        # # print("Resetting IdProvider...")
-        # # IdProvider.reset()
-        # # Fermer les éditeurs:
-        # self.closeEditors()
-        #
-        # # Permettre à l'application de quitter: Si l'application doit effectivement quitter, event.Skip() est appelé pour autoriser la fermeture.
-        # if self.__shutdown:
-        #     event.Skip()
-        #     return
-        # # Vérifier les paramètres de l'application:
-        # # Si l'utilisateur a configuré pour cacher la fenêtre plutôt que de la fermer, la fenêtre est minimisée.:
-        # if event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed"):
-        #     event.Veto()
-        #     self.Iconize()
-        # else:
-        #     if application.Application().quitApplication():
-        #         event.Skip()
-        #         # Arrêter le suivi des tâches :
-        #         self.taskFile.stop()
-        #         # Arrêter le contrôleur d'inactivité :
-        #         self._idleController.stop()
+        # print("Resetting IdProvider...")
+        # IdProvider.reset()
+        # Fermer les éditeurs:
+        self.closeEditors()
 
-        # Nouveau code :
-        # Simplifier la logique
-        # Vérifier les paramètres de l'application. :
-        should_quit = application.Application().quitApplication()
-        should_hide = event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed")
-
-        if should_quit:
-            # Assurer la fermeture propre des ressources.
-            self.taskFile.stop()  # Arrêter le suivi des tâches.
-            self._idleController.stop()  # Arrêter le contrôleur d'inactivité.
-            self.closeEditors()  # Fermer les éditeurs.
-            event.Skip()  # Autoriser la fermeture.
-        elif should_hide:
-            # Si l'utilisateur a configuré pour cacher la fenêtre plutôt que de la fermer, la fenêtre est minimisée.
+        # Permettre à l'application de quitter: Si l'application doit effectivement quitter, event.Skip() est appelé pour autoriser la fermeture.
+        if self.__shutdown:
+            event.Skip()
+            return
+        # Vérifier les paramètres de l'application:
+        # Si l'utilisateur a configuré pour cacher la fenêtre plutôt que de la fermer, la fenêtre est minimisée.:
+        if event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed"):
             event.Veto()
             self.Iconize()
+        else:
+            if application.Application().quitApplication():
+                event.Skip()
+                # Arrêter le suivi des tâches :
+                self.taskFile.stop()
+                # Arrêter le contrôleur d'inactivité :
+                self._idleController.stop()
+
+        # Nouveau code :
+        # # Simplifier la logique
+        # # Vérifier les paramètres de l'application. :
+        # should_quit = application.Application().quitApplication()
+        # should_hide = event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed")
+        #
+        # if should_quit:
+        #     # Assurer la fermeture propre des ressources.
+        #     self.taskFile.stop()  # Arrêter le suivi des tâches.
+        #     self._idleController.stop()  # Arrêter le contrôleur d'inactivité.
+        #     self.closeEditors()  # Fermer les éditeurs.
+        #     event.Skip()  # Autoriser la fermeture.
+        # elif should_hide:
+        #     # Si l'utilisateur a configuré pour cacher la fenêtre plutôt que de la fermer, la fenêtre est minimisée.
+        #     event.Veto()
+        #     self.Iconize()
 
     def restore(self, event) -> None:  # pylint: disable=W0613
         """
@@ -809,6 +810,9 @@ If this happens again, please make a copy of your TaskCoach.ini file
             event (wx.Event) : L'événement de minimisation de la fenêtre.
         """
         # TODO: Vérifiez que la méthode onIconify de MainWindow est correctement implémentée et qu'elle met à jour l'état interne de la fenêtre.
+        #  Faire une recherche sur wx.IconizeEvent.IsIconized()
+        #  See also :
+        #  Events and Event Handling, wx.TopLevelWindow.Iconize , wx.TopLevelWindow.IsIconized
         try:
             # if event.Iconized() and self.settings.getboolean('window', 'hidewheniconized'):
             if event.IsIconized() and self.settings.getboolean(
@@ -818,7 +822,7 @@ If this happens again, please make a copy of your TaskCoach.ini file
             else:
                 event.Skip()
         except RuntimeError as e:
-            print("mainwindow : onIconify :", str(e))
+            print("mainwindow : Error onIconify :", str(e))
 
     def onResize(self, event):
         """

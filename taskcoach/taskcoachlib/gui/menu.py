@@ -47,6 +47,8 @@ from taskcoachlib.gui.newid import IdProvider
 from taskcoachlib.gui import viewer
 from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui.uicommand import uicommandcontainer
+# from .settings_uicommand import UIRadioCommand, UICheckCommand
+from taskcoachlib.gui.uicommand import settings_uicommand
 import taskcoachlib.gui.viewer
 import wx
 import os
@@ -668,7 +670,8 @@ class ViewMenu(Menu):
         self.appendUICommands(None)
         self.appendMenu(_("T&oolbar"), ToolBarMenu(mainwindow, settings))
         self.appendUICommands(
-            uicommand.UICheckCommand(
+            # uicommand.UICheckCommand(
+            settings_uicommand.UICheckCommand(
                 settings=settings,
                 menuText=_("Status&bar"),
                 helpText=_("Show/hide status bar"),
@@ -853,7 +856,8 @@ class ToolBarMenu(Menu):
             )
         ]:
             toolbarCommands.append(
-                uicommand.UIRadioCommand(
+                # uicommand.UIRadioCommand(
+                settings_uicommand.UIRadioCommand(
                     settings=settings,
                     setting="toolbar",
                     value=value,

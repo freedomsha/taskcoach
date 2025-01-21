@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import object
 from taskcoachlib import command
 from taskcoachlib.domain import base, task, category, attachment
-from taskcoachlib.gui import uicommand
+from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.i18n import _
 # try:
 #    from ...thirdparty.pubsub import pub
@@ -37,8 +37,8 @@ from pubsub import pub
 import wx
 
 
-class SearchableViewerMixin:
-    """ A viewer that is searchable. This is a mixin class. """
+class SearchableViewerMixin:  # Il manque les classes mères
+    """ Une visionneuse consultable. Il s'agit d'une classe mixin. """
 
     # @staticmethod
     def isSearchable(self):
@@ -538,7 +538,7 @@ class SortableViewerForTasksMixin(
 
 
 class AttachmentDropTargetMixin(object):
-    """ Mixin class for viewers that are drop targets for attachments. """
+    """ Classe Mixin pour les téléspectateurs qui sont des cibles de dépôt pour les pièces jointes (attachments). """
 
     def widgetCreationKeywordArguments(self):
         kwargs = super().widgetCreationKeywordArguments()
@@ -548,10 +548,10 @@ class AttachmentDropTargetMixin(object):
         return kwargs
 
     def _addAttachments(self, attachments, item, **itemDialogKwargs):
-        """ Add attachments. If item refers to an existing domain object,
-            add the attachments to that object. If item is None, use the
-            newItemDialog to create a new domain object and add the attachments
-            to that new object. """
+        """ Ajouter des pièces jointes. Si l'élément fait référence à un objet de domaine existant,
+            ajoutez les pièces jointes à cet objet. Si l'élément est None, utilisez le
+            newItemDialog pour créer un nouvel objet de domaine et ajouter les pièces jointes
+            à ce nouvel objet. """
         if item is None:
             itemDialogKwargs["subject"] = attachments[0].subject()
             if self.settings.get(
@@ -594,8 +594,8 @@ class AttachmentDropTargetMixin(object):
             addAttachment.do()
 
     def onDropURL(self, item, url, **kwargs):
-        """ This method is called by the widget when a URL is dropped on an
-            item. """
+        """ Cette méthode est appelée par le widget lorsqu'une URL est déposée sur un élément.
+        """
         attachments = [attachment.URIAttachment(url)]
         self._addAttachments(attachments, item, **kwargs)
 
