@@ -600,7 +600,7 @@ class Object(SynchronizedObject):
         """
         attributes = set()
         # for line in self.description().split("\n"):
-        for line in self.getDescription().split("\n"):
+        for line in self.description().split("\n"):
             match = self.rx_attributes.match(line.strip())
             if match and match.group(1) == sectionName:
                 attributes.add(match.group(2))
@@ -784,7 +784,7 @@ class Object(SynchronizedObject):
 
     # Description:
 
-    def getDescription(self):
+    def description(self):
         """
         Obtenir la description de l'objet.
 
@@ -809,7 +809,7 @@ class Object(SynchronizedObject):
         :param event: L'événement.
         """
         event.addSource(
-            self, self.getDescription(), type=self.descriptionChangedEventType()
+            self, self.description(), type=self.descriptionChangedEventType()
         )
 
     @classmethod
@@ -1144,7 +1144,7 @@ class CompositeObject(Object, patterns.ObservableComposite):
         """
         # Autoriser l'indicateur récursif, mais ignorer le
         # return super().description()
-        return super().getDescription()
+        return super().description()
 
     # État d'expansion :
 
