@@ -16,13 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from __future__ import absolute_import
+# from __future__ import absolute_import
 
-from builtins import range
+# from builtins import range
 import wx
 from . import TreeCtrlTest
 from ...unittests import dummy
-from ....taskcoachlib import widgets
+from taskcoachlib import widgets
 
 
 class TreeListCtrlTestCase(TreeCtrlTest.TreeCtrlTestCase):
@@ -30,20 +30,26 @@ class TreeListCtrlTestCase(TreeCtrlTest.TreeCtrlTestCase):
     onSelect = getItemTooltipText = None
 
     def setUp(self):
-        super(TreeListCtrlTestCase, self).setUp()
+        super().setUp()
         self._columns = self.createColumns()
-        self.treeCtrl = widgets.TreeListCtrl(self.frame, self.columns(),
-                                             self.getItemTooltipText,
-                                             self.onSelect, dummy.DummyUICommand(), dummy.DummyUICommand())
+        self.treeCtrl = widgets.TreeListCtrl(
+            self.frame,
+            self.columns(),
+            self.getItemTooltipText,
+            self.onSelect,
+            dummy.DummyUICommand(),
+            dummy.DummyUICommand(),
+        )
         imageList = wx.ImageList(16, 16)
-        for bitmapName in ['led_blue_icon', 'folder_blue_icon']:
-            imageList.Add(wx.ArtProvider_GetBitmap(bitmapName, wx.ART_MENU,
-                          (16, 16)))
+        for bitmapName in ["led_blue_icon", "folder_blue_icon"]:
+            imageList.Add(wx.ArtProvider.GetBitmap(bitmapName, wx.ART_MENU, (16, 16)))
         self.treeCtrl.AssignImageList(imageList)  # pylint: disable=E1101
 
     def createColumns(self):
-        names = ['treeColumn'] + ['column%d' % index for index in range(1, 5)]
-        return [widgets.Column(name, name, ('view', 'whatever'), None) for name in names]
+        names = ["treeColumn"] + ["column%d" % index for index in range(1, 5)]
+        return [
+            widgets.Column(name, name, ("view", "whatever"), None) for name in names
+        ]
 
     def columns(self):
         return self._columns
@@ -55,20 +61,20 @@ class TreeListCtrlTest(TreeListCtrlTestCase, TreeCtrlTest.CommonTestsMixin):
 
 class TreeListCtrlColumnsTest(TreeListCtrlTestCase):
     def setUp(self):
-        super(TreeListCtrlColumnsTest, self).setUp()
-        self.children[None] = [TreeCtrlTest.DummyDomainObject('item')]
+        super().setUp()
+        self.children[None] = [TreeCtrlTest.DummyDomainObject("item")]
         self.treeCtrl.RefreshAllItems(1)
         self.visibleColumns = self.columns()[1:]
 
     def assertColumns(self):
         # pylint: disable=E1101
-        self.assertEqual(len(self.visibleColumns)+1, self.treeCtrl.GetColumnCount())
+        self.assertEqual(len(self.visibleColumns) + 1, self.treeCtrl.GetColumnCount())
         item = self.treeCtrl.GetFirstChild(self.treeCtrl.GetRootItem())[0]
         for columnIndex in range(1, len(self.visibleColumns)):
-            self.assertEqual('item', self.treeCtrl.GetItemText(item, columnIndex))
+            self.assertEqual("item", self.treeCtrl.GetItemText(item, columnIndex))
 
     def showColumn(self, name, show=True):
-        column = widgets.Column(name, name, ('view', 'whatever'), None)
+        column = widgets.Column(name, name, ("view", "whatever"), None)
         self.treeCtrl.showColumn(column, show)
         if show:
             index = self.columns()[1:].index(column)
@@ -80,14 +86,14 @@ class TreeListCtrlColumnsTest(TreeListCtrlTestCase):
         self.assertColumns()
 
     def testHideColumn(self):
-        self.showColumn('column1', False)
+        self.showColumn("column1", False)
         self.assertColumns()
 
     def testHideLastColumn(self):
-        lastColumnHeader = 'column%d' % len(self.visibleColumns)
+        lastColumnHeader = "column%d" % len(self.visibleColumns)
         self.showColumn(lastColumnHeader, False)
         self.assertColumns()
 
     def testShowColumn(self):
-        self.showColumn('column2', False)
-        self.showColumn('column2', True)
+        self.showColumn("column2", False)
+        self.showColumn("column2", True)
