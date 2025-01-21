@@ -624,7 +624,7 @@ class AttachmentSubjectPage(SubjectPage):
        Elle gère également la synchronisation de l'emplacement avec l'objet de tâche sous-jacent à l'aide de la classe `attributesync.AttributeSync`.
 
        Attributs :
-           _locationSync (attributesync.AttributeSync, optionnel): Objet de synchronisation pour l'attribut "getLocation" des pièces jointes.
+           _locationSync (attributesync.AttributeSync, optionnel) : Objet de synchronisation pour l'attribut "location" des pièces jointes.
            _locationEntry (widgets.SingleLineTextCtrl): Champ de saisie pour l'emplacement du fichier de la pièce jointe.
 
        Méthodes :
