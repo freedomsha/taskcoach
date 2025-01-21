@@ -170,7 +170,7 @@ def getRelativePath(path, basePath=os.getcwd()):
 class Attachment(base.Object, NoteOwner):
     """ Classe de base abstraite pour les pièces jointes. """
 
-    type_ = "unknown"
+    type_ = "unknown"  # Utilisé dans XML.xriter.py
 
     def __init__(self, location, *args, **kwargs):
         if "subject" not in kwargs:
@@ -237,7 +237,7 @@ class Attachment(base.Object, NoteOwner):
         # in PasteCommand.
         pass
 
-    def getLocation(self):
+    def location(self):
         return self.__location
 
     def setLocation(self, location):
@@ -263,7 +263,7 @@ class Attachment(base.Object, NoteOwner):
 
     def __cmp__(self, other):
         try:
-            return cmp(self.getLocation(), other.getLocation())
+            return cmp(self.location(), other.location())
         except AttributeError:
             # return False
             return 1
@@ -278,8 +278,8 @@ class Attachment(base.Object, NoteOwner):
             state = super().__getstate__()
         except AttributeError:
             state = dict()
-        state.update(dict(location=self.getLocation()))
-        # state.update(location=self.getLocation())
+        state.update(dict(location=self.location()))
+        # state.update(location=self.location())
         return state
 
     @patterns.eventSource
@@ -310,7 +310,7 @@ class FileAttachment(Attachment):
         return openAttachment(self.normalizedLocation(workingDir))
 
     def normalizedLocation(self, workingDir=None):
-        location = self.getLocation()
+        location = self.location()
         if self.isLocalFile():
             if workingDir and not os.path.isabs(location):
                 location = os.path.join(workingDir, location)
@@ -318,7 +318,7 @@ class FileAttachment(Attachment):
         return location
 
     def isLocalFile(self):
-        return urlparse(self.getLocation())[0] == ""
+        return urlparse(self.location())[0] == ""
 
 
 class URIAttachment(Attachment):
@@ -336,7 +336,7 @@ class URIAttachment(Attachment):
         super().__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
-        return openfile.openFile(self.getLocation())
+        return openfile.openFile(self.location())
 
 
 class MailAttachment(Attachment):
@@ -352,15 +352,15 @@ class MailAttachment(Attachment):
         super().__init__(location, *args, **kwargs)
 
     def open(self, workingDir=None):
-        return mailer.openMail(self.getLocation())
+        return mailer.openMail(self.location())
 
     def read(self):
-        return self._readMail(self.getLocation())
+        return self._readMail(self.location())
 
     def data(self):
         try:
-            return file(self.getLocation(), "rb").read()  # fichier binaire !!!
-            # return io.open(self.getLocation(), "rb").read()
+            return file(self.location(), "rb").read()  # fichier binaire !!!
+            # return io.open(self.location(), "rb").read()
         except IOError:
             return None
 
