@@ -249,7 +249,7 @@ class SynchronizedObject(object):
 
         Args :
             state (dict) : L’état à définir.
-            event (event) : L'événement associé à la définition de l'état.
+            event (Any) : (event) L'événement associé à la définition de l'état.
         """
         try:
             super().__setstate__(state, event=event)
@@ -264,7 +264,6 @@ class SynchronizedObject(object):
                 self.markNew(event=event)
             elif state["status"] == self.STATUS_NONE:
                 self.cleanDirty(event=event)
-
 
     def getStatus(self):
         """
@@ -282,7 +281,7 @@ class SynchronizedObject(object):
 
         Args :
             force(bool) : (optional) Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
-            event(event) : L'événement associé au marquage de l'objet comme sale.
+            event(Any) : (event) L'événement associé au marquage de l'objet comme sale.
         """
         if not self.setStatusDirty(force):
             return
@@ -310,8 +309,8 @@ class SynchronizedObject(object):
         """
         Marquez l'objet comme neuf-nouveau(new).
 
-        Args:
-            event: L'événement associé au marquage de l'objet comme nouveau.
+        Args :
+            event : L'événement associé au marquage de l'objet comme nouveau.
         """
         if not self.setStatusNew():
             return
@@ -321,8 +320,8 @@ class SynchronizedObject(object):
         """
         Définissez le statut de l'objet comme nouveau.
 
-        Returns:
-            bool: Vrai si le statut a été modifié et non supprimé, faux dans le cas contraire.
+        Returns :
+            bool : Vrai si le statut a été modifié et non supprimé, faux dans le cas contraire.
         """
         oldStatus = self.__status
         self.__status = self.STATUS_NEW
@@ -350,8 +349,8 @@ class SynchronizedObject(object):
         """
         Marquez l'objet comme non sale (aucun).
 
-        Args:
-            event: L'événement associé au marquage de l'objet comme non sale.
+        Args :
+            event : L'événement associé au marquage de l'objet comme non sale.
         """
         if not self.setStatusNone():
             return
@@ -361,8 +360,8 @@ class SynchronizedObject(object):
         """
         Définissez le statut de l'objet sur aucun.
 
-        Returns:
-            bool: Vrai si le statut a été modifié et non supprimé, Faux dans le cas contraire.
+        Returns :
+            bool : Vrai si le statut a été modifié et non supprimé, Faux dans le cas contraire.
         """
         oldStatus = self.__status
         self.__status = self.STATUS_NONE
@@ -571,8 +570,8 @@ class Object(SynchronizedObject):
         """
         Obtenez la liste des attributs surveillés.
 
-        Returns:
-            list: La liste des attributs surveillés.
+        Returns :
+            list : La liste des attributs surveillés.
         """
         return ["ordering", "subject", "description", "appearance"]
 
@@ -630,7 +629,7 @@ class Object(SynchronizedObject):
         """
         Définissez la date et l'heure de modification de l'objet.
 
-        Args:
+        Args :
             dateTime (DateTime): La date et l'heure de modification.
         """
         self.__modificationDateTime = dateTime
@@ -641,7 +640,7 @@ class Object(SynchronizedObject):
         """
         Obtenez une fonction de tri pour trier par date et heure de modification.
 
-        Returns:
+        Returns :
             function: La fonction de tri.
         """
         return lambda item: item.modificationDateTime()
