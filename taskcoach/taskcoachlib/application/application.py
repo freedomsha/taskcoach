@@ -123,7 +123,7 @@ class RedirectedOutput(object):
 
     # TODO : A VERIFIER si la virgule est nécessaire
     _rx_ignore = [
-        re.compile("RuntimeWarning: PyOS_InputHook")
+        re.compile("RuntimeWarning: PyOS_InputHook",)
     ]
 
     def __init__(self):
