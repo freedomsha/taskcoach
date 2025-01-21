@@ -104,7 +104,7 @@ class SafeWriteFile(object):
         """
         Initialisez le SafeWriteFile avec un nom de fichier.
 
-        Args:
+        Args :
             filename (str) : Le nom de fichier dans lequel écrire.
         """
         self.__filename = filename
@@ -122,7 +122,7 @@ class SafeWriteFile(object):
         """
         Écrivez les données dans le fichier.
 
-        Args:
+        Args :
             bf (bytes) : Les données à écrire.
         """
         self.__fd.write(bf)
@@ -707,7 +707,7 @@ class TaskFile(patterns.Observer):
         """
         Ouvrez le fichier de tâche pour la lecture.
 
-        Returns:
+        Returns :
             file : le descripteur de fichier à lire.
         """
         return open(self.__filename, "r")
@@ -716,8 +716,8 @@ class TaskFile(patterns.Observer):
         """
         Chargez le fichier de tâche à partir du disque.
 
-        Args:
-            filename (str, optional) : Le nom du fichier à partir duquel charger. La valeur par défaut est Aucun.
+        Args :
+            filename (str) : (optional) Le nom du fichier à partir duquel charger. La valeur par défaut est Aucun.
         """
         pub.sendMessage("taskfile.aboutToRead", taskFile=self)
         self.__loading = True
