@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-
 from .task import (
     TaskViewer,
     TaskStatsViewer,
@@ -41,3 +40,24 @@ except ImportError:
     pass
 else:
     from .task import TaskInterdepsViewer
+
+__all__ = [
+    "TaskViewer",
+    "TaskStatsViewer",
+    "CheckableTaskViewer",
+    "SquareTaskViewer",
+    "TimelineViewer",
+    "CalendarViewer",
+    "HierarchicalCalendarViewer",
+    "CategoryViewer",
+    "BaseCategoryViewer",
+    "EffortViewer",
+    "EffortViewerForSelectedTasks",
+    "NoteViewer",
+    "BaseNoteViewer",
+    "AttachmentViewer",  # ?
+    "ViewerContainer",
+    "viewerTypes",
+    "addViewers",
+    "addOneViewer",
+]
