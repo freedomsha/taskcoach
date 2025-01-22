@@ -33,7 +33,7 @@ from taskcoachlib.widgets import itemctrl, draganddrop
 # pylint: disable=E1101,E1103
 
 
-class BaseHyperTreeList(hypertreelist.HyperTreeList):
+class BaseHyperTreeList(hypertreelist.HyperTreeList, customtree.CustomTreeCtrl):
     def __init__(
             self,
             parent,
@@ -85,8 +85,9 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
     MainWindow = property(fget=GetMainWindow)
 
     def HitTest(self, point):  # pylint: disable=W0221, C0103
-        """ Always return a three-tuple (item, flags, column). """
-        if type(point) == type(()):  # isinstance (tuple ?)
+        """ Renvoie toujours un triple-tuple (item, flags, column). """
+        # if type(point) == type(()):  # isinstance (tuple ?)
+        if type(point) is type(()):  # isinstance (tuple ?)
             point = wx.Point(point[0], point[1])
         hit_test_result = super().HitTest(point)
         if len(hit_test_result) == 2:
@@ -96,13 +97,16 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         return hit_test_result
 
     def isClickablePartOfNodeClicked(self, event):
-        """ Return whether the user double clicked some part of the node that
-            can also receive regular mouse clicks. """
+        """ Indique si l'utilisateur a double-cliqué sur une partie du nœud qui
+            peut également recevoir des clics de souris réguliers. """
         return self.__is_collapse_expand_button_clicked(event)
 
     def __is_collapse_expand_button_clicked(self, event):
         flags = self.HitTest(event.GetPosition())[1]
-        return flags & wx.TREE_HITTEST_ONITEMBUTTON
+        # return flags & wx.TREE_HITTEST_ONITEMBUTTON  # Class 'TreeItemId' does not define '__and__', so the '&' operator cannot be used on its instances
+        if not isinstance(flags, int):
+            flags = int(flags)
+        return bool(flags & wx.TREE_HITTEST_ONITEMBUTTON)
 
     def select(self, selection):
         for item in self.GetItemChildren(recursively=True):
@@ -205,8 +209,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         self.Bind(wx.EVT_SET_FOCUS, self.onSetFocus)
 
     def onSetFocus(self, event):  # pylint: disable=W0613
-        # Send a child focus event to let the AuiManager know we received focus
-        # so it will activate our pane
+        # Envoyez un événement de focus enfant pour informer AuiManager que nous avons reçu le focus
+        # afin qu'il active notre volet
         wx.PostEvent(self._main_win, wx.ChildFocusEvent(self._main_win))
         self.SetFocus()
 
@@ -252,14 +256,15 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         while child_item:
             item_object = self.GetItemPyData(child_item)
             if item_object in target_objects:
-                self._refreshObjectCompletely(child_item, item_object)
+                self._refreshObjectCompletely(item=child_item, domain_object=item_object)
             self._refreshTargetObjects(child_item, *target_objects)
             child_item, cookie = self.GetNextChild(parent_item, cookie)
 
-    def _refreshObjectCompletely(self, item, *args):
+    def _refreshObjectCompletely(self, item, domain_object=None, *args):
         self.__refresh_aspects(
             ("ItemType", "Columns", "Font", "Colors", "Selection"),
             item,
+            domain_object,
             check=True,
             *args
         )
@@ -290,11 +295,11 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             ("Columns", "Colors", "Font", "Selection"), *args, **kwargs
         )
 
-    def __refresh_aspects(self, aspects, *args, **kwargs):
+    def __refresh_aspects(self, aspects, domain_object, *args, **kwargs):
         for aspect in aspects:
             # refresh_aspect = getattr(self, "_refresh%s" % aspect)
             refresh_aspect = getattr(self, f"_refresh{aspect}")
-            refresh_aspect(*args, **kwargs)
+            refresh_aspect(domain_object, *args, **kwargs)
 
     def _refreshItemType(self, item, domain_object, check=False):
         ct_type = self.getItemCTType(domain_object)
@@ -385,8 +390,9 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             self.onItemActivated(event)
 
     def onItemActivated(self, event):
-        """ Attach the column clicked on to the event so we can use it
-            elsewhere. """
+        """ Attachez la colonne sur laquelle vous avez cliqué à l'événement
+        afin que nous puissions l'utiliser ailleurs.
+        """
         column_index = self.__column_under_mouse()
         if column_index >= 0:
             event.columnName = self._getColumn(column_index).name()
@@ -398,8 +404,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         item, _, column = self.HitTest(mouse_position)
         if item:
             # Only get the column name if the hittest returned an item,
-            # otherwise the item was activated from the menu or by double
-            # clicking on a portion of the tree view not containing an item.
+            # otherwise the item was activated from the menu or by double-clicking
+            #  on a portion of the tree view not containing an item.
             return max(0, column)  # FIXME: Why can the column be -1?
         else:
             return -1
@@ -475,8 +481,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                                self._getColumn(column_index).isEditable())
 
     def showColumn(self, *args, **kwargs):
-        """ Stop editing before we hide or show a column to prevent problems
-            redrawing the tree list control contents. """
+        """ Arrêtez l'édition avant de masquer ou d'afficher une colonne pour éviter les problèmes
+        lors du redessinage du contenu du contrôle de la liste arborescente. """
         self.StopEditing()
         super().showColumn(*args, **kwargs)
 
@@ -553,7 +559,8 @@ class CheckTreeCtrl(TreeListCtrl):
         if item.GetType():
             self.__uncheck_item(item, torefresh=parent_is_expanded)
         if disable_item:
-            self.EnableItem(item, False, torefresh=parent_is_expanded)
+            # self.EnableItem(item, False, torefresh=parent_is_expanded)
+            self.EnableItem(item, False, enable=parent_is_expanded)
         parent_is_expanded = item.IsExpanded()
         child, cookie = self.GetFirstChild(item)
         while child:
@@ -570,8 +577,8 @@ class CheckTreeCtrl(TreeListCtrl):
         event.SetEventObject(self)
         self.GetEventHandler().ProcessEvent(event)
 
-    def _refreshObjectCompletely(self, item, domain_object):
-        super()._refreshObjectCompletely(item, domain_object)
+    def _refreshObjectCompletely(self, item, domain_object=None, *args):
+        super()._refreshObjectCompletely(item, domain_object, *args)
         self._refreshCheckState(item, domain_object)
 
     def _refreshObjectMinimally(self, item, domain_object):
