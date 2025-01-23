@@ -114,6 +114,7 @@ class ToolTipMixin(object):
         self.GetMainWindow().Bind(wx.EVT_LEAVE_WINDOW, self.__OnLeave)
         self.Bind(wx.EVT_TIMER, self.__OnTimer, id=self.__timer.GetId())
 
+    # Cette méthode ne passe pas le test TreeCtrlTest ! :
     def GetMainWindow(self):
         """
         Retourne la fenêtre principale associée à ce widget.
