@@ -14,6 +14,25 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Module `tooltip.py`
+
+Ce module fournit des classes et des fonctionnalités pour gérer les info-bulles
+dynamique dans Task Coach. Ces info-bulles offrent des informations détaillées
+et enrichies, pouvant inclure des icônes et du texte formaté.
+
+Les classes principales incluent :
+    - `ToolTipMixin` : Permet d'ajouter une prise en charge des info-bulles dynamiques
+      à un contrôle existant.
+    - `ToolTipBase` : Classe de base pour les fenêtres d'info-bulles.
+    - `SimpleToolTip` : Une implémentation simple d'info-bulles avec du texte et des icônes.
+
+Compatibilité :
+    - Le comportement des info-bulles varie en fonction du système d'exploitation
+      (Windows, MacOS ou autres).
+
+Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
+Licence : GNU General Public License, version 3 ou ultérieure.
 """
 
 # from builtins import range
@@ -24,12 +43,61 @@ import textwrap
 
 
 class ToolTipMixin(object):
-    """ Sous-classez ceci et remplacez OnBeforeShowToolTip pour fournir
+    # class ToolTipMixin(wx.Window):  # à essayer pour retrouver des unresolved attribute reference 'GetMainWindow' bind et autres
+    """Mixin permettant d'ajouter des info-bulles dynamiques à un contrôle.
+
+    Sous-classez ceci et remplacez OnBeforeShowToolTip pour fournir
     une info-bulle dynamique sur un contrôle.
+    Cette classe s'attend à ce que les classes dans lesquelles elle est
+    intégrée définissent une méthode `GetMainWindow` pour fournir la fenêtre
+    principale associée.
+        Ce mixin dépend de la méthode `GetMainWindow`, qui doit être implémentée
+    par les classes finales. Les classes suivantes utilisent ce mixin et
+    fournissent une implémentation de `GetMainWindow` :
+        - calendarwidget
+        - hcalendar
+        - itemctrl
+        - searchctrl
+        - squaremap
+        - timeline
+
+    Utilisez ce mixin uniquement avec des classes fournissant cette méthode.
+
+    Ce mixin dépend de fonctionnalités spécifiques à wxPython, notamment :
+    - `Bind` : Méthode pour lier des événements.
+    - `PopupMenu` : Méthode pour afficher un menu contextuel.
+    - `ClientToScreenXY` : Méthode pour convertir des coordonnées locales en
+      coordonnées de l'écran.
+
+    Ce mixin suppose que la classe finale hérite d'une classe wxPython comme
+    `wx.Window` ou `wx.Control`.
+
+    Cette classe peut être sous-classée pour ajouter un comportement d'info-bulles à
+    un contrôle. Les info-bulles sont affichées lorsqu'une souris survole le contrôle,
+    et leur contenu peut être défini dynamiquement en redéfinissant `OnBeforeShowToolTip`.
+
+    Attributs :
+        - `__enabled` : Indique si les info-bulles sont activées.
+        - `__timer` : Minuterie utilisée pour retarder l'affichage des info-bulles.
+        - `__tip` : Instance actuelle de la fenêtre d'info-bulle affichée.
+        - `__position` : Position de l'info-bulle par rapport à la souris.
+        - `__text` : Texte de l'info-bulle.
+        - `__frozen` : Indique si l'info-bulle est figée (ne doit pas changer).
+
+    Méthodes principales :
+        - `SetToolTipsEnabled` : Active ou désactive les info-bulles.
+        - `ShowTip` : Affiche une info-bulle à une position donnée.
+        - `HideTip` : Masque l'info-bulle actuelle.
+        - `OnBeforeShowToolTip` : Définit dynamiquement le contenu de l'info-bulle.
+
+    Méthodes privées :
+        - `__OnMotion` : Gère le mouvement de la souris pour afficher ou cacher les info-bulles.
+        - `__OnLeave` : Masque l'info-bulle lorsque la souris quitte la fenêtre.
+        - `__OnTimer` : Affiche l'info-bulle après une minuterie.
     """
 
     def __init__(self, *args, **kwargs):
-        self.__enabled = kwargs.pop('tooltipsEnabled', True)
+        self.__enabled = kwargs.pop("tooltipsEnabled", True)
         super().__init__(*args, **kwargs)
 
         # self.__timer = wx.Timer(self, wx.NewId())
@@ -41,11 +109,86 @@ class ToolTipMixin(object):
         self.__text = None
         self.__frozen = True
 
+        # Unresolved attribute reference 'GetMainWindow' for class 'ToolTipMixin' :
         self.GetMainWindow().Bind(wx.EVT_MOTION, self.__OnMotion)
         self.GetMainWindow().Bind(wx.EVT_LEAVE_WINDOW, self.__OnLeave)
         self.Bind(wx.EVT_TIMER, self.__OnTimer, id=self.__timer.GetId())
 
+    def GetMainWindow(self):
+        """
+        Retourne la fenêtre principale associée à ce widget.
+
+        Doit être implémenté dans les classes qui utilisent ce mixin.
+        Si cette méthode n'est pas redéfinie, une exception est levée.
+
+        Returns :
+            wx.Window : La fenêtre principale associée.
+
+        Raises :
+            NotImplementedError : Si la méthode n'est pas implémentée dans
+                                  la classe finale.
+        """
+        raise NotImplementedError(
+            "GetMainWindow doit être implémenté dans une sous-classe qui utilise ToolTipMixin."
+        )
+        # Utiliser un mécanisme basé sur wx.GetTopLevelParent comme solution de secours
+        #
+        # Si ToolTipMixin est toujours utilisé dans des widgets wxPython,
+        # ajouter une implémentation par défaut basée sur wx.GetTopLevelParent.
+        # Cela couvre les cas où GetMainWindow n'est pas explicitement défini dans une sous-classe.
+        # """
+        # Retourne la fenêtre principale associée à ce widget en utilisant
+        # `wx.GetTopLevelParent`.
+        #
+        # Cette méthode peut être redéfinie dans les sous-classes si nécessaire.
+        #
+        # Returns:
+        #     wx.Window : La fenêtre principale du widget.
+        # """
+        # if isinstance(self, wx.Window):
+        #     return wx.GetTopLevelParent(self)
+        # return None
+
+    def Bind(self, event, handler, *args, **kwargs):
+        """
+        Lie un événement à un gestionnaire si la méthode est disponible.
+
+        Args :
+            event : Type d'événement à lier.
+            handler : Gestionnaire à exécuter lorsque l'événement est déclenché.
+        """
+        if hasattr(super(), "Bind"):
+            return super().Bind(event, handler, *args, **kwargs)
+        raise NotImplementedError(
+            "Bind est indisponible dans cette classe. "
+            "Assurez-vous que ToolTipMixin est utilisé avec une classe wxPython."
+        )
+
+    def ClientToScreenXY(self, x, y):
+        """
+        Convertit les coordonnées du client en coordonnées de l'écran.
+
+        Args :
+            x (int) : Coordonnée X dans le référentiel local du client.
+            y (int) : Coordonnée Y dans le référentiel local du client.
+
+        Returns :
+            tuple : Coordonnées X et Y dans le référentiel de l'écran.
+        """
+        if hasattr(super(), "ClientToScreenXY"):
+            return super().ClientToScreenXY(x, y)
+        raise NotImplementedError(
+            "ClientToScreenXY est indisponible. Cette méthode nécessite "
+            "un widget wxPython valide."
+        )
+
     def SetToolTipsEnabled(self, enabled):
+        """
+        Activer ou désactiver les info-bulles pour ce contrôle.
+
+        Args :
+            enabled (bool) : `True` pour activer les info-bulles, `False` pour les désactiver.
+        """
         self.__enabled = enabled
 
     def PopupMenu(self, menu):
@@ -54,6 +197,16 @@ class ToolTipMixin(object):
         self.__frozen = True
 
     def ShowTip(self, x, y):
+        """
+        Affiche une info-bulle à la position spécifiée.
+
+        L'info-bulle est ajustée pour s'assurer qu'elle reste visible dans
+        la zone d'affichage de l'écran.
+
+        Args :
+            x (int) : Position X de l'info-bulle.
+            y (int) : Position Y de l'info-bulle.
+        """
         # Assurez-vous que nous ne sommes pas trop grands (dans la direction Y
         # de toute façon) pour la zone d'affichage du bureau.
         # Cela ne fonctionne pas sous Linux car
@@ -91,7 +244,21 @@ class ToolTipMixin(object):
 
     def OnBeforeShowToolTip(self, x, y):
         """Doit renvoyer une instance de wx.Frame qui sera affichée sous la forme
-        d'info-bulle, ou Aucune."""
+        d'info-bulle, ou Aucun.
+
+        Doit être redéfinie pour fournir dynamiquement une info-bulle.
+
+        Cette méthode est appelée juste avant l'affichage de l'info-bulle.
+        Retournez une instance de `wx.Frame` représentant l'info-bulle, ou `None`
+        si aucune info-bulle ne doit être affichée.
+
+        Args :
+            x (int) : Position X de la souris.
+            y (int) : Position Y de la souris.
+
+        Returns :
+            wx.Frame | None : Contenu de l'info-bulle ou `None`.
+        """
         raise NotImplementedError  # pragma: no cover
 
     def __OnMotion(self, event):
@@ -130,22 +297,43 @@ class ToolTipMixin(object):
 
 
 if operating_system.isWindows():
+
     class ToolTipBase(wx.MiniFrame):
+        """
+        Classe de base pour afficher une fenêtre d'info-bulle.
+
+        Le comportement de cette classe dépend du système d'exploitation :
+        - Sur Windows, une fenêtre `wx.MiniFrame` est utilisée.
+        - Sur MacOS, une fenêtre `wx.Frame` est utilisée.
+        - Sur les autres systèmes, une fenêtre `wx.PopupWindow` est utilisée.
+
+        Méthodes principales :
+            - `Show` : Affiche l'info-bulle à une position et taille données.
+            - `Hide` : Masque l'info-bulle (implémentation spécifique selon l'OS).
+        """
         def __init__(self, parent):
             style = wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
-            super().__init__(parent, wx.ID_ANY, "Tooltip",
-                             style=style)
+            super().__init__(parent, wx.ID_ANY, "Tooltip", style=style)
 
-        def Show(self, x, y, w, h):  # pylint: disable=W0221
+        def Show(self, x, y, w, h):  # pylint: disable=W0221 Window:def Show(self, show=True):
+            """
+            Affiche l'info-bulle à la position spécifiée avec la taille donnée.
+
+            Args :
+                x (int) : Position X de l'info-bulle.
+                y (int) : Position Y de l'info-bulle.
+                width (int) : Largeur de l'info-bulle.
+                height (int) : Hauteur de l'info-bulle.
+            """
             self.SetDimensions(x, y, w, h)
             super().Show()
 
 elif operating_system.isMac():
+
     class ToolTipBase(wx.Frame):
         def __init__(self, parent):  # pylint: disable=E1003
             style = wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
-            super().__init__(parent, wx.ID_ANY, "ToolTip",
-                             style=style)
+            super().__init__(parent, wx.ID_ANY, "ToolTip", style=style)
 
             # There are some subtleties on Mac regarding multi-monitor
             # displays...
@@ -167,6 +355,7 @@ elif operating_system.isMac():
             self.MoveXY(self.__maxWidth, self.__maxHeight)
 
 else:
+
     class ToolTipBase(wx.PopupWindow):
         def Show(self, x, y, width, height):  # pylint: disable=E1003,W0221
             # self.SetDimensions(x, y, width, height)
@@ -175,17 +364,43 @@ else:
 
 
 class SimpleToolTip(ToolTipBase):
+    """
+    Classe d'info-bulle simple affichant du texte et des icônes.
+
+    Cette classe permet d'afficher des info-bulles contenant une liste de
+    sections avec du texte et des icônes. Les lignes longues sont automatiquement
+    adaptées pour s'ajuster à la largeur maximale spécifiée.
+
+    Méthodes principales :
+        - `SetData` : Définit les données (texte et icônes) à afficher.
+        - `OnPaint` : Gère le rendu graphique de l'info-bulle.
+    """
     def __init__(self, parent):
         super().__init__(parent)
         self.data = []
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
     def SetData(self, data):
+        """
+        Définit les données affichées dans l'info-bulle.
+
+        Args :
+            data (list) : Liste de tuples contenant des icônes et des lignes de texte.
+        """
         self.data = self._wrapLongLines(data)
         self.SetSize(self._calculateSize())
         self.Refresh()  # Needed on Mac OS X
 
     def _wrapLongLines(self, data):
+        """
+        Ajuste les lignes longues pour qu'elles respectent une largeur maximale.
+
+        Args :
+            data (list) : Liste de données avec texte et icônes.
+
+        Returns :
+            list : Liste de données avec les lignes ajustées.
+        """
         wrappedData = []
         wrapper = textwrap.TextWrapper(width=78)
         for icon, lines in data:
@@ -223,7 +438,7 @@ class SimpleToolTip(ToolTipBase):
 
     def OnPaint(self, event):  # pylint: disable=W0613
         dc = wx.PaintDC(self)
-        # dc.BeginDrawing()  # TODO: BeginDrawing n'existe pas
+        # dc.BeginDrawing()  # DID: BeginDrawing n'existe plus, il n'est plus nécesaire !
         # try:
         self._setFontBrushAndPen(dc)
         self._drawBorder(dc)
@@ -291,5 +506,12 @@ class SimpleToolTip(ToolTipBase):
         return y + textHeight + 1
 
     def _drawIconSeparator(self, dc, x, top, bottom):
-        """ Dessine une ligne verticale entre l'icône et le texte. """
+        """Dessine une ligne verticale entre l'icône et le texte.
+
+        Args :
+            dc (wx.DC) : Contexte de dessin.
+            x (int) : Position X de la ligne.
+            top (int) : Position supérieure de la ligne.
+            bottom (int) : Position inférieure de la ligne.
+        """
         dc.DrawLine(x, top, x, bottom)
