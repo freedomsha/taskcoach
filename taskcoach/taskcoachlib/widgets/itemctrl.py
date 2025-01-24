@@ -14,10 +14,45 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
 
-# """ Base classes for controls with items, such as ListCtrl, TreeCtrl,
-#    and TreeListCtrl. """  # pylint: disable=W0105
+Module `itemctrl.py`
+
+Ce module fournit des mixins pour gérer des contrôles avec des éléments tels que
+`wx.ListCtrl`, `wx.TreeCtrl`, et `wx.TreeListCtrl`. Il étend la fonctionnalité
+de ces contrôles pour inclure :
+- Gestion des menus contextuels sur les éléments ou les colonnes.
+- Prise en charge des événements de glisser-déposer.
+- Colonnes masquables et redimensionnables.
+- Colonnes avec tri et indicateurs de tri.
+
+Classes principales :
+- `_CtrlWithItemsMixin` : Classe de base pour les contrôles avec des éléments.
+- `_CtrlWithPopupMenuMixin` : Ajoute la prise en charge des menus contextuels.
+- `_CtrlWithItemPopupMenuMixin` : Menu contextuel pour des éléments spécifiques.
+- `_CtrlWithColumnPopupMenuMixin` : Menu contextuel pour les colonnes.
+- `_CtrlWithDropTargetMixin` : Permet de déposer des fichiers, URL ou e-mails.
+- `CtrlWithToolTipMixin` : Ajoute des info-bulles spécifiques à chaque élément.
+- `_CtrlWithHideableColumnsMixin` : Colonnes masquables.
+- `_CtrlWithSortableColumnsMixin` : Colonnes avec tri et indicateurs de tri.
+- `_CtrlWithAutoResizedColumnsMixin` : Colonnes redimensionnables automatiquement.
+- `CtrlWithColumnsMixin` : Combine toutes les fonctionnalités ci-dessus.
+
+Dépendances :
+- wxPython : Le module utilise des classes comme `wx.ListCtrl`, `wx.TreeCtrl`, et
+  `wx.TreeListCtrl`.
+- wx.lib.agw.hypertreelist : Pour gérer des contrôles avancés.
+
+Ce module dépend de méthodes spécifiques disponibles dans les contrôles hérités de
+wxPython :
+- `Bind`, `Unbind` : Gestion des événements.
+- `PopupMenu`, `PopupMenuXY` : Gestion des menus contextuels.
+- `GetMainWindow` : Accès à la fenêtre principale contenant le contrôle.
+- `InsertColumn`, `DeleteColumn`, `GetColumnWidth`, etc. : Gestion des colonnes.
+
+Assurez-vous que les classes utilisant ces mixins héritent des contrôles wxPython
+appropriés pour éviter des erreurs.
+"""
+# pylint: disable=W0105
 
 # from builtins import str
 # from builtins import range
@@ -33,10 +68,29 @@ from wx.lib.agw import hypertreelist
 
 
 class _CtrlWithItemsMixin(object):
-    """ Base class for controls with items, such as ListCtrl, TreeCtrl,
-        TreeListCtrl, etc. """
+    """
+    Classe de base pour les contrôles contenant des éléments, comme `ListCtrl`,
+    `TreeCtrl`, ou `TreeListCtrl`.
+
+    Fournit des méthodes génériques pour vérifier les éléments, accéder aux
+    données associées, et gérer les sélections.
+
+    Méthodes principales :
+        - `_itemIsOk` : Vérifie si un élément est valide.
+        - `_objectBelongingTo` : Retourne l'objet associé à un élément.
+        - `SelectItem` : Sélectionne ou désélectionne un élément.
+    """
 
     def _itemIsOk(self, item):
+        """
+        Vérifie si un élément est valide.
+
+        Args :
+            item : L'élément à vérifier.
+
+        Returns :
+            bool : `True` si l'élément est valide, sinon `False`.
+        """
         try:
             return item.IsOk()  # for Tree(List)Ctrl
         except AttributeError:
@@ -51,6 +105,16 @@ class _CtrlWithItemsMixin(object):
             return self.getItemWithIndex(item)  # ListCtrl
 
     def SelectItem(self, item, *args, **kwargs):
+        """
+        Sélectionne ou désélectionne un élément.
+
+        Pour les `TreeCtrl` et `TreeListCtrl`, utilise `SelectItem`. Pour les
+        `ListCtrl`, utilise `SetItemState`.
+
+        Args :
+            item : L'élément à sélectionner ou désélectionner.
+            select (bool) : Si `True`, sélectionne l'élément. Sinon, le désélectionne.
+        """
         try:
             # Tree(List)Ctrl:
             super().SelectItem(item, *args, **kwargs)
@@ -64,27 +128,56 @@ class _CtrlWithItemsMixin(object):
 
 
 class _CtrlWithPopupMenuMixin(_CtrlWithItemsMixin):
-    """ Base class for controls with popupmenu's. """
+    """ Classe de base pour les contrôles avec PopupMenu.
+
+    Ajoute la prise en charge des menus contextuels.
+
+    Méthodes principales :
+        - `_attachPopupMenu` : Lie un gestionnaire d'événements pour afficher
+          un menu contextuel.
+    """
 
     @staticmethod
     def _attachPopupMenu(eventSource, eventTypes, eventHandler):
+        """
+        Lie un gestionnaire d'événements pour afficher un menu contextuel.
+
+        Args :
+            eventSource : La source de l'événement.
+            eventTypes (list) : Liste des types d'événements.
+            eventHandler : Gestionnaire d'événements pour afficher le menu.
+        """
         for eventType in eventTypes:
             eventSource.Bind(eventType, eventHandler)
 
 
 class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
-    """ Popupmenu's on items. """
+    """ Le menu contextuel est sur les éléments.
+
+    Ajoute un menu contextuel spécifique aux éléments.
+
+    Méthodes principales :
+        - `onItemPopupMenu` : Affiche le menu contextuel pour un élément.
+    """
 
     def __init__(self, *args, **kwargs):
         self.__popupMenu = kwargs.pop("itemPopupMenu")
         super().__init__(*args, **kwargs)
         if self.__popupMenu is not None:
             self._attachPopupMenu(self,
-                (wx.EVT_TREE_ITEM_RIGHT_CLICK, wx.EVT_CONTEXT_MENU),
-                self.onItemPopupMenu)
+                                  (wx.EVT_TREE_ITEM_RIGHT_CLICK, wx.EVT_CONTEXT_MENU),
+                                  self.onItemPopupMenu)
 
     def onItemPopupMenu(self, event):
-        # Make sure the window this control is in has focus:
+        """
+        Affiche le menu contextuel pour un élément.
+
+        Sélectionne l'élément sous le curseur avant d'afficher le menu.
+
+        Args :
+            event (wx.Event) : Événement déclenchant le menu contextuel.
+        """
+        # Assurez-vous que la fenêtre de ce contrôle est au foyer:
         try:
             window = event.GetEventObject().MainWindow
         except AttributeError:
@@ -104,17 +197,18 @@ class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
 
 
 class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
-    """ This class enables a right-click popup menu on column headers. The
-        popup menu should expect a public property columnIndex to be set so
-        that the control can tell the menu which column the user clicked to
-        popup the menu. """
+    """ Cette classe active un menu contextuel par clic droit sur les en-têtes de colonnes. Le menu contextuel
+        doit s'attendre à ce qu'un columnIndex de propriété publique soit défini de sorte
+        que le contrôle puisse indiquer au menu sur quelle colonne l'utilisateur a cliqué pour
+        faire apparaître le menu.
+    """
 
     def __init__(self, *args, **kwargs):
         self.__popupMenu = kwargs.pop("columnPopupMenu")
         super().__init__(*args, **kwargs)
         if self.__popupMenu is not None:
             self._attachPopupMenu(self, [wx.EVT_LIST_COL_RIGHT_CLICK],
-                self.onColumnPopupMenu)
+                                  self.onColumnPopupMenu)
 
     def onColumnPopupMenu(self, event):
         # We store the columnIndex in the menu, because it's near to
@@ -122,8 +216,8 @@ class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
         # menu was popped up.
         columnIndex = event.GetColumn()
         self.__popupMenu.columnIndex = columnIndex
-        # Because right-clicking on column headers does not automatically give
-        # focus to the control, we force the focus:
+        # Parce qu'un clic droit sur les en-têtes de colonnes ne donne pas automatiquement le focus
+        # au contrôle, nous forçons le focus :
         try:
             window = event.GetEventObject().GetMainWindow()
         except AttributeError:
@@ -135,7 +229,16 @@ class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
 
 
 class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
-    """Control that accepts files, e-mails or URLs being dropped onto items."""
+    """
+    Permet aux contrôles d'accepter des fichiers, URL ou e-mails déposés.
+
+    Contrôle qui accepte que des fichiers, des e-mails ou des URL soient déposés sur des éléments.
+
+    Méthodes principales :
+        - `onDropURL` : Gère le dépôt d'une URL.
+        - `onDropFiles` : Gère le dépôt de fichiers.
+        - `onDropMail` : Gère le dépôt de courriers électroniques.
+    """
 
     def __init__(self, *args, **kwargs):
         self.__onDropURLCallback = kwargs.pop("onDropURL", None)
@@ -143,9 +246,9 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
         self.__onDropMailCallback = kwargs.pop("onDropMail", None)
         super().__init__(*args, **kwargs)
         if (
-            self.__onDropURLCallback
-            or self.__onDropFilesCallback
-            or self.__onDropMailCallback
+                self.__onDropURLCallback
+                or self.__onDropFilesCallback
+                or self.__onDropMailCallback
         ):
             dropTarget = draganddrop.DropTarget(
                 self.onDropURL,
@@ -156,6 +259,14 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
             self.GetMainWindow().SetDropTarget(dropTarget)
 
     def onDropURL(self, x, y, url):
+        """
+        Gère le dépôt d'une URL sur un élément.
+
+        Args :
+            x (int) : Coordonnée X du point de dépôt.
+            y (int) : Coordonnée Y du point de dépôt.
+            url (str) : URL déposée.
+        """
         item = self.HitTest((x, y))[0]
         if self.__onDropURLCallback:
             self.__onDropURLCallback(self._objectBelongingTo(item), url)
@@ -185,7 +296,8 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
 
 
 class CtrlWithToolTipMixin(_CtrlWithItemsMixin, tooltip.ToolTipMixin):
-    """ Control that has a different tooltip for each item """
+    """ Contrôle qui a une info-bulle différente pour chaque élément. """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__tip = tooltip.SimpleToolTip(self)
@@ -224,8 +336,8 @@ class Column(object):
         self.__alignment = kwargs.pop("alignment", wx.LIST_FORMAT_LEFT)
         self.__hasImages = "imageIndicesCallback" in kwargs
         self.__imageIndicesCallback = (
-            kwargs.pop("imageIndicesCallback", self.defaultImageIndices)
-            or self.defaultImageIndices
+                kwargs.pop("imageIndicesCallback", self.defaultImageIndices)
+                or self.defaultImageIndices
         )
         # NB: because the header image is needed for sorting a fixed header
         # image cannot be combined with a sortable column
@@ -259,7 +371,7 @@ class Column(object):
             self.__sortCallback(*args, **kwargs)
 
     def __filterArgs(self, func, kwargs):
-        actualKwargs = dict()
+        # actualKwargs = dict()  # Jamais utilisé !
         argNames = inspect.getfullargspec(func).args
         return dict([(name, value) for name, value in list(
             kwargs.items()) if name in argNames])
@@ -284,7 +396,7 @@ class Column(object):
         return self.__hasImages
 
     def isEditable(self):
-        return self.__editControlClass != None and self.__editCallback != None
+        return self.__editControlClass is not None and self.__editCallback is not None
 
     def onEndEdit(self, item, newValue):
         self.__editCallback(item, newValue)
@@ -307,17 +419,17 @@ class Column(object):
 
 
 class _BaseCtrlWithColumnsMixin(object):
-    """ A base class for all controls with columns. Note that this class and
-        its subclasses do not support addition or deletion of columns after
-        the initial setting of columns. """
+    """ Une classe de base pour tous les contrôles avec des colonnes. Notez que cette classe et
+        ses sous-classes ne prennent pas en charge l'ajout ou la suppression de colonnes après
+        le paramètre initial des colonnes. """
 
     def __init__(self, *args, **kwargs):
         self.__allColumns = kwargs.pop("columns")
         super().__init__(*args, **kwargs)
-        # This  is  used to  keep  track  of  which column  has  which
-        # index. The only  other way would be (and  was) find a column
-        # using its header, which causes problems when several columns
-        # have the same header. It's a list of (index, column) tuples.
+        # Ceci est utilisé pour garder une trace de quelle colonne a quel
+        # index. La seule autre façon serait (et était) de trouver une colonne
+        # en utilisant son en-tête, ce qui pose des problèmes lorsque plusieurs colonnes
+        # ont le même en-tête. C'est une liste de tuples (index, colonne).
         self.__indexMap = []
         self._setColumns()
 
@@ -363,12 +475,12 @@ class _BaseCtrlWithColumnsMixin(object):
         raise IndexError
 
     def _getColumnHeader(self, columnIndex):
-        """ The currently displayed column header in the column with index
+        """ En-tête de colonne actuellement affiché dans la colonne avec index
             columnIndex. """
         return self.GetColumn(columnIndex).GetText()
 
     def _getColumnIndex(self, column):
-        """ The current column index of the column 'column'. """
+        """ L'index de colonne actuel de la colonne 'colonne'. """
         try:
             return self.__allColumns.index(column)  # Uses overriden __eq__
         except ValueError:
@@ -376,13 +488,27 @@ class _BaseCtrlWithColumnsMixin(object):
 
 
 class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
-    """ This class supports hiding columns. """
+    """
+    Prend en charge le masquage et l'affichage des colonnes.
+
+    Méthodes principales :
+        - `showColumn` : Affiche ou masque une colonne.
+        - `isColumnVisible` : Vérifie si une colonne est visible.
+    """
 
     def showColumn(self, column, show=True):
-        """ showColumn shows or hides the column for column.
-            The column is actually removed or inserted into the control because
-            although TreeListCtrl supports hiding columns, ListCtrl does not.
-            """
+        """
+        Affiche ou masque une colonne.
+
+        showColumn affiche ou masque la colonne de la colonne.
+        La colonne est en fait supprimée ou insérée dans le contrôle car
+        bien que TreeListCtrl prenne en charge le masquage des colonnes,
+        ListCtrl ne le fait pas.
+
+        Args :
+        column (Column) : La colonne à afficher ou masquer.
+        show (bool) : Si `True`, affiche la colonne. Sinon, la masque.
+    """
         columnIndex = self._getColumnIndex(column)
         if show and not self.isColumnVisible(column):
             self._insertColumn(columnIndex, column)
@@ -393,21 +519,21 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
         return column in self._visibleColumns()
 
     def _getColumnIndex(self, column):
-        """ _getColumnIndex returns the actual columnIndex of the column if it
-            is visible, or the position it would have if it were visible. """
+        """ _getColumnIndex renvoie le columnIndex réel de la colonne si elle
+            est visible, ou la position qu'elle aurait si elle était visible. """
         columnIndexWhenAllColumnsVisible = super()._getColumnIndex(column)
         for columnIndex, visibleColumn in enumerate(self._visibleColumns()):
             if super()._getColumnIndex(visibleColumn) >= columnIndexWhenAllColumnsVisible:
                 return columnIndex
-        return self.GetColumnCount() # Column header not found
+        return self.GetColumnCount()  # Column header not found
 
     def _visibleColumns(self):
         return [self._getColumn(columnIndex) for columnIndex in range(self.GetColumnCount())]
 
 
 class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
-    """ This class adds sort indicators and clickable column headers that
-        trigger callbacks to (re)sort the contents of the control. """
+    """ Cette classe ajoute des indicateurs de tri et des en-têtes de colonnes cliquables qui
+        déclenchent des rappels pour (re)trier le contenu du contrôle. """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -417,7 +543,7 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
 
     def onColumnClick(self, event):
         event.Skip(False)
-        # Make sure the window this control is in has focus:
+        # Assurez-vous que la fenêtre dans laquelle se trouve ce contrôle a le focus :
         try:
             window = event.GetEventObject().GetMainWindow()
         except AttributeError:
@@ -426,8 +552,8 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
         columnIndex = event.GetColumn()
         if 0 <= columnIndex < self.GetColumnCount():
             column = self._getColumn(columnIndex)
-            # Use CallAfter to make sure the window this control is in is
-            # activated before we process the column click:
+            # Utilisez CallAfter pour vous assurer que la fenêtre dans laquelle se trouve ce contrôle est
+            # activée avant de traiter le clic sur la colonne :
             wx.CallAfter(column.sort, event)
 
     def showSortColumn(self, column):
@@ -453,7 +579,7 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
         columnIndex = self._getColumnIndex(self.__currentSortColumn)
         columnInfo = self.GetColumn(columnIndex)
         if columnInfo.GetImage() == imageIndex:
-            pass # The column is already showing the right image, so we're done
+            pass  # The column is already showing the right image, so we're done
         else:
             columnInfo.SetImage(imageIndex)
             self.SetColumn(columnIndex, columnInfo)
@@ -465,7 +591,7 @@ class _CtrlWithAutoResizedColumnsMixin(autowidth.AutoColumnWidthMixin):
         self.Bind(wx.EVT_LIST_COL_END_DRAG, self.onEndColumnResize)
 
     def onEndColumnResize(self, event):
-        """ Save the column widths after the user did a resize. """
+        """ Enregistrez les largeurs de colonne après que l'utilisateur ait fait un redimensionnement. """
         for index, column in enumerate(self._visibleColumns()):
             column.setWidth(self.GetColumnWidth(index))
         event.Skip()
@@ -475,24 +601,26 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
                            _CtrlWithHideableColumnsMixin,
                            _CtrlWithSortableColumnsMixin,
                            _CtrlWithColumnPopupMenuMixin):
-    """ CtrlWithColumnsMixin combines the functionality of its four parent
-        classes: automatic resizing of columns, hideable columns, columns with
-        sort indicators, and column popup menu's. """
+    """ Combine toutes les fonctionnalités de ses quatre classes parents
+    pour les contrôles avec colonnes. :
+    - Redimensionnement automatique des colonnes.
+    - Colonnes masquables.
+    - Colonnes avec tri et indicateurs de tri.
+    - Menu contextuel pour les colonnes.
+    """
 
     def showColumn(self, column, show=True):
         super().showColumn(column, show)
-        # Show sort indicator if the column that was just made visible is being sorted on
+        # Afficher l'indicateur de tri si la colonne qui vient d'être rendue visible est en cours de tri.
         if show and column == self._currentSortColumn():
             self._showSortImage()
 
     def _clearSortImage(self):
-        # Only clear the sort image if the column in question is visible
+        # Effacer l'image de tri si la colonne en question est visible.
         if self.isColumnVisible(self._currentSortColumn()):
             super()._clearSortImage()
 
     def _showSortImage(self):
-        # Only show the sort image if the column in question is visible
+        # Affichez uniquement l'image de tri si la colonne en question est visible.
         if self.isColumnVisible(self._currentSortColumn()):
             super()._showSortImage()
-
-
