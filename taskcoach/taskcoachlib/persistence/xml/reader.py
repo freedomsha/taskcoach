@@ -1042,10 +1042,10 @@ class XMLReader(object):  # nouvelle classe
         #         print(
         #             f"Vérification 🔍 DEBUG - Avant setCategories() | Sous-tâche {child.id()} | Catégories actuelles = {child.categories()}")
 
-        for task in tasks:
+        for a_task in tasks:
             # print(f"FORCAGE 🔍 DEBUG - Avant setCategories() | Task {task.id()} | Catégories actuelles = {task.categories()}")
             # task.setCategories(set(task.categories()))  # Force l'affectation
-            task.setCategories(task.categories() | set(task.categories()))
+            a_task.setCategories(a_task.categories() | set(a_task.categories()))
             # print(f"🔍 DEBUG - Après setCategories() | Task {task.id()} | Catégories finales = {task.categories()}")
         # for obj in tasks + notes:
         #     print(f"🔍 DEBUG - Après résolution, {obj.id()} a les catégories {obj.categories()}")
@@ -1457,7 +1457,7 @@ class XMLReader(object):  # nouvelle classe
         # print(f"XMLReader.__parse_task_node : 🛠 FINAL kwargs avant création de la tâche : {kwargs}")
         # 🔹 Création de la tâche
         # print("Création de la tâche.")
-        task_id = task_node.get("id")
+        # task_id = task_node.get("id")
         # print(f"🔍 DEBUG - Tentative de création de la tâche {task_id}")
         # if task_id in self.__parsed_tasks:
         #     print(f"⚠️ La tâche {task_id} existe déjà, on ne la recrée pas.")
