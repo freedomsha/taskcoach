@@ -33,7 +33,7 @@ class Composite(object):
         """
         Initialisez le composite avec une liste facultative d'enfants et de parents.
 
-        Args:
+        Args :
             children (list, facultatif) : Liste des composites enfants.
             parent (Composite, facultatif) : Composite parent.
         """
@@ -56,7 +56,7 @@ class Composite(object):
         """
         Définissez l'état à partir du décapage.
 
-        Args:
+        Args :
             state (dict) : L'état du composite.
         """
         self.__parent = (
@@ -115,7 +115,7 @@ class Composite(object):
         """
         Définissez le composite parent.
 
-        Args:
+        Args :
             parent (Composite) : Le composite parent.
         """
         self.__parent = None if parent is None else weakref.ref(parent)
@@ -124,15 +124,16 @@ class Composite(object):
         """
         Récupère les enfants du composite.
 
-        Args:
-            récursif (bool, facultatif) : Si True, récupère tous les descendants de manière récursive.
+        Args :
+            recursive (bool, facultatif) : Si True, récupère tous les descendants de manière récursive.
 
-        Renvoie :
-            list : La liste des enfants .
+        Returns :
+            list : La liste des enfants.
         """
         if recursive:
             result = self.__children[:]
             for child in self.__children:
+                # print(f"Composite.children : DEBUG: Ajout de l'enfant {child.id()} à {self.id()}")
                 result.extend(child.children(recursive=True))
             return result
         else:
@@ -349,7 +350,7 @@ class CompositeCollection(object):
         """
         Ajoutez plusieurs composites à la collection avec notification d'événement.
 
-        Args:
+        Args :
             composites (list) : La liste des composites à ajouter.
             event (Événement, facultatif) : L'événement à notifier.
         """
@@ -363,7 +364,7 @@ class CompositeCollection(object):
         """
         Obtenez tous les composites et leurs enfants de manière récursive.
 
-        Args:
+        Args :
             composites (list) : La liste des composites.
 
         Returns:
@@ -378,7 +379,7 @@ class CompositeCollection(object):
         """
         Ajoutez des composites à leur parent.
 
-        Args:
+        Args :
             composites (list) : La liste des composites.
             event (Event) : L'événement à notifier.
         """
@@ -395,7 +396,7 @@ class CompositeCollection(object):
         """
         Supprimer un composite de la collection.
 
-        Args:
+        Args :
             composite (Composite) : Le composite à supprimer.
             event (Event, facultatif) : L'événement à notifier.
         """
@@ -410,7 +411,7 @@ class CompositeCollection(object):
         """
         Supprimez plusieurs éléments composites de la collection avec notification d'événement.
 
-        Args:
+        Args :
             composites (list) : La liste des composites à supprimer.
             event (Événement, facultatif) : L'événement à notifier.
         """
@@ -424,7 +425,7 @@ class CompositeCollection(object):
         """
         Supprimer les composites de leur parent.
 
-        Args:
+        Args :
             composites (list) : La liste des composites.
             event (Event) : L'événement à notifier.
         """
