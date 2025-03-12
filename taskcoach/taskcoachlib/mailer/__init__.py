@@ -34,9 +34,14 @@ from taskcoachlib import operating_system
 
 
 def readMail(filename, readContent=True):
-    with file(filename, "r") as fd:  # str or bytes ?
-        # with open(filename, 'r') as fd:
-        message = email.message_from_file(fd)
+    """Lit un email depuis un fichier et retourne son contenu."""
+    if isinstance(filename, str):  # Si fd est un chemin de fichier, on ouvre en binaire
+        with open(filename, "rb") as f:
+            message = email.message_from_bytes(f.read())  # ✅ Utilise `message_from_bytes`
+    else:  # Sinon, fd est déjà un objet fichier
+        with file(filename, "r") as fd:  # str or bytes ?
+            # with open(filename, 'r') as fd: # ✅ Lecture binaire
+            message = email.message_from_file(fd)
     subject = getSubject(message)
     content = getContent(message) if readContent else ''
     return subject, content
@@ -46,21 +51,37 @@ charset_re = re.compile('charset="?([-0-9a-zA-Z]+)"?')
 
 
 def getSubject(message):
-    subject = message["subject"]
+    """Extrait le sujet d'un email en le décodant correctement."""
+    # subject = message["subject"]
+    subject = message.get("Subject")  # ✅ Utilise `get()` pour éviter KeyError
+
+    if subject is None:  # ✅ Vérifie si le sujet est `None`
+        return "(Pas de sujet)"
+
+    # try:
+    #     return " ".join(
+    #         (part[0].decode(part[1]) if part[1] else part[0])
+    #         for part in email.header.decode_header(subject)
+    #     )
     try:
         return " ".join(
-            (part[0].decode(part[1]) if part[1] else part[0])
+            (part[0].decode(part[1]) if isinstance(part[0], bytes) else part[0])
             for part in email.header.decode_header(subject)
         )
     except UnicodeDecodeError:
-        encoding = message.get_content_charset()
-        if encoding is None:
-            encoding = message.get("Content-Transfer-Encoding")
-        if encoding is None:
-            encoding = "utf-8"
+        # encoding = message.get_content_charset()
+        # if encoding is None:
+        #     encoding = message.get("Content-Transfer-Encoding")
+        # if encoding is None:
+        #     encoding = "utf-8"
+        # try:
+        #     return subject.decode(encoding)
+        # except:
+        #     return repr(subject)
+        encoding = message.get_content_charset() or message.get("Content-Transfer-Encoding") or "utf-8"
         try:
             return subject.decode(encoding)
-        except:
+        except Exception:
             return repr(subject)
 
 
