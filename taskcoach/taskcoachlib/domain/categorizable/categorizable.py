@@ -22,15 +22,19 @@ from taskcoachlib.domain.attribute import font, color
 
 
 class CategorizableCompositeObject(base.CompositeObject):
-    """ CategorizableCompositeObjects are composite objects that can be
-        categorized by adding them to one or more categories. Examples of
-        categorizable composite objects are tasks and notes. """
+    """
+    Les CatégorizableCompositeObjects sont des objets composites qui peuvent
+    être classés en les ajoutant à une ou plusieurs catégories.
+    Des exemples d'objets composites catégorisables sont des tâches et des notes.
+    """
 
     def __init__(self, *args, **kwargs):
-        self.__categories = base.SetAttribute(kwargs.pop("categories", set()),
-                                              self,
-                                              self.addCategoryEvent,
-                                              self.removeCategoryEvent)
+        self.__categories = base.SetAttribute(
+            kwargs.pop("categories", set()),
+            self,
+            self.addCategoryEvent,
+            self.removeCategoryEvent,
+        )
         super().__init__(*args, **kwargs)
 
     def __getstate__(self):
@@ -49,7 +53,9 @@ class CategorizableCompositeObject(base.CompositeObject):
         return state
 
     def categories(self, recursive=False, upwards=False):
+        # print(f"CategorizableCompositeObject.categories : 🔍 DEBUG - Appel de categories() pour {self.id()} | Retour = {self.__categories}")
         result = self.__categories.get()
+        # print(f"CategorizableCompositeObject.categories : Retour=result={result}")
         if recursive and upwards and self.parent() is not None:
             result |= self.parent().categories(recursive=True, upwards=True)
         elif recursive and not upwards:
@@ -62,13 +68,22 @@ class CategorizableCompositeObject(base.CompositeObject):
         return "categorizable.category.add"
 
     def addCategory(self, *categories, **kwargs):
-        return self.__categories.add(set(categories), event=kwargs.pop("event", None))
+        # print(f"CategorizableCompositeObject.addCategory : 🛠 DEBUG - Ajout de {categories} à {self} dans {self.__class__.__name__}")
+        # return self.__categories.add(set(categories), event=kwargs.pop("event", None))
+        # self.__categories.update(categories)  # Ajoute les catégories. Erreur, update() ne fonctionne pas.
+        for category in categories:
+            # self.__categories.add(category)  # Utilise add() pour un SetAttribute. ⚠️ Erreur, category est un objet et pas un set
+            self.__categories.add({category})  # ✅ Convertit en set avant l'ajout
+        # print(f"CategorizableCompositeObject.addCategory : ✅ DEBUG - self.__categories après ajout = {self.__categories}")
+
+        return True  # Retourne True pour que Task.addCategory() fonctionne
 
     def addCategoryEvent(self, event, *categories):
         event.addSource(self, *categories, **dict(type=self.categoryAddedEventType()))
         for child in self.children(recursive=True):
-            event.addSource(child, *categories,
-                            **dict(type=child.categoryAddedEventType()))
+            event.addSource(
+                child, *categories, **dict(type=child.categoryAddedEventType())
+            )
         if self.categoriesChangeAppearance(categories):
             self.appearanceChangedEvent(event)
 
@@ -81,60 +96,115 @@ class CategorizableCompositeObject(base.CompositeObject):
         )
 
     def categoriesChangeFgColor(self, categories):
-        return not self.foregroundColor() and any(category.foregroundColor(recursive=True) for category in categories)
+        return not self.foregroundColor() and any(
+            category.foregroundColor(recursive=True) for category in categories
+        )
 
     def categoriesChangeBgColor(self, categories):
-        return not self.backgroundColor() and any(category.backgroundColor(recursive=True) for category in categories)
+        return not self.backgroundColor() and any(
+            category.backgroundColor(recursive=True) for category in categories
+        )
 
     def categoriesChangeFont(self, categories):
-        return not self.font() and any(category.font(recursive=True) for category in categories)
+        return not self.font() and any(
+            category.font(recursive=True) for category in categories
+        )
 
     def categoriesChangeIcon(self, categories):
-        return not self.icon() and any(category.icon(recursive=True) for category in categories)
+        return not self.icon() and any(
+            category.icon(recursive=True) for category in categories
+        )
 
     @classmethod
     def categoryRemovedEventType(class_):
-        return 'categorizable.category.remove'
+        return "categorizable.category.remove"
 
     def removeCategory(self, *categories, **kwargs):
-        return self.__categories.remove(set(categories), event=kwargs.pop("event", None))
+        return self.__categories.remove(
+            set(categories), event=kwargs.pop("event", None)
+        )
 
     def removeCategoryEvent(self, event, *categories):
         event.addSource(self, *categories, **dict(type=self.categoryRemovedEventType()))
         for child in self.children(recursive=True):
-            event.addSource(child, *categories,
-                            **dict(type=child.categoryRemovedEventType()))
+            event.addSource(
+                child, *categories, **dict(type=child.categoryRemovedEventType())
+            )
         if self.categoriesChangeAppearance(categories):
             self.appearanceChangedEvent(event)
 
     def setCategories(self, categories, event=None):
+
+        # print(
+        #     f"CategorizableCompositeObject.setCategory : 🛠 DEBUG - Règle de {categories} à {self} dans {self.__class__.__name__}")
         return self.__categories.set(set(categories), event=event)
+        # return self.__categories.add(set(categories), event=kwargs.pop("event", None))
+        # self.__categories.update(categories)  # Ajoute les catégories. Erreur, update() ne fonctionne pas.
+        # for category in categories:
+        #     # self.__categories.add(category)  # Utilise add() pour un SetAttribute. ⚠️ Erreur, category est un objet et pas un set
+        #     self.__categories.set({category})  # ✅ Convertit en set avant l'ajout
+        # print(f"CategorizableCompositeObject.setCategory : ✅ DEBUG - self.__categories après réglage = {self.__categories}")
 
     @staticmethod
     def categoriesSortFunction(**kwargs):
-        """ Return a sort key for sorting by categories. Since a categorizable
-            can have multiple categories we first sort the categories by their
-            subjects. If the sorter is in tree mode, we also take the categories
-            of the children of the categorizable into account, after the
-            categories of the categorizable itself. If the sorter is in list
-            mode we also take the categories of the parent (recursively) into
-            account, again after the categories of the categorizable itself. """
+        """
+        Renvoyer une clé de tri pour le tri par les catégories.
+        Étant donné qu'une catégorisable peut avoir plusieurs catégories,
+        nous triez d'abord les catégories par leurs sujets. Si le trieur
+        est en mode arborescence, nous prenons également les catégories
+        des enfants Catégorizables, après les catégories de la catégorizable
+        elle-même. Si le trieur est en mode liste, nous apportons également
+        les catégories du parent (récursivement) en compte, encore une fois
+        après les catégories de la catégorisable elle-même.
+
+        Args :
+            **kwargs :
+
+        Returns :
+        """
+
         def sortKeyFunction(categorizable):
+            """
+
+            Args :
+                categorizable :
+
+            Returns :
+
+            """
             def sortedSubjects(items):
+                """
+                Retourne les sujets des items triés par nom.
+
+                Args :
+                    items : Liste d'éléments.
+
+                Returns :
+                    Les sujets des items triés par nom.
+                """
                 return sorted([item.subject(recursive=True) for item in items])
+
             categories = categorizable.categories()
+            # Tri la liste des sujets des catégories par nom.
             sortedCategorySubjects = sortedSubjects(categories)
             isListMode = not kwargs.get("treeMode", False)
-            childCategories = categorizable.categories(recursive=True, upwards=isListMode) - categories
+            # Retire les catégories triées de la liste des catégories catégorisables.
+            childCategories = (
+                categorizable.categories(recursive=True, upwards=isListMode)
+                - categories
+            )
+            # Ajoute les catégories enfants triées par nom de sujet à la liste des catégories triées.
             sortedCategorySubjects.extend(sortedSubjects(childCategories))
+            # Retourne la liste des catégories triées par sujet.
             return sortedCategorySubjects
+
         return sortKeyFunction
 
     @classmethod
     def categoriesSortEventTypes(class_):
-        """ The event types that influence the categories sort order. """
-        return (class_.categoryAddedEventType(),
-                class_.categoryRemovedEventType())
+        """Les types d'événements qui influencent l'ordre de tri des catégories. """
+        # return (class_.categoryAddedEventType(), class_.categoryRemovedEventType())
+        return class_.categoryAddedEventType(), class_.categoryRemovedEventType()
 
     def foregroundColor(self, recursive=False):
         myOwnFgColor = super().foregroundColor()
@@ -157,28 +227,30 @@ class CategorizableCompositeObject(base.CompositeObject):
             return super().backgroundColor(recursive=True)
 
     def _categoryForegroundColor(self):
-        """ If a categorizable object belongs to a category that has a
-            foreground color associated with it, the categorizable object is
-            colored accordingly. When a categorizable object belongs to
-            multiple categories, the color is mixed. If a categorizable
-            composite object has no foreground color of its own, it uses its
-            parent's foreground color. """
-        colors = [category.foregroundColor(recursive=True)
-                  for category in self.categories()]
+        """Si un objet catégorisable appartient à une catégorie qui a
+        une couleur de premier plan qui lui est associée,
+        l'objet catégorisable est coloré en conséquence. Lorsqu'un objet
+        catégorisable appartient à plusieurs catégories, la couleur est mélangée.
+        Si un objet composite catégorisable n'a pas de couleur de premier plan,
+        il utilise la couleur de premier plan des parents."""
+        colors = [
+            category.foregroundColor(recursive=True) for category in self.categories()
+        ]
         if not colors and self.parent():
             return self.parent()._categoryForegroundColor()
         else:
             return color.ColorMixer.mix(colors)
 
     def _categoryBackgroundColor(self):
-        """ If a categorizable object belongs to a category that has a
-            background color associated with it, the categorizable object is
-            colored accordingly. When a categorizable object belongs to
-            multiple categories, the color is mixed. If a categorizable
-            composite object has no background color of its own, it uses its
-            parent's background color. """
-        colors = [category.backgroundColor(recursive=True)
-                  for category in self.categories()]
+        """If a categorizable object belongs to a category that has a
+        background color associated with it, the categorizable object is
+        colored accordingly. When a categorizable object belongs to
+        multiple categories, the color is mixed. If a categorizable
+        composite object has no background color of its own, it uses its
+        parent's background color."""
+        colors = [
+            category.backgroundColor(recursive=True) for category in self.categories()
+        ]
         if not colors and self.parent():
             return self.parent()._categoryBackgroundColor()
         else:
@@ -195,13 +267,12 @@ class CategorizableCompositeObject(base.CompositeObject):
             return super().font(recursive=True)
 
     def _categoryFont(self):
-        """ If a categorizable object belongs to a category that has a
-            font associated with it, the categorizable object uses that font.
-            When a categorizable object belongs to multiple categories, the
-            font is mixed. If a categorizable composite object has no font of
-            its own, it uses its parent's font. """
-        fonts = [category.font(recursive=True)
-                 for category in self.categories()]
+        """If a categorizable object belongs to a category that has a
+        font associated with it, the categorizable object uses that font.
+        When a categorizable object belongs to multiple categories, the
+        font is mixed. If a categorizable composite object has no font of
+        its own, it uses its parent's font."""
+        fonts = [category.font(recursive=True) for category in self.categories()]
         if not fonts and self.parent():
             return self.parent()._categoryFont()
         else:
@@ -247,13 +318,18 @@ class CategorizableCompositeObject(base.CompositeObject):
 
     def categorySubjectChangedEvent(self, event, subject):
         for categorizable in [self] + self.children(recursive=True):
-            event.addSource(categorizable, subject,
-                            type=categorizable.categorySubjectChangedEventType())
+            event.addSource(
+                categorizable,
+                subject,
+                type=categorizable.categorySubjectChangedEventType(),
+            )
 
     @classmethod
     def modificationEventTypes(class_):
         eventTypes = super().modificationEventTypes()
         if eventTypes is None:
             eventTypes = []
-        return eventTypes + [class_.categoryAddedEventType(),
-                              class_.categoryRemovedEventType()]
+        return eventTypes + [
+            class_.categoryAddedEventType(),
+            class_.categoryRemovedEventType(),
+        ]
