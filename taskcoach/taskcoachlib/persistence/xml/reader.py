@@ -165,9 +165,7 @@ class PIParser(ET.XMLTreeBuilder):  # XMLTreeBuilder don't exist
         # self._parser.ProcessingInstructionHandler = self.handle_pi
         #
         # Use lxml's ElementTree instead, it's provided better Processing Instruction handling
-        # FIXME: Le code d'origine pour parser la version de Task Coach est obsolète
-        # et ne fonctionne plus avec les versions récentes de Python.
-        # Le parsing de la version devrait se faire ailleurs dans le code.
+
 
     def handle_pi(self, target, data):
         """
@@ -1184,7 +1182,6 @@ class XMLReader(object):  # nouvelle classe
         'filtered' et 'exclusiveSubcategories'. Les tâches associées (categorizables)
         ne sont pas traitées ici mais seront associées plus tard dans __resolve_categories.
         """
-        # TODO : à analyser et vérifier
         # Récupérer l'ID de la catégorie depuis le nœud XML
         # print(f"📂 DEBUG - Début analyse de la catégorie {ET.tostring(category_node, pretty_print=True).decode()}")
         # print(f"XMLReader.__parse_category_node : récupère l'ID de la catégorie {category_node} depuis le nœud XML :")
@@ -1818,7 +1815,6 @@ class XMLReader(object):  # nouvelle classe
         * Définit les permissions du fichier temporaire sur lecture seule pour Windows.
         * Crée et retourne une instance de `attachment.AttachmentFactory`.
         * Enregistre la date de modification de la pièce jointe à l'aide de `__save_modification_datetime`."""
-        # TODO : à analyser
 
         # Création d'un dictionnaire d'attributs
         kwargs = self.__parse_base_attributes(node)
