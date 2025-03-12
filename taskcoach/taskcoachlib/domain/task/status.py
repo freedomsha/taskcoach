@@ -55,9 +55,9 @@ class TaskStatus(object):
 
     Attributs :
         statusString (str) : Un identifiant de chaîne courte pour le statut.
-        pluralLabel (str) : Une étiquette lisible par l'homme pour la forme plurielle de le statut.
+        pluralLabel (str) : Une étiquette lisible par l'homme pour la forme plurielle du statut.
         countLabel (str) : Un format de chaîne pour afficher le nombre de tâches avec ce statut.
-        hideMenuText (str) : Le texte à afficher dans le menu pour masquer les tâches avec ce statut. status.
+        hideMenuText (str) : Le texte à afficher dans le menu pour masquer les tâches avec ce statut status.
         hideHelpText (str) : Un texte d'aide expliquant la signification du statut.
     """
     def __init__(self, statusString, pluralLabel, countLabel, hideMenuText,
@@ -126,15 +126,18 @@ class TaskStatus(object):
         """
         Vérifie si deux objets TaskStatus sont égaux.
 
-        Args:
+        Args :
             other (TaskStatus) : l'autre objet TaskStatus à comparer.
 
-        Returns:
-            bool : True si les chaînes d'état sont égal, Faux sinon.
+        Returns :
+            bool : True si les chaînes d'état sont égales, Faux sinon.
         """
-        return self.statusString == other.statusString
+        # return self.statusString == other.statusString
+        if isinstance(other, TaskStatus):
+            return self.statusString == other.statusString
+        return False
 
-# j'ai ajouter cette fonction:
+# j'ai ajouté cette fonction :
     def __hash__(self) -> int:
         """
         Renvoie le hachage de l'objet TaskStatus.
@@ -150,10 +153,10 @@ class TaskStatus(object):
         """
         Vérifie si deux objets TaskStatus ne sont pas égaux.
 
-        Args:
+        Args :
             other (TaskStatus) : L'autre objet TaskStatus à comparer.
 
-        Returns:
+        Returns :
             bool : True si les chaînes d'état ne sont pas égaux, Faux sinon.
         """
         return self.statusString != other.statusString
@@ -168,6 +171,7 @@ class TaskStatus(object):
         return True
 
 
+# Définition des statuts
 inactive = TaskStatus(
     "inactive",
     _("Inactive tasks"),
@@ -223,3 +227,27 @@ completed = TaskStatus(
     _("Hide &completed tasks"),
     _("Show/hide completed tasks"),
 )
+
+# Mapping des valeurs numériques vers les instances de TaskStatus
+_status_map = {
+    2: completed,
+    3: overdue,
+    4: duesoon,
+    5: active,
+    6: inactive,
+    7: late
+}
+
+
+def from_int(value):
+    """ Convertit un entier en instance de TaskStatus. """
+    # print(f"TaskStatus.from_int() appelé avec {value}, _status_map = {_status_map}")
+    # print(f"DEBUG - TaskStatus.from_int() appelé avec {value}, retourne {_status_map.get(int(value))}")
+    if isinstance(value, int) :
+        return _status_map.get(value)  # Par défaut, retourne "inactive" si inconnu
+    else :
+        return _status_map.get(int(value))  # Par défaut, retourne "inactive" si inconnu
+    # return _status_map.get(value, inactive)  # Par défaut, retourne "inactive" si inconnu
+
+
+# print(f"DEBUG - Vérification des statuts : completed = {completed} ({type(completed)})")
