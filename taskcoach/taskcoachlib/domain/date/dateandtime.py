@@ -133,12 +133,33 @@ DateTime.min = DateTime(datetime.datetime.min.year, 1, 1).startOfDay()
 
 
 def parseDateTime(string, *timeDefaults):
+    """
+    Méthode d'analyse de la date et de l'heure.
+
+    Args :
+        string : Date (et heure) à analyser.
+        *timeDefaults : Heure par défaut.
+
+    Returns : None si string est vide ou égal à None, sinon renvoie une date
+              au format (year, month, day, hour:minute:second:microsecond)
+              avec l'heure actuelle s'il n'y a que year, month et day.
+
+    """
+    # Si string est vide ou égal à None alors retourne None
     if string in ("", "None"):
+        # print("dateandtime.parseDateTime : La date string est vide")
         return None
+    # sinon renvoie une date au format (year, month, day, hour:minute:second:microsecond)
     else:
+        # Sépare string en une liste args d'arg au format int.
+        # print(f"dateandtime.parseDateTime : La date string = {string}.")
         args = [int(arg) for arg in re.split("[-:. ]", string)]
+        # print(f"La liste d'arguments de date args = {args}")
+        # Si la liste contient 3 éléments, il s'agit d'une date sans heures. On ajoute l'heure par défaut.
         if len(args) == 3:  # We parsed a date, no time
             args.extend(timeDefaults)
+        # print(f"La liste d'arguments ajustée args = {args}")
+        # print(f"dateandtime.parseDateTime : Le retour de parseDateTime = {DateTime(*args)}")
         return DateTime(*args)  # pylint: disable=W0142
 
 
