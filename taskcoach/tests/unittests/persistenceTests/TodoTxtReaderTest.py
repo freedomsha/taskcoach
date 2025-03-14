@@ -16,15 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from future import standard_library
-from ... import test
+# from future import standard_library
+from ... import tctest
 import io
-from ....taskcoachlib import persistence, config
-from ....taskcoachlib.domain import task, category, date
-standard_library.install_aliases()
+from taskcoachlib import persistence, config
+from taskcoachlib.domain import task, category, date
+# standard_library.install_aliases()
 
 
-class TodoTxtReaderTestCase(test.TestCase):
+class TodoTxtReaderTestCase(tctest.TestCase):
     def setUp(self):
         task.Task.settings = config.Settings(load=False)
         self.tasks = task.TaskList()
@@ -56,11 +56,11 @@ class TodoTxtReaderTestCase(test.TestCase):
                          list(self.tasks)[0].dueDateTime())
 
     def assertTaskIsCompleted(self):
-        self.failUnless(list(self.tasks)[0].completed())
+        self.assertTrue(list(self.tasks)[0].completed())
 
     def testEmptyFile(self):
         self.reader.readFile(io.StringIO())
-        self.failIf(self.tasks)
+        self.assertFalse(self.tasks)
 
     def testReadOneTask(self):
         self.read('Get milk\n')
@@ -128,12 +128,12 @@ class TodoTxtReaderTestCase(test.TestCase):
     def testTaskWithPlusSign(self):
         self.read('Order pizza + drink\n')
         self.assertTaskSubject('Order pizza + drink')
-        self.failIf(self.categories)
+        self.assertFalse(self.categories)
 
     def testTaskWithAtSign(self):
         self.read('Mail frank@niessink.com\n')
         self.assertTaskSubject('Mail frank@niessink.com')
-        self.failIf(self.categories)
+        self.assertFalse(self.categories)
 
     def testTwoTasksWithTheSameContext(self):
         self.read('Order pizza @phone\nCall mom @phone\n')
