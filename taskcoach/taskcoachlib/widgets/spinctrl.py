@@ -47,10 +47,11 @@ class SpinCtrl(wx.Panel):
         maxValue = kwargs["max"] if "max" in kwargs else self.maxRange
         value = min(maxValue, max(int(value), minValue))
         self._textCtrl = wx.TextCtrl(self, value=str(value))
-        # self._spinButton = wx.SpinButton(
-        #     self, size=(-1, self._textCtrl.GetSize()[1]),
-        #     style=wx.SP_VERTICAL | wx.SP_ARROW_KEYS)
-        self._spinButton = wx.SpinButton(self)
+        self._spinButton = wx.SpinButton(
+            self, size=(-1, self._textCtrl.GetSize()[1]),
+            style=wx.SP_VERTICAL | wx.SP_ARROW_KEYS)
+        # ou
+        # self._spinButton = wx.SpinButton(self)
         self._spinButton.SetRange(minValue, maxValue)
         self._spinButton.SetValue(value)
         # self._textCtrl.SetMinSize((size[0]-self._spinButton.GetSize()[0], -1))
@@ -101,7 +102,7 @@ class SpinCtrl(wx.Panel):
         # within the min/max range.
         self._textCtrl.SetValue(str(self.GetValue()))
 
-    GetValue = property(GetValue, SetValue)  # TODO : faire un choix ou les deux ?
+    # GetValue = property(GetValue, SetValue)  # TODO : faire un choix ou les deux ?
     # Value = property(GetValue, SetValue)
 
     def GetMax(self):
