@@ -21,6 +21,7 @@ import wx
 from ... import tctest
 from ...unittests import dummy
 from taskcoachlib import widgets
+# from taskcoachlib.widgets import treectrl
 
 
 class TreeCtrlTestCase(tctest.wxTestCase):

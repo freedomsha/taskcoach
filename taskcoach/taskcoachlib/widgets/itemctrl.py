@@ -292,7 +292,12 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
         try:
             return super().GetMainWindow()
         except AttributeError:
-            return self
+            # return self
+            return self.GetCustomTreeCtrlInstance()  # Retourner une instance de CustomTreeCtrl
+
+    def GetCustomTreeCtrlInstance(self):
+        # Retourner une instance de CustomTreeCtrl, par exemple :
+        return self.parent.GetTreeCtrl()
 
 
 class CtrlWithToolTipMixin(_CtrlWithItemsMixin, tooltip.ToolTipMixin):

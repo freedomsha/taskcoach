@@ -56,6 +56,7 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
     # pylint: disable=W0223
 
     def __init__(self, *args, **kwargs):
+        self._editCtrl = None  # nouvel attribut pour TreeListCtrl
         super().__init__(*args, **kwargs)
         if operating_system.isGTK():
             self.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.__on_item_collapsed)
@@ -84,7 +85,7 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
 
     MainWindow = property(fget=GetMainWindow)
 
-    def HitTest(self, point):  # pylint: disable=W0221, C0103
+    def HitTest(self, point, flags=0):  # pylint: disable=W0221, C0103
         """ Renvoie toujours un triple-tuple (item, flags, column). """
         # if type(point) == type(()):  # isinstance (tuple ?)
         if type(point) is type(()):  # isinstance (tuple ?)
@@ -141,13 +142,36 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
 
     def IsLabelBeingEdited(self):
         return bool(self.GetLabelTextCtrl())
+    # # Ancien code
+    # def IsLabelBeingEdited(self):
+    #     return bool(self._editCtrl)
+    # # Nouveau code (wxPython Phoenix compatible)
+    # def IsLabelBeingEdited(self):
+    #     return self.IsEditing()  # Méthode de wx.TreeCtrl
+    # def IsLabelBeingEdited(self):
+    #     return self.IsEditing()  # Méthode wxPython Phoenix
+
 
     def StopEditing(self):
         if self.IsLabelBeingEdited():
             self.GetLabelTextCtrl().StopEditing()
 
     def GetLabelTextCtrl(self):
-        return self.GetMainWindow()._editCtrl  # pylint: disable=W0212
+        # return self.GetMainWindow()._editCtrl  # pylint: disable=W0212
+        return self._editCtrl  # pylint: disable=W0212 AttributeError: 'TreeListCtrl' object has no attribute '_editCtrl'
+        # if self.GetMainWindow().IsEditing():
+        #     return self.GetEditControl()  # Méthode wxPython Phoenix
+        # return None
+
+
+        # Vérifiez la définition de la classe MainWindow pour voir si _Editctrl
+        # est initialisé. S'il est censé être un widget pour l'édition,
+        # assurez-vous qu'il est correctement créé et affecté à la variable d'instance.
+        # S'il n'est pas censé exister, ajustez la méthode getLabelTextCtrl
+        # pour ne pas le référencer ou gérer son absence potentielle.
+        # TODO : _editCtrl est un attribut interne de wxPython Classic.
+        # Dans wxPython Phoenix (4.x), l'édition des labels est gérée via des événements et des méthodes publiques.
+        # Remplace l'accès à _editCtrl par l'API officielle.
 
     def GetItemCount(self):
         root_item = self.GetRootItem()
@@ -175,6 +199,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         self.__columns_with_images = []
         self.__default_font = wx.NORMAL_FONT
         # ajout d'attribut :
+        self._editCtrl = None  # Initialise explicitement ici
         self.selectCommand = selectCommand
         self.editCommand = editCommand
         self.dragAndDropCommand = dragAndDropCommand
@@ -191,6 +216,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         # self._mainWin = UltimateListMainWindow(self, wx.ID_ANY, wx.Point(0, 0), wx.DefaultSize, self.__get_style(), self.__get_agw_style())
         # # AttributeError: 'TreeListCtrl' object has no attribute '_headerWin'
         # self._headerWin = None
+        # # AttributeError: 'TreeListCtrl' object has no attribute '_editCtrl'
+
 
     def bindEventHandlers(self, selectCommand, editCommand, dragAndDropCommand):
         # pylint: disable=W0201
@@ -268,7 +295,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             check=True,
             *args
         )
-        self.GetMainWindow().RefreshLine(item)
+        if isinstance(self.GetMainWindow(), customtree.CustomTreeCtrl):  # Semble plutôt être une instance de _CtrlWithDropTargetMixin
+            self.GetMainWindow().RefreshLine(item)  # Seule customtreectrl a une méthode RefreshLine.
 
     def _addObjectRecursively(self, parent_item, parent_object=None):
         for child_object in self.__adapter.children(parent_object):
