@@ -45,7 +45,8 @@ class AppTests(tctest.TestCase):
     def testAppProperties(self):
         import locale
 
-        if locale.getdefaultlocale()[0] != "en_US":
+        # if locale.getdefaultlocale()[0] != "en_US":
+        if locale.getlocale()[0] != "en_US":
             # Somehow wx displays an error dialog box if en_US is not installed, when
             # quitApplication() calls ProcessIdle and I don't know how to get rid of it.
             # I don't know how to find out if en_US is installed either, so skip if
