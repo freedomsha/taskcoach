@@ -235,15 +235,15 @@ def init():
     if operating_system.isWindows() and wx.DisplayDepth() >= 32:
         wx.SystemOptions.SetOption("msw.remap", "0")  # pragma: no cover
     # Pousser le nouveau fournisseur d'images sur la pile:
-    try:
-        # Ancienne méthode
-        wx.ArtProvider.PushProvider(ArtProvider())  # pylint: disable=E1101
-        # PushProvider n'existe pas voir Push ou PushBack
-        # wx.ArtProvider.Push(ArtProvider())
-        # wx.ArtProvider.PushBack(ArtProvider())
-    except AttributeError:
-        # Nouvelle méthode Python3:
-        wx.ArtProvider.Push(ArtProvider())
+    # try:
+    #     # Ancienne méthode
+    #     wx.ArtProvider.PushProvider(ArtProvider())  # pylint: disable=E1101
+    #     # PushProvider n'existe pas voir Push ou PushBack
+    #     # wx.ArtProvider.Push(ArtProvider())
+    #     # wx.ArtProvider.PushBack(ArtProvider())
+    # except AttributeError:
+    #     # Nouvelle méthode Python3:
+    wx.ArtProvider.Push(ArtProvider())
 
 
 chooseableItemImages = dict(

@@ -322,8 +322,12 @@ class Application(object, metaclass=patterns.Singleton):
                           "Error", wx.OK | wx.ICON_ERROR)
         print("application.Application.__init__: Twisted initialized")
         self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=False)
+        # print("application.Application.__init__: self.__wx_app défini !")
         self.registerApp()
+        print("application.Application.__init__: self.registerApp() !")
         self.init(**kwargs)  # passe mais n'atteint pas la suite ! goto l540
+        print("application.Application.__init__: self.init() !")
+
         # self est Application (tclib.application.application.Application)
         # # Attributs d'instance définis en dehors de __init__ , nécessaires dans start:
         # # __version_checker, __message_checker
@@ -377,6 +381,7 @@ class Application(object, metaclass=patterns.Singleton):
             else:
                 self.sessionMonitor = None
 
+        # print("application.Application.__init__: isGTK? !")
         calendar.setfirstweekday(
             dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
         )
@@ -571,9 +576,11 @@ class Application(object, metaclass=patterns.Singleton):
         self.__init_domain_objects()  # Passe directement à l556 !? après avoir affiché 6 lignes debug image handler for
         self.__init_application()
         # Problème de doublon d'image ! :
+        print("application.Application.init : attributs ok !")
         from taskcoachlib import gui, persistence  # TODO : à mettre au début !
 
         gui.init()  # goto gui.artprovider.init
+        print("application.Application.init : gui.init(), Problème de doublons ?")
         show_splash_screen = self.settings.getboolean("window", "splash")  # = True puis l560
         splash = gui.SplashScreen() if show_splash_screen else None
         # pylint: disable=W0201
