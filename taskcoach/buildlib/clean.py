@@ -24,14 +24,26 @@ import fnmatch
 # Supprimez le package distutils. Il a été obsolète dans Python 3.10 par la PEP 632 « Module distutils obsolète ».
 # Pour les projets utilisant toujours distutils et ne pouvant pas être mis à jour vers autre chose,
 # le projet setuptools peut être installé : il fournit toujours distutils.
-from setuptools._distutils.command.clean import clean as base_clean_command
-from setuptools._distutils import log
+# from setuptools._distutils.command.clean import clean as base_clean_command
+# from setuptools._distutils import log
+from setuptools import Command
+import logging
+import pathlib
 
 
-class clean(base_clean_command):
-    user_options = base_clean_command.user_options + \
-                   [("really-clean", "r", "remove even more files")]
-    boolean_options = base_clean_command.boolean_options + ["really-clean"]
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+
+# class clean(base_clean_command):
+class clean(Command):
+    # user_options = base_clean_command.user_options + \
+    #                [("really-clean", "r", "remove even more files")]
+    user_options = [
+        ("really-clean", "r", "remove even more files"),
+    ]
+    # boolean_options = base_clean_command.boolean_options + ["really-clean"]
+    boolean_options = ["really-clean"]
 
     def initialize_options(self):
         # def __init__(self):
@@ -58,7 +70,7 @@ class clean(base_clean_command):
         # Unresolved attribute reference 'verbose' and 'dry_run' for class 'Clean'
         # mais d'ou viennent-ils ?
         if not self.verbose:
-            log.info(
+            logging.info(
                 "recursively removing '"
                 + "', '".join(self.cleaning_patterns)
                 + "'"
@@ -66,11 +78,15 @@ class clean(base_clean_command):
         for root, _, files in os.walk("."):
             for pattern in self.cleaning_patterns:
                 for filename in fnmatch.filter(files, pattern):
-                    filename = os.path.join(root, filename)
+                    # filename = os.path.join(root, filename)
+                    filepath = pathlib.Path(root) / filename
                     try:
                         if not self.dry_run:
-                            os.unlink(filename)
+                            # os.unlink(filename)
+                            filepath.unlink()
                         if self.verbose:
-                            log.info("removing '%s'" % filename.strip(".\\"))
-                    except IOError:
+                            # log.info("removing '%s'" % filename.strip(".\\"))
+                            logging.info(f"removing '{filepath.relative_to(pathlib.Path('.')).as_posix()}'")
+                    # except IOError:
+                    except OSError:
                         pass
