@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # futurize +1 ligne
-from builtins import object
+# from builtins import object
 import textwrap
 import changetypes
 import re
@@ -84,7 +84,7 @@ class ChangeToDebianConverter(ChangeToTextConverter):
                                                  subsequent_indent='    ', width=78)
 
     def postprocess(self, convertedchange):
-        return super(ChangeToDebianConverter, self).postProcess(convertedChange) + '\n'
+        return super(ChangeToDebianConverter, self).postProcess(convertedchange) + '\n'
 
 
 class ChangeToHTMLConverter(ChangeConverter):
