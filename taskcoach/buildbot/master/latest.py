@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 # 3 lignes de futurize:
-from __future__ import print_function
-from past.builtins import cmp
-from builtins import map
+# from __future__ import print_function
+# from past.builtins import cmp
+# from builtins import map
 import os
 import re
 import sys
@@ -153,7 +153,7 @@ def main(path):
                         print(f"<h1>Bug fixes (from {name})</h1>")
                     else:
                         print(f"<h1>Experimental features (from {name})</h1>")
-                    listpath(fname)
+                    listPath(fname)
 
     print('<a href="http://www.taskcoach.org/download.html>Back to Task Coach downloads</a>')
 
