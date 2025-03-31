@@ -1,12 +1,163 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+    <option name="SCOPE_TYPE" value="3" />
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="I believe sre_constants is obsolete. re.error is sufficient.">
+    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="test_app passe !">
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests-py2/unittests/guiTests/EffortViewerTest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests-py2/unittests/guiTests/appmap.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests-py2/unittests/persistenceTests/AutoBackupTest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests-py2/unittests/persistenceTests/CSVReaderTest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests-py2/unittests/persistenceTests/VCalendarWriterTest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/appmap.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/appmap.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/taskcoach/thirdparty/wxhelper-0.0.7.tar.gz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ruff.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ruff.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/task-coach-git.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/task-coach-git.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/appmap.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/buildbot/master/latest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/buildbot/master/latest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/buildbot/master/tcbuild.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/buildbot/master/tcbuild.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/buildlib/clean.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/buildlib/clean.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/changes.in/converter.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/changes.in/converter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/changes/monitor.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/changes/monitor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/command/attachmentCommands.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/command/attachmentCommands.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/command/taskCommands.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/command/taskCommands.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/attachment/attachment.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/attachment/attachment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/attachment/attachmentowner.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/attachment/attachmentowner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/collection.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/collection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/owner.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/owner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/category/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/category/category.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/date/timedelta.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/date/timedelta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/note/note.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/note/note.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/note/noteowner.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/note/noteowner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/developer_message.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/developer_message.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/entry.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/entry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/export.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/export.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/iocontroller.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/iocontroller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/menu.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/menu.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/toolbar.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/toolbar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/uicommand.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/uicommand.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/uicommandcontainer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/uicommandcontainer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/attachment.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/attachment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/mixin.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/mixin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/i18n/po2dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/i18n/po2dict.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/iphone/protocol.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/iphone/protocol.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/mailer/thunderbird.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/mailer/thunderbird.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/meta/debug.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/meta/debug.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/notify/notifier_growl.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/notify/notifier_growl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/notify/notifier_windows.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/notify/notifier_windows.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/csv/reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/csv/reader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/csv/writer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/csv/writer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/html/writer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/html/writer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/icalendar/ical.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/icalendar/ical.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/icalendar/writer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/icalendar/writer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/todotxt/writer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/todotxt/writer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/writer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/writer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/syncml/core.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/syncml/core.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/syncml/notesource.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/syncml/notesource.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/syncml/sync.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/syncml/sync.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/agw/floatspin.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/agw/floatspin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/combotreebox.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/combotreebox.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/deltaTime.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/deltaTime.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/guid.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/guid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/HTTPNtlmAuthHandler.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/HTTPNtlmAuthHandler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/IMAPNtlmAuthHandler.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/IMAPNtlmAuthHandler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/des.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/des.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/des_c.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/des_c.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/ntlm.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/ntlm/ntlm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/sandbox/rrulewrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/sandbox/rrulewrapper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/smartdatetimectrl.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/smartdatetimectrl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/timeline/timeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/timeline/timeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerCore.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerCore.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerPaint.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerPaint.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/notebook.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/password.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/password.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/tooltip.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/tooltip.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/treectrl.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/treectrl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/templates.in/make.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/templates.in/make.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/appmap.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/guiTests/EffortViewerTest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/guiTests/appmap.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/persistenceTests/AutoBackupTest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/persistenceTests/CSVReaderTest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/persistenceTests/VCalendarWriterTest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests-py3/unittests/persistenceTests/appmap.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/tctest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/tctest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/asserts.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/asserts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/AttachmentCommandsTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/AttachmentCommandsTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/CategoryCommandsTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/CategoryCommandsTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/CutCopyPasteTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/CutCopyPasteTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/NoteCommandTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/NoteCommandTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/TaskCommandsTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/commandTests/TaskCommandsTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_category.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_category.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_effort.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_effort.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_task.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/AttachmentEditorTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/AttachmentEditorTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/AttachmentViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/AttachmentViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/CategoryEditorTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/CategoryEditorTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/CategoryViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/CategoryViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/DateTimeEntryTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/DateTimeEntryTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/DeveloperMessageDialogTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/DeveloperMessageDialogTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/EditorTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/EditorTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/EffortEditorTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/EffortEditorTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/EffortViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/EffortViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ExportDialogTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ExportDialogTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/IOControllerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/IOControllerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/IPhoneDialogTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/IPhoneDialogTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/MainWindowTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/MainWindowTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/MenuTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/MenuTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/NoteViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/NoteViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/PreferencesTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/PreferencesTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/PrinterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/PrinterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ReminderControllerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ReminderControllerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ReminderDialogTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ReminderDialogTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskBarIconTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskBarIconTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskEditorTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskEditorTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskViewerStatusMessagesTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskViewerStatusMessagesTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TaskViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TemplatesDialogTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TemplatesDialogTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ToolBarTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ToolBarTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TreeViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/TreeViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/UICommandTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/UICommandTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/UpdatePerSecondViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/UpdatePerSecondViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/VersionDialogTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/VersionDialogTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ViewerContainerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ViewerContainerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ViewerTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/ViewerTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/guiTests/appmap.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/AutoBackupTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/AutoBackupTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/AutoImporterExporterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/AutoImporterExporterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/CSVReaderTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/CSVReaderTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/CSVWriterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/CSVWriterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/HTMLWriterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/HTMLWriterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/SyncMLTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/SyncMLTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TaskFileTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TaskFileTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TemplateXMLReaderTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TemplateXMLReaderTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TemplateXMLWriterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TemplateXMLWriterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TodoTxtWriterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TodoTxtWriterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/VCalendarReaderTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/VCalendarReaderTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/VCalendarWriterTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/VCalendarWriterTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/XMLReaderWriterIntegrationTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/XMLReaderWriterIntegrationTest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tools/pygettext.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tools/pygettext.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/tools/webchecker.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tools/webchecker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/website.in/make.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/website.in/make.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,6 +166,13 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$USER_HOME$/.local/lib/python3.11/site-packages/wx/lib/agw/customtreectrl.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$USER_HOME$/.local/lib/python3.11/site-packages/wx/lib/agw/hypertreelist.py" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -27,11 +185,208 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithAttachmentFixture.testAttachments.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithAttachmentFixture.testCopy.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithTwoChildrenTest.testCopy.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion20Test.testCategoryId.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion22Test.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion22Test.testStatus.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion30Test.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion38Test.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.CheckTreeCtrlTest.testAddOneChild.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.CheckTreeCtrlTest.testRefreshItem.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.TreeCtrlTestCase.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in AutoImporterExporterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in AutoSaverTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in CSVReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in DateTimeCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in DragAndDropTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in HTMLWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ItemCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ListCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in MaskedCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in SpinCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in SyncMLTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TaskFileTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TemplateListTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TemplateXMLReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TemplateXMLWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TextCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TodoTxtReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TodoTxtWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ToolTipTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TreeCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TreeListCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in VCalendarReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in VCalendarWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in WindowDimensionsTrackerTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in XMLReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in XMLReaderWriterIntegrationTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in XMLWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in tctest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_app.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_attachment.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_base.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_categorizable.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_category.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_categorycontainer.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_categoryfilter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_command.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_composite.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_config.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_date.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_datetime.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_desktop.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_domainobjectownermetaclass.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effort.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortaggregator.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortcomposite.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortcompositeperperiod.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortlist.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_filter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_font.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_lockfile.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_mailer.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_metaclass.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_note.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_notecontainer.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_observable.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_owner.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_pubsub.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_recurrence.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_render.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_scheduler.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_singleton.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_sorter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_task.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskfilter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_tasklist.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskrecurrence.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskrelations.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskstatus.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_timedelta.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_wxpython.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python.HTMLWriterTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.SyncMLTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.TodoTxtReaderTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.TodoTxtWriterTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.VCalendarReaderTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.taskcoach.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/sylvain/Téléchargements/src&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;appmap.toolWindow.codeObjects.collapsed&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/sylvain/Téléchargements/src/devika&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
 }</component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;export GTK_DEBUG=interactive" module-name="task-coach-git" is-module-sdk="true">
+        <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;export GTK_DEBUG=interactive" />
+        <option name="myUseModuleSdk" value="true" />
+        <option name="myModuleName" value="task-coach-git" />
+      </console-settings>
+    </option>
+  </component>
+  <component name="PyDebuggerOptionsProvider">
+    <option name="mySaveCallSignatures" value="true" />
+    <option name="mySupportGeventDebugging" value="true" />
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="tests" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python tests.Unittests in test_timedelta.py">
+    <configuration name="Unittests in test_tasklist.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_tasklist.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Unittests in test_taskrecurrence.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_taskrecurrence.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Unittests in test_taskrelations.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_taskrelations.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Unittests in test_taskstatus.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_taskstatus.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Unittests in test_timedelta.py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_timedelta.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.Unittests in test_timedelta.py" />
+        <item itemvalue="Python tests.Unittests in test_taskstatus.py" />
+        <item itemvalue="Python tests.Unittests in test_taskrelations.py" />
+        <item itemvalue="Python tests.Unittests in test_taskrecurrence.py" />
+        <item itemvalue="Python tests.Unittests in test_tasklist.py" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -49,7 +404,151 @@
       <option name="project" value="LOCAL" />
       <updated>1719676813343</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741710273769</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1741710273769</updated>
+    </task>
+    <task id="LOCAL-00003" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741807943201</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1741807943201</updated>
+    </task>
+    <task id="LOCAL-00004" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741808063659</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1741808063659</updated>
+    </task>
+    <task id="LOCAL-00005" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741808371246</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1741808371246</updated>
+    </task>
+    <task id="LOCAL-00006" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741808569411</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1741808569411</updated>
+    </task>
+    <task id="LOCAL-00007" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741809094993</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1741809094993</updated>
+    </task>
+    <task id="LOCAL-00008" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741809271819</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1741809271819</updated>
+    </task>
+    <task id="LOCAL-00009" summary="XMLReaderTest est un gros morceaux !">
+      <option name="closed" value="true" />
+      <created>1741809495712</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1741809495712</updated>
+    </task>
+    <task id="LOCAL-00010" summary="XMLreaderTest est un gros morceau !">
+      <option name="closed" value="true" />
+      <created>1741882162746</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1741882162746</updated>
+    </task>
+    <task id="LOCAL-00011" summary="XMLWriterTest est ok !">
+      <option name="closed" value="true" />
+      <created>1741882376265</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1741882376265</updated>
+    </task>
+    <task id="LOCAL-00012" summary="AutoSaverTest est ok !">
+      <option name="closed" value="true" />
+      <created>1741945669584</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1741945669584</updated>
+    </task>
+    <task id="LOCAL-00013" summary="TemplateListTest est ok !">
+      <option name="closed" value="true" />
+      <created>1741955465654</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1741955465654</updated>
+    </task>
+    <task id="LOCAL-00014" summary="TodoTxtReaderTest est ok !">
+      <option name="closed" value="true" />
+      <created>1741955664669</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1741955664669</updated>
+    </task>
+    <task id="LOCAL-00015" summary="TreeCtrlTest passe !">
+      <option name="closed" value="true" />
+      <created>1742458636187</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1742458636187</updated>
+    </task>
+    <task id="LOCAL-00016" summary="TreeCtrlTest passe !">
+      <option name="closed" value="true" />
+      <created>1742458764770</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1742458764770</updated>
+    </task>
+    <task id="LOCAL-00017" summary="SpinCtrlTest passe !">
+      <option name="closed" value="true" />
+      <created>1742459875037</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1742459875037</updated>
+    </task>
+    <task id="LOCAL-00018" summary="DragAndDropTest passe !">
+      <option name="closed" value="true" />
+      <created>1742463480786</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1742463480786</updated>
+    </task>
+    <task id="LOCAL-00019" summary="test_app passe !">
+      <option name="closed" value="true" />
+      <created>1742762668372</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1742762668372</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -92,6 +591,85 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="I believe sre_constants is obsolete. re.error is sufficient." />
-    <option name="LAST_COMMIT_MESSAGE" value="I believe sre_constants is obsolete. re.error is sufficient." />
+    <MESSAGE value="XMLReaderTest est un gros morceaux !" />
+    <MESSAGE value="XMLreaderTest est un gros morceau !" />
+    <MESSAGE value="XMLWriterTest est ok !" />
+    <MESSAGE value="AutoSaverTest est ok !" />
+    <MESSAGE value="TemplateListTest est ok !" />
+    <MESSAGE value="TodoTxtReaderTest est ok !" />
+    <MESSAGE value="TreeCtrlTest passe !" />
+    <MESSAGE value="SpinCtrlTest passe !" />
+    <MESSAGE value="DragAndDropTest passe !" />
+    <MESSAGE value="test_app passe !" />
+    <option name="LAST_COMMIT_MESSAGE" value="test_app passe !" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="self.__status == 1" language="Python" />
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py</url>
+          <line>362</line>
+          <log-expression expression="print(f&quot;SynchronizedObject.setStatusNew : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="self.__status == 1" language="Python" />
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
+          <line>533</line>
+          <log-expression expression="print(f&quot;Task.setCompletionDateTime : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="NONE" type="python-line">
+          <condition expression="self.__status == 1" language="Python" />
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
+          <line>707</line>
+          <log-expression expression="print(f&quot;Task.status : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="self.__status == 1" language="Python" />
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
+          <line>1068</line>
+          <log-expression expression="print(f&quot;Task.iconForStatus : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/tests/unittests/widgetTests/DragAndDropTest.py</url>
+          <line>51</line>
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/AutoSaverTest.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/treectrl.py</url>
+          <line>142</line>
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/treectrl.py</url>
+          <line>158</line>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/changes.in/converter.py</url>
+          <line>18</line>
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/buildbot/master/latest.py</url>
+          <line>3</line>
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file:///usr/lib/python3.11/importlib/machinery.py</url>
+          <line>2</line>
+          <option name="timeStamp" value="25" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
