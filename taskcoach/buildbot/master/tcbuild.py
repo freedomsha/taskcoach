@@ -30,13 +30,16 @@ from buildbot.process.buildstep import SUCCESS, FAILURE
 
 from twisted.python import log
 
-from zope.interface import implements
+# from zope.interface import implements
+# from zope.interface import Interface, implementer
+from zope.interface import implementer  # Remplacement de implements.
 import re
 import os
 
 
+@implementer(interfaces.IEmailLookup)
 class TaskCoachEmailLookup(object):
-    implements(interfaces.IEmailLookup)
+    # implements(interfaces.IEmailLookup)
 
     # @staticmethod
     def getAddress(self, name):
