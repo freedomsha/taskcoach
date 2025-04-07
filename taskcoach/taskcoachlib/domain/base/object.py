@@ -182,16 +182,17 @@ Considérations supplémentaires :
 En abordant ces points, vous pouvez améliorer davantage la classe Object et la rendre plus robuste, maintenable et adaptable aux exigences futures.
 """
 
-from taskcoachlib import patterns
-from taskcoachlib.domain.attribute import icon
-from taskcoachlib.domain.date import DateTime, Now
-# from taskcoachlib.domain.task.task import Task
-from pubsub import pub
-from . import attribute
 import functools
 import sys
 import uuid
 import re
+import weakref
+from pubsub import pub
+from taskcoachlib import patterns
+from taskcoachlib.domain.attribute import icon
+from taskcoachlib.domain.date import DateTime, Now
+# from taskcoachlib.domain.task.task import Task
+from . import attribute
 
 
 class SynchronizedObject(object):
@@ -251,16 +252,18 @@ class SynchronizedObject(object):
 
     def __getstate__(self):
         """
-        Obtenez l'état de l'objet pour la sérialisation.
+        Étend l'état sérialisé de l'objet avec les informations de synchronisation.
 
         Returns :
-            state (dict) : L'état de l'objet.
+            dict : L'état de l'objet, incluant l'état de synchronisation.
         """
+        # Récupération de l'état de base de l'objet (depuis Object)
         try:
             state = super().__getstate__()
         except AttributeError:
             state = dict()
 
+        # Ajout de l'attribut de statut de synchronisation
         state["status"] = self.__status
         return state
 
@@ -472,12 +475,18 @@ class Object(SynchronizedObject):
     """
     Une classe de base pour les objets avec des attributs et des fonctionnalités communs.
 
+    Classe de base représentant un objet avec des attributs communs et des notifications d'événements.
+
     Cette classe étend SynchronizedObject pour fournir des attributs supplémentaires
     et des méthodes permettant de gérer l'état et le comportement d'un objet.
+    Hérite de SynchronizedObject et fournit des attributs comme le sujet, la description,
+    les couleurs, la police, les icônes, etc. Tous ces attributs sont encapsulés
+    dans des objets `Attribute` capables de déclencher des événements.
     """
 
-    rx_attributes = re.compile(r"\[(\w+):(.+)\]")
+    rx_attributes = re.compile(r"\[(\w+):(.+)\]")  # Expression régulière pour parser les attributs
 
+    # Gestion de la compatibilité Python 2/3 pour un entier long zéro
     if sys.version_info.major == 2:
         _long_zero = int(0)
     else:
@@ -487,41 +496,99 @@ class Object(SynchronizedObject):
         """
         Initialisez l'instance d'objet.
 
-        Args:
-            args: Liste d'argument de longueur variable.
-            *kwargs: Arguments de mots clés arbitraires.
+        Initialise une nouvelle instance d'Object avec ses attributs et
+        leurs gestionnaires d'événements.
+
+        Args :
+            args : Liste d'argument positionnel de longueur variable.
+            *kwargs : Arguments de mots clés arbitraires. Arguments nommés pour personnaliser les attributs de l'objet.
         """
-        Attribute = attribute.Attribute
+        # print(f"Object.__init__ : self avant init={self}")  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
+        Attribute = attribute.Attribute  # Raccourci pour la classe Attribute
+        print(f"Object.__init__ : Attribute={Attribute}")
+
+        # Création d'une référence faible à self, utilisée pour éviter les cycles de références
+        selfRef = weakref.ref(self)
+
+        def setSubjectEvent(event):
+            obj = selfRef()
+            if obj is not None:
+                obj.subjectChangedEvent(event)
+
+        # Fonction de rappel personnalisée pour les changements de description
+        def setDescriptionEvent(event):
+            obj = selfRef()  # Récupère l'objet si encore en mémoire
+            if obj is not None:
+                obj.descriptionChangedEvent(event)  # Déclenche l'événement
+
+        def setAppearanceEvent(event):
+            obj = selfRef()
+            if obj is not None:
+                obj.appearanceChangedEvent(event)
+
+        def setOrderingEvent(event):
+            obj = selfRef()
+            if obj is not None:
+                obj.orderingChangedEvent(event)
+
+        # Attributs principaux, initialisés avec leurs gestionnaires d'événements
         self.__creationDateTime = kwargs.pop("creationDateTime", None) or Now()
         self.__modificationDateTime = kwargs.pop("modificationDateTime", DateTime.min)
+        # self.__subject = Attribute(
+        #     kwargs.pop("subject", ""), self, self.subjectChangedEvent
+        # )
         self.__subject = Attribute(
-            kwargs.pop("subject", ""), self, self.subjectChangedEvent
+            kwargs.pop("subject", ""), self, setSubjectEvent
         )
+        # self.__description = Attribute(
+        #     kwargs.pop("description", ""), self, self.descriptionChangedEvent
+        # )
         self.__description = Attribute(
-            kwargs.pop("description", ""), self, self.descriptionChangedEvent
+            kwargs.pop("description", ""), self, setDescriptionEvent
         )
+        # self.__fgColor = Attribute(
+        #     kwargs.pop("fgColor", None), self, self.appearanceChangedEvent
+        # )
         self.__fgColor = Attribute(
-            kwargs.pop("fgColor", None), self, self.appearanceChangedEvent
+            kwargs.pop("fgColor", None), self, setAppearanceEvent
         )
+        # self.__bgColor = Attribute(
+        #     kwargs.pop("bgColor", None), self, self.appearanceChangedEvent
+        # )
         self.__bgColor = Attribute(
-            kwargs.pop("bgColor", None), self, self.appearanceChangedEvent
+            kwargs.pop("bgColor", None), self, setAppearanceEvent
         )
+        # self.__font = Attribute(
+        #     kwargs.pop("font", None), self, self.appearanceChangedEvent
+        # )
         self.__font = Attribute(
-            kwargs.pop("font", None), self, self.appearanceChangedEvent
+            kwargs.pop("font", None), self, setAppearanceEvent
         )
+        # self.__icon = Attribute(
+        #     kwargs.pop("icon", ""), self, self.appearanceChangedEvent
+        # )
         self.__icon = Attribute(
-            kwargs.pop("icon", ""), self, self.appearanceChangedEvent
+            kwargs.pop("icon", ""), self, setAppearanceEvent
         )
+        # self.__selectedIcon = Attribute(
+        #     kwargs.pop("selectedIcon", ""), self, self.appearanceChangedEvent
+        # )
         self.__selectedIcon = Attribute(
-            kwargs.pop("selectedIcon", ""), self, self.appearanceChangedEvent
+            kwargs.pop("selectedIcon", ""), self, setAppearanceEvent
         )
+        # self.__ordering = Attribute(
+        #     kwargs.pop("ordering", Object._long_zero),
+        #     self,
+        #     self.orderingChangedEvent,
+        # )
         self.__ordering = Attribute(
             kwargs.pop("ordering", Object._long_zero),
             self,
-            self.orderingChangedEvent,
+            setOrderingEvent,
         )
-        self.__id = kwargs.pop("id", None) or str(uuid.uuid1())
-        super().__init__(*args, **kwargs)
+        self.__id = kwargs.pop("id", None) or str(uuid.uuid1())  # ID unique
+
+        super().__init__(*args, **kwargs)  # Appelle le constructeur de la classe parente
         # super().__init__()  # à vérifier sinon revenir à la définition précédente
 
     def __repr__(self):
@@ -535,34 +602,109 @@ class Object(SynchronizedObject):
 
     def __getstate__(self):
         """
-        Obtenez l'état de l'objet pour la sérialisation.
+        Retourne l'état sérialisé de l'objet.
+
+        Cet état est un dictionnaire contenant uniquement les attributs utiles
+        pour la sauvegarde, en filtrant les attributs internes ou non pertinents.
+        Conserve les données héritées depuis les classes parentes,
+        tout en filtrant les attributs internes non désirés.
 
         Returns :
-            dict : L'état de l'objet.
+            dict : Un dictionnaire nettoyé représentant l'état de l'objet.
         """
+        # Construction explicite du dictionnaire d'état.
         try:
+            # On récupère l'état hérité (ex : depuis SynchronizedObject)
             state = super().__getstate__()
         except AttributeError:
             state = dict()
-        print(f"DEBUG - Object.__getstate__() avant update : {state}")  # Ajoute ce print
+        print(f"DEBUG - Object.__getstate__() avant update : {state}")
 
+        # On ajoute uniquement les champs publics attendus,
+        # extraits via les attributs "Attribute"
         state.update(
             dict(
-                subject=self.__subject.get(),
-                description=self.__description.get(),
-                id=self.__id,
-                creationDateTime=self.__creationDateTime,
-                modificationDateTime=self.__modificationDateTime,
-                fgColor=self.__fgColor.get(),
-                bgColor=self.__bgColor.get(),
-                font=self.__font.get(),
-                icon=self.__icon.get(),
-                ordering=self.__ordering.get(),
-                selectedIcon=self.__selectedIcon.get(),
+                subject=self.__subject.get(),  # Sujet de l'objet
+                description=self.__description.get(),  # Description
+                id=self.__id,  # Identifiant unique de l'objet
+                creationDateTime=self.__creationDateTime,  # Date de création
+                modificationDateTime=self.__modificationDateTime,  # Date de modification
+                fgColor=self.__fgColor.get(),  # Couleur de premier plan
+                bgColor=self.__bgColor.get(),  # Couleur d'arrière-plan
+                font=self.__font.get(),  # Police utilisée
+                icon=self.__icon.get(),  # Icône associée
+                ordering=self.__ordering.get(),  # Icône sélectionnée
+                selectedIcon=self.__selectedIcon.get(),  # Ordre d'affichage ou de tri
             )
         )
-        print(f"DEBUG - Object.__getstate__() renvoie : {state}")  # Ajoute ce print
+        # On supprime les clés privées (souvent nommées _NomClasse__attribut)
+        # Ici, on retire tous les attributs privés de 'Object' (ex: _Object__subject)
+        private_prefixes = [f"_{self.__class__.__name__}__", '_SynchronizedObject__']
+        keys_to_remove = [key for key in state if any(key.startswith(prefix) for prefix in private_prefixes)]
+        for key in keys_to_remove:
+            del state[key]
+
+        # DEBUG : Affichage de l'état sérialisé pour vérification
+        print(f"DEBUG - Object.__getstate__() renvoie : {state}")
+        #
         return state
+
+
+        # Problème __getstate__ contient maintenant plus d'objet :
+        # {'_Object__bgColor': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b81888b500>,
+        #  '_Object__creationDateTime': DateTime(2025, 3, 12, 20, 59, 14, 750288),
+        #  '_Object__description': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b822a88d40>,
+        #  '_Object__fgColor': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b818436f40>,
+        #  '_Object__font': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b818889e40>,
+        #  '_Object__icon': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b818889c80>,
+        #  '_Object__id': '794711e8-ff7c-11ef-a937-a4f933b218b7',
+        #  '_Object__modificationDateTime': DateTime(1, 1, 1, 0, 0),
+        #  '_Object__ordering': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b80a7c1100>,
+        #  '_Object__selectedIcon': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b80a7c2a40>,
+        #  '_Object__subject': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b822c04b80>,
+        #  '_SynchronizedObject__status': 1,
+        #  'bgColor': None,
+        #  'creationDateTime': DateTime(2025, 3, 12, 20, 59, 14, 750288),
+        #  'description': '',
+        #  'fgColor': None,
+        #  'font': None,
+        #  'icon': '',
+        #  'id': '794711e8-ff7c-11ef-a937-a4f933b218b7',
+        #  'modificationDateTime': DateTime(1, 1, 1, 0, 0),
+        #  'ordering': 0,
+        #  'selectedIcon': '',
+        #  'status': 1,
+        #  'subject': ''} != {'bgColor': None,
+        #  'creationDateTime': DateTime(2025, 3, 12, 20, 59, 14, 750288),
+        #  'description': '',
+        #  'fgColor': None,
+        #  'font': None,
+        #  'icon': '',
+        #  'id': '794711e8-ff7c-11ef-a937-a4f933b218b7',
+        #  'modificationDateTime': DateTime(1, 1, 1, 0, 0),
+        #  'ordering': 0,
+        #  'selectedIcon': '',
+        #  'status': 1,
+        #  'subject': ''}
+
+        # Origine probable
+        #
+        # La méthode __getstate__ (comme __setstate__) est utilisée en Python
+        # pour définir comment un objet doit être sérialisé/désérialisé
+        # (par exemple, avec pickle, ou pour enregistrer son état).
+        # Si tu ne la redéfinis pas dans ta classe, le comportement par défaut
+        # consiste à retourner le dictionnaire __dict__,
+        # donc tous les attributs de l’objet, y compris ceux privés et internes.
+
+        # Python 3 ne masque pas autant les attributs privés (préfixés par __)
+        # lors de la sérialisation si on utilise object.__getstate__
+        # ou si la classe n'en définit pas un.
+        # Ce genre d’attribut devient dans __dict__ : '_NomDeLaClasse__bgColor',
+        # et est donc sérialisé si on ne filtre pas.
+
+        # Solution :
+        # Il faut redéfinir __getstate__() dans la classe concernée
+        # pour ne retourner que ce que tu veux (et non tous les attributs de l’objet).
 
     @patterns.eventSource
     def __setstate__(self, state, event=None):
@@ -741,7 +883,7 @@ class Object(SynchronizedObject):
         Returns :
             str : Le sujet de l'objet.
         """
-        return self.__subject.get()
+        return self.__subject.get()  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
         # return self.__subject
 
     def setSubject(self, subject, event=None):
@@ -878,22 +1020,61 @@ class Object(SynchronizedObject):
             description (str) : La description à définir.
             event : Événement associé à la définition de la description.
         """
-        self.__description.set(description, event=event)
+        # self.__description.set(description, event=event)
+        # Si l’appelant passe un event, il s’en occupe.
+        #
+        # Si None est passé, on crée un event et on le publie explicitement
+        # une fois que set() a eu un effet.
+        if event is None:
+            event = patterns.Event()  # 👈 Création automatique si besoin
+            shouldPublish = True  # 👈 Flag pour savoir si on doit publier
+        else:
+            shouldPublish = False
+
+        if self.__description.set(description, event=event):
+            if shouldPublish:
+                # Publier manuellement l'événement uniquement s'il a été créé ici
+                patterns.Publisher().notifyObservers(event)
 
     def descriptionChangedEvent(self, event):
         """
         Gérer l’événement de modification de description.
 
+        Cet événement est déclenché lorsqu'une nouvelle description est définie.
+        On enregistre la nouvelle description à la fois comme source et comme valeur.
+
         Args :
-            event : L'événement de modification de description.
+            event (Event) : L'événement à enrichir avec la source modifiée.
         """
-        event.addSource(
-            self, self.description, type=self.descriptionChangedEventType()
-        )
+        # event.addSource(
+        #     self, self.description, type=self.descriptionChangedEventType()
+        # )
         # essayer
         # self.addSource(
         #     event, self.description(), type=self.descriptionChangedEventType()
         # )  # Unresolved attribute reference 'addSource' for class 'Object'
+        # event.addSource(
+        #     self, self.description(), type=self.descriptionChangedEventType()
+        # )
+        # current_description = self.description()
+        # print(f"DEBUG — descriptionChangedEvent : self.description() = {current_description!r}")
+        # event.addSource(
+        #     self, current_description, type=self.descriptionChangedEventType()
+        # )
+        # event.addSource(self.description(), self.description(), type=self.descriptionChangedEventType())
+        # On récupère la description actuelle
+        new_description = self.description()
+
+        # DEBUG facultatif :
+        print(f"[DEBUG] descriptionChangedEvent — new_description = {new_description!r}")
+
+        # Ajoute la description comme source et comme valeur pour ce type d'événement
+        event.addSource(
+            new_description,               # source de l'événement
+            new_description,               # valeur associée à cette source
+            type=self.descriptionChangedEventType()  # type d'événement
+        )
+
 
     @classmethod
     def descriptionChangedEventType(class_):
