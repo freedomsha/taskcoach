@@ -22,7 +22,34 @@ from .collection import Collection
 from .filter import Filter, SearchFilter, SelectedItemsFilter, DeletedFilter
 from .sorter import Sorter, TreeSorter
 from .owner import DomainObjectOwnerMetaclass
+
 # from .owner import DomainObjectOwnerMetaclass, NoteOwner, AttachmentOwner
 # Où sont ces deux dernières classes ?
 # NoteOwner est dans domain.note.noteowner
 # et AttachmentOwner est dans domain.attachment.attachmentowner
+
+__all__ = ["Attribute", "Collection", "CompositeObject", "DeletedFilter", "DomainObjectOwnerMetaclass", "Filter",
+           "Object", "SearchFilter", "SelectedItemsFilter", "SetAttribute", "Sorter", "SynchronizedObject", "TreeSorter"]
+
+# Ce fichier domain.base.__init__ est demandé par :
+# tclib/domain/attachment/attachment
+# tclib/domain/attachment/attachmentowner
+# tclib/domain/attachment/sorter
+# tclib/domain/base/filter
+# tclib/domain/categorizable/categorizable
+# tclib/domain/categorizable/categorizablecontainer
+# tclib/domain/category/category
+# tclib/domain/effort/effort
+# tclib/gui/menu
+# tclib/gui/uicommand/uicommand
+# tclib/gui/viewer/mixin
+# tclib/gui/persistence/taskfile
+# tclib/persistence/xml/reader
+# tests/unittests/domainTests/test_base
+# tests/unittests/domainTests/test_filter
+# tests/unittests/guiTests/EditorTest
+# tests/unittests/guiTests/UpdatePerSecondViewerTest
+# tests/unittests/persistenceTests/XMLWriterTest
+
+
+

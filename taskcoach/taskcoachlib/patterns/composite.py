@@ -213,7 +213,7 @@ class ObservableComposite(Composite):
         """
         Définissez l'état du décapage avec la notification d'événement.
 
-        Args:
+        Args :
             state (dict) : L'état du composite.
             event (Événement, facultatif) : L'événement à notifier.
         """
@@ -244,7 +244,7 @@ class ObservableComposite(Composite):
         """
         Avertir les observateurs de l'ajout d'enfants.
 
-        Args:
+        Args :
             event (Event) : L'événement à notifier.
             children (Composite) : Les enfants ajoutés.
         """
@@ -276,7 +276,7 @@ class ObservableComposite(Composite):
         """
         Avertir les observateurs du retrait des enfants.
 
-        Args:
+        Args :
             event (Event) : L'événement à notifier.
             children (Composite) : Les enfants supprimés.
         """

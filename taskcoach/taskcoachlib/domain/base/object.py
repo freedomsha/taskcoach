@@ -225,10 +225,19 @@ class SynchronizedObject(object):
         # print(f"SynchronizedObject.__init__ : ✅ Après assignation : self.__status = {self.__status}")
         # print(
         #     f"SynchronizedObject.__init__ : 🔍 Avant super().__init__() : self.__status = {getattr(self, '__status', 'Non défini')}")
-        super().__init__(*args, **kwargs)  # ← Problème possible ici ! Peut-être le mettre avant self.__status !?
+        # super().__init__(*args, **kwargs)  # ← Problème possible ici ! Peut-être le mettre avant self.__status !?
         # print(f"SynchronizedObject.__init__ : ✅ Après super().__init__() : self.__status = {self.__status}")
         # print(f"SynchronizedObject.__init__ : ⚠️ Après super().__init__() : self.__status = {self.__status}")
-        # super().__init__()
+        # super().__init__()  # Comme SynchronizedObject est basé sur object, rien dans __init__ !
+        # Transmet les arguments uniquement si le parent **n'est pas `object`**
+        # Test de sécurité : on ne transmet que si `super()` n'est pas `object`
+        if type(self).__mro__[1] is not object:
+            try:
+                super().__init__(*args, **kwargs)
+            except TypeError:
+                super().__init__()
+        else:
+            super().__init__()  # Sécurisé pour `object`
 
     @classmethod
     def markDeletedEventType(class_):
@@ -498,17 +507,37 @@ class Object(SynchronizedObject):
 
         Initialise une nouvelle instance d'Object avec ses attributs et
         leurs gestionnaires d'événements.
+        Initialise l'objet de base avec ses attributs standards, tout en filtrant
+        les arguments non reconnus avant d'appeler le constructeur final.
+
 
         Args :
-            args : Liste d'argument positionnel de longueur variable.
-            *kwargs : Arguments de mots clés arbitraires. Arguments nommés pour personnaliser les attributs de l'objet.
+            args : Liste d'argument positionnel de longueur variable (souvent vides ici).
+            *kwargs : Arguments de mots clés arbitraires. Arguments nommés pour
+                      personnaliser les attributs de l'objet. Attributs sérialisés
+                      pour restaurer l'état de l'objet.
         """
         # print(f"Object.__init__ : self avant init={self}")  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
         Attribute = attribute.Attribute  # Raccourci pour la classe Attribute
         print(f"Object.__init__ : Attribute={Attribute}")
+        print(f"Object.__init__ : kwargs={kwargs}")
 
         # Création d'une référence faible à self, utilisée pour éviter les cycles de références
         selfRef = weakref.ref(self)
+
+        # On récupère la liste des clés à traiter localement
+        accepted_keys = [
+            'id', 'subject', 'description', 'creationDateTime',
+            'modificationDateTime', 'fgColor', 'bgColor',
+            'font', 'icon', 'selectedIcon', 'ordering'
+        ]
+
+        # On extrait les attributs pour soi
+        local_kwargs = {key: kwargs.pop(key) for key in accepted_keys if key in kwargs}
+
+        print(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs}")
+        # Appel sécurisé au constructeur parent (sans kwargs dangereux)
+        super().__init__(*args, **kwargs)
 
         def setSubjectEvent(event):
             obj = selfRef()
@@ -531,65 +560,126 @@ class Object(SynchronizedObject):
             if obj is not None:
                 obj.orderingChangedEvent(event)
 
+        # On extrait d'abord les données utiles pour Object
         # Attributs principaux, initialisés avec leurs gestionnaires d'événements
-        self.__creationDateTime = kwargs.pop("creationDateTime", None) or Now()
-        self.__modificationDateTime = kwargs.pop("modificationDateTime", DateTime.min)
+        # self.__creationDateTime = kwargs.pop("creationDateTime", None) or Now()
+        self.__creationDateTime = local_kwargs.pop("creationDateTime", None) or Now()
+        # self.__modificationDateTime = kwargs.pop("modificationDateTime", DateTime.min)
+        self.__modificationDateTime = local_kwargs.pop("modificationDateTime", DateTime.min)
         # self.__subject = Attribute(
         #     kwargs.pop("subject", ""), self, self.subjectChangedEvent
         # )
-        self.__subject = Attribute(
-            kwargs.pop("subject", ""), self, setSubjectEvent
-        )
+        # self.__subject = Attribute(
+        #     kwargs.pop("subject", ""), self, setSubjectEvent
+        # )
+        # subject_value = kwargs.pop("subject", "")
+        subject_value = local_kwargs.pop("subject", "")
+        print(f"Object.__init__ : subject_value={subject_value}")
+        if isinstance(subject_value, attribute.Attribute):
+            self.__subject = subject_value
+        else:
+            self.__subject = Attribute(subject_value, self, setSubjectEvent)
+        print(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject!r}")
         # self.__description = Attribute(
         #     kwargs.pop("description", ""), self, self.descriptionChangedEvent
         # )
-        self.__description = Attribute(
-            kwargs.pop("description", ""), self, setDescriptionEvent
-        )
+        # self.__description = Attribute(
+        #     kwargs.pop("description", ""), self, setDescriptionEvent
+        # )
+        # description_value = kwargs.pop("description", "")
+        description_value = local_kwargs.pop("description", "")
+        if isinstance(description_value, attribute.Attribute):
+            self.__description = description_value
+        else:
+            self.__description = Attribute(description_value, self, setDescriptionEvent)
         # self.__fgColor = Attribute(
         #     kwargs.pop("fgColor", None), self, self.appearanceChangedEvent
         # )
-        self.__fgColor = Attribute(
-            kwargs.pop("fgColor", None), self, setAppearanceEvent
-        )
+        # self.__fgColor = Attribute(
+        #     kwargs.pop("fgColor", None), self, setAppearanceEvent
+        # )
+        # fgColor_value = kwargs.pop("fgColor", None)
+        fgColor_value = local_kwargs.pop("fgColor", None)
+        if isinstance(fgColor_value, attribute.Attribute):
+            self.__fgColor = fgColor_value
+        else:
+            self.__fgColor = Attribute(fgColor_value, self, setAppearanceEvent)
         # self.__bgColor = Attribute(
         #     kwargs.pop("bgColor", None), self, self.appearanceChangedEvent
         # )
-        self.__bgColor = Attribute(
-            kwargs.pop("bgColor", None), self, setAppearanceEvent
-        )
+        # self.__bgColor = Attribute(
+        #     kwargs.pop("bgColor", None), self, setAppearanceEvent
+        # )
+        # bgColor_value = kwargs.pop("bgColor", None)
+        bgColor_value = local_kwargs.pop("bgColor", None)
+        if isinstance(bgColor_value, attribute.Attribute):
+            self.__bgColor = bgColor_value
+        else:
+            self.__bgColor = Attribute(bgColor_value, self, setAppearanceEvent)
         # self.__font = Attribute(
         #     kwargs.pop("font", None), self, self.appearanceChangedEvent
         # )
-        self.__font = Attribute(
-            kwargs.pop("font", None), self, setAppearanceEvent
-        )
+        # self.__font = Attribute(
+        #     kwargs.pop("font", None), self, setAppearanceEvent
+        # )
+        # font_value = kwargs.pop("font", None)
+        font_value = local_kwargs.pop("font", None)
+        if isinstance(font_value, attribute.Attribute):
+            self.__font = font_value
+        else:
+            self.__font = Attribute(font_value, self, setAppearanceEvent)
         # self.__icon = Attribute(
         #     kwargs.pop("icon", ""), self, self.appearanceChangedEvent
         # )
-        self.__icon = Attribute(
-            kwargs.pop("icon", ""), self, setAppearanceEvent
-        )
+        # self.__icon = Attribute(
+        #     kwargs.pop("icon", ""), self, setAppearanceEvent
+        # )
+        # icon_value = kwargs.pop("icon", "")
+        icon_value = local_kwargs.pop("icon", "")
+        if isinstance(icon_value, attribute.Attribute):
+            self.__icon = icon_value
+        else:
+            self.__icon = Attribute(icon_value, self, setAppearanceEvent)
         # self.__selectedIcon = Attribute(
         #     kwargs.pop("selectedIcon", ""), self, self.appearanceChangedEvent
         # )
-        self.__selectedIcon = Attribute(
-            kwargs.pop("selectedIcon", ""), self, setAppearanceEvent
-        )
+        # self.__selectedIcon = Attribute(
+        #     kwargs.pop("selectedIcon", ""), self, setAppearanceEvent
+        # )
+        # selectedIcon_value = kwargs.pop("selectedIcon", "")
+        selectedIcon_value = local_kwargs.pop("selectedIcon", "")
+        if isinstance(selectedIcon_value, attribute.Attribute):
+            self.__selectedIcon = selectedIcon_value
+        else:
+            self.__selectedIcon = Attribute(selectedIcon_value, self, setAppearanceEvent)
         # self.__ordering = Attribute(
         #     kwargs.pop("ordering", Object._long_zero),
         #     self,
         #     self.orderingChangedEvent,
         # )
+        # self.__ordering = Attribute(
+        #     kwargs.pop("ordering", Object._long_zero),
+        #     self,
+        #     setOrderingEvent,
+        # )
         self.__ordering = Attribute(
-            kwargs.pop("ordering", Object._long_zero),
+            local_kwargs.pop("ordering", Object._long_zero),
             self,
             setOrderingEvent,
         )
-        self.__id = kwargs.pop("id", None) or str(uuid.uuid1())  # ID unique
+        # self.__id = kwargs.pop("id", None or str(uuid.uuid1()))  # ID unique
+        self.__id = local_kwargs.pop("id", None or str(uuid.uuid1()))  # ID unique
 
-        super().__init__(*args, **kwargs)  # Appelle le constructeur de la classe parente
+        # Initialisation du parent
+        # super().__init__(*args, **kwargs)  # Appelle le constructeur de la classe parente
         # super().__init__()  # à vérifier sinon revenir à la définition précédente
+        if type(self).__mro__[1] is not object:
+            try:
+                super().__init__(*args, **kwargs)
+            except TypeError:
+                super().__init__()
+        else:
+            super().__init__()  # Sécurisé pour `object`
 
     def __repr__(self):
         """
@@ -878,7 +968,7 @@ class Object(SynchronizedObject):
 
     def subject(self):
         """
-        Obtenez le sujet de l'objet.
+        Obtenir le sujet de l'objet.
 
         Returns :
             str : Le sujet de l'objet.
@@ -1063,6 +1153,7 @@ class Object(SynchronizedObject):
         # )
         # event.addSource(self.description(), self.description(), type=self.descriptionChangedEventType())
         # On récupère la description actuelle
+        # new_description = self.description()  # str is not callable
         new_description = self.description()
 
         # DEBUG facultatif :
@@ -1306,13 +1397,14 @@ class Object(SynchronizedObject):
         # ]
 
 
-class CompositeObject(Object, patterns.ObservableComposite):
+# class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des problèmes
+class CompositeObject(Object, patterns.composite.ObservableComposite):
     """
-    Un objet composite qui peut contenir d'autres objets en tant qu'enfants.
+        Un objet composite qui peut contenir d'autres objets en tant qu'enfants.
 
-    Cette classe étend Object et ObservableComposite pour fournir des méthodes supplémentaires
-    pour gérer les objets enfants et leur état.
-    """
+        Cette classe étend Object et ObservableComposite pour fournir des méthodes supplémentaires
+        pour gérer les objets enfants et leur état.
+        """
 
     def __init__(self, *args, **kwargs):
         """
@@ -1323,7 +1415,39 @@ class CompositeObject(Object, patterns.ObservableComposite):
             **kwargs : Arbitrary keyword arguments.
         """
         self.__expandedContexts = set(kwargs.pop("expandedContexts", []))
-        super().__init__(*args, **kwargs)
+        # super().__init__(*args, **kwargs)
+        # Transmet les arguments uniquement si le parent **n'est pas `object`**
+        # Test de sécurité : on ne transmet que si `super()` n'est pas `object`
+        # if type(self).__mro__[1] is not object:
+        #     try:
+        #         super().__init__(*args, **kwargs)
+        #     except TypeError:
+        #         super().__init__()
+        # else:
+        #     super().__init__()  # Sécurisé pour `object`
+        # # Plus de super() perdu dans une hiérarchie complexe ! :
+
+        # # On extrait manuellement les kwargs destinés à Composite
+        # composite_keys = ("children", "parent")
+        # composite_kwargs = {k: kwargs.pop(k) for k in composite_keys if k in kwargs}
+        #
+        # # Initialisation manuelle des deux parents
+        # Object.__init__(self, *args, **kwargs)
+        # patterns.ObservableComposite.__init__(self, **composite_kwargs)
+
+        # Tu dois appeler toi-même Object.__init__() et Composite.__init__(),
+        # puisque super() ne peut pas les gérer correctement en raison de
+        # l’héritage en diamant.
+        # On extrait les kwargs pour Composite uniquement
+        children = kwargs.pop("children", None)
+        parent = kwargs.pop("parent", None)
+
+        print(f"[DEBUG] CompositeObject.__init__() → kwargs avant Object: {kwargs}")
+        # Initialisation de la logique Object (subject, description, etc.)
+        Object.__init__(self, *args, **kwargs)
+
+        # Initialisation manuelle de Composite
+        patterns.composite.Composite.__init__(self, children=children, parent=parent)
 
     def __getcopystate__(self) -> dict:
         """
@@ -1361,12 +1485,16 @@ class CompositeObject(Object, patterns.ObservableComposite):
             str : Le sujet de l'objet composite.
         """
         subject = super().subject()
-        if recursive and self.parent():
-            # subject = "%s -> %s" % (
-            #     self.parent().subject(recursive=True),
-            #     subject,
-            # )
-            subject = f"{self.parent().subject(recursive=True)} -> {subject}"
+        # if recursive and self.parent():
+        #     # subject = "%s -> %s" % (
+        #     #     self.parent().subject(recursive=True),
+        #     #     subject,
+        #     # )
+        #     subject = f"{self.parent().subject(recursive=True)} -> {subject}"
+        if recursive and hasattr(self, "parent") and callable(self.parent):
+            parent = self.parent()
+            if parent:
+                subject = f"{parent.subject(recursive=True)} -> {subject}"
         return subject
 
     def subjectChangedEvent(self, event):
@@ -1643,12 +1771,12 @@ class CompositeObject(Object, patterns.ObservableComposite):
         # Appel explicite à la méthode de ObservableComposite
         # observable_events = patterns.ObservableComposite.modificationEventTypes()
         return (
-            [
-                class_.addChildEventType(),
-                class_.removeChildEventType(),
-            ]
-            + parent_events
-            + [class_.expansionChangedEventType()]
+                [
+                    class_.addChildEventType(),
+                    class_.removeChildEventType(),
+                ]
+                + parent_events
+                + [class_.expansionChangedEventType()]
         )
         # Changement possible :
         #     parent_events = set(super().modificationEventTypes())

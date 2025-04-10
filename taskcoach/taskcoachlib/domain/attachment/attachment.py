@@ -127,6 +127,7 @@ from pubsub import pub
 #        from wx.lib.pubsub import pub
 # from taskcoachlib.domain.base import NoteOwner
 from taskcoachlib.domain.note.noteowner import NoteOwner  # plutôt ?
+from taskcoachlib.domain.attachment.attachmentowner import AttachmentOwner
 
 
 def getRelativePath(path, basePath=os.getcwd()):
@@ -167,18 +168,34 @@ def getRelativePath(path, basePath=os.getcwd()):
     return os.path.join(*path1).replace("\\", "/")  # pylint: disable=W0142
 
 
+# class Attachment(base.Object, NoteOwner):
 class Attachment(base.Object, NoteOwner):
     """ Classe de base abstraite pour les pièces jointes. """
 
     type_ = "unknown"  # Utilisé dans XML.xriter.py
 
-    def __init__(self, location, *args, **kwargs):
+    def __init__(self, location="", *args, **kwargs):
+        """
+        Initialise une pièce jointe avec sa localisation et l'état hérité.
+
+        Args :
+            location (str) : Le chemin de la pièce jointe.
+            *args : Arguments positionnels.
+            **kwargs : Attributs hérités de la copie/sérialisation.
+        """
+        print(f"DEBUG - Attachment.__init__() appelé avec location={location}, args={args}, kwargs={kwargs}")
         if "subject" not in kwargs:
             kwargs["subject"] = location
+
+        # On extrait l’attribut propre à Attachment
+        self.__location = kwargs.pop("location", location)
+
+        # Appel du constructeur parent avec les kwargs restants
         super().__init__(*args, **kwargs)
-        self.__location = location
-        print(f"Type of self.__location: {type(self.__location)}")  # Added for debugging
-        print(f"self.__location: {self.__location}")  # Added for debugging
+
+        # self.__location = location
+        # print(f"Attachment.__init__ : Type of self.__location: {type(self.__location)}")  # Added for debugging
+        # print(f"self.__location: {self.__location}")  # Added for debugging
 
         # # Appelle l'initialisation de la classe de base sans arguments supplémentaires
         # super().__init__()
@@ -190,8 +207,6 @@ class Attachment(base.Object, NoteOwner):
         #     self.__location = state.get("location", None)  # Ou toute autre logique pour gérer l'absence de 'location'
         #
         # # autres :
-        # if "subject" not in kwargs:
-        #     kwargs["subject"] = location
         # if "subject" not in kwargs:
         #     kwargs["subject"] = location
         # # SynchronizedObject a initialisé :
@@ -226,8 +241,62 @@ class Attachment(base.Object, NoteOwner):
         # super().__init__()
         # self.__location = location
 
+        print(f"DEBUG - Attachment.__init__() terminé avec location={self.__location}")
+
     def copy(self):
-        return self.__class__(**self.__getcopystate__())
+        """
+        Crée une copie indépendante de l'attachement avec les mêmes attributs,
+        sans perturber les méthodes comme `description()`.
+
+        Returns :
+            Attachment : Une nouvelle instance de l'attachement.
+        """
+        # return self.__class__(**self.__getcopystate__())
+        # Obtenir l'état de l'objet sous forme de dictionnaire
+        state = self.__getcopystate__()
+        print(f"DEBUG - Attachment.__getcopystate__() renvoie : {state}")
+        # Filtrer les clés indésirables :
+        # # Clés valides à conserver — mais attention à ne pas réécraser les attributs sensibles
+        # valid_keys = {
+        #     'id', 'creationDateTime', 'modificationDateTime',
+        #     'fgColor', 'bgColor', 'font', 'icon', 'ordering', 'selectedIcon', 'location'
+        # }
+        # # Filtrage pour ne pas écraser les méthodes comme description()
+        # Retirer les clés qui risquent de masquer des méthodes, mais **sans les perdre**
+        # On va les réinjecter via les setters juste après instanciation
+        overrides = {key: state.pop(key) for key in ("subject", "description") if key in state}
+        # overrides = {}
+        # for key in ['subject', 'description']:
+        #     if key in state:
+        #         overrides[key] = state.pop(key)
+
+        # # Filtrer les clés à garder dans le constructeur
+        # # state = {k: v for k, v in state.items() if k in valid_keys}
+        # constructor_state = {k: v for k, v in state.items() if k in valid_keys}
+
+        # # Créer une nouvelle instance sans écraser les méthodes
+        # new_attachment = self.__class__(**constructor_state)
+        # On crée une nouvelle instance sans les attributs ambigus
+        new_attachment = self.__class__(**state)
+
+        # # # Appliquer description et subject via les méthodes prévues à cet effet
+        # # new_attachment.setDescription(self.description())
+        # # new_attachment.setSubject(self.subject())
+        #
+        # # Restaurer les attributs avec les setters pour ne pas écraser les méthodes
+        # if hasattr(self, 'description') and callable(getattr(self, 'description')):
+        #     new_attachment.setDescription(self.description())
+        # if hasattr(self, 'subject') and callable(getattr(self, 'subject')):
+        #     new_attachment.setSubject(self.subject())
+        # On applique proprement les valeurs via les méthodes existantes
+        if 'subject' in overrides:
+            new_attachment.setSubject(overrides['subject'])
+        if 'description' in overrides:
+            new_attachment.setDescription(overrides['description'])
+
+        # return self.__class__(**state)
+        return new_attachment
+
 
     def data(self):
         return None
@@ -304,7 +373,7 @@ class Attachment(base.Object, NoteOwner):
 
 
 class FileAttachment(Attachment):
-    type_ = "File"
+    type_ = "file"
 
     def open(self, workingDir=None, openAttachment=openfile.openFile):  # pylint: disable=W0221
         return openAttachment(self.normalizedLocation(workingDir))
@@ -317,7 +386,7 @@ class FileAttachment(Attachment):
             location = os.path.normpath(location)
         return location
 
-    def isLocalFile(self):
+    def isLocalFile(self) -> bool:
         return urlparse(self.location())[0] == ""
 
 
@@ -359,13 +428,23 @@ class MailAttachment(Attachment):
 
     def data(self):
         try:
-            return file(self.location(), "rb").read()  # fichier binaire !!!
-            # return io.open(self.location(), "rb").read()
+            # return file(self.location(), "rb").read()  # fichier binaire !!!
+            with open(self.location(), "rb") as f:  # Ouvre le fichier en mode binaire
+                return f.read()  # Lit et retourne le contenu du fichier
         except IOError:
-            return None
+            return None  # En cas d'erreur, retourne None
 
 
 def AttachmentFactory(location, type_=None, *args, **kwargs):
+    if not location:
+        print(f"⚠️ [DEBUG] L'attachement a un emplacement vide ! kwargs={kwargs}")
+    else:
+        print(f"✅ [DEBUG] Attachement valide : {location}")
+    return None if not location else Attachment(location, *args, **kwargs)
+
+    if not location or not isinstance(location, str):
+        print(f"attachment.AttachmentFactory : ⚠️ WARNING - Emplacement d'attachement invalide : {location}")
+        return None
     if type_ is None:
         if location.startswith("URI:"):
             return URIAttachment(

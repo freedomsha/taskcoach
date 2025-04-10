@@ -636,9 +636,11 @@ class CompositeObjectTest(tctest.TestCase):
         self.assertEqual([], self.compositeObject.expandedContexts())
 
     def testRecursiveSubject(self):
-        self.compositeObject.setSubject("parent")
-        self.addChild(subject="child")
-        self.assertEqual("parent -> child", self.child.subject(recursive=True))
+        self.compositeObject.setSubject("parent")  # Sujet du parent
+        self.addChild(subject="child")  # Ajoute un enfant avec son sujet
+        print(f"[TEST DEBUG] self.child.subject() = {self.child.subject()!r}")
+        # self.child.setSubject("child")
+        self.assertEqual("parent -> child", self.child.subject(recursive=True))  # Test la chaîne récursive
 
     def testSubjectNotification(self):
         self.addChild(subject="child")
