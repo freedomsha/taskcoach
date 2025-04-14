@@ -57,7 +57,22 @@ class _Toolbar(aui.auibar.AuiToolBar):
         super().__init__(parent, agwStyle=aui.AUI_TB_NO_AUTORESIZE)
 
     def AddLabelTool(self, id, label, bitmap1, bitmap2, kind, **kwargs):
-        """Ajoute un outil à la barre d'outils. Il s'agit de la version complète d'wx.lib.agw.aui.auibar.AuiToolBar.AddTool."""
+        """Ajoute un outil à la barre d'outils.
+
+        Il s'agit de la version complète d'wx.lib.agw.aui.auibar.AuiToolBar.AddTool.
+
+        Args:
+            id:
+            label:
+            bitmap1:
+            bitmap2:
+            kind:
+            **kwargs:
+
+        Returns:
+
+        """
+
         long_help_string = kwargs.pop("longHelp", "")
         short_help_string = kwargs.pop("shortHelp", "")
         bitmap2 = self.MakeDisabledBitmap(bitmap1)
@@ -104,12 +119,11 @@ class _Toolbar(aui.auibar.AuiToolBar):
         #          has been minimized into this toolbar.
         #          """
 
-
     def GetToolState(self, tool_id):
         """ wx.lib.agw.aui.auibar.AuiToolBar.GetToolToggle indique si un outil est activé ou non.
         
-        Parameters:
-            tool_id (integer) – the toolbar item identifier.
+        Args :
+            tool_id (integer) : the toolbar item identifier.
         """
         # Cela s'applique uniquement à un outil qui a été spécifié comme outil toggle(à bascule).
         return self.GetToolToggled(tool_id)
@@ -117,15 +131,16 @@ class _Toolbar(aui.auibar.AuiToolBar):
     def SetToolBitmapSize(self, size):
         """ Définit la taille par défaut de chaque bitmap d'outil. La taille bitmap par défaut est de 16 x 15 pixels.
 
-            Parameters:
-            
-                size (wx.Size) – the size of the bitmaps in the toolbar.
+        Args :
+            size (wx.Size) : The size of the bitmaps in the toolbar.
         """
         self.__size = size
         # TODO : à remplacer par 
 
     def GetToolBitmapSize(self):
-        """ Renvoie la taille du bitmap attendue par la barre d'outils. La taille bitmap par défaut est de 16 x 15 pixels.
+        """ Renvoie la taille du bitmap attendue par la barre d'outils.
+
+        La taille bitmap par défaut est de 16 x 15 pixels.
         """
         return self.__size
         # TODO : à remplacer par wx.GetToolBitmapSize(self) inclut dans AuiToolBar
@@ -133,30 +148,31 @@ class _Toolbar(aui.auibar.AuiToolBar):
         # return GetToolBitmapSize(self)
 
     def GetToolSize(self):
-        """ Renvoie la taille du bitmap. La taille bitmap par défaut est de 16 x 15 pixels.
+        """ Renvoie la taille du bitmap.
+
+        La taille bitmap par défaut est de 16 x 15 pixels.
         """
         return self.__size
-
 
     def SetMargins(self, *args):
         """
         Définissez les valeurs à utiliser comme marges pour la barre d'outils.
 
-        Paramètres :
+        Args :
         
-            x (int) – marge gauche, marge droite et valeur de séparation inter-outils ;
+            x (int) : marge gauche, marge droite et valeur de séparation inter-outils ;
             
-            y (int) – marge supérieure, marge inférieure et valeur de séparation inter-outils.
+            y (int) : marge supérieure, marge inférieure et valeur de séparation inter-outils.
 
         ou
         
-            left (int) – la marge gauche de la barre d'outils;
+            left (int) : la marge gauche de la barre d'outils;
             
-            right (int) – la marge droite de la barre d'outils;
+            right (int) : la marge droite de la barre d'outils;
             
-            top (int) – la marge supérieure de la barre d'outils;
+            top (int) : la marge supérieure de la barre d'outils;
             
-            bottom (int) – la marge inférieure de la barre d’outils.
+            bottom (int) : la marge inférieure de la barre d’outils.
         """
         if len(args) == 2:
             super().SetMarginsXY(args[0], args[1])
@@ -170,10 +186,10 @@ class _Toolbar(aui.auibar.AuiToolBar):
         Crée une version en niveaux de gris d'un bitmap pour l'afficher en mode désactivé.
 
         Args :
-            bitmap (wx.Bitmap): Le bitmap à convertir.
+            bitmap (wx.Bitmap) : Le bitmap à convertir.
 
         Returns :
-            wx.Bitmap: Le bitmap converti en niveaux de gris.
+            wx.Bitmap : Le bitmap converti en niveaux de gris.
         """
         # Penser à utiliser SetToolDisabledBitmap(self, tool_id, bitmap) qui
         # Définit le bitmap de l'outil désactivé pour l'outil identifié par tool_id.
@@ -186,7 +202,7 @@ class _Toolbar(aui.auibar.AuiToolBar):
         return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
 
 
-class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
+class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
     """
     Une classe qui représente une barre d'outils personnalisable dans l'interface utilisateur de Task Coach.
 
@@ -197,24 +213,28 @@ class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
     La classe MainToolBar est une sous-classe de ToolBar qui est utilisée dans la fenêtre principale de Task Coach.
     """
     def __init__(self, window, settings, size: tuple = (32, 32)):
+
         """
         Initialise une nouvelle instance de la classe ToolBar.
 
         Args :
-            window (wx.Window): La fenêtre parent de la barre d'outils.
-            settings (config.Settings): Les paramètres de configuration de l'application.
-            size (tuple, optional): La taille des icônes de la barre d'outils. La valeur par défaut est (32, 32).
+            window (Window) : La fenêtre parent de la barre d'outils.
+            settings (Settings) : Les paramètres de configuration de l'application.
+            size (tuple, optional) : La taille des icônes de la barre d'outils. La valeur par défaut est (32, 32).
         """
         self.__window = window
         self.__settings = settings
         self.__visibleUICommands = list()
         self.__cache = None
+        self.__customizeId = None
         super().__init__(window, style=wx.TB_FLAT | wx.TB_NODIVIDER)
         self.SetToolBitmapSize(size)
         if operating_system.isMac():
             # Extra margin needed because the search control is too high
             self.SetMargins(0, 7)
         self.loadPerspective(window.getToolBarPerspective())
+        self.tools = []  # utiliser une liste pour stocker les outils
+
 
     def Clear(self):
         """Efface la barre d'outils et tous les contrôles qu'elle contient.
@@ -311,8 +331,8 @@ class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
         """
         Enregistre la perspective actuelle de la barre d'outils dans les préférences de l'application.
 
-        Args:
-            perspective (str): La perspective à enregistrer.
+        Args :
+            perspective (str) : La perspective à enregistrer.
         """
         self.loadPerspective(perspective)
         self.__window.saveToolBarPerspective(perspective)
@@ -347,8 +367,8 @@ class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
         """
         Ajoute un espaceur extensible à la barre d'outils.
 
-        Args:
-            proportion (int): La proportion de l'espaceur extensible.
+        Args :
+            proportion (int) : La proportion de l'espaceur extensible.
         """
         self.AddStretchSpacer(proportion)
 
@@ -356,10 +376,31 @@ class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
         """
         Ajoute une commande UI à la barre d'outils.
 
-        Args:
-            uiCommand (uicommand.UICommand): La commande UI à ajouter.
+        Args :
+            uiCommand (uicommand.UICommand) : La commande UI à ajouter.
         """
-        return uiCommand.appendToToolBar(self)
+        # return uiCommand.appendToToolBar(self)
+        # Déboggage :
+        # Ajoutez des débogage pour vérifier les paramètres
+        print(f"gui.toolbar.ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}")
+
+        # Implémentation de la méthode appendUICommand
+        toolId = len(self.tools)  # Simule un ID unique pour l'outil
+        # self.__visibleUICommands[toolId] = uiCommand
+        self.tools.append(uiCommand)
+
+        # Ajoutez des débogage pour vérifier que l'outil a été ajouté avec succès
+        print(f"Tool added with ID: {toolId}")
+
+        return toolId
+
+    def GetToolPos(self, toolId):
+        # if toolId in self.tools:
+        #     return self.tools.index(toolId)
+        if 0 <= toolId < len(self.tools):
+            return toolId
+
+        return wx.NOT_FOUND
 
 
 class MainToolBar(ToolBar):
@@ -368,11 +409,11 @@ class MainToolBar(ToolBar):
     """
     def __init__(self, *args, **kwargs):
         """
-        Initialise une nouvelle instance de la classe MainToolBar.
+        Initialise une nouvelle instance de la classe MainToolBar, utilisée dans la fenêtre principale.
 
-        Args:
-            *args: Les arguments positionnels à passer à la méthode __init__ de la classe parent ToolBar.
-            **kwargs: Les arguments par mot-clé à passer à la méthode __init__ de la classe parent ToolBar.
+        Args :
+            *args : Les arguments positionnels à passer à la méthode __init__ de la classe parent ToolBar.
+            **kwargs : Les arguments par mot-clé à passer à la méthode __init__ de la classe parent ToolBar.
         """
         super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_SIZE, self._OnSize)
@@ -383,8 +424,8 @@ class MainToolBar(ToolBar):
 
         Cette méthode ajuste la taille de la barre d'outils en fonction de la taille de la fenêtre parent.
 
-        Args:
-            event (wx.SizeEvent): L'événement de redimensionnement.
+        Args :
+            event (wx.SizeEvent) : L'événement de redimensionnement.
         """
         event.Skip()
         # On Windows XP, the sizes are off by 1 pixel. I fear that this value depends
@@ -393,7 +434,7 @@ class MainToolBar(ToolBar):
             wx.CallAfter(self.GetParent().SendSizeEvent)
 
     def Realize(self):
-        """wx.lib.agw.aui.auibar.AuiToolBar.Relize Réalise la barre d'outils.
+        """wx.lib.agw.aui.auibar.AuiToolBar.Realize Réalise la barre d'outils.
         
         Cette fonction doit être appelée après avoir ajouté des outils.
         """
