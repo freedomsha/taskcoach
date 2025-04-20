@@ -17,13 +17,34 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+taskcoach.py est le point d'entrée principal. Il :
+
+    Configure le logging (déjà fait ✅),
+
+    Prépare l’environnement (OS, sys.path, etc.),
+
+    Tente d’importer taskcoachlib,
+
+    Gère les arguments de la ligne de commande,
+
+    Lance l’application (Application.start()).
 """
 
 # Programme principal
 # importer la bibliothèque pour enregistrer les événements
 # voir https://docs.python.org/fr/3.12/library/logging.html pour son implantation
-# import logging
-# log = logging.getLogger(__name__)
+import logging
+log = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.DEBUG,  # Tu peux passer à INFO ou WARNING en production
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[
+        logging.FileHandler("taskcoach.log", mode='w', encoding='utf-8'),
+        logging.StreamHandler()  # Affiche aussi dans la console
+    ]
+)
+
 
 # importer les bibliothèques permettant l'interface pour le système d'exploitation
 import os
@@ -50,6 +71,7 @@ if not hasattr(sys, "frozen"):
     # wxpython: wxversion non integre sur python3 donc à ignorer :
     # remplacé par wx.__version__ donc ne plus importer wxversion.
     # https://docs.python.org/fr/3/howto/pyporting.html
+    log.debug("Environnement non frozen détecté (mode développement)")
     # try:
     #     import wxversion  # in python 3 try with wx.__version__
     #     # from wx.core import __version__ as wxversion  # ?
@@ -78,10 +100,14 @@ if not hasattr(sys, "frozen"):
         sys.path.insert(
             0, "/usr/share/pyshared"
         )  # ajoute à la variable d'environnement PYTHONPATH
+        log.warning(
+            "taskcoachlib introuvable, ajout manuel de /usr/share/pyshared au PYTHONPATH"
+        )
         try:
             import taskcoachlib  # pylint: disable=W0611  # noqa: F401
         except ImportError:
             # si erreur écrire une erreur dans le log et sortir
+            log.error("Impossible d'importer 'taskcoachlib' m\u00eame apr\u00e8s avoir modifi\u00e9 sys.path")
             sys.stderr.write(
                 """ERROR: cannot import the library 'taskcoachlib'.
                 Please see https://answers.launchpad.net/taskcoach/+faq/1063
@@ -91,6 +117,8 @@ if not hasattr(sys, "frozen"):
                 """
             )
             sys.exit(1)  # quitte le programme suite à une erreur autre que syntaxe
+else:
+    log.debug("Environnement frozen détecté (exécutable)")
 
 
 def start():
@@ -142,19 +170,27 @@ def start():
     # options = vars(options)
     # print(vars(options), args)
     # print(f"taskcoach.py: options:{vars(options)} args:{args}")
+    log.info("Arguments analys\u00e9s : options=%s, args=%s", vars(options), args)
+
+    # Lancement de l'initialisation de l'application :
     app = application.Application(
         options, args
     )  # définition de la variable app comme application avec options et args
     # app = application.Application(tcargs)
-    print("taskcoach.py: options.profile:", options.profile)
+    # print("taskcoach.py: options.profile:", options.profile)  # is False !
+    log.debug("Option --profile active : %s", options.profile)
+    # Lancement de l'application :
     if options.profile:
         # if options["profile"]:
         import cProfile
 
+        log.info("Mode profilage activ\u00e9, d\u00e9marrage avec cProfile")
         cProfile.runctx("app.start()", globals(), locals(), filename=".profile")
     else:
+        log.info("Lancement de l'application avec Application.start()")
         app.start()
 
 
 if __name__ == "__main__":
+    log.info("Lancement du programme Task Coach via taskcoach.py")
     start()
