@@ -18,6 +18,39 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+# Changements à prendre en compte :
+# Voici quelques points importants à considérer lors de la conversion :
+#
+# 1. **Syntaxe des chaînes de caractères** :
+#    - En Python 2.7, les chaînes de caractères sont encadrées par des guillemets simples ou
+# doubles (par exemple, `'string'` ou `"string"`).
+#    - En Python 3, il faut utiliser des guillemets simples pour les chaînes littérales
+# (`'string'`) et des guillemets triples pour les chaînes de plusieurs lignes (`"""text"""`). Les
+# chaînes encadrées par des guillemets doubles sont traitées comme des chaînes de caractères
+# Unicode.
+#
+# 2. **Exceptions** :
+#    - En Python 2.7, `except:` catche toutes les exceptions.
+#    - En Python 3, il est recommandé d'utiliser `except Exception as e:` pour capturer les
+# exceptions et d'accéder à l'objet exception via la variable `e`.
+#
+# 3. **Méthodes des chaînes de caractères** :
+#    - La méthode `splitlines()` retourne une liste de lignes dans Python 2.7, mais en Python 3,
+# elle retourne un générateur.
+#    - Il est préférable d'utiliser `str.splitlines(keepends=True)` pour obtenir les lignes avec le
+# caractère de saut de ligne.
+#
+# 4. **Fichiers** :
+#    - La méthode `read()` renvoie une chaîne en Python 2.7, mais elle renvoie un bytes object en
+# Python 3.
+#    - Utiliser `open(filename, 'r', encoding='utf-8')` pour lire les fichiers avec l'encodage
+# UTF-8.
+#
+# 5. **Comparaisons et boucles** :
+#    - En Python 2.7, les comparaisons et boucles peuvent être effectuées sur des entiers de
+# différents types (comme `int` et `long`) qui ont une largeur fixe.
+#    - En Python 3, tous les entiers sont des objets `int` de taille dynamique.
+# ### Code modifié pour Python 3
 
 import wx
 import os
@@ -34,6 +67,11 @@ from . import artprovider
 
 
 class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
+    """
+    Classe pour créer l'icône de la barre de tâche.
+
+    iconType=TBI_DEFAULT_TYPE
+    """
     def __init__(self, mainwindow, taskList, settings,
                  defaultBitmap="taskcoach", tickBitmap="clock_icon",
                  tackBitmap="clock_stopwatch_icon", *args, **kwargs):
@@ -48,14 +86,14 @@ class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
         self.__currentText = self.__tooltipText
         self.__tickBitmap = tickBitmap
         self.__tackBitmap = tackBitmap
-        self.registerObserver(self.onTaskListChanged,
-                              eventType=taskList.addItemEventType(), eventSource=taskList)
-        self.registerObserver(self.onTaskListChanged,
-                              eventType=taskList.removeItemEventType(), eventSource=taskList)
-        pub.subscribe(self.onTrackingChanged,
-                      task.Task.trackingChangedEventType())
-        pub.subscribe(self.onChangeDueDateTime,
-                      task.Task.dueDateTimeChangedEventType())
+        # self.registerObserver(self.onTaskListChanged,
+        #                       eventType=taskList.addItemEventType(), eventSource=taskList)
+        # self.registerObserver(self.onTaskListChanged,
+        #                       eventType=taskList.removeItemEventType(), eventSource=taskList)
+        # pub.subscribe(self.onTrackingChanged,
+        #               task.Task.trackingChangedEventType())
+        # pub.subscribe(self.onChangeDueDateTime,
+        #               task.Task.dueDateTimeChangedEventType())
         # When the user chances the due soon hours preferences it may cause
         # a task to change appearance. That also means the number of due soon
         # tasks has changed, so we need to change the tool tip text.
@@ -63,71 +101,75 @@ class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
         # is not reliable. The TaskBarIcon may get the event before the tasks
         # do. When that happens the tasks haven't changed their status yet and
         # we would use the wrong status count.
-        self.registerObserver(self.onChangeDueDateTime_Deprecated,
-                              eventType=task.Task.appearanceChangedEventType())
-        if operating_system.isGTK():
-            events = [wiz.EVT_TASKBAR_LEFT_DOWN]
-        elif operating_system.isWindows():
-            # See http://msdn.microsoft.com/en-us/library/windows/desktop/aa511448.aspx#interaction
-            events = [wiz.EVT_TASKBAR_LEFT_DOWN, wiz.EVT_TASKBAR_LEFT_DCLICK]
-        else:
-            events = [wiz.EVT_TASKBAR_LEFT_DCLICK]
-        for event in events:
-            self.Bind(event, self.onTaskbarClick)
-        self.__setTooltipText()
-        mainwindow.Bind(wx.EVT_IDLE, self.onIdle)
+        # self.registerObserver(self.onChangeDueDateTime_Deprecated,
+        #                       eventType=task.Task.appearanceChangedEventType())
+        # if operating_system.isGTK():
+        #     events = [wiz.EVT_TASKBAR_LEFT_DOWN]
+        # elif operating_system.isWindows():
+        #     # See http://msdn.microsoft.com/en-us/library/windows/desktop/aa511448.aspx#interaction
+        #     events = [wiz.EVT_TASKBAR_LEFT_DOWN, wiz.EVT_TASKBAR_LEFT_DCLICK]
+        # else:
+        #     events = [wiz.EVT_TASKBAR_LEFT_DCLICK]
+        # for event in events:
+        #     self.Bind(event, self.onTaskbarClick)
+        # self.__setTooltipText()
+        # mainwindow.Bind(wx.EVT_IDLE, self.onIdle)
+        self.toolTipMessages = [
+            (task.status.overdue, _("one task overdue"), _("%d tasks overdue")),
+            (task.status.duesoon, _("one task due soon"), _("%d tasks due soon"))
+        ]
 
-    # Event handlers:
-
-    def onIdle(self, event):
-        if self.__currentText != self.__tooltipText or self.__currentBitmap != self.__bitmap:
-            self.__currentText = self.__tooltipText
-            self.__currentBitmap = self.__bitmap
-            self.__setIcon()
-        if event is not None:  # Unit tests
-            event.Skip()
-
-    def onTaskListChanged(self, event):  # pylint: disable=W0613
-        self.__setTooltipText()
-        self.__startOrStopTicking()
-
-    def onTrackingChanged(self, newValue, sender):
-        if newValue:
-            self.registerObserver(self.onChangeSubject,
-                                  eventType=sender.subjectChangedEventType(),
-                                  eventSource=sender)
-        else:
-            self.removeObserver(self.onChangeSubject,
-                                eventType=sender.subjectChangedEventType())
-        self.__setTooltipText()
-        if newValue:
-            self.__startTicking()
-        else:
-            self.__stopTicking()
-
-    def onChangeSubject(self, event):  # pylint: disable=W0613
-        self.__setTooltipText()
-
-    def onChangeDueDateTime(self, newValue, sender):  # pylint: disable=W0613
-        self.__setTooltipText()
-
-    def onChangeDueDateTime_Deprecated(self, event):
-        self.__setTooltipText()
-
-    def onEverySecond(self):
-        if self.__settings.getboolean("window", "blinktaskbariconwhentrackingeffort") and \
-                not operating_system.isMacOsXMavericks_OrNewer():
-            self.__toggleTrackingBitmap()
-            self.__setIcon()
-
-    def onTaskbarClick(self, event):
-        if self.__window.IsIconized() or not self.__window.IsShown():
-            self.__window.restore(event)
-        else:
-            if operating_system.isMac():
-                self.__window.Raise()
-            else:
-                self.__window.Iconize()
+    # # Event handlers:
+    #
+    # def onIdle(self, event):
+    #     if self.__currentText != self.__tooltipText or self.__currentBitmap != self.__bitmap:
+    #         self.__currentText = self.__tooltipText
+    #         self.__currentBitmap = self.__bitmap
+    #         self.__setIcon()
+    #     if event is not None:  # Unit tests
+    #         event.Skip()
+    #
+    # def onTaskListChanged(self, event):  # pylint: disable=W0613
+    #     self.__setTooltipText()
+    #     self.__startOrStopTicking()
+    #
+    # def onTrackingChanged(self, newValue, sender):
+    #     if newValue:
+    #         self.registerObserver(self.onChangeSubject,
+    #                               eventType=sender.subjectChangedEventType(),
+    #                               eventSource=sender)
+    #     else:
+    #         self.removeObserver(self.onChangeSubject,
+    #                             eventType=sender.subjectChangedEventType())
+    #     self.__setTooltipText()
+    #     if newValue:
+    #         self.__startTicking()
+    #     else:
+    #         self.__stopTicking()
+    #
+    # def onChangeSubject(self, event):  # pylint: disable=W0613
+    #     self.__setTooltipText()
+    #
+    # def onChangeDueDateTime(self, newValue, sender):  # pylint: disable=W0613
+    #     self.__setTooltipText()
+    #
+    # def onChangeDueDateTime_Deprecated(self, event):
+    #     self.__setTooltipText()
+    #
+    # def onEverySecond(self):
+    #     if self.__settings.getboolean("window", "blinktaskbariconwhentrackingeffort") and \
+    #             not operating_system.isMacOsXMavericks_OrNewer():
+    #         self.__toggleTrackingBitmap()
+    #         self.__setIcon()
+    #
+    # def onTaskbarClick(self, event):
+    #     if self.__window.IsIconized() or not self.__window.IsShown():
+    #         self.__window.restore(event)
+    #     else:
+    #         if operating_system.isMac():
+    #             self.__window.Raise()
+    #         else:
+    #             self.__window.Iconize()
 
     # Menu:
 
@@ -153,8 +195,14 @@ class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
     # Private methods:
 
     def __startOrStopTicking(self):
-        self.__startTicking()
+        # self.__startTicking()
+        # self.__stopTicking()
         self.__stopTicking()
+        # if self.__taskList.nrBeingTracked() > 0:
+        #     self.startClock()
+        #     self.__toggleTrackingBitmap()
+        #     self.__setIcon()
+        self.__startTicking()
 
     def __startTicking(self):
         if self.__taskList.nrBeingTracked() > 0:
@@ -174,10 +222,13 @@ class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
     def stopClock(self):
         date.Scheduler().unschedule(self.onEverySecond)
 
-    toolTipMessages = [
-        (task.status.overdue, _("one task overdue"), _("%d tasks overdue")),
-        (task.status.duesoon, _("one task due soon"), _("%d tasks due soon"))
-    ]
+    def onEverySecond(self):
+        pass
+
+    # toolTipMessages = [
+    #     (task.status.overdue, _("one task overdue"), _("%d tasks overdue")),
+    #     (task.status.duesoon, _("one task due soon"), _("%d tasks due soon"))
+    # ]
 
     def __setTooltipText(self):
         """ Note that Windows XP and Vista limit the text shown in the
@@ -204,10 +255,10 @@ class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
         textPart = ", ".join(textParts)
         filename = os.path.basename(self.__window.taskFile.filename())
         namePart = "%s - %s" % (meta.name, filename) if filename else meta.name
-        text = "%s\n%s" % (namePart, textPart) if textPart else namePart
-
-        if text != self.__tooltipText:
-            self.__tooltipText = text
+        # text = "%s\n%s" % (namePart, textPart) if textPart else namePart
+        # if text != self.__tooltipText:
+        #     self.__tooltipText = text
+        self.__tooltipText = "%s\n%s" % (namePart, textPart) if textPart else namePart
 
     def __setDefaultBitmap(self):
         self.__bitmap = self.__defaultBitmap
