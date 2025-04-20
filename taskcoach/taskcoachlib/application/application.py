@@ -21,8 +21,10 @@ Programme Principal
 Module: application
 
 Ce module fait partie de l'application Task Coach et contient
-la logique principale de l'application, y compris l'initialisation, la configuration
-et la boucle d'événements principale.
+la logique principale de l'application,
+y compris l'initialisation,
+la configuration et
+la boucle d'événements principale.
 
 Classes:
     Application: Gère l'initialisation et l'exécution de l'application Task Coach.
@@ -54,6 +56,7 @@ Functions:
         Arrête l'application et effectue le nettoyage nécessaire.
 
 Attributes:
+
     _instance: Instance singleton de la classe Application.
 
     _options: Options de ligne de commande analysées à partir des arguments.
@@ -94,7 +97,8 @@ Dependencies:
 
 import calendar
 import locale
-# import logging  # Attendre avant son implantation
+import logging  # Attendre avant son implantation
+log = logging.getLogger(__name__)
 import os
 import re
 import sys
@@ -116,6 +120,7 @@ from taskcoachlib import patterns, operating_system
 # nouveau :
 from taskcoachlib.i18n import _
 from taskcoachlib.config import Settings
+from taskcoachlib import gui, persistence
 
 
 class RedirectedOutput(object):
@@ -312,21 +317,41 @@ class Application(object, metaclass=patterns.Singleton):
 
         self._options = options
         self._args = args
+        # Initialisation de Twisted (1-3/5)
         # self.initTwisted()
         try:
             self.initTwisted()
         except Exception as e:
-            # logging.error("application.py: Error initializing Twisted: %s", str(e))
-            print(f"application.py: Error initializing Twisted: {e}")
-            wx.MessageBox(f"application.py Application.__init__: Error initializing Twisted: {e}",
-                          "Error", wx.OK | wx.ICON_ERROR)
-        print("application.Application.__init__: Twisted initialized")
+            log.error("application.py: Error initializing Twisted: %s", str(e))
+            # print(f"application.py: Error initializing Twisted: {e}")
+            # wx.MessageBox(f"application.py Application.__init__: Error initializing Twisted: {e}",
+            #               "Error", wx.OK | wx.ICON_ERROR)
+        # print("application.Application.__init__: Twisted initialized")
+        log.debug("Twisted initialisé avec succès.")
+
+
+        # wx-1-Create a new app, don't redirect stdout/stderr to a window.
         self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=False)
+        # myapp = MyApp() # functions normally. Stdio is redirected to its own window
+        # myapp = MyApp(0) #does not redirect stdout. Tracebacks will show up at the console.
+        # myapp = MyApp(1, 'filespec') #redirects stdout to the file 'filespec'
+        # # NOTE: These are named parameters, so you can do this for improved readability:
+        # myapp = MyApp(redirect = 1, filename = 'filespec') # will redirect stdout to 'filespec'
+        # myapp = MyApp(redirect = 0) #stdio will stay at the console...
+        # self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=1, filename=RedirectedOutput().__path)
+        # Après cela, wx-2-création d'une Frame !(-> Dans init)
+
         # print("application.Application.__init__: self.__wx_app défini !")
+        log.debug("Application wxApp créée.")
+
+        # Twisted (4/5) Enregistrement de l'application dans Twisted
         self.registerApp()
-        print("application.Application.__init__: self.registerApp() !")
+        # print("application.Application.__init__: self.registerApp() !")
+        # wx-2 :
+        log.debug("Appel de la Méthode init().")
         self.init(**kwargs)  # passe mais n'atteint pas la suite ! goto l540
-        print("application.Application.__init__: self.init() !")
+        # print("application.Application.__init__: self.init() !")
+        log.debug("Méthode init() appelée.")
 
         # self est Application (tclib.application.application.Application)
         # # Attributs d'instance définis en dehors de __init__ , nécessaires dans start:
@@ -390,15 +415,32 @@ class Application(object, metaclass=patterns.Singleton):
         """Fonction-méthode pour initialiser et lancer Twisted.
 
         Initialise et lance le réacteur Twisted, qui permet de gérer les événements asynchrones de l'application.
+        Centralise aussi tous les logs (Twisted inclus).
         """
         # voir peut-être https://docs.twisted.org/en/stable/core/howto/design.html
         # et https://docs.twisted.org/en/stable/core/howto/process.html
         # et pour python 3 : https://docs.twisted.org/en/stable/core/howto/python3.html
         # https://docs.twisted.org/en/stable/core/howto/choosing-reactor.html
-        # (1/5) to use Twisted
+        # Twisted (1/5) to use Twisted
         from twisted.internet import wxreactor
 
-        # (2/5)Twisted
+        # twisted.python.log s'est sensiblement déplacé vers le texte des str
+        # à partir de lignes d'octets.
+        # Événements d'exploitation forestière,
+        # en particulier ceux produits par un Appel comme msg("foo"),
+        # doit maintenant être des chaînes de texte.
+        # Par conséquent, sur Python 3, les dictionnaires d'événements
+        # passés aux enregistrements de journaliser
+        # confulent une chaîne de texte où
+        # elles contenaient précédemment des chaînes d'octets.
+        # twisted.python.filepath.FilePath n'a pas changé.
+        # Il ne supporte que des lignes d'octets.
+        # Cela nécessitera probablement des demandes pour
+        # mettre à jour leur utilisation de FilePath,
+        # au moins pour passer un octet explicite littérales de chaîne
+        # plutôt que "native" littérales de chaîne (qui sont du texte sur Python 3).
+
+        # Twisted (2/5)
         wxreactor.install()
 
         # Monkey-patching older versions because of https://twistedmatrix.com/trac/ticket/3948
@@ -418,7 +460,7 @@ class Application(object, metaclass=patterns.Singleton):
         # if tuple(map(int, twisted.__version__.split("."))) < (11,):
         # ValueError: invalid literal for int() with base 10: '0rc1'
         # Est-ce nécessaire ?
-        # (3/5)Twisted, when Wxapp has been created :
+        # Twisted (3/5), when Wxapp has been created :
         # from twisted.internet import wxreactor, threads  # unused import
         from twisted.internet import wxreactor
 
@@ -436,6 +478,8 @@ class Application(object, metaclass=patterns.Singleton):
                 # self.blockingCallFromThread(oldStop, self)
 
             wxreactor.WxReactor.stop = stopFromThread
+            # wxreactor.WxReactor.stop = wxreactor.WxReactor.callFromThread(wxreactor.WxReactor.stop, self)  # Ne fonctionne pas !
+            # <taskcoachlib.application.application.Application object at 0x7c07fff70110> is not callable
         # ou
         # import twisted
         # print(list(twisted.__version__.split('.')))
@@ -449,6 +493,11 @@ class Application(object, metaclass=patterns.Singleton):
         #        wxreactor.WxReactor.stop = stopFromThread
         #        # ou essayer avec https://www.programcreek.com/python/example/117947/twisted.internet.error
         #        # .ReactorAlreadyInstalledError
+
+        # Centraliser tous les logs (Twisted inclus) :
+        from twisted.python import log as twisted_log
+        twisted_log.startLoggingWithObserver(lambda msg: log.debug(msg.get('message')))
+
 
     def stopTwisted(self):
         """Fonction-méthode pour arrêter twisted-reactor"""
@@ -466,11 +515,11 @@ class Application(object, metaclass=patterns.Singleton):
     def registerApp(self):
         """Fonction-méthode pour Enregistrez l'instance d'application avec Twisted:"""
         # try:
-        # (3/5)Twisted, when Wxapp has been created :
+        # Twisted (3/5), when Wxapp has been created :
         from twisted.internet import reactor
 
         # voir peut-etre aussi twisted.internet.wxreactor.WxReactor !
-        # (4/5)Twisted :
+        # Twisted (4/5) : (5/5) est dans start !
         reactor.registerWxApp(self.__wx_app)
         # except ModuleNotFoundError:
         #     from twisted.internet import wxreactor
@@ -489,6 +538,7 @@ class Application(object, metaclass=patterns.Singleton):
         # pylint: disable=W0201
         from taskcoachlib import meta
 
+        log.info("Lancement de la fenêtre principale")
         if self.settings.getboolean("version", "notify"):
             self.__version_checker = meta.VersionChecker(self.settings)
             self.__version_checker.start()
@@ -496,24 +546,33 @@ class Application(object, metaclass=patterns.Singleton):
             self.__message_checker = meta.DeveloperMessageChecker(self.settings)
             self.__message_checker.start()
         self.__copy_default_templates()
-        self.mainwindow.Show()  # ligne qui devrait être la 2e dans OnInit
+
+        # Show the frame.
+        # self.mainwindow.Show()  # ligne qui devrait être la 2e dans OnInit, ou en 3e après frame !
+        self.mainwindow.Show(True)
+        # Ensuite, il devrait y avoir self.__wx_app.MainLoop() !
+        # Ici, c'est remplacé par twisted.reactor.
+
         # vieux code
         #  from twisted.internet import reactor
         #         reactor.run()
-        # (3/5)Twisted :
+        # Twisted (3/5) :
         from twisted.internet import reactor
+
+        # Twisted (4/5) : est dans RegisterApp
 
         # voir https://github.com/twisted/twisted/blob/63df84e454978bd7a2d57ed292913384ca352e1a/src/twisted/internet/wxreactor.py#L74
         # start the event loop:
         # Démarre la boucle des événements:
-        # (5/5)Twisted :
+        # Twisted (5/5):
         # reactor.run()
         try:
             reactor.run()
         except Exception as e:
             # logging.error("application.py: Error running Twisted reactor: %s", str(e))
-            wx.MessageBox(f"application.py: Error running Twisted reactor: {e}",
-                          "Error", wx.OK | wx.ICON_ERROR)
+            # wx.MessageBox(f"application.py: Error running Twisted reactor: {e}",
+            #               "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageDialog(self, message=f"application.py: Error running Twisted reactor: {e}", caption="Error", style=wx.OK | wx.ICON_ERROR)
             # Gérer l'erreur de manière appropriée (par exemple, afficher un message à l'utilisateur)
         # IMPORTANT: tests will fail when run under this reactor. This is
         # expected and probably does not reflect on the reactor's ability to run
@@ -563,24 +622,30 @@ class Application(object, metaclass=patterns.Singleton):
                     open(filename, "wb").write(template)
 
     def init(self, loadSettings=True, loadTaskFile=True):
-        """Initialisez l'application. Doit être appelé avant Application.start().
+        """Initialiser l'application.
+
+        Appelé par __init__.
+        Doit être appelé avant Application.start().
 
         Args:
             loadSettings (bool, optional): Charger les paramètres de l'application. Defaults to True.
             loadTaskFile (bool, optional): Charger le fichier de tâches. Defaults to True.
         """
+        log.debug("Initialisation des composants de l'application")
+
         # try:
         # Attributs d'instance:
         self.__init_config(loadSettings)
         self.__init_language()
+        #  Fournir aux objets de domaine pertinents un accès aux paramètres :
         self.__init_domain_objects()  # Passe directement à l556 !? après avoir affiché 6 lignes debug image handler for
-        self.__init_application()
-        # Problème de doublon d'image ! :
-        print("application.Application.init : attributs ok !")
-        from taskcoachlib import gui, persistence  # TODO : à mettre au début !
+        self.__init_application()  # Réglage des paramètres nom et auteurs de l'application.
+        # Problème de doublon d'image ! : réglé, double entrée de .mainwindow dans gui/init.py
+        # print("application.Application.init : attributs ok !")
+        # from taskcoachlib import gui, persistence  # TODO : à mettre au début !
 
-        gui.init()  # goto gui.artprovider.init
-        print("application.Application.init : gui.init(), Problème de doublons ?")
+        gui.init()  # goto gui.artprovider.init : Initialise l'ArtProvider
+        # print("application.Application.init : gui.init(), Problème de doublons ? C'était MainWindow en double dans gui/init.py")
         show_splash_screen = self.settings.getboolean("window", "splash")  # = True puis l560
         splash = gui.SplashScreen() if show_splash_screen else None
         # pylint: disable=W0201
@@ -594,21 +659,25 @@ class Application(object, metaclass=patterns.Singleton):
         self.iocontroller = gui.IOController(
             self.taskFile, self.displayMessage, self.settings, splash
         )
-        # Création d'une instance de la fenêtre Principale (objet de gui.mainwindow.MainWindow):
-        # ligne qui devrait être la première dans OnInit:
-        self.mainwindow = gui.MainWindow(
+
+        # wx-2-Création d'une instance de la fenêtre Principale (objet de gui.mainwindow.MainWindow, wx.Frame):
+        # ligne qui devrait être la première dans OnInit (ou en tout cas juste après self.__wx_app = wxApp() dans __init__):
+        self.mainwindow = gui.mainwindow.MainWindow(
             self.iocontroller, self.taskFile, self.settings, splash=splash
-        )
+        )  # A Frame is a top-level window.
+        # Après il devrait y avoir self.mainwindow.Show(true) !(Voir start())
+
         # Désignation de la fenêtre en tant que principale par la méthode SetTopWindow() spécifique à la classe wx.App
         # ligne qui devrait être en 3e position dans OnInit:
         self.__wx_app.SetTopWindow(self.mainwindow)
-        self.__init_spell_checking()
+
+        self.__init_spell_checking()  # Attention changements
         if not self.settings.getboolean("file", "inifileloaded"):
             self.__close_splash(splash)
             self.__warn_user_that_ini_file_was_not_loaded()
         if loadTaskFile:
             self.iocontroller.openAfterStart(self._args)
-        self.__register_signal_handlers()
+        # self.__register_signal_handlers()  # Est-elle bien implémentée ?
         self.__create_mutex()
         self.__create_task_bar_icon()
         wx.CallAfter(self.__close_splash, splash)
@@ -638,16 +707,17 @@ class Application(object, metaclass=patterns.Singleton):
             # AttributeError: 'Values' object has no attribute 'inifile'
             # AttributeError: 'Namespace' object has no attribute 'inifile'
             # pylint: disable=W0201
-            self.settings = config.Settings(load_settings, ini_file)  # TODO : ini_file is None !
+            self.settings = config.Settings(load_settings, ini_file)  #
+            # TODO : ini_file is None !
         except IOError or Exception as e:
-            print(
-                "application.py: Erreur lors de la lecture du fichier de configuration: %s",
-                str(e),
-            )
-            # logging.error(
+            # print(
             #     "application.py: Erreur lors de la lecture du fichier de configuration: %s",
             #     str(e),
             # )
+            log.error(
+                "application.py: Erreur lors de la lecture du fichier de configuration: %s",
+                str(e),
+            )
             raise
 
     def __init_language(self):
@@ -657,14 +727,14 @@ class Application(object, metaclass=patterns.Singleton):
 
             i18n.Translator(self.determine_language(self._options, self.settings))
         except Exception as e:
-            print(
-                "application.py: Erreur lors de l'initialisation de la langue: %s",
-                str(e),
-            )
-            # logging.error(
+            # print(
             #     "application.py: Erreur lors de l'initialisation de la langue: %s",
             #     str(e),
             # )
+            log.error(
+                "application.py: Erreur lors de l'initialisation de la langue: %s",
+                str(e),
+            )
 
     @staticmethod
     def determine_language(options, settings, locale=locale):  # pylint: disable=W0621
@@ -721,6 +791,8 @@ class Application(object, metaclass=patterns.Singleton):
 
     def __init_spell_checking(self):
         """Fonction-méthode qui règle-initialise."""
+        log.debug("Vérification orthographique initialisée")
+
         self.on_spell_checking(self.settings.getboolean("editor", "maccheckspelling"))
         pub.subscribe(self.on_spell_checking, "settings.editor.maccheckspelling")
 
@@ -779,7 +851,7 @@ class Application(object, metaclass=patterns.Singleton):
 
     @staticmethod
     def __create_mutex():
-        """Sous Windows, créez un mutex pour qu'InnoSetup puisse vérifier si l'application est en cours d'exécution."""
+        """Sous Windows, crée un mutex pour qu'InnoSetup puisse vérifier si l'application est en cours d'exécution."""
         if operating_system.isWindows():
             import ctypes
             from taskcoachlib import meta
@@ -838,6 +910,7 @@ class Application(object, metaclass=patterns.Singleton):
         from taskcoachlib import meta
 
         reason = self.settings.get("file", "inifileloaderror")
+        log.warning("Fichier ini non chargé : %s", reason)
         wx.MessageBox(
             _("Couldn't load settings from TaskCoach.ini:\n%s") % reason,
             # _(f"Couldn't load settings from TaskCoach.ini:\n{reason}"),
@@ -865,12 +938,12 @@ class Application(object, metaclass=patterns.Singleton):
             self.mainwindow.setShutdownInProgress()
             self.quitApplication(force=True)
         except Exception as e:
-            print(
-                "application.py: Erreur lors de la fermeture de la session: %s", str(e)
-            )
-            # logging.error(
+            # print(
             #     "application.py: Erreur lors de la fermeture de la session: %s", str(e)
             # )
+            log.exception(
+                "application.py: Erreur lors de la fermeture de la session: %s", str(e)
+            )
 
     def on_reopen_app(self):
         """Fonction-méthode pour rouvrir l'application."""
@@ -887,6 +960,9 @@ class Application(object, metaclass=patterns.Singleton):
         Returns :
             bool : True si l'application a été arrêtée avec succès, False sinon.
         """
+        # Voir https://pythonhosted.org/wxPython/window_deletion_overview.html#window-deletion
+        log.info("Fermeture de l'application")
+
         if not self.iocontroller.close(force=force):
             return False
         # Rappelez-vous sur quoi l'utilisateur travaillait :
@@ -915,12 +991,12 @@ class Application(object, metaclass=patterns.Singleton):
         try:
             self.stopTwisted()
         except Exception as e:
-            print(
-                "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
-            )
-            # logging.error(
+            # print(
             #     "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
             # )
+            log.exception(
+                "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
+            )
 
         sys.exit()  # Quitter proprement l'application
         return True  # This code is unreachable
