@@ -60,7 +60,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
     Attributs :
         lock (threading.RLock) : Un verrou réentrant pour la sécurité des threads.
         cancelled (bool) : Indicateur indiquant si le notificateur a été annulé.
-        evt (threading.Event) : un événement utilisé pour la synchronisation.
+        evt (threading.Event) : Un événement utilisé pour la synchronisation.
     """
     # la méthode stop() dans la classe FilesystemPollerNotifier est conçue
     # pour arrêter le thread en définissant self.cancelled sur True,
@@ -86,8 +86,11 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
     def __init__(self):
         super().__init__()
 
+        # Un verrou réentrant pour la sécurité des threads :
         self.lock = threading.RLock()
+        # Indicateur indiquant si le notificateur a été annulé :
         self.cancelled = False
+        # Un événement utilisé pour la synchronisation :
         self.evt = threading.Event()
         self.join_called = False
         # self.setDaemon(True)  # This method is deprecated, setDaemon() is deprecated, set the daemon attribute instead
@@ -98,14 +101,14 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
         """
         Définissez le nom de fichier associé au notificateur.
 
-        Args:
+        Args :
             filename (str) : Le nom de fichier à définir.
         """
         self.lock.acquire()
         try:
-           super().setFilename(filename)
+            super().setFilename(filename)
         finally:
-           self.lock.release()
+            self.lock.release()
         # TODO: Essayer plutôt :
         # with self.lock:
         #    super().setFilename(filename)
@@ -157,8 +160,9 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
 
         Cette méthode doit être appelée une fois le fichier enregistré.
 
-        Note:
-            Si le nom de fichier n'est pas défini ou si le fichier n'existe pas , l'horodatage est défini sur Aucun.
+        Note :
+            Si le nom de fichier n'est pas défini ou si le fichier n'existe pas,
+            l'horodatage est défini sur Aucun.
         """
         with self.lock:
             super().saved()
