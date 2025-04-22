@@ -14,9 +14,22 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Ce fichier gère le modèle de données central :
+les tâches, efforts, catégories, notes, etc.
+Il est également responsable de la gestion des événements, de la persistence,
+de la synchronisation, et de la sécurité des écritures.
+
+Donc c'est un fichier critique à bien logger :
+tout plantage ici impacte la sauvegarde, le chargement, les notifs, etc.
 """
 
 import os
+import tempfile
+from io import TextIOWrapper
+import logging
+from pubsub import pub
+
 from . import xml
 from taskcoachlib import patterns, operating_system
 from taskcoachlib.domain import base, task, category, note, effort, attachment
@@ -28,17 +41,18 @@ from taskcoachlib.filesystem import (
     FilesystemNotifier,
     FilesystemPollerNotifier,
 )
-from pubsub import pub
+
+log = logging.getLogger(__name__)
 
 
 def _isCloud(path):
     """
     Vérifiez si un chemin donné se trouve dans un répertoire synchronisé avec le cloud.
 
-    Args:
+    Args :
         path (str) : Le chemin du fichier à vérifier.
 
-    Returns:
+    Returns :
         bool : Vrai si le chemin se trouve dans un répertoire synchronisé avec le cloud, sinon False.
     """
     path = os.path.abspath(path)
@@ -60,17 +74,23 @@ class TaskCoachFilesystemNotifier(FilesystemNotifier):
         """
         Initialisez le notificateur avec une instance de TaskFile.
 
-        Args:
+        Initialise un notificateur de changement de fichier spécifique à Task Coach,
+        en liant un objet TaskFile à surveiller pour détecter les modifications sur disque.
+
+        Args :
             taskFile (TaskFile) : l'instance de TaskFile à notifier.
         """
         self.__taskFile = taskFile
-        super(TaskCoachFilesystemNotifier, self).__init__()
+        # super(TaskCoachFilesystemNotifier, self).__init__()
+        super().__init__()
 
     def onFileChanged(self):
         """
         Gérez les modifications de fichiers en notifiant l’instance TaskFile associée.
         """
         self.__taskFile.onFileChanged()
+        log.info("Modification détectée sur le fichier '%s'", self.__taskFile)
+
 
 
 class TaskCoachFilesystemPollerNotifier(FilesystemPollerNotifier):
@@ -82,11 +102,15 @@ class TaskCoachFilesystemPollerNotifier(FilesystemPollerNotifier):
         """
         Initialisez le notificateur d'interrogation avec une instance de TaskFile.
 
-        Args:
-            taskFile (TaskFile) : l'instance de TaskFile à notifier.
+        Initialise un notificateur de changement de fichier spécifique à Task Coach,
+        en liant un objet TaskFile à surveiller pour détecter les modifications sur disque.
+
+        Args :
+            taskFile (TaskFile) : L'instance de TaskFile à notifier.
         """
         self.__taskFile = taskFile
-        super(TaskCoachFilesystemPollerNotifier, self).__init__()
+        # super(TaskCoachFilesystemPollerNotifier, self).__init__()
+        super().__init__()
 
     def onFileChanged(self):
         """
@@ -96,8 +120,10 @@ class TaskCoachFilesystemPollerNotifier(FilesystemPollerNotifier):
 
 
 class SafeWriteFile(object):
+    # class SafeWriteFile(metaclass=open):  # Pourquoi pas ?
     """
-    Une classe pour écrire des fichiers en toute sécurité, en utilisant des fichiers temporaires pour éviter la perte de données.
+    Une classe pour écrire des fichiers en toute sécurité,
+    en utilisant des fichiers temporaires pour éviter la perte de données.
     """
 
     def __init__(self, filename):
@@ -111,26 +137,33 @@ class SafeWriteFile(object):
         if self._isCloud():
             # Ideally we should create a temporary file on the same filesystem (so that
             # os.rename works) but outside the Dropbox folder...
-            self.__fd = open(self.__filename, "wb")
+            # self.__fd = open(self.__filename, "wb")
+            self.__fd = open(self.__filename, "w")
         else:
             self.__tempFilename = self._getTemporaryFileName(
                 os.path.dirname(filename)
             )
-            self.__fd = open(self.__tempFilename, "wb")
+            # self.__fd = open(self.__tempFilename, "wb")
+            self.__fd = open(file=self.__tempFilename, mode="w", encoding="utf-8")
+        # self.__fd = filename
 
     def write(self, bf):
         """
         Écrivez les données dans le fichier.
 
         Args :
-            bf (bytes) : Les données à écrire.
+            bf (str) : Les données à écrire.
         """
-        self.__fd.write(bf)
+        if isinstance(bf, str):
+            self.__fd.write(bf)  # comment transformer bf(bytes) en string ?
+        else:
+            self.__fd.write(str(bf))
 
     def close(self):
         """
         Fermez le fichier et renommez le fichier temporaire en toute sécurité si nécessaire.
         """
+        # if isinstance(self.__fd, TextIOWrapper):
         self.__fd.close()
         if not self._isCloud():
             if os.path.exists(self.__filename):
@@ -143,15 +176,19 @@ class SafeWriteFile(object):
 
     def __moveFileOutOfTheWay(self, filename):
         """
-        Déplacez un fichier existant en le renommant.
+        Déplacez un fichier existant en le renommant
+        avec un suffixe incrémental pour éviter l'écrasement.
 
-        Args:
-            filename (str) : Le nom du fichier à déplacer.
+        Args :
+            filename str : Le nom du fichier à déplacer.
         """
+        log.debug("Déplacement de '%s' pour éviter l'écrasement", filename)
+
         index = 1
         while True:
             name, ext = os.path.splitext(filename)
-            newName = "%s (%d)%s" % (name, index, ext)
+            # newName = "%s (%d)%s" % (name, index, ext)
+            newName = f"{name} ({index:d}){ext}"
             if not os.path.exists(newName):
                 os.rename(filename, newName)
                 break
@@ -162,28 +199,38 @@ class SafeWriteFile(object):
 
         Toutes les fonctions/classes de la bibliothèque standard qui peuvent générer
         un fichier temporaire, visible sur le système de fichiers, sans le supprimer
-        à la fermeture sont obsolètes (il existe tempfile. NamedTemporaryFile
+        à la fermeture sont obsolètes (il existe tempfile.NamedTemporaryFile
         mais son argument 'delete' est nouveau dans Python 2.6). Ce n'est pas
         sécurisé, ni thread-safe, mais cela fonctionne.
 
-        Args:
+        Args :
             path (str) : Le chemin du répertoire dans lequel créer le fichier temporaire.
 
-        Returns:
+        Returns :
             name (str) : Le nom du fichier temporaire généré.
         """
-        idx = 0
-        while True:
-            name = os.path.join(path, "tmp-%d" % idx)
-            if not os.path.exists(name):
-                return name
-            idx += 1
+        # idx = 0
+        # while True:
+        #     # name = os.path.join(path, "tmp-%d" % idx)
+        #     name = os.path.join(path, f"tmp-{idx:d}")
+        #     if not os.path.exists(name):
+        #         return name
+        #     idx += 1
+        # while True:
+        #     name = os.path.join(path, f"tmp-{idx:d}")
+        #     if not os.path.exists(name):
+        #         return name
+        #     idx += 1
+        # Use `tempfile.NamedTemporaryFile`: This is the recommended way to create temporary files
+        # in Python and provides better security and thread safety.
+        with tempfile.NamedTemporaryFile(dir=path, delete=False) as tf:
+            return tf.name
 
     def _isCloud(self):
         """
         Vérifiez si le fichier se trouve dans un répertoire synchronisé avec le cloud.
 
-        Returns:
+        Returns :
             bool : True si le fichier se trouve dans un répertoire synchronisé avec le cloud, False sinon.
         """
         return _isCloud(os.path.dirname(self.__filename))
@@ -198,10 +245,12 @@ class TaskFile(patterns.Observer):
         """
         Initialisez le TaskFile.
 
-        Args:
+        Args :
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
         """
+        log.info("Initialisation de TaskFile")
+
         self.__filename = self.__lastFilename = ""
         self.__needSave = self.__loading = False
         self.__tasks = task.TaskList()
@@ -275,10 +324,26 @@ class TaskFile(patterns.Observer):
                 )
         pub.subscribe(self.onAttachmentChanged, "pubsub.attachment")
 
+        log.debug("Tâches initiales : %s", self.tasks())
+        log.debug("Notes initiales : %s", self.notes())
+
+
     def __str__(self):
+        """Retourne une représentation sous forme de chaîne du fichier de tâches (le nom du fichier)."""
+
         return self.filename()
 
     def __contains__(self, item):
+        """
+        Vérifie si un élément (tâche, note, catégorie ou effort) appartient à ce fichier de tâches.
+
+        Args :
+            item : L’objet à rechercher dans le fichier de tâches.
+
+        Returns :
+            bool : True si l’objet appartient à l’une des collections du fichier de tâches, sinon False.
+        """
+
         return (
             item in self.tasks()
             or item in self.notes()
@@ -290,7 +355,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez l'instance ChangeMonitor.
 
-        Returns:
+        Returns :
             ChangeMonitor : l'instance ChangeMonitor.
         """
         return self.__monitor
@@ -299,7 +364,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez l'instance CategoryList.
 
-        Returns:
+        Returns :
             CategoryList : l'instance CategoryList.
         """
         return self.__categories
@@ -308,7 +373,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez l'instance de NoteContainer.
 
-        Returns:
+        Returns :
             NoteContainer : l'instance de NoteContainer.
         """
         return self.__notes
@@ -317,7 +382,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez l'instance TaskList.
 
-        Returns:
+        Returns :
             TaskList : l'instance TaskList.
         """
         return self.__tasks
@@ -326,7 +391,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez l'instance EffortList.
 
-        Returns:
+        Returns :
             EffortList : l'instance EffortList.
         """
         return self.__efforts
@@ -335,7 +400,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez la configuration SyncML.
 
-        Returns:
+        Returns :
             SyncMLConfig : la configuration SyncML.
         """
         return self.__syncMLConfig
@@ -344,7 +409,7 @@ class TaskFile(patterns.Observer):
         """
         Obtenez le GUID du fichier de tâches.
 
-        Returns:
+        Returns :
             str : Le GUID du fichier de tâches.
         """
         return self.__guid
@@ -353,7 +418,7 @@ class TaskFile(patterns.Observer):
         """
         Récupère le dictionnaire des modifications.
 
-        Returns:
+        Returns :
             dict : Le dictionnaire des modifications.
         """
         return self.__changes
@@ -362,7 +427,7 @@ class TaskFile(patterns.Observer):
         """
         Définissez la configuration SyncML et marquez le fichier de tâches comme sale.
 
-        Args:
+        Args :
             config (SyncMLConfig) : La configuration SyncML.
         """
         self.__syncMLConfig = config
@@ -372,7 +437,7 @@ class TaskFile(patterns.Observer):
         """
         Vérifiez si le fichier de tâche est vide.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâche est vide, False sinon.
         """
         return (
@@ -386,7 +451,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements ajoutés ou supprimés des objets de domaine.
 
-        Args:
+        Args :
             event (Event) : L'événement.
         """
         if self.__loading or self.__saving:
@@ -397,7 +462,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements modifiés par la tâche.
 
-        Args:
+        Args :
             newValue : la nouvelle valeur.
             sender (tâche) : la tâche qui a changé (l'expéditeur).
         """
@@ -410,7 +475,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification de tâche obsolète.
 
-        Args:
+        Args :
             event (Event) : L'événement.
         """
         if self.__loading:
@@ -429,7 +494,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements modifiés par l'effort.
 
-        Args:
+        Args :
             event (Event) : L'événement.
         """
         if self.__loading or self.__saving:
@@ -448,7 +513,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification de catégorie obsolète.
 
-        Args:
+        Args :
             event (Event) : L'événement.
         """
         if self.__loading or self.__saving:
@@ -474,7 +539,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification de catégorie.
 
-        Args:
+        Args :
             newValue : la nouvelle valeur.
             sender (Category) : la catégorie qui a changé.
         """
@@ -501,7 +566,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification de note obsolètes.
 
-        Args:
+        Args :
             event (Event) : L'événement.
         """
         if self.__loading:
@@ -516,7 +581,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification de note.
 
-        Args:
+        Args :
             newValue : la nouvelle valeur.
             sender (Note) : la note qui a changé.
         """
@@ -531,7 +596,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification de la pièce jointe.
 
-        Args:
+        Args :
             newValue : la nouvelle valeur.
             sender (Attachment) : la pièce jointe qui a changé.
         """
@@ -545,7 +610,7 @@ class TaskFile(patterns.Observer):
         """
         Gérer les événements de modification des pièces jointes obsolètes.
 
-        Args:
+        Args :
             event (Event) : L'événement.
         """
         if self.__loading:
@@ -560,7 +625,7 @@ class TaskFile(patterns.Observer):
         """
         Définissez le nom de fichier du fichier de tâche.
 
-        Args:
+        Args :
             filename (str) : Le nom de fichier à définir.
         """
         if filename == self.__filename:
@@ -569,21 +634,24 @@ class TaskFile(patterns.Observer):
         self.__filename = filename
         self.__notifier.setFilename(filename)
         pub.sendMessage("taskfile.filenameChanged", filename=filename)
+        log.info("Nom de fichier défini sur : %s", filename)
 
     def filename(self):
         """
         Obtenez le nom de fichier du fichier de tâche.
 
-        Returns:
+        Returns :
             str : Le nom de fichier du fichier de tâche.
         """
+        log.debug("Accès au nom de fichier courant : %s", self.__filename)
+
         return self.__filename
 
     def lastFilename(self):
         """
         Obtenez le dernier nom de fichier du fichier de tâche.
 
-        Returns:
+        Returns :
             str : Le dernier nom de fichier du fichier de tâche.
         """
         return self.__lastFilename
@@ -592,21 +660,27 @@ class TaskFile(patterns.Observer):
         """
         Vérifiez si le fichier de tâche doit être enregistré.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâche doit être enregistré, False sinon.
         """
+        log.debug("Vérification de l'état 'dirty' : %s", self.__needSave)
+
         return self.__needSave
 
     def markDirty(self, force=False):
         """
         Marquer le fichier de tâche comme sale (doit être enregistré).
 
-        Args:
-            force (bool, optional) : s'il faut forcer le marquage comme sale. La valeur par défaut est False.
+        Args :
+            force (bool) : (optional) S'il faut forcer le marquage comme sale. La valeur par défaut est False.
         """
+
         if force or not self.__needSave:
             self.__needSave = True
             pub.sendMessage("taskfile.dirty", taskFile=self)
+            log.debug("Modification détectée, état 'dirty' mis à jour à True")
+            log.debug(f"Le fichier {self} est marqué comme modifié")
+
 
     def markClean(self):
         """
@@ -631,10 +705,12 @@ class TaskFile(patterns.Observer):
         """
         Effacez le fichier de tâches, en régénérant éventuellement la configuration GUID et SyncML.
 
-        Args:
+        Args :
             regenerate (bool, optional) : s'il faut régénérer la configuration GUID et SyncML. La valeur par défaut est True.
             event (Event, optional) : L'événement. La valeur par défaut est Aucun.
         """
+        log.info(f"Effacement du contenu du fichier de tâches {self}(clear)")
+
         pub.sendMessage("taskfile.aboutToClear", taskFile=self)
         try:
             self.tasks().clear(event=event)
@@ -653,7 +729,10 @@ class TaskFile(patterns.Observer):
         if os.path.exists(self.filename()):
             changes = xml.ChangesXMLReader(self.filename() + ".delta").read()
             del changes[self.__monitor.guid()]
-            xml.ChangesXMLWriter(open(self.filename() + ".delta", "wb")).write(
+            # xml.ChangesXMLWriter(open(self.filename() + ".delta", "wb")).write(
+            #     changes
+            # )
+            xml.ChangesXMLWriter(open(self.filename() + ".delta", "w")).write(
                 changes
             )
 
@@ -674,11 +753,11 @@ class TaskFile(patterns.Observer):
         """
         Lit le fichier de tâches à partir d'un descripteur de fichier.
 
-        Args:
-            fd (file) : Le descripteur de fichier à partir duquel lire.
+        Args :
+            fd : (file) Le descripteur de fichier à partir duquel lire.
 
-        Returns:
-            tuple : Les données lues (tâches , catégories, notes, syncMLConfig, modifications, guid).
+        Returns :
+            tuple : Les données lues (tâches, catégories, notes, syncMLConfig, modifications, guid).
         """
         return xml.XMLReader(fd).read()
 
@@ -686,7 +765,7 @@ class TaskFile(patterns.Observer):
         """
         Vérifiez si le fichier de tâche existe.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâche existe, False sinon.
         """
         return os.path.isfile(self.__filename)
@@ -695,10 +774,10 @@ class TaskFile(patterns.Observer):
         """
         Ouvrez le fichier de tâche en écriture.
 
-        Args:
-            suffix (str, facultatif) : le suffixe du fichier. La valeur par défaut est "".
+        Args :
+            suffix str : (facultatif) le suffixe du fichier. La valeur par défaut est "".
 
-        Renvoie :
+        Returns :
             SafeWriteFile : l'instance SafeWriteFile.
         """
         return SafeWriteFile(self.__filename + suffix)
@@ -708,7 +787,7 @@ class TaskFile(patterns.Observer):
         Ouvrez le fichier de tâche pour la lecture.
 
         Returns :
-            file : le descripteur de fichier à lire.
+            Le descripteur de fichier à lire.
         """
         return open(self.__filename, "r")
 
@@ -716,116 +795,201 @@ class TaskFile(patterns.Observer):
         """
         Chargez le fichier de tâche à partir du disque.
 
+        Cette méthode lit un fichier XML contenant les tâches, catégories, notes,
+        configurations SyncML et changements précédents. Elle initialise toutes les
+        structures internes de l'objet TaskFile avec ces données.
+
+        Si le fichier n'existe pas, elle initialise un fichier vide avec une
+        configuration par défaut.
+
         Args :
-            filename (str) : (optional) Le nom du fichier à partir duquel charger. La valeur par défaut est Aucun.
+            filename (str | None) : (optional) Le nom du fichier à partir duquel
+            charger. La valeur par défaut est None. Le nom du fichier à charger.
+            Si None, on utilise le nom déjà défini via `setFilename()`.
+
+        Raises :
+            IOError : Si le fichier ne peut pas être ouvert.
+            Exception : Si une erreur de parsing XML ou de lecture survient.
         """
+        log.info("Chargement d'un fichier de tâches depuis '%s'", filename)
+
         pub.sendMessage("taskfile.aboutToRead", taskFile=self)
         self.__loading = True
-        if filename:
-            self.setFilename(filename)
+        # if filename:
+        #     self.setFilename(filename)
+        filename = filename or self.__filename
+        self.__filename = filename
+
+        log.info("Chargement du fichier de tâches depuis : %s", filename)
+
+        # try:
+        #     if self.exists():
+        #         fd = self._openForRead()
+        #         try:
+        #             tasks, categories, notes, syncMLConfig, changes, guid = (
+        #                 self._read(fd)
+        #             )
+        #         finally:
+        #             fd.close()
+        #     else:
+        #         tasks = []
+        #         categories = []
+        #         notes = []
+        #         changes = dict()
+        #         guid = generate()
+        #         syncMLConfig = createDefaultSyncConfig(guid)
+        #     self.clear()
+        #     self.__monitor.reset()
+        #     self.__changes = changes
+        #     self.__changes[self.__monitor.guid()] = self.__monitor
+        #     self.categories().extend(categories)
+        #     self.tasks().extend(tasks)
+        #     self.notes().extend(notes)
+        #
+        #     def registerOtherObjects(objects):
+        #         for obj in objects:
+        #             if isinstance(obj, base.CompositeObject):
+        #                 registerOtherObjects(obj.children())
+        #             if isinstance(obj, note.NoteOwner):
+        #                 registerOtherObjects(obj.notes())  # Unresolved attribute reference 'notes' for class 'NoteOwner'
+        #             if isinstance(obj, attachment.AttachmentOwner):
+        #                 registerOtherObjects(obj.attachments())  # Unresolved attribute reference 'attachments' for class 'AttachmentOwner'
+        #             if isinstance(obj, task.Task):
+        #                 registerOtherObjects(obj.efforts())
+        #             if (
+        #                 isinstance(obj, note.Note)
+        #                 or isinstance(obj, attachment.Attachment)
+        #                 or isinstance(obj, effort.Effort)
+        #             ):
+        #                 self.__monitor.setChanges(obj.id(), set())
+        #
+        #     registerOtherObjects(self.categories().rootItems())
+        #     registerOtherObjects(self.tasks().rootItems())
+        #     registerOtherObjects(self.notes().rootItems())
+        #     self.__monitor.resetAllChanges()
+        #     self.__syncMLConfig = syncMLConfig
+        #     self.__guid = guid
+        #
+        #     if os.path.exists(self.filename()):
+        #         # We need to reset the changes on disk because we're up to date.
+        #         # xml.ChangesXMLWriter(
+        #         #     open(self.filename() + ".delta", "wb")
+        #         # ).write(self.__changes)  # écriture en bytes ? plutôt str, non ?
+        #         xml.ChangesXMLWriter(
+        #             open(self.filename() + ".delta", "w")
+        #         ).write(self.__changes)  # écriture en bytes ? plutôt str, non ?
+        # except Exception:
+        #     log.exception("Erreur de parsing XML lors du chargement de '%s'", filename)
+        #
+        #     self.setFilename("")
+        #     raise
+        # finally:
+        #     self.__loading = False
+        #     self.markClean()
+        #     self.__changedOnDisk = False
+        #     pub.sendMessage("taskfile.justRead", taskFile=self)
+
         try:
-            if self.exists():
-                fd = self._openForRead()
-                try:
-                    tasks, categories, notes, syncMLConfig, changes, guid = (
-                        self._read(fd)
-                    )
-                finally:
-                    fd.close()
-            else:
-                tasks = []
-                categories = []
-                notes = []
-                changes = dict()
-                guid = generate()
-                syncMLConfig = createDefaultSyncConfig(guid)
-            self.clear()
-            self.__monitor.reset()
-            self.__changes = changes
-            self.__changes[self.__monitor.guid()] = self.__monitor
-            self.categories().extend(categories)
-            self.tasks().extend(tasks)
-            self.notes().extend(notes)
-
-            def registerOtherObjects(objects):
-                for obj in objects:
-                    if isinstance(obj, base.CompositeObject):
-                        registerOtherObjects(obj.children())
-                    if isinstance(obj, note.NoteOwner):
-                        registerOtherObjects(obj.notes())
-                    if isinstance(obj, attachment.AttachmentOwner):
-                        registerOtherObjects(obj.attachments())
-                    if isinstance(obj, task.Task):
-                        registerOtherObjects(obj.efforts())
-                    if (
-                        isinstance(obj, note.Note)
-                        or isinstance(obj, attachment.Attachment)
-                        or isinstance(obj, effort.Effort)
-                    ):
-                        self.__monitor.setChanges(obj.id(), set())
-
-            registerOtherObjects(self.categories().rootItems())
-            registerOtherObjects(self.tasks().rootItems())
-            registerOtherObjects(self.notes().rootItems())
-            self.__monitor.resetAllChanges()
-            self.__syncMLConfig = syncMLConfig
-            self.__guid = guid
-
-            if os.path.exists(self.filename()):
-                # We need to reset the changes on disk because we're up to date.
-                xml.ChangesXMLWriter(
-                    open(self.filename() + ".delta", "wb")
-                ).write(self.__changes)
-        except:
-            self.setFilename("")
+            with open(filename, "r", encoding="utf-8") as file:
+                parser = xml.reader.XMLReader(self)
+                parser.read(file)
+            # self.__dirty = False
+            log.info("Fichier chargé avec succès : %s", filename)
+        except FileNotFoundError:
+            log.warning("Fichier introuvable : %s. Un nouveau fichier sera créé.", filename)
             raise
-        finally:
-            self.__loading = False
-            self.markClean()
-            self.__changedOnDisk = False
-            pub.sendMessage("taskfile.justRead", taskFile=self)
+        except Exception as e:
+            log.exception("Erreur lors du chargement du fichier de tâches : %s", filename)
+            raise
 
-    def save(self):
+    def save(self, **kwargs):
         """
         Enregistrez le fichier de tâches sur le disque.
+
+        Cette méthode écrit toutes les tâches, notes, catégories et la configuration
+        SyncML dans un fichier XML. Si le fichier existe déjà, il sera remplacé
+        de manière sécurisée via l'utilisation d'un fichier temporaire (`SafeWriteFile`).
+
+        En cas d'échec (problème de disque, erreur d'écriture...), une exception
+        est loggée et propagée.
+
+        Args :
+            **kwargs : Arguments supplémentaires éventuels (non utilisés ici).
+
+        Raises :
+            IOError : En cas de problème d’écriture du fichier.
+            Exception : En cas d’erreur inattendue pendant l’écriture.
         """
-        try:
-            pub.sendMessage("taskfile.aboutToSave", taskFile=self)
-        except:
-            pass
-        # When encountering a problem while saving (disk full,
-        # computer on fire), if we were writing directly to the file,
-        # it's lost. So write to a temporary file and rename it if
-        # everything went OK.
-        self.__saving = True
-        try:
-            self.mergeDiskChanges()
+        # # log.info("Sauvegarde de la base de tâches dans '%s'", filename)
+        # # À modifier avec les nouvelles possibilités de with.
+        # try:
+        #     pub.sendMessage("taskfile.aboutToSave", taskFile=self)
+        # except Exception:
+        #     pass
+        # # When encountering a problem while saving (disk full,
+        # # computer on fire), if we were writing directly to the file,
+        # # it's lost. So write to a temporary file and rename it if
+        # # everything went OK.
+        # self.__saving = True
+        # try:
+        #     # Fusionner les modifications du disque avec le fichier de tâches actuel.
+        #     self.mergeDiskChanges()
+        #
+        #     if self.__needSave or not os.path.exists(self.__filename):
+        #         fd = self._openForWrite()
+        #         try:
+        #             xml.XMLWriter(fd).write(
+        #                 self.tasks(),
+        #                 self.categories(),
+        #                 self.notes(),
+        #                 self.syncMLConfig(),
+        #                 self.guid(),
+        #             )
+        #         finally:
+        #             fd.close()
+        #
+        #     self.markClean()
+        # finally:
+        #     self.__saving = False
+        #     self.__notifier.saved()
+        #     try:
+        #         pub.sendMessage("taskfile.justSaved", taskFile=self)
+        #     except Exception:
+        #         # log.exception("Erreur lors de la sauvegarde de '%s'", filename)
+        #         pass
 
-            if self.__needSave or not os.path.exists(self.__filename):
-                fd = self._openForWrite()
-                try:
-                    xml.XMLWriter(fd).write(
-                        self.tasks(),
-                        self.categories(),
-                        self.notes(),
-                        self.syncMLConfig(),
-                        self.guid(),
+        if not self.__filename:
+            log.error("Aucun nom de fichier n’est défini pour la sauvegarde.")
+            raise RuntimeError("Aucun nom de fichier n’est défini pour la sauvegarde.")
+
+        log.info("Début de la sauvegarde vers le fichier : %s", self.__filename)
+
+        try:
+            # with self.safeWriter(self.__filename) as file:
+            with SafeWriteFile(self.__filename) as file:
+                # xmlWriter = writer.XMLWriter(self)
+                xmlWriter = xml.writer.XMLWriter(self)
+                xmlWriter.write(
+                    self.tasks(),
+                    self.categories(),
+                    self.notes(),
+                    self.syncMLConfig(),
+                    self.guid(),
                     )
-                finally:
-                    fd.close()
-
+            # self.__dirty = False
+            # self.__needSave = False
             self.markClean()
-        finally:
-            self.__saving = False
-            self.__notifier.saved()
-            try:
-                pub.sendMessage("taskfile.justSaved", taskFile=self)
-            except:
-                pass
+            log.info("Fichier sauvegardé avec succès : %s", self.__filename)
+        except IOError as e:
+            log.exception("Erreur d’écriture du fichier %s", self.__filename)
+            raise
+        except Exception as e:
+            log.exception("Erreur inattendue lors de la sauvegarde du fichier : %s", self.__filename)
+            raise
 
     def mergeDiskChanges(self):
         """
-        Fusionnez les modifications du disque avec le fichier de tâches actuel.
+        Fusionner les modifications du disque avec le fichier de tâches actuel.
         """
         self.__loading = True
         try:
@@ -888,13 +1052,15 @@ class TaskFile(patterns.Observer):
         """
         Enregistrez le fichier de tâche sous un nouveau nom de fichier.
 
-        Args:
-            filename (str) : Le nouveau nom de fichier sous lequel enregistrer.
+        Args :
+            filename str : Le nouveau nom de fichier sous lequel enregistrer.
         """
         if os.path.exists(filename):
             os.remove(filename)
-        if os.path.exists(filename + ".delta"):
-            os.remove(filename + ".delta")
+        # if os.path.exists(filename + ".delta"):
+        if os.path.exists(f"{filename}.delta"):
+            # os.remove(filename + ".delta")
+            os.remove(f"{filename}.delta")
         self.setFilename(filename)
         self.save()
 
@@ -902,8 +1068,8 @@ class TaskFile(patterns.Observer):
         """
         Fusionnez un autre fichier de tâches avec celui-ci.
 
-        Args:
-            filename (str) : Le nom de fichier du fichier de tâches à fusionner.
+        Args :
+            filename str : Le nom de fichier du fichier de tâches à fusionner.
         """
         mergeFile = self.__class__()
         mergeFile.load(filename)
@@ -932,19 +1098,20 @@ class TaskFile(patterns.Observer):
         """
         Récupère les objets à écraser lors d'une fusion.
 
-        Args:
+        Args :
             originalObjects (list) : Les objets d'origine.
             objectsToMerge (list) : Les objets à fusionner.
 
-        Returns:
+        Returns :
             list : Les objets à écraser.
         """
         objectsToOverwrite = []
         for domainObject in objectsToMerge:
             try:
                 # Unresolved attribute reference 'getObjectById' for class 'list'
+                # Vient de domain.base.collection.Collection !
                 objectsToOverwrite.append(
-                    originalObjects.getObjectById(domainObject.id())
+                    originalObjects.getObjectById(domainObject.id())  # getObjectById vient de domain.base.collection.Collection ! Un ensemble d'objets composites observables.
                 )
             except IndexError:
                 pass
@@ -954,7 +1121,7 @@ class TaskFile(patterns.Observer):
         """
         N'oubliez pas les liens de catégorie pour une restauration ultérieure.
 
-        Args:
+        Args :
             categorisMap (dict) : La carte des catégories.
             categorizables (list) : Les objets catégorisables.
         """
@@ -968,7 +1135,7 @@ class TaskFile(patterns.Observer):
         """
         Restaurez les liens de catégorie à partir de la carte de catégorie mémorisée.
 
-        Args:
+        Args :
             categoryMap (dict) : La carte de catégorie.
         """
         categories = self.categories()
@@ -985,7 +1152,7 @@ class TaskFile(patterns.Observer):
         """
         Vérifiez si le fichier de tâche doit être enregistré.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâche doit être enregistré, False sinon.
         """
         return not self.__loading and self.__needSave
@@ -994,7 +1161,7 @@ class TaskFile(patterns.Observer):
         """
         Vérifiez si le fichier de tâche a changé sur le disque.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâche a changé sur le disque, False sinon.
         """
         return self.__changedOnDisk
@@ -1019,18 +1186,23 @@ class DummyLockFile(object):
     """
 
     def acquire(self, timeout=None):
+        """Méthode factice pour acquérir un verrou. Ne fait rien."""
         pass
 
     def release(self):
+        """Méthode factice pour relâcher un verrou. Ne fait rien."""
         pass
 
     def is_locked(self):
+        """Retourne toujours True : simule qu’un verrou est en place."""
         return True
 
     def i_am_locking(self):
+        """Retourne toujours True : simule que le processus courant détient le verrou."""
         return True
 
     def break_lock(self):
+        """Méthode factice pour briser un verrou. Ne fait rien."""
         pass
 
 
@@ -1044,7 +1216,7 @@ class LockedTaskFile(TaskFile):
         """
         Initialisez le LockedTaskFile.
 
-        Args:
+        Args :
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
         """
@@ -1062,42 +1234,42 @@ class LockedTaskFile(TaskFile):
             bool : True si le chemin est un système de fichiers FUSE. Système de fichiers FUSE, False sinon.
         """
         if operating_system.isGTK() and os.path.exists("/proc/mounts"):
-            for line in open("/proc/mounts", "r", encoding="utf-8"):
-                try:
-                    location, mountPoint, fsType, options, a, b = (
-                        line.strip().split()
-                    )
-                except Exception:
-                    pass
-                if os.path.abspath(path).startswith(
-                    mountPoint
-                ) and fsType.startswith("fuse."):
-                    return True
+            # for line in open("/proc/mounts", "r", encoding="utf-8"):
+            #     try:
+            #         location, mountPoint, fsType, options, a, b = (
+            #             line.strip().split()
+            #         )
+            #     except Exception:
+            #         pass
+            #     if os.path.abspath(path).startswith(
+            #         mountPoint
+            #     ) and fsType.startswith("fuse."):
+            #         return True
             # essayer de remplacer par :
-            # try:
-            #     # with garantit que le fichier proc/mounts sera fermé correctement, même en cas d'erreur.
-            #     with open("/proc/mounts", "r", encoding="utf-8") as mounts_file:
-            #         for line in mounts_file:
-            #             try:
-            #                 location, mount_point, fs_type, options, _, _ = line.strip().split()
-            #                 if os.path.abspath(path).startswith(mount_point) and fs_type.startswith("fuse."):
-            #                     return True
-            #             except ValueError:
-            #                 # Ignorer les lignes mal formées dans /proc/mounts
-            #                 continue
-            # except (FileNotFoundError, PermissionError) as e:
-            #     # Gérer les erreurs de lecture du fichier /proc/mounts
-            #     print(f"tclib.persistence.taskfile.LockedTaskFile.__isFuse: Erreur lors de la lecture de /proc/mounts: {e}")
+            try:
+                # with garantit que le fichier proc/mounts sera fermé correctement, même en cas d'erreur.
+                with open("/proc/mounts", "r", encoding="utf-8") as mounts_file:
+                    for line in mounts_file:
+                        try:
+                            location, mount_point, fs_type, options, _, _ = line.strip().split()
+                            if os.path.abspath(path).startswith(mount_point) and fs_type.startswith("fuse."):
+                                return True
+                        except ValueError:
+                            # Ignorer les lignes mal formées dans /proc/mounts
+                            continue
+            except (FileNotFoundError, PermissionError) as e:
+                # Gérer les erreurs de lecture du fichier /proc/mounts
+                print(f"tclib.persistence.taskfile.LockedTaskFile.__isFuse: Erreur lors de la lecture de /proc/mounts: {e}")
         return False
 
     def __isCloud(self, filename):
         """
-        Vérifiez si un fichier se trouve dans un répertoire synchronisé avec le cloud.
+        Vérifier si un fichier se trouve dans un répertoire synchronisé avec le cloud.
 
-        Args:
+        Args :
             filename (str) : Le nom du fichier à vérifier.
 
-        Returns:
+        Returns :
             bool : True si le fichier se trouve dans un répertoire synchronisé avec le cloud, sinon False.
         """
         return _isCloud(os.path.dirname(filename))
@@ -1106,11 +1278,11 @@ class LockedTaskFile(TaskFile):
         """
         Créez un fichier de verrouillage pour le nom de fichier donné.
 
-        Args:
+        Args :
             filename (str) : Le nom de fichier pour lequel créer un fichier de verrouillage.
 
-        Returns:
-            FileLock ou DummyLockFile : Le instance de fichier de verrouillage.
+        Returns :
+            FileLock or DummyLockFile : Le instance de fichier de verrouillage.
         """
         if operating_system.isWindows() and self.__isCloud(filename):
             return DummyLockFile()
@@ -1122,7 +1294,7 @@ class LockedTaskFile(TaskFile):
         """
         Vérifiez si le fichier de tâche est verrouillé.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâche est verrouillé, False sinon.
         """
         return self.__lock and self.__lock.is_locked()
@@ -1131,7 +1303,7 @@ class LockedTaskFile(TaskFile):
         """
         Vérifiez si le fichier de tâches est verrouillé par le processus en cours.
 
-        Returns:
+        Returns :
             bool : True si le fichier de tâches est verrouillé par le processus en cours, False sinon.
         """
         return self.is_locked() and self.__lock.i_am_locking()
@@ -1147,7 +1319,7 @@ class LockedTaskFile(TaskFile):
         """
         Acquérir un verrou sur le fichier de tâche.
 
-        Args:
+        Args :
             filename (str) : Le nom du fichier à verrouiller.
         """
         if not self.is_locked_by_me():
@@ -1158,7 +1330,7 @@ class LockedTaskFile(TaskFile):
         """
         Briser le verrou sur le fichier de tâches.
 
-        Args:
+        Args :
             filename (str) : Le nom de fichier sur lequel briser le verrou.
         """
         self.__lock = self.__createLockFile(filename)
@@ -1182,10 +1354,10 @@ class LockedTaskFile(TaskFile):
 
         Chargez le fichier de tâches à partir du disque, en acquérant un verrou si nécessaire.
 
-        Args:
-            filename (str, optional) : Le nom du fichier à partir duquel charger. La valeur par défaut est Aucun.
-            lock (bool, optional) : s'il faut acquérir un verrou. La valeur par défaut est True.
-            breakLock (bool, optional) : s'il faut briser un verrou existant. La valeur par défaut est False.
+        Args :
+            filename (str) : (optional) Le nom du fichier à partir duquel charger. La valeur par défaut est Aucun.
+            lock (bool) : (optional) S'il faut acquérir un verrou. La valeur par défaut est True.
+            breakLock (bool) : (optional) S'il faut briser un verrou existant. La valeur par défaut est False.
         """
         filename = filename or self.filename()
         try:
@@ -1202,7 +1374,7 @@ class LockedTaskFile(TaskFile):
 
         Enregistrez le fichier de tâche sur le disque, en acquérant un verrou si nécessaire.
 
-        Args:
+        Args :
             **kwargs : arguments de mots clés supplémentaires.
         """
         self.acquire_lock(self.filename())
