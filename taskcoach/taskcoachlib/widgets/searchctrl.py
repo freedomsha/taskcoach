@@ -17,11 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import range
+import logging
 import wx
 import re
 # import sre_constants
 from taskcoachlib.widgets import tooltip
 from taskcoachlib.i18n import _
+
+log = logging.getLogger(__name__)
 
 
 class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
@@ -158,10 +161,16 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
                                    [_("This is an invalid regular expression."),
                                     _("Defaulting to substring search.")])])
             # x, y = self.GetParent().ClientToScreenXY(*self.GetPosition())
-            x, y = self.GetParent().ClientToScreen(*self.GetPosition())
-            # height = self.GetClientSizeTuple()[1]
-            height = self.GetClientSize()[1]
-            self.DoShowTip(x + 3, y + height + 4, self.__tooltip)
+            # x, y = self.GetParent().ClientToScreen(*self.GetPosition())
+            if self.GetParent().IsShown():
+                x, y = self.GetParent().ClientToScreen(*self.GetPosition())
+
+                # height = self.GetClientSizeTuple()[1]
+                height = self.GetClientSize()[1]
+                self.DoShowTip(x + 3, y + height + 4, self.__tooltip)
+            else:
+                log.debug("Le widget %s n'est pas encore affiché, ClientToScreen ignoré.", self.GetParent())
+
         else:
             self.HideTip()
         searchString = self.GetValue()
