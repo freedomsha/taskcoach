@@ -16,11 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import wx
 # from taskcoachlib.thirdparty import aui
 # import aui2 as aui
 from wx.lib.agw import aui
 from taskcoachlib import operating_system
+
+log = logging.getLogger(__name__)
 
 
 class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
@@ -54,27 +57,47 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
                 dockedPanes[0].Center()
 
     def addPane(self, window, caption, name, floating=False):
-        # x, y = window.GetPositionTuple()
-        # wxPyDeprecationWarning: Call to deprecated item. Use GetPosition instead
+        # # x, y = window.GetPositionTuple()
+        # # wxPyDeprecationWarning: Call to deprecated item. Use GetPosition instead
+        window.Show()
+        self.Show()
         x, y = window.GetPosition()
-        # x, y = window.ClientToScreenXY(x, y)
-        # AttributeError: 'TaskViewer' object has no attribute 'ClientToScreenXY'. Did you mean: 'ClientToScreen'?
-        # Debug: ClientToScreen cannot work when toplevel window is not shown
-        if window.Shown:
-            x, y = window.ClientToScreen(x, y)  # TODO : j'ai ClientToScreen cannot work when toplevel window is not shown même si window.shown est True
-            # pour window CategoryViewer (gui.viewer.category.CategoryViewer)
+        # # # x, y = window.ClientToScreenXY(x, y)
+        # # # AttributeError: 'TaskViewer' object has no attribute 'ClientToScreenXY'. Did you mean: 'ClientToScreen'?
+        # # # Debug: ClientToScreen cannot work when toplevel window is not shown
+        # if window.Shown:
+        # x, y = window.ClientToScreen(x, y)  # TODO : j'ai ClientToScreen cannot work when toplevel window is not shown même si window.shown est True
+        # #     # pour window CategoryViewer (gui.viewer.category.CategoryViewer)
+        if window.IsShown():
+            x, y = window.ClientToScreen(x, y)
         else:
-            print("frame.py: Debug: ClientToScreen cannot work when toplevel window is not shown")
+            log.debug("La fenêtre %s n'est pas encore affiché, ClientToScreen ignoré.", window)
+        #     print("frame.py: Debug: ClientToScreen cannot work when toplevel window is not shown")
+        # RESOLUTION DE "ClientToScreen cannot work when toplevel window is not shown" :
         paneInfo = aui.AuiPaneInfo()
         paneInfo = paneInfo.CloseButton(True).Floatable(True).\
             Name(name).Caption(caption).Right().\
             FloatingSize((300, 200)).BestSize((200, 200)).\
             FloatingPosition((x + 30, y + 30)).\
             CaptionVisible().MaximizeButton().DestroyOnClose()
+        # paneInfo = paneInfo.CloseButton(True).Floatable(True). \
+        #     Name(name).Caption(caption).Right(). \
+        #     FloatingSize((300, 200)).BestSize((200, 200)). \
+        #     CaptionVisible().MaximizeButton().DestroyOnClose()
+
         if floating:
+            # Positionner la fenêtre flottante de manière relative à l'écran ou à la fenêtre principale après l'ajout.
             paneInfo.Float()
+            # Vous pourriez définir une position initiale approximative ici,
+            # puis potentiellement l'ajuster après l'affichage.
+            # Par exemple, centrer approximativement :
+            screen_rect = wx.GetClientDisplayRect()
+            float_x = (screen_rect.width - 300) // 2 + 30
+            float_y = (screen_rect.height - 200) // 2 + 30
+            paneInfo = paneInfo.FloatingPosition((float_x, float_y))
         if not self.dockedPanes():
             paneInfo = paneInfo.Center()
+
         self.manager.AddPane(window, paneInfo)
         self.manager.Update()
 
