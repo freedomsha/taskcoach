@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # standard_library.install_aliases()
 # from past.utils import old_div
+import logging
 import math
 import wx
 import struct
@@ -67,6 +68,8 @@ from taskcoachlib.gui.viewer import inplace_editor
 from taskcoachlib.gui.viewer import mixin
 from taskcoachlib.gui.viewer import refresher
 
+log = logging.getLogger(__name__)
+
 
 class DueDateTimeCtrl(inplace_editor.DateTimeCtrl):
     """
@@ -76,9 +79,9 @@ class DueDateTimeCtrl(inplace_editor.DateTimeCtrl):
     en utilisant une sélection relative (par exemple, en fonction d'une autre date).
 
     Méthodes :
-        __init__(self, parent, wxId, item, column, owner, value, **kwargs) :
+        __init__ (self, parent, wxId, item, column, owner, value, **kwargs) :
             Initialise le contrôle avec les paramètres fournis, notamment l'élément à éditer.
-        OnChoicesChange(self, event) :
+        OnChoicesChange (self, event) :
             Gère les événements de changement de sélection dans le contrôle de choix.
     """
     def __init__(self, parent, wxId, item, column, owner, value, **kwargs):
@@ -145,22 +148,34 @@ class BaseTaskViewer(
     des tâches spécifiques.
 
     Méthodes :
-        __init__(self, *args, **kwargs) :
+        __init__ (self, *args, **kwargs) :
             Initialise le visualiseur et enregistre les observateurs nécessaires pour suivre les changements d'apparence.
-        detach(self) :
+        detach (self) :
             Détache le visualiseur et les observateurs associés.
-        _renderTimeSpent(self, *args, **kwargs) :
+        _renderTimeSpent (self, *args, **kwargs) :
             Rend le temps passé sous forme décimale ou standard.
-        onAppearanceSettingChange(self, value) :
+        onAppearanceSettingChange (self, value) :
             Met à jour l'apparence des tâches en fonction des paramètres d'affichage.
-        domainObjectsToView(self) :
+        domainObjectsToView (self) :
             Retourne les objets de domaine (tâches) à visualiser.
-        createFilter(self, taskList) :
+        createFilter (self, taskList) :
             Crée un filtre pour les tâches à visualiser.
-        nrOfVisibleTasks(self) :
+        nrOfVisibleTasks (self) :
             Retourne le nombre de tâches visibles.
     """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise le visualiseur.
+
+        Crée une instance TaskViewerStatusMessages pour gérer les messages de la barre d'état.
+        Appelle Self.__RegisterForAppearanceChanges() pour configurer les auditeurs pour les modifications des paramètres liés à l'apparence.
+        Appelle wx.CallAfter(self.__DisplayBallon) pour afficher une bulle d'aide (ce n'est probablement pas lié à l'accident).
+        """
+        # Args :
+        #     *args :
+        #     **kwargs :
+
+        log.debug(f"Création du Visualiseur de base pour les tâches.")
         super().__init__(*args, **kwargs)
         self.statusMessages = TaskViewerStatusMessages(self)
         self.__registerForAppearanceChanges()
@@ -185,6 +200,24 @@ class BaseTaskViewer(
             )
 
     def __registerForAppearanceChanges(self):
+        """
+        C’est important pour les mises à jour de l’interface utilisateur !
+        Il abonne le spectateur aux modifications de la police,
+        de la couleur de premier plan, de la couleur d’arrière-plan et
+        des paramètres d’icône pour divers états de tâche (actif, inactif, terminé, etc.).
+        Il enregistre également des observateurs pour les modifications d’attributs
+         de tâche (par exemple, les conditions préalables).
+
+        Returns :
+
+        """
+        # Zones de préoccupation potentielles dans BaseTaskViewer :
+        #
+        # La méthode __registerForAppearanceChanges peut valoir la peine
+        # d’être examinée si le plantage semble lié à la façon dont
+        # l’apparence de la tâche est mise à jour.
+        # Cependant, il utilise pub.subscribe et self.registerObserver,
+        # qui sont généralement sûrs.
         for appearance in ("font", "fgcolor", "bgcolor", "icon"):
             appearanceSettings = [
                 "settings.%s.%s" % (appearance, setting)
@@ -230,39 +263,76 @@ class BaseTaskViewer(
         return True
 
     def createFilter(self, taskList):
+        """
+        Crée un filtre pour exclure les tâches supprimées.
+
+        Il s’agit d’une opération au niveau des données,
+        et non de l’interface utilisateur.
+
+        Args :
+            taskList : Liste des tâches supprimées à filtrer.
+
+        Returns :
+            Une méthode super de la création de filtre sur les tâches supprimées.
+        """
+        # Il est peu probable que la méthode createFilter
+        # provoquent des blocages de l’interface utilisateur,
+        # car elle gère le filtrage des données.
+        #
         tasks = domain.base.DeletedFilter(taskList)
         return super().createFilter(tasks)
 
     def nrOfVisibleTasks(self):
+        """
+        Calcule le nombre de tâches actuellement visibles dans le visualiseur.
+
+        Returns :
+            (int) : Le nombre d'objets de domaine que cette visionneuse affiche actuellement.
+        """
+        # Il est peu probable que la méthodes nrOfVisibleTasks provoque
+        # des blocages de l’interface utilisateur,
+        # car elle gère le comptage des données.
+        #
         # Make this overridable for viewers where the widget does not show all
         # items in the presentation, i.e. the widget does filtering on its own.
         return len(self.presentation())
 
 
 class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
-    class BaseTaskTreeViewer(BaseTaskViewer):
-        """
-        Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.
+    # class BaseTaskTreeViewer(BaseTaskViewer):
+    """
+    Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.
 
-        Ce visualiseur est conçu pour afficher les tâches sous forme d'arbre
-        avec des rafraîchissements en temps réel toutes les secondes ou minutes.
+    Ce visualiseur est conçu pour afficher les tâches sous forme d'arbre
+    avec des rafraîchissements en temps réel toutes les secondes ou minutes.
 
-        Méthodes :
-            __init__(self, *args, **kwargs) :
-                Initialise le visualiseur avec des options supplémentaires pour rafraîchir les tâches.
-            detach(self) :
-                Détache les observateurs et arrête les rafraîchissements automatiques.
-            newItemDialog(self, *args, **kwargs) :
-                Ouvre une boîte de dialogue pour créer un nouvel élément (tâche ou sous-tâche).
-            editItemDialog(self, items, bitmap, columnName="", items_are_new=False) :
-                Ouvre une boîte de dialogue pour éditer les tâches sélectionnées.
-            createTaskPopupMenu(self) :
-                Crée le menu contextuel pour les tâches.
-        """
+    Méthodes :
+        __init__(self, *args, **kwargs) :
+            Initialise le visualiseur avec des options supplémentaires pour rafraîchir les tâches.
+        detach (self) :
+            Détache les observateurs et arrête les rafraîchissements automatiques.
+        newItemDialog (self, *args, **kwargs) :
+            Ouvre une boîte de dialogue pour créer un nouvel élément (tâche ou sous-tâche).
+        editItemDialog (self, items, bitmap, columnName="", items_are_new=False) :
+            Ouvre une boîte de dialogue pour éditer les tâches sélectionnées.
+        createTaskPopupMenu (self) :
+            Crée le menu contextuel pour les tâches.
+    """
     defaultTitle = _("Tasks")
     defaultBitmap = "led_blue_icon"
 
     def __init__(self, *args, **kwargs):
+        """
+
+        Appelle le constructeur BaseTaskViewer.
+        Crée en option des instances refresher(SecondRefresher, MinuteRefresher)
+        pour des mises à jour automatiques.
+        """
+        # Args :
+        #     *args :
+        #     **kwargs :
+
+        log.debug(f"BaseTaskTreeViewer : Création du Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.")
         super().__init__(*args, **kwargs)
         if kwargs.get("doRefresh", True):
             self.secondRefresher = refresher.SecondRefresher(
@@ -357,17 +427,35 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         )
 
     def createTaskPopupMenu(self):
+        """
+        Directement lié à la création de menu. Crée un menu Popup de tâche qui
+        est un menu wx.Menu.
+
+        Returns :
+            Le menu contextuel TaskPopupMenu.
+        """
         # from taskcoachlib.gui.menu import TaskPopupMenu
+        log.debug(f"BaseTaskTreeViewer.createTaskPopupMenu : Création du menu contextuel.")
+        log.debug(f"mainwindow={self.parent}, settings={self.settings},"
+                  f"tasks={self.presentation()}, efforts={self.taskFile.efforts()},"
+                  f"categories={self.taskFile.categories()}, taskViewer={self}")
         return taskcoachlib.gui.menu.TaskPopupMenu(
             self.parent,
             self.settings,
             self.presentation(),
             self.taskFile.efforts(),
             self.taskFile.categories(),
-            self,
-        )
+            self)
 
     def createCreationToolBarUICommands(self):
+        """
+        Cette méthode crée des commandes UI (en utilisant le module uicommand)
+        pour la barre d'outil. Les commandes UI manipulent souvent l'UI (par
+        exemple, créer des boîtes de dialogue, changer les propriétés de widget.)
+
+        Returns :
+
+        """
         return (
             uicommand.TaskNew(taskList=self.presentation(), settings=self.settings),
             uicommand.NewSubItem(viewer=self),
@@ -377,6 +465,14 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         ) + super().createCreationToolBarUICommands()
 
     def createActionToolBarUICommands(self):
+        """
+        Cette méthode crée des commandes UI (en utilisant le module uicommand)
+        pour la barre d'outil. Les commandes UI manipulent souvent l'UI (par
+        exemple, créer des boîtes de dialogue, changer les propriétés de widget.)
+
+        Returns :
+
+        """
         uiCommands = (
             uicommand.AddNote(settings=self.settings, viewer=self),
             uicommand.TaskMarkInactive(settings=self.settings, viewer=self),
@@ -945,13 +1041,13 @@ class HierarchicalCalendarViewer(
     et d'échéance.
 
     Méthodes :
-        createWidget(self) :
+        createWidget (self) :
             Crée le widget du calendrier hiérarchique.
-        onEdit(self, item) :
+        onEdit (self, item) :
             Permet l'édition des tâches directement depuis la vue du calendrier.
-        onCreate(self, dateTime, show=True) :
+        onCreate (self, dateTime, show=True) :
             Crée une nouvelle tâche à une date spécifique.
-        atMidnight(self) :
+        atMidnight (self) :
             Rafraîchit le calendrier à minuit pour mettre à jour les dates.
     """
     defaultTitle = _("Hierarchical calendar")
@@ -1341,6 +1437,7 @@ class TaskViewer(
     """
     def __init__(self, *args, **kwargs):
         # self._instance_count = taskcoachlib.patterns.NumberedInstances.lowestUnusedNumber(self) + 1  # pas sur !
+        log.debug("TaskViewer : Initialisation, Création du Visualiseur de tâches standard.")
         kwargs.setdefault("settingsSection", "taskviewer")
         super().__init__(*args, **kwargs)
         if self.isVisibleColumnByName("timeLeft"):
@@ -2189,10 +2286,10 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
     des cases à cocher pour chaque tâche.
 
     Méthodes :
-        createWidget(self) : Crée le widget d'affichage avec des cases à cocher pour les tâches.
-        onCheck(self, event, final) : Gère les événements liés au changement d'état des cases à cocher.
-        getIsItemChecked(self, task) : Vérifie si une tâche est cochée.
-        getItemParentHasExclusiveChildren(self, task) : Vérifie si une tâche parent a des enfants exclusifs.
+        createWidget (self) : Crée le widget d'affichage avec des cases à cocher pour les tâches.
+        onCheck (self, event, final) : Gère les événements liés au changement d'état des cases à cocher.
+        getIsItemChecked (self, task) : Vérifie si une tâche est cochée.
+        getItemParentHasExclusiveChildren (self, task) : Vérifie si une tâche parent a des enfants exclusifs.
     """
     def createWidget(self):
         imageList = self.createImageList()  # Has side-effects
@@ -2211,7 +2308,8 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
             columnPopupMenu,
             **self.widgetCreationKeywordArguments()
         )
-        widget.AssignImageList(imageList)  # pylint: disable=E1101
+        # widget.AssignImageList(imageList)  # pylint: disable=E1101
+        widget.AssignImageList(imageList, wx.IMAGE_LIST_NORMAL)  # pylint: disable=E1101
         return widget
 
     def onCheck(self, event, final):
