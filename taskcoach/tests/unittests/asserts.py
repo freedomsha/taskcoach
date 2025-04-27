@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # standard_library.install_aliases()
 # from builtins import zip
 # from builtins import object
+
 from taskcoachlib import patterns
 
 
@@ -67,6 +68,9 @@ class TaskAssertsMixin(object):
         self.assertTrue(child.parent() == parent)
 
     def assertTaskCopy(self, orig, copy):
+        print(f"asserts : DEBUG - Comparaison des objets : orig is copy -> {orig is copy}")
+        print(f"asserts : DEBUG - Comparaison des objets : orig == copy -> {orig == copy}")
+
         self.assertFalse(orig == copy)
         self.assertEqual(orig.subject(), copy.subject())
         self.assertEqual(orig.description(), copy.description())
