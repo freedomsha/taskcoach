@@ -456,7 +456,13 @@ class ChangePriorityCommand(base.BaseCommand):  # pylint: disable=W0223
     def undo_command(self):
         # self.changePriorities(self.delta)
         # Class 'str' does not define '__neg__', so the '-' operator cannot be used on its instances
-        self.changePriorities("-" + self.delta)
+        # self.changePriorities("-" + self.delta)  # TypeError: can only concatenate str (not "int") to str
+        # if self.delta >= 0:
+        # self.changePriorities(-self.delta)
+        # self.changePriorities(int(f"-{self.delta}"))  # ValueError: invalid literal for int() with base 10: '--1'
+        # else:
+        #     self.changePriorities(abs(self.delta))
+        self.changePriorities(-int(self.delta))
         super().undo_command()
 
     def redo_command(self):
