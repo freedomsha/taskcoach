@@ -18,15 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from __future__ import absolute_import
 
-from unittests import asserts
+from tests.unittests import asserts
 from .CommandTestCase import CommandTestCase
 from taskcoachlib import command, patterns, config
 from taskcoachlib.domain import task, effort, date, category, attachment
 
 
-class TaskCommandTestCase(CommandTestCase, asserts.Mixin):
+class TaskCommandTestCase(asserts.Mixin, CommandTestCase):
     def setUp(self):
-        super(TaskCommandTestCase, self).setUp()
+        super().setUp()
         self.settings = task.Task.settings = config.Settings(load=False)
         self.list = self.taskList = task.TaskList()
         self.categories = category.CategoryList()
@@ -42,7 +42,7 @@ class TaskCommandTestCase(CommandTestCase, asserts.Mixin):
         self.originalList = [self.task1]
 
     def tearDown(self):
-        super(TaskCommandTestCase, self).tearDown()
+        super().tearDown()
         command.Clipboard().clear()
 
     def delete(self, items=None, shadow=False):
@@ -54,7 +54,7 @@ class TaskCommandTestCase(CommandTestCase, asserts.Mixin):
         if items:
             command.PasteAsSubItemCommand(self.taskList, items).do()
         else:
-            super(TaskCommandTestCase, self).paste()
+            super().paste()
 
     def copy(self, items=None):
         command.CopyCommand(self.list, items or []).do()
@@ -96,7 +96,7 @@ class TaskCommandTestCase(CommandTestCase, asserts.Mixin):
 
 class CommandWithChildrenTestCase(TaskCommandTestCase):
     def setUp(self):
-        super(CommandWithChildrenTestCase, self).setUp()
+        super().setUp()
         self.parent = task.Task("parent")
         self.child = task.Task("child")
         self.parent.addChild(self.child)
@@ -111,7 +111,7 @@ class CommandWithChildrenTestCase(TaskCommandTestCase):
 
 class CommandWithEffortTestCase(TaskCommandTestCase):
     def setUp(self):
-        super(CommandWithEffortTestCase, self).setUp()
+        super().setUp()
         self.list = self.effortList = effort.EffortList(self.taskList)
         self.effort1 = effort.Effort(self.task1)
         self.task1.addEffort(self.effort1)
@@ -215,8 +215,8 @@ class DeleteCommandWithTasksWithChildrenTest(CommandWithChildrenTestCase):
 
     def assertTaskListUnchanged(self):
         self.assertTaskList(self.originalList)
-        self.failUnlessParentAndChild(self.parent, self.child)
-        self.failUnlessParentAndChild(self.child, self.grandchild)
+        self.assertTrueParentAndChild(self.parent, self.child)
+        self.assertTrueParentAndChild(self.child, self.grandchild)
 
     def assertShadowed(self, *shadowedTasks):
         for shadowedTask in shadowedTasks:
@@ -271,9 +271,9 @@ class DeleteCommandWithTasksWithChildrenTest(CommandWithChildrenTestCase):
         cat2.addCategorizable(self.parent)
         self.parent.addCategory(cat2)
         self.delete([self.parent])
-        self.assertDoUndoRedo(lambda: self.failIf(cat1.categorizables() or cat2.categorizables()),
+        self.assertDoUndoRedo(lambda: self.assertFalse(cat1.categorizables() or cat2.categorizables()),
                               # lambda: self.failUnless(set([self.child]) == cat1.categorizables() and \
-                              lambda: self.failUnless({self.child} == cat1.categorizables() and \
+                              lambda: self.assertTrue({self.child} == cat1.categorizables() and \
                                                       # set([self.parent]) == cat2.categorizables()))
                                                       {self.parent} == cat2.categorizables()))
 
@@ -656,11 +656,11 @@ class DragAndDropTaskCommandTest(CommandWithChildrenTestCase):
 
 class PriorityCommandTestCase(TaskCommandTestCase):
     def setUp(self):
-        super(PriorityCommandTestCase, self).setUp()
+        super().setUp()
         self.taskList.append(self.task2)
 
     def assertDoUndoRedo(self, priority1do, priority2do, priority1undo, priority2undo):  # pylint: disable=W0221
-        super(PriorityCommandTestCase, self).assertDoUndoRedo(
+        super().assertDoUndoRedo(
             lambda: self.assertTrue(
                 priority1do == self.task1.priority()
                 and priority2do == self.task2.priority()
