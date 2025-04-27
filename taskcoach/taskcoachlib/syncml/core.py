@@ -29,7 +29,8 @@ if len(struct.pack("L", 0)) == 8:
 else:
     arch = "IA32"
 
-if sys.platform == "linux2":
+# if sys.platform == "linux2":
+if sys.platform.startswith("linux"):
     # The user should install the binary packages
     pass
 elif sys.platform == "darwin":
