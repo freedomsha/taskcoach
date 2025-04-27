@@ -15,6 +15,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Vous devez spécifier les classes de mixin avant les autres classes.
 """
 
 # from builtins import object
@@ -22,7 +24,7 @@ from taskcoachlib.domain import task, note, category, effort, attachment
 import wx
 
 
-# Quels sont ces types de classes ?
+# Quels sont ces types de classes ? Mixin
 # class NeedsSelectionMixin:
 class NeedsSelectionMixin(object):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un élément sélectionné. """
