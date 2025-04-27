@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from __future__ import absolute_import
 
-from unittests import asserts
-from .CommandTestCase import CommandTestCase
 from taskcoachlib import patterns, command, config
 from taskcoachlib.domain import category, task
+from tests.unittests import asserts
+from .CommandTestCase import CommandTestCase
 
 
 class CategoryCommandTestCase(CommandTestCase, asserts.CommandAssertsMixin):
@@ -104,7 +104,7 @@ class DragAndDropCategoryCommandTest(CategoryCommandTestCase):
 
 class CopyAndPasteCommandTest(CategoryCommandTestCase):
     def setUp(self):
-        super(CopyAndPasteCommandTest, self).setUp()
+        super().setUp()
         self.original = category.Category("original")
         self.categories.append(self.original)
         self.task = task.Task()
@@ -119,7 +119,7 @@ class CopyAndPasteCommandTest(CategoryCommandTestCase):
         self.copy([self.original])
         self.paste()
         self.assertDoUndoRedo(
-            lambda: self.assertEqual(2, len(self.categories)),
+            lambda: self.assertEqual(2, len(self.categories)),  # AssertionError: 2 != 1
             lambda: self.assertEqual([self.original], self.categories))
 
     def testCopyOneCategoryWithTasks(self):
