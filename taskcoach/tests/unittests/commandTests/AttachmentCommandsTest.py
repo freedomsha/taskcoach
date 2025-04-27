@@ -25,10 +25,15 @@ from .CommandTestCase import CommandTestCase
 
 
 class AddAttachmentTestsMixin(object):
+    # def __init__(self):
+    #     self.attachment = None
+
     def addAttachment(self, selectedItems=None):
         self.attachment = attachment.FileAttachment(
             "attachment"
         )  # pylint: disable=W0201
+        print(f"AttachmentCommandsTest.AddAttachmentTestsMixin.addAttachment : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self.attachments}, attachment={self.attachment}")
+
         addAttachmentCommand = command.AddAttachmentCommand(
             self.container, selectedItems or [], attachments=[self.attachment]
         )
@@ -58,10 +63,17 @@ class AddAttachmentTestsMixin(object):
 
 
 class AddAttachmentTestCase(CommandTestCase):
-    ItemClass = ContainerClass = lambda subject: "Subclass responsibility"
+    # ItemClass = ContainerClass = lambda subject: "Subclass responsibility"
+    # @staticmethod
+    def ItemClass(subject):
+        return "Subclass responsibility"
+
+    # @staticmethod
+    def ContainerClass(subject):
+        return "Subclass responsibility"
 
     def setUp(self):
-        super(AddAttachmentTestCase, self).setUp()
+        super().setUp()
         self.item1 = self.ItemClass(subject="item1")
         self.item2 = self.ItemClass(subject="item2")
         self.container = self.ContainerClass([self.item1, self.item2])
