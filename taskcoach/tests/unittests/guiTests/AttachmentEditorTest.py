@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from builtins import object
-import test
-from ....taskcoachlib import gui, config, persistence, operating_system
-from ....taskcoachlib.domain import attachment
+# from builtins import object
+from ... import tctest
+from taskcoachlib import gui, config, persistence, operating_system
+from taskcoachlib.domain import attachment
 
 
 class DummyEvent(object):
@@ -27,17 +27,17 @@ class DummyEvent(object):
         pass
 
 
-class AttachmentEditorTest(test.wxTestCase):
+class AttachmentEditorTest(tctest.wxTestCase):
     def setUp(self):
-        super(AttachmentEditorTest, self).setUp()
+        super().setUp()
         self.settings = config.Settings(load=False)
         self.taskFile = persistence.TaskFile()
-        self.attachment = attachment.FileAttachment('Attachment')
+        self.attachment = attachment.FileAttachment("Attachment")
         self.attachments = attachment.AttachmentList()
         self.attachments.append(self.attachment)
-        self.editor = gui.dialog.editor.AttachmentEditor(self.frame,
-                                                         self.attachments, self.settings, self.attachments,
-                                                         self.taskFile)
+        self.editor = gui.dialog.editor.AttachmentEditor(
+            self.frame, self.attachments, self.settings, self.attachments, self.taskFile
+        )
 
     def tearDown(self):
         super(AttachmentEditorTest, self).tearDown()
@@ -64,15 +64,17 @@ class AttachmentEditorTest(test.wxTestCase):
 
     def testCreate(self):
         # pylint: disable=W0212
-        self.assertEqual('Attachment', self.editor._interior[0]._subjectEntry.GetValue())
+        self.assertEqual(
+            "Attachment", self.editor._interior[0]._subjectEntry.GetValue()
+        )
 
     def testEditSubject(self):
-        self.setSubject('Done')
-        self.assertEqual('Done', self.attachment.subject())
+        self.setSubject("Done")
+        self.assertEqual("Done", self.attachment.subject())
 
     def testEditDescription(self):
-        self.setDescription('Description')
-        self.assertEqual('Description', self.attachment.description())
+        self.setDescription("Description")
+        self.assertEqual("Description", self.attachment.description())
 
     def testAddNote(self):
         viewer = self.editor._interior[1].viewer
