@@ -876,6 +876,7 @@ def ComboTreeBox(*args, **kwargs):
         'platform=GTK' or 'platform=MSW' or platform='MAC'. """
 
     platform = kwargs.pop("platform", None) or wx.PlatformInfo[0][4:7]
-    comboTreeBoxClassName = "%sComboTreeBox" % platform
+    # comboTreeBoxClassName = "%sComboTreeBox" % platform
+    comboTreeBoxClassName = f"{platform}ComboTreeBox"
     comboTreeBoxClass = globals()[comboTreeBoxClassName]
     return comboTreeBoxClass(*args, **kwargs)
