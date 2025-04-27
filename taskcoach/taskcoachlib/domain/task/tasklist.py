@@ -39,9 +39,12 @@ class TaskListQueryMixin(object):
 class TaskList(TaskListQueryMixin, categorizable.CategorizableContainer):
     # FIXME: TaskList should be called TaskCollection or TaskSet
 
-    newItemMenuText = _("&New task...") + (
+    # newItemMenuText = _("&New task...") + (
+    #     "\tINSERT" if not operating_system.isMac() else "\tCtrl+N"
+    # )
+    newItemMenuText = "{0}{1}".format(_("&New task..."), (
         "\tINSERT" if not operating_system.isMac() else "\tCtrl+N"
-    )
+    ))
     # TypeError: unsupported operand type(s) for +: 'NoneType' and 'str'
     newItemHelpText = help.taskNew
 
