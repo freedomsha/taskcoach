@@ -18,56 +18,146 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import object
+import logging
 import wx
-from taskcoachlib.gui import menu
+
+# from taskcoachlib import patterns
+# from taskcoachlib.gui.menu import AppendSeparator, AppendStretchSpacer, Append, appendUICommand, _window, appendMenu
+# from taskcoachlib.gui.menu import Menu
+# from taskcoachlib.gui.toolbar import ToolBar
+
+log = logging.getLogger(__name__)
 
 
+# class UICommandContainerMixin(object):
 class UICommandContainerMixin(object):
     """ Mélange avec la (sous-)classe wx.Menu ou wx.ToolBar.
     """
 
-    def appendUICommands(self, *uiCommands):
-        """ Ajout de *uiCommand. """
-        # print(f"tclib.gui.uicommand.uicommandcontainer Appending UI commands: {uiCommands}")  # Débogage
+    # def __init__(self):
+    #     self._window = None
+
+    def appendUICommands(self, *uiCommands, **kwargs):
+        """ Ajout de *uiCommand.
+
+        **Responsabilité** :
+        Cette méthode, qui est mélangée dans la classe Menu,
+        prend une liste de UICommand et les ajoute au menu.
+        Elle gère également les séparateurs, les espaces (pour les barres d'outils),
+        les éléments de menu désactivés et les sous-menus.
+
+        Args :
+            *uiCommands :
+            **kwargs :
+
+        Returns :
+
+        """
+        log.debug(f"UICommandContainerMixin.appendUICommands ajoute les UI commands: {uiCommands} au menu {self}")  # Débogage
         # uicommands : taskcoachlib.gui.uicommand.uicommand.EditCut, EditCopy, EditPaste, EditPasteAsSubItem, Edit,
         # Delete, AddAtachment, OpenAllAttachments, AddNote, OpenAllNotes, Mail,...
+        # Itération sur les Commandes :
         for uiCommand in uiCommands:
+            # Gestion des Différents Types d'Éléments :
             if uiCommand is None:
+                # None : Ajoute un séparateur (self.AppendSeparator()).
                 # print(f"tclib.gui.uicommand.uicommandcontainer Appending UI command: {uiCommand}")  # Débogage
                 # print(f"tclib.gui.uicommand.uicommandcontainer Appending command: {command.__class__.__name__}")
-                self.AppendSeparator()
+                log.debug("UICommandContainerMixin.appendUICommands : l' uiCommand est None donc ajoute un séparateur.")
+                self.AppendSeparator()  # customtreectrl ou toolbar !
             elif isinstance(uiCommand, int):  # Toolbars only
+                # int : Ajoute un espace extensible (pour les barres d'outils, non pertinent ici).
+                log.debug(f"UICommandContainerMixin.appendUICommands : l' uiCommand {uiCommand} est int donc ajoute un espace extensible .")
                 self.AppendStretchSpacer(uiCommand)
-            # elif isinstance(uiCommand, (str, str)):
+                # elif isinstance(uiCommand, (str,)):
             elif isinstance(uiCommand, str):
+                # str : Ajoute un élément de menu désactivé.
                 # Ajoute un élément dans le menu
+                log.debug(f"UICommandContainerMixin.appendUICommands : l' uiCommand {uiCommand} est str donc ajoute un élément de menu désactivé.")
                 label = wx.MenuItem(self, text=uiCommand)
                 # doit ajouter un élément avant de le désactiver pour assurer
                 # que l'objet interne existe
-                self.AppendItem(label)
-                # self.Append(label)
+                # self.AppendItem(label)  # wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+                self.Append(label)  # Unresolved attribute reference 'Append' for class 'UICommandContainerMixin'
+                # TODO : Sauf qu'AppendItem est défini dans customtreectrl.py
+                # Normal car il s'agit d'une Mixin.
                 label.Enable(False)
-            # elif isinstance(type(uiCommand), type()):  # This only works for menu's
-            # TODO revenir sur mon choix:
-            # elif isinstance(uiCommand, type):
-            # ou garder celui de rainfornight :
-            # elif type(uiCommand) == type(()):
-            elif isinstance(uiCommand, tuple):
+                # elif isinstance(type(uiCommand), type()):  # This only works for menu's
+                # TODO revenir sur mon choix:
+                # elif isinstance(uiCommand, type(())):
+                # ou garder celui de rainfornight :
+                # elif type(uiCommand) == type(()):
+                # elif isinstance(uiCommand, tuple):
+            elif isinstance(uiCommand, (tuple, list)):
+                # tuple : Crée un sous-menu et y ajoute les commandes UI du tuple en appelant self.appendSubMenuWithUICommands().
+                log.debug(f"UICommandContainerMixin.appendUICommands : l' uiCommand {uiCommand} est un tuple donc crée un sous-menu et y ajoute les commandes UI.")
                 menuTitle, menuUICommands = uiCommand[0], uiCommand[1:]
                 self.appendSubMenuWithUICommands(menuTitle, menuUICommands)
             else:
-                self.appendUICommands(uiCommand)  # [Previous line repeated 972 more times]
-            # RecursionError: maximum recursion depth exceeded
-        #        print(f"Appending UI command: {uiCommand}")  # Débogage
-        #        cmd = uiCommand.addToMenu(self, self._window)
-        #        print(f"Command added to menu: {cmd}")  # Débogage
-        #        self._accels.extend(uiCommand.accelerators())
-        #        if isinstance(uiCommand, patterns.Observer):
-        #            self._observers.append(uiCommand)
-        #        return cmd
+                # Autre (supposé être une instance de UICommand) :
+                # Appelle récursivement self.appendUICommands(uiCommand).
+                # C'est ici qu'une erreur de récursion infinie se produit
+                # si la condition d'arrêt n'est pas correctement gérée.
+                log.debug(f"UICommandContainerMixin.appendUICommands : l' uiCommand {uiCommand}est un autre-chose donc ajoute la commande UI.")
+                # self.appendUICommand(uiCommand)  # [Previous line repeated 972 more times]
+                # Vérification pour éviter une récursion infinie
+                if not hasattr(uiCommand, "_appended"):
+                    log.debug(f"UICommandContainerMixin.appendUICommands : l' uiCommand {uiCommand} n'a pas _append.")
+                    try :
+                        self.appendUICommand(uiCommand)  # Méthode de Menu ou Toolbar
+                    except Exception as e:
+                        log.error(f"UICommandContainerMixin.appendUICommands n'arrive pas à ajouter {uiCommand} : erreur {e}")
+                    # Mettre un drapeau après l'ajout de l'ordre.
+                    uiCommand._appended = True
+                # La récursion actuelle (self.appendUICommands(uiCommand))
+                # est incorrecte et doit être corrigée.
+                # RecursionError: maximum recursion depth exceeded
+                # Corrigez l'Erreur de Récursion dans appendUICommands() :
+                # log.debug(f"Appending UI command: {uiCommand}")  # Débogage
+                # # Remplacement de la ligne récursive par l'appel direct à addToMenu() :
+                # cmd = uiCommand.addToMenu(self, self._window)
+                # print(f"Command added to menu: {cmd}")  # Débogage
+                # self._accels.extend(uiCommand.accelerators())
+                # # if isinstance(uiCommand, patterns.Observer):
+                # #     self._observers.append(uiCommand)
+                # # Notez que j'ai ajouté des vérifications pour s'assurer que
+                # # les attributs _accels et _observers existent sur l'objet self
+                # # avant d'y accéder.
+                # if hasattr(self, '_accels'):
+                #     self._accels.extend(uiCommand.accelerators())
+                # if hasattr(self, '_observers') and isinstance(uiCommand, patterns.Observer):
+                #     self._observers.append(uiCommand)
+                # return cmd
+            log.debug(f"UICommandContainerMixin.appendUICommands terminé pour uiCommands={uiCommands}")
 
     def appendSubMenuWithUICommands(self, menuTitle, uiCommands):
-        # from taskcoachlib.gui import menu
+        """
+        Cette méthode crée un nouveau menu.Menu,
+        l'ajoute comme sous-menu au menu actuel,
+        puis appelle récursivement subMenu.appendUICommands()
+        pour ajouter les commandes au sous-menu.
+
+        Args :
+            menuTitle : Nom du sous-menu à créer.
+            uiCommands : Liste des commandes à y ajouter
+
+        Returns :
+
+        """
+        from taskcoachlib.gui import menu  # Pas en début de fichier, risque de circular import (menu->viewer->viewer.task->viewer.base->toolbar->uicommandcontainer)
         subMenu = menu.Menu(self._window)
         self.appendMenu(menuTitle, subMenu)
         subMenu.appendUICommands(*uiCommands)  # pylint: disable=W0142
+
+    # def AppendSeparator(self):
+    #     return wx.Menu.AppendSeparator(self)
+    #
+    # def AppendStretchSpacer(self, uiCommand):
+    #     self.AddStretchSpacer(proportion)
+    #     pass
+    #
+    # def AppendItem(self, label):
+    #     pass
+    #
+    # def appendMenu(self, menuTitle, subMenu):
+    #     pass
