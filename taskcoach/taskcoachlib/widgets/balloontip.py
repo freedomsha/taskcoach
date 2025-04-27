@@ -22,8 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from __future__ import division
 # from builtins import object
 # from past.utils import old_div
+import logging
 import wx
 from wx.lib.embeddedimage import PyEmbeddedImage
+
+log = logging.getLogger(__name__)
 
 
 class BalloonTip(wx.Frame):
@@ -117,7 +120,8 @@ class BalloonTip(wx.Frame):
             tx, ty = 0, 0
         else:
             tx, ty, tw, th = self._getRect()
-        tx, ty = self._target.ClientToScreen(wx.Point(tx, ty))
+        if self.Shown:
+            tx, ty = self._target.ClientToScreen(wx.Point(tx, ty))
         dpyIndex = max(0, wx.Display.GetFromPoint(wx.Point(tx, ty)) or 0)
         rect = wx.Display(dpyIndex).GetClientArea()
 
@@ -191,8 +195,9 @@ class BalloonTip(wx.Frame):
 
 class BalloonTipManager(object):
     """
-    Use this as a mixin in the top-level window that hosts balloon tip targets, to
-    avoid them appearing all at once.
+    Utilisez-le comme un mixin dans la fenêtre de niveau supérieur
+    qui héberge les cibles de la bulle d'aide, pour
+    éviter qu'ils n'apparaissent en une seule fois.
     """
 
     def __init__(self, *args, **kwargs):
@@ -249,14 +254,22 @@ if __name__ == "__main__":
 
     class Frame(wx.Frame):
         def __init__(self):
-            super().__init__(None, wx.ID_ANY, "Test")
+            log.debug("BallonTipManager-Frame : Création du Frame principal BallonTip.")
 
-            self.btn = wx.Button(self, wx.ID_ANY, "Show balloon")
-            wx.EVT_BUTTON(self.btn, wx.ID_ANY, self.OnClick)
+            super().__init__(None, wx.ID_ANY, "Test")
+            # wx.Frame.__init__(self,None, wx.ID_ANY, "Test")
+
+            # Le sizer va servir à positionner les éléments et dimensionner la fenêtre.
             s = wx.BoxSizer()
+            self.btn = wx.Button(self, wx.ID_ANY, "Show balloon")
+            # wx.EVT_BUTTON(self.btn, wx.ID_ANY, self.OnClick)
+            self.btn.Bind(wx.EVT_BUTTON, self.OnClick)  # TODO : A Essayer !
+            # self.Bind(wx.EVT_BUTTON, self.OnClick, self.btn)  # TODO : ou ceci !
             s.Add(self.btn, 1, wx.EXPAND)
+            # L'appel SetSizer () indique à votre fenêtre (ou cadre) quel créateur utiliser.
             self.SetSizer(s)
-            self.Fit()
+            # self.Fit()
+            s.Fit(self)  # TODO : Essayer plutôt ceci !
 
         def OnClick(self, event):
             BalloonTip(self, self.btn, """Your bones don't break, mine do. That's clear. Your cells react to bacteria 
