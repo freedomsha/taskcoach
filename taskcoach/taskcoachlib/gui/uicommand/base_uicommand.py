@@ -22,10 +22,12 @@ import logging
 import wx
 
 from typing import Optional
-
+# artprovider ?
 from taskcoachlib import operating_system
 from taskcoachlib.gui.newid import IdProvider
 from taskcoachlib.i18n import _
+
+log = logging.getLogger(__name__)
 
 ''' User interface commands (subclasses of UICommand) are actions that can
     be invoked by the user via the user interface (menu's, toolbar, etc.).
@@ -44,14 +46,14 @@ class UICommand(object):
     remplacer enabled() pour personnaliser l'activation des commandes.
 
     Attributs :
-        menuText (str): Texte du menu.
-        helpText (str): Texte d'aide.
-        bitmap (str): Icône à afficher pour l'élément de menu ou la barre d'outils.
-        bitmap2 (str): Icône secondaire pour les éléments de type ITEM_CHECK.
-        kind (wx.ItemKind): Type d'élément (normal, checkable, etc.).
-        id (int): Identifiant unique pour l'élément.
-        toolbar (wx.ToolBar): Barre d'outils associée.
-        menuItems (list): Liste des éléments de menu auxquels cette commande est associée.
+        menuText (str) : Texte du menu.
+        helpText (str) : Texte d'aide.
+        bitmap (str) : Icône à afficher pour l'élément de menu ou la barre d'outils.
+        bitmap2 (str) : Icône secondaire pour les éléments de type ITEM_CHECK.
+        kind (wx.ItemKind) : Type d'élément (normal, checkable, etc.).
+        id (int) : Identifiant unique pour l'élément.
+        toolbar (wx.ToolBar) : Barre d'outils associée.
+        menuItems (list) : Liste des éléments de menu auxquels cette commande est associée.
     """
 
     def __init__(self, menuText="", helpText="", bitmap="nobitmap",
@@ -60,21 +62,21 @@ class UICommand(object):
         """
         Initialise la commande d'interface utilisateur.
 
-        Args:
-            menuText (str, optionnel): Le texte à afficher dans le menu. Par défaut à "".
-            helpText (str, optionnel): Le texte d'aide contextuelle. Par défaut à "".
-            bitmap (str, optionnel): L'icône du menu ou de la barre d'outils. Par défaut à "nobitmap".
-            kind (wx.ItemKind, optionnel): Le type d'élément (normal, checkable, etc.). Par défaut à wx.ITEM_NORMAL.
-            id (int, optionnel): L'identifiant de la commande. Si non spécifié, un identifiant unique sera généré.
-            bitmap2 (str, optionnel): Icône secondaire pour les éléments checkables. Par défaut à None.
+        Args :
+            menuText (str, optionnel) : Le texte à afficher dans le menu. Par défaut à "".
+            helpText (str, optionnel) : Le texte d'aide contextuelle. Par défaut à "".
+            bitmap (str, optionnel) : L'icône du menu ou de la barre d'outils. Par défaut à "nobitmap".
+            kind (wx.ItemKind, optionnel) : Le type d'élément (normal, checkable, etc.). Par défaut à wx.ITEM_NORMAL.
+            id (int, optionnel) : L'identifiant de la commande. Si non spécifié, un identifiant unique sera généré.
+            bitmap2 (str, optionnel) : Icône secondaire pour les éléments checkables. Par défaut à None.
         """
         super().__init__()
         # menuText = menuText or '<%s>' % _('None')
         menuText = menuText or "<%s>" % _("None")
         # menuText = menuText or f"<{_("None")}>"
         # self.menuText = menuText if '&' in menuText else '&' + menuText
-        self.menuText = menuText if "&" in menuText else "&" + menuText
-        # self.menuText = menuText if "&" in menuText else f"&{menuText}"
+        # self.menuText = menuText if "&" in menuText else "&" + menuText
+        self.menuText = menuText if "&" in menuText else f"&{menuText}"
         self.helpText = helpText
         self.bitmap = bitmap
         self.bitmap2 = bitmap2
@@ -120,39 +122,90 @@ class UICommand(object):
         # def addToMenu(self, menu, window, position=None) -> int:
         """ Ajoute un sous-menu au Menu menu dans la fenêtre window à la fin en principe.
 
+        **Responsabilité** :
+        Cette méthode est responsable de la création et de l'ajout d'un wx.MenuItem
+        au wx.Menu spécifié. Elle gère également l'association de ce menu item
+        à la fenêtre et potentiellement à une position spécifique.
+
         Args :
-            menu (wx.Menu) : Le menu auquel ajouter la commande.
+            menu (wx.Menu) : Le menu parent auquel ajouter la commande.
             window (wx.Window) : La fenêtre parent associée.
             position (int, optionnel) : La position dans le menu. Si non spécifiée, la commande est ajoutée à la fin.
 
         Returns :
-            int : L'identifiant de l'élément de menu ajouté.
+            (int) : L'identifiant de l'élément de menu ajouté.
         """
+        # Erreurs lors de la création de wx.MenuItem :
+        #  La gestion de RuntimeError dans addToMenu pourrait
+        #  indiquer des problèmes occasionnels lors de la création des éléments de menu.
+        #  Bien qu'un nouvel ID soit tenté,
+        #  il serait préférable de comprendre la cause de cette erreur initiale.
+
         # Un menuItem représente un élément dans un menu.
         # menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
         # test de chatGPT
         # print(f"tclib.gui.uicommand.base_uicommand essaye d'ajouter le sous-menu {self} dans le menu {menu} de la fenêtre {window} à la position {position}")
         # Ajouter une assertion pour vérifier que le menu existe
+
+        #  Si la window passée à addToMenu et bind n'est pas la fenêtre
+        #  qui contient réellement le menu ou qui est responsable de
+        #  la gestion des événements pour ce menu, les mises à jour de
+        #  l'interface utilisateur (activation/désactivation)
+        #  pourraient ne pas fonctionner correctement,
+        #  et les actions de menu pourraient ne pas être déclenchées.
         assert isinstance(menu, wx.Menu), "Le premier argument doit être un objet wx.Menu"
 
-        try:
-            menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
-        except wx._core.wxAssertionError as e:
-            # print(f"tclib.gui.uicommand.base_uicommand: Error creating MenuItem: {e}")
-            # Handle the error or create a new ID manually
-            # new_id = wx.NewIdRef().GetId()
-            new_id = wx.ID_ANY
-            menuItem = wx.MenuItem(menu, new_id, self.menuText, self.helpText, self.kind)
-            return menu.Append(menuItem)
+        # try:
+        log.debug("UICommand.addToMenu crée l'objet menuItem")
+        log.debug(f"UICommand.addToMenu essaye d'ajouter le sous-menu {self.menuText} d'ID={self.id} dans le menu {menu} de la fenêtre {window} à la position {position}")
+        menuItem = wx.MenuItem(menu, self.id, self.menuText, self.helpText, self.kind)
+        log.debug(f"UICommand.addToMenu a enregistré le sous-menu {menuItem} avec les valeurs d'ID={self.id}, text={self.menuText}, help={self.helpText} et kind={self.kind}")
+        # Les arguments importants ici sont :
+        #     menu : Le menu parent auquel l'élément est ajouté.
+        #     self.id : L'identifiant de la commande.
+        #               C'est cet ID qui est utilisé pour lier les événements.
+        #               Assurez-vous que self.id est correctement initialisé dans les classes dérivées de UICommand.
+        #     self.menuText : Le texte affiché dans le menu.
+        #                     Vérifiez que self.menuText est correctement défini dans vos classes UICommand.
+        #     self.helpText : Le texte d'aide affiché dans la barre d'état.
+        #     self.kind : Le type de l'élément de menu (wx.ITEM_NORMAL, wx.ITEM_CHECK, wx.ITEM_RADIO).
+        #                 Assurez-vous que self.kind est correctement défini dans vos classes UICommand
+        #                 en fonction du type d'élément de menu souhaité.
+        # except wx._core.wxAssertionError as e:
+        #     # except wx.wxAssertionError as e:
+        #     # except RuntimeError as e:
+        #     # print(f"tclib.gui.uicommand.base_uicommand.addToMenu : Error creating MenuItem: {e}")
+        #     log.error(f"addToMenu : Error creating MenuItem with ID {self.id}: {e}", exc_info=True)
+        #     # Handle the error or create a new ID manually
+        #     # new_id = wx.NewIdRef().GetId()
+        #     new_id = wx.ID_ANY
+        #     menuItem = wx.MenuItem(menu, new_id, self.menuText, self.helpText, self.kind)
+        #     # return menu.Append(menuItem)  # ?
+        log.debug(f"UICommand.addToMenu : Ajoute l'élément {menuItem} à la fin du menu {self.menuItems}.")
         self.menuItems.append(menuItem)
         self.addBitmapToMenuItem(menuItem)
+        # L'élément de menu est ajouté à la fin du menu ou à une position spécifiée.
         if position is None:
-            # menu.AppendItem(menuItem)  # wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
-            menu.Append(menuItem)
+            log.debug(f"UICommand.addToMenu : Ajoute l'élément {menuItem} dans le menu {menu}.")
+            menu.AppendItem(menuItem)  # wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+            # AppendItem est dans customTreeCtrl
+            # menu.Append(menuItem)
         else:
-            # menu.InsertItem(position, menuItem)  # TODO: choisir entre les deux
-            menu.Insert(position, menuItem)
+            log.debug(f"UICommand.addToMenu : Ajoute l'élément {menuItem} dans le menu {menu}(position={position}).")
+            menu.InsertItem(position, menuItem)  # TODO: choisir entre les deux
+            # menu.Insert(position, menuItem)
+        # Liaison des événements :
+        log.info(f"UICommand.addToMenu : Commande {self} exécutée : fenêtre {window}, ID={self.id}")
         self.bind(window, self.id)  # Lie la commande aux événements de menu ou de barre d'outils.
+        # self.bind(self, window, self.id)  # Lie la commande aux événements de menu ou de barre d'outils.
+        # Cette ligne est cruciale.
+        # Elle lie la commande (self) aux événements de menu (wx.EVT_MENU)
+        # sur la window spécifiée, en utilisant l'ID de la commande (self.id).
+        # TODO : Assurez-vous que window est la fenêtre correcte
+        # et que la méthode bind est correctement implémentée dans la classe UICommand
+        # (elle n'est pas montrée ici). Si la liaison ne se fait pas correctement,
+        # les actions de menu ne seront pas traitées.
+        # Retoour de l'ID :
         return self.id
 
     def addBitmapToMenuItem(self, menuItem) -> None:
@@ -162,6 +215,11 @@ class UICommand(object):
         Args :
             menuItem (wx.MenuItem) : L'élément de menu auquel ajouter l'icône.
         """
+        # Problèmes spécifiques à la plateforme (GTK) :
+        #  La condition not operating_system.isGTK() dans addBitmapToMenuItem
+        #  suggère qu'il pourrait y avoir des différences
+        #  dans la gestion des bitmaps pour les éléments cochables sur GTK.
+        #  Si vous utilisez GTK, cela pourrait être un point à examiner.
         if self.bitmap2 and self.kind == wx.ITEM_CHECK and not operating_system.isGTK():
             bitmap1 = self.__getBitmap(self.bitmap)
             bitmap2 = self.__getBitmap(self.bitmap2)
@@ -182,26 +240,31 @@ class UICommand(object):
         """
         Ajoute cette commande à une barre d'outils.
 
-        Args:
-            toolbar (wx.ToolBar): La barre d'outils à laquelle ajouter la commande.
+        Args :
+            toolbar (wx.ToolBar) : La barre d'outils à laquelle ajouter la commande.
 
-        Returns:
-            int: L'identifiant de l'élément de la barre d'outils ajouté.
+        Returns :
+            int : L'identifiant de l'élément ajouté à la barre d'outils.
         """
         self.toolbar = toolbar
         bitmap = self.__getBitmap(self.bitmap, wx.ART_TOOLBAR,
                                   toolbar.GetToolBitmapSize())
+        # wx.ToolBar.AddLabelTool est une vielle méthode pour ajouter un outil à une barre d'outils.
+        # wx.ToolBar.AddTool semble être la norme. Voir aussi CreateTool, AddRadioTool
+        # Ne pas oublier d'utiliser Realize après avoir ajouté les outils pour faire apparaître les outils !
         # toolbar.AddLabelTool(self.id, '',
         #               bitmap, wx.NullBitmap, self.kind,
         #               shortHelp=wx.MenuItem.GetLabelFromText(self.menuText),
         #               longHelp = self.helpText)
-        toolbar.AddLabelTool(self.id, "",
-                             bitmap,
-                             wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType !
-                             self.kind,
-                             shortHelp=wx.MenuItem.GetLabelText(self.menuText),
-                             longHelp=self.helpText)
+        toolbar.AddTool(self.id,
+                        "",
+                        bitmap,
+                        wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType !
+                        self.kind,
+                        shortHelp=wx.MenuItem.GetLabelText(self.menuText),
+                        longHelp=self.helpText)
         self.bind(toolbar, self.id)
+        # self.bind(self, toolbar, self.id)
         return self.id
 
     def bind(self, window, itemId) -> None:
@@ -212,8 +275,27 @@ class UICommand(object):
             window (wx.Window) : La fenêtre à laquelle lier les événements.
             itemId (int) : L'identifiant de l'élément de menu ou de barre d'outils.
         """
+        # TODO : Comprenez comment la méthode bind() dans votre classe UICommand
+        #  (ou sa base) lie l'événement de menu à une action.
+        #  Assurez-vous que la window passée à addToMenu()
+        #  est celle qui doit gérer les événements.
         window.Bind(wx.EVT_MENU, self.onCommandActivate, id=itemId)
         window.Bind(wx.EVT_UPDATE_UI, self.onUpdateUI, id=itemId)
+
+    # def bind(self, window, itemId) -> None:
+    #     # def bind(self, command, window, itemId) -> None:
+    #     """
+    #     Lie la commande aux événements de menu ou de barre d'outils.
+    #
+    #     Args :
+    #         command : La commande à passer.
+    #         window (wx.Window) : La fenêtre à laquelle lier les événements.
+    #         itemId (int) : L'identifiant de l'élément de menu ou de barre d'outils.
+    #     """
+    #     window.Bind(wx.EVT_MENU, self.onCommandActivate, id=itemId)
+    #     # window.Bind(wx.EVT_MENU, command.onCommandActivate, source=window, id=itemId)
+    #     window.Bind(wx.EVT_UPDATE_UI, self.onUpdateUI, id=itemId)
+    #     # window.Bind(wx.EVT_UPDATE_UI, command.onUpdateUI, source=window, id=itemId)
 
     def unbind(self, window, itemId):
         for eventType in [wx.EVT_MENU, wx.EVT_UPDATE_UI]:
@@ -247,11 +329,12 @@ class UICommand(object):
 
         Args :
             event (wx.Event) : L'événement déclenchant la commande.
-            *args: Arguments supplémentaires.
-            **kwargs: Arguments nommés supplémentaires.
+
         Raises :
             NotImplementedError : Si non implémenté dans la sous-classe.
         """
+        # *args : Arguments supplémentaires.
+        # **kwargs : Arguments nommés supplémentaires.
         # Accéder aux paramètres supplémentaires via self._kwargs
         # ...
         raise NotImplementedError  # pragma: no cover
@@ -334,10 +417,19 @@ class UICommand(object):
             FileNotFoundError : Si l'icône n'est pas trouvée.
         """
         # return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
+        # Problèmes de Chemin ou de Nom d'Icône dans __getBitmap :
+        #  Si les noms de fichiers spécifiés dans l'attribut bitmap
+        #  des instances de UICommand sont incorrects
+        #  ou si les icônes ne sont pas trouvées par wx.ArtProvider,
+        #  les icônes des menus n'apparaîtront pas.
+        #  L'exception FileNotFoundError levée ici pourrait indiquer un tel problème.
+        #  Vérifiez les logs pour voir si cette erreur se produit.
+        log.info(f"__getBitmap() appelé avec self={self} bitmapName={bitmapName}, bitmapType={bitmapType} et bitmapSize={bitmapSize}")
         try:
             return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
+            # return artprovider.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
         except Exception as e:
             print(f"tclib.gui.uicommand.base_uicommand: Error getting bitmap: {e}")
-            logging.error(f"tclib.gui.uicommand.base_uicommand: Error loading bitmap '{bitmapName}': {str(e)}")
+            logging.error(f"UICommand.__getBitmap : Error loading bitmap '{bitmapName}': {str(e)}")
             raise FileNotFoundError(f"Bitmap '{bitmapName}' not found")
             return wx.NullBitmap
