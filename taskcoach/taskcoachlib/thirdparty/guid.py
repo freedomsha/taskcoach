@@ -23,7 +23,6 @@
 # DEALINGS IN THE SOFTWARE.
 
 
-
 ##################################################################################################
 ###   A globally-unique identifier made up of time and ip and 8 digits for a counter:
 ###   each GUID is 40 characters wide
@@ -89,7 +88,15 @@ import threading
 
 # Makes a hex IP from a decimal dot-separated ip (eg: 127.0.0.1)
 # make_hexip = lambda ip: ''.join(["%04x" % long(i) for i in ip.split('.')])  # leave space for ip v6 (65K in each sub)
-make_hexip = lambda ip: "".join(["%04x" % int(i) for i in ip.split(".")])  # leave space for ip v6 (65K in each sub)
+# make_hexip = lambda ip: "".join(
+#     ["%04x" % int(i) for i in ip.split(".")]
+# )  # leave space for ip v6 (65K in each sub)
+def make_hexip(ip):
+    to_join = []
+    for i in ip.split("."):
+        to_join.append(f"{int(i):04x}")
+    return "".join(to_join)  # leave space for ip v6 (65K in each sub)
+
 
 MAX_COUNTER = 0xFFFFFFFE
 counter = 0
@@ -100,7 +107,8 @@ lock = threading.RLock()
 try:  # only need to get the IP addresss once
     ip = socket.getaddrinfo(socket.gethostname(), 0)[-1][-1][0]
     hexip = make_hexip(ip)
-except:  # if we don't have an ip, default to someting in the 10.x.x.x private range
+except Exception:
+    # if we don't have an ip, default to someting in the 10.x.x.x private range
     ip = "10"
     rand = random.Random()
     for i in range(3):
@@ -112,6 +120,7 @@ except:  # if we don't have an ip, default to someting in the 10.x.x.x private r
 
 #################################
 # ##   Public module functions
+
 
 def generate(ip=None):
     """Generates a new guid.  A guid is unique in space and time because it combines
@@ -134,8 +143,12 @@ def generate(ip=None):
         parts.append("%016x" % now)
 
         # counter part
-        if lasttime != now:  # time to start counter over since we have a different millisecond
-            firstcounter = int(random.uniform(1, MAX_COUNTER))  # start at random position
+        if (
+            lasttime != now
+        ):  # time to start counter over since we have a different millisecond
+            firstcounter = int(
+                random.uniform(1, MAX_COUNTER)
+            )  # start at random position
             counter = firstcounter
         counter += 1
         if counter > MAX_COUNTER:
@@ -154,9 +167,9 @@ def generate(ip=None):
 
 def extract_time(guid):
     """Extracts the time portion out of the guid and returns the
-       number of seconds since the epoch as a float"""
+    number of seconds since the epoch as a float"""
     # return float(long(guid[0:16], 16)) / 1000.0
-    return float(int(guid[0:16], 16)) / 1000.0
+    return int(guid[0:16], 16) / 1000.0
 
 
 def extract_counter(guid):
@@ -174,7 +187,7 @@ def extract_ip(guid):
     return ".".join(thisip)
 
 
-### TESTING OF GUID CLASS ###
+# ### TESTING OF GUID CLASS ###
 if __name__ == "__main__":
     guids = []
     for i in range(10):  # calculate very fast so people can see the counter in action
@@ -183,10 +196,15 @@ if __name__ == "__main__":
     for guid in guids:
         print("GUID:", guid)
         guidtime = extract_time(guid)
+        # print(
+        #     "\tTime:   ",
+        #     time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(guidtime)),
+        #     "(millis: " + str(round(guidtime - int(guidtime), 3)) + ")",
+        # )
         print(
             "\tTime:   ",
             time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(guidtime)),
-            "(millis: " + str(round(guidtime - int(guidtime), 3)) + ")",
+            f"(millis: {str(round(guidtime - int(guidtime), 3))})",
         )
         print("\tIP:     ", extract_ip(guid))
         print("\tCounter:", extract_counter(guid))
