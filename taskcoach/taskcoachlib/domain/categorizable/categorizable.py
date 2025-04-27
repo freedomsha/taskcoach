@@ -328,7 +328,8 @@ class CategorizableCompositeObject(base.CompositeObject):
     def modificationEventTypes(class_):
         eventTypes = super().modificationEventTypes()
         if eventTypes is None:
-            eventTypes = []
+            # eventTypes = []
+            eventTypes = list()
         return eventTypes + [
             class_.categoryAddedEventType(),
             class_.categoryRemovedEventType(),
