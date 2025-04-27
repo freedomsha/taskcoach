@@ -96,8 +96,11 @@ from taskcoachlib.gui import (
     windowdimensionstracker,
 )
 from taskcoachlib.gui.uicommand import uicommand
-from .viewer import addViewers, ViewerContainer, viewerTypes
-from taskcoachlib.gui.newid import IdProvider
+# from taskcoachlib.gui.uicommand import base_uicommand
+# from taskcoachlib.gui.uicommand import settings_uicommand
+# from taskcoachlib.gui.uicommand import uicommandcontainer
+# from .viewer import addViewers, ViewerContainer, viewerTypes
+# from taskcoachlib.gui.newid import IdProvider
 
 # from .viewer import container, factory
 from taskcoachlib.gui.dialog.iphone import IPhoneSyncTypeDialog
@@ -592,7 +595,7 @@ class MainWindow(
             - Empêche l'apparition de "panneaux zombies" en s'assurant que tous les panneaux sont visibles.
             - Met à jour les titres des panneaux pour refléter la traduction correcte en cas de changement de langue.
         """
-        log.debug("Restauration de la perspective depuis les paramètres")
+        log.debug("__restore_perspective : Restauration de la perspective depuis les paramètres")
         perspective = self.settings.get("view", "perspective")
         #  Vérifie si le nombre de visionneuses a changé entre les versions
         for viewer_type in viewer.viewerTypes():
@@ -602,7 +605,8 @@ class MainWindow(
                 # lorsque le nom d'un spectateur
                 # est modifié entre les versions
                 perspective = ""  # Réinitialise la perspective en cas de différence
-                log.warning("Incompatibilité entre la perspective et les viewers")
+                log.warning("__restore_perspective : Incompatibilité entre la perspective et les viewers."
+                            "Le nombre de visionneuses dans la perspective actuelle de la fenêtre diffère de celui sauvegardé dans les paramètres")
                 break
 
         try:
@@ -611,7 +615,7 @@ class MainWindow(
             # Cela a été rapporté. Je ne sais pas pourquoi. Continuez
             # si c'est le cas.
             # Si la restauration échoue, affiche une erreur et utilise une perspective par défaut
-            log.error("Erreur lors de la restauration de la perspective : %s", reason, exc_info=True)
+            log.error("__restore_perspective : Erreur lors de la restauration de la perspective : %s", reason, exc_info=True)
 
             if self.__splash:
                 self.__splash.Destroy()
@@ -672,8 +676,9 @@ class MainWindow(
         Gère les changements de nom de fichier dans Task Coach et met à jour le titre de la fenêtre en conséquence.
 
         Args :
-            event (Event) : L'événement de changement de nom de fichier.
+            filename (str) : Nom du fichier.
         """
+        #    event (Event) : L'événement de changement de nom de fichier.
         self.__filename = filename
         self.__setTitle()
 
