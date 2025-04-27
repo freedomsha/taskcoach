@@ -40,12 +40,12 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
                        mixin.SearchableViewerMixin, mixin.NoteColumnMixin,
                        base.ListViewer):
     """
-        Vue des pièces jointes dans Task Coach.
+    Vue des pièces jointes dans Task Coach.
 
-        Cette classe gère l'affichage, le tri, la recherche, et l'interaction avec les pièces jointes
-        associées aux tâches. Elle permet également la gestion des colonnes et des menus contextuels
-        pour les pièces jointes.
-        """
+    Cette classe gère l'affichage, le tri, la recherche, et l'interaction avec les pièces jointes
+    associées aux tâches. Elle permet également la gestion des colonnes et des menus contextuels
+    pour les pièces jointes.
+    """
 
     # Classe de tri pour les pièces jointes
     # SorterClass = sorter.AttachmentSorter  # don't exist; Ne semble pas exister dans le code actuel noqa: F405
@@ -57,10 +57,10 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         Initialise la vue des pièces jointes.
 
-                Args:
-                    *args: Arguments positionnels.
-                    **kwargs: Arguments nommés et spécifiques, comme les pièces jointes à afficher.
-                """
+        Args :
+            *args : Arguments positionnels.
+            **kwargs : Arguments nommés et spécifiques, comme les pièces jointes à afficher.
+        """
         self.attachments = kwargs.pop("attachmentsToShow")
         kwargs.setdefault("settingssection", "attachmentviewer")
         super().__init__(*args, **kwargs)
@@ -69,41 +69,42 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         Ajoute des pièces jointes. Ne pas ajouter de pièces jointes à d'autres pièces jointes.
 
-                Args:
-                    attachments (list): Liste des pièces jointes à ajouter.
-                    item: Élément auquel ajouter les pièces jointes.
-                    **itemDialogKwargs: Arguments supplémentaires pour la boîte de dialogue d'ajout.
-                """
+        Args :
+            attachments (list) : Liste des pièces jointes à ajouter.
+            item : Élément auquel ajouter les pièces jointes.
+            **itemDialogKwargs : Arguments supplémentaires pour la boîte de dialogue d'ajout.
+        """
         # Don't try to add attachments to attachments.
-        super(AttachmentViewer, self)._addAttachments(attachments, None, **itemDialogKwargs)
+        print(f"viewer.attachment.AttachmentViewer._addAttachments : 📌 [DEBUG] Ajout des attachements : {attachments} dans self={self}")
+        super()._addAttachments(attachments, None, **itemDialogKwargs)
 
     def domainObjectsToView(self):
         """
-                Retourne les objets de domaine à afficher dans cette vue.
+        Retourne les objets de domaine à afficher dans cette vue.
 
-                Returns:
-                    list: Liste des pièces jointes à afficher.
-                """
+        Returns :
+            (list) : Liste des pièces jointes à afficher.
+        """
         return self.attachments
 
     def isShowingAttachments(self):
         """
         Vérifie si la vue affiche des pièces jointes.
 
-                Returns:
-                    bool: True si des pièces jointes sont affichées, sinon False.
-                """
+        Returns :
+            (bool) : True si des pièces jointes sont affichées, sinon False.
+        """
         return True
 
     def curselectionIsInstanceOf(self, class_):
         """
         Vérifie si la sélection courante est une instance de la classe spécifiée.
 
-                Args:
-                    class_ (type): Classe à vérifier.
+        Args :
+            class_ (type) : Classe à vérifier.
 
-                Returns:
-                    bool: True si la sélection est une instance de la classe spécifiée.
+        Returns :
+            (bool) : True si la sélection est une instance de la classe spécifiée.
                 """
         return class_ == attachment.Attachment
         # return isinstance(class_, attachment.Attachment)
@@ -112,8 +113,8 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         Crée et retourne le widget utilisé pour afficher les pièces jointes.
 
-        Returns:
-            wx.VirtualListCtrl: Le widget utilisé pour afficher les pièces jointes.
+        Returns :
+            wx.VirtualListCtrl : Le widget utilisé pour afficher les pièces jointes.
         """
         imageList = self.createImageList()
         itemPopupMenu = taskcoachlib.gui.menu.AttachmentPopupMenu(
@@ -134,8 +135,8 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         Crée et retourne les colonnes utilisées pour afficher les informations des pièces jointes.
 
-        Returns:
-            list: Liste des colonnes.
+        Returns :
+            (list) : Liste des colonnes.
         """
         # Unresolved attribute reference 'notesChangedEventType' for class '*Attachment'
         return [
@@ -226,8 +227,8 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         Crée et retourne les commandes de l'interface utilisateur pour gérer les colonnes.
 
-        Returns:
-            list: Liste des commandes pour les colonnes.
+        Returns :
+            (list) : Liste des commandes pour les colonnes.
         """
         return [
             uicommand.ToggleAutoColumnResizing(viewer=self,
@@ -261,11 +262,11 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
 
     def createCreationToolBarUICommands(self):
         """
-                Crée et retourne les commandes de la barre d'outils pour la création de pièces jointes.
+        Crée et retourne les commandes de la barre d'outils pour la création de pièces jointes.
 
-                Returns:
-                    tuple: Les commandes de création.
-                """
+        Returns :
+            (tuple) : Les commandes de création.
+        """
         return (uicommand.AttachmentNew(attachments=self.presentation(),
                                         settings=self.settings,
                                         viewer=self)) + \
@@ -273,26 +274,26 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
 
     def createActionToolBarUICommands(self):
         """
-                Crée et retourne les commandes de la barre d'outils pour les actions sur les pièces jointes.
+        Crée et retourne les commandes de la barre d'outils pour les actions sur les pièces jointes.
 
-                Returns:
-                    tuple: Les commandes d'action.
-                """
+        Returns :
+            (tuple) : Les commandes d'action.
+        """
         return (uicommand.AttachmentOpen(attachments=attachment.AttachmentList(),
                                          viewer=self, settings=self.settings)) + \
             super().createActionToolBarUICommands()
 
     def typeImageIndices(self, anAttachment, exists=os.path.exists):  # pylint: disable=W0613
         """
-                Retourne les indices des images associées à un type de pièce jointe.
+        Retourne les indices des images associées à un type de pièce jointe.
 
-                Args:
-                    anAttachment (attachment.Attachment): La pièce jointe.
-                    exists (callable): Fonction pour vérifier l'existence du fichier.
+        Args :
+            anAttachment (attachment.Attachment) : La pièce jointe.
+            exists (callable) : Fonction pour vérifier l'existence du fichier.
 
-                Returns:
-                    dict: Dictionnaire des indices d'images en fonction de l'icône standard de wx.
-                """
+        Returns :
+            (dict) : Dictionnaire des indices d'images en fonction de l'icône standard de wx.
+        """
         if anAttachment.type_ == "file":
             attachmentBase = self.settings.get("file", "attachmentbase")
             if exists(anAttachment.normalizedLocation(attachmentBase)):
@@ -312,45 +313,45 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
 
     def itemEditorClass(self):
         """
-                Retourne la classe de l'éditeur d'éléments.
+        Retourne la classe de l'éditeur d'éléments.
 
-                Returns:
-                    type: Classe de l'éditeur d'éléments.
-                """
+        Returns :
+            (type) : Classe de l'éditeur d'éléments.
+        """
         return dialog.editor.AttachmentEditor
 
     def newItemCommandClass(self):
         """
-                Classe de commande pour créer un nouvel élément. Non implémenté ici.
+        Classe de commande pour créer un nouvel élément. Non implémenté ici.
 
-                Raises:
-                    NotImplementedError: Non implémenté.
-                """
+        Raises :
+            NotImplementedError : Non implémenté.
+        """
         raise NotImplementedError  # pragma: no cover
 
     def newSubItemCommandClass(self):
         """
-                Classe de commande pour créer un sous-élément. Non applicable ici.
+        Classe de commande pour créer un sous-élément. Non applicable ici.
 
-                Returns:
-                    None: Cette vue ne supporte pas la création de sous-éléments.
-                """
+        Returns :
+            None : Cette vue ne supporte pas la création de sous-éléments.
+        """
         return None
 
     def deleteItemCommandClass(self):
         """
-                Classe de commande pour supprimer un élément. Non implémenté ici.
+        Classe de commande pour supprimer un élément. Non implémenté ici.
 
-                Raises:
-                    NotImplementedError: Non implémenté.
-                """
+        Raises :
+            NotImplementedError : Non implémenté.
+        """
         raise NotImplementedError  # pragma: no cover
 
     def cutItemCommandClass(self):
         """
-                Classe de commande pour couper un élément. Non implémenté ici.
+        Classe de commande pour couper un élément. Non implémenté ici.
 
-                Raises:
-                    NotImplementedError: Non implémenté.
-                """
+        Raises :
+            NotImplementedError : Non implémenté.
+        """
         raise NotImplementedError  # pragma: no cover
