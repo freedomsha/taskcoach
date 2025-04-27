@@ -16,13 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test
 import wx
-from ....taskcoachlib import gui, config, persistence
-from ....taskcoachlib.domain import attachment
+from taskcoachlib import gui, config, persistence
+from taskcoachlib.domain import attachment
+from ... import tctest
 
 
-class AttachmentViewerTest(test.wxTestCase):
+class AttachmentViewerTest(tctest.wxTestCase):
     def setUp(self):
         settings = config.Settings(load=False)
         self.taskFile = persistence.TaskFile()
