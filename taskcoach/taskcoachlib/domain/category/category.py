@@ -27,10 +27,11 @@ class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject)
         super().__init__(subject=subject, children=children or [],
                          parent=parent, description=description,
                          *args, **kwargs)
-        self.__categorizables = base.SetAttribute(set(categorizables or []),
-                                                  self,
-                                                  self.categorizableAddedEvent,
-                                                  self.categorizableRemovedEvent, weak=True)
+        # Liste d'attributs de base contenant la liste des catégorisables.
+        self.__categorizables = base.SetAttribute(values=set(categorizables or []),
+                                                  owner=self,
+                                                  addEvent=self.categorizableAddedEvent,
+                                                  removeEvent=self.categorizableRemovedEvent, weak=True)
         self.__filtered = filtered
         self.__exclusiveSubcategories = exclusiveSubcategories
 
@@ -109,7 +110,9 @@ class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject)
             eachCategorizable.categorySubjectChangedEvent(event, subject)
 
     def categorizables(self, recursive=False):
+        # Met la Liste d'attributs de base contenant la liste des catégorisables dans result.
         result = self.__categorizables.get()
+        # Si récursive, pour chaque enfant de la liste d'enfants, result devient result OU la liste d'attributs de l'enfant :
         if recursive:
             for child in self.children():
                 result |= child.categorizables(recursive)
