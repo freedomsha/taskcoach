@@ -18,6 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Vous devez spécifier les classes de mixin avant les autres classes.
 """
 
 # from future import standard_library
@@ -37,8 +39,9 @@ from pubsub import pub
 import wx
 
 
-class SearchableViewerMixin:  # Il manque les classes mères
-    """ Une visionneuse consultable. Il s'agit d'une classe mixin. """
+# Il manque les classes mères, normal ce sont des Mixins
+class SearchableViewerMixin:
+    """ Classe Mixin pour obtenir une visionneuse consultable."""
 
     # @staticmethod
     def isSearchable(self):
@@ -95,7 +98,7 @@ class SearchableViewerMixin:  # Il manque les classes mères
 
 
 # class FilterableViewerMixin:
-class FilterableViewerMixin(object):
+class FilterableViewerMixin:
     """ A viewer that is filterable. This is a mixin class. """
 
     def __init__(self, *args, **kwargs):
@@ -537,7 +540,7 @@ class SortableViewerForTasksMixin(
         return commands
 
 
-class AttachmentDropTargetMixin(object):
+class AttachmentDropTargetMixin:
     """ Classe Mixin pour les téléspectateurs qui sont des cibles de dépôt pour les pièces jointes (attachments). """
 
     def widgetCreationKeywordArguments(self):
@@ -552,6 +555,7 @@ class AttachmentDropTargetMixin(object):
             ajoutez les pièces jointes à cet objet. Si l'élément est None, utilisez le
             newItemDialog pour créer un nouvel objet de domaine et ajouter les pièces jointes
             à ce nouvel objet. """
+        print(f"mixin.AttachmentDropTargetMixin._addAttachments : 📌 [DEBUG] Ajout des attachements : {attachments}")
         if item is None:
             itemDialogKwargs["subject"] = attachments[0].subject()
             if self.settings.get(
