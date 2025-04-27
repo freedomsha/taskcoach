@@ -30,6 +30,7 @@ class AttachmentOwner(object, metaclass=base.DomainObjectOwnerMetaclass):
         # like taskcoachlib/patterns/observer/addItemEventType
         # and taskcoachlib/domain/base/owner/noteAddedEventType
         # return '%s.add' % cls
+        return f"{class_}.add"
         pass
 
     @classmethod
@@ -37,4 +38,9 @@ class AttachmentOwner(object, metaclass=base.DomainObjectOwnerMetaclass):
         # like taskcoachlib/patterns/observer/removeItemEventType
         # and taskcoachlib/domain/base/owner/noteRemovedEventType
         # return '%s.remove' % cls
+        return f"{class_}.remove"
+        pass
+
+    def attachments(self):
+        print("AttachmentOwner.attachments est appelé !")
         pass
