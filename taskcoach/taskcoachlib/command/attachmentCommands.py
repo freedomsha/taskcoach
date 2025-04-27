@@ -71,6 +71,8 @@ class AddAttachmentCommand(base.BaseCommand):
 
     @patterns.eventSource
     def addAttachments(self, event=None):
+        print(f"attachmentCommands.AddAttachmentsCommand.addAttachments : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self.attachments}, event={event}")
+
         kwargs = dict(event=event)
         for owner in self.owners:
             owner.addAttachments(*self.__attachments, **kwargs)  # pylint: disable=W0142
@@ -106,6 +108,8 @@ class RemoveAttachmentCommand(base.BaseCommand):
 
     @patterns.eventSource
     def addAttachments(self, event=None):
+        print(f"attachmentsCommands.RemoveAttachmentCommand.addAttachments : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self.attachments}, event={event}")
+
         kwargs = dict(event=event)
         for item in self.items:
             item.addAttachments(*self._attachments, **kwargs)  # pylint: disable=W0142
