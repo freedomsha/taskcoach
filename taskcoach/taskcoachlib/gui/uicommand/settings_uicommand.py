@@ -18,8 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import str
-from taskcoachlib.gui.uicommand import base_uicommand
+import logging
 import wx
+from taskcoachlib.gui.uicommand import base_uicommand
+
+log = logging.getLogger(__name__)
 
 
 class SettingsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
@@ -34,15 +37,11 @@ class SettingsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
 
 
 class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
-    """ Bae class for commands that change a boolean setting.
-        Whenever the setting is changed, the user interface
-        representation is changed as well. E.g. a menu gets
-        a checkmark.
+    """ Classe de Base pour les commandes qui modifient un paramètre booléen.
 
-        Classe Bae pour les commandes qui modifient un paramètre booléen.
         Chaque fois que le paramètre est modifié,
         la représentation de l'interface utilisateur est également modifiée.
-        Par exemple. un menu est coché.
+        Par exemple, un menu est coché.
         """
 
     def __init__(self, value=None, *args, **kwargs):
@@ -55,10 +54,21 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
 
     def addToMenu(self, menu, window, position=None):
         # def addToMenu(self, menu, window, position=None) -> int:
-        """ Ajouter un sous_menu au menu"""
+        """ Ajouter un sous_menu au menu (Toolbar).
+
+        Args :
+            menu : Menu à ajouter
+            window : Fenêtre
+            position : Position.
+
+        Returns :
+            menuId (int) : ID du Menu ajouté.
+        """
+        log.debug(f"BooleanSettingsCommand.addToMenu ajoute le sous-menu {self} au menu {menu} de la fenêtre {window} à la position {position}.")
         # print(f"tclib.gui.uicommand.setings_uicommand.py BooleanSettingCommand.addToMenu essaie d'ajouter: self =",
         #      repr(self), " au",
         #      f"menu: {menu} dans window: {window}")
+        # Définition de l'ID du menu ajouté via la méthode super :
         menuId = super().addToMenu(menu, window, position)
 
         # print(f'menuId: {menuId} ajouté' )
@@ -66,6 +76,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         # menuId: <wx._core.MenuItem object at 0x7f9bffc23ec0>
         # ce devrait être un nombre entier !
 
+        # Recherche l'ID du sous-menu dans la liste des IDs dans menu.
         # print(f"essaie try FindItemById de {menuId}")
         menuItem = menu.FindItemById(menuId)
         # print(f"résultat: menuItem: {menuItem}")
@@ -76,13 +87,16 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
                 menuItem.Check(self.isSettingChecked())
             except TypeError as e:
                 # menuItem = menu.FindItemById(menuId)  # ?
-                print(f"tclib.gui.uicommand.settings_uicommand l75: Error d'ajout de UI command au menu: {e}")
+                # print(f"tclib.gui.uicommand.settings_uicommand l75: Error d'ajout de UI command au menu: {e}")
+                log.debug("BooleanSettingsCommand.addToMenu: Error d'ajout de UI command au menu: %s", e)
                 # TypeError: Menu.FindItemById(): argument 1 has unexpected type 'MenuItem'
         else:
             # Gérer le cas où menuItem est None
             # print("Erreur: menuItem est None.")
+            log.info("BooleanSettingsCommand.addToMenu: Erreur: menuItem est None.")
             pass
 
+        log.debug(f"BooleanSettingsCommand.addToMenu retourne menuId={menuId}")
         return menuId
 
     def isSettingChecked(self):
@@ -125,7 +139,7 @@ class UICheckCommand(BooleanSettingsCommand):
 
 class UIRadioCommand(BooleanSettingsCommand):
     def __init__(self, *args, **kwargs):
-        super().__init__(kind=wx.ITEM_RADIO, bitmap='',
+        super().__init__(kind=wx.ITEM_RADIO, bitmap="",
                          *args, **kwargs)
 
     def onUpdateUI(self, event):
