@@ -21,13 +21,14 @@ class handles setting and getting a single value with an associated event handle
 values, allowing elements to be added or removed with events triggered accordingly. Both classes utilize the
 `patterns.eventSource` decorator to facilitate event handling.
 
-Ce code Python définit deux classes, `attribut` et` setAttribute`, qui fournissent un moyen de gérer les attributs
-simples et multiples avec la gestion des événements. Les classes utilisent des références faibles pour leurs objets
+Ce code Python définit deux classes, `attribut` et` setAttribute`, qui fournissent
+un moyen de gérer les attributs simples et multiples avec la gestion des événements.
+Les classes utilisent des références faibles pour leurs objets
 propriétaires pour éviter les fuites de mémoire.
 La classe `attribut` gère le réglage et l'obtention d'une valeur unique
 avec un gestionnaire d'événements associé. La classe `SetAttribute` gère un ensemble de valeurs, permettant d'ajouter
 ou de supprimer des éléments avec des événements déclenchés en conséquence. Les deux classes utilisent le décorateur
-`Mpatterns.eventSource' pour faciliter la manipulation des événements.
+`patterns.eventSource' pour faciliter la manipulation des événements.
 
 """
 
