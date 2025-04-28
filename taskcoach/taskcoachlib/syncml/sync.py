@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib.syncml.tasksource import TaskSource
 from taskcoachlib.syncml.notesource import NoteSource
 from taskcoachlib.syncml.config import SyncMLConfigNode
-from taskcoachlib.syncml.core import *  # deprecied method
+# from taskcoachlib.syncml.core import *  # deprecied method
+from taskcoachlib.syncml.core import ManagementNode, DMTree, SyncSourceConfig, SyncClient, DMTClientConfig
 from taskcoachlib.i18n import _
 from taskcoachlib.meta import data
 import sys
@@ -102,22 +103,32 @@ class Synchronizer(wx.ProgressDialog):
             _("Synchronization"), _("Synchronizing. Please wait.\n\n\n")
         )
 
-        self.clientName = "TaskCoach-%s" % taskFile.guid().encode("UTF-8")
+        # self.clientName = "TaskCoach-%s" % taskFile.guid().encode("UTF-8")
+        self.clientName = "TaskCoach-%s" % taskFile.guid()
         self.reportCallback = reportCallback
         self.taskFile = taskFile
 
         cfg = taskFile.syncMLConfig()
 
+        # self.username = (
+        #     cfg[self.clientName]["spds"]["syncml"]["Auth"]
+        #     .get("username")
+        #     .encode("UTF-8")
+        # )  # Hum...
         self.username = (
             cfg[self.clientName]["spds"]["syncml"]["Auth"]
             .get("username")
-            .encode("UTF-8")
         )  # Hum...
-        self.password = password.encode("UTF-8")
+        # self.password = password.encode("UTF-8")
+        self.password = password
+        # self.url = (
+        #     cfg[self.clientName]["spds"]["syncml"]["Conn"]
+        #     .get("syncUrl")
+        #     .encode("UTF-8")
+        # )
         self.url = (
             cfg[self.clientName]["spds"]["syncml"]["Conn"]
             .get("syncUrl")
-            .encode("UTF-8")
         )
 
         self.synctasks = (
@@ -133,19 +144,31 @@ class Synchronizer(wx.ProgressDialog):
             == "True"
         )
 
+        # self.taskdbname = (
+        #     cfg[self.clientName]["spds"]["sources"][
+        #         "%s.Tasks" % self.clientName
+        #     ]
+        #     .get("uri")
+        #     .encode("UTF-8")
+        # )
         self.taskdbname = (
             cfg[self.clientName]["spds"]["sources"][
                 "%s.Tasks" % self.clientName
             ]
             .get("uri")
-            .encode("UTF-8")
         )
+        # self.notedbname = (
+        #     cfg[self.clientName]["spds"]["sources"][
+        #         "%s.Notes" % self.clientName
+        #     ]
+        #     .get("uri")
+        #     .encode("UTF-8")
+        # )
         self.notedbname = (
             cfg[self.clientName]["spds"]["sources"][
                 "%s.Notes" % self.clientName
             ]
             .get("uri")
-            .encode("UTF-8")
         )
 
         self.taskmode = cfg[self.clientName]["spds"]["sources"][
