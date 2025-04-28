@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from __future__ import absolute_import
 
-from unittests import asserts
+from tests.unittests import asserts
 from .CommandTestCase import CommandTestCase
 from .TaskCommandsTest import TaskCommandTestCase, CommandWithChildrenTestCase, \
     CommandWithEffortTestCase
@@ -169,7 +169,7 @@ class PasteCommandWithEffortTest(CommandWithEffortTestCase):
         self.cut([self.effort1])
         self.paste()
         self.assertDoUndoRedo(lambda: self.assertEqual(2, len(self.originalEffortList)),
-                              lambda: self.assertEqualLists([self.effort2], self.effortList))
+                              lambda: self.assertEqualLists([self.effort2], self.effortList))  # a remplacer par assertListEqual
 
     def testClipboardIsNotEmptyAfterPaste(self):
         self.cut([self.effort1])
@@ -367,7 +367,7 @@ class CopyCommandWithEffortTest(CommandWithEffortTestCase):
 
 
 class DragAndDropWithTasksTest(CommandWithChildrenTestCase):
-    def dragAndDrop(self, draggedItems, dropItem):  # pylint: disable=W0222
+    def dragAndDrop(self, draggedItems, dropItem):  # pylint: disable=W0222 (dropTarget, tasks) or (draggedItems, dropItem) ?
         command.DragAndDropTaskCommand(self.taskList, draggedItems, drop=[dropItem]).do()
 
     def testDragAndDropRootTask(self):
