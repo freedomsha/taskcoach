@@ -25,17 +25,17 @@ class GridCursor:
     """
     Classe utilitaire pour aider lors de l’ajout de contrôles à un GridBagSizer.
 
-    Attributes:
-        __columns (int): Le nombre de colonnes dans la grille.
-        __nextPosition (tuple): Position suivante pour ajouter un contrôle.
+    Attributes :
+        __columns (int) : Le nombre de colonnes dans la grille.
+        __nextPosition (tuple) : Position suivante pour ajouter un contrôle.
     """
 
     def __init__(self, columns):
         """
         Initialisez l'instance GridCursor.
 
-        Args:
-            columns (int): Le nombre de colonnes dans la grille.
+        Args :
+            columns (int) : Le nombre de colonnes dans la grille.
         """
         self.__columns = columns
         self.__nextPosition = (0, 0)
@@ -44,8 +44,8 @@ class GridCursor:
         """
         Met à jour la position du curseur en tenant compte de colspan.
 
-        Args:
-            colspan (int): Nombre de colonnes couvertes(spanned) par le contrôle.
+        Args :
+            colspan (int) : Nombre de colonnes couvertes (spanned) par le contrôle.
         """
         row, column = self.__nextPosition
         if column == self.__columns - colspan:
@@ -59,11 +59,11 @@ class GridCursor:
         """
         Obtenez la position suivante pour un contrôle.
 
-        Args:
-            colspan (int, optional): Le nombre de colonnes couvertes(spanned) par le contrôle. Defaults à 1.
+        Args :
+            colspan (int) : (optional) Le nombre de colonnes couvertes (spanned) par le contrôle. Defaults à 1.
 
-        Returns:
-            tuple: La prochaine position (row, column).
+        Returns :
+            (tuple) : La prochaine position (row, column).
         """
         row, column = self.__nextPosition
         self.__updatePosition(colspan)
@@ -74,7 +74,7 @@ class GridCursor:
         Obtenir l'index de ligne maximum.
 
         Returns:
-            int: L'index de ligne maximum.
+            (int) : L'index de ligne maximum.
         """
         row, column = self.__nextPosition
         return max(0, row - 1) if column == 0 else row
@@ -82,26 +82,26 @@ class GridCursor:
 
 class BookPage(wx.Panel):
     """
-    Une page dans un cahier(notebook).
+    Une page dans un cahier (notebook).
 
-    Attributes:
-        _sizer (wx.GridBagSizer): Le sizer pour organiser les contrôles.
-        _columns (int): Le nombre de colonnes dans la grille.
-        _position (GridCursor): Le curseur pour les contrôles de positionnement.
-        _growableColumn (int): L'index de la colonne extensible.
-        _borderWidth (int): La largeur de la bordure autour des contrôles.
+    Attributes :
+        _sizer (wx.GridBagSizer) : Le sizer pour organiser les contrôles.
+        _columns (int) : Le nombre de colonnes dans la grille.
+        _position (GridCursor) : Le curseur pour les contrôles de positionnement.
+        _growableColumn (int) : L'index de la colonne extensible.
+        _borderWidth (int) : La largeur de la bordure autour des contrôles.
     """
 
     def __init__(self, parent, columns, growableColumn=None, *args, **kwargs):
         """
         Initialise l'instance BookPage.
 
-        Args:
-            parent (wx.Window): La fenêtre parente.
-            columns (int): Le nombre de colonnes dans la grille.
-            growableColumn (int, optional): L'index de la colonne augmentable. Defaults to None.
-            *args: Liste d’arguments de longueur variable.
-            **kwargs: Arguments de mots clés arbitraires.
+        Args :
+            parent (wx.Window) : La fenêtre parente.
+            columns (int) : Le nombre de colonnes dans la grille.
+            growableColumn (int, optional) : L'index de la colonne augmentable. Defaults to None.
+            *args : Liste d’arguments de longueur variable.
+            **kwargs : Arguments de mots clés arbitraires.
         """
         super().__init__(parent, style=wx.TAB_TRAVERSAL, *args, **kwargs)
         self._sizer = wx.GridBagSizer(vgap=5, hgap=5)
@@ -123,11 +123,11 @@ class BookPage(wx.Panel):
         """
         Renvoie les indicateurs par défaut pour placer une liste de contrôles.
 
-        Args:
-            controls (list): La liste des contrôles.
+        Args :
+            controls (list) : La liste des contrôles.
 
-        Returns:
-            list: La liste des indicateurs par défaut.
+        Returns :
+            (list) : La liste des indicateurs par défaut.
         """
         labelInFirstColumn = type(controls[0]) in [type(""), type("")]
         # TODO: essayer:
@@ -146,12 +146,12 @@ class BookPage(wx.Panel):
         """
         Renvoie une liste fusionnée d'indicateurs en remplaçant les indicateurs par défaut par les indicateurs transmis par l'appelant.
 
-        Args:
-            controls (list): La liste des contrôles.
-            flagsPassed (list or None): La liste des indicateurs transmis par l'appelant.
+        Args :
+            controls (list) : La liste des contrôles.
+            flagsPassed (list or None) : La liste des indicateurs transmis par l'appelant.
 
-        Returns:
-            list: La liste des drapeaux fusionnés(merged).
+        Returns :
+            (list) : La liste des drapeaux fusionnés(merged).
         """
         flagsPassed = flagsPassed or [None] * len(controls)
         # TODO : try to replaced by:
@@ -168,22 +168,22 @@ class BookPage(wx.Panel):
         """
         Ajoute un certain nombre de contrôles à la page. Tous les contrôles sont placés sur une seule ligne et forment ensemble une seule entrée.
 
-        Par exemple. une étiquette, un champ de texte et une étiquette explicative. Les indicateurs par défaut
+        Par exemple, une étiquette, un champ de texte et une étiquette explicative. Les indicateurs par défaut
         pour placer les contrôles peuvent être remplacés en
         fournissant un paramètre de mot-clé « flags ». les drapeaux doivent être une liste de drapeaux
         (wx.ALIGN_LEFT et autres). La liste peut
-        contenir Aucun pour les contrôles qui doivent être placés à l'aide de l'indicateur par défaut
-        . Si la liste des indicateurs est plus courte que le nombre de contrôles
-        , elle est étendue avec autant de « Aucun » que nécessaire.
-        Ainsi, addEntry(aLabel, aTextCtrl, flags=[None, wx.ALIGN_LEFT])
+        contenir Aucun pour les contrôles qui doivent être placés à l'aide de l'indicateur par défaut.
+        Si la liste des indicateurs est plus courte que le nombre de contrôles,
+        elle est étendue avec autant de « Aucun » que nécessaire.
+        Ainsi, addEntry (aLabel, aTextCtrl, flags=[None, wx.ALIGN_LEFT])
         le fera. placez l'étiquette avec le drapeau par défaut et placera le textCtrl
         aligné à gauche.
 
-        Args:
-            *controls: Liste de contrôles de longueur variable.
-            **kwargs: Arguments de mots clés arbitraires, notamment:
-                - flags (list): Liste des drapeaux pour placer les contrôles.
-                - growable (bool): Indique si la ligne doit pouvoir être développée.
+        Args :
+            *controls : Liste de contrôles de longueur variable.
+            **kwargs : Arguments de mots clés arbitraires, notamment :
+                - flags (list) : Liste des drapeaux pour placer les contrôles.
+                - growable (bool) : Indique si la ligne doit pouvoir être développée.
         """
         flags = self.__determineFlags(controls, kwargs.get("flags", None))
         controls = [
@@ -226,18 +226,18 @@ class BookPage(wx.Panel):
         """
         Ajoutez un contrôle au sizer.
 
-        Args:
-            columnIndex (int): L'index de la colonne.
-            control (wx.Window): Le contrôle à ajouter.
-            flag (int): Les drapeaux pour placer le contrôle.
-            lastColumn (bool): Si le contrôle est dans la dernière colonne.
+        Args :
+            columnIndex (int) : L'index de la colonne.
+            control (wx.Window) : Le contrôle à ajouter.
+            flag (int) : Les drapeaux pour placer le contrôle.
+            lastColumn (bool) : Si le contrôle est dans la dernière colonne.
         """
         colspan = max(self._columns - columnIndex, 1) if lastColumn else 1
         # position = self._position.next(colspan)
         #
         # # Sortie de débogage pour vérifier les valeurs transmises
         # print(
-        #     f"notebook.py:Adding control: {control}, Position: {position}, Span: {(1, colspan)}, Flag: {flag}, Border: {self._borderWidth}"
+        #     f"notebook.py:Adding control : {control}, Position: {position}, Span: {(1, colspan)}, Flag: {flag}, Border: {self._borderWidth}"
         # )
         #
         # # Assurez-vous que l'indicateur est un entier
@@ -257,11 +257,11 @@ class BookPage(wx.Panel):
         """
         Créez un contrôle StaticText si le contrôle donné est une chaîne.
 
-        Args:
-            control: Le contrôle ou la chaîne.
+        Args :
+            control : Le contrôle ou la chaîne.
 
-        Returns:
-            wx.Window: Le contrôle.
+        Returns :
+            control (wx.Window) : Le contrôle.
         """
         if type(control) in [type(""), type("")]:  # TODO: essayer de le remplacer par
             # if isinstance(control, str):
@@ -273,9 +273,9 @@ class BookMixin(object):
     """
     Classe Mixin pour les composants *book.
 
-    Attributes:
-        _bitmapSize (tuple): La taille du bitmap.
-        pageChangedEvent (str): L'événement pour les changements de page.
+    Attributes :
+        _bitmapSize (tuple) : La taille du bitmap.
+        pageChangedEvent (str) : L'événement pour les changements de page.
     """
 
     _bitmapSize = (16, 16)
@@ -300,17 +300,18 @@ class BookMixin(object):
         Manière plus pythonique d'obtenir une page spécifique, également utile pour itérer
         sur toutes les pages, par exemple : pour la page du cahier : ...
 
-        Args:
-            index (int): L'index de la page.
+        Args :
+            index (int) : L'index de la page.
 
-        Returns:
-            wx.Window: La page.
+        Returns :
+            (wx.Window) : La page.
 
-        Raises:
-            IndexError: Si l'index est hors de portée.
+        Raises :
+            IndexError : Si l'index est hors de portée.
         """
-        if index < self.GetPageCount():
-            return self.GetPage(index)
+        if index < self.GetPageCount():  # Unresolved attribute reference 'GetPageCount' for class 'BookMixin'
+            return self.GetPage(index)  # Unresolved attribute reference 'GetPage' for class 'BookMixin'
+            # Normal, c'est un mixin !
         else:
             raise IndexError
 
@@ -318,8 +319,8 @@ class BookMixin(object):
         """
         Gérer l’événement de modification de page. Peut être remplacé dans une sous-classe pour faire quelque chose d'utile.
 
-        Args:
-            event (wx.Event): Événement de changement de page.
+        Args :
+            event (wx.Event) : Événement de changement de page.
         """
         event.Skip()
 
@@ -327,34 +328,34 @@ class BookMixin(object):
         """
         Remplace AddPage pour permettre de spécifier simplement le nom du bitmap.
 
-        Args:
-            page (wx.Window): La page à ajouter.
-            name (str): Le nom de la page.
-            bitmap (str, optional): Le nom du bitmap. La valeur par défaut est Aucun.
+        Args :
+            page (wx.Window) : La page à ajouter.
+            name (str) : Le nom de la page.
+            bitmap (str, optional) : Le nom du bitmap. La valeur par défaut est None (Aucun).
         """
         bitmap = wx.ArtProvider.GetBitmap(
             bitmap, wx.ART_MENU, self._bitmapSize
         )
-        super().AddPage(page, name, bitmap=bitmap)
+        super().AddPage(page, name, bitmap=bitmap)  # Unresolved attribute reference 'AddPage' for class 'object'
 
     def ok(self, *args, **kwargs):
         """
         Effectuez l'action « ok » pour toutes les pages.
 
-        Args:
-            *args: Liste d’arguments de longueur variable.
-            **kwargs: Arguments de mots clés arbitraires.
+        Args :
+            *args : Liste d’arguments de longueur variable.
+            **kwargs : Arguments de mots clés arbitraires.
         """
         for page in self:
-            page.ok(*args, **kwargs)
+            page.ok(*args, **kwargs)  # Unresolved attribute reference 'ok' for class 'Window'
 
 
 class Notebook(BookMixin, aui.AuiNotebook):
     """
     Un Notebook doté de fonctionnalités AUI (Advanced User Interface).
 
-    Attributes:
-        pageChangedEvent (str): L'événement pour les changements de page.
+    Attributes :
+        pageChangedEvent (str) : L'événement pour les changements de page.
     """
 
     pageChangedEvent = aui.EVT_AUINOTEBOOK_PAGE_CHANGED
