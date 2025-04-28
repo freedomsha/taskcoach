@@ -66,13 +66,13 @@ class XMLWriterTest(tctest.TestCase):
         Configure les objets nécessaires pour les tests.
 
         Initialise les objets XMLWriter, tâche, catégories et notes avant chaque
-        test. Utilise `io.StringIO` pour capturer la sortie XML dans un flux mémoire.
+        test. Utilise `io.StringIO ou io.BytesIO` pour capturer la sortie XML dans un flux mémoire.
         """
         task.Task.settings = config.Settings(load=False)
         # Flux mémoire pour capturer la sortie XML :
-        self.fd = io.StringIO()  # Cela crée un objet StringIO (Un flux de texte utilisant un tampon de texte en mémoire).
+        # self.fd = io.StringIO()  # Cela crée un objet StringIO (Un flux de texte utilisant un tampon de texte en mémoire).
         # Use BytesIO for binary data
-        # self.fd = io.BytesIO()
+        self.fd = io.BytesIO()
         self.fd.name = "testfile.tsk"  # Name attribute assignment might not be necessary for StringIO
         # Pour StringIO, encoding n'est plus réglable. utf-8 est automatique.
         # self.fd.encoding = "UTF-8"  # Remove or comment this out if it's present in your code
@@ -123,7 +123,7 @@ class XMLWriterTest(tctest.TestCase):
         Args :
             xmlFragment (str) : Fragment de XML attendu.
 
-        Lève :
+        Assertions :
             AssertionError : Si le fragment attendu n'est pas trouvé dans la sortie XML.
         """
         xml = self.__writeAndRead()
