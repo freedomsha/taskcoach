@@ -309,28 +309,30 @@ def _get_modpkg_path(dotted_name, pathlist=None):
     if len(parts) > 1:
         # we have a dotted path, import top-level package
         try:
-            file, pathname, description = imp.find_module(parts[0], pathlist)  # TODO : trouver de quoi remplacer
+            # file, pathname, description = imp.find_module(parts[0], pathlist)  # TODO : trouver de quoi remplacer
+            file, pathname, description = util.find_spec(parts[0], pathlist)
             if file:
                 file.close()
         except ImportError:
             return None
 
-        # check if it's indeed a package
-        if description[2] == imp.PKG_DIRECTORY:
-            # recursively handle the remaining name parts
-            pathname = _get_modpkg_path(parts[1], [pathname])
-        else:
-            pathname = None
+        # # check if it's indeed a package
+        # if description[2] == imp.PKG_DIRECTORY:  # PKG_DIRECTORY a été abandonné
+        #     # recursively handle the remaining name parts
+        #     pathname = _get_modpkg_path(parts[1], [pathname])
+        # else:
+        #     pathname = None
     else:
         # plain name
         try:
-            file, pathname, description = imp.find_module(
+            # file, pathname, description = imp.find_module(
+            file, pathname, description = util.find_spec(
                 dotted_name, pathlist
             )
             if file:
                 file.close()
-            if description[2] not in [imp.PY_SOURCE, imp.PKG_DIRECTORY]:
-                pathname = None
+            # if description[2] not in [imp.PY_SOURCE, imp.PKG_DIRECTORY]:  # les 2 sont obsolètes
+            #     pathname = None
         except ImportError:
             pathname = None
 
