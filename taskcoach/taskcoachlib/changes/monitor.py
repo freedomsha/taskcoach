@@ -119,7 +119,8 @@ class ChangeMonitor(Observer):
     def unmonitorClass(self, klass):
         if klass in self._classes:
             for name in klass.monitoredAttributes():
-                eventType = getattr(klass, "%sChangedEventType" % name)()
+                # eventType = getattr(klass, "%sChangedEventType" % name)()
+                eventType = getattr(klass, f"{name}ChangedEventType")()
                 if eventType.startswith("pubsub"):
                     pub.unsubscribe(self.onAttributeChanged, eventType)
                 else:
@@ -198,7 +199,8 @@ class ChangeMonitor(Observer):
         for type_, valBySource in list(event.sourcesAndValuesByType().items()):  # TODO : problème potentiel
             for obj in list(valBySource.keys()):
                 for name in obj.monitoredAttributes():
-                    if type_ == getattr(obj, "%sChangedEventType" % name)():
+                    # if type_ == getattr(obj, "%sChangedEventType" % name)():
+                    if type_ == getattr(obj, f"{name}ChangedEventType")():
                         if (
                             obj.id() in self._changes
                             and self._changes[obj.id()] is not None
@@ -300,10 +302,13 @@ class ChangeMonitor(Observer):
                 for theCategory in event.values(source=obj):
                     # name = "_category:%s" % theCategory.id()
                     name = f"_category:{theCategory.id()}"
-                    if "__del" + name in self._changes[obj.id()]:
-                        self._changes[obj.id()].remove("__del" + name)
+                    # if "__del" + name in self._changes[obj.id()]:
+                    if f"__del{name}" in self._changes[obj.id()]:
+                        # self._changes[obj.id()].remove("__del" + name)
+                        self._changes[obj.id()].remove(f"__del{name}")
                     else:
-                        self._changes[obj.id()].add("__add" + name)
+                        # self._changes[obj.id()].add("__add" + name)
+                        self._changes[obj.id()].add(f"__add{name}")
 
     def onCategoryRemoved(self, event):
         if self.__frozen:
@@ -314,10 +319,13 @@ class ChangeMonitor(Observer):
                 for theCategory in event.values(source=obj):
                     # name = "_category:%s" % theCategory.id()
                     name = f"_category:{theCategory.id()}"
-                    if "__add" + name in self._changes[obj.id()]:
-                        self._changes[obj.id()].remove("__add" + name)
+                    # if "__add" + name in self._changes[obj.id()]:
+                    if f"__add{name}" in self._changes[obj.id()]:
+                        # self._changes[obj.id()].remove("__add" + name)
+                        self._changes[obj.id()].remove(f"__add{name}")
                     else:
-                        self._changes[obj.id()].add("__del" + name)
+                        # self._changes[obj.id()].add("__del" + name)
+                        self._changes[obj.id()].add(f"__del{name}")
 
     def onPrerequisitesChanged(self, newValue, sender):  # pylint: disable-msg=W0613
         # Need to check whether the sender is actually in one of the collections we monitor
@@ -358,8 +366,8 @@ class ChangeMonitor(Observer):
         self._changes[obj.id()] = changes
 
     def resetAllChanges(self):
-        for id_, changes in self._changes.items():  # TODO : alors list ou non ?
-            # for id_, changes in list(self._changes.items()):
+        # for id_, changes in self._changes.items():  # TODO : alors list ou non ?
+        for id_, changes in list(self._changes.items()):
             if changes is not None and "__del__" in changes:
                 del self._changes[id_]
             else:
@@ -369,8 +377,8 @@ class ChangeMonitor(Observer):
         self._changes = dict()  # dict ? ou set ? dict
 
     def merge(self, monitor):
-        for id_, changes in self._changes.items():
-            # for id_, changes in list(self._changes.items()):
+        # for id_, changes in self._changes.items():
+        for id_, changes in list(self._changes.items()):
             theirChanges = monitor._changes.get(id_, None)
             if theirChanges is not None:
                 changes.update(theirChanges)
