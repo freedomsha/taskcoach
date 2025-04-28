@@ -91,6 +91,7 @@ def key56_to_key64(key_56):
 
 
 def set_key_odd_parity(key):
+    bit = 0
     for i in range(len(key)):
         for k in range(7):
             bit = 0
