@@ -437,7 +437,8 @@ class DynamicMenuThatGetsUICommandsFromViewer(DynamicMenu):
                 return
         # except wx._core.PyDeadObjectError:  # pylint: disable=W0212
         # except wx.PyDeadObjectError:  # pylint: disable=W0212
-        except RuntimeError:
+        except RuntimeError as e:
+            log.debug(f"DynamicMenuThatGetsUICommandsFromViewer.updateMenuItems : Erreur lors la mise à jour du menu: {e}")
             pass  # Old viewer was closed
         log.debug("DynamicMenuThatGetsUICommandsFromViewer.updateMenuItems : Les commandes UI ont changé, mise à jour du menu.")
         self.clearMenu()
