@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import wx
+from itertools import chain
 # from .wxSchedule import *
 from .wxSchedule import wxSchedule, EVT_SCHEDULE_CHANGE
 
@@ -35,13 +36,14 @@ class InvalidSchedule(Exception):
         return repr(self.value)
 
 
-class wxSchedulerCore(wxSchedulerPaint):
+class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def __init__(self, *args, **kwds):
+        self._viewType = None
         self._currentDate = wx.DateTime.Now()
         self._weekstart = wxSCHEDULER_WEEKSTART_MONDAY
 
-        super(wxSchedulerCore, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
 
         self._showOnlyWorkHour = True
         self._dc = None
@@ -99,7 +101,11 @@ class wxSchedulerCore(wxSchedulerPaint):
             afternoonWorkTime = range(
                 self._endingPauseHour.GetHour(), self._endingHour.GetHour()
             )
-            rangeWorkHour = morningWorkTime + afternoonWorkTime
+            # rangeWorkHour = morningWorkTime + afternoonWorkTime
+            rangeWorkHour = chain(morningWorkTime, afternoonWorkTime)
+            # ou
+            # rangeWorkHour = list(chain(morningWorkTime, afternoonWorkTime))
+
         else:
             # Show all the hours
             rangeWorkHour = range(
@@ -125,7 +131,10 @@ class wxSchedulerCore(wxSchedulerPaint):
         elif self._viewType == wxSCHEDULER_WEEKLY:
             offset = wx.DateSpan(weeks=1)
         elif self._viewType == wxSCHEDULER_MONTHLY:
-            daysAdd = self._currentDate.GetNumberOfDaysInMonth(
+            # daysAdd = self._currentDate.GetNumberOfDaysInMonth(
+            #     self._currentDate.GetMonth()
+            # )
+            daysAdd = self._currentDate.GetNumberOfDays(
                 self._currentDate.GetMonth()
             )
             offset = wx.DateSpan(months=1)
@@ -185,12 +194,12 @@ class wxSchedulerCore(wxSchedulerPaint):
         """
         Delete all schedules
         """
-        self.Freeze()
+        self.Freeze()  # dans wxScheduler ou plutôt wxSchedule ?
         try:
             while len(self._schedules) > 0:
                 self.Delete(0)
         finally:
-            self.Thaw()
+            self.Thaw()  # dans wxScheduler ou plutôt wxSchedule ?
 
     def GetDate(self):
         """
@@ -274,7 +283,8 @@ class wxSchedulerCore(wxSchedulerPaint):
         # End the end day
         elif self._viewType == wxSCHEDULER_MONTHLY:
             start.SetDay(1)
-            end.SetDay(wx.DateTime.GetNumberOfDaysInMonth(end.GetMonth()))
+            # end.SetDay(wx.DateTime.GetNumberOfDaysInMonth(end.GetMonth()))
+            end.SetDay(wx.DateTime.GetNumberOfDays(end.GetMonth()))
         else:
             print("Why I'm here?")
             return
@@ -332,7 +342,7 @@ class wxSchedulerCore(wxSchedulerPaint):
         if view is None:
             view = wxSCHEDULER_DAILY
 
-        if not view in (
+        if view not in (
             wxSCHEDULER_DAILY,
             wxSCHEDULER_WEEKLY,
             wxSCHEDULER_MONTHLY,
