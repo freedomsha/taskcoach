@@ -19,15 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #  de domaine qui contiennent des classes pour les objets de domaine et
 #  le package gui qui contient des visualiseurs, des boîtes de dialogue et d'autres composants gui.
 
+# print("gui.init: initialisation de splash")
 from .splash import SplashScreen
+# print("gui.init: initialisation de MainWindow")
 from .mainwindow import MainWindow
+# print("gui.init: initialisation de editor")
 from .dialog.editor import TaskEditor, EffortEditor, CategoryEditor
+# print("gui.init: initialisation de Preferences")
 from .dialog.preferences import Preferences
+# print("gui.init: initialisation de IOController")
 from .iocontroller import IOController
-from .mainwindow import MainWindow
+# from .mainwindow import MainWindow  # Doublon !
+# print("gui.init: initialisation de ReminderController")
 from .remindercontroller import ReminderController
+# print("gui.init: initialisation de ArtProvider")
 from .artprovider import init, itemImages
+# print("gui.init: initialisation de TaskBarIcon")
 from .taskbaricon import TaskBarIcon
+# print("gui.init: initialisation de viewer")
 from . import viewer
 
 
