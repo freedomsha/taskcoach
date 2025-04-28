@@ -181,7 +181,7 @@ Considérations supplémentaires :
 
 En abordant ces points, vous pouvez améliorer davantage la classe Object et la rendre plus robuste, maintenable et adaptable aux exigences futures.
 """
-
+# TODO : faire log !
 import functools
 import sys
 import uuid
@@ -283,7 +283,7 @@ class SynchronizedObject(object):
 
         Args :
             state (dict) : L’état à définir.
-            event (Any) : (event) L'événement associé à la définition de l'état.
+            event : (event) L'événement associé à la définition de l'état.
         """
         # try:
         #     super().__setstate__(state, event=event)
@@ -314,7 +314,7 @@ class SynchronizedObject(object):
         Obtenez l'état actuel de l'objet.
 
         Returns :
-            int : Le statut actuel.
+            (int) : Le statut actuel.
         """
         # print(
         #     f"object.SynchronizedObject.getStatus : 🔍 DEBUG - getStatus() appelé pour {self} - self.__status = {self.__status} ({type(self.__status)})")
@@ -344,7 +344,7 @@ class SynchronizedObject(object):
 
         Args :
             force (bool) : (optional) Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
-            event (Any) : (event) L'événement associé au marquage de l'objet comme sale.
+            event : (event) L'événement associé au marquage de l'objet comme sale.
         """
         if not self.setStatusDirty(force):
             return
@@ -355,10 +355,10 @@ class SynchronizedObject(object):
         Définissez le statut de l'objet comme sale (modifié).
 
         Args :
-            force(bool) : (optional) Forcer la définition du statut comme sale. La valeur par défaut est False.
+            force (bool) : (optional) Forcer la définition du statut comme sale. La valeur par défaut est False.
 
         Returns :
-            bool : True si le statut a été modifié et non supprimé, False dans le cas contraire.
+            (bool) : True si le statut a été modifié et non supprimé, False dans le cas contraire.
         """
 
         # print(f"🔄 setStatusDirty appelé : {self.__status} → {self.STATUS_CHANGED}")
@@ -388,7 +388,7 @@ class SynchronizedObject(object):
         Définissez le statut de l'objet comme nouveau.
 
         Returns :
-            bool : Vrai si le statut a été modifié et non supprimé, faux dans le cas contraire.
+            (bool) : Vrai si le statut a été modifié et non supprimé, faux dans le cas contraire.
         """
         # print(f"🔄 setStatusNew appelé : {self.__status} → {self.STATUS_NEW}")
         oldStatus = self.__status
@@ -442,8 +442,8 @@ class SynchronizedObject(object):
         """
         Vérifiez si l'objet est nouveau.
 
-        Returns:
-            bool: True if the object is new, False otherwise.
+        Returns :
+            (bool) : Vrai si l'objet est nouveau, faux sinon.
         """
         # print(f"🔄 isNew appelé : {self.__status} = {self.STATUS_NEW}")
         return self.__status == self.STATUS_NEW
@@ -452,8 +452,8 @@ class SynchronizedObject(object):
         """
         Vérifiez si l'objet est modifié (sale).
 
-        Returns:
-            bool: True if the object is modified, False otherwise.
+        Returns :
+            (bool) : Vrai si l'objet est modifié, faux sinon.
         """
         # print(f"🔄 isModified appelé : {self.__status} = {self.STATUS_CHANGED}")
         return self.__status == self.STATUS_CHANGED
@@ -462,8 +462,8 @@ class SynchronizedObject(object):
         """
         Vérifiez si l'objet est supprimé.
 
-        Returns:
-            bool: True if the object is deleted, False otherwise.
+        Returns :
+            (bool) : Vrai si l'objet est supprimé, faux sinon.
         """
         # print(f"🔄 isDeleted appelé : {self.__status} = {self.STATUS_DELETED}")
         return self.__status == self.STATUS_DELETED
@@ -493,7 +493,7 @@ class Object(SynchronizedObject):
     dans des objets `Attribute` capables de déclencher des événements.
     """
 
-    rx_attributes = re.compile(r"\[(\w+):(.+)\]")  # Expression régulière pour parser les attributs
+    rx_attributes = re.compile(r'\[(\w+):(.+)\]')  # Expression régulière pour parser les attributs
 
     # Gestion de la compatibilité Python 2/3 pour un entier long zéro
     if sys.version_info.major == 2:
@@ -519,8 +519,8 @@ class Object(SynchronizedObject):
         """
         # print(f"Object.__init__ : self avant init={self}")  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
         Attribute = attribute.Attribute  # Raccourci pour la classe Attribute
-        print(f"Object.__init__ : Attribute={Attribute}")
-        print(f"Object.__init__ : kwargs={kwargs}")
+        # print(f"Object.__init__ : Attribute={Attribute}")
+        # print(f"Object.__init__ : kwargs={kwargs}")
 
         # Création d'une référence faible à self, utilisée pour éviter les cycles de références
         selfRef = weakref.ref(self)
@@ -535,7 +535,7 @@ class Object(SynchronizedObject):
         # On extrait les attributs pour soi
         local_kwargs = {key: kwargs.pop(key) for key in accepted_keys if key in kwargs}
 
-        print(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs}")
+        # print(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs}")
         # Appel sécurisé au constructeur parent (sans kwargs dangereux)
         super().__init__(*args, **kwargs)
 
@@ -574,12 +574,12 @@ class Object(SynchronizedObject):
         # )
         # subject_value = kwargs.pop("subject", "")
         subject_value = local_kwargs.pop("subject", "")
-        print(f"Object.__init__ : subject_value={subject_value}")
+        # print(f"Object.__init__ : subject_value={subject_value}")
         if isinstance(subject_value, attribute.Attribute):
             self.__subject = subject_value
         else:
             self.__subject = Attribute(subject_value, self, setSubjectEvent)
-        print(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject!r}")
+        # print(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject!r}")
         # self.__description = Attribute(
         #     kwargs.pop("description", ""), self, self.descriptionChangedEvent
         # )
@@ -686,7 +686,7 @@ class Object(SynchronizedObject):
         Renvoie une représentation sous forme de chaîne de l'instance d'objet.
 
         Returns :
-            str : La représentation sous forme de chaîne.
+            (str) : La représentation sous forme de chaîne.
         """
         return self.subject()
 
@@ -700,7 +700,7 @@ class Object(SynchronizedObject):
         tout en filtrant les attributs internes non désirés.
 
         Returns :
-            dict : Un dictionnaire nettoyé représentant l'état de l'objet.
+            (dict) : Un dictionnaire nettoyé représentant l'état de l'objet.
         """
         # Construction explicite du dictionnaire d'état.
         try:
@@ -708,7 +708,7 @@ class Object(SynchronizedObject):
             state = super().__getstate__()
         except AttributeError:
             state = dict()
-        print(f"DEBUG - Object.__getstate__() avant update : {state}")
+        # print(f"DEBUG - Object.__getstate__() avant update : {state}")
 
         # On ajoute uniquement les champs publics attendus,
         # extraits via les attributs "Attribute"
@@ -735,10 +735,9 @@ class Object(SynchronizedObject):
             del state[key]
 
         # DEBUG : Affichage de l'état sérialisé pour vérification
-        print(f"DEBUG - Object.__getstate__() renvoie : {state}")
+        # print(f"DEBUG - Object.__getstate__() renvoie : {state}")
         #
         return state
-
 
         # Problème __getstate__ contient maintenant plus d'objet :
         # {'_Object__bgColor': <taskcoachlib.domain.base.attribute.Attribute object at 0x74b81888b500>,
@@ -802,8 +801,8 @@ class Object(SynchronizedObject):
         Définissez l'état de l'objet à partir de la désérialisation.
 
         Args :
-            dict state : L’état à définir.
-            event event : L'événement associé à la définition de l'état.
+            state (dict) : L’état à définir.
+            event : (event) L'événement associé à la définition de l'état.
         """
         try:
             super().__setstate__(state, event=event)
@@ -833,7 +832,7 @@ class Object(SynchronizedObject):
         E.g. copy = obj.__class__(**original.__getcopystate__())
 
         Returns :
-            dict state : Le dictionnaire d'état pour créer une copie.
+            state (dict) : Le dictionnaire d'état pour créer une copie.
         """
         try:
             state = super().__getcopystate__()
@@ -862,10 +861,10 @@ class Object(SynchronizedObject):
         Créez une copie de l'objet.
 
         Returns :
-            Object : Une nouvelle instance de l'objet avec le même état.
+            (Object) Une nouvelle instance de l'objet avec le même état.
         """
         state = self.__getcopystate__()
-        print(f"object.Object.__getcopystate__ : DEBUG - __getcopystate__() : {state}")  # Ajoute ce print
+        # print(f"object.Object.__getcopystate__ : DEBUG - __getcopystate__() : {state}")  # Ajoute ce print
         return self.__class__(**state)  # Accessor kind: Getter
         # return self.__class__(**self.__getcopystate__())
 
@@ -875,8 +874,8 @@ class Object(SynchronizedObject):
         Obtenez la liste des attributs surveillés.
 
         Returns :
-            list : La liste des attributs surveillés.
-                   ["ordering", "subject", "description", "appearance"]
+            (list) : La liste des attributs surveillés.
+                     ["ordering", "subject", "description", "appearance"]
         """
         return ["ordering", "subject", "description", "appearance"]
 
@@ -887,7 +886,7 @@ class Object(SynchronizedObject):
         Obtenez l'ID de l'objet.
 
         Returns :
-            str : L'ID de l'objet.
+            (str) : L'ID de l'objet.
         """
         return self.__id
 
@@ -920,7 +919,7 @@ class Object(SynchronizedObject):
         Obtenez la date et l'heure de création de l'objet.
 
         Returns :
-            DateTime : La date et l'heure de création.
+            (DateTime) : La date et l'heure de création.
         """
         return self.__creationDateTime
 
@@ -929,7 +928,7 @@ class Object(SynchronizedObject):
         Obtenez la date et l'heure de modification de l'objet.
 
         Returns :
-            DateTime : La date et l'heure de modification.
+            (DateTime) : La date et l'heure de modification.
         """
         return self.__modificationDateTime
 
@@ -949,7 +948,7 @@ class Object(SynchronizedObject):
         Obtenez une fonction de tri pour trier par date et heure de modification.
 
         Returns :
-            function : La fonction de tri.
+            (function) La fonction de tri.
         """
         return lambda item: item.modificationDateTime()
 
@@ -960,7 +959,7 @@ class Object(SynchronizedObject):
         Obtenez une fonction de tri pour trier par date et heure de création.
 
         Returns :
-            function : La fonction de tri.
+            (function) La fonction de tri.
         """
         return lambda item: item.creationDateTime()
 
@@ -971,7 +970,7 @@ class Object(SynchronizedObject):
         Obtenir le sujet de l'objet.
 
         Returns :
-            str : Le sujet de l'objet.
+            (str) : Le sujet de l'objet.
         """
         return self.__subject.get()  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
         # return self.__subject
@@ -980,8 +979,9 @@ class Object(SynchronizedObject):
         """
         Définissez le sujet de l'objet.
 
-        :param str subject: Le sujet à définir.
-        :param bool event: Événement associé à la définition du sujet.
+        Args :
+            subject (str) : Le sujet à définir.
+            event : Événement associé à la définition du sujet.
         """
         self.__subject.set(subject, event=event)
 
@@ -1000,7 +1000,7 @@ class Object(SynchronizedObject):
         Obtenir le type d’événement pour les événements à sujet modifié.
 
         Returns :
-            str : Type d'événement pour les événements de changement de sujet.
+            (str) : Type d'événement pour les événements de changement de sujet.
         """
         # return "%s.subject" % class_
         return f"{class_}.subject"
@@ -1013,7 +1013,7 @@ class Object(SynchronizedObject):
         Fonction à passer à list.sort lors du tri par sujet.
 
         Returns :
-            function : La fonction de tri.
+            (function) La fonction de tri.
         """
         if kwargs.get("sortCaseSensitive", False):
             return lambda item: item.subject()
@@ -1026,7 +1026,7 @@ class Object(SynchronizedObject):
         Obtenez les types d'événements qui influencent l'ordre de tri des sujets.
 
         Returns :
-            tuple : Les types d'événements.
+            (tuple) Les types d'événements.
         """
         return (class_.subjectChangedEventType(),)
 
@@ -1037,7 +1037,7 @@ class Object(SynchronizedObject):
         Obtenez l'ordre de l'objet.
 
         Returns :
-            int : L'ordre.
+            (int) L'ordre.
         """
         return self.__ordering.get()
 
@@ -1066,7 +1066,7 @@ class Object(SynchronizedObject):
         Obtenez le type d'événement pour ordonner les événements modifiés.
 
         Returns :
-            str : Type d'événement pour classer les événements modifiés.
+            (str) : Type d'événement pour classer les événements modifiés.
         """
         # return "%s.ordering" % class_
         return f"{class_}.ordering"
@@ -1077,7 +1077,7 @@ class Object(SynchronizedObject):
         Obtenez une fonction de tri pour trier par ordre.
 
         Returns :
-            function : La fonction de tri.
+            (function) La fonction de tri.
         """
         return lambda item: item.ordering()
 
@@ -1087,7 +1087,7 @@ class Object(SynchronizedObject):
         Obtenez les types d’événements qui influencent l’ordre de tri.
 
         Returns :
-            tuple : Les types d'événements.
+            (tuple) Les types d'événements.
         """
         return (class_.orderingChangedEventType(),)
 
@@ -1098,7 +1098,7 @@ class Object(SynchronizedObject):
         Obtenir la description de l'objet.
 
         Returns :
-            str : La description de l'objet.
+            (str) La description de l'objet.
         """
         return self.__description.get()
 
@@ -1134,7 +1134,7 @@ class Object(SynchronizedObject):
         On enregistre la nouvelle description à la fois comme source et comme valeur.
 
         Args :
-            event (Event) : L'événement à enrichir avec la source modifiée.
+            event : (Event) L'événement à enrichir avec la source modifiée.
         """
         # event.addSource(
         #     self, self.description, type=self.descriptionChangedEventType()
@@ -1173,7 +1173,7 @@ class Object(SynchronizedObject):
         Obtenez le type d’événement pour les événements modifiés dans la description.
 
         Returns :
-            str : Le type d'événement pour la description des événements a changé.
+            (str) : Le type d'événement pour la description des événements a changé.
         """
         # return "%s.description" % class_
         return f"{class_}.description"
@@ -1186,7 +1186,7 @@ class Object(SynchronizedObject):
         Fonction à transmettre à list.sort lors du tri par description.
 
         Returns :
-            function : La fonction de tri.
+            (function) La fonction de tri.
         """
         if kwargs.get("sortCaseSensitive", False):
             return lambda item: item.description()
@@ -1199,7 +1199,7 @@ class Object(SynchronizedObject):
         Obtenez les types d’événements qui influencent l’ordre de tri des descriptions.
 
         Returns :
-            tuple : Les types d'événements.
+            (tuple) Les types d'événements.
         """
         return (class_.descriptionChangedEventType(),)
 
@@ -1220,7 +1220,7 @@ class Object(SynchronizedObject):
         Obtenez la couleur de premier plan de l'objet.
 
         Args :
-            recursive (bool, optional) : S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
+            recursive bool : (optional) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
 
         Returns :
             La couleur de premier plan.
@@ -1245,7 +1245,7 @@ class Object(SynchronizedObject):
         Obtenez la couleur d'arrière-plan de l'objet.
 
         Args :
-            recursive(bool) : (optionnal) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
+            recursive bool : (optionnal) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
 
         Return : La couleur d’arrière-plan.
         """
@@ -1261,7 +1261,7 @@ class Object(SynchronizedObject):
         Obtenez la police de l'objet.
 
         Args :
-            recursive (bool, optional) : S'il faut obtenir la police de manière récursive. La valeur par défaut est False.
+            recursive bool : (optional) S'il faut obtenir la police de manière récursive. La valeur par défaut est False.
 
         Returns :
             La police.
@@ -1329,10 +1329,10 @@ class Object(SynchronizedObject):
         Obtenez le type d’événement pour les événements d’apparence modifiée.
 
         Returns :
-            str : Le type d'événement pour les événements d'apparence a changé.
+            (str) : Le type d'événement pour les événements d'apparence a changé.
         """
-        return "%s.appearance" % class_
-        # return f"{class_}.appearance"
+        # return "%s.appearance" % class_
+        return f"{class_}.appearance"
 
     def appearanceChangedEvent(self, event):
         """
@@ -1349,7 +1349,7 @@ class Object(SynchronizedObject):
         Obtenez les types d'événements pour les événements de modification.
 
         Returns :
-            list : La liste des types d'événements.
+            (list) : La liste des types d'événements.
         """
         try:
             # eventTypes = super(Object, class_).modificationEventTypes()
@@ -1397,14 +1397,15 @@ class Object(SynchronizedObject):
         # ]
 
 
-# class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des problèmes
-class CompositeObject(Object, patterns.composite.ObservableComposite):
+# Les mixins doivent être avant les types parents !
+class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des problèmes
+    # class CompositeObject(Object, patterns.composite.ObservableComposite):
     """
-        Un objet composite qui peut contenir d'autres objets en tant qu'enfants.
+    Un objet composite qui peut contenir d'autres objets en tant qu'enfants.
 
-        Cette classe étend Object et ObservableComposite pour fournir des méthodes supplémentaires
-        pour gérer les objets enfants et leur état.
-        """
+    Cette classe étend Object et ObservableComposite pour fournir des méthodes supplémentaires
+    pour gérer les objets enfants et leur état.
+    """
 
     def __init__(self, *args, **kwargs):
         """
@@ -1455,7 +1456,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         d'une copie de l'objet composite.
 
         Returns :
-            state(dict) : Le dictionnaire d'état pour créer une copie.
+            state (dict) : Le dictionnaire d'état pour créer une copie.
         """
         state = super().__getcopystate__()
         state.update(dict(expandedContexts=self.expandedContexts()))
@@ -1468,7 +1469,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenir la liste des attributs surveillés.
 
         Returns :
-            list : The list of monitored attributes.
+            (list) : The list of monitored attributes.
         """
         return Object.monitoredAttributes() + ["expandedContexts"]
 
@@ -1479,10 +1480,10 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenir le sujet de l'objet composite.
 
         Args :
-            recursive (bool, optional) : S'il faut obtenir le sujet de manière récursive. La valeur par défaut est False.
+            recursive (bool) : (optional) S'il faut obtenir le sujet de manière récursive. La valeur par défaut est False.
 
         Returns :
-            str : Le sujet de l'objet composite.
+            (str) : Le sujet de l'objet composite.
         """
         subject = super().subject()
         # if recursive and self.parent():
@@ -1519,7 +1520,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
             **kwargs :
 
         Returns :
-            function : La fonction de tri.
+            (function) : La fonction de tri.
         """
         recursive = kwargs.get("treeMode", False)
         if kwargs.get("sortCaseSensitive", False):
@@ -1537,7 +1538,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
             recursive (bool) : (optional) S'il faut obtenir la description de manière récursive. La valeur par défaut est False.
 
         Returns :
-            str : La description de l'objet composite.
+            (str) : La description de l'objet composite.
         """
         # Autoriser l'indicateur récursif, mais ignorer le
         # return super().description()
@@ -1558,10 +1559,10 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         développé dans le contexte spécifié.
 
         Args :
-            context (str, optional) : Le contexte. La valeur par défaut est "Aucun".
+            context (str) : (optional) Le contexte. La valeur par défaut est "Aucun".
 
         Returns :
-            bool : True si l'objet composite est développé, False sinon.
+            (bool) : True si l'objet composite est développé, False sinon.
         """
         return context in self.__expandedContexts
 
@@ -1570,7 +1571,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenez la liste des contextes dans lesquels l'objet composite est développé.
 
         Returns :
-            list : La liste des contextes.
+            (list) : La liste des contextes.
         """
         return list(self.__expandedContexts)
 
@@ -1603,7 +1604,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         d'un objet composite.
 
         Returns :
-            str : Le type d’événement pour les changements d’état d’expansion.
+            (str) : Le type d’événement pour les changements d’état d’expansion.
         """
         # return "pubsub.%s.expandedContexts" % cls.__name__.lower()
         return f"pubsub.{cls.__name__.lower()}.expandedContexts"
@@ -1624,7 +1625,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenir le type d’événement pour les modifications de contextes étendus.
 
         Returns :
-            str : Le type d'événement pour les contextes étendus change.
+            (str) : Le type d'événement pour les contextes étendus change.
         """
         return class_.expansionChangedEventType()
 
@@ -1663,7 +1664,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenez la couleur d'arrière-plan de l'objet composite.
 
         Args :
-            recursive(bool) : (optional) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
+            recursive (bool) : (optional) S'il faut obtenir la couleur de manière récursive. La valeur par défaut est False.
 
         Return : La couleur d’arrière-plan.
         """
@@ -1678,7 +1679,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenez la police de l'objet composite.
 
         Args :
-            recursive (bool, optional) : S'il faut obtenir la police de manière récursive. La valeur par défaut est False.
+            recursive (bool) : (optional) S'il faut obtenir la police de manière récursive. La valeur par défaut est False.
 
         Returns :
             La police.
@@ -1694,7 +1695,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenez l'icône de l'objet composite.
 
         Args :
-            recursive (bool, optional) : S'il faut obtenir l'icône de manière récursive. La valeur par défaut est False.
+            recursive (bool) : (optional) S'il faut obtenir l'icône de manière récursive. La valeur par défaut est False.
 
         Returns :
             L'icône.
@@ -1711,7 +1712,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenez l'icône sélectionnée de l'objet composite.
 
         Args :
-            recursive (bool, optional) : S'il faut obtenir l'icône sélectionnée de manière récursive. La valeur par défaut est False.
+            recursive (bool) : (optional) S'il faut obtenir l'icône sélectionnée de manière récursive. La valeur par défaut est False.
 
         Returns :
             L'icône sélectionnée.
@@ -1729,7 +1730,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
 
         Args :
             myIcon : L'icône de base.
-            native (bool, optional) : Si l'icône provient des paramètres utilisateur. La valeur par défaut est True.
+            native (bool) : (optional) Si l'icône provient des paramètres utilisateur. La valeur par défaut est True.
 
         Returns :
             L'icône plurielle ou singulière.
@@ -1750,7 +1751,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Obtenez les types d'événements pour les événements de modification.
 
         Returns :
-            list : La liste des types d'événements.
+            (list) : La liste des types d'événements.
         """
         # return super().modificationEventTypes() + [class_.expansionChangedEventType()]
         # parent_events = super().modificationEventTypes()
@@ -1820,7 +1821,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):
         Marquez l'objet composite et ses enfants comme sales (modifiés).
 
         Args :
-            force (bool, optional) : Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
+            force (bool) : (optional) Forcer le marquage de l'objet comme sale. La valeur par défaut est False.
             event : L'événement associé au marquage de l'objet comme sale.
         """
         super().markDirty(force, event=event)
