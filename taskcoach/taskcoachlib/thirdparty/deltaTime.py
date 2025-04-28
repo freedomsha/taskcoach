@@ -118,7 +118,13 @@ CL = CaselessLiteral
 # ajout de list
 today, tomorrow, yesterday, noon, midnight, now = list(map(CL,
                                                            "today tomorrow yesterday noon midnight now".split()))
-plural = lambda s: Combine(CL(s) + Optional(CL("s")))
+
+
+# plural = lambda s: Combine(CL(s) + Optional(CL("s")))
+def plural(s):
+    return Combine(CL(s) + Optional(CL("s")))
+
+
 week, day, hour, minute, second = list(map(plural,
                                            "week day hour minute second".split()))
 am = CL("am")
