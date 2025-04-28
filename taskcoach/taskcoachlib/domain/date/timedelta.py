@@ -41,25 +41,25 @@ class TimeDelta(datetime.timedelta):
 
     Voici une analyse plus détaillée des éléments clés du code :
 
-Constantes:
+Constantes :
 
-    millisecondsPerSecond: Nombre de millisecondes dans une seconde.
-    millisecondsPerDay: Nombre de millisecondes dans un jour.
-    millisecondsPerMicroSecond: Nombre de millisecondes dans une microseconde.
+    millisecondsPerSecond : Nombre de millisecondes dans une seconde.
+    millisecondsPerDay : Nombre de millisecondes dans un jour.
+    millisecondsPerMicroSecond : Nombre de millisecondes dans une microseconde.
 
-Méthodes de la classe TimeDelta:
+Méthodes de la classe TimeDelta :
 
-    hoursMinutesSeconds(self) : Renvoie un tuple contenant le nombre d'heures, de minutes et de secondes de l'intervalle.
-    sign(self) : Renvoie un entier indiquant le signe de l'intervalle (1 pour positif, -1 pour négatif).
-    hours(self) : Renvoie l'intervalle exprimé en nombre d'heures en tenant compte du signe.
-    minutes(self) : Renvoie l'intervalle exprimé en nombre de minutes en tenant compte du signe.
-    totalSeconds(self) : Renvoie l'intervalle exprimé en nombre de secondes en tenant compte du signe.
-    milliseconds(self) : Renvoie l'intervalle exprimé en nombre de millisecondes.
-    round(self, hours=0, minutes=0, seconds=0, alwaysUp=False) : Arrondi l'intervalle aux unités spécifiées (heures, minutes, secondes). alwaysUp permet de toujours arrondir vers le haut.
-    __add__(self, other) : Permet l'addition de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
-    __sub__(self, other) : Permet la soustraction de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
+    hoursMinutesSeconds (self) : Renvoie un tuple contenant le nombre d'heures, de minutes et de secondes de l'intervalle.
+    sign (self) : Renvoie un entier indiquant le signe de l'intervalle (1 pour positif, -1 pour négatif).
+    hours (self) : Renvoie l'intervalle exprimé en nombre d'heures en tenant compte du signe.
+    minutes (self) : Renvoie l'intervalle exprimé en nombre de minutes en tenant compte du signe.
+    totalSeconds (self) : Renvoie l'intervalle exprimé en nombre de secondes en tenant compte du signe.
+    milliseconds (self) : Renvoie l'intervalle exprimé en nombre de millisecondes.
+    round (self, hours=0, minutes=0, seconds=0, alwaysUp=False) : Arrondi l'intervalle aux unités spécifiées (heures, minutes, secondes). alwaysUp permet de toujours arrondir vers le haut.
+    __add__ (self, other) : Permet l'addition de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
+    __sub__ (self, other) : Permet la soustraction de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
 
-Commentaires supplémentaires:
+Commentaires supplémentaires :
 
     La méthode legacy_round (commentée) est conservée pour des raisons de tests unitaires.
     La conversion en flottant (float(self.totalSeconds())) dans la méthode round pourrait être évitée en Python 3 car la division d'entiers par des nombres flottants renvoie automatiquement un flottant.
@@ -270,39 +270,41 @@ ONE_YEAR = TimeDelta(days=365)
 
 def parseTimeDelta(string):
     """
-    Fonctionnalité:
+    Fonctionnalité :
 
-La méthode parseTimeDelta est conçue pour analyser une chaîne de caractères représentant un intervalle de temps au format heures:minutes:secondes et la convertir en un objet TimeDelta.
+    La méthode parseTimeDelta est conçue pour analyser une chaîne de caractères représentant un intervalle de temps au format heures:minutes:secondes et la convertir en un objet TimeDelta.
 
-Fonctionnement étape par étape:
+    Fonctionnement étape par étape :
 
-    Analyse de la chaîne de caractères:
+    Analyse de la chaîne de caractères :
         La méthode tente de diviser la chaîne de caractères en trois parties (heures, minutes, secondes) en utilisant le caractère :.
         Chaque partie est convertie en un entier.
 
-    Gestion des erreurs:
+    Gestion des erreurs :
         Si une erreur se produit lors de l'analyse de la chaîne (par exemple, si le format n'est pas correct), la méthode capture l'exception ValueError et initialise les heures, minutes et secondes à zéro.
 
-    Création de l'objet TimeDelta:
+    Création de l'objet TimeDelta :
         Un nouvel objet TimeDelta est créé en utilisant les valeurs extraites de la chaîne de caractères (ou les valeurs par défaut si une erreur s'est produite).
 
-Exemple d'utilisation:
-Python
+    Exemple d'utilisation :
+    Python
 
-interval_string = "2:30:15"
-delta = parseTimeDelta(interval_string)
-print(delta)  # Output: 2:30:15
+    interval_string = "2:30:15"
+    delta = parseTimeDelta(interval_string)
+    print(delta)  # Output : 2:30:15
 
-Utilisez ce code avec précaution.
+    Utilisez ce code avec précaution.
 
-Cas d'utilisation:
+    Cas d'utilisation :
 
-Cette méthode peut être utile dans diverses situations, notamment :
+    Cette méthode peut être utile dans diverses situations, notamment :
 
-    Parsing d'intervalles de temps à partir de chaînes de caractères: Par exemple, pour analyser des durées spécifiées par l'utilisateur.
-    Conversion de chaînes de temps en objets TimeDelta: Pour faciliter les calculs et manipulations d'intervalles de temps.
+    Parsing d'intervalles de temps à partir de chaînes de caractères : Par exemple, pour analyser des durées spécifiées par l'utilisateur.
+    Conversion de chaînes de temps en objets TimeDelta : Pour faciliter les calculs et manipulations d'intervalles de temps.
 
-En résumé, la méthode parseTimeDelta offre une manière simple et flexible de convertir des chaînes de caractères représentant des intervalles de temps en objets TimeDelta utilisables dans votre application.
+    En résumé, la méthode parseTimeDelta offre une manière simple et flexible
+    de convertir des chaînes de caractères représentant des intervalles de temps
+    en objets TimeDelta utilisables dans votre application.
     :param string:
     :return:
     """
