@@ -49,7 +49,7 @@ class TodoTxtWriter(object):
                             task.subject(recursive=True) +
                             self.contextsAndProjects(task) +
                             self.dueDate(task.dueDateTime()) +
-                            self.id(task.id()) + "\n")
+                            self.id(task.id()) + "\n", )
         metaName = self.__filename + "-meta"
         if os.path.exists(metaName):
             os.remove(metaName)
