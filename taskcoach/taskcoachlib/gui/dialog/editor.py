@@ -55,9 +55,15 @@ Classes :
 # from builtins import range
 
 import wx
-# import logging
+import logging
 
 import os.path
+# try:
+from pubsub import pub
+# except ImportError:
+#    from taskcoachlib.thirdparty.pubsub import pub
+# else:
+#    from wx.lib.pubsub import pub
 
 from taskcoachlib import widgets, patterns, command, operating_system, render
 from taskcoachlib.domain import task, date, note, attachment
@@ -65,11 +71,12 @@ from taskcoachlib.domain import task, date, note, attachment
 from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui import windowdimensionstracker
 # import taskcoachlib.gui.viewer
-from taskcoachlib.gui.viewer.effort import EffortViewer
+from taskcoachlib.gui import viewer
 from taskcoachlib.gui.viewer.attachment import AttachmentViewer
+from taskcoachlib.gui.viewer.category import BaseCategoryViewer  # circular import !
+from taskcoachlib.gui.viewer.effort import EffortViewer
 from taskcoachlib.gui.viewer.note import BaseNoteViewer
 from taskcoachlib.gui.viewer.task import CheckableTaskViewer
-from taskcoachlib.gui.viewer.category import BaseCategoryViewer  # circular import
 
 # for don't have AttributeError: partially initialized module 'taskcoachlib.gui.*'
 # has no attribute '*' (most likely due to a circular import) :
@@ -78,13 +85,7 @@ from taskcoachlib.gui.viewer.category import BaseCategoryViewer  # circular impo
 from taskcoachlib.gui.dialog import entry, attributesync
 from taskcoachlib.gui.newid import IdProvider
 from taskcoachlib.i18n import _
-# try:
-from pubsub import pub
 
-# except ImportError:
-#    from taskcoachlib.thirdparty.pubsub import pub
-# else:
-#    from wx.lib.pubsub import pub
 from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
 from taskcoachlib.help.balloontips import BalloonTipManager
 
@@ -101,11 +102,11 @@ class Page(patterns.Observer, widgets.BookPage):
 
     Méthodes :
         __init__(self, items, *args, **kwargs) : Initialise la page avec les objets à éditer.
-        selected(self) : Méthode appelée lorsque la page est sélectionnée.
-        addEntries(self) : Ajoute les entrées à la page (doit être implémentée par les sous-classes).
-        entries(self) : Retourne un dictionnaire des entrées par nom de colonne.
-        setFocusOnEntry(self, column_name) : Définit le focus sur une entrée spécifique.
-        close(self) : Ferme la page et libère les ressources.
+        selected (self) : Méthode appelée lorsque la page est sélectionnée.
+        addEntries (self) : Ajoute les entrées à la page (doit être implémentée par les sous-classes).
+        entries (self) : Retourne un dictionnaire des entrées par nom de colonne.
+        setFocusOnEntry (self, column_name) : Définit le focus sur une entrée spécifique.
+        close (self) : Ferme la page et libère les ressources.
     """
     columns = 2  # Par défaut, deux colonnes pour l'édition.
 
@@ -131,7 +132,6 @@ class Page(patterns.Observer, widgets.BookPage):
         """
         pass  # Implémentation des actions lors de la sélection de la page.
 
-
     def addEntries(self):
         """Ajoute les entrées de la page. Doit être implémentée par les sous-classes.
 
@@ -152,14 +152,13 @@ class Page(patterns.Observer, widgets.BookPage):
             dict : Les champs d'entrée ajoutés par `addEntries`."""
         return dict()  # Retourne les champs d'édition.
 
-
     def setFocusOnEntry(self, column_name):
         """
         Définit le focus sur une entrée spécifique.
 
         Définit le focus sur un champ d'entrée spécifique basé sur le nom de la colonne.
 
-        Args:
+        Args :
             column_name (str) : Le nom de la colonne de l'entrée sur laquelle positionner le focus.
         """
         # Définit le focus sur une colonne particulière.
@@ -176,8 +175,8 @@ class Page(patterns.Observer, widgets.BookPage):
         puisse commencer à taper dessus immédiatement, sauf sous Linux car il
         écrase le presse-papiers X.
 
-        Args:
-            the_entry (wx.TextCtrl): L'entrée à sélectionner et à mettre en focus.
+        Args :
+            the_entry (TextCtrl) : L'entrée à sélectionner et à mettre en focus.
         """
         if self.focusTextControl():
             the_entry.SetFocus()
@@ -232,8 +231,8 @@ class SubjectPage(Page):
         qui peut représenter le titre ou la description courte de l'objet.
 
         Méthodes :
-            addEntries(self) : Ajoute les champs d'entrée pour l'édition du sujet.
-            subject(self) : Retourne l'objet d'édition du sujet.
+            addEntries (self) : Ajoute les champs d'entrée pour l'édition du sujet.
+            subject (self) : Retourne l'objet d'édition du sujet.
         """
     pageName = "subject"
     pageTitle = _("Description")
@@ -269,9 +268,9 @@ class SubjectPage(Page):
 
     def focusTextControl(self):
         """
-    Checks the application settings to determine if text controls should receive
-    focus on GTK platforms.
-    """
+        Checks the application settings to determine if text controls should receive
+        focus on GTK platforms.
+        """
         return self._settings.getboolean("os_linux", "focustextentry")
 
     def addEntries(self):
@@ -293,7 +292,7 @@ class SubjectPage(Page):
     #     """
     #     Retourne l'objet sujet à éditer.
     #
-    #     Returns:
+    #     Returns :
     #         Objet à éditer, généralement un texte.
     #     """
     #     pass
@@ -301,11 +300,11 @@ class SubjectPage(Page):
         # pylint: disable=W0201
         """Adds a subject entry to the page.
 
-            Adds a single-line text control for editing the subject of the selected task(s).
-    It also creates an AttributeSync object to manage synchronization between the control
-    and the task object(s).
+        Adds a single-line text control for editing the subject of the selected task(s).
+        It also creates an AttributeSync object to manage synchronization between the control
+        and the task object(s).
 
-        Returns:
+        Returns :
             None
         """
         current_subject = (
@@ -335,7 +334,8 @@ class SubjectPage(Page):
         # def __modification_text(self) -> str:
         """Calculates the modification text for the page.
 
-        Cette méthode privée calcule le texte à afficher pour la date de modification, en tenant compte des dates minimale et maximale.
+        Cette méthode privée calcule le texte à afficher pour la date de modification,
+        en tenant compte des dates minimale et maximale.
         """
         modification_datetimes = [item.modificationDateTime() for item in self.items]
         # TODO: A ESSAYER :
@@ -345,9 +345,11 @@ class SubjectPage(Page):
         # essai:
         try:
             return render.dateTime_range(min(modification_datetimes), max(modification_datetimes))
-        except ReferenceError as e:
-            # logging.error(f"tclib.gui.dialog.editor: {str(e)}")
-            print(f"tclib.gui.dialog.editor: {str(e)}")
+            # return render.dateRange(min(modification_datetimes), max(modification_datetimes))
+            # return render.dateTime(range(min(modification_datetimes), max(modification_datetimes)))  # TODO : A essayer !
+        except ReferenceError or AttributeError as e:
+            # print(f"tclib.gui.dialog.editor: {str(e)}")
+            logging.error(f"tclib.gui.dialog.editor: {str(e)}")
             # vieux code:
             min_modification_datetime = min(modification_datetimes)
             max_modification_datetime = max(modification_datetimes)
@@ -359,8 +361,6 @@ class SubjectPage(Page):
                     max_modification_datetime, humanReadable=True
                 )
             return modification_text
-
-
 
     def addDescriptionEntry(self):
         # pylint: disable=W0201
@@ -407,7 +407,8 @@ class SubjectPage(Page):
         # TODO: remplacer les 2 fonctions suivantes pas celle-ci, régler le problème de dateTime_range
         date_times = [getattr(item, attribute_name)() for item in self.items]
         min_date, max_date = min(date_times), max(date_times)
-        date_text = render.dateTime_range(min_date, max_date)
+        # date_text = render.dateTime_range(min_date, max_date)
+        date_text = render.dateTime(range(min_date, max_date))
 
     def addCreationDateTimeEntry(self):
         """Cette méthode ajoute des étiquettes affichant les dates de création des tâches sélectionnées.
@@ -429,8 +430,10 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
 
     def addModificationDateTimeEntry(self):
         """Cette méthode ajoute des étiquettes affichant les dates de modification des tâches sélectionnées.
-Elles calculent les dates minimale et maximale pour les tâches multiples et affichent un intervalle si nécessaire.
-Elles s'abonnent à des événements pour mettre à jour l'affichage de la date de modification lorsque celle-ci change."""
+
+        Elles calculent les dates minimale et maximale pour les tâches multiples et affichent un intervalle si nécessaire.
+        Elles s'abonnent à des événements pour mettre à jour l'affichage de la date de modification lorsque celle-ci change.
+        """
         self._modificationTextEntry = wx.StaticText(
             self, label=self.__modification_text()
         )
@@ -450,15 +453,21 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
                 )
 
     def onAttributeChanged(self, newValue, sender):
-        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change. Elles mettent à jour le texte de l'étiquette correspondante."""
+        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change.
+        Elles mettent à jour le texte de l'étiquette correspondante.
+        """
         self._modificationTextEntry.SetLabel(self.__modification_text())
 
     def onAttributeChanged_Deprecated(self, *args, **kwargs):
-        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change. Elles mettent à jour le texte de l'étiquette correspondante."""
+        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change.
+         Elles mettent à jour le texte de l'étiquette correspondante.
+         """
         self._modificationTextEntry.SetLabel(self.__modification_text())
 
     def close(self):
-        """Cette méthode est appelée lors de la fermeture de la page. Elle se désabonne des événements pour éviter les fuites de mémoire."""
+        """Cette méthode est appelée lors de la fermeture de la page.
+        Elle se désabonne des événements pour éviter les fuites de mémoire.
+        """
         super().close()
         for eventType in self.items[0].modificationEventTypes():
             try:
@@ -468,7 +477,9 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
         patterns.Publisher().removeObserver(self.onAttributeChanged_Deprecated)
 
     def entries(self):
-        """Cette méthode retourne un dictionnaire contenant des références vers les contrôles de la page, utilisé probablement pour la navigation ou d'autres fonctionnalités."""
+        """Cette méthode retourne un dictionnaire contenant des références vers les contrôles de la page,
+        utilisé probablement pour la navigation ou d'autres fonctionnalités.
+        """
         return dict(
             firstEntry=self._subjectEntry,
             subject=self._subjectEntry,
@@ -486,13 +497,18 @@ class TaskSubjectPage(SubjectPage):
     Cette page permet de modifier le titre et la priorité d'une tâche dans Task Coach.
 
     Méthodes :
-        addEntries(self) : Ajoute les champs d'entrée pour l'édition du sujet et de la priorité.
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition du sujet et de la priorité.
     """
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
     #     self._prioritySync = None
     #     self._priorityEntry = None
+
+    def __init__(self, items, parent, settings, *args, **kwargs):
+        super().__init__(items, parent, settings, args, kwargs)
+        self._prioritySync = None
+        self._priorityEntry = None
 
     def addEntries(self):
         """
@@ -513,10 +529,10 @@ class TaskSubjectPage(SubjectPage):
         # pylint: disable=W0201
         """Ajoute un champ pour modifier la priorité de la tâche.
 
-        This method adds a spin control (widgets.SpinCtrl) to the page for editing the priority of the selected task(s).
-        It retrieves the current priority of the first task (if only one is selected) or sets it to 0 (default).
-        It creates an AttributeSync object to synchronize the spin control value with the "priority" attribute of the task object(s).
-        It adds an entry label for "Priority" and the spin control to the page using self.addEntry.
+        Cette méthode ajoute un contrôle spin (widgets.SpinCtrl) à la page pour modifier la priorité de la ou des tâches sélectionnées.
+        Elle récupère la priorité actuelle de la première tâche (si une seule est sélectionnée) ou la met à 0. (par défaut).
+        Il crée un objet AttributeSync pour synchroniser la valeur du contrôle de rotation avec l'attribut "priorité" du ou des objets de tâche.
+        Il ajoute une étiquette d'entrée pour "Priorité" et le faites tourner le contrôle sur la page en utilisant self.addEntry.
         """
         current_priority = self.items[0].priority() if len(self.items) == 1 else 0
         # Nous introduisons une constante nommée MAX_PRIORITY pour améliorer la lisibilité
@@ -2119,12 +2135,13 @@ class EditBook(widgets.Notebook):
                 page.selected()
 
     def __save_perspective(self):
-        """enregistre la configuration de mise en page actuelle pour une utilisation ultérieure.
+        """Enregistre la configuration de mise en page actuelle pour une utilisation ultérieure.
 
         Enregistrez la perspective actuelle de l'éditeur dans les paramètres.
         Plusieurs perspectives sont prises en charge, pour chaque ensemble de pages visibles.
         Cela permet différentes perspectives, par ex. éditeurs à élément unique et
-        éditeurs à éléments multiples."""
+        éditeurs à éléments multiples.
+        """
         page_names = [self[index].pageName for index in range(self.GetPageCount())]
         section = self.settings_section()
         self.settings.settext(section, "perspective", self.SavePerspective())
@@ -2143,7 +2160,8 @@ class EditBook(widgets.Notebook):
     def __settings_section_name(self):
         """Renvoie le nom de la section de ce bloc-notes. Le nom de la section
         dépend des pages visibles afin que différentes variantes du carnet
-        stockent leurs paramètres dans différentes sections."""
+        stockent leurs paramètres dans différentes sections.
+        """
         page_names = self.__pages_to_create()
         sorted_page_names = "_".join(sorted(page_names))
         return "%sdialog_with_%s" % (self.domainObject, sorted_page_names)
@@ -2151,7 +2169,8 @@ class EditBook(widgets.Notebook):
     def __create_settings_section(self, section):
         """Créez la section et initialisez les options dans la section.
 
-        Crée un nouvelle section de paramètres si elle n'existe pas."""
+        Crée une nouvelle section de paramètres si elle n'existe pas.
+        """
         self.settings.add_section(section)
         for option, value in list(
             dict(
@@ -2264,44 +2283,43 @@ class AttachmentEditBook(EditBook):
 
 
 class EffortEditBook(Page):
-    """
-Cette classe fournit un éditeur spécialisé pour l'édition des entrées d'effort.
-Il hérite de la classe Page de base et ajoute des fonctionnalités spécifiques pour modifier les détails de l'effort.
+    """Cette classe fournit un éditeur spécialisé pour l'édition des entrées d'effort.
+    Il hérite de la classe Page de base et ajoute des fonctionnalités spécifiques pour modifier les détails de l'effort.
 
-Principales fonctionnalités :
+    Principales fonctionnalités :
 
-    Sélection de tâches : permet à l'utilisateur de sélectionner la tâche associée à l'effort.
-    Démarrer et Modification de l'heure d'arrêt : fournit des contrôles pour définir les heures de début et de fin de l'effort, y compris les options de temps relatif.
-    Modification de la description : permet de modifier la description de l'effort.
-    Modification des tâches : permet à l'utilisateur de modifier le tâche directement depuis l'éditeur d'effort.
+        Sélection de tâches : permet à l'utilisateur de sélectionner la tâche associée à l'effort.
+        Démarrer et Modification de l'heure d'arrêt : fournit des contrôles pour définir les heures de début et de fin de l'effort, y compris les options de temps relatif.
+        Modification de la description : permet de modifier la description de l'effort.
+        Modification des tâches : permet à l'utilisateur de modifier la tâche directement depuis l'éditeur d'effort.
 
-Méthodes :
+    Méthodes :
 
-    __init__ : Initialise l'éditeur avec les efforts et le fichier de tâches donnés.
-    __onChoicesConfigChanged :
-    getPage :
-    settings_section (self) : Renvoie la section des paramètres pour la boîte de dialogue d'effort.
-    perspective (self) : Renvoie la perspective de la boîte de dialogue d'effort.
-    addEntries : Ajoute les différentes entrées (tâche, heure de début, heure d'arrêt time, description) à l'éditeur.
-    __add_task_entry : ajoute l'entrée de sélection de tâche.
-    __onStartDateTimeChanged (self, value) :
-    __onChoicesChanged (self, event) :
-    __add_start_and_stop_entries : ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif.
-    __create_start_from_last_effort_button : crée un bouton pour démarrer l'effort à partir du dernier effort arrêté.
-    __create_stop_now_button : Crée un bouton pour arrêter l'effort en cours.
-    __create_invalid_period_message : Crée un message à afficher si l'heure de début est après l'heure d'arrêt.
-    onStartFromLastEffort : Gère l'événement de démarrage de l'effort depuis le dernier effort arrêté.
-    onStopNow : Gère l'événement d'arrêt de l'effort en cours.
-    onStopDateTimeChanged : Gère les modifications apportées à l'heure d'arrêt, en s'assurant que l'heure de début n'est pas ultérieure.
-    onDateTimeChanged : Gère les modifications apportées à l'heure de début ou de fin et met à jour le message de période invalide.
-    __update_invalid_period_message : Met à jour le message de période invalide en fonction des heures de début et de fin.
-    __is_period_valid (self) : Indique si la période actuelle est valide, c'est-à-dire que la date et l'heure de début sont antérieures à la date et à l'heure de fin.
-    onEditTask : Ouvre l'éditeur de tâches pour la tâche sélectionnée.
-    addDescriptionEntry : Ajoute l'entrée de description.
-    setFocus : Définit le focus sur une entrée spécifique.
-    isDisplayingItemOrChildOfItem : Détermine si un élément donné est en cours de modification.
-    entries : Renvoie les entrées clés de l'éditeur.
-    close_edit_book : Ferme l'éditeur sans actions spécifiques.
+        __init__ : Initialise l'éditeur avec les efforts et le fichier de tâches donnés.
+        __onChoicesConfigChanged :
+        getPage :
+        settings_section (self) : Renvoie la section des paramètres pour la boîte de dialogue d'effort.
+        perspective (self) : Renvoie la perspective de la boîte de dialogue d'effort.
+        addEntries : Ajoute les différentes entrées (tâche, heure de début, heure d'arrêt time, description) à l'éditeur.
+        __add_task_entry : ajoute l'entrée de sélection de tâche.
+        __onStartDateTimeChanged (self, value) :
+        __onChoicesChanged (self, event) :
+        __add_start_and_stop_entries : ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif.
+        __create_start_from_last_effort_button : crée un bouton pour démarrer l'effort à partir du dernier effort arrêté.
+        __create_stop_now_button : Crée un bouton pour arrêter l'effort en cours.
+        __create_invalid_period_message : Crée un message à afficher si l'heure de début est après l'heure d'arrêt.
+        onStartFromLastEffort : Gère l'événement de démarrage de l'effort depuis le dernier effort arrêté.
+        onStopNow : Gère l'événement d'arrêt de l'effort en cours.
+        onStopDateTimeChanged : Gère les modifications apportées à l'heure d'arrêt, en s'assurant que l'heure de début n'est pas ultérieure.
+        onDateTimeChanged : Gère les modifications apportées à l'heure de début ou de fin et met à jour le message de période invalide.
+        __update_invalid_period_message : Met à jour le message de période invalide en fonction des heures de début et de fin.
+        __is_period_valid (self) : Indique si la période actuelle est valide, c'est-à-dire que la date et l'heure de début sont antérieures à la date et à l'heure de fin.
+        onEditTask : Ouvre l'éditeur de tâches pour la tâche sélectionnée.
+        addDescriptionEntry : Ajoute l'entrée de description.
+        setFocus : Définit le focus sur une entrée spécifique.
+        isDisplayingItemOrChildOfItem : Détermine si un élément donné est en cours de modification.
+        entries : Renvoie les entrées clés de l'éditeur.
+        close_edit_book : Ferme l'éditeur sans actions spécifiques.
 
         Cette classe fournit une interface conviviale pour modifier les détails de l'effort,
         y compris la sélection des tâches, le suivi du temps et l'édition de la description.
@@ -2313,6 +2331,8 @@ Méthodes :
         self, parent, efforts, taskFile, settings, items_are_new, *args, **kwargs
     ):  # pylint: disable=W0613
         """Initialise l'éditeur avec les efforts et le fichier de tâches donnés."""
+        self._descriptionSync = None
+        self._descriptionEntry = None
         self._effortList = taskFile.efforts()
         task_list = taskFile.tasks()
         self._taskList = task.TaskList(task_list)
@@ -2398,7 +2418,7 @@ Méthodes :
 
     def __add_start_and_stop_entries(self):
         # pylint: disable=W0201,W0142
-        """ ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif. """
+        """Ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif. """
         date_time_entry_kw_args = dict(showSeconds=True)
         flags = [
             None,
@@ -2664,9 +2684,14 @@ class Editor(BalloonTipManager, widgets.Dialog):
     garantissant une expérience utilisateur cohérente dans différents scénarios d'édition.
     """
     # Gestion du 'wx.Timer' pour macOS
-    EditBookClass = (
-        lambda *args: "Subclass responsibility"
-    )  # TODO: PEP 8: E731 do not assign a lambda expression, use a def
+    # EditBookClass = (
+    #     lambda *args: "Subclass responsibility"
+    # )  # TODO: PEP 8: E731 do not assign a lambda expression, use a def
+
+    @staticmethod
+    def EditBookClass(*args) -> str:
+        return "Subclass responsibility"
+
     singular_title = "Subclass responsibility %s"
     plural_title = "Subclass responsibility"
 
@@ -2745,9 +2770,9 @@ class Editor(BalloonTipManager, widgets.Dialog):
     def __create_ui_commands(self):
         """Crée des commandes d'interface utilisateur pour annuler, rétablir et nouvel effort."""
         # FIXME: les raccourcis clavier sont codés en dur ici, mais ils peuvent être
-        # modifiés dans les traductions
+        #  modifiés dans les traductions
         # FIXME: il y a d'autres raccourcis clavier qui ne fonctionnent pas dans les boîtes de dialogue
-        # pour le moment, comme DELETE
+        #  pour le moment, comme DELETE
         self.__new_effort_id = IdProvider.get()
         table = wx.AcceleratorTable(
             [
@@ -2818,10 +2843,14 @@ class Editor(BalloonTipManager, widgets.Dialog):
 
     def __close_if_item_is_deleted(self, items):
         for item in items:
+            # if (
+            #     self._interior.isDisplayingItemOrChildOfItem(item)
+            #     and not item in self._taskFile
+            # ):  # PEP 8: E713 test for membership should be 'not in'
             if (
-                self._interior.isDisplayingItemOrChildOfItem(item)
-                and not item in self._taskFile
-            ):  # PEP 8: E713 test for membership should be 'not in'
+                self._interior.isDisplayingItemOrChildOfItem(item) in self._taskFile
+                and item not in self._taskFile
+            ):
                 self.Close()
                 break
 
