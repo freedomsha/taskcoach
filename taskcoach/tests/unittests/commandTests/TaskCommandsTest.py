@@ -80,7 +80,7 @@ class TaskCommandTestCase(asserts.Mixin, CommandTestCase):
                 subtask.setCompletionDateTime()
         newSubTask.do()
 
-    def dragAndDrop(self, dropTarget, tasks=None):
+    def dragAndDrop(self, dropTarget, tasks=None):  # TODO : (dropTarget, tasks) or (draggedItems, dropItem) ?
         command.DragAndDropTaskCommand(self.taskList, tasks or [],
                                        drop=dropTarget).do()
 
