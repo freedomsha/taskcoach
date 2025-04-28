@@ -322,7 +322,7 @@ class Settings(CachingConfigParser):
         return super().set(section, option, value)
 
     # def get(self, section, option, raise_on_missing=False, *, raw=False, vars=None):
-    def get(self, section, option,raise_on_missing=False):
+    def get(self, section, option, raise_on_missing=False, *args):
         # def get(self, section: str, option: str):
         """
         Obtenez une valeur à partir des paramètres, de la gestion des valeurs par défaut et des anciens formats de fichier .ini.
@@ -464,8 +464,8 @@ class Settings(CachingConfigParser):
                     ascending = self.getboolean(section, "sortascending")
                 except Exception:
                     ascending = True
-                # result = '["%s%s"]' % (("" if ascending else "-"), result)
-                result = f'["{("" if ascending else "-")}{result}"]'
+                result = '["%s%s"]' % (("" if ascending else "-"), result)
+                # result = f'["{("" if ascending else "-")}{result}"]'
         elif option == "columns":
             columns = [
                 (col + "Time" if col in taskDateColumns else col)
