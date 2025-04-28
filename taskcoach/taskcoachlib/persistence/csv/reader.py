@@ -49,10 +49,12 @@ class CSVReader(object):
         return reader
 
     def read(self, **kwargs):
+        # TODO : vérifier si besoin d'encodage
         fp = tempfile.TemporaryFile()
-        fp.write(file(kwargs["filename"], "r").read().decode(kwargs["encoding"]).encode("UTF-8"))
+        # fp.write(file(kwargs["filename"], "r").read().decode(kwargs["encoding"]).encode("UTF-8"))
         # fp.write(io.open(kwargs['filename'], 'rU').read().decode(kwargs['encoding']).encode('UTF-8'))
         # fp.write(file(kwargs['filename'], 'rU').read().encode(kwargs['encoding']).decode('UTF-8'))
+        fp.write(file(kwargs["filename"], "r").read())
         fp.seek(0)
 
         rx1 = re.compile(r"^(\d+):(\d+)$")
@@ -83,17 +85,20 @@ class CSVReader(object):
 
             for idx, fieldValue in enumerate(line):  # TODO :
                 if kwargs["mappings"][idx] == _("ID"):
-                    id_ = fieldValue.decode("UTF-8")  # unresolved attribute reference decode for class str
+                    # id_ = fieldValue.decode("UTF-8")  # unresolved attribute reference decode for class str
                     # id_ = fieldValue.encode('UTF-8')
+                    id_ = fieldValue
                 elif kwargs["mappings"][idx] == _("Subject"):
-                    subject = fieldValue.decode("UTF-8")  # unresolved attribute reference decode for class str
-                    # subject = fieldValue.encode('UTF-8')
+                    # subject = fieldValue.decode("UTF-8")  # unresolved attribute reference decode for class str
+                    subject = fieldValue
                 elif kwargs["mappings"][idx] == _("Description"):
-                    description.write(fieldValue.decode("UTF-8"))  # unresolved attribute reference decode for class str
+                    # description.write(fieldValue.decode("UTF-8"))  # unresolved attribute reference decode for class str
                     # description.write(fieldValue.encode('UTF-8'))  # Expected type 'str', got 'bytes' instead
+                    description.write(fieldValue)
                     description.write("\n")
                 elif kwargs["mappings"][idx] == _("Category") and fieldValue:
-                    name = fieldValue.decode("UTF-8")
+                    # name = fieldValue.decode("UTF-8")
+                    name = fieldValue
                     if name.startswith("(") and name.endswith(")"):
                         continue  # Skip categories of subitems
                     cat = self.categoryList.findCategoryByName(name)
