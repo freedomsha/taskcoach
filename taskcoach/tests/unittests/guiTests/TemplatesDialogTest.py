@@ -16,29 +16,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import test
+from ... import tctest
 import os
 import shutil
-from ....taskcoachlib import gui, config
+from taskcoachlib import gui, config
 
 
-class TemplatesDialogTestCase(test.wxTestCase):
+class TemplatesDialogTestCase(tctest.wxTestCase):
     def setUp(self):
-        super(TemplatesDialogTestCase, self).setUp()
+        super().setUp()
         self.settings = config.Settings(load=False)
 
         # Monkey-patching
-        self.path = os.path.join(os.path.split(__file__)[0], 'tmpl')
+        self.path = os.path.join(os.path.split(__file__)[0], "tmpl")
         self.safelyRemove(self.path)
         os.mkdir(self.path)
 
         self.settings.pathToTemplatesDir = lambda: self.path
 
-        self.editor = gui.dialog.templates.TemplatesDialog(self.settings,
-                                                           self.frame, title='title')
+        self.editor = gui.dialog.templates.TemplatesDialog(
+            self.settings, self.frame, title="title"
+        )
 
     def tearDown(self):
-        super(TemplatesDialogTestCase, self).tearDown()
+        super().tearDown()
         self.safelyRemove(self.path)
 
     def safelyRemove(self, path):
@@ -48,4 +49,6 @@ class TemplatesDialogTestCase(test.wxTestCase):
             pass
 
     def testTwoDefaultTemplates(self):
-        self.assertEqual(0, len(self.editor._templates.tasks()))  # pylint: disable=W0212
+        self.assertEqual(
+            0, len(self.editor._templates.tasks())
+        )  # pylint: disable=W0212
