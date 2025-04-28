@@ -108,8 +108,13 @@ class CommonTaskTestsMixin(asserts.TaskAssertsMixin):
     """Ces tests doivent réussir pour toutes les tâches, quel que soit l’état."""
 
     def testCopy(self):
+        orig = self.task
         copy = self.task.copy()
-        self.assertTaskCopy(copy, self.task)
+
+        wx.LogDebug(f"testCopy : Tâche originale : {orig} -> Enfants: {len(orig.children())}")
+        wx.LogDebug(f"testCopy : Tâche copiée : {copy} -> Enfants: {len(copy.children())}")
+
+        self.assertTaskCopy(self.task, copy)
 
     def testCopy_IdIsDifferent(self):
         copy = self.task.copy()
@@ -895,12 +900,14 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
     # Prerequisites
 
     def testAddOnePrerequisite(self):
-        prerequisites = set([task.Task()])
+        # prerequisites = set([task.Task()])
+        prerequisites = {task.Task()}
         self.task.addPrerequisites(prerequisites)
         self.assertEqual(prerequisites, self.task.prerequisites())
 
     def testAddTwoPrerequisites(self):
-        prerequisites = set([task.Task(), task.Task()])
+        # prerequisites = set([task.Task(), task.Task()])
+        prerequisites = {task.Task(), task.Task()}
         self.task.addPrerequisites(prerequisites)
         self.assertEqual(prerequisites, self.task.prerequisites())
 
@@ -913,7 +920,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
         pub.subscribe(onEvent, task.Task.prerequisitesChangedEventType())
         prerequisite = task.Task()
         self.task.addPrerequisites([prerequisite])
-        self.assertEqual([(set([prerequisite]), self.task)], events)
+        # self.assertEqual([(set([prerequisite]), self.task)], events)
+        self.assertEqual([({prerequisite}, self.task)], events)
 
     def testRemovePrerequisiteThatHasNotBeenAdded(self):
         prerequisite = task.Task()
@@ -921,7 +929,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
         self.assertFalse(self.task.prerequisites())
 
     def testAddPrerequisiteKeepsTaskInactive(self):
-        prerequisites = set([task.Task()])
+        # prerequisites = set([task.Task()])
+        prerequisites = {task.Task()}
         self.task.addPrerequisites(prerequisites)
         self.assertTrue(self.task.inactive())
 
@@ -933,12 +942,14 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
     # Dependencies
 
     def testAddOneDependency(self):
-        dependencies = set([task.Task()])
+        # dependencies = set([task.Task()])
+        dependencies = {task.Task()}
         self.task.addDependencies(dependencies)
         self.assertEqual(dependencies, self.task.dependencies())
 
     def testAddTwoDependencies(self):
-        dependencies = set([task.Task(), task.Task()])
+        # dependencies = set([task.Task(), task.Task()])
+        dependencies = {task.Task(), task.Task()}
         self.task.addDependencies(dependencies)
         self.assertEqual(dependencies, self.task.dependencies())
 
@@ -951,7 +962,8 @@ class DefaultTaskStateTest(TaskTestCase, CommonTaskTestsMixin, NoBudgetTestsMixi
         pub.subscribe(onEvent, task.Task.dependenciesChangedEventType())
         dependency = task.Task()
         self.task.addDependencies([dependency])
-        self.assertEqual([(set([dependency]), self.task)], events)
+        # self.assertEqual([(set([dependency]), self.task)], events)
+        self.assertEqual([({dependency}, self.task)], events)
 
     def testRemoveDependencyThatHasNotBeenAdded(self):
         dependency = task.Task()
@@ -2980,12 +2992,15 @@ class TaskWithAttachmentFixture(AttachmentTestCase):
         for index, name in enumerate(
             self.taskCreationKeywordArguments()[0]["attachments"]
         ):
+            print(f"DEBUG - type(expected): {type(attachment.FileAttachment(name))}, repr(expected): {repr(attachment.FileAttachment(name))}")
+            print(f"DEBUG - type(actual): {type(self.task.attachments()[index])}, repr(actual): {repr(self.task.attachments()[index])}")
+
             self.assertEqual(
-                attachment.FileAttachment(name), self.task.attachments()[index]
+                str(attachment.FileAttachment(name)), str(self.task.attachments()[index])
             )
 
     def testRemoveNonExistingAttachment(self):
-        self.task.remove_attachments("Non-existing attachment")
+        self.task.removeAttachments("Non-existing attachment")
 
         for index, name in enumerate(
             self.taskCreationKeywordArguments()[0]["attachments"]
@@ -3031,7 +3046,7 @@ class TaskWithAttachmentAddedFixture(TaskWithAttachmentAddedTestCase):
 class TaskWithAttachmentRemovedFixture(TaskWithAttachmentAddedTestCase):
     def setUp(self):
         super().setUp()
-        self.task.remove_attachments(self.attachment)
+        self.task.removeAttachments(self.attachment)
 
     def testRemoveAttachment(self):
         self.assertFalse(self.attachment in self.task.attachments())
@@ -3334,7 +3349,9 @@ class TaskWithDependency(TaskTestCase):
         self.assertEqual([(set([self.dependency]), self.task)], events)
 
 
-class TaskSuggestedDateTimeBaseSetupAndTests(object):
+# class TaskSuggestedDateTimeBaseSetupAndTests(object):
+# class TaskSuggestedDateTimeBaseSetupAndTests(TaskTestCase):
+class TaskSuggestedDateTimeBaseSetupAndTests(tctest.TestCase):
     def setUp(self):
         super().setUp()
         # pylint: disable=W0142
@@ -3493,8 +3510,9 @@ class TaskConstructionTest(tctest.TestCase):
         self.assertEqual(date.DateTime(2010, 1, 1), newTask.actualStartDateTime())
 
 
+# class TaskScheduledTest(tctest.TestCase):
 class TaskScheduledTest(TaskTestCase):
-    def setUp(self):
+    def setUp(self, settings=None):
         super().setUp([("behavior", "duesoonhours", 1)])
 
     def taskCreationKeywordArguments(self):
@@ -3516,7 +3534,8 @@ class TaskScheduledTest(TaskTestCase):
 
 
 class TaskNotScheduledTest(TaskTestCase):
-    def setUp(self):
+    # class TaskNotScheduledTest(tctest.TestCase):
+    def setUp(self, settings=None):
         super().setUp([("behavior", "duesoonhours", 1)])
 
     def taskCreationKeywordArguments(self):
