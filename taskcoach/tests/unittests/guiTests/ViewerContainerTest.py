@@ -16,27 +16,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from ...unittests import dummy
+# from builtins import str
+# from builtins import object
+# from taskcoachlib.thirdparty.pubsub import pub
+from pubsub import pub
+from .. import dummy
+from ... import tctest
 from taskcoachlib import gui, config, persistence, widgets
 from taskcoachlib.domain import task
-# from taskcoachlib.thirdparty.pubsub import pub
-
-from builtins import str
-from builtins import object
-import test
-from pubsub import pub
 
 
 class DummyMainWindow(widgets.AuiManagedFrameWithDynamicCenterPane):
     count = 0
 
     def __init__(self):
-        super(DummyMainWindow, self).__init__(None)
+        super().__init__(None)
 
     def addPane(self, window, caption, floating=False):
         self.count += 1
-        super(DummyMainWindow, self).addPane(window, caption,
-                                             str('name%d' % self.count))
+        super().addPane(window, caption, str(f"name{self.count:d}"))
 
     def AddBalloonTip(self, *args, **kwargs):
         pass
@@ -78,28 +76,31 @@ class DummyChangeEvent(DummyEvent):
 
 class DummyCloseEvent(DummyEvent):
     def __init__(self, window):
-        super(DummyCloseEvent, self).__init__(DummyPane(window))
+        super().__init__(DummyPane(window))
 
 
-class ViewerContainerTest(test.wxTestCase):
+class ViewerContainerTest(tctest.wxTestCase):
     def setUp(self):
-        super(ViewerContainerTest, self).setUp()
+        super().setUp()
         self.events = 0
         task.Task.settings = self.settings = config.Settings(load=False)
-        self.settings.set('view', 'viewerwithdummywidgetcount', '2', new=True)
+        self.settings.set("view", "viewerwithdummywidgetcount", "2", new=True)
         self.taskFile = persistence.TaskFile()
         self.mainWindow = DummyMainWindow()
-        self.container = gui.viewer.ViewerContainer(self.mainWindow,
-                                                    self.settings)
-        self.viewer1 = self.createViewer('taskviewer1')
+        self.container = gui.viewer.ViewerContainer(self.mainWindow, self.settings)
+        self.viewer1 = self.createViewer("taskviewer1")
         self.container.addViewer(self.viewer1)
-        self.viewer2 = self.createViewer('taskviewer2')
+        self.viewer2 = self.createViewer("taskviewer2")
         self.container.addViewer(self.viewer2)
 
     def createViewer(self, settingsSection):
         self.settings.add_section(settingsSection)
-        return dummy.ViewerWithDummyWidget(self.mainWindow, self.taskFile,
-                                           self.settings, settingsSection=settingsSection)
+        return dummy.ViewerWithDummyWidget(
+            self.mainWindow,
+            self.taskFile,
+            self.settings,
+            settingsSection=settingsSection,
+        )
 
     def onEvent(self):
         self.events += 1
@@ -119,9 +120,9 @@ class ViewerContainerTest(test.wxTestCase):
         self.assertEqual(self.viewer2, self.container.activeViewer())
 
     def testChangePage_NotifiesObserversAboutNewActiveViewer(self):
-        pub.subscribe(self.onEvent, 'viewer.status')
+        pub.subscribe(self.onEvent, "viewer.status")
         self.container.onPageChanged(DummyChangeEvent(self.viewer2))
-        self.failUnless(self.events > 0)
+        self.assertTrue(self.events > 0)
 
     def testCloseViewer_RemovesViewerFromContainer(self):
         self.container.onPageClosed(DummyCloseEvent(self.viewer1))
@@ -134,6 +135,6 @@ class ViewerContainerTest(test.wxTestCase):
 
     def testCloseViewer_NotifiesObserversAboutNewActiveViewer(self):
         self.container.activateViewer(self.viewer2)
-        pub.subscribe(self.onEvent, 'viewer.status')
+        pub.subscribe(self.onEvent, "viewer.status")
         self.container.closeViewer(self.viewer2)
-        self.failUnless(self.events > 0)
+        self.assertTrue(self.events > 0)
