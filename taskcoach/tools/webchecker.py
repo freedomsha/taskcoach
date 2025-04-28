@@ -414,7 +414,7 @@ class Checker:
             return
         try:
             page = self.getpage(url_pair)
-        except sgmllib3k.SGMLParseError as msg:
+        except sgmllib.SGMLParseError as msg:
             msg = self.sanitize(msg)
             self.note(0, "Error parsing %s: %s",
                       self.format_url(url_pair), msg)
@@ -503,7 +503,8 @@ class Checker:
         if url in self.name_table:
             return self.name_table[url]
 
-        scheme, path = urllib.parse.splittype(url)
+        # scheme, path = urllib.parse.splittype(url)
+        scheme, path = urllib.parse.urlsplit(url)
         if scheme in ("mailto", "news", "javascript", "telnet"):
             self.note(1, " Not checking %s URL" % scheme)
             return None
@@ -618,7 +619,8 @@ class Checker:
     # changed into methods so they can be overridden in subclasses.
 
     def show(self, p1, link, p2, origins):
-        self.message("%s %s", p1, link)
+        # self.message("%s %s", p1, link)
+        self.message(f"{p1} {link}")
         i = 0
         for source, rawlink in origins:
             i = i + 1
@@ -771,8 +773,19 @@ class MyURLopener(urllib.request.FancyURLopener):
             ("User-agent", "Python-webchecker/%s" % __version__),
         ]
 
-    def http_error_401(self, url, fp, errcode, errmsg, headers):
+    def http_error_401(self, url, fp, errcode, errmsg, headers, data=None, retry=False):
         return None
+    # def http_error_401(
+    #     self,
+    #     url: str,
+    #     fp,
+    #     errcode: int,
+    #     errmsg: str,
+    #     headers,
+    #     data=None,
+    #     retry: bool = False,
+    # ):
+    #     return None
 
     def open_file(self, url):
         path = urllib.request.url2pathname(urllib.parse.unquote(url))
