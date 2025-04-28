@@ -910,7 +910,8 @@ class wxSchedulerPaint(object):
             day.SetMinute(0)
             day.SetSecond(0)
 
-            daysCount = wx.DateTime.GetNumberOfDaysInMonth(day.GetMonth())
+            # daysCount = wx.DateTime.GetNumberOfDaysInMonth(day.GetMonth())
+            daysCount = wx.DateTime.GetNumberOfDays(day.GetMonth())
 
             maxDY = 0
             for idx in xrange(daysCount):
@@ -1007,7 +1008,8 @@ class wxSchedulerPaint(object):
             day.SetMinute(0)
             day.SetSecond(0)
 
-            daysCount = wx.DateTime.GetNumberOfDaysInMonth(day.GetMonth())
+            # daysCount = wx.DateTime.GetNumberOfDaysInMonth(day.GetMonth())
+            daysCount = wx.DateTime.GetNumberOfDays(day.GetMonth())
 
             minHeight = h
 
@@ -1100,9 +1102,16 @@ class wxSchedulerPaint(object):
                     elif self._viewType == wxSCHEDULER_WEEKLY:
                         minW = self._periodWidth * 7
                     elif self._viewType == wxSCHEDULER_MONTHLY:
+                        # return wx.Size(
+                        #     self._periodWidth
+                        #     * wx.DateTime.GetNumberOfDaysInMonth(
+                        #         self.GetDate().GetMonth()
+                        #     ),
+                        #     minH,
+                        # )
                         return wx.Size(
                             self._periodWidth
-                            * wx.DateTime.GetNumberOfDaysInMonth(
+                            * wx.DateTime.GetNumberOfDays(
                                 self.GetDate().GetMonth()
                             ),
                             minH,
