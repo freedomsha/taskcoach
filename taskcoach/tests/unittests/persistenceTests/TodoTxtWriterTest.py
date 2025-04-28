@@ -18,15 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from future import standard_library
-from ... import test
+# from future import standard_library
+from ... import tctest
 import io
-from ....taskcoachlib import persistence, config, gui
-from ....taskcoachlib.domain import task, category, date
-standard_library.install_aliases()
+from taskcoachlib import persistence, config, gui
+from taskcoachlib.domain import task, category, date
+# standard_library.install_aliases()
 
 
-class TodoTxtWriterTestCase(test.wxTestCase):
+class TodoTxtWriterTestCase(tctest.wxTestCase):
     def setUp(self):
         self.settings = task.Task.settings = config.Settings(load=False)
         self.file = io.StringIO()
