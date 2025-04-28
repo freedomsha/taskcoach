@@ -39,11 +39,12 @@ class UnicodeCSVWriter:
         self.fd = fd
 
     def writerow(self, row):
-        self.writer.writerow([cell.encode("utf-8") for cell in row])
+        # self.writer.writerow([cell.encode("utf-8") for cell in row])
+        self.writer.writerow([cell for cell in row])
         # Fetch UTF-8 output from the queue
         data = self.queue.getvalue()
-        data = data.decode("utf-8")  # Unresolved attribute reference 'decode' for class 'str'
-        self.fd.write(data)
+        # data = data.decode("utf-8")  # Unresolved attribute reference 'decode' for class 'str'
+        self.fd.write(data, )
         self.queue.truncate(0)
 
     def writerows(self, rows):
