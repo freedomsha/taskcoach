@@ -29,15 +29,18 @@ La classe ToolBar est également utilisée dans les tests unitaires pour tester 
 # from future import standard_library
 
 # standard_library.install_aliases()
-from taskcoachlib import operating_system
+import logging
+import wx
 # from taskcoachlib.thirdparty import aui
 # import aui2 as aui
 from wx.lib.agw import aui
-import wx
+from taskcoachlib import operating_system
 # from taskcoachlib.gui import uicommand
 from taskcoachlib.gui.uicommand import base_uicommand, uicommand, uicommandcontainer
 # from taskcoachlib.gui.uicommand import uicommand
 # from taskcoachlib.gui.uicommand import uicommandcontainer
+
+log = logging.getLogger(__name__)
 
 
 class _Toolbar(aui.auibar.AuiToolBar):
@@ -235,7 +238,6 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         self.loadPerspective(window.getToolBarPerspective())
         self.tools = []  # utiliser une liste pour stocker les outils
 
-
     def Clear(self):
         """Efface la barre d'outils et tous les contrôles qu'elle contient.
 
@@ -308,6 +310,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
 
         self.appendUICommands(*commands)
         self.Realize()  # Réalise la barre d'outils. Cette fonction doit être appelée après avoir ajouté des outils.
+        # pour les faire apparaître !
 
     # def perspective(self) -> str:
     def perspective(self):
@@ -382,7 +385,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         # return uiCommand.appendToToolBar(self)
         # Déboggage :
         # Ajoutez des débogage pour vérifier les paramètres
-        print(f"gui.toolbar.ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}")
+        log.debug(f"gui.toolbar.ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}")
 
         # Implémentation de la méthode appendUICommand
         toolId = len(self.tools)  # Simule un ID unique pour l'outil
@@ -390,7 +393,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         self.tools.append(uiCommand)
 
         # Ajoutez des débogage pour vérifier que l'outil a été ajouté avec succès
-        print(f"Tool added with ID: {toolId}")
+        log.debug(f"ToolBar.appendUICommand : Tool {uiCommand.menuText} ajouté avec l' ID: {toolId} retourné.")
 
         return toolId
 
