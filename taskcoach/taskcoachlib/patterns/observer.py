@@ -386,7 +386,7 @@ class MethodProxy(object):
     """
     Enveloppez les méthodes dans une classe qui permet de comparer les méthodes.
 
-    Comparaison si les méthodes d'instance ont été modifiées dans Python 2.5 Dans Python 2.5,
+    Comparaison si les méthodes d'instance ont été modifiées dans Python 2.5,
     les méthodes d'instance sont égales lorsque leurs instances sont égales, ce qui n'est pas
     le comportement nécessaire pour les rappels. Cette classe encapsule les rappels pour restaurer ou
     pour récupérer l'ancien comportement.
@@ -402,7 +402,8 @@ class MethodProxy(object):
         self.method = method
 
     def __repr__(self) -> str:
-        return "MethodProxy(%s)" % self.method  # pragma: no cover
+        # return "MethodProxy(%s)" % self.method  # pragma: no cover
+        return f"MethodProxy({self.method})"  # pragma: no cover
 
     def __call__(self, *args, **kwargs):
         """
@@ -517,8 +518,9 @@ def unwrapObservers(decoratedMethod):
 
 class Publisher(object, metaclass=singleton.Singleton):
     """
-    Publisher est utilisé pour s’inscrire aux notifications d’événements. Il prend en charge
-    le modèle éditeur/abonnement, également connu sous le nom de modèle observateur.
+    Publisher est utilisé pour s’inscrire aux notifications d’événements.
+
+    Il prend en charge le modèle éditeur/abonnement, également connu sous le nom de modèle observateur.
     Les objets (observateurs) intéressés par les notifications de changement enregistrent une méthode de rappel
     via Publisher.registerObserver. Le rappel devrait
     attendre un argument ; une instance de la classe Event. Les observateurs peuvent
@@ -623,7 +625,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         Informer les observateurs de l'événement. Le type et les sources de l'événement sont
         extraits de l'événement.
 
-        Args:
+        Args :
             event (event) : L'événement dont il faut informer les observateurs.
         """
         if not event.sources():
@@ -669,7 +671,7 @@ class Publisher(object, metaclass=singleton.Singleton):
 
 class Observer(object):
     """
-    Classe de base observer pour gérer l’enregistrement et la suppression des observateurs.
+    Classe mixin de base Observer qui permet de gérer l’enregistrement et la suppression des observateurs.
     """
 
     def __init__(self, *args, **kwargs):
@@ -727,7 +729,7 @@ class Decorator(Observer):
         """
         Initialisez le décorateur.
 
-        Args:
+        Args :
             observable (objet) : l'instance observable à envelopper.
         """
         self.__observable = observable
@@ -738,10 +740,10 @@ class Decorator(Observer):
         Obtenez l'instance observable encapsulée.
 
         Args :
-            recursive (bool, facultatif) : Si True, obtenez l'observable de niveau supérieur.
+            recursive (bool) : (optional) True, obtenez l'observable de niveau supérieur.
 
         Renvoie :
-            object : L'observable encapsulé exemple.
+            (object) L'observable encapsulé exemple.
         """
         if recursive:
             try:
@@ -758,7 +760,7 @@ class Decorator(Observer):
             attribute (str) : le nom de l'attribut.
 
         Returns :
-            Any : la valeur de l'attribut.
+            (Any) La valeur de l'attribut.
         """
         return getattr(self.observable(), attribute)
 
@@ -812,8 +814,8 @@ class ObservableSet(ObservableCollection, Set):
         Args :
             other : L'objet à comparer avec 'self.__class__'.
 
-        Renvoie :
-            bool : True si les objets sont égaux, False sinon.
+        Returns :
+            result (bool) : True si les objets sont égaux, False sinon.
         """
         # Si l'objet est une instance ou instance fille de self.
         if isinstance(other, self.__class__):
@@ -831,7 +833,7 @@ class ObservableSet(ObservableCollection, Set):
         Calcule la valeur de hachage pour cet ObservableSet.
 
         Returns :
-            int : la valeur de hachage.
+            (int) : la valeur de hachage.
         """
         return hash(id(self))
 
@@ -852,7 +854,7 @@ class ObservableSet(ObservableCollection, Set):
         """
         Étend l'ObservableSet avec plusieurs éléments.
 
-        Args:
+        Args :
             items : itérable des éléments à ajouter.
             event : événement facultatif associé à l'opération.
         """
@@ -866,7 +868,7 @@ class ObservableSet(ObservableCollection, Set):
         """
         Supprime un élément de l'ObservableSet.
 
-        Args:
+        Args :
             item : L'élément à supprimer.
             event : Événement facultatif associé à l'opération.
         """
@@ -878,7 +880,7 @@ class ObservableSet(ObservableCollection, Set):
         """
         Supprime plusieurs éléments de l'ObservableSet.
 
-        Args:
+        Args :
             items : itérable des éléments à supprimer.
             event : événement facultatif associé à l'opération.
         """
@@ -937,7 +939,7 @@ class ObservableList(ObservableCollection, List):
         """
         Supprime un élément de l'ObservableList.
 
-        Args:
+        Args :
             item : L'élément à supprimer.
             event : Événement facultatif associé à l'opération.
         """
@@ -949,7 +951,7 @@ class ObservableList(ObservableCollection, List):
         """
         Supprime plusieurs éléments de l'ObservableList.
 
-        Args:
+        Args :
             items : itérable des éléments à supprimer.
             event : événement facultatif associé à l'opération.
         """
@@ -963,7 +965,7 @@ class ObservableList(ObservableCollection, List):
         """
         Efface tous les éléments de l’événement ObservableList.
 
-        Args:
+        Args :
             event : événement facultatif associé à l’opération.
         """
         if not self:
@@ -1008,9 +1010,9 @@ class CollectionDecorator(Decorator, ObservableCollection):
         dans la collection observable.
 
         Args :
-            observedCollection (ObservableCollection): La collection à décorer et observer.
-            *args: Arguments supplémentaires pour l'initialisation.
-            **kwargs: Arguments nommés supplémentaires pour l'initialisation.
+            observedCollection (ObservableCollection) : La collection à décorer et observer.
+            *args : Arguments supplémentaires pour l'initialisation.
+            **kwargs : Arguments nommés supplémentaires pour l'initialisation.
         """
         super().__init__(observedCollection, *args, **kwargs)
         self.__freezeCount = 0
@@ -1060,7 +1062,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         Vérifie si la collection est gelée.
 
         Returns :
-            bool : True si la collection est gelée, sinon False.
+            (bool) : True si la collection est gelée, sinon False.
         """
         return self.__freezeCount != 0
 
@@ -1116,7 +1118,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
 
         Args :
             items (list) : Liste des éléments à ajouter à la collection décorée.
-            event (Event, optionnel) : L'événement associé à l'ajout des éléments.
+            event (Event) : (optionnel) L'événement associé à l'ajout des éléments.
         """
         return super().extend(items, event=event)
 
@@ -1129,7 +1131,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
 
         Args :
             items (list) : Liste des éléments à supprimer de la collection décorée.
-            event (Event, optionnel) : L'événement associé à la suppression des éléments.
+            event (Event) (optionnel) L'événement associé à la suppression des éléments.
         """
         return super().removeItems(items, event=event)
 
