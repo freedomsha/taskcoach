@@ -123,15 +123,15 @@ class ToolTipMixin(object):
         Si cette méthode n'est pas redéfinie, une exception est levée.
 
         Returns :
-            wx.Window : La fenêtre principale associée.
+            (wx.Window) : La fenêtre principale associée.
 
         Raises :
             NotImplementedError : Si la méthode n'est pas implémentée dans
                                   la classe finale.
         """
-        raise NotImplementedError(
-            "GetMainWindow doit être implémenté dans une sous-classe qui utilise ToolTipMixin."
-        )
+        # raise NotImplementedError(
+        #     "GetMainWindow doit être implémenté dans une sous-classe qui utilise ToolTipMixin."
+        # )
         # Utiliser un mécanisme basé sur wx.GetTopLevelParent comme solution de secours
         #
         # Si ToolTipMixin est toujours utilisé dans des widgets wxPython,
@@ -143,12 +143,12 @@ class ToolTipMixin(object):
         #
         # Cette méthode peut être redéfinie dans les sous-classes si nécessaire.
         #
-        # Returns:
+        # Returns :
         #     wx.Window : La fenêtre principale du widget.
         # """
-        # if isinstance(self, wx.Window):
-        #     return wx.GetTopLevelParent(self)
-        # return None
+        if isinstance(self, wx.Window):
+            return wx.GetTopLevelParent(self)
+        return None
 
     def Bind(self, event, handler, *args, **kwargs):
         """
@@ -295,6 +295,7 @@ class ToolTipMixin(object):
 
     def __OnTimer(self, event):  # pylint: disable=W0613
         self.ShowTip(*self.GetMainWindow().ClientToScreenXY(*self.__position))
+        # self.ShowTip(*self.GetMainWindow().ClientToScreen(*self.__position))
 
 
 if operating_system.isWindows():
@@ -323,10 +324,11 @@ if operating_system.isWindows():
             Args :
                 x (int) : Position X de l'info-bulle.
                 y (int) : Position Y de l'info-bulle.
-                width (int) : Largeur de l'info-bulle.
-                height (int) : Hauteur de l'info-bulle.
+                w (int) : Largeur de l'info-bulle.
+                h (int) : Hauteur de l'info-bulle.
             """
-            self.SetDimensions(x, y, w, h)
+            # self.SetDimensions(x, y, w, h)
+            self.SetSize(x, y, w, h)
             super().Show()
 
 elif operating_system.isMac():
