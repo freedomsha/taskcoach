@@ -169,7 +169,8 @@ class StringItem(BaseItem):
             self.state = 2
 
     def pack(self, value):
-        v = value.encode("UTF-8")
+        # v = value.encode("UTF-8")
+        v = value
         return struct.pack("!i", len(v)) + v
 
 
