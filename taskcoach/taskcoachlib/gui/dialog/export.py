@@ -19,11 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import range
 # from builtins import str
 # from taskcoachlib.tools import wxhelper
-import wxhelper
 import wx
+# import wxhelper
 from taskcoachlib.i18n import _
-# from wx.lib import sized_controls, newevent
-from wx.lib import sized_controls
+from wx.lib import sized_controls, newevent
+# from wx.lib import sized_controls
 from taskcoachlib import meta, widgets
 
 
@@ -43,10 +43,10 @@ class ExportDialog(sized_controls.SizedDialog):
         self.components = self.createInterior(pane)
         buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(buttonSizer)
-        # buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.onOk)
-        wxhelper.getButtonFromStdDialogButtonSizer(buttonSizer, wx.ID_OK).Bind(
-            wx.EVT_BUTTON, self.onOk
-        )
+        buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.onOk)
+        # wxhelper.getButtonFromStdDialogButtonSizer(buttonSizer, wx.ID_OK).Bind(
+        #     wx.EVT_BUTTON, self.onOk
+        # )
         self.Fit()
         self.CentreOnParent()
 
@@ -79,6 +79,16 @@ ViewerPickedEvent, EVT_VIEWERPICKED = wx.lib.newevent.NewEvent()
 
 class ViewerPicker(sized_controls.SizedPanel):
     """ Control for adding a viewer chooser widget to the export dialog. """
+    # Attention à l'utilisation des SizedPanel :
+    # self.SetSizerType("horizontal")
+    #
+    # b1 = wx.Button(self, wx.ID_ANY)
+    # t1 = wx.TextCtrl(self, -1)
+    # t1.SetSizerProps(expand=True)
+    #
+    # AddChild(self, child)
+    #   Called automatically by wx, do not call it from user code.
+
 
     def __init__(self, parent, viewers, activeViewer):
         super().__init__(parent)
@@ -89,6 +99,7 @@ class ViewerPicker(sized_controls.SizedPanel):
 
     def createPicker(self):
         label = wx.StaticText(self, label=_("Export items from:"))
+        # label = wx.TextCtrl(self, label=_("Export items from:"))  # TODO : A Essayer
         label.SetSizerProps(valign="center")
         self.viewerComboBox = wx.ComboBox(
             self, style=wx.CB_READONLY | wx.CB_SORT
@@ -158,6 +169,7 @@ class ColumnPicker(sized_controls.SizedPanel):
 
     def createColumnPicker(self):
         label = wx.StaticText(self, label=_("Columns to export:"))
+        # label = wx.TextCtrl(self, label=_("Columns to export:"))  # TODO : A Essayer ! plus approprié !?
         label.SetSizerProps(valign="top")
         self.columnPicker = widgets.CheckListBox(self)  # pylint: disable=W0201
         self.columnPicker.SetSizerProps(expand=True, proportion=1)
@@ -219,6 +231,7 @@ class SeparateCSSCheckBox(sized_controls.SizedPanel):
         self.settings = settings
         self.section = section
         self.setting = setting
+        self.separateCSSCheckBox = None  # Définit dans createCheckBox()
         self.createCheckBox()
         self.createHelpInformation(parent)
 
