@@ -177,10 +177,7 @@ class TimeLine(wx.Panel):
         self.DEFAULT_PEN = wx.Pen(wx.BLACK, 1, wx.PENSTYLE_SOLID)
         self.SELECTED_PEN = wx.Pen(wx.WHITE, 2, wx.PENSTYLE_SOLID)
         kwargs["style"] = (
-            wx.TAB_TRAVERSAL
-            | wx.NO_BORDER
-            | wx.FULL_REPAINT_ON_RESIZE
-            | wx.WANTS_CHARS
+            wx.TAB_TRAVERSAL | wx.NO_BORDER | wx.FULL_REPAINT_ON_RESIZE | wx.WANTS_CHARS
         )
         super(TimeLine, self).__init__(*args, **kwargs)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -212,7 +209,7 @@ class TimeLine(wx.Panel):
         """
         Gérer l'événement paint.
 
-        Args:
+        Args :
             event (wx.PaintEvent) : L'événement paint.
         """
         dc = wx.BufferedPaintDC(self, self._buffer)
@@ -221,7 +218,7 @@ class TimeLine(wx.Panel):
         """
         Gérez l'événement de redimensionnement.
 
-        Args:
+        Args :
             event (wx.SizeEvent): L'événement de redimensionnement.
         """
         # Le tampon est initialisé ici, de sorte qu'il ait toujours
@@ -240,7 +237,7 @@ class TimeLine(wx.Panel):
         """
         Gérez l'événement de relâchement du bouton gauche de la souris.
 
-        Args:
+        Args :
             event (wx.MouseEvent): L'événement de la souris.
         """
         event.Skip()
@@ -253,7 +250,7 @@ class TimeLine(wx.Panel):
         """
         Gérez l'événement de double-clic du bouton gauche de la souris.
 
-        Args:
+        Args :
             event (wx.MouseEvent): L'événement de la souris.
         """
         point = event.GetPosition()
@@ -265,7 +262,7 @@ class TimeLine(wx.Panel):
         """
         Gérer l'événement key up.
 
-        Args:
+        Args :
             event (wx.KeyEvent): L'événement clé.
         """
         # TODO : Review the method
@@ -304,7 +301,7 @@ class TimeLine(wx.Panel):
         """
         Récupère le nœud actuellement sélectionné.
 
-        Returns:
+        Returns :
             Le nœud actuellement sélectionné.
         """
         return self.selectedNode
@@ -313,9 +310,9 @@ class TimeLine(wx.Panel):
         """
         Définissez le nœud donné comme sélectionné dans le widget de chronologie.
 
-        Args:
+        Args :
             node : Le nœud à sélectionner.
-            point (wx.Point, optional) : La position du nœud (la valeur par défaut est Aucun ).
+            point (wx.Point) : (optional) La position du nœud (la valeur par défaut est None).
         """
         if node == self.selectedNode:
             return
@@ -326,7 +323,7 @@ class TimeLine(wx.Panel):
 
     def UpdateDrawing(self):
         """
-        Mettez à jour le dessin de la chronologie.
+        Mettre à jour le dessin de la chronologie.
         """
         dc = wx.BufferedDC(wx.ClientDC(self), self._buffer)
         self.Draw(dc)
@@ -335,7 +332,7 @@ class TimeLine(wx.Panel):
         """
         Dessinez la chronologie sur le contexte de l'appareil.
 
-        Args:
+        Args :
             dc (wx.DC) : Le contexte de l'appareil.
         """
         self.hot_map = HotMap()
@@ -367,31 +364,29 @@ class TimeLine(wx.Panel):
         """
         Renvoie la police GUI par défaut, mise à l'échelle pour l'impression si nécessaire.
 
-        Args:
-            dc (wx.DC) : le contexte du périphérique.
+        Args :
+            dc (wx.DC) : Le contexte du périphérique.
 
-        Returns:
-            wx.Font : le police mise à l'échelle.
+        Returns :
+            font (wx.Font) : La police mise à l'échelle.
         """
         font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         scale = dc.GetPPI()[0] // wx.ScreenDC().GetPPI()[0]
         font.SetPointSize(scale * font.GetPointSize())
         return font
 
-    def DrawBox(
-        self, dc, node, y, h, hot_map, isSequentialNode=False, depth=0
-    ):
+    def DrawBox(self, dc, node, y, h, hot_map, isSequentialNode=False, depth=0):
         """
         Dessinez une boîte représentant un nœud.
 
-        Args:
-            dc (wx.DC): Le contexte du périphérique.
-            node: Le nœud à dessiner.
-            y (int): Le y- coordinate.
-            h (int): La hauteur de la boîte.
-            hot_map (HotMap): L'instance de HotMap.
-            isSequentialNode (bool, optional): Indique si le nœud est séquentiel (la valeur par défaut est False).
-            depth (int, optional): la profondeur du nœud (la valeur par défaut est 0).
+        Args :
+            dc (wx.DC) : Le contexte du périphérique.
+            node : Le nœud à dessiner.
+            y (int) : Le y- coordinate.
+            h (int) : La hauteur de la boîte.
+            hot_map (HotMap) : L'instance de HotMap.
+            isSequentialNode (bool, optional) : Indique si le nœud est séquentiel (la valeur par défaut est False).
+            depth (int, optional) : la profondeur du nœud (la valeur par défaut est 0).
         """
         if h < self.padding:
             return
@@ -424,15 +419,15 @@ class TimeLine(wx.Panel):
         """
         Dessinez un rectangle représentant un nœud.
 
-        Args:
-            dc (wx.DC): Le contexte du périphérique.
-            node: Le nœud à dessiner.
-            x (int): Le x- coordinate.
-            y (int): La coordonnée y.
-            w (int): La largeur du rectangle.
-            h (int): La hauteur du rectangle.
-            isSequentialNode (bool): Si le nœud est séquentiel.
-            depth (int): La profondeur du nœud.
+        Args :
+            dc (wx.DC) : Le contexte du périphérique.
+            node : Le nœud à dessiner.
+            x (int) : Le x- coordinate.
+            y (int) : La coordonnée y.
+            w (int) : La largeur du rectangle.
+            h (int) : La hauteur du rectangle.
+            isSequentialNode (bool) : Si le nœud est séquentiel.
+            depth (int) : La profondeur du nœud.
         """
         dc = wx.GCDC(dc) if isSequentialNode else dc
         dc.SetClippingRegion(x, y, w, h)
@@ -440,8 +435,7 @@ class TimeLine(wx.Panel):
         dc.SetPen(self.penForNode(node, isSequentialNode, depth))
         rounding = (
             0
-            if isSequentialNode
-            and (h < self.padding * 4 or w < self.padding * 4)
+            if isSequentialNode and (h < self.padding * 4 or w < self.padding * 4)
             else self.padding * 2
         )
         dc.DrawRoundedRectangle(x, y, w, h, rounding)
@@ -451,23 +445,23 @@ class TimeLine(wx.Panel):
         """
         Dessinez l'icône, le cas échéant, et l'étiquette, le cas échéant, du nœud.
 
-        Args:
-            dc (wx.DC): The device context.
-            node: The node to draw.
-            x (int): The x-coordinate.
-            y (int): The y-coordinate.
-            w (int): The width of the rectangle.
-            h (int): The height of the rectangle.
-            depth (int): The depth of the node.
+        Args :
+            dc (wx.DC) : The device context.
+            node : The node to draw.
+            x (int) : The x-coordinate.
+            y (int) : The y-coordinate.
+            w (int) : The width of the rectangle.
+            h (int) : The height of the rectangle.
+            depth (int) : The depth of the node.
         """
         # Make sure the Icon and Label are visible:
         if x < 0:
             w -= abs(x)
             x = 0
-        dc.SetClippingRegion(
-            x + 1, y + 1, w - 2, h - 2
-        )  # Don't draw outside the box
-        icon = self.adapter.icon(node, node == self.selectedNode)
+        dc.SetClippingRegion(x + 1, y + 1, w - 2, h - 2)  # Don't draw outside the box
+        # icon = self.adapter.icon(node, node == self.selectedNode)
+        if node == self.selectedNode:
+            icon = self.adapter.icon(node)
         if icon and h >= icon.GetHeight() and w >= icon.GetWidth():
             iconWidth = icon.GetWidth() + 2
             dc.DrawIcon(icon, x + 2, y + 2)
@@ -497,26 +491,16 @@ class TimeLine(wx.Panel):
         childY = y
         h -= len(children)  # vertical space between children
         recursiveChildrenList = [
-            self.adapter.parallel_children(child, recursive=True)
-            for child in children
+            self.adapter.parallel_children(child, recursive=True) for child in children
         ]
         recursiveChildrenCounts = [
-            len(recursiveChildren)
-            for recursiveChildren in recursiveChildrenList
+            len(recursiveChildren) for recursiveChildren in recursiveChildrenList
         ]
-        recursiveChildHeight = h / float(
-            len(children) + sum(recursiveChildrenCounts)
-        )
-        for child, numberOfRecursiveChildren in zip(
-            children, recursiveChildrenCounts
-        ):
-            childHeight = recursiveChildHeight * (
-                numberOfRecursiveChildren + 1
-            )
+        recursiveChildHeight = h / float(len(children) + sum(recursiveChildrenCounts))
+        for child, numberOfRecursiveChildren in zip(children, recursiveChildrenCounts):
+            childHeight = recursiveChildHeight * (numberOfRecursiveChildren + 1)
             if childHeight >= self.padding:
-                self.DrawBox(
-                    dc, child, childY, childHeight, hot_map, depth=depth
-                )
+                self.DrawBox(dc, child, childY, childHeight, hot_map, depth=depth)
             childY += childHeight + 1
 
     def DrawSequentialChildren(self, dc, parent, y, h, hot_map, depth=0):
@@ -532,9 +516,7 @@ class TimeLine(wx.Panel):
             depth (int, optional): The depth of the node (default is 0).
         """
         for child in self.adapter.sequential_children(parent):
-            self.DrawBox(
-                dc, child, y, h, hot_map, isSequentialNode=True, depth=depth
-            )
+            self.DrawBox(dc, child, y, h, hot_map, isSequentialNode=True, depth=depth)
 
     def DrawNow(self, dc):
         """
@@ -555,11 +537,11 @@ class TimeLine(wx.Panel):
         """
         Mettre à l'échelle la coordonnée X.
 
-        Args:
-            x (float): La coordonnée X à mettre à l'échelle.
+        Args :
+            x (float) : La coordonnée X à mettre à l'échelle.
 
-        Returns:
-            float: La coordonnée X mise à l'échelle.
+        Returns :
+            (float) : La coordonnée X mise à l'échelle.
         """
         return self.scaleWidth(x - self.min_start)
 
@@ -567,11 +549,11 @@ class TimeLine(wx.Panel):
         """
         Mettre à l'échelle la largeur.
 
-        Args:
+        Args :
             width (float): La largeur à mettre à l'échelle.
 
-        Returns:
-            float: La largeur mise à l'échelle.
+        Returns :
+            (float) : La largeur mise à l'échelle.
         """
         return (width / self.length) * self.width
 
@@ -579,41 +561,37 @@ class TimeLine(wx.Panel):
         """
         Déterminez la couleur de premier plan du texte à utiliser pour afficher l'étiquette du nœud donné.
 
-        Args:
-            node: Le nœud.
-            depth (int, optional): La profondeur du nœud (la valeur par défaut est 0).
+        Args :
+            node : Le nœud.
+            depth (int, optional) : La profondeur du nœud (la valeur par défaut est 0).
 
-        Returns:
-            wx.Colour: La couleur de premier plan du texte.
+        Returns :
+            fg_color (wx.Colour) : La couleur de premier plan du texte.
         """
         if node == self.selectedNode:
             fg_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT)
         else:
             fg_color = self.adapter.foreground_color(node, depth)
             if not fg_color:
-                fg_color = wx.SystemSettings.GetColour(
-                    wx.SYS_COLOUR_WINDOWTEXT
-                )
+                fg_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
         return fg_color
 
     def fontForNode(self, dc, node, depth=0):
         """
         Déterminez la police à utiliser pour afficher l'étiquette du nœud donné, mise à l'échelle pour l'impression si nécessaire.
 
-        Args:
+        Args :
             dc (wx.DC): Le contexte du périphérique.
-            node: Le nœud.
-            depth (int, optional): La profondeur du nœud (la valeur par défaut est 0).
+            node : Le nœud.
+            depth (int, optional) : La profondeur du nœud (la valeur par défaut est 0).
 
-        Returns:
-            wx.Font: La police.
+        Returns :
+            font (wx.Font) : La police.
         """
-        font = self.adapter.font(node, depth)  # Unresolved attribute reference 'font' for class 'DefaultAdapter'
-        font = (
-            font
-            if font
-            else wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
-        )
+        font = self.adapter.font(
+            node, depth
+        )  # Unresolved attribute reference 'font' for class 'DefaultAdapter'
+        font = font if font else wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         scale = dc.GetPPI()[0] / wx.ScreenDC().GetPPI()[0]
         font.SetPointSize(scale * font.GetPointSize())
         return font
@@ -622,13 +600,13 @@ class TimeLine(wx.Panel):
         """
         Créez un pinceau à utiliser pour afficher le nœud donné.
 
-        Args:
-            node: Le nœud.
-            isSequentialNode (bool, optional): Indique si le nœud est séquentiel (la valeur par défaut est False).
-            depth (int, optional): La profondeur du nœud (la valeur par défaut est 0).
+        Args :
+            node : Le nœud.
+            isSequentialNode (bool, optional) : Indique si le nœud est séquentiel (la valeur par défaut est False).
+            depth (int, optional) : La profondeur du nœud (la valeur par défaut est 0).
 
-        Returns:
-            wx.Brush : Le pinceau.
+        Returns :
+            (wx.Brush) : Le pinceau.
         """
         if node == self.selectedNode:
             color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
@@ -638,7 +616,9 @@ class TimeLine(wx.Panel):
                 # L'adaptateur renvoie un 3-tuple
                 color = tuple(int(c) for c in color[:3])  # Convertir RGB en entiers
                 if len(color) == 4:
-                    color = color + (int(color[3] * 255),)  # Convertir l'alpha en entier
+                    color = color + (
+                        int(color[3] * 255),
+                    )  # Convertir l'alpha en entier
 
                 color = wx.Colour(*color)
             else:
@@ -655,19 +635,15 @@ class TimeLine(wx.Panel):
         """
         Déterminez le stylet à utiliser pour afficher le nœud donné.
 
-        Args:
-            node: Le nœud.
-            isSequentialNode (bool, optional): Indique si le nœud est séquentiel (la valeur par défaut est False).
-            depth (int, optional): La profondeur du nœud (la valeur par défaut est 0).
+        Args :
+            node : Le nœud.
+            isSequentialNode (bool, optional) : Indique si le nœud est séquentiel (la valeur par défaut est False).
+            depth (int, optional) : La profondeur du nœud (la valeur par défaut est 0).
 
-        Returns:
-            wx.Pen: Le stylet.
+        Returns :
+            pen (wx.Pen) : Le stylet.
         """
-        pen = (
-            self.SELECTED_PEN
-            if node == self.selectedNode
-            else self.DEFAULT_PEN
-        )
+        pen = self.SELECTED_PEN if node == self.selectedNode else self.DEFAULT_PEN
         # style = wx.DOT if isSequentialNode else wx.SOLID
         # pen.SetStyle(style)
         return pen
@@ -679,6 +655,7 @@ class DefaultAdapter(object):
 
     Cette classe fournit des méthodes pour accéder aux propriétés et aux relations des nœuds.
     """
+
     # def __init__(self):
     # self.font = None
 
@@ -686,12 +663,12 @@ class DefaultAdapter(object):
         """
         Obtenez les enfants parallèles d'un nœud.
 
-        Args:
-            node: Le nœud.
-            recursive (bool, optional): s'il faut inclure les enfants récursifs (la valeur par défaut est False).
+        Args :
+            node : Le nœud.
+            recursive (bool, optional) : s'il faut inclure les enfants récursifs (la valeur par défaut est False).
 
-        Returns:
-            list: Les enfants parallèles du nœud.
+        Returns :
+            children (list) : Les enfants parallèles du nœud.
         """
         children = node.parallel_children[:]
         if recursive:
@@ -703,11 +680,11 @@ class DefaultAdapter(object):
         """
         Obtenez les enfants séquentiels d'un nœud.
 
-        Args:
-            node: Le nœud.
+        Args :
+            node : Le nœud.
 
-        Returns:
-            list: Les enfants séquentiels du nœud.
+        Returns :
+            (list) : Les enfants séquentiels du nœud.
         """
         return node.sequential_children
 
@@ -715,11 +692,11 @@ class DefaultAdapter(object):
         """
         Récupère tous les enfants d'un nœud (à la fois parallèles et séquentiels).
 
-        Args:
-            node: Le nœud.
+        Args :
+            node : Le nœud.
 
-        Returns:
-            list: Tous les enfants du nœud.
+        Returns :
+            (list) : Tous les enfants du nœud.
         """
         return self.parallel_children(node) + self.sequential_children(node)
 
@@ -727,11 +704,11 @@ class DefaultAdapter(object):
         """
         Obtenez les limites (heures de début et de fin) d'un nœud.
 
-        Args:
-            node: Le nœud.
+        Args :
+            node : Le nœud.
 
-        Returns:
-            tuple: L'heure de début minimale et l'heure d'arrêt maximale.
+        Returns :
+            (tuple) : L'heure de début minimale et l'heure d'arrêt maximale.
         """
         times = [node.start, node.stop]
         for child in self.children(node):
@@ -742,47 +719,43 @@ class DefaultAdapter(object):
         """
         Obtenez l'heure de début d'un nœud.
 
-        Args:
+        Args :
             node : Le nœud.
-            recursive (bool, optional): s'il faut inclure les enfants récursifs (la valeur par défaut est False).
+            recursive (bool, optional) : s'il faut inclure les enfants récursifs (la valeur par défaut est False).
 
-        Returns:
-            float: L'heure de début.
+        Returns :
+            (float) : L'heure de début.
         """
         starts = [node.start]
         if recursive:
-            starts.extend(
-                [self.start(child, True) for child in self.children(node)]
-            )
+            starts.extend([self.start(child, True) for child in self.children(node)])
         return float(min(starts))
 
     def stop(self, node, recursive=False):
         """
         Obtenez l'heure d'arrêt d'un nœud.
 
-        Args:
-            node: Le nœud.
-            recursive (bool, optional): s'il faut inclure les enfants récursifs (la valeur par défaut est False).
+        Args :
+            node : Le nœud.
+            recursive (bool, optional) : s'il faut inclure les enfants récursifs (la valeur par défaut est False).
 
-        Returns:
-            float: L'heure d'arrêt.
+        Returns :
+            (float) : L'heure d'arrêt.
         """
         stops = [node.stop]
         if recursive:
-            stops.extend(
-                [self.stop(child, True) for child in self.children(node)]
-            )
+            stops.extend([self.stop(child, True) for child in self.children(node)])
         return float(max(stops))
 
     def label(self, node):
         """
         Récupère l'étiquette d'un nœud.
 
-        Args:
+        Args :
             node : Le nœud.
 
-        Renvoie :
-            str : L'étiquette du nœud.
+        Returns :
+            (str) : L'étiquette du nœud.
         """
         return node.path
 
@@ -790,11 +763,11 @@ class DefaultAdapter(object):
         """
         Récupère la couleur d'arrière-plan d'un nœud.
 
-        Args:
+        Args :
             node : Le nœud.
 
-        Renvoie :
-            tuple : La couleur d'arrière-plan sous forme de 3 tuples (R, G, B).
+        Returns :
+            (tuple | None) : La couleur d'arrière-plan sous forme de 3 tuples (R, G, B).
         """
         return None
 
@@ -802,12 +775,12 @@ class DefaultAdapter(object):
         """
         Obtenez la couleur de premier plan d'un nœud.
 
-        Args:
+        Args :
             node : Le nœud.
             depth (int) : La profondeur du nœud.
 
-        Returns:
-            tuple : La couleur de premier plan sous forme de 3-tuples (R, V, B).
+        Returns :
+            (tuple | None) : La couleur de premier plan sous forme de 3-tuples (R, V, B).
         """
         return None
 
@@ -815,12 +788,13 @@ class DefaultAdapter(object):
         """
         Récupère l'icône d'un nœud.
 
-        Args:
+        Args :
             node : Le nœud.
 
         Renvoie :
-            wx.Icon : L'icône du nœud.
+            (wx.Icon | None) : L'icône du nœud.
         """
+        # wx.Icon(node)
         return None
 
     def now(self):
@@ -828,16 +802,16 @@ class DefaultAdapter(object):
         Obtenez l'heure actuelle.
 
         Renvoie :
-            float : L'heure actuelle.
+            (float) : L'heure actuelle.
         """
-        return 0
+        return 0.00
 
     def nowlabel(self):
         """
         Obtenez l'étiquette de l'heure actuelle.
 
         Renvoie :
-            str : L'étiquette de l'heure actuelle.
+            (str) : L'étiquette de l'heure actuelle.
         """
         return "Now"
 
@@ -851,18 +825,19 @@ class TestApp(wx.App):
         """
         Initialisez l'instance TestApp.
 
-        Args:
+        Args :
             size (int) : La taille du modèle.
         """
         self.size = size
-        super(TestApp, self).__init__(0)
+        # super(TestApp, self).__init__(0)
+        super().__init__(0)
 
     def OnInit(self):
         """
         Initialisez l'application.
 
-        Renvoie :
-            bool : vrai si l'initialisation a réussi.
+        Returns :
+            (bool) : True Vrai si l'initialisation a réussi.
         """
         wx.InitAllImageHandlers()
         self.frame = wx.Frame(None)
@@ -876,11 +851,11 @@ class TestApp(wx.App):
         """
         Obtenez le modèle pour la chronologie.
 
-        Args:
+        Args :
             size (int) : La taille du modèle.
 
-        Returns:
-            Node: Le nœud racine du modèle.
+        Returns :
+            Node : Le nœud racine du modèle.
         """
         parallel_children, sequential_children = [], []
         if size > 0:
@@ -924,8 +899,8 @@ class Node(object):
         """
         Renvoie une représentation sous forme de chaîne de l'instance Node.
 
-        Returns:
-            str: The string representation.
+        Returns :
+            (str) : The string representation.
         """
         return "%s(%r, %r, %r, %r, %r)" % (
             self.__class__.__name__,
@@ -935,6 +910,7 @@ class Node(object):
             self.parallel_children,
             self.sequential_children,
         )
+        # return f"{self.__class__.__name__}({self.path!r}, {self.start!r}, {self.stop!r}, {self.parallel_children!r}, {self.sequential_children!r})"
 
 
 usage = "timeline.py [size]"
