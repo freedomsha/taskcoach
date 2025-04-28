@@ -17,14 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from . import noteowner
-from taskcoachlib.domain import categorizable
-from taskcoachlib.domain import base
-from taskcoachlib.domain.attachment import attachmentowner
+from taskcoachlib.domain.categorizable import CategorizableCompositeObject
+# from taskcoachlib.domain import base
+from taskcoachlib.domain.attachment.attachmentowner import AttachmentOwner
+from taskcoachlib.domain.note.noteowner import NoteOwner
 
 
 # class Note(base.AttachmentOwner,
-class Note(attachmentowner.AttachmentOwner,
-           categorizable.CategorizableCompositeObject):
+class Note(AttachmentOwner,
+           CategorizableCompositeObject):
     """ Cette classe représente des notes. Les notes comprennent un sujet, une description
         et des pièces jointes. De plus, une note peut être attribuée aux catégories."""
     pass
