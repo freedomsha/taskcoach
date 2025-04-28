@@ -19,26 +19,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import object
+import codecs
+import gc
+import lockfile
+# import logging  # not used, log.Error replaced by wx.logError
+import os
+import sys
+import traceback
+import wx
 from taskcoachlib import meta, persistence, patterns, operating_system
 from taskcoachlib.i18n import _
 # from taskcoachlib.thirdparty import lockfile
-import lockfile
 from taskcoachlib.widgets import GetPassword
 from taskcoachlib.workarounds import ExceptionAsUnicode
 from taskcoachlib.gui.dialog import BackupManagerDialog
-import wx
-import os
-import gc
-# import lockfile
-import sys
-import codecs
-import traceback
 
 try:
     from taskcoachlib.syncml import sync
 except ImportError:  # pragma: no cover
     # Unsupported platform.
     pass
+
+# log = logging.getLogger(__name__)  # not used, log.Error replaced by wx.logError
 
 
 class IOController(object):
@@ -195,9 +197,10 @@ class IOController(object):
             else:
                 try:
                     filename = commandLineArgs[0].decode(sys.getfilesystemencoding())
-                except Exception:
+                except Exception as e:
                     # filename = commandLineArgs[0].encode(sys.getfilesystemencoding())
-                    print("tclib.gui.iocontroller.IOController.openAfterStart can't open file")
+                    # print(f"tclib.gui.iocontroller.IOController.openAfterStart can't open file à cause de {e}")
+                    wx.LogError(f"IOController.openAfterStart can't open file à cause de : {e}")
                     wx.MessageBox("MessageBox: tclib.gui.iocontroller.IOController.openAfterStart can't open file")
             # commandLineArgs[0] est le premier argument de la ligne de commande,
             # qui est une chaîne de caractères encodée en bytes.
@@ -567,21 +570,21 @@ class IOController(object):
         """Cette fonction permet d'importer un modèle de tâche à partir d'un fichier.
 
         Voici une explication ligne par ligne :
-            -La première ligne définit la fonction "importTemplate"
+            - La première ligne définit la fonction "importTemplate"
             avec un paramètre "showerror" qui est une fonction de boîte de dialogue d'erreur.
 
-            -La deuxième ligne demande à l'utilisateur de sélectionner un fichier à importer
+            - La deuxième ligne demande à l'utilisateur de sélectionner un fichier à importer
             en utilisant la fonction "__askUserForFile" qui est définie ailleurs dans le code.
 
-            -Si l'utilisateur sélectionne un fichier, la troisième ligne
+            - Si l'utilisateur sélectionne un fichier, la troisième ligne
             crée une instance de la classe "TemplateList" qui est définie ailleurs dans le code
             et qui représente une liste de modèles de tâches.
 
-            -La quatrième ligne essaie de copier le modèle de tâche sélectionné
+            - La quatrième ligne essaie de copier le modèle de tâche sélectionné
             dans le répertoire des modèles de tâches en utilisant la méthode "copyTemplate"
             de la classe "TemplateList".
 
-            -Si une exception est levée pendant la copie, la cinquième ligne
+            - Si une exception est levée pendant la copie, la cinquième ligne
             crée un message d'erreur avec le nom du fichier et la raison de l'exception,
             puis affiche la boîte de dialogue d'erreur en utilisant la fonction "showerror" passée en paramètre.
         """
@@ -609,30 +612,30 @@ class IOController(object):
         """Cette fonction permet de fermer la tâche en cours d'édition.
 
         Voici une explication ligne par ligne :
-            -La première ligne définit la fonction "Close" avec un paramètre optionnel "force"
+            - La première ligne définit la fonction "Close" avec un paramètre optionnel "force"
             qui est un booléen indiquant si la fermeture doit être forcée
             sans demander à l'utilisateur de sauvegarder les modifications en cours.
 
-            -La deuxième ligne vérifie si le fichier de tâche en cours d'édition
+            - La deuxième ligne vérifie si le fichier de tâche en cours d'édition
             a besoin d'être sauvegardé en appelant la méthode "needSave" de l'objet "taskFile"
             qui est défini ailleurs dans le code.
 
-            -Si le fichier a besoin d'être sauvegardé et que la fermeture doit être forcée,
+            - Si le fichier a besoin d'être sauvegardé et que la fermeture doit être forcée,
             la troisième ligne sauvegarde le fichier sans demander à l'utilisateur
             en utilisant la méthode "_saveSave" de l'objet "taskFile"
             et une fonction lambda qui ne fait rien (elle vide les arguments).
 
-            -Si le fichier a besoin d'être sauvegardé mais que la fermeture n'est pas forcée,
+            - Si le fichier a besoin d'être sauvegardé mais que la fermeture n'est pas forcée,
             la cinquième ligne appelle la méthode "__saveUnsavedChanges" qui
             demande à l'utilisateur s'il veut sauvegarder les modifications en cours.
             Si l'utilisateur choisit de ne pas sauvegarder, la fonction retourne "False"
             et la tâche n'est pas fermée.
 
-            -Si le fichier n'a pas besoin d'être sauvegardé ou
+            - Si le fichier n'a pas besoin d'être sauvegardé ou
             si l'utilisateur a choisi de sauvegarder les modifications,
             la septième ligne appelle la méthode "__closeUnconditionally" qui ferme la tâche sans condition.
 
-            -Enfin, la dernière ligne retourne "True" pour indiquer que
+            - Enfin, la dernière ligne retourne "True" pour indiquer que
             la tâche a été fermée avec succès.
             """
         if self.__taskFile.needSave():
@@ -695,8 +698,7 @@ class IOController(object):
             fd = self.__openFileForWriting(filename, openfile, showerror)
             if fd is None:
                 return False
-            count = writerClass(fd, filename).write(viewer, self.__settings,
-                                                    selectionOnly, **kwargs)
+            count = writerClass(fd, filename).write(viewer, self.__settings, selectionOnly, **kwargs)
             fd.close()
             self.__messageCallback(
                 _("Exported %(count)d items to " "%(filename)s")
@@ -1051,12 +1053,12 @@ class IOController(object):
         """
         result = wx.MessageBox(_("""Cannot open %s because it is locked.
 
-This means either that another instance of TaskCoach
-is running and has this file opened, or that a previous
-instance of Task Coach crashed. If no other instance is
-running, you can safely break the lock.
-
-Break the lock?""") % filename,
+                                 This means either that another instance of TaskCoach
+                                 is running and has this file opened, or that a previous
+                                 instance of Task Coach crashed. If no other instance is
+                                 running, you can safely break the lock.
+                                
+                                 Break the lock?""") % filename,
                                _("%s: file locked") % meta.name,
                                style=wx.YES_NO | wx.ICON_QUESTION | wx.NO_DEFAULT)
         return result == wx.YES
@@ -1135,6 +1137,7 @@ Break the lock?""") % filename,
         sys.stderr.write("".join(traceback.format_exception(*sys.exc_info())))
         limitedException = "".join(traceback.format_exception(*sys.exc_info(),
                                    limit=10))
+
         message = _("Error while reading %s:\n") % filename + limitedException
         man = persistence.BackupManifest(self.__settings)
         if showBackups and man.hasBackups(filename):
