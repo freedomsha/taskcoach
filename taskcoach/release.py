@@ -17,15 +17,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-from __future__ import print_function
-
-# Sanity check
-from future import standard_library
-standard_library.install_aliases()
-from builtins import map
-from builtins import str
-from builtins import range
-from builtins import object
+# from __future__ import print_function
+#
+# # Sanity check
+# from future import standard_library
+# standard_library.install_aliases()
+# from builtins import map
+# from builtins import str
+# from builtins import range
+# from builtins import object
 from future.utils import raise_
 import sys
 PYTHONEXE = sys.executable
@@ -608,7 +608,7 @@ def announcing(settings, options):
 
 
 def updating_Sourceforge_trackers(settings, options):
-    sys.path.insert(0, 'changes.in')
+    sys.path.insert(0, "changes.in")
     import changes  # from /changes.in ?
     import changetypes
 
