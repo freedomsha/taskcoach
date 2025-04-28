@@ -74,9 +74,15 @@ class FileAttachmentTest(tctest.TestCase):
 
     def testCopy(self):
         copy = self.attachment.copy()
-        self.assertEqual(copy.location(), self.attachment.location())
-        self.attachment.setDescription("new")
-        self.assertEqual(copy.location(), self.attachment.location())
+        # print(f"type(copy)={type(copy)}")
+        # print(f"dir(copy)={dir(copy)}")
+        # print(f"type(self.attachment.location)={type(self.attachment.location)}")
+        # print(f"dir(self.attachment.location)={dir(self.attachment.location)}")
+        self.assertEqual(copy.location(), self.attachment.location)
+        self.attachment.setDescription("new")  # Attention, risque d'écraser self.__description
+        # self.assertTrue(callable(copy.description), "description n'est plus une méthode !")
+
+        self.assertEqual(copy.location(), self.attachment.location)
 
     def testLocationNotification(self):
         pub.subscribe(self.onEvent, self.attachment.locationChangedEventType())
