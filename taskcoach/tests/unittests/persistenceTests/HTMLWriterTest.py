@@ -16,19 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from future import standard_library
-from builtins import str
-from builtins import object
+# from future import standard_library
+# from builtins import str
+# from builtins import object
 import wx
 import io
 import os
-from ... import test
-from ....taskcoachlib import persistence, gui, config, render
-from ....taskcoachlib.domain import task, category, effort, date
-standard_library.install_aliases()
+from ... import tctest
+from taskcoachlib import persistence, gui, config, render
+from taskcoachlib.domain import task, category, effort, date
+# standard_library.install_aliases()
 
 
-class HTMLWriterTestCase(test.wxTestCase):
+class HTMLWriterTestCase(tctest.wxTestCase):
     treeMode = 'Subclass responsibility'
     filename = 'Subclass responsibility'
 
