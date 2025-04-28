@@ -116,7 +116,7 @@ def make(filename, outfile=None):
 
     # Compute output
     # output = bytes(generatedict(), 'utf-8')  # génération du fichier en binaire
-    output = generateDict()
+    output = generatedict()
 
     # TODO: This is a hack to get the encoding from the output
     encoding = re.search(r"\-\*\-\s*coding\:\s*(.*)\s*\-\*\-\n", output).group(
