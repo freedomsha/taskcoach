@@ -280,7 +280,8 @@ class ThunderbirdMailboxReader(object):
         return Iterator(self.fp)
 
     def saveToFile(self, fp):
-        fp.write(self.read())
+        # fp.write(self.read())
+        fp.write(self.read(), )
 
 
 class ThunderbirdImapReader(object):
@@ -311,6 +312,7 @@ class ThunderbirdImapReader(object):
         # mailservers would be numbered consecutively, but apparently
         # that is not always the case, so we cannot assume that because
         # serverX does not exist, serverX+1 won't either.
+        name = ""
         for serverIndex in range(100):
             name = "mail.server.server%d" % serverIndex
             if (
@@ -422,7 +424,8 @@ class ThunderbirdImapReader(object):
         return parameters[0][1]
 
     def saveToFile(self, fp):
-        fp.write(self._getMail())
+        # fp.write(self._getMail())
+        fp.write(self._getMail(), )
 
 
 class ThunderbirdLocalMailboxReader(object):
@@ -456,7 +459,8 @@ class ThunderbirdLocalMailboxReader(object):
         return mb.get_string(0)
 
     def saveToFile(self, fp):
-        fp.write(self._getMail())
+        # fp.write(self._getMail())
+        fp.write(self._getMail(), )
 
 
 def getMail(id_):
