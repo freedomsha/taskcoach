@@ -110,7 +110,11 @@ class IdleController(Observer, IdleNotifier):
         for effort in self.__tracker.trackedEfforts():
             if effort not in self._displayed:
                 self._displayed.add(effort)
-                frm = WakeFromIdleFrame(date.DateTime.fromtimestamp(self._lastActivity), effort, self._displayed,
-                                        _("Notification"), icon=wx.ArtProvider.GetBitmap("taskcoach",
-                                                                                          wx.ART_FRAME_ICON, (16, 16)))
+                frm = WakeFromIdleFrame(date.DateTime.fromtimestamp(self._lastActivity),
+                                        effort,
+                                        self._displayed,
+                                        _("Notification"),
+                                        icon=wx.ArtProvider.GetBitmap("taskcoach",
+                                                                      wx.ART_FRAME_ICON,
+                                                                      (16, 16)))
                 NotificationCenter().NotifyFrame(frm)
