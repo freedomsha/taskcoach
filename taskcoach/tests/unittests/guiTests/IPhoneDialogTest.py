@@ -16,16 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from ....taskcoachlib.gui.dialog import iphone
-from ....taskcoachlib import config
-import test
+from ... import tctest
+from taskcoachlib.gui.dialog import iphone
+from taskcoachlib import config
 
 
-class IPhoneSyncTypeDialogTest(test.TestCase):
+class IPhoneSyncTypeDialogTest(tctest.TestCase):
     def testCreate(self):
         iphone.IPhoneSyncTypeDialog(None)
-        
-        
-class IPhoneBonjourDialogTest(test.TestCase):
+
+
+class IPhoneBonjourDialogTest(tctest.TestCase):
     def testCreate(self):
         iphone.IPhoneBonjourDialog(None)
