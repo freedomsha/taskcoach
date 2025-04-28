@@ -29,6 +29,21 @@ Explication des classes :
 # from builtins import object
 # from io import open as file
 
+import logging
+import wx
+import re
+import operator
+
+from functools import reduce
+# from .taskcoachlib.thirdparty.agw import hypertreelist
+from wx.lib.agw import hypertreelist
+
+# try:
+#    from ...thirdparty.pubsub import pub
+# except ImportError:
+#    from wx.lib.pubsub import pub
+from pubsub import pub
+
 from taskcoachlib import (
     patterns,
     meta,
@@ -49,14 +64,6 @@ from taskcoachlib.gui.wizard import CSVImportWizard
 from taskcoachlib.i18n import _
 from taskcoachlib.mailer import sendMail
 
-# from .taskcoachlib.thirdparty.agw import hypertreelist
-from wx.lib.agw import hypertreelist
-
-# try:
-#    from ...thirdparty.pubsub import pub
-# except ImportError:
-#    from wx.lib.pubsub import pub
-from pubsub import pub
 from taskcoachlib.thirdparty.wxScheduler import (
     wxSCHEDULER_NEXT,
     wxSCHEDULER_PREV,
@@ -64,13 +71,12 @@ from taskcoachlib.thirdparty.wxScheduler import (
 )
 from taskcoachlib.tools import anonymize, openfile
 from taskcoachlib.workarounds import ExceptionAsUnicode
-import wx
-import re
-import operator
+
 from taskcoachlib.gui.uicommand import base_uicommand
 from taskcoachlib.gui.uicommand import mixin_uicommand
 from taskcoachlib.gui.uicommand import settings_uicommand
-from functools import reduce
+
+log = logging.getLogger(__name__)
 
 
 class IOCommand(base_uicommand.UICommand):  # pylint: disable=W0223
@@ -187,7 +193,7 @@ class ViewerCommand(base_uicommand.UICommand):  # pylint: disable=W0223
             other (ViewerCommand) : La commande avec laquelle comparer.
 
         Returns :
-            bool : True si les commandes sont égales, False sinon.
+            (bool) : True si les commandes sont égales, False sinon.
         """
         return (
             super().__eq__(other)
@@ -215,7 +221,7 @@ class FileOpen(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileOpen command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileOpen command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -224,12 +230,12 @@ class FileOpen(IOCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        print("tclib.gui.uicommand.FileOpen.doCommand() called")  # Débogage
+        # print("tclib.gui.uicommand.FileOpen.doCommand() called")  # Débogage
         try:
             self.iocontroller.open()
         except Exception as e:
-            print("gui.uicommand.uicommand.FileOpen.doCommand error")
-            print(f"Error opening file: {e}")  # Débogage
+            log.error("gui.uicommand.uicommand.FileOpen.doCommand error")
+            log.debug(f"Error opening file: {e}")  # Débogage
 
 
 class RecentFileOpen(IOCommand):
@@ -253,8 +259,8 @@ class RecentFileOpen(IOCommand):
         super().__init__(
             # menuText="%d %s" % (index, self.__filename),
             menuText=f"{index:d} {self.__filename}",
-            helpText=_("Open %s") % self.__filename,
-            # helpText=_(f"Open {self.__filename}"),
+            # helpText=_("Open %s") % self.__filename,
+            helpText=_(f"Open {self.__filename}"),
             *args,
             **kwargs,
         )
@@ -284,7 +290,7 @@ class FileMerge(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileMerge command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileMerge command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour fusionner les tâches."""
@@ -312,7 +318,7 @@ class FileClose(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileClose command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileClose command initialized")  # Débogage
 
     def doCommand(self, event):
         """Ferme le fichier et les éditeurs associés."""
@@ -341,7 +347,7 @@ class FileSave(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileSave command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileSave command initialized")  # Débogage
 
     def doCommand(self, event):
         """Sauvegarde le fichier actuel."""
@@ -372,7 +378,7 @@ class FileMergeDiskChanges(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileMergeDiskChanges command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileMergeDiskChanges command initialized")  # Débogage
 
     def doCommand(self, event):
         """Fusionne les changements détectés sur disque."""
@@ -404,7 +410,7 @@ class FileSaveAs(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileSaveAs command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileSaveAs command initialized")  # Débogage
 
     def doCommand(self, event):
         """Sauvegarde le fichier sous un autre nom."""
@@ -436,7 +442,7 @@ class FileSaveSelection(
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileSaveSelection command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileSaveSelection command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour sauvegarder les tâches sélectionnées."""
@@ -468,7 +474,7 @@ class FileSaveSelectedTaskAsTemplate(
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileSaveSelectedTaskAsTemplate command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileSaveSelectedTaskAsTemplate command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour sauvegarder la tâche sélectionnée en tant que modèle."""
@@ -498,7 +504,7 @@ class FileImportTemplate(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileImportTemplate command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileImportTemplate command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande pour importer un modèle depuis un fichier."""
@@ -527,7 +533,7 @@ class FileEditTemplates(settings_uicommand.SettingsCommand, base_uicommand.UICom
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileEditTemplates command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileEditTemplates command initialized")  # Débogage
 
     def doCommand(self, event):
         """Affiche la boîte de dialogue pour éditer les modèles existants."""
@@ -562,7 +568,7 @@ class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FilePurgeDeletedItems command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FilePurgeDeletedItems command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -575,12 +581,12 @@ class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
             wx.MessageBox(
                 _(
                     """Purging deleted items is undoable.
-If you're planning on enabling
-the SyncML feature again with the
-same server you used previously,
-these items will probably come back.
-
-Do you still want to purge?"""
+                    If you're planning on enabling
+                    the SyncML feature again with the
+                    same server you used previously,
+                    these items will probably come back.
+                    
+                    Do you still want to purge?"""
                 ),
                 _("Warning"),
                 wx.YES_NO,
@@ -614,7 +620,7 @@ class PrintPageSetup(settings_uicommand.SettingsCommand, base_uicommand.UIComman
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.PrintPageSetup command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.PrintPageSetup command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -658,7 +664,7 @@ class PrintPreview(ViewerCommand, settings_uicommand.SettingsCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.PrintPreview command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.PrintPreview command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -703,7 +709,7 @@ class Print(ViewerCommand, settings_uicommand.SettingsCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.Print command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.Print command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -771,7 +777,7 @@ class FileManageBackups(IOCommand, settings_uicommand.SettingsCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileManageBackups command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileManageBackups command initialized")  # Débogage
 
     def doCommand(self, event):
         dlg = dialog.BackupManagerDialog(
@@ -833,7 +839,7 @@ class FileExportAsHTML(FileExportCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileExportAsHTML command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileExportAsHTML command initialized")  # Débogage
 
     @staticmethod
     def getExportDialogClass():
@@ -858,7 +864,7 @@ class FileExportAsCSV(FileExportCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileExportAsCSV command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileExportAsCSV command initialized")  # Débogage
 
     @staticmethod
     def getExportDialogClass():
@@ -881,7 +887,7 @@ class FileExportAsICalendar(FileExportCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileExportAsICalendar command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileExportAsICalendar command initialized")  # Débogage
 
     def exportFunction(self):
         return self.iocontroller.exportAsICalendar
@@ -916,7 +922,7 @@ class FileExportAsTodoTxt(FileExportCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileExportAsTodoTxt command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileExportAsTodoTxt command initialized")  # Débogage
 
     def exportFunction(self):
         return self.iocontroller.exportAsTodoTxt
@@ -950,7 +956,7 @@ class FileImportCSV(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileImportCSV command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileImportCSV command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -992,7 +998,7 @@ class FileImportTodoTxt(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileImportTodoTxt command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileImportTodoTxt command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1021,7 +1027,7 @@ class FileSynchronize(IOCommand, settings_uicommand.SettingsCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileSynchronize command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileSynchronize command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1047,7 +1053,7 @@ class FileQuit(base_uicommand.UICommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.FileQuit command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.FileQuit command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1080,7 +1086,7 @@ class EditUndo(base_uicommand.UICommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditUndo command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditUndo command initialized")  # Débogage
 
     @staticmethod
     def getUndoMenuText():
@@ -1134,7 +1140,7 @@ class EditRedo(base_uicommand.UICommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditRedo command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditRedo command initialized")  # Débogage
 
     @staticmethod
     def getRedoMenuText() -> str:
@@ -1189,7 +1195,7 @@ class EditCut(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditCut command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditCut command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande de découpage."""
@@ -1233,7 +1239,7 @@ class EditCopy(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditCopy command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditCopy command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande de copie."""
@@ -1280,7 +1286,7 @@ class EditPaste(base_uicommand.UICommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditPaste command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditPaste command initialized")  # Débogage
 
     def doCommand(self, event):
         """Exécute la commande de collage."""
@@ -1325,7 +1331,7 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditPasteAsSubItem command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditPasteAsSubItem command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1387,13 +1393,13 @@ class EditPreferences(settings_uicommand.SettingsCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditPreferences command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditPreferences command initialized")  # Débogage
 
     def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
         """
         Affiche la boîte de dialogue des préférences.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement déclencheur.
             show (bool) : Indique si la boîte de dialogue doit être affichée.
         """
@@ -1423,13 +1429,13 @@ class EditSyncPreferences(IOCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditSyncPreferences command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditSyncPreferences command initialized")  # Débogage
 
     def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
         """
         Affiche la boîte de dialogue des préférences de synchronisation SyncML.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement déclencheur.
             show (bool) : Indique si la boîte de dialogue doit être affichée.
         """
@@ -1469,7 +1475,7 @@ class EditToolBarPerspective(settings_uicommand.SettingsCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.EditToolBarPerspective command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.EditToolBarPerspective command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1500,7 +1506,7 @@ class SelectAll(mixin_uicommand.NeedsItemsMixin, ViewerCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.SelectAll command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.SelectAll command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1537,7 +1543,7 @@ class ClearSelection(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.ClearSelection command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.ClearSelection command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1562,7 +1568,7 @@ class ResetFilter(ViewerCommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.ResetFilter command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.ResetFilter command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1594,7 +1600,7 @@ class ResetCategoryFilter(
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.ResetCategoryFilter command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.ResetCategoryFilter command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1631,7 +1637,7 @@ class ToggleCategoryFilter(base_uicommand.UICommand):
             *args,
             **kwargs,
         )
-        print("tclib.gui.uicommand.uicommand.ToggleCategoryFilter command initialized")  # Débogage
+        # print("tclib.gui.uicommand.uicommand.ToggleCategoryFilter command initialized")  # Débogage
 
     def doCommand(self, event):
         """
@@ -1808,7 +1814,7 @@ class HideCurrentColumn(ViewerCommand):
 
         Exécute la commande pour masquer la colonne sélectionnée dans la visionneuse.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement déclencheur.
         """
         columnPopupMenu = event.GetEventObject()
@@ -1818,11 +1824,11 @@ class HideCurrentColumn(ViewerCommand):
         """
         Vérifie si la commande peut être exécutée, en déterminant la colonne actuelle basée sur la position de la souris.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement pour lequel la disponibilité de la commande est vérifiée.
 
-        Returns:
-            bool : True si la colonne peut être masquée, sinon False.
+        Returns :
+            (bool) : True si la colonne peut être masquée, sinon False.
         """
         # Unfortunately the event (an UpdateUIEvent) does not give us any
         # information to determine the current column, so we have to find
@@ -1856,8 +1862,8 @@ class ViewColumn(ViewerCommand, settings_uicommand.UICheckCommand):
         """
         Vérifie si la colonne est actuellement visible.
 
-        Returns:
-            bool : True si la colonne est visible, sinon False.
+        Returns :
+            (bool) : True si la colonne est visible, sinon False.
         """
         return self.viewer.isVisibleColumnByName(self.setting)
 
@@ -1865,7 +1871,7 @@ class ViewColumn(ViewerCommand, settings_uicommand.UICheckCommand):
         """
         Exécute la commande pour afficher ou masquer la colonne en fonction de l'état du menu.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement déclencheur.
         """
         self.viewer.showColumnByName(self.setting, self._isMenuItemChecked(event))
@@ -1882,8 +1888,8 @@ class ViewColumns(ViewerCommand, settings_uicommand.UICheckCommand):
         """
         Vérifie si toutes les colonnes du groupe sont actuellement visibles.
 
-        Returns:
-            bool : True si toutes les colonnes sont visibles, sinon False.
+        Returns :
+            (bool) : True si toutes les colonnes sont visibles, sinon False.
         """
         for columnName in self.setting:
             if not self.viewer.isVisibleColumnByName(columnName):
@@ -1894,7 +1900,7 @@ class ViewColumns(ViewerCommand, settings_uicommand.UICheckCommand):
         """
         Exécute la commande pour afficher ou masquer les colonnes en fonction de l'état du menu.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement déclencheur.
         """
         show = self._isMenuItemChecked(event)
@@ -1981,8 +1987,8 @@ class ViewerSortByCommand(ViewerCommand, settings_uicommand.UIRadioCommand):
         """
         Vérifie si la visionneuse est triée par la colonne spécifiée.
 
-        Returns:
-            bool : True si la visionneuse est triée par cette colonne, sinon False.
+        Returns :
+            (bool) : True si la visionneuse est triée par cette colonne, sinon False.
         """
         return self.viewer.isSortedBy(self.value)
 
@@ -2018,7 +2024,7 @@ class ViewerSortOrderCommand(ViewerCommand, settings_uicommand.UICheckCommand):
         Vérifie si l'ordre de tri est ascendant.
 
         Returns :
-            bool : True si l'ordre est ascendant, sinon False.
+            (bool) : True si l'ordre est ascendant, sinon False.
         """
         return self.viewer.isSortOrderAscending()
 
@@ -2093,7 +2099,7 @@ class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckComma
         Vérifie si les tâches sont triées d'abord par statut.
 
         Returns :
-            bool : True si les tâches sont triées par statut en premier, sinon False.
+            (bool) : True si les tâches sont triées par statut en premier, sinon False.
         """
         return self.viewer.isSortByTaskStatusFirst()
 
@@ -2101,7 +2107,7 @@ class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckComma
         """
         Exécute la commande pour trier les tâches en premier par leur statut.
 
-        Args:
+        Args :
             event (wx.Event) : L'événement déclencheur.
         """
         self.viewer.setSortByTaskStatusFirst(self._isMenuItemChecked(event))
@@ -2120,7 +2126,7 @@ class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
         """
         Initialise la commande avec le statut des tâches à masquer ou afficher.
 
-        Args:
+        Args :
             taskStatus : Le statut des tâches (actif/inactif/terminé).
         """
         self.__taskStatus = taskStatus
@@ -2143,7 +2149,7 @@ class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
         Vérifie si les tâches avec le statut spécifié sont masquées.
 
         Returns :
-            bool : True si ces tâches sont masquées, sinon False.
+            (bool) : True si ces tâches sont masquées, sinon False.
         """
         return self.viewer.isHidingTaskStatus(self.__taskStatus)
 
@@ -2200,7 +2206,7 @@ class ViewerHideCompositeTasks(ViewerCommand, settings_uicommand.UICheckCommand)
         Active la commande uniquement si la visionneuse n'est pas en mode arborescence.
 
         Returns :
-            bool : True si la visionneuse est en mode liste, sinon False.
+            (bool) : True si la visionneuse est en mode liste, sinon False.
         """
         return not self.viewer.isTreeViewer()
 
@@ -2245,9 +2251,10 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         windowWithFocus = wx.Window.FindFocus()
         editCtrl = self.findEditCtrl(windowWithFocus)
         if editCtrl:
-            editCtrl.AcceptChanges()
+            # editCtrl.AcceptChanges()
+            editCtrl.AcceptsFocus()  # A vérifier !
             if editCtrl:
-                editCtrl.Finish()
+                editCtrl.Finish()  # Est-ce encore nécessaire ?
             return
         try:
             columnName = event.columnName
@@ -2282,7 +2289,7 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             windowWithFocus (wx.Window) : La fenêtre actuellement active.
 
         Returns :
-            wx.Window : Le contrôle d'édition si trouvé, sinon None.
+            (wx.Window) : Le contrôle d'édition si trouvé, sinon None.
         """
         while windowWithFocus:
             # if isinstance(windowWithFocus, thirdparty.hypertreelist.EditCtrl):
@@ -2323,9 +2330,12 @@ class EditTrackedTasks(TaskListCommand, settings_uicommand.SettingsCommand):
     def doCommand(self, event, show: bool = True):
         """
         Ouvre la boîte de dialogue de modification de la tâche suivie.
-        :param event:
-        :param show:
-        :return:
+
+        Args :
+            event :
+            show :
+
+        Returns :
         """
         editTaskDialog = dialog.editor.TaskEditor(
             self.mainWindow(),
@@ -2342,8 +2352,10 @@ class EditTrackedTasks(TaskListCommand, settings_uicommand.SettingsCommand):
         """
         Vérifie si les tâches sont suivies.
 
-        :param event:
-        :return:
+        Args :
+            event:
+
+        Returns :
         """
         return any(self.taskList.tasksBeingTracked())
 
@@ -2409,7 +2421,7 @@ class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             window (wx.Window) : La fenêtre active.
 
         Returns :
-            bool : True si la fenêtre est un contrôle de texte, sinon False.
+            (bool) : True si la fenêtre est un contrôle de texte, sinon False.
         """
         return isinstance(window, wx.TextCtrl) or isinstance(
             window, hypertreelist.EditCtrl
@@ -2437,33 +2449,33 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
             Utilisé uniquement si non fourni dans `kwargs`.
 
     Returns :
-        taskcoachlib.dialogs.TaskEditor : Objet de dialogue d'édition de tâche nouvellement créé.
+        (taskcoachlib.dialogs.TaskEditor) : Objet de dialogue d'édition de tâche nouvellement créé.
 
 
-**Explication de la classe TaskNew**
+    **Explication de la classe TaskNew**
 
-La classe TaskNew implémente une commande d'interface utilisateur permettant à l'utilisateur de créer une nouvelle tâche. Elle hérite de deux classes :
+    La classe TaskNew implémente une commande d'interface utilisateur permettant à l'utilisateur de créer une nouvelle tâche. Elle hérite de deux classes :
 
-    TaskListCommand : Fournit des fonctionnalités de base liées à la gestion des listes de tâches.
-    settings_uicommand.SettingsCommand : Permet l'intégration avec les paramètres de configuration de l'application.
+        TaskListCommand : Fournit des fonctionnalités de base liées à la gestion des listes de tâches.
+        settings_uicommand.SettingsCommand : Permet l'intégration avec les paramètres de configuration de l'application.
 
-Lors de l'exécution de la commande (doCommand), TaskNew effectue les actions suivantes :
+    Lors de l'exécution de la commande (doCommand), TaskNew effectue les actions suivantes :
 
-    Préparation des mots-clés de la tâche :
-        Copie les mots-clés fournis par l'utilisateur dans le constructeur (taskKeywords).
-        Vérifie si des paramètres par défaut doivent être appliqués pour les dates et rappels en fonction des paramètres de configuration.
-    Création de la commande NewTaskCommand :
-        Utilise la classe command.NewTaskCommand pour créer une nouvelle tâche en tenant compte des mots-clés préparés.
-        Inclut les catégories, prérequis et dépendances définies par les méthodes categoriesForTheNewTask, prerequisitesForTheNewTask et dependenciesForTheNewTask.
-    Exécution de la commande de création de tâche :
-        Exécute la commande NewTaskCommand pour créer la nouvelle tâche dans la liste de tâches.
-    Affichage du dialogue d'édition de tâche :
-        Crée un dialogue d'édition de tâche à l'aide de la classe dialog.editor.TaskEditor.
-        Initialise le dialogue avec les éléments de la tâche nouvellement créée (newTaskCommand.items).
-        Affiche le dialogue d'édition de tâche (Show) avec l'option de contrôle de l'affichage (show).
+        Préparation des mots-clés de la tâche :
+            Copie les mots-clés fournis par l'utilisateur dans le constructeur (taskKeywords).
+            Vérifie si des paramètres par défaut doivent être appliqués pour les dates et rappels en fonction des paramètres de configuration.
+        Création de la commande NewTaskCommand :
+            Utilise la classe command.NewTaskCommand pour créer une nouvelle tâche en tenant compte des mots-clés préparés.
+            Inclut les catégories, prérequis et dépendances définies par les méthodes categoriesForTheNewTask, prerequisitesForTheNewTask et dependenciesForTheNewTask.
+        Exécution de la commande de création de tâche :
+            Exécute la commande NewTaskCommand pour créer la nouvelle tâche dans la liste de tâches.
+        Affichage du dialogue d'édition de tâche :
+            Crée un dialogue d'édition de tâche à l'aide de la classe dialog.editor.TaskEditor.
+            Initialise le dialogue avec les éléments de la tâche nouvellement créée (newTaskCommand.items).
+            Affiche le dialogue d'édition de tâche (Show) avec l'option de contrôle de l'affichage (show).
 
-Cette classe fournit un point d'entrée unique pour la création de nouvelles tâches, en gérant les paramètres par défaut et l'ouverture du dialogue d'édition consécutive.
-Points à considérer
+    Cette classe fournit un point d'entrée unique pour la création de nouvelles tâches, en gérant les paramètres par défaut et l'ouverture du dialogue d'édition consécutive.
+    Points à considérer
 
     Les méthodes categoriesForTheNewTask, prerequisitesForTheNewTask, et dependenciesForTheNewTask peuvent être adaptées pour implémenter des logiques spécifiques de définition des catégories, prérequis et dépendances pour la nouvelle tâche.
     La méthode __shouldPreset*DateTime peut être étendue pour prendre en charge d'autres paramètres de date et d'heure par défaut.
@@ -2647,9 +2659,9 @@ class TaskNewFromTemplate(TaskNew):
 
     **Explication de TaskNewFromTemplate**
 
-La classe TaskNewFromTemplate s'appuie sur les fonctionnalités de TaskNew en permettant la création de nouvelles tâches basées sur un modèle prédéfini stocké dans un fichier XML.
+    La classe TaskNewFromTemplate s'appuie sur les fonctionnalités de TaskNew en permettant la création de nouvelles tâches basées sur un modèle prédéfini stocké dans un fichier XML.
 
-Voici une répartition de la classe et ses méthodes :
+    Voici une répartition de la classe et ses méthodes :
 
     Constructeur (__init__) :
         Hérite des arguments de TaskNew.
@@ -2704,8 +2716,8 @@ Voici une répartition de la classe et ses méthodes :
             taskcoachlib.model.Task : Un objet représentant la tâche définie dans le modèle.
         """
         # file -> open !!!? import io.open
-        return persistence.TemplateXMLReader(open(self.__filename, "rU")).read()
-        # return persistence.TemplateXMLReader(open(self.__filename, "r")).read()
+        # return persistence.TemplateXMLReader(open(self.__filename, "rU")).read()
+        return persistence.TemplateXMLReader(open(self.__filename, "r", newline=None)).read()
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
         """
@@ -2780,7 +2792,7 @@ class TaskNewFromTemplateButton(
         tâche à partir de différents modèles de tâches.
 
         Returns :
-            wx.Menu : Le menu contextuel créé.
+            (wx.Menu) : Le menu contextuel créé.
         """
         from taskcoachlib.gui import menu
 
@@ -2791,7 +2803,7 @@ class TaskNewFromTemplateButton(
         Obtient le texte à afficher pour la commande dans le menu principal.
 
         Returns :
-            str : Le texte à afficher dans le menu.
+            (str) : Le texte à afficher dans le menu.
         """
         return _("New task from &template")
 
@@ -2800,7 +2812,7 @@ class TaskNewFromTemplateButton(
         Obtient le texte d'aide pour la commande.
 
         Returns :
-            str : Le texte d'aide à afficher pour la commande.
+            (str) : Le texte d'aide à afficher pour la commande.
         """
         return _("Create a new task from a template")
 
@@ -2828,7 +2840,7 @@ class NewTaskWithSelectedCategories(TaskNew, ViewerCommand):
         Détermine les catégories à attribuer à la nouvelle tâche en fonction des catégories sélectionnées dans la vue courante.
 
         Returns :
-            list : Une liste des catégories sélectionnées.
+            (list) : Une liste des catégories sélectionnées.
         """
         return self.viewer.curselection()
 
@@ -2860,7 +2872,7 @@ class NewTaskWithSelectedTasksAsPrerequisites(
         Détermine les tâches prérequises pour la nouvelle tâche en fonction des tâches sélectionnées dans la vue courante.
 
         Returns :
-            list : Une liste des tâches sélectionnées en tant que prérequis.
+            (list) : Une liste des tâches sélectionnées en tant que prérequis.
         """
         return self.viewer.curselection()
 
@@ -2890,7 +2902,7 @@ class NewTaskWithSelectedTasksAsDependencies(
         Détermine les tâches dépendantes de la nouvelle tâche en fonction des tâches sélectionnées dans la vue courante.
 
         Returns :
-            list : Une liste des tâches sélectionnées en tant que dépendances.
+            (list) : Une liste des tâches sélectionnées en tant que dépendances.
         """
         return self.viewer.curselection()
 
@@ -4300,6 +4312,7 @@ class AddAttachment(
         Args :
             event : L'événement déclenchant la commande.
         """
+        print(f"uicommand.AddAttachment.doCommand : 📌 [DEBUG] Ajout d’un attachement : {attachment}")
         filename = widgets.AttachmentSelector()
         if not filename:
             return
