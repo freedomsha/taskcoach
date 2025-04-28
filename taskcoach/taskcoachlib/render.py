@@ -43,9 +43,11 @@ def priority(priority):
 
 
 def timeLeft(time_left, completed_task):
-    """ Rendre le temps restant sous forme de chaîne de texte. Renvoie une chaîne vide pour les tâches terminées
-        et pour les tâches sans date d'échéance prévue. Sinon,
-        renvoie le nombre de jours, d'heures et de minutes restants."""
+    """ Rendre le temps restant sous forme de chaîne de texte.
+
+    Renvoie une chaîne vide pour les tâches terminées
+    et pour les tâches sans date d'échéance prévue. Sinon,
+    renvoie le nombre de jours, d'heures et de minutes restants."""
     if completed_task or time_left == datemodule.TimeDelta.max:
         return ""
     sign = "-" if time_left.days < 0 else ""
@@ -68,18 +70,18 @@ def timeLeft(time_left, completed_task):
     return sign + days + hours_and_minutes
 
 
-def timeSpent(timeSpent, showSeconds=True, decimal=False):
+def timeSpent(time_spent, showSeconds=True, decimal=False):
     """ Render time spent (of type Date.TimeDelta) as
         "<hours>:<minutes>:<seconds>" or "<hours>:<minutes>" """
     if decimal:
-        return timeSpentDecimal(timeSpent)
+        return timeSpentDecimal(time_spent)
 
     zero = datemodule.TimeDelta()
-    if timeSpent == zero:
+    if time_spent == zero:
         return ""
     else:
-        sign = "-" if timeSpent < zero else ""
-        hours, minutes, seconds = timeSpent.hoursMinutesSeconds()
+        sign = "-" if time_spent < zero else ""
+        hours, minutes, seconds = time_spent.hoursMinutesSeconds()
         # AttributeError: 'TimeDelta' object has no attribute 'hoursMinutesSeconds'
         return (
             sign
@@ -88,15 +90,15 @@ def timeSpent(timeSpent, showSeconds=True, decimal=False):
         )
 
 
-def timeSpentDecimal(timeSpent):
+def timeSpentDecimal(time_spent):
     """ Render time spent (of type Date.TimeDelta) as
         "<hours>.<fractional hours> """
     zero = datemodule.TimeDelta()
-    if timeSpent == zero:
+    if time_spent == zero:
         return ""
     else:
-        sign = "-" if timeSpent < zero else ""
-        hours, minutes, seconds = timeSpent.hoursMinutesSeconds()
+        sign = "-" if time_spent < zero else ""
+        hours, minutes, seconds = time_spent.hoursMinutesSeconds()
         decimalHours = hours + minutes / 60.0 + seconds / 3600.0
         return sign + "%.2f" % decimalHours
 
