@@ -66,11 +66,11 @@ import platform
 from pubsub import pub
 import wx
 
+from taskcoachlib import patterns
+
 gettext.NullTranslations().install()
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
-from taskcoachlib import patterns
 
 
 # TMP: compat to map wx platform strings
@@ -86,7 +86,7 @@ def skipOnPlatform(*platforms):
         *platforms (str) : Une liste de noms de plateformes à ignorer.
 
     Returns :
-        function : Une fonction wrapper qui saute le test si la plateforme courante est dans la liste fournie.
+        (function) : Une fonction wrapper qui saute le test si la plateforme courante est dans la liste fournie.
     """
     def wrapper(func):
         if platform.system() in [_PLATFORM_MAP[name] for name in platforms]:
@@ -94,6 +94,14 @@ def skipOnPlatform(*platforms):
             return lambda self, *args, **kwargs: self.skipTest(f"platform is {wx.Platform}")
         return func
     return wrapper
+
+
+def is_gui_available():
+    return os.environ.get("DISPLAY") is not None and not os.environ.get("CI")
+
+
+def skipIfNotGui(reason="Requires GUI environment"):
+    return unittest.skipUnless(is_gui_available(), reason)
 
 
 class TestCase(unittest.TestCase):
