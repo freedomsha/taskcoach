@@ -121,7 +121,7 @@ def GetPassword(domain, username, reset=False):
         # from taskcoachlib.thirdparty.keyring import set_password, get_password
         # except ImportError:
         from keyring import set_password, get_password
-    except:
+    except ImportError:
         # Keychain unavailable.
         return _GetCachedPassword(domain, username, reset)
 
@@ -133,7 +133,7 @@ def GetPassword(domain, username, reset=False):
                 domain.encode("UTF-8"), username.encode("UTF-8")
             )
             if pwd:
-                return pwd.decode("UTF-8")
+                return pwd.decode("UTF-8")  # Unresolved attribute reference 'decode' for class 'str'
     except ImportError:
         # Bug seen on Ubuntu 13.10: secretstorage cannot import ._gi
         return _GetCachedPassword(domain, username, reset)
