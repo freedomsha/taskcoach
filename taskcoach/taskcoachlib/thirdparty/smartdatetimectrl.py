@@ -302,10 +302,10 @@ class Field(object):
         __choices : Liste des choix possibles pour ce champ (le cas échéant).
 
     Méthodes :
-        GetValue(self) : Retourne la valeur actuelle du champ.
-        SetValue(self, value, notify) : Définit la valeur du champ avec une option de notification.
-        GetChoices(self) : Retourne les choix disponibles pour ce champ.
-        PaintValue(self, dc, x, y, w, h) : Méthode à redéfinir pour peindre la valeur dans l'interface graphique.
+        GetValue (self) : Retourne la valeur actuelle du champ.
+        SetValue (self, value, notify) : Définit la valeur du champ avec une option de notification.
+        GetChoices (self) : Retourne les choix disponibles pour ce champ.
+        PaintValue (self, dc, x, y, w, h) : Méthode à redéfinir pour peindre la valeur dans l'interface graphique.
     """
     def __init__(self, *args, **kwargs):
         self.__value = kwargs.pop("value")
@@ -408,10 +408,10 @@ class Entry(wx.Panel):
         __fields : Liste des champs constituant l'entrée.
 
     Méthodes :
-        AddField(self, name, field) : Ajoute un champ à l'entrée.
-        GetValue(self) : Retourne la valeur actuelle sous forme de tuple.
-        SetValue(self, value) : Définit les valeurs des champs à partir d'un tuple.
-        PopupChoices(self, widget) : Affiche une liste de choix pour un champ donné.
+        AddField (self, name, field) : Ajoute un champ à l'entrée.
+        GetValue (self) : Retourne la valeur actuelle sous forme de tuple.
+        SetValue (self, value) : Définit les valeurs des champs à partir d'un tuple.
+        PopupChoices (self, widget) : Affiche une liste de choix pour un champ donné.
     """
     MARGIN = 3
     formats = [AnyFormatCharacter]
@@ -423,6 +423,7 @@ class Entry(wx.Panel):
         format = list()
         state = None
 
+        klass = None
         for c in fmt:
             for klass in self.formats:
                 if klass.matches(c):
@@ -783,8 +784,8 @@ class NumericField(Field):
     Champ de saisie numérique, permet d'afficher et de manipuler des valeurs numériques.
 
     Méthodes :
-        PaintValue(self, dc, x, y, w, h) : Peint la valeur numérique dans l'interface utilisateur.
-        HandleKey(self, event) : Gère les événements de clavier, y compris les touches fléchées pour augmenter/diminuer la valeur.
+        PaintValue (self, dc, x, y, w, h) : Peint la valeur numérique dans l'interface utilisateur.
+        HandleKey (self, event) : Gère les événements de clavier, y compris les touches fléchées pour augmenter/diminuer la valeur.
     """
     class NumericFormatCharacter(FormatCharacter):
         def __init__(self, c):
@@ -1007,9 +1008,9 @@ class TimeEntry(Entry):
     Entrée de l'heure, permet de saisir une heure complète (heures, minutes, secondes) avec prise en charge des formats 12/24 heures.
 
     Méthodes :
-        GetTime(self) : Retourne l'heure actuellement saisie.
-        SetTime(self, value, notify) : Définit l'heure saisie et notifie l'observateur.
-        PopupRelativeChoices(self) : Affiche les choix relatifs d'heure pour ajuster rapidement l'heure sélectionnée.
+        GetTime (self) : Retourne l'heure actuellement saisie.
+        SetTime (self, value, notify) : Définit l'heure saisie et notifie l'observateur.
+        PopupRelativeChoices (self) : Affiche les choix relatifs d'heure pour ajuster rapidement l'heure sélectionnée.
     """
     class HourFormatCharacter(SingleFormatCharacter):
         character = "H"
@@ -1083,7 +1084,7 @@ class TimeEntry(Entry):
         elif platform.system() == "Linux":
             try:
                 from PyKDE4.kdecore import KLocale, KGlobal
-                from PyQt4.QtCore import QTime
+                from PyQt4.QtCore import QTime  # TODO : Retrouver la source pour python3
             except ImportError:
                 pass
             else:
@@ -1093,13 +1094,15 @@ class TimeEntry(Entry):
                     amStrings.append(str(localeCopy.formatTime(QTime(11, 0, 0))))
 
         debugInfo["amlit"] = amStrings
+        idx = -1
+        amLit = ""
         for amLit in amStrings:
             idx = pattern.lower().find(amLit.lower())
             if idx != -1:
                 break
         ampm = idx != -1
         if ampm:
-            pattern = pattern[:idx] + "p" + pattern[idx + len(amLit) :]
+            pattern = pattern[:idx] + "p" + pattern[idx + len(amLit):]
 
         self.__value = datetime.time(
             hour=kwargs.get("hour", 0),
@@ -1149,15 +1152,19 @@ class TimeEntry(Entry):
     def EnableChoices(self, enabled=True):
         if enabled:
             if self.Field("ampm") is NullField:
-                hours = [
-                    ("%d" % hour, hour)
-                    for hour in range(self.__startHour, min(self.__endHour + 1, 24))
-                ]
+                # hours = [
+                #     ("%d" % hour, hour)
+                #     for hour in range(self.__startHour, min(self.__endHour + 1, 24))
+                # ]
+                hours = []
+                for hour in range(self.__startHour, min(self.__endHour + 1, 24)):
+                    hours.append((f"{hour:d}", hour))
             else:
                 hours = list()
                 for hour in range(self.__startHour, min(self.__endHour + 1, 24)):
                     hr, ampm = Convert24To12(hour)
-                    hours.append(("%02d %s" % (hr, ["AM", "PM"][ampm]), hour))
+                    # hours.append(("%02d %s" % (hr, ["AM", "PM"][ampm]), hour))
+                    hours.append((f"{hr:02d} {['AM', 'PM'][ampm]}", hour))
             self.Field("hour").SetChoices(hours)
             self.Field("minute").SetChoices(
                 [("%d" % minute, minute) for minute in range(0, 60, self.__minuteDelta)]
@@ -1410,7 +1417,7 @@ class TimeEntry(Entry):
 
         try:
             dt = datetime.time(**kwargs)
-        except:
+        except Exception:
             wx.Bell()
             return
 
@@ -1492,10 +1499,10 @@ class DateEntry(Entry):
     Entrée de date, permet de saisir une date complète (jour, mois, année) avec prise en charge des formats localisés.
 
     Méthodes :
-        GetDate(self) : Retourne la date actuellement saisie.
-        SetDate(self, dt, notify) : Définit la date saisie et notifie l'observateur.
-        ValidateYearChange(self, value) : Valide et applique un changement d'année.
-        OnPaste(self, values) : Gère l'événement de collage pour définir les valeurs de date.
+        GetDate (self) : Retourne la date actuellement saisie.
+        SetDate (self, dt, notify) : Définit la date saisie et notifie l'observateur.
+        ValidateYearChange (self, value) : Valide et applique un changement d'année.
+        OnPaste (self, values) : Gère l'événement de collage pour définir les valeurs de date.
     """
     class YearFormatCharacter(SingleFormatCharacter):
         character = "y"
@@ -1914,7 +1921,7 @@ class DateEntry(Entry):
 
         try:
             dt = datetime.date(**kwargs)
-        except:
+        except Exception:
             wx.Bell()
             return
 
@@ -1955,7 +1962,10 @@ class _PopupWindow(wx.Dialog):
         else:
             wx.EVT_CHAR(self.__interior, self.OnChar)
 
-        self.Fill(self.__interior)
+        self.Fill(self.__interior)  # Unresolved attribute reference 'Fill' for class '_PopupWindow'
+        # valable pour panel, layout et sizers.
+        # wx.Dialog est une fenêtre qui les contient.
+        # Il est préférable d'utiliser wx.Sizer ou wx.Panel lors des créations et de les réutiliser via les compositions.
 
         sizer = wx.BoxSizer()
         sizer.Add(self.__interior, 1, wx.EXPAND)
@@ -1993,6 +2003,7 @@ class _PopupWindow(wx.Dialog):
 
 class _RelativeChoicePopup(_PopupWindow):
     def __init__(self, start, *args, **kwargs):
+        self.__choices = None
         self.__start = start
         self.__editing = False
         self.__comboState = 0
@@ -2027,9 +2038,12 @@ class _RelativeChoicePopup(_PopupWindow):
         )
 
     def LoadChoices(self, choices):
-        self.__choices = [
-            datetime.timedelta(minutes=m) for m in map(int, choices.split(","))
-        ]
+        # self.__choices = [
+        #     datetime.timedelta(minutes=m) for m in map(int, choices.split(","))
+        # ]
+        self.__choices = []
+        for m in map(int, choices.split(",")):
+            self.__choices.append(datetime.timedelta(minutes=m))
 
     def __OnComboLeftDown(self, event):
         self.__comboState = 1
@@ -2201,6 +2215,7 @@ class _CalendarPopup(_PopupWindow):
         self.__selection = kwargs.pop("selection")
         self.__year = self.__selection.year
         self.__month = self.__selection.month
+        self.__days = list()
         self.__minDate = kwargs.pop("minDate", None)
         self.__maxDate = kwargs.pop("maxDate", None)
         self.__maxDim = None
@@ -2311,7 +2326,8 @@ class _CalendarPopup(_PopupWindow):
             gp.AddArc(
                 cx,
                 cy,
-                math.sqrt((xinf - cx) * (xinf - cx) + (yinf - cy) * (yinf - cy)),
+                math.sqrt((xinf - cx) * (xinf - cx) + (yinf - cy) * (yinf - cy)),  # TODO : ? A vérifier
+                # math.sqrt((xinf - cx) * (xsup - cx) + (yinf - cy) * (ysup - cy)),  # TODO : plutôt ?
                 math.pi // 4,
                 -math.pi // 4,
                 False,
@@ -2329,7 +2345,7 @@ class _CalendarPopup(_PopupWindow):
 
         dc.SetPen(wx.LIGHT_GREY_PEN)
         dc.SetBrush(wx.LIGHT_GREY_BRUSH)
-        dc.DrawRectangle(0, y, self.__maxDim * 7, self.__maxDim)
+        dc.DrawRectangle(0, y, self.__maxDim * 7, self.__maxDim)  # y ou ysup ?
         dc.SetTextForeground(wx.BLUE)
         for idx, header in enumerate(
             decodeSystemString(calendar.weekheader(2)).split()
@@ -2927,7 +2943,9 @@ if __name__ == "__main__":
             spanCtrl = DateTimeSpanCtrl(pnl1, pnl2, minSpan=datetime.timedelta(hours=1))
             EVT_DATETIMESPAN_CHANGE(spanCtrl, self.OnChange)
 
-            cfg = wx.Config("SmartDateTimeCtrlSample")
+            cfg = wx.Config("SmartDateTimeCtrlSample")  # TODO : qu'est devenu wx.Config ? Deprecatted ! Disparu.
+            # à remplacer par  import json et cerberus.Validator
+            # ou par la bibliothèque standard configparser
             if cfg.HasEntry("Choices"):
                 pnl2.LoadChoices(cfg.Read("Choices"))
             EVT_TIME_CHOICES_CHANGE(pnl2, self.OnChoicesChanged)
