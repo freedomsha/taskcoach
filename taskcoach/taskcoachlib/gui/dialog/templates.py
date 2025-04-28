@@ -138,9 +138,9 @@ class TemplatesDialog(sized_controls.SizedDialog):
         self.SetButtonSizer(self._buttonSizer)
         self.Fit()
         self.SetMinSize(self.GetSize())  # Current size is min size
-        self._buttonSizer.GetAffirmativeButton().bind(
+        self._buttonSizer.GetAffirmativeButton().Bind(
             wx.EVT_BUTTON, self.ok
-        )  # TODO: gui.uicommand.base_uicommand.bind or Bind ?
+        )  # gui.uicommand.base_uicommand.bind or Bind ? Plutôt Bind !
         self.CentreOnParent()
 
     def createInterior(self, pane):
@@ -151,8 +151,10 @@ class TemplatesDialog(sized_controls.SizedDialog):
         """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
         en créant la liste d'arborescence.
 
-        :param pane:
-        :return:
+        Args :
+            pane :
+
+        Returns :
         """
         panel = sized_controls.SizedPanel(pane)  # revoir l'implémentation
         panel.SetSizerType("horizontal")
@@ -206,7 +208,7 @@ class TemplatesDialog(sized_controls.SizedDialog):
         panel = self._editPanel = sized_controls.SizedPanel(pane)
         panel.SetSizerType("form")
         panel.SetSizerProps(expand=True)
-        label = wx.StaticText(panel, label=_("Subject"))
+        label = wx.StaticText(panel, label=_("Subject"))  # StaticText -> TextCtrl ?
         label.SetSizerProps(valign="center")
         self._subjectCtrl = wx.TextCtrl(panel)
         label = wx.StaticText(panel, label=_("Planned start Date"))
