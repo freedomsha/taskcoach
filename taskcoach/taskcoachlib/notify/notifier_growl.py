@@ -22,7 +22,8 @@ import sys
 import tempfile
 import wx
 from io import open as file
-from taskcoachlib.thirdparty.gntp import notifier as growl
+# from taskcoachlib.thirdparty.gntp import notifier as growl
+from gntp import notifier as growl
 from taskcoachlib import meta
 from .notifier import AbstractNotifier
 
