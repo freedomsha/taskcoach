@@ -109,12 +109,15 @@ Fonctions principales:
 
 # from builtins import str
 # from builtins import object
+import io
+import logging
+import os
+import sys
 from taskcoachlib import meta
 from taskcoachlib.domain import date, task, note, category
 from xml.etree import ElementTree as eTree
-import io
-import os
-import sys
+
+log = logging.getLogger(__name__)
 
 
 def flatten(elem):
@@ -169,6 +172,7 @@ class PIElementTree(eTree.ElementTree):
             encoding (str) : Encodage du fichier XML.
             namespaces : Espaces de noms XML utilisés.
         """
+        # Si le noeud est la racine :
         if node == self._root:
             # WTF? ElementTree does not write the encoding if it's ASCII or UTF-8...
             # if encoding in ["us-ascii", "utf-8"]:
@@ -209,12 +213,13 @@ class PIElementTree(eTree.ElementTree):
         if encoding is None:
             encoding = "utf-8"
         if sys.version_info >= (2, 7):
-            # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding), )
-            file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n")
+            file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding), )
+            # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n")
             # content = f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding)
             # file.write(content.decode(encoding))
             # file.write((self.__pi + "\n").encode(encoding), )
-            file.write(f"{self.__pi}\n")
+            # file.write(f"{self.__pi}\n")
+            file.write(f"{self.__pi}\n".encode(encoding), )
             # content = (self.__pi + "\n").encode(encoding)
             # file.write(content.decode(encoding))
 
@@ -235,7 +240,7 @@ def sortedById(objects):
         objects (list) : Liste d'objets à trier.
 
     Returns :
-        list : Liste triée d'objets.
+        (list) : Liste triée d'objets.
     """
     # s = [(obj.id(), obj) for obj in objects]
     # s.sort()
@@ -728,7 +733,21 @@ class ChangesXMLWriter(object):
                         objNode.text = ",".join(list(changes))
 
         tree = eTree.ElementTree(root)
+        # tree.write(self.__fd)
+        # tree.write(self.__fd, encoding="unicode")  # Sauf que ce n'est pas de l'unicode mais de l'utf-8 !
+        # tree.write(self.__fd, encoding="utf-8")
         tree.write(self.__fd)
+        log.debug(f"ChangesXMLWriter.write : DEBUG - Contenu du fichier écrit:\n{self.__fd.getvalue()}")
+        if hasattr(self.__fd, "getvalue"):  # StringIO ou BytesIO
+            log.debug(f"DEBUG - Contenu du fichier écrit:\n{self.__fd.getvalue()}")
+        # else:  # Fichier ouvert en mode écriture
+        elif "r" in self.__fd.mode or "+" in self.__fd.mode:  # Si le fichier supporte la lecture
+            # AttributeError: 'SafeWriteFile' object has no attribute 'mode'
+            self.__fd.seek(0)  # Repositionne le curseur au début
+            log.debug(f"DEBUG - Contenu du fichier écrit:\n{self.__fd.read()}")
+            self.__fd.seek(0)  # Remet le curseur au début du fichier
+        else:
+            log.debug(f"⚠️ [DEBUG] Impossible de lire self.__fd, mode : {self.__fd.mode}")
 
 
 class TemplateXMLWriter(XMLWriter):
@@ -766,7 +785,7 @@ class TemplateXMLWriter(XMLWriter):
             tsk : Tâche à sérialiser en XML.
 
         Returns :
-            Element : Nœud XML créé.
+            node (Element) : Nœud XML créé.
         """
         node = super().taskNode(parentNode, tsk)
 
