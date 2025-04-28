@@ -35,6 +35,7 @@ except ImportError:  # pragma: no cover
 
 class SplashScreen(wx.adv.SplashScreen):
     def __init__(self):
+        # print("gui.splash.SplashScreen.__init__ : debug: Début")
         splash = icons.catalog["splash"]  # type: PyEmbeddedImage
         if i18n.currentLanguageIsRightToLeft():
             # RTL languages cause the bitmap to be mirrored too, but because
@@ -46,5 +47,7 @@ class SplashScreen(wx.adv.SplashScreen):
         else:
             bitmap = splash.GetBitmap()
         # super().__init__(bitmap, wx.SPLASH_CENTRE_ON_SCREEN | wx.SPLASH_TIMEOUT, 4000, None, -1)
-        super().__init__(bitmap,
-                         wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT, 4000, None, -1)
+        # super().__init__(bitmap,
+        #                  wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT, 4000, None, -1)
+        super().__init__(bitmap=bitmap, splashStyle=wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT, milliseconds=4000, parent=None, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize)
+        # print("gui.splash.SplashScreen.__init__ : debug: Fin")
