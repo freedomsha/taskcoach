@@ -246,6 +246,8 @@ class CategoryTest(tctest.TestCase):
         self.category.addChild(self.subCategory)
         copy = self.category.copy()
         self.assertEqual(self.subCategory.subject(), copy.children()[0].subject())
+        #                                            ~~~~~~~~~~~~~~~^^^
+        # IndexError: list index out of range
 
     # Notifications:
 
