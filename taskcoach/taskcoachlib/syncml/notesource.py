@@ -37,11 +37,15 @@ class NoteSource(BaseSource):
     def updateItemProperties(self, item, note):
         item.dataType = self._dataType
         if self._dataType == "text/x-vnote":
-            item.data = ical.VNoteFromNote(note, doFold=False).encode("UTF-8")
+            # item.data = ical.VNoteFromNote(note, doFold=False).encode("UTF-8")
+            item.data = ical.VNoteFromNote(note, doFold=False)
         else:
+            # item.data = (
+            #     "%s\n%s" % (note.subject(), note.description())
+            # ).encode("UTF-8")
             item.data = (
                 "%s\n%s" % (note.subject(), note.description())
-            ).encode("UTF-8")
+            )
 
     def _parseObject(self, item):
         # Horde doesn't seem to give a fuck about the supported types we send it.
