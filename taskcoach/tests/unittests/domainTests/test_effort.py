@@ -210,6 +210,8 @@ class EffortTest(tctest.TestCase, asserts.Mixin):
         newEffort = effort.Effort(theTask)
         newEffort.__setstate__(state)
         self.assertEqualEfforts(newEffort, self.effort)
+        #                                  ^^^^^^^^^^^
+        # TypeError: 'Task' object is not callable
 
     def testCopy(self):
         copyEffort = self.effort.copy()
