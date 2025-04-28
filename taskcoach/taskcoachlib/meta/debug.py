@@ -66,7 +66,7 @@ def profile_call(func):
     """ Docorator for profiling a specific function. I'm not sure what
         happens if you decorate a recursive function... """
 
-    import hotshot  # no module named
+    import hotshot  # no module named -> à changer !
 
     def inner(*args, **kwargs):
         profiler = hotshot.Profile(".profile")
