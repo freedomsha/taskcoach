@@ -59,7 +59,7 @@ class HTMLWriter(object):
         cssFilename = os.path.basename(self.__cssFilename) if separateCSS else ""
         htmlText, count = generator.viewer2html(viewer, settings, cssFilename,
                                                 selectionOnly, columns)
-        self.__fd.write(htmlText)
+        self.__fd.write(htmlText, )
         if separateCSS:
             self._writeCSS()
         return count
@@ -67,7 +67,7 @@ class HTMLWriter(object):
     def _writeCSS(self, open=open):  # pylint: disable=W0622 Shadows built-in name 'open'
         if not self.__cssFilename or os.path.exists(self.__cssFilename):
             return
-        try:
+        try:  # TODO : Changer la méthode !
             fd = open(self.__cssFilename, "wb")
             fd.write(css % self.__filename)
             fd.close()
