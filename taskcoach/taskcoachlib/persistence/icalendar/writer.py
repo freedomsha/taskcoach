@@ -46,7 +46,7 @@ class iCalendarWriter(object):  # création nouvelle classe
         return self.writeItems(items)
 
     def writeItems(self, items):
-        self.__fd.write("BEGIN:VCALENDAR\r\n")
+        self.__fd.write("BEGIN:VCALENDAR\r\n", )
         self._writeMetaData()
         count = 0
         for item in items:
@@ -55,15 +55,13 @@ class iCalendarWriter(object):  # création nouvelle classe
                 if isinstance(item, task.Task)
                 else ical.VCalFromEffort
             )
-            self.__fd.write(transform(item, encoding=False))
+            self.__fd.write(transform(item, encoding=False), )
             count += 1
-        self.__fd.write("END:VCALENDAR\r\n")
+        self.__fd.write("END:VCALENDAR\r\n", )
         return count
 
     def _writeMetaData(self):
-        self.__fd.write("VERSION:2.0\r\n")
+        self.__fd.write("VERSION:2.0\r\n", )
         domain = meta.url[len("http://") :].strip("/")
-        self.__fd.write(
-            "PRODID:-//%s//NONSGML %s V%s//EN\r\n"
-            % (domain, meta.name, meta.version)
-        )
+        self.__fd.write("PRODID:-//%s//NONSGML %s V%s//EN\r\n"
+                        % (domain, meta.name, meta.version), )
