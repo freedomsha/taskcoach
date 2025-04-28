@@ -1313,12 +1313,14 @@ def ensureFolderExists(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+
 def writeFile(folder, filename, contents):
     ensureFolderExists(folder)
     filename = os.path.join(folder, filename)
     print("Creating %s" % filename)
     fd = open(filename, "w")
-    fd.write(contents.encode("UTF-8"))
+    # fd.write(contents.encode("UTF-8"))
+    fd.write(contents)  # TODO : A vérifier
     fd.close()
 
 
@@ -1326,6 +1328,7 @@ def expandPatterns(*patterns):
     for pattern in patterns:
         for filename in glob.glob(pattern):
             yield filename
+
 
 def copyFiles(folder, *patterns):
     ensureFolderExists(folder)
@@ -1349,6 +1352,7 @@ def createPAD(folder, filename="pad.xml"):
 def createVersionFile(folder, filename="version.txt"):
     textTemplate = open(filename).read()
     writeFile(folder, filename, textTemplate % meta.metaDict)
+
 
 def createHTMLPages(targetFolder, pages):
     for title, text in list(pages.items()):
