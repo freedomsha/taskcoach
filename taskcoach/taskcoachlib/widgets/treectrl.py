@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import operating_system
 # from ..thirdparty import customtreectrl as customtree, hypertreelist
 # from taskcoachlib.thirdparty import customtreectrl as customtree
+import logging
 import wx
 # from wx import TreeCtrl as customtree
 from wx.lib.agw import customtreectrl as customtree
@@ -31,6 +32,7 @@ from taskcoachlib.widgets import itemctrl, draganddrop
 
 
 # pylint: disable=E1101,E1103
+log = logging.getLogger(__name__)
 
 
 class BaseHyperTreeList(hypertreelist.HyperTreeList, customtree.CustomTreeCtrl):
@@ -81,7 +83,8 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
 
     def GetMainWindow(self, *args, **kwargs):  # pylint: disable=C0103
         """ Avoir un GetMainWindow local afin que nous puissions créer une propriété MainWindow. """
-        return super().GetMainWindow(*args, **kwargs)
+        # return super().GetMainWindow(*args, **kwargs)  # *args et **kwargs semblent inutiles ici !
+        return super().GetMainWindow()  # *args et **kwargs semblent inutiles ici !
 
     MainWindow = property(fget=GetMainWindow)
 
@@ -141,16 +144,12 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         return self.ItemHasChildren(item) and self.IsExpanded(item)
 
     def IsLabelBeingEdited(self):
-        return bool(self.GetLabelTextCtrl())
-    # # Ancien code
-    # def IsLabelBeingEdited(self):
-    #     return bool(self._editCtrl)
-    # # Nouveau code (wxPython Phoenix compatible)
-    # def IsLabelBeingEdited(self):
-    #     return self.IsEditing()  # Méthode de wx.TreeCtrl
-    # def IsLabelBeingEdited(self):
-    #     return self.IsEditing()  # Méthode wxPython Phoenix
-
+        # return bool(self.GetLabelTextCtrl())
+        # # Ancien code
+        return bool(self._editCtrl)
+        # # Nouveau code (wxPython Phoenix compatible)
+        # def IsLabelBeingEdited(self):
+        #     return self.IsEditing()  # Méthode de wx.TreeCtrl - wxPython Phoenix
 
     def StopEditing(self):
         if self.IsLabelBeingEdited():
@@ -162,7 +161,6 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         # if self.GetMainWindow().IsEditing():
         #     return self.GetEditControl()  # Méthode wxPython Phoenix
         # return None
-
 
         # Vérifiez la définition de la classe MainWindow pour voir si _Editctrl
         # est initialisé. S'il est censé être un widget pour l'édition,
@@ -204,6 +202,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         self.editCommand = editCommand
         self.dragAndDropCommand = dragAndDropCommand
         kwargs.setdefault("resizeableColumn", 0)
+        self._mainWin = None
         super().__init__(parent, style=self.__get_style(),
                          agwStyle=self.__get_agw_style(), columns=columns,
                          itemPopupMenu=itemPopupMenu,
@@ -217,7 +216,6 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         # # AttributeError: 'TreeListCtrl' object has no attribute '_headerWin'
         # self._headerWin = None
         # # AttributeError: 'TreeListCtrl' object has no attribute '_editCtrl'
-
 
     def bindEventHandlers(self, selectCommand, editCommand, dragAndDropCommand):
         # pylint: disable=W0201
@@ -393,7 +391,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         if event.GetKeyCode() == wx.WXK_RETURN:
             self.editCommand(event)
         elif event.GetKeyCode() == wx.WXK_F2 and self.GetSelections():
-            self.EditLabel(self.GetSelections()[0], column=0)  # TODO :
+            # self.EditLabel(self.GetSelections()[0], column=0)  # TODO :
+            self.EditLabel(self.GetSelections()[0])  # TODO :
         else:
             event.Skip()
 
@@ -428,14 +427,18 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         event.Skip(False)
 
     def __column_under_mouse(self):
+        log.debug("TreeListCtrl.__column_under_mouse : début")
         mouse_position = self.GetMainWindow().ScreenToClient(wx.GetMousePosition())
         item, _, column = self.HitTest(mouse_position)
         if item:
             # Only get the column name if the hittest returned an item,
             # otherwise the item was activated from the menu or by double-clicking
             #  on a portion of the tree view not containing an item.
-            return max(0, column)  # FIXME: Why can the column be -1?
+            log.debug(f"TreeListCtrl.__column_under_mouse : fin1 colonne={column}")
+            return max(0, column)  # FIXME: Why can the column be -1? It is the default value.
+
         else:
+            log.debug("TreeListCtrl.__column_under_mouse : fin2")
             return -1
 
     # Inline editing
@@ -520,6 +523,8 @@ class CheckTreeCtrl(TreeListCtrl):
                  editCommand, dragAndDropCommand, itemPopupMenu=None,
                  *args, **kwargs):
         self.__checking = False
+        # nouvel attribut :
+        self._mainWin = None
         super().__init__(parent, columns,
                          selectCommand, editCommand, dragAndDropCommand,
                          itemPopupMenu, *args, **kwargs)
