@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import wx
 # from wx.lib.agw import aui
 import wx.lib.agw.aui as aui
@@ -154,6 +155,10 @@ class BookPage(wx.Panel):
             (list) : La liste des drapeaux fusionnés(merged).
         """
         flagsPassed = flagsPassed or [None] * len(controls)
+        # flagsPassed = (flagsPassed or [None]) * len(controls)
+        # ou
+        # flagsPassed = flagsPassed or ([None] * len(controls))
+
         # TODO : try to replaced by:
         # if not isinstance(flagsPassed, list):
         #     flagsPassed = [flagsPassed] * len(controls)
@@ -233,12 +238,12 @@ class BookPage(wx.Panel):
             lastColumn (bool) : Si le contrôle est dans la dernière colonne.
         """
         colspan = max(self._columns - columnIndex, 1) if lastColumn else 1
-        # position = self._position.next(colspan)
+        position = self._position.next(colspan)
         #
         # # Sortie de débogage pour vérifier les valeurs transmises
-        # print(
-        #     f"notebook.py:Adding control : {control}, Position: {position}, Span: {(1, colspan)}, Flag: {flag}, Border: {self._borderWidth}"
-        # )
+        logging.debug(
+            f"notebook.py:Adding control : {control}, Position: {position}, Span: {(1, colspan)}, Flag: {flag}, Border: {self._borderWidth}"
+        )
         #
         # # Assurez-vous que l'indicateur est un entier
         # if isinstance(flag, tuple):
@@ -265,6 +270,8 @@ class BookPage(wx.Panel):
         """
         if type(control) in [type(""), type("")]:  # TODO: essayer de le remplacer par
             # if isinstance(control, str):
+            # ou
+            # if isinstance(control, list):
             control = wx.StaticText(self, label=control)
         return control
 
@@ -290,7 +297,7 @@ class BookMixin(object):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        super().__init__(parent, -1, *args, **kwargs)
+        super().__init__(parent, id=-1, *args, **kwargs)
         self.Bind(self.pageChangedEvent, self.onPageChanged)
 
     def __getitem__(self, index):
