@@ -21,15 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import object
 import codecs
 import gc
-import lockfile
-# import logging  # not used, log.Error replaced by wx.logError
+# import lockfile
+import logging  # not used, log.Error replaced by wx.logError
 import os
 import sys
 import traceback
 import wx
 from taskcoachlib import meta, persistence, patterns, operating_system
 from taskcoachlib.i18n import _
-# from taskcoachlib.thirdparty import lockfile
+from taskcoachlib.thirdparty import lockfile
 from taskcoachlib.widgets import GetPassword
 from taskcoachlib.workarounds import ExceptionAsUnicode
 from taskcoachlib.gui.dialog import BackupManagerDialog
@@ -40,7 +40,7 @@ except ImportError:  # pragma: no cover
     # Unsupported platform.
     pass
 
-# log = logging.getLogger(__name__)  # not used, log.Error replaced by wx.logError
+log = logging.getLogger(__name__)  # not used, log.Error replaced by wx.logError
 
 
 class IOController(object):
@@ -49,23 +49,27 @@ class IOController(object):
     to let the user specify what file to load/save/etc.
 
     IOController est responsable de l’ouverture, de la fermeture, du chargement
-    de l’enregistrement et de l’exportation des fichiers. Il présente également les boîtes de dialogue nécessaires
+    de l’enregistrement et de l’exportation des fichiers.
+    Il présente également les boîtes de dialogue nécessaires
     pour permettre à l'utilisateur de spécifier quel fichier charger/enregistrer/etc.
     """
 
     def __init__(self, taskFile, messageCallback, settings, splash=None):
+        # log.info("Initialisation de IOController.")
         super().__init__()
         self.__taskFile = taskFile
         self.__messageCallback = messageCallback
         self.__settings = settings
         self.__splash = splash
         defaultPath = os.path.expanduser("~")
+        # Options de la boîte de dialogue de sauvegarde save_as :
         self.__tskFileSaveDialogOpts = {
             "default_path": defaultPath,
             "default_extension": "tsk",
             "wildcard": _("%s files (*.tsk)|*.tsk|All files (*.*)|*")
             % meta.name,
         }
+        # Options de la boîte de dialogue d'ouverture de fichier :
         self.__tskFileOpenDialogOpts = {
             "default_path": defaultPath,
             "default_extension": "tsk",
@@ -101,6 +105,7 @@ class IOController(object):
         self.__errorMessageOptions = dict(
             caption=_("%s file error") % meta.name, style=wx.ICON_ERROR
         )
+        # log.info("IOController initialisé.")
 
     # Ces fonctions sont des méthodes d'accès aux données du fichier de tâches (TaskFile).
     # Elles permettent de récupérer ou de modifier des informations sur la synchronisation,
@@ -109,7 +114,7 @@ class IOController(object):
         """Renvoie la configuration de synchronisation du fichier de tâches.
 
         Returns :
-            dict : La configuration de synchronisation du fichier de tâches.
+            (dict) : La configuration de synchronisation du fichier de tâches.
        """
         return self.__taskFile.syncMLConfig()
 
@@ -125,26 +130,26 @@ class IOController(object):
         self.__taskFile.setSyncMLConfig(config)
 
     def needSave(self):
-        """Renvoie True si le fichier de tâches a été modifié depuis la dernière sauvegarde, False sinon.
+        """Renvoie si le fichier de tâches a besoin d'être sauvegardé.
 
         Returns :
-            bool
+            (bool) : True si le fichier de tâches a été modifié depuis la dernière sauvegarde, False sinon.
         """
         return self.__taskFile.needSave()
 
     def changedOnDisk(self):
-        """Renvoie True si le fichier de tâches a été modifié sur le disque depuis la dernière ouverture, False sinon.
+        """Renvoie si le fichier de tâches a été modifié sur le disque depuis la dernière ouverture.
 
         Returns :
-            bool
+            (bool) : True si le fichier de tâches a été modifié sur le disque depuis la dernière ouverture, False sinon.
         """
         return self.__taskFile.changedOnDisk()
 
     def hasDeletedItems(self):
-        """Renvoie True s'il y a des tâches ou des notes supprimées dans le fichier de tâches, False sinon.
+        """Renvoie s'il y a des tâches ou des notes supprimées dans le fichier de tâches.
 
         Returns :
-            bool
+            (bool) : True si des tâches ou des notes sont supprimées du fichier de tâches, sinon False.
         """
         return bool([task for task in self.__taskFile.tasks() if task.isDeleted()] +
                     [note for note in self.__taskFile.notes() if note.isDeleted()])
@@ -189,14 +194,18 @@ class IOController(object):
             None
             """
         filename = None
+        log.info("IOController.openAfterStart : Ouvre le fichier spécifié en ligne de commande"
+                 " ou le dernier fichier ouvert par l'utilisateur, ou aucun fichier du tout.")
         if commandLineArgs:
             # Si un argument de ligne de commande est présent, on considère
             # que c'est le nom du fichier à ouvrir.
             if isinstance(commandLineArgs, str):
                 filename = commandLineArgs[0]
+                log.info(f"IOController.openAfterStart : Enregistre le str {commandLineArgs[0]} comme nom de fichier.")
             else:
                 try:
                     filename = commandLineArgs[0].decode(sys.getfilesystemencoding())
+                    log.info(f"IOController.openAfterStart : Enregistre {filename} comme nom de fichier.")
                 except Exception as e:
                     # filename = commandLineArgs[0].encode(sys.getfilesystemencoding())
                     # print(f"tclib.gui.iocontroller.IOController.openAfterStart can't open file à cause de {e}")
@@ -217,16 +226,20 @@ class IOController(object):
             # convertir le premier argument de la ligne de commande
             # en une chaîne de caractères Unicode,
             # en utilisant l'encodage du système de fichiers.
+
         else:
             # Sinon, on récupère le nom du dernier fichier ouvert par
             # l'utilisateur à partir des paramètres de configuration.
             filename = self.__settings.get("file", "lastfile")
+            log.info(f"IOController.openAfterStart : Récupère le dernier fichier ouvert {filename} comme nom de fichier.")
         if filename:
             # Use CallAfter so that the main window is opened first and any
             # error messages are shown on top of it
             # On utilise CallAfter pour s'assurer que la fenêtre principale
             # est ouverte avant d'ouvrir le fichier.
+            log.info(f"IOController.openAfterStart : Appelle CallAfter avec self.open={self.open} et filename={filename}")
             wx.CallAfter(self.open, filename)
+            log.info("IOController.openAfterStart : Appelle CallAfter réussi. Terminé.")
 
     def open(self, filename=None, showerror=wx.MessageBox,
              fileExists=os.path.exists, breakLock=False, lock=True):
@@ -242,7 +255,7 @@ class IOController(object):
         Si le fichier n'existe pas, une erreur est affichée.
 
         Args :
-            filename (str) : Le nom du fichier à ouvrir. Si None, l'utilisateur est invité à choisir un fichier.
+            filename (str | None) : Le nom du fichier à ouvrir. Si None, l'utilisateur est invité à choisir un fichier.
             showerror (callable) : La fonction à utiliser pour afficher les messages d'erreur.
             fileExists (callable) : La fonction à utiliser pour vérifier si le fichier existe.
             breakLock (bool) : Si True, permet de forcer l'ouverture du fichier même s'il est verrouillé.
@@ -251,26 +264,37 @@ class IOController(object):
         Returns :
             None
         """
+        log.info(f"IOController.open : Ouverture du fichier {filename}, fileExists={fileExists}, breakLock={breakLock}, lock={lock}")
         if self.__taskFile.needSave():
+            log.info(f"IOController.open : {self.__taskFile} a besoin d'être sauvegardé.")
             if not self.__saveUnsavedChanges():
                 return
-        if not filename:
+        if not filename or filename == "/":
+            # if not persistence.TaskFile.filename():
             filename = self.__askUserForFile(
                 _("Open"), self.__tskFileOpenDialogOpts
             )
+            log.info(f"IOController.open : L'utilisateur a choisi d'ouvrir {filename}.")
         if not filename:
+            log.warning(f"IOController.open : Aucun fichier à ouvrir !")
             return
         self.__updateDefaultPath(filename)
         # TODO: code à remplacer (trop complexe):
         if fileExists(filename):
-            self.__closeUnconditionally()
-            self.__addRecentFile(filename)
+            log.info(f"IOCOntroller.open : {filename} existe !")
+            self.__closeUnconditionally()  # Ferme la tâche actuelle.
+            self.__addRecentFile(filename)  # Ajoute le nom de fichier "fileName" à la liste des fichiers récents.
             try:
                 try:  # self._Application__wx_app.traits={AttributeError}AttributeError("'IOController' object has no attribute '_Application__wx_app'")
                     # En fait, j'ai un problème avec /gui/uicommand/base_uicommand.py, gui/iocontroller.py et gui/viewer.base.py . En gros:  self._Application__wx_app.traits={AttributeError}AttributeError("'IOController' object has no attribute '_Application__wx_app'")
+                    # Vérifiez comment le fichier est ouvert avant d'être passé
+                    # à la méthode load de TaskFile.
+                    # Assurez-vous que l'ouverture du fichier se fait correctement
+                    # et que le descripteur de fichier est bien passé aux étapes suivantes.
+                    log.debug(f"IOController.open : Test de l'ouverture de {filename}.")
                     self.__taskFile.load(filename, lock=lock,
                                          breakLock=breakLock)
-                except:  # pas finally sinon tout s'arrête.
+                except Exception:  # pas finally sinon tout s'arrête.
                     # Need to Destroy splash screen first because it may
                     # interfere with dialogs we show later on Mac OS X
                     if self.__splash:
@@ -432,14 +456,26 @@ class IOController(object):
         Args :
             showerror (callable) : La fonction.
         """
+        log.info("IOController.save tente de sauvegarder le fichier de tâches courant.")
+        # Si le nom de fichier existe :
         if self.__taskFile.filename():
+            # Renvoie True si l'enregistrement du fichier est ok :
             if self._saveSave(self.__taskFile, showerror):
+                log.info(f"IOController.save a sauvegardé le fichier de tâches courant {self.__taskFile} sous son nom {self.__taskFile.filename()}.")
                 return True
             else:
+                log.warning(f"IOController.save sauvegarde le fichier de tâches courant {self.__taskFile} sous un nouveau nom.")
+                # Sinon enregistre le fichier sous un nouveau nom.
                 return self.saveas(showerror=showerror)
+        # Si le fichier n'existe pas, vérifier si le fichier de tâche est vide.
         elif not self.__taskFile.isEmpty():
+            # S'il ne l'est pas, lancer l'enregistrement du fichier courant sous un nouveau nom.
+            log.warning(f"IOController.save : Le fichier n'existe pas, sauvegarder {self.__taskFile} sous un nouveau nom.")
             return self.saveas(showerror=showerror)  # Ask for filename
+
         else:
+            # Retourne False Si le fichier courant self.__taskFile est vide.
+            log.warning(f"IOController.save : Le fichier {self.__taskFile} est vide.")
             return False
 
     def mergeDiskChanges(self):
@@ -463,7 +499,10 @@ class IOController(object):
 
         Si le fichier existe déjà, elle affiche une boîte de dialogue pour demander à l'utilisateur
         de confirmer l'écrasement du fichier existant."""
+        # Si filename n'existe pas :
         if not filename:
+            # Ouvrir une boîte de dialogue de sélection de fichier pour
+            # demander à l'utilisateur de sélectionner un fichier :
             filename = self.__askUserForFile(
                 _("Save as"),
                 self.__tskFileSaveDialogOpts,
@@ -613,31 +652,31 @@ class IOController(object):
 
         Voici une explication ligne par ligne :
             - La première ligne définit la fonction "Close" avec un paramètre optionnel "force"
-            qui est un booléen indiquant si la fermeture doit être forcée
-            sans demander à l'utilisateur de sauvegarder les modifications en cours.
+              qui est un booléen indiquant si la fermeture doit être forcée
+              sans demander à l'utilisateur de sauvegarder les modifications en cours.
 
             - La deuxième ligne vérifie si le fichier de tâche en cours d'édition
-            a besoin d'être sauvegardé en appelant la méthode "needSave" de l'objet "taskFile"
-            qui est défini ailleurs dans le code.
+              a besoin d'être sauvegardé en appelant la méthode "needSave" de l'objet "taskFile"
+              qui est défini ailleurs dans le code.
 
             - Si le fichier a besoin d'être sauvegardé et que la fermeture doit être forcée,
-            la troisième ligne sauvegarde le fichier sans demander à l'utilisateur
-            en utilisant la méthode "_saveSave" de l'objet "taskFile"
-            et une fonction lambda qui ne fait rien (elle vide les arguments).
+              la troisième ligne sauvegarde le fichier sans demander à l'utilisateur
+              en utilisant la méthode "_saveSave" de l'objet "taskFile"
+              et une fonction lambda qui ne fait rien (elle vide les arguments).
 
             - Si le fichier a besoin d'être sauvegardé mais que la fermeture n'est pas forcée,
-            la cinquième ligne appelle la méthode "__saveUnsavedChanges" qui
-            demande à l'utilisateur s'il veut sauvegarder les modifications en cours.
-            Si l'utilisateur choisit de ne pas sauvegarder, la fonction retourne "False"
-            et la tâche n'est pas fermée.
+              la cinquième ligne appelle la méthode "__saveUnsavedChanges" qui
+              demande à l'utilisateur s'il veut sauvegarder les modifications en cours.
+              Si l'utilisateur choisit de ne pas sauvegarder, la fonction retourne "False"
+              et la tâche n'est pas fermée.
 
             - Si le fichier n'a pas besoin d'être sauvegardé ou
-            si l'utilisateur a choisi de sauvegarder les modifications,
-            la septième ligne appelle la méthode "__closeUnconditionally" qui ferme la tâche sans condition.
+              si l'utilisateur a choisi de sauvegarder les modifications,
+              la septième ligne appelle la méthode "__closeUnconditionally" qui ferme la tâche sans condition.
 
             - Enfin, la dernière ligne retourne "True" pour indiquer que
-            la tâche a été fermée avec succès.
-            """
+              la tâche a été fermée avec succès.
+        """
         if self.__taskFile.needSave():
             if force:
                 # No user interaction, since we're forced to Close right Now.
@@ -664,10 +703,10 @@ class IOController(object):
             "writerClass" : qui est la classe qui écrit les données exportées dans le fichier,
             "viewer" : qui est l'objet qui fournit les données à exporter,
             "selectionOnly" : qui est un booléen indiquant si seules les données sélectionnées doivent être exportées,
-            "openfile" : qui est la fonction utilisée pour ouvrir le fichier en écriture,
-            "showerror" : qui est la fonction de boîte de dialogue d'erreur,
+            "openfile" : (optionnel) qui est la fonction utilisée pour ouvrir le fichier en écriture,
+            "showerror" : (optionnel) qui est la fonction de boîte de dialogue d'erreur,
             "filename" : qui est le nom de fichier à utiliser pour l'export,
-            "fileExists" : qui est la fonction utilisée pour vérifier si le fichier existe déjà, et
+            "fileExists" : (optionnel) qui est la fonction utilisée pour vérifier si le fichier existe déjà, et
             "**kwargs" : qui permet de passer des arguments supplémentaires à la méthode d'écriture.
 
         La deuxième ligne utilise le nom de fichier fourni en paramètre
@@ -686,26 +725,37 @@ class IOController(object):
         La cinquième ligne ferme le fichier et affiche un message de confirmation
         en utilisant la méthode "__messageCallback" qui est définie ailleurs dans le code.
 
-        Enfin, la dernière ligne
+        Enfin, la dernière ligne retourne "False" si le nom de fichier
+        n'existe toujours pas après la boîte de dialogue.
 
         Returns :
-            bool : retourne "True" si l'export a réussi et "False" sinon.
+            (bool) : retourne "True" si l'export a réussi et "False" sinon.
         """
+        log.info("IOController.export ouvre le fichier filename pour écriture et renvoie si tout s'est bien passé.")
+        # filename est filename s'il existe sinon ouvre une boîte de dialogue.
         filename = filename or self.__askUserForFile(title, fileDialogOpts,
                                                      flag=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                                                      fileExists=fileExists)
+        # Si filename existe :
         if filename:
+            # revoir la méthode avec with ! :
+            # l'ouvre avec open pour écrire dedans ! Attention mode w !
             fd = self.__openFileForWriting(filename, openfile, showerror)
+            # Si l'ouverture ne donne rien, export renvoie Faux !
             if fd is None:
                 return False
+            # Sinon, utiliser writerClass().write() pour écrire les données exportées dans le fichier :
             count = writerClass(fd, filename).write(viewer, self.__settings, selectionOnly, **kwargs)
+            # Fermer le fichier :
             fd.close()
+            # Afficher un message de confirmation :
             self.__messageCallback(
                 _("Exported %(count)d items to " "%(filename)s")
                 % dict(count=count, filename=filename)
             )
             return True
         else:
+            log.warning("IOController.export n'a pas enregistré de fichier.")
             return False
 
     def exportAsHTML(self, viewer, selectionOnly=False, separateCSS=False,
@@ -862,7 +912,7 @@ class IOController(object):
         """Retourne le nom de fichier de tâche en cours d'édition.
 
         Le nom de fichier est stocké dans l'objet "self.__taskFile".
-"""
+        """
         return self.__taskFile.filename()
 
     # @staticmethod
@@ -894,6 +944,7 @@ class IOController(object):
         Si l'ouverture du fichier échoue, la fonction retourne "None".
         """
         try:
+            log.info(f"IOController.__openFileForWriting : Ouvre {filename} avec {openfile} en mode={mode} et encoding={encoding}.")
             return openfile(filename, mode, encoding)
         except IOError as reason:
             errorMessage = _("Cannot open %s\n%s") % (filename,
@@ -1051,6 +1102,7 @@ class IOController(object):
 
         Sinon, la fonction retourne "False".
         """
+        log.info(f"IOController.__askBreakLock demande à l'utilisateur s'il veut casser le verrouillage du fichier {filename}.")
         result = wx.MessageBox(_("""Cannot open %s because it is locked.
 
                                  This means either that another instance of TaskCoach
@@ -1074,6 +1126,7 @@ class IOController(object):
 
         Sinon, la fonction retourne "False".
         """
+        log.warning("IOController.__askOpenUnlocked appelé !")
         result = wx.MessageBox(_("Cannot acquire a lock because locking is not "
                                  "supported\non the location of %s.\n"
                                  "Open %s unlocked?") % (filename, filename),
