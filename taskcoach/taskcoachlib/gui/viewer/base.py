@@ -93,12 +93,15 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             *args : Arguments supplémentaires.
             **kwargs : Arguments nommés supplémentaires.
         """
+        log.debug(f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
         patterns.Observer.__init__(self)
+        log.debug(f"parent={parent.__class__.__name__}")
         super().__init__(parent, -1)
         # new_id = wx.NewIdRef().GetId()
+        # new_id = wx.ID_ANY
         # super().__init__(parent, new_id)
         # print('le mro de gui.viewer.base.Viewer est ', Viewer.__mro__)
-        self.parent = parent
+        self.parent = parent  # window or frame ?
         self.taskFile = taskFile
         self.settings = settings
         self.__settingsSection = kwargs.pop("settingsSection")
@@ -122,6 +125,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         )
         # The widget used to present the presentation:
         self.widget = self.createWidget()
+        # log.error("VIEWER : Ici, s'arrête après cela ? :")
         self.widget.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
@@ -145,7 +149,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
                 settings.getboolean("view", "descriptionpopups")
             )
 
+        log.debug("Viewer : Appel de CallAfter.")
         wx.CallAfter(self.__DisplayBalloon)
+        log.debug("Viewer : CallAfter passé avec succès.")
 
     def __DisplayBalloon(self):
         """Affiche une info-bulle pour informer l'utilisateur que la barre d'outils est personnalisable."""
@@ -227,9 +233,8 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
 
         for popupMenu in self._popupMenus:
             # try:
-            if popupMenu:
-                popupMenu.clearMenu()
-                popupMenu.Destroy()
+            #     popupMenu.clearMenu()
+            #     popupMenu.Destroy()
             # except wx.PyDeadObjectError:
             #     pass
             #     # https://stackoverflow.com/questions/34202195/import-pydeadobjecterror-with-wx-version-3-0-3
@@ -240,8 +245,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             # except RuntimeError:
             #     pass
             # TODO: Essayer plutôt ça :
-            #   popupMenu.clearMenu()
-            #   popupMenu.Destroy()
+            if popupMenu:
+                popupMenu.clearMenu()
+                popupMenu.Destroy()
 
         pub.unsubscribe(self.onBeginIO, "taskfile.aboutToRead")
         pub.unsubscribe(self.onBeginIO, "taskfile.aboutToClear")
@@ -275,7 +281,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         """Retourne le titre actuel de la visionneuse.
 
         Returns :
-            str : Le titre actuel de la visionneuse.
+            (str) : Le titre actuel de la visionneuse.
         """
         return self.settings.get(self.settingsSection(), "title") or self.defaultTitle
 
@@ -287,18 +293,18 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         """
         titleToSaveInSettings = "" if title == self.defaultTitle else title
         self.settings.set(self.settingsSection(), "title", titleToSaveInSettings)
-        self.parent.setPaneTitle(self, title)
+        self.parent.setPaneTitle(self, title)  # setPaneTitle is for frame ! not window. SetLabel or SetName for window !
         self.parent.manager.Update()
 
     def initLayout(self):
         """Initialise la mise en page de la visionneuse."""
         log.debug("Viewer.initLayout : Initialisation de la mise en page de la visionneuse.")
         self._sizer = wx.BoxSizer(wx.VERTICAL)  # pylint: disable=W0201
-        log.debug(f"Viewer.initLayout : _sizer de {self} créé: {self._sizer}")
+        # log.debug(f"Viewer.initLayout : _sizer de {self} créé: {self._sizer}")
         self._sizer.Add(self.toolbar, flag=wx.EXPAND)
-        log.debug(f"Viewer.initLayout : toolbar ajoutée, toolbar: {self.toolbar}, taille: {self.toolbar.GetSize()}")
+        # log.debug(f"Viewer.initLayout : toolbar ajoutée, toolbar: {self.toolbar}, taille: {self.toolbar.GetSize()}")
         self._sizer.Add(self.widget, proportion=1, flag=wx.EXPAND)
-        log.debug(f"Viewer.initLayout : widget ajoutée, widget: {self.widget}, taille: {self.widget.GetSize()}")
+        # log.debug(f"Viewer.initLayout : widget ajoutée, widget: {self.widget}, taille: {self.widget.GetSize()}")
         self.SetSizerAndFit(self._sizer)
         log.debug(f"Viewer.initLayout : initLayout terminé, taille: {self.GetSize()}")
 
@@ -427,9 +433,23 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
                 self.sendViewerStatusEvent()
 
     def freeze(self):
+        """
+        Gèle la fenêtre ou, en d'autres termes, empêche les mises à jour
+        qui se déroulent à l'écran, la fenêtre n'est pas du tout redessinée.
+
+        Returns :
+
+        """
         self.widget.Freeze()
 
     def thaw(self):
+        """
+
+        Réévaluer la mise à jour de la fenêtre après un appel précédent de freeze().
+
+        Returns :
+
+        """
         self.widget.Thaw()
 
     # def refresh(self):
@@ -516,7 +536,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         Indique si la vue est une vue arborescente.
 
         Returns :
-            bool : False, car cette vue n'est ni une vue en liste et ni en arbre.
+            (bool) : False, car cette vue n'est ni une vue en liste et ni en arbre.
         """
         # return False
         raise NotImplementedError
@@ -825,7 +845,7 @@ class ListViewer(Viewer):  # pylint: disable=W0223
         Indique si la vue est une vue arborescente.
 
         Returns :
-            bool : False, car cette vue est une vue en liste et non en arbre.
+            (bool) : False, car cette vue est une vue en liste et non en arbre.
         """
         return False
 
@@ -861,7 +881,7 @@ class ListViewer(Viewer):  # pylint: disable=W0223
             item (object) : L'objet dont on souhaite connaître l'index.
 
         Returns :
-            int : L'index de l'objet dans la présentation.
+            (int) : L'index de l'objet dans la présentation.
         """
         return self.presentation().index(item)
 
@@ -885,13 +905,17 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
     Cette classe est utilisée pour afficher des objets dans une vue arborescente, permettant d'expander
     ou de réduire les nœuds de l'arbre. Elle gère les événements de sélection et d'expansion des éléments.
 
-    Explication des méthodes :
+    **Explication des méthodes** :
 
     onItemExpanded et onItemCollapsed : Gèrent les événements d'expansion ou de réduction des nœuds d'un arbre.
+
     expandAll et collapseAll : Permettent d'expander ou de réduire tous les éléments de manière récursive.
+
     select et selectNextItemsAfterRemoval : Sélectionnent des éléments, en expandeant leurs parents si nécessaire,
-     et sélectionnent des éléments après suppression.
+    et sélectionnent des éléments après suppression.
+
     visibleItems : Itère sur les éléments visibles dans l'arbre, y compris leurs enfants.
+
     getRootItems, getItemParent, et children : Gèrent la relation parent-enfant dans l'arbre.
     """
     def __init__(self, *args, **kwargs):
@@ -927,7 +951,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
 
         Args :
             event : (wx.Event) L'événement lié à l'expansion ou au collapse.
-            expanded bool : Indique si l'élément doit être expansé ou réduit.
+            expanded (bool) : Indique si l'élément doit être expansé ou réduit.
         """
         event.Skip()
         # treeItem = event.GetItem()
@@ -1064,7 +1088,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         Autoriser le remplacement des rootItems.
 
         Returns :
-            list : Liste des éléments racines.
+            (list) : Liste des éléments racines.
         """
         return self.presentation().rootItems()
 
@@ -1105,7 +1129,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
              parent : (optionnel) L'élément parent. Si aucun parent n'est fourni, retourne les éléments racines.
 
          Returns :
-             list : Liste des enfants de l'élément parent, ou des éléments racines si aucun parent n'est spécifié.
+             (list) : Liste des enfants de l'élément parent, ou des éléments racines si aucun parent n'est spécifié.
          """
         if parent:
             children = parent.children()
@@ -1125,7 +1149,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
             item : L'élément dont le texte est à retourner.
 
         Returns :
-            str : Le texte (sujet) de l'élément.
+            (str) : Le texte (sujet) de l'élément.
         """
         return item.subject()
 
@@ -1145,28 +1169,30 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         __columnUICommands (list) : Liste des commandes de l'interface utilisateur liées aux colonnes.
 
     Explication des méthodes :
-
-    hasHideableColumns : Indique si certaines colonnes peuvent être masquées.
-    hasOrderingColumn : Vérifie si une colonne de tri est présente.
-    getColumnUICommands : Récupère ou génère les commandes pour gérer les colonnes.
-    initColumns et initColumn : Initialisent les colonnes et déterminent si elles sont visibles ou masquées.
-    showColumn et hideColumn : Permettent d'afficher ou de masquer des colonnes.
-    validateDrag : Valide si un élément peut être déplacé dans la colonne sélectionnée.
-    __startObserving et __stopObserving : Ces méthodes gèrent l'abonnement aux événements en fonction des colonnes visibles.
-     Lorsqu'une colonne devient visible, les événements associés à cette colonne sont observés,
-      et lorsque la colonne est masquée, les événements ne sont plus observés.
-    renderCategories et renderSubjectsOfRelatedItems : Ces méthodes permettent d'afficher les catégories
-     ou d'autres éléments liés à l'élément courant. Elles rassemblent les sujets des éléments et les présentent sous forme de chaîne de texte.
-    renderSubjects, renderCreationDateTime, et renderModificationDateTime : Ces méthodes formatent et affichent
-     les sujets, ainsi que les dates de création et de modification des éléments.
-    isItemCollapsed : Cette méthode vérifie si un élément est réduit dans une vue arborescente.
-     Elle dépend de deux méthodes qui devraient être définies dans une sous-classe (par exemple, TreeViewer),
-      à savoir getItemExpanded et isTreeViewer. Celles-ci sont utilisées pour déterminer l'état d'expansion ou de réduction d'un élément.
+        * hasHideableColumns : Indique si certaines colonnes peuvent être masquées.
+        * hasOrderingColumn : Vérifie si une colonne de tri est présente.
+        * getColumnUICommands : Récupère ou génère les commandes pour gérer les colonnes.
+        * initColumns et initColumn : Initialisent les colonnes et déterminent si elles sont visibles ou masquées.
+        * showColumn et hideColumn : Permettent d'afficher ou de masquer des colonnes.
+        * validateDrag : Valide si un élément peut être déplacé dans la colonne sélectionnée.
+        * __startObserving et __stopObserving : Ces méthodes gèrent l'abonnement aux événements en fonction des colonnes visibles.
+          Lorsqu'une colonne devient visible, les événements associés à cette colonne sont observés,
+          et lorsque la colonne est masquée, les événements ne sont plus observés.
+        * renderCategories et renderSubjectsOfRelatedItems : Ces méthodes permettent d'afficher les catégories
+          ou d'autres éléments liés à l'élément courant. Elles rassemblent les sujets des éléments et les présentent sous forme de chaîne de texte.
+        * renderSubjects, renderCreationDateTime, et renderModificationDateTime : Ces méthodes formatent et affichent
+          les sujets, ainsi que les dates de création et de modification des éléments.
+        * isItemCollapsed : Cette méthode vérifie si un élément est réduit dans une vue arborescente.
+          Elle dépend de deux méthodes qui devraient être définies dans une sous-classe (par exemple, TreeViewer),
+          à savoir getItemExpanded et isTreeViewer. Celles-ci sont utilisées pour déterminer l'état d'expansion ou de réduction d'un élément.
 
     Concernant les méthodes isTreeViewer et getItemExpanded :
-
-        isTreeViewer : Cette méthode est définie dans les sous-classe TreeViewer et ListViewer. Elle permet de différencier les vues arborescentes des vues en liste.
-        getItemExpanded : De même, cette méthode est définie dans la sous-classe Treeviewer pour gérer l'état d'expansion ou de collapse d'un élément dans une vue arborescente.
+        * isTreeViewer : Cette méthode est définie dans les sous-classe
+          TreeViewer et ListViewer. Elle permet de différencier les vues
+          arborescentes des vues en liste.
+        * getItemExpanded : De même, cette méthode est définie dans la
+          sous-classe Treeviewer pour gérer l'état d'expansion ou de collapse
+          d'un élément dans une vue arborescente.
     """
 
     def __init__(self, *args, **kwargs):
@@ -1196,7 +1222,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Indique si la visionneuse a des colonnes masquables.
 
         Returns :
-            bool : True si certaines colonnes peuvent être masquées, sinon False.
+            (bool) : True si certaines colonnes peuvent être masquées, sinon False.
         """
         return True
 
@@ -1205,7 +1231,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Vérifie si une colonne de tri (ordering) est présente parmi les colonnes visibles.
 
         Returns :
-            bool : True si une colonne "ordering" est visible, sinon False.
+            (bool) : True si une colonne "ordering" est visible, sinon False.
         """
         for column in self.__visibleColumns:
             if column.name() == "ordering":
@@ -1217,7 +1243,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Retourne les commandes de l'interface utilisateur pour gérer les colonnes.
 
         Returns :
-            list : Liste des commandes UI pour les colonnes.
+            (list) : Liste des commandes UI pour les colonnes.
         """
         if not self.__columnUICommands:
             self.__columnUICommands = self.createColumnUICommands()
@@ -1337,7 +1363,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Retourne toutes les colonnes disponibles dans la visionneuse.
 
         Returns :
-            list : Liste des colonnes.
+            (list) : Liste des colonnes.
         """
         return self._columns
 
@@ -1347,7 +1373,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Retourne les colonnes sélectionnables.
 
         Returns :
-            list : Liste des colonnes sélectionnables.
+            (list) : Liste des colonnes sélectionnables.
         """
         return self._columns
 
@@ -1420,7 +1446,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Returns :
             (int) : La largeur de la colonne.
         """
-        log.debug(f"ViewerWithColumns.getColumnWidth est appelé avec self={self} et columnName={columnName}")
+        # log.debug(f"ViewerWithColumns.getColumnWidth est appelé par self={self}, pour columnName={columnName}")
         columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
         # defaultWidth = (
         #     28 if columnName == "ordering" else hypertreelist._DEFAULT_COL_WIDTH
@@ -1429,7 +1455,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         # Dans hypertreelist _DEFAULT_COL_WIDTH = 100
         defaultWidth = 28 if columnName == "ordering" else 100  # pylint: disable=W0212
         columnWidthGot = columnWidths.get(columnName, defaultWidth)
-        log.debug(f"ViewerWithColumns.getColumnWidth retourne la largeur de la colonne {columnName} : {columnWidthGot}")
+        # log.debug(f"ViewerWithColumns.getColumnWidth retourne la largeur de la colonne {columnName} : {columnWidthGot} pour self.={self.__class__.Name}")
         return columnWidthGot
 
     def onResizeColumn(self, column, width):
@@ -1760,7 +1786,7 @@ class SortableViewerWithColumns(
         Args:
             column: La colonne à initialiser.
         """
-        log.debug("SortableViewerWithColumns.initColumn Initialise une colonne.")
+        # log.debug("SortableViewerWithColumns.initColumn Initialise une colonne.")
         super().initColumn(column)
         if self.isSortedBy(column.name()):
             self.widget.showSortColumn(column)
