@@ -64,7 +64,9 @@ class DeveloperMessageChecker(threading.Thread):
         """ Use this method for calling GUI methods from a non-GUI thread. """
         # Import wx here so it isn't a build dependency.
         import wx
+        wx.LogDebug("DeveloperMessageChecker : Appel de CallAfter.")
         wx.CallAfter(function, *args, **kwargs)
+        wx.LogDebug("DeveloperMessageChecker : CallAfter passé avec succès.")
 
     def __show_dialog(self, message, url, show=True):
         """ Show the message dialog. """
