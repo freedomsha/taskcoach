@@ -35,9 +35,34 @@ taskcoach.py est le point d'entrée principal. Il :
 # importer la bibliothèque pour enregistrer les événements
 # voir https://docs.python.org/fr/3.12/library/logging.html pour son implantation
 import logging
+# Créer un enregistreur de niveau module
 log = logging.getLogger(__name__)
+# Il reste à utiliser cet enregistreur pour effectuer toute journalisation nécessaire.
+# Les messages enregistrés vers l’enregistreur d’images au niveau du module
+# seront transmis aux gestionnaires d’enregistreurs dans les modules de niveau supérieur,
+# jusqu’à l’enregistreur d’événements de niveau supérieur
+# connu sous le nom d’enregistreur racine (ici);
+# Cette approche est connue sous le nom de journalisation hiérarchique.
+
+# La bibliothèque de journalisation adopte une approche modulaire et
+# offre différentes catégories de composants : loggers, handlers, filters et formatters.
+#
+#     Les enregistreurs (loggers en anglais)
+#       exposent l'interface que le code de l'application utilise directement.
+#
+#     Les gestionnaires (handlers)
+#       envoient les entrées de journal (créés par les loggers)
+#       vers les destinations voulues.
+#
+#     Les filtres (filters)
+#       fournissent un moyen de choisir finement quelles entrées de journal
+#       doivent être sorties.
+#
+#     Les formateurs (formatters)
+#       spécifient la structure de l'entrée de journal dans la sortie finale.
+
 logging.basicConfig(
-    level=logging.DEBUG,  # Tu peux passer à INFO ou WARNING en production
+    level=logging.DEBUG,  # DEBUG, Tu peux passer à INFO ou WARNING en production
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     handlers=[
         logging.FileHandler("taskcoach.log", mode='w', encoding='utf-8'),
@@ -68,10 +93,10 @@ os.environ["XLIB_SKIP_ARGB_VISUALS"] = "1"
 if not hasattr(sys, "frozen"):
     # ces vérifications sont seulement nécessaires dans un environnement non-frozen,
     # i.e. nous passons ces vérifications quand il tourne depuis une application py2exe.fied
-    # wxpython: wxversion non integre sur python3 donc à ignorer :
+    # wxpython: wxversion non intégré sur python3 donc à ignorer :
     # remplacé par wx.__version__ donc ne plus importer wxversion.
     # https://docs.python.org/fr/3/howto/pyporting.html
-    log.debug("Environnement non frozen détecté (mode développement)")
+    log.info("Environnement non frozen détecté (mode développement)")
     # try:
     #     import wxversion  # in python 3 try with wx.__version__
     #     # from wx.core import __version__ as wxversion  # ?
@@ -192,5 +217,5 @@ def start():
 
 
 if __name__ == "__main__":
-    log.info("Lancement du programme Task Coach via taskcoach.py")
+    log.info("Lancement du programme Task Coach via taskcoach.py et les arguments d'ArgumentParser.")
     start()
