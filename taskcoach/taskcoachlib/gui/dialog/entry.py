@@ -36,7 +36,7 @@ from taskcoachlib.i18n import _
 # except ImportError:
 #     from wx import adv
 
-DateTimeEntryEvent, EVT_DATETIMEENTRY = newevent.NewEvent()
+DateTimeEntryEvent, EVT_DATETIMEENTRY = wx.lib.newevent.NewEvent()
 
 
 class DateTimeEntry(widgets.DateTimeCtrl):
