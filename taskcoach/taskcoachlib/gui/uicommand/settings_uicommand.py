@@ -26,7 +26,15 @@ log = logging.getLogger(__name__)
 
 
 class SettingsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
-    """ SettingsCommands are saved in the settings (a ConfigParser). """
+    """
+    SettingsCommands are saved in the settings (a ConfigParser).
+
+    C'est une classe de base pour les commandes qui sont liées aux paramètres
+    de l'application (stockés dans une sorte de fichier de configuration).
+
+    Elle initialise les attributs settings, section, et setting
+    pour savoir où le paramètre est stocké.
+    """
 
     def __init__(self, settings=None, setting=None, section="view",
                  *args, **kwargs):
@@ -39,10 +47,14 @@ class SettingsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
 class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
     """ Classe de Base pour les commandes qui modifient un paramètre booléen.
 
-        Chaque fois que le paramètre est modifié,
-        la représentation de l'interface utilisateur est également modifiée.
-        Par exemple, un menu est coché.
-        """
+    Elle hérite de SettingsCommand et est la base pour les commandes
+    qui modifient des paramètres booléens (ou qui peuvent être représentés
+    par un état "coché" ou non).
+
+    Chaque fois que le paramètre est modifié,
+    la représentation de l'interface utilisateur est également modifiée.
+    Par exemple, un menu est coché.
+    """
 
     def __init__(self, value=None, *args, **kwargs):
         self.value = value
@@ -64,12 +76,14 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         Returns :
             menuId (int) : ID du Menu ajouté.
         """
-        log.debug(f"BooleanSettingsCommand.addToMenu ajoute le sous-menu {self} au menu {menu} de la fenêtre {window} à la position {position}.")
+        # log.debug(f"BooleanSettingsCommand.addToMenu ajoute le sous-menu {self} au menu {menu} de la fenêtre {window} à la position {position}.")
         # print(f"tclib.gui.uicommand.setings_uicommand.py BooleanSettingCommand.addToMenu essaie d'ajouter: self =",
         #      repr(self), " au",
         #      f"menu: {menu} dans window: {window}")
         # Définition de l'ID du menu ajouté via la méthode super :
         menuId = super().addToMenu(menu, window, position)
+
+        log.debug(f"BooleanSettingsCommand.addToMenu : Après super(), menuId={menuId} de type {type(menuId)}")
 
         # print(f'menuId: {menuId} ajouté' )
         # print(f'au menu: {menu} window: {window} position: {position}')
@@ -104,6 +118,18 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
 
 
 class UICheckCommand(BooleanSettingsCommand):
+    """
+    Elle hérite de BooleanSettingsCommand et
+    représente une commande qui se comporte comme une case à cocher dans un menu.
+
+    Elle utilise wx.ITEM_CHECK pour spécifier le style de l'élément de menu.
+
+    Elle a des méthodes pour obtenir l'état du paramètre (isSettingChecked) et
+    pour le modifier (doCommand).
+    """
+    # L'ID est déterminé par la classe qui hérite de UICommand.
+    # C'est cette classe (par exemple, UICheckCommand) qui doit s'assurer
+    # que self.id a une valeur correcte et unique.
     def __init__(self, *args, **kwargs):
         kwargs["bitmap"] = kwargs.get("bitmap", self.getBitmap())
         super().__init__(kind=wx.ITEM_CHECK, *args, **kwargs)
@@ -138,6 +164,12 @@ class UICheckCommand(BooleanSettingsCommand):
 
 
 class UIRadioCommand(BooleanSettingsCommand):
+    """
+    Elle hérite également de BooleanSettingsCommand mais
+    représente une commande qui fait partie d'un groupe de boutons radio.
+
+    Elle utilise wx.ITEM_RADIO pour le style.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(kind=wx.ITEM_RADIO, bitmap="",
                          *args, **kwargs)
