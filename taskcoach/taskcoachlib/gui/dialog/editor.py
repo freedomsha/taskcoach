@@ -2737,6 +2737,7 @@ class Editor(BalloonTipManager, widgets.Dialog):
             id_ = (
                 IdProvider.get()
             )  # Parameter 'self' unfilled -> Obtenir un identifiant unique
+            # id_ = wx.ID_ANY  # lequel utiliser ?
             self.__timer = wx.Timer(self, id_)
             # wx.EVT_TIMER(self, id_, self.__on_timer)
             self.Bind(wx.EVT_TIMER, id_, self.__on_timer)
@@ -2774,6 +2775,7 @@ class Editor(BalloonTipManager, widgets.Dialog):
         # FIXME: il y a d'autres raccourcis clavier qui ne fonctionnent pas dans les boîtes de dialogue
         #  pour le moment, comme DELETE
         self.__new_effort_id = IdProvider.get()
+        # self.__new_effort_id = wx.ID_ANY
         table = wx.AcceleratorTable(
             [
                 (wx.ACCEL_CMD, ord("Z"), wx.ID_UNDO),
