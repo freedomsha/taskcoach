@@ -98,7 +98,6 @@ Dependencies:
 import calendar
 import locale
 import logging  # Attendre avant son implantation
-log = logging.getLogger(__name__)
 import os
 import re
 import sys
@@ -121,6 +120,8 @@ from taskcoachlib import patterns, operating_system
 from taskcoachlib.i18n import _
 from taskcoachlib.config import Settings
 from taskcoachlib import gui, persistence
+
+log = logging.getLogger(__name__)
 
 
 class RedirectedOutput(object):
@@ -228,8 +229,8 @@ class wxApp(wx.App):
         - Binds to `wx.EVT_QUERY_END_ SESSION` on Windows to manage session ending.
         - Redirects standard output to `sys.stderr` if running a frozen executable or not in a terminal.
 
-        Returns:
-            bool: True on successful initialization.
+        Returns :
+            (bool) : True on successful initialization.
         """
         # La séquence d'initialisation de la méthode OnInit() est alors toujours la même :
         #    fen = Bonjour("Exemple 1")  # Création d'une instance de la fenêtre principale.
@@ -322,13 +323,12 @@ class Application(object, metaclass=patterns.Singleton):
         try:
             self.initTwisted()
         except Exception as e:
-            log.error("application.py: Error initializing Twisted: %s", str(e))
+            log.exception(f"application.py: Error initializing Twisted: {str(e)}", exc_info=True)
             # print(f"application.py: Error initializing Twisted: {e}")
             # wx.MessageBox(f"application.py Application.__init__: Error initializing Twisted: {e}",
             #               "Error", wx.OK | wx.ICON_ERROR)
         # print("application.Application.__init__: Twisted initialized")
-        log.debug("Twisted initialisé avec succès.")
-
+        log.info("Application : Twisted initialisé avec succès.")
 
         # wx-1-Create a new app, don't redirect stdout/stderr to a window.
         self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=False)
@@ -342,16 +342,16 @@ class Application(object, metaclass=patterns.Singleton):
         # Après cela, wx-2-création d'une Frame !(-> Dans init)
 
         # print("application.Application.__init__: self.__wx_app défini !")
-        log.debug("Application wxApp créée.")
+        # log.debug("Application wxApp créée.")
 
         # Twisted (4/5) Enregistrement de l'application dans Twisted
         self.registerApp()
         # print("application.Application.__init__: self.registerApp() !")
         # wx-2 :
-        log.debug("Appel de la Méthode init().")
+        # log.debug("Appel de la Méthode init().")
         self.init(**kwargs)  # passe mais n'atteint pas la suite ! goto l540
         # print("application.Application.__init__: self.init() !")
-        log.debug("Méthode init() appelée.")
+        # log.debug("Méthode init() appelée.")
 
         # self est Application (tclib.application.application.Application)
         # # Attributs d'instance définis en dehors de __init__ , nécessaires dans start:
@@ -496,8 +496,8 @@ class Application(object, metaclass=patterns.Singleton):
 
         # Centraliser tous les logs (Twisted inclus) :
         from twisted.python import log as twisted_log
-        twisted_log.startLoggingWithObserver(lambda msg: log.debug(msg.get('message')))
-
+        twisted_log.startLoggingWithObserver(lambda msg: log.info(msg.get('message')))
+        # msg("Log opened.")
 
     def stopTwisted(self):
         """Fonction-méthode pour arrêter twisted-reactor"""
@@ -603,9 +603,8 @@ class Application(object, metaclass=patterns.Singleton):
         """Copie les modèles par défaut qui n'existent pas encore dans le répertoire de modèles de l'utilisateur."""
 
         # class getDefaultTemplates créé par templates.in/make.py
-        from taskcoachlib.persistence import (
-            getDefaultTemplates,
-        )  # créé par templates.in/make
+        from taskcoachlib.persistence import getDefaultTemplates
+        # créé par templates.in/make
 
         template_dir = self.settings.pathToTemplatesDir()
         if (
@@ -631,13 +630,14 @@ class Application(object, metaclass=patterns.Singleton):
             loadSettings (bool, optional): Charger les paramètres de l'application. Defaults to True.
             loadTaskFile (bool, optional): Charger le fichier de tâches. Defaults to True.
         """
-        log.debug("Initialisation des composants de l'application")
+        log.info("Application.init: Initialisation des composants de l'application.")
 
         # try:
         # Attributs d'instance:
         self.__init_config(loadSettings)
         self.__init_language()
         #  Fournir aux objets de domaine pertinents un accès aux paramètres :
+        # log.info("Application.init: Fournir aux objets de domaine pertinents un accès aux paramètres :")
         self.__init_domain_objects()  # Passe directement à l556 !? après avoir affiché 6 lignes debug image handler for
         self.__init_application()  # Réglage des paramètres nom et auteurs de l'application.
         # Problème de doublon d'image ! : réglé, double entrée de .mainwindow dans gui/init.py
@@ -662,21 +662,29 @@ class Application(object, metaclass=patterns.Singleton):
 
         # wx-2-Création d'une instance de la fenêtre Principale (objet de gui.mainwindow.MainWindow, wx.Frame):
         # ligne qui devrait être la première dans OnInit (ou en tout cas juste après self.__wx_app = wxApp() dans __init__):
+        log.info("Application.init: Initialisation de la fenêtre principale.")
         self.mainwindow = gui.mainwindow.MainWindow(
             self.iocontroller, self.taskFile, self.settings, splash=splash
         )  # A Frame is a top-level window.
+        # log.info(f"Application : self.mainwindow.winId = {self.mainwindow.winId}")
         # Après il devrait y avoir self.mainwindow.Show(true) !(Voir start())
 
         # Désignation de la fenêtre en tant que principale par la méthode SetTopWindow() spécifique à la classe wx.App
         # ligne qui devrait être en 3e position dans OnInit:
+        log.info("Application.init: Fenêtre principale mise en avant.")
         self.__wx_app.SetTopWindow(self.mainwindow)
 
         self.__init_spell_checking()  # Attention changements
         if not self.settings.getboolean("file", "inifileloaded"):
             self.__close_splash(splash)
             self.__warn_user_that_ini_file_was_not_loaded()
+        log.info("Application.init : loadTaskFile est coché ?")
+        # Si loadTaskFile est configuré sur True ouvrir le fichier de self._args avec openAfterStart:
         if loadTaskFile:
+            log.info(f"Oui, Application.init ouvre un fichier grâce à _args={self._args}.")
             self.iocontroller.openAfterStart(self._args)
+        else:
+            log.info("Non, Application.init n'ouvre pas de fichier.")
         # self.__register_signal_handlers()  # Est-elle bien implémentée ?
         self.__create_mutex()
         self.__create_task_bar_icon()
@@ -692,6 +700,7 @@ class Application(object, metaclass=patterns.Singleton):
         #         str(e),
         #     )
         #     return False
+        log.info("Application.init: Composants de l'application initialisés. ✅")
 
     def __init_config(self, load_settings):
         """Fonction-méthode d'initialisation de la configuration.
@@ -860,6 +869,10 @@ class Application(object, metaclass=patterns.Singleton):
 
     def __create_task_bar_icon(self):
         """Fonction-Méthode pour créer une icône avec menu dans la barre de tâche."""
+        # Le problème est effectivement que TaskBarIcon n'est pas
+        # une sous-classe de wx.Window, et les menus wxPython
+        # (comme ceux gérés par UICommandContainerMixin)
+        # sont conçus pour être associés à des wx.Window.
         if self.__can_create_task_bar_icon():
             from taskcoachlib.gui import taskbaricon, menu
 
@@ -868,14 +881,32 @@ class Application(object, metaclass=patterns.Singleton):
                 self.taskFile.tasks(),
                 self.settings,
             )
+            # self.taskBarIcon.setPopupMenu(
+            #     menu.TaskBarMenu(
+            #         self.taskBarIcon,
+            #         self.settings,
+            #         self.taskFile,
+            #         self.mainwindow.viewer,
+            #     )
+            # )
             self.taskBarIcon.setPopupMenu(
                 menu.TaskBarMenu(
-                    self.taskBarIcon,
+                    self.mainwindow,  # Passer self.mainwindow au lieu de self.taskBarIcon.
                     self.settings,
                     self.taskFile,
                     self.mainwindow.viewer,
                 )
             )
+            # En passant self.mainwindow à TaskBarMenu,
+            # nous fournissons au menu une référence à une instance de wx.Window,
+            # ce qui satisfait les exigences de wx.Menu et UICommandContainerMixin.
+            # L'affichage du menu est toujours géré correctement par TaskBarIcon
+            # en utilisant self.PopupMenu(), car c'est la manière appropriée
+            # d'afficher un menu contextuel pour une icône de barre des tâches.
+            # Cohérence : S'Assurer que l'utilisation de self._window dans Menu
+            # et UICommandContainerMixin est cohérente avec le fait
+            # qu'il peut maintenant s'agir de la fenêtre principale
+            # et non de l'icône de la barre des tâches.
 
     # @staticmethod
     def __can_create_task_bar_icon(self):
@@ -884,6 +915,10 @@ class Application(object, metaclass=patterns.Singleton):
         Returns :
             bool
         """
+        # Le problème est effectivement que TaskBarIcon n'est pas
+        # une sous-classe de wx.Window, et les menus wxPython
+        # (comme ceux gérés par UICommandContainerMixin)
+        # sont conçus pour être associés à des wx.Window.
         try:
             from taskcoachlib.gui import taskbaricon  # pylint: disable=W0612  # noqa: F401
 
@@ -995,7 +1030,7 @@ class Application(object, metaclass=patterns.Singleton):
             #     "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
             # )
             log.exception(
-                "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
+                f"application.py:Erreur lors de l'arrêt de Twisted: {str(e)}", exc_info=True
             )
 
         sys.exit()  # Quitter proprement l'application
