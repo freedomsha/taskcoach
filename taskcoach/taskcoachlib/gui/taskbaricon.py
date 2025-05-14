@@ -52,8 +52,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #    - En Python 3, tous les entiers sont des objets `int` de taille dynamique.
 # ### Code modifié pour Python 3
 
+# Le problème est effectivement que TaskBarIcon n'est pas une sous-classe de wx.Window,
+# et les menus wxPython (comme ceux gérés par UICommandContainerMixin)
+# sont conçus pour être associés à des wx.Window.
+
 import wx
 import os
+from wx import adv as wiz
 from taskcoachlib import meta, patterns, operating_system
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import date, task
@@ -62,7 +67,6 @@ from taskcoachlib.domain import date, task
 # except ImportError:
 #    from wx.lib.pubsub import pub
 from pubsub import pub
-from wx import adv as wiz
 from . import artprovider
 
 
@@ -179,7 +183,7 @@ class TaskBarIcon(patterns.Observer, wiz.TaskBarIcon):
         self.popupmenu = menu  # pylint: disable=W0201
 
     def popupTaskBarMenu(self, event):  # pylint: disable=W0613
-        self.PopupMenu(self.popupmenu)
+        self.PopupMenu(self.popupmenu)  # Utiliser la méthode PopupMenu de wx.TaskBarIcon.
 
     # Getters:
 
