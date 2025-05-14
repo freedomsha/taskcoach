@@ -76,6 +76,7 @@ class SecondRefresher(patterns.Observer, wx.EvtHandler):
         # Utiliser IdProvider.get() pour obtenir un identifiant unique
         # TODO : essayer avec timer_id
         id_ = IdProvider.get()
+        # id_ = wx.ID_ANY
         # self.__timer_id = IdProvider.get()
         self.__timer = wx.Timer(self, id_)
         # self.__timer = wx.Timer(self, self.__timer_id)
