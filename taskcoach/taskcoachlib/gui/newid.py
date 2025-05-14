@@ -16,7 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import wx
+
+log = logging.getLogger(__name__)
 
 
 # Le problème semble être lié à l'épuisement des identifiants uniques
@@ -40,26 +43,28 @@ class IdProvider(set):
         """
         Obtenir un nouvel identifiant unique.
 
-        Cette méthode génère un nouvel identifiant unique en utilisant wx.ID_ANY (pas wx.NewIdRef()) et l'ajoute
-        à l'ensemble des identifiants gérés par cette classe.
+        Cette méthode génère un nouvel identifiant unique en utilisant wx.NewIdRef()
+        (pas wx.ID_ANY qui génère -1) et
+        l'ajoute à l'ensemble des identifiants gérés par cette classe.
 
         Returns :
-            int : Un nouvel identifiant unique.
+            (int) : Un nouvel identifiant unique.
         """
         if self:
             return self.pop()
         # return wx.NewId()
         # # méthode dépréciée
-        # # return wx.NewIdRef().GetId()
-        # # new_id = wx.NewIdRef()
+        # return wx.NewIdRef().GetId()
+        # new_id = wx.NewIdRef()
         # # self.add(new_id)
         # new_id = wx.NewIdRef().GetId()
+        new_id = wx.ID_ANY
         # self._ids.add(new_id)
         # self.add(new_id)
-        # print(f"tclib.gui.newid.py IdProvider.get add: new_id = {new_id} for self: {self}")  # Ajout de journalisation
-        # # return new_id
+        # log.debug(f"tclib.gui.newid.py IdProvider.get add: new_id = {new_id} for self: {self}")  # Ajout de journalisation
+        return new_id
         # # return wx.NewIdRef()
-        return wx.ID_ANY
+        # return wx.ID_ANY
 
     # def put(self, id_: int):
     def put(self, id_):
@@ -72,8 +77,11 @@ class IdProvider(set):
         Args :
             id_ (int) : L'identifiant à libérer.
         """
+        # log.info(f"IdProvider.put appelé avec id_={id_}")
         if id_ > 0:
+            # if id_ != 0:
             self.add(id_)
+            # log.info(f"IdProvider.put : ajoute {id_} à {self}")
         # # nouveau code :
         # if id_ in self:
         #     self._ids.remove(id_)
