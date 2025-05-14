@@ -183,6 +183,7 @@ En abordant ces points, vous pouvez améliorer davantage la classe Object et la 
 """
 # TODO : faire log !
 import functools
+import logging
 import sys
 import uuid
 import re
@@ -193,6 +194,8 @@ from taskcoachlib.domain.attribute import icon
 from taskcoachlib.domain.date import DateTime, Now
 # from taskcoachlib.domain.task.task import Task
 from . import attribute
+
+log = logging.getLogger(__name__)
 
 
 class SynchronizedObject(object):
@@ -1443,7 +1446,7 @@ class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des probl
         children = kwargs.pop("children", None)
         parent = kwargs.pop("parent", None)
 
-        print(f"[DEBUG] CompositeObject.__init__() → kwargs avant Object: {kwargs}")
+        log.debug(f"CompositeObject.__init__() → kwargs avant Object: {kwargs}")
         # Initialisation de la logique Object (subject, description, etc.)
         Object.__init__(self, *args, **kwargs)
 
