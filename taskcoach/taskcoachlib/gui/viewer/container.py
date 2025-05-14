@@ -163,7 +163,9 @@ class ViewerContainer(object):
                 break
             window = window.GetParent()
         else:
+            wx.LogDebug("ViwerContainer.__ensure_active_viewer_has_focus : Appel de CallAfter.")
             wx.CallAfter(self.activeViewer().SetFocus)
+            wx.LogDebug("ViwerContainer.__ensure_active_viewer_has_focus : CallAfter passé avec succès.")
 
     def onPageClosed(self, event):
         if event.GetPane().IsToolbar():
