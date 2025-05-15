@@ -15,15 +15,75 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Ce module contient la définition de la classe ToolBar, qui représente une barre d'outils personnalisable dans l'interface utilisateur de Task Coach.
+Ce module contient la définition de la classe ToolBar,
+qui représente une barre d'outils personnalisable dans l'interface utilisateur de Task Coach.
 
-La classe ToolBar hérite de la classe AuiToolBar de la bibliothèque wxPython et utilise la classe UICommand pour définir les commandes qui apparaissent sur la barre d'outils.
+La classe ToolBar hérite de la classe AuiToolBar de la bibliothèque wxPython et
+utilise la classe UICommand pour définir les commandes qui apparaissent sur la barre d'outils.
 
-La barre d'outils peut être personnalisée par l'utilisateur en utilisant le menu "Personnaliser" dans le menu "Affichage". Les choix de l'utilisateur sont enregistrés dans les préférences de l'application.
+La barre d'outils peut être personnalisée par l'utilisateur en utilisant
+le menu "Personnaliser" dans le menu "Affichage".
+Les choix de l'utilisateur sont enregistrés dans les préférences de l'application.
 
-La classe MainToolBar est une sous-classe de ToolBar qui est utilisée dans la fenêtre principale de Task Coach.
+La classe MainToolBar est une sous-classe de ToolBar qui est utilisée
+dans la fenêtre principale de Task Coach.
 
-La classe ToolBar est également utilisée dans les tests unitaires pour tester la fonctionnalité de la barre d'outils.
+La classe ToolBar est également utilisée dans les tests unitaires pour
+tester la fonctionnalité de la barre d'outils.
+
+
+Voici comment les commandes de la barre d’outils (UICommand)
+sont créées et injectées dans la fenêtre principale de Task Coach:
+**Flux de création des UICommands de la barre d’outils**
+
+    1-MainWindow.createToolBarUICommands() (dans mainwindow.py)
+    C’est le point d’entrée principal pour la création de commandes.
+    Cette méthode retourne une liste d’instances de sous-classes de UICommand, comme FileOpen, EffortStartButton, etc.
+
+    2-ToolBar.uiCommands() (dans toolbar.py)
+    Appelle MainWindow.createToolBarUICommands() pour obtenir les commandes.
+    Il peut aussi utiliser un cache (self.__cache) pour éviter de les recréer inutilement.
+
+    3-ToolBar.loadPerspective()
+    Cette méthode :
+        - filtre les commandes à afficher selon une chaîne perspective
+        - appelle appendUICommands(...) avec cette liste
+
+    4-UICommandContainerMixin.appendUICommands(...)
+    Cette méthode, héritée par ToolBar, appelle ensuite pour chaque commande :
+    self.appendUICommand(uiCommand)
+
+    5-ToolBar.appendUICommand()
+    C’est ici que chaque commande est ajoutée à la barre d’outils :
+        - les None sont convertis en séparateurs
+        - les int en espaceurs
+        - les UICommand en éléments interactifs via uiCommand.appendToToolBar(...)
+
+    6-UICommand.appendToToolBar(...)
+    C’est là que chaque commande instancie un bouton avec icône, tooltip, etc.
+
+    7-taskcoachlib/gui/dialog/toolbar.py
+    C’est là que se trouve ToolBarEditor utilisé pour la personnalisation dynamique de la barre.
+    Et c’est aussi une pièce centrale du mécanisme EditToolBarPerspective.
+
+**Où sont définies les UICommand utilisées ?**
+
+Les classes comme FileOpen, EditUndo, EffortStartButton sont des sous-classes de base_uicommand.UICommand définies dans :
+    - uicommand.py
+    - base_uicommand.py
+
+Elles surchargent typiquement :
+    - appendToToolBar(...)
+    - doCommand(...) (le code exécuté quand on clique)
+
+**Exemple concret**
+
+Prenons FileOpen :
+    - Instanciée dans MainWindow.createToolBarUICommands()
+    - Ajoutée par appendToToolBar() dans la barre
+      Cela crée un bouton avec icône, lié à FileOpen.doCommand()
+    - Le clic exécute FileOpen.doCommand() → cela appelle la méthode du contrôleur de fichiers.
+
 """
 
 # from future import standard_library
@@ -192,7 +252,7 @@ class _Toolbar(aui.auibar.AuiToolBar):
             bitmap (wx.Bitmap) : Le bitmap à convertir.
 
         Returns :
-            wx.Bitmap : Le bitmap converti en niveaux de gris.
+            (wx.Bitmap) : Le bitmap converti en niveaux de gris.
         """
         # Penser à utiliser SetToolDisabledBitmap(self, tool_id, bitmap) qui
         # Définit le bitmap de l'outil désactivé pour l'outil identifié par tool_id.
@@ -202,7 +262,11 @@ class _Toolbar(aui.auibar.AuiToolBar):
         # tool_id (entier) – l'identifiant de l'outil ;
         
         # bitmap (wx.Bitmap) – le nouveau bitmap désactivé pour l'élément de la barre d'outils.
-        return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
+        # Eviter que si bitmap.ConvertToImage() retourne un objet invalide, le retour plantera.
+        if not bitmap or not bitmap.IsOk():
+            log.warning("Le bitmap fourni est invalide ou None dans MakeDisabledBitmap")
+        else:
+            return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
 
 
 class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
@@ -225,6 +289,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
             settings (Settings) : Les paramètres de configuration de l'application.
             size (tuple, optional) : La taille des icônes de la barre d'outils. La valeur par défaut est (32, 32).
         """
+        log.debug("Initialisation de ToolBar dans la fenêtre parent : %s, taille : %s", window, size)
         self.__window = window
         self.__settings = settings
         self.__visibleUICommands = list()
@@ -247,10 +312,12 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
 
         if self.__visibleUICommands:  # Peut-être aucun(None)
             for uiCommand in self.__visibleUICommands:
+                log.debug("ToolBar.Clear : Suppression de l'élément UICommand %s", uiCommand)
                 if uiCommand is not None and not isinstance(uiCommand, int):
                     uiCommand.unbind(self, uiCommand.id)
 
         idx = 0
+        log.debug("ToolBar.Clear : Nettoyage de la barre d'outils existante (Clear)")
         while idx < self.GetToolCount():
             item = self.FindToolByIndex(idx)
             if item is not None and item.GetKind() == aui.ITEM_CONTROL:
@@ -267,6 +334,9 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
 
     # def getToolIdByCommand(self, commandName: str) -> int:
     def getToolIdByCommand(self, commandName):
+        # Tracer la récupération d’un ID :
+        log.debug("Recherche de l'ID d'outil pour la commande '%s'", commandName)
+
         if commandName == "EditToolBarPerspective":
             return self.__customizeId
 
@@ -283,7 +353,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
                           command is not None and not isinstance(command, int)])
             index["Separator"] = None
             index["Spacer"] = 1
-            for className in perspective.split(","):
+            for className in perspective.split(", "):
                 if className in index:
                     commands.append(index[className])
         else:
@@ -292,7 +362,8 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
 
     # def loadPerspective(self, perspective: str, customizable=True, cache=True):
     def loadPerspective(self, perspective, customizable=True, cache=True):
-        self.Clear()
+        log.debug("ToolBar.loadPerspective : Chargement de la perspective de la barre d'outils : %s", perspective)
+        self.Clear()  # ?
 
         commands = self._filterCommands(perspective, cache=cache)
         self.__visibleUICommands = commands[:]
@@ -301,6 +372,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
             if 1 not in commands:
                 commands.append(1)
             from taskcoachlib.gui.dialog.toolbar import ToolBarEditor
+            log.debug("ToolBar.loadPerspective : Ajout du bouton de personnalisation de la barre d'outils")
             uiCommand = uicommand.EditToolBarPerspective(
                 self, ToolBarEditor, settings=self.__settings)
             commands.append(uiCommand)
@@ -308,6 +380,8 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         if operating_system.isMac():
             commands.append(None)  # Errr...
 
+        # log.debug("ToolBar.loadPerspective : Commandes filtrées : %s", [str(c) for c in commands])
+        # Une fois les commandes créées par UICommands() et MainWindow.createToolBarUICommands()
         self.appendUICommands(*commands)
         self.Realize()  # Réalise la barre d'outils. Cette fonction doit être appelée après avoir ajouté des outils.
         # pour les faire apparaître !
@@ -327,7 +401,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
                 names.append("Spacer")
             else:
                 names.append(uiCommand.uniqueName())
-        return ",".join(names)
+        return ",".join(names)  # Utiliser ", ", non ?
 
     # def savePerspective(self, perspective: str):
     def savePerspective(self, perspective):
@@ -348,7 +422,12 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         Cette méthode utilise la méthode createToolBarUICommands de la classe parent UICommandContainerMixin pour générer la liste de commandes UI.
         """
         if self.__cache is None or not cache:
+            # La méthode suivante est appelée pour
+            # Obtenir la liste des commandes UI à afficher sur la barre d’outils :
             self.__cache = self.__window.createToolBarUICommands()
+            # Cela signifie que c’est la fenêtre principale (MainWindow) qui
+            # fournit les commandes via sa méthode createToolBarUICommands()
+            # qui retourne explicitement une liste d’instances de UICommand.
         return self.__cache
 
     def visibleUICommands(self):
@@ -382,20 +461,27 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         Args :
             uiCommand (uicommand.UICommand) : La commande UI à ajouter.
         """
-        # return uiCommand.appendToToolBar(self)
+        # Cette méthode distingue :
+        #     - les None ➜ séparateurs
+        #     - les int ➜ espaceurs
+        #     - les objets hérités de UICommand ➜ ajoutés à la barre avec appendToToolBar()
         # Déboggage :
         # Ajoutez des débogage pour vérifier les paramètres
-        log.debug(f"gui.toolbar.ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}")
-
-        # Implémentation de la méthode appendUICommand
-        toolId = len(self.tools)  # Simule un ID unique pour l'outil
-        # self.__visibleUICommands[toolId] = uiCommand
-        self.tools.append(uiCommand)
-
-        # Ajoutez des débogage pour vérifier que l'outil a été ajouté avec succès
-        log.debug(f"ToolBar.appendUICommand : Tool {uiCommand.menuText} ajouté avec l' ID: {toolId} retourné.")
-
-        return toolId
+        log.debug(f"ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}")
+        try:
+            return uiCommand.appendToToolBar(self)
+        except Exception as e:
+            log.error("ToolBar.appendUICommand : Erreur lors de l'ajout de la commande %s : %s", uiCommand, e)
+            raise
+        # # Implémentation de la méthode appendUICommand
+        # toolId = len(self.tools)  # Simule un ID unique pour l'outil
+        # # self.__visibleUICommands[toolId] = uiCommand
+        # self.tools.append(uiCommand)
+        #
+        # # Ajoutez des débogage pour vérifier que l'outil a été ajouté avec succès
+        # log.debug(f"ToolBar.appendUICommand : Tool {uiCommand.menuText} ajouté avec l' ID: {toolId} retourné.")
+        #
+        # return toolId
 
     def GetToolPos(self, toolId):
         # if toolId in self.tools:
@@ -434,7 +520,10 @@ class MainToolBar(ToolBar):
         # On Windows XP, the sizes are off by 1 pixel. I fear that this value depends
         # on the user's config so let's take some margin.
         if abs(event.GetSize()[0] - self.GetParent().GetClientSize()[0]) >= 10:
+            # A surveiller : Ces appels à wx.CallAfter sont parfois asynchrones et silencieux en cas d'échec.
+            log.debug("MainToolBar._OnSize : appel wx.CallAfter()")
             wx.CallAfter(self.GetParent().SendSizeEvent)
+            log.debug("MainToolBar._OnSize : L'appel wx.CallAfter(GetParent.SendSizeEvent) est passé.")
 
     def Realize(self):
         """wx.lib.agw.aui.auibar.AuiToolBar.Realize Réalise la barre d'outils.
@@ -445,7 +534,11 @@ class MainToolBar(ToolBar):
         self._agwStyle &= ~aui.AUI_TB_NO_AUTORESIZE
         super().Realize()
         self._agwStyle |= aui.AUI_TB_NO_AUTORESIZE
+        log.debug("MainToolBar.Realize : appel wx.CallAfter()")
         wx.CallAfter(self.GetParent().SendSizeEvent)
+        # log.debug("MainToolBar.Realize : L'appel wx.CallAfter(SendSizeEvent) est passé.")
         # w, h = self.GetParent().GetClientSizeTuple()
         w, h = self.GetParent().GetClientSize()
         wx.CallAfter(self.SetMinSize, (w, -1))
+        # log.debug("MainToolBar.Realize : L'appel wx.CallAfter(SetMinSize) est passé.")
+        log.debug("MainToolBar.Realize : Les appels wx.CallAfter(SendSizeEvent & SetMinSize) sont passé avec succès.")
