@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import wx
 
 # from taskcoachlib.thirdparty.agw import hypertreelist as htl
@@ -26,6 +27,8 @@ from taskcoachlib.widgets import autowidth
 from taskcoachlib.help.balloontips import BalloonTipManager
 from taskcoachlib.gui import uicommand
 from taskcoachlib.i18n import _
+
+log = logging.getLogger(__name__)
 
 
 class _AutoWidthTree(autowidth.AutoColumnWidthMixin, htl.HyperTreeList):
@@ -174,6 +177,7 @@ class _ToolBarEditorInterior(wx.Panel):
         wx.EVT_TREE_END_DRAG(self.__visibleCommands, wx.ID_ANY, self.__onEndDrag)
         wx.EVT_TREE_BEGIN_DRAG(self.__remainingCommands, wx.ID_ANY, self.__OnBeginDrag2)
 
+        wx.LogDebug("_ToolBarEditorInterior : Appel de CallAfter.")
         wx.CallAfter(
             wx.GetTopLevelParent(self).AddBalloonTip,
             settings,
@@ -184,6 +188,7 @@ class _ToolBarEditorInterior(wx.Panel):
                 """Reorder toolbar buttons by drag and dropping them in this list."""
             ),
         )
+        wx.LogDebug("_ToolBarEditorInterior : CallAfter passé avec succès.")
 
     def __OnRemainingSelectionChanged(self, event):
         self.__remainingSelection = event.GetItem()
