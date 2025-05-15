@@ -81,7 +81,8 @@ log = logging.getLogger(__name__)
 
 class IOCommand(base_uicommand.UICommand):  # pylint: disable=W0223
     """
-    Commande d'entrée/sortie (IOCommand) de base qui gère les opérations d'entrée/sortie (comme ouvrir ou sauvegarder un fichier) via un contrôleur I/O.
+    Commande d'entrée/sortie (IOCommand) de base qui gère les opérations d'entrée/sortie
+    (comme ouvrir ou sauvegarder un fichier) via un contrôleur I/O.
 
     Attributs :
         iocontroller (IOController) : Le contrôleur I/O responsable des opérations sur les fichiers.
@@ -94,7 +95,7 @@ class IOCommand(base_uicommand.UICommand):  # pylint: disable=W0223
         Args :
             iocontroller (IOController) : Contrôleur I/O chargé de gérer les fichiers.
         """
-        # print(f"tclib.gui.uicommand.uicommand.IOCommand Initializing IOCommand with {args} and {kwargs}")  # Débogage
+        # log.debug(f"tclib.gui.uicommand.uicommand.IOCommand Initializing IOCommand with {args} and {kwargs} et y retire iocontroller.")  # Débogage
         self.iocontroller = kwargs.pop("iocontroller", None)
         super().__init__(*args, **kwargs)
 
@@ -164,7 +165,16 @@ class NotesCommand(base_uicommand.UICommand):  # pylint: disable=W0223
 
 
 class AttachmentsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
+    """
+    Commande pour gérer les fichiers joints. Utilisée pour interagir avec une liste de fichiers joints.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une liste de fichiers joints fournis.
+
+        Args :
+            attachments : La liste des fichiers joints.
+        """
         self.attachments = kwargs.pop("attachments", None)
         super().__init__(*args, **kwargs)
 
@@ -211,7 +221,10 @@ class FileOpen(IOCommand):
 
     def __init__(self, *args, **kwargs):
         """
-        Initialise la commande d'ouverture de fichier avec des paramètres spécifiques pour l'interface utilisateur, comme le texte du menu et l'icône associée.
+        Initialise la commande d'ouverture de fichier.
+
+        Avec des paramètres spécifiques pour l'interface utilisateur,
+        comme le texte du menu et l'icône associée.
         """
         super().__init__(
             menuText=_("&Open...\tCtrl+O"),
@@ -230,12 +243,13 @@ class FileOpen(IOCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        # print("tclib.gui.uicommand.FileOpen.doCommand() called")  # Débogage
+        log.info("FileOpen.doCommand() appelé. Ouvre self.iocontroller.open()")  # Débogage
+        # self.iocontroller.open()
         try:
             self.iocontroller.open()
         except Exception as e:
-            log.error("gui.uicommand.uicommand.FileOpen.doCommand error")
-            log.debug(f"Error opening file: {e}")  # Débogage
+            log.exception(f"FileOpen.doCommand : Error: {e}", exc_info=True)
+            log.debug(f"FileOpen.doCommand : Error opening file: {e}")  # Débogage
 
 
 class RecentFileOpen(IOCommand):
@@ -255,6 +269,7 @@ class RecentFileOpen(IOCommand):
             index (int) : L'indice dans la liste des fichiers récents.
         """
         self.__filename = kwargs.pop("filename")
+        log.debug(f"RecentFileOpen: self.__filename={self.__filename}")
         index = kwargs.pop("index")
         super().__init__(
             # menuText="%d %s" % (index, self.__filename),
@@ -267,6 +282,7 @@ class RecentFileOpen(IOCommand):
 
     def doCommand(self, event):
         """Ouvre le fichier récent sélectionné."""
+        log.debug(f"RecentFileOpen.doCommand : Appelé et appelle self.iocontroller.open({self.__filename})")
         self.iocontroller.open(self.__filename)
 
 
@@ -780,26 +796,31 @@ class FileManageBackups(IOCommand, settings_uicommand.SettingsCommand):
         # print("tclib.gui.uicommand.uicommand.FileManageBackups command initialized")  # Débogage
 
     def doCommand(self, event):
-        dlg = dialog.BackupManagerDialog(
-            self.mainWindow(), self.settings, self.iocontroller.filename()
-        )
-        try:
-            if dlg.ShowModal() == wx.ID_OK:
-                self.iocontroller.open(dlg.restoredFilename())
-        finally:
-            dlg.Destroy()
+        # dlg = dialog.BackupManagerDialog(
+        #     self.mainWindow(), self.settings, self.iocontroller.filename()
+        # )
+        # try:
+        #     if dlg.ShowModal() == wx.ID_OK:
+        #         self.iocontroller.open(dlg.restoredFilename())
+        # finally:
+        #     dlg.Destroy()
 
-    # Voici quelques suggestions pour moderniser votre code :
-    #
-    # Context manager with: Au lieu d'appeler explicitement dlg.Destroy(), utilisez le mot-clé with. Cela garantit que la fenêtre sera fermée même si une exception se produit :
-    #     Python
-    #
-    #     def doCommand(self, event):
-    #         with dialog.BackupManagerDialog(
-    #             self.mainWindow(), self.settings, self.iocontroller.filename()
-    #         ) as dlg:
-    #             if dlg.ShowModal() == wx.ID_OK:
-    #                 self.iocontroller.open(dlg.restoredFilename())
+        # Voici quelques suggestions pour moderniser votre code :
+        #
+        # Context manager with: Au lieu d'appeler explicitement dlg.Destroy(), utilisez le mot-clé with. Cela garantit que la fenêtre sera fermée même si une exception se produit :
+        #     Python
+        #
+        #     def doCommand(self, event):
+        with dialog.BackupManagerDialog(
+            self.mainWindow(), self.settings, self.iocontroller.filename()
+        ) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
+                # self.iocontroller.open(dlg.restoredFilename())
+                # restored_file = dlg.restoredFilename()
+                try:
+                    self.iocontroller.open(dlg.restoredFilename())
+                except IOError as e:
+                    log.error(f"Erreur lors de l'ouverture de {dlg.restoredFilename()}: {e}")
     # F-strings: Pour formater des chaînes, privilégiez les f-strings (introduites en Python 3.6) qui offrent une syntaxe plus concise et lisible :
     #     Python
     #
@@ -1059,7 +1080,9 @@ class FileQuit(base_uicommand.UICommand):
         """
         Exécute la commande pour quitter l'application. Ferme la fenêtre principale de l'application.
         """
+        log.debug(f"FileQuit.doCommand : Essaie de fermer {self.mainWindow()}.")
         self.mainWindow().Close(force=True)
+        log.debug("FileQuit.doCommand : self.mainWindow={self.mainWindow()} est fermé.")
 
 
 class EditUndo(base_uicommand.UICommand):
@@ -2534,8 +2557,8 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
         #             Exécute la commande NewTaskCommand pour créer la nouvelle tâche dans la liste de tâches.
         newTaskCommand.do()
         # Affichage du dialogue d'édition de tâche :
-        #             Crée un dialogue d'édition de tâche à l'aide de la classe dialog.editor.TaskEditor.
-        #             Initialise le dialogue avec les éléments de la tâche nouvellement créée (newTaskCommand.items).
+        # Crée un dialogue d'édition de tâche à l'aide de la classe dialog.editor.TaskEditor.
+        # Initialise le dialogue avec les éléments de la tâche nouvellement créée (newTaskCommand.items).
         newTaskDialog = dialog.editor.TaskEditor(
             self.mainWindow(),
             newTaskCommand.items,
@@ -2545,7 +2568,7 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
             bitmap=self.bitmap,
             items_are_new=True,
         )
-        #             Affiche le dialogue d'édition de tâche (Show) avec l'option de contrôle de l'affichage (show).
+        # Affiche le dialogue d'édition de tâche (Show) avec l'option de contrôle de l'affichage (show).
         newTaskDialog.Show(show)
         return newTaskDialog  # for testing purposes
 
@@ -4344,6 +4367,7 @@ def openAttachments(attachments, settings, showerror):
     attachmentBase = settings.get("file", "attachmentbase")
     for eachAttachment in attachments:
         try:
+            log.debug(f"openAttachments essaie d'ouvrir {attachmentBase}.")
             eachAttachment.open(attachmentBase)
         except Exception as instance:  # pylint: disable=W0703
             showerror(
