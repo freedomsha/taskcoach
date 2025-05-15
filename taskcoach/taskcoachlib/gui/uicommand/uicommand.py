@@ -249,7 +249,7 @@ class FileOpen(IOCommand):
             self.iocontroller.open()
         except Exception as e:
             log.exception(f"FileOpen.doCommand : Error: {e}", exc_info=True)
-            log.debug(f"FileOpen.doCommand : Error opening file: {e}")  # Débogage
+            # log.debug(f"FileOpen.doCommand : Error opening file: {e}")  # Débogage
 
 
 class RecentFileOpen(IOCommand):

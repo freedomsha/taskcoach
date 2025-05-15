@@ -1720,6 +1720,7 @@ class TaskViewer(
         kwargs = dict(resizeCallback=self.onResizeColumn)
         # pylint: disable=E1101,W0142
         # log.error("taskViewer._createColumns : s'arrête après ça :")
+        columns = []
         try:
             columns = [
                 widgets.Column(
@@ -1727,7 +1728,7 @@ class TaskViewer(
                     "",
                     task.Task.orderingChangedEventType(),
                     sortCallback=uicommand.ViewerSortByCommand(
-                        viewer=self, value="ordering"
+                        viewer=self, value="ordering",
                     ),
                     renderCallback=lambda task: "",
                     imageIndicesCallback=self.orderingImageIndices,

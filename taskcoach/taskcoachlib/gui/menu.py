@@ -278,8 +278,8 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         #  cela pourrait potentiellement causer des problèmes d'affichage ou même des erreurs.
         # subMenuItem = wx.MenuItem(self, id=IdProvider.get(), text=text, subMenu=subMenu)
         # # Nouvelle ligne conseillée par chatGPT
-        # subMenuId = IdProvider().get()  # Obtenir un nouvel identifiant unique
-        subMenuId = wx.ID_ANY  # Obtenir un nouvel identifiant unique
+        subMenuId = IdProvider.get()  # Obtenir un nouvel identifiant unique
+        # subMenuId = wx.ID_ANY  # Obtenir un nouvel identifiant unique
         subMenuItem = wx.MenuItem(self, id=subMenuId, text=text, subMenu=subMenu)  # TypeError(MenuItem argument subMenu has unexpected type ResetCategoryFilter)
         # print(f"tclib.gui.menu.py appendMenu: self:{self} .id:{subMenuId}, text={text}, subMenu={subMenu}")
         if bitmap:

@@ -2818,8 +2818,8 @@ class Editor(BalloonTipManager, widgets.Dialog):
         if operating_system.isMac():
             self._interior.SetFocusIgnoringChildren()
         if self.__timer is not None:
-            IdProvider.put(self.__timer.GetId())  # Libérer l'identifiant
-        IdProvider.put(self.__new_effort_id)
+            IdProvider.put(id_=self.__timer.GetId())  # Libérer l'identifiant, self = self ou IdProvider ?
+        IdProvider.put(id_=self.__new_effort_id)  # Libérer l'identifiant,  self = self ou IdProvider ?
         self.Destroy()
 
     # Nouvelle fonction conseillée par chatGPT

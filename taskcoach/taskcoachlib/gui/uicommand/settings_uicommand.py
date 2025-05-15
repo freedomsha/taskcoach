@@ -83,7 +83,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         # Définition de l'ID du menu ajouté via la méthode super :
         menuId = super().addToMenu(menu, window, position)
 
-        log.debug(f"BooleanSettingsCommand.addToMenu : Après super(), menuId={menuId} de type {type(menuId)}")
+        log.warning(f"BooleanSettingsCommand.addToMenu : Après super(), menu={menu, }menuId={menuId} de type {type(menuId)}")
 
         # print(f'menuId: {menuId} ajouté' )
         # print(f'au menu: {menu} window: {window} position: {position}')
@@ -93,8 +93,13 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         # Recherche l'ID du sous-menu dans la liste des IDs dans menu.
         # print(f"essaie try FindItemById de {menuId}")
         menuItem = menu.FindItemById(menuId)
+        # label = menuItem.GetItemLabelText()  # Récupère le label
+        # # Crée une erreur : taskcoachlib.gui.menu: Menu.appendUICommand :
+        # # Erreur en ajoutant UI command TaskViewerTreeOrListOption au menu ModeMenu:
+        # # 'NoneType' object has no attribute 'GetItemLabelText'
+
         # print(f"résultat: menuItem: {menuItem}")
-        # print(f"vérification de menuItem: {menuItem} avec {self.isSettingChecked}")
+        log.debug(f"addToMenu : Vérification de menuItem: {menuItem}")
         if menuItem is not None:
             # menuItem.Check(self.isSettingChecked())
             try:

@@ -809,7 +809,7 @@ class CategorizableViewerMixin(object):
                     else []
                 ),
             )
-        ] + super().getItemTooltipData(item)
+        ] + super().getItemTooltipData(item)  # It's a mixin.
 
 
 class WithAttachmentsViewerMixin(object):

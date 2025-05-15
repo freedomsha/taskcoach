@@ -88,8 +88,8 @@ class UICommand(object):
         # Le type d'élément (normal, checkable, etc., Par défaut à wx.ITEM_NORMAL) :
         self.kind = kind
         # L'identifiant de la commande. Si non spécifié, un identifiant unique sera généré.
-        # self.id = IdProvider().get()  # Obtient un identifiant unique
-        self.id = wx.ID_ANY  # Obtient un identifiant unique
+        self.id = IdProvider.get()  # Obtient un identifiant unique
+        # self.id = wx.ID_ANY  # Obtient un identifiant unique
         # log.info(f"UICommand.__init__ : initialise {self} avec l'id {self.id}.")
         # self.id = id  # Obtient un identifiant unique
         #
@@ -99,7 +99,7 @@ class UICommand(object):
         # Ajouter un dictionnaire interne pour stocker les paramètres supplémentaires
         self._kwargs = kwargs
 
-    def __del__(self):
+    def __del__(self):  # Non utilisé !?
         """ Libère l'identifiant lors de la destruction de l'objet. """
         IdProvider.put(self.id)
 
