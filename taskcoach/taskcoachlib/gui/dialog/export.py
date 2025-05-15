@@ -89,7 +89,6 @@ class ViewerPicker(sized_controls.SizedPanel):
     # AddChild(self, child)
     #   Called automatically by wx, do not call it from user code.
 
-
     def __init__(self, parent, viewers, activeViewer):
         super().__init__(parent)
         self.SetSizerType("horizontal")
