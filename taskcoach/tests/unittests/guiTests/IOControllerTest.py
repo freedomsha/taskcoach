@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import str
 # from builtins import range
-import lockfile
+# import lockfile
 import os
 import shutil
 import wx
 from ... import tctest
 from taskcoachlib import gui, config, persistence
 from taskcoachlib.domain import task, note, category
-# from taskcoachlib.thirdparty import lockfile
+from taskcoachlib.thirdparty import lockfile
 from .. import dummy
 
 
