@@ -30,7 +30,7 @@ class ApplicationArgumentParser:
     pour définir et gérer les options de ligne de commande disponibles pour l'utilisateur.
 
     Attributs :
-        analyseur (argparse.ArgumentParser) : instance de l'analyseur d'arguments
+        parser (argparse.ArgumentParser) : Instance de l'analyseur d'arguments
         utilisée pour gérer les options de ligne de commande.
 
     Methods :
