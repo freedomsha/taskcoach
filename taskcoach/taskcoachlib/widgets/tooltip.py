@@ -101,7 +101,7 @@ class ToolTipMixin(object):
         super().__init__(*args, **kwargs)
 
         # self.__timer = wx.Timer(self, wx.NewId())
-        # self.__timer = wx.Timer(self, wx.NewIdRef())
+        # self.__timer = wx.Timer(self, wx.NewIdRef().GetId())
         self.__timer = wx.Timer(self, wx.ID_ANY)
 
         self.__tip = None
