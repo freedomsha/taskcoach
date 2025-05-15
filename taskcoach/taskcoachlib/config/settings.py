@@ -1123,7 +1123,7 @@ class Settings(CachingConfigParser):
     def __hash__(self):
         # def __hash__(self) -> int:
         """
-        Obtenez le hachage de l'objet Paramètres.
+        Obtenez le hachage de l'objet Paramètres(Settings).
 
         Returns :
             int : L'id de hachage de l'objet Paramètres.
