@@ -327,9 +327,10 @@ class Column(object):
     def __init__(self, name, columnHeader, *eventTypes, **kwargs):
         self.__name = name
         self.__columnHeader = columnHeader
-        self.width = kwargs.pop(
-            "width", hypertreelist._DEFAULT_COL_WIDTH
-        )  # pylint: disable=W0212
+        # self.width = kwargs.pop(
+        #     "width", hypertreelist._DEFAULT_COL_WIDTH
+        # )  # pylint: disable=W0212 Access to a protected member _DEFAULT_COL_WIDTH of a module
+        self.width = kwargs.pop("width", 100)
         # The event types to use for registering an observer that is
         # interested in changes that affect this column:
         self.__eventTypes = eventTypes
@@ -353,6 +354,7 @@ class Column(object):
         self.__settings = kwargs.get(
             "settings", None
         )  # FIXME: Column shouldn't need to know about settings
+        # La colonne ne devrait pas avoir besoin de connaître les paramètres.
 
     def name(self):
         return self.__name
