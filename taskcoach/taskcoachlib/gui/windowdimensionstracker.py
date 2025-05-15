@@ -126,7 +126,9 @@ class WindowDimensionsTracker(WindowSizeAndPositionTracker):
                     self.get_setting("hidewheniconized"):
                 # Seems like hiding the window after it's been
                 # iconized actually closes it on macOS...
+                wx.LogDebug("WindowDimensionsTracker : Appel de de CallAfter.")
                 wx.CallAfter(self._window.Hide)
+                wx.LogDebug("WindowDimensionsTracker : CallAfter passé avec succès.")
 
     def __start_iconized(self):
         """ Return whether the window should be opened iconized. """
