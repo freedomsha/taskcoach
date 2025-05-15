@@ -135,6 +135,30 @@ def flatten(elem):
     for child in elem:
         flatten(child)
 
+    # to_remove = []
+    # to_extend = {}
+    # for child in elem:
+    #     flatten(child)
+    #     if not child.tag:  # C'est un commentaire ou PI
+    #         continue
+    #     if child.getchildren():
+    #         continue
+    #     if child.text is not None and '\n' in child.text:
+    #         lines = [line.strip() for line in child.text.split('\n') if line.strip()]
+    #         if lines:
+    #             child.text = lines[0]
+    #             for line in lines[1:]:
+    #                 new_child = eTree.Element(child.tag)
+    #                 new_child.text = line
+    #                 to_extend.setdefault(elem, []).append(new_child)
+    #             to_remove.append(child)
+    # for el, children in to_extend.items():
+    #     index = el.index(to_remove[0]) if to_remove else len(el)
+    #     for i, child in enumerate(children):
+    #         el.insert(index + i, child)
+    # for el in to_remove:
+    #     elem.remove(el)
+
 
 class PIElementTree(eTree.ElementTree):
     """
@@ -158,7 +182,7 @@ class PIElementTree(eTree.ElementTree):
             *args :
             **kwargs :
         """
-        self._root = None  # Attribut utilisé dans les write des classes suivantes
+        self._root = self.getroot()  # Attribut utilisé dans les write des classes suivantes
         self.__pi = pi
         eTree.ElementTree.__init__(self, *args, **kwargs)
 
@@ -175,16 +199,30 @@ class PIElementTree(eTree.ElementTree):
         # Si le noeud est la racine :
         if node == self._root:
             # WTF? ElementTree does not write the encoding if it's ASCII or UTF-8...
-            # if encoding in ["us-ascii", "utf-8"]:
-            for encoding in ["us-ascii", "utf-8"]:
+            if encoding in ["us-ascii", "utf-8"]:
+                # for encoding in ["us-ascii", "utf-8"]:
                 # file.write('<?xml version="1.0" encoding="%s"?>\n' % encoding).encode(encoding)
-                file.write(f'<?xml version="1.0" encoding="{encoding}"?>\n', )
-            file.write(f"{self.__pi}\n".encode(encoding), )
+                # file.write(f'<?xml version="1.0" encoding="{encoding}"?>\n', )
+                log.debug("PIElementTree._write : Essaie d'écrire l'en-tête du fichier.")
+                try:
+                    file.write(f'<?xml version="1.0" encoding="{encoding}"?>\n'.encode(encoding))
+                except UnicodeEncodeError as e:
+                    log.exception(f"PIElementTree._write : Erreur en écrivant l'en-tête : {e}")
+                    pass
+            # file.write(f"{self.__pi}\n".encode(encoding), )
+            try:
+                log.debug("PIElementTree._write : Essaie d'écrire la suite de l'en-tête du fichier.")
+                file.write(f"{self.__pi}\n".encode(encoding))
+            except UnicodeEncodeError as e:
+                log.exception(f"PIElementTree._write : Erreur en écrivant la suite de l'en-tête : {e}")
+                log.info(f"PIElementTree._write : L'erreur est écrite dans la suite de l'en-tête.")
+                file.write(f"{self.__pi}\n".encode('utf-8', errors='replace'))
+
         # eTree.ElementTree._write(self, file, node, encoding, namespaces)  # pylint: disable=E1101
         eTree.ElementTree.write(self, file, node, encoding, namespaces)  # pylint: disable=E1101
 
     # def write(self, file, encoding, *args, **kwargs):  # Signature of method 'PIElementTree.write()' does not match signature of the base method in class 'ElementTree'
-    # def write(self, file, encoding, *args, **kwargs):  # Signature of method 'PIElementTree.write()' does not match signature of the base method in class 'ElementTree'
+    # def write(self, file, encoding, *args, **kwargs):  # Signature of Nonemethod 'PIElementTree.write()' does not match signature of the base method in class 'ElementTree'
     def write(self, file, encoding: str | None = None,
               xml_declaration: bool | None = None,
               default_namespace: str | None = None,
@@ -213,23 +251,31 @@ class PIElementTree(eTree.ElementTree):
         if encoding is None:
             encoding = "utf-8"
         if sys.version_info >= (2, 7):
-            file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding), )
-            # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n")
-            # content = f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding)
-            # file.write(content.decode(encoding))
-            # file.write((self.__pi + "\n").encode(encoding), )
-            # file.write(f"{self.__pi}\n")
-            file.write(f"{self.__pi}\n".encode(encoding), )
-            # content = (self.__pi + "\n").encode(encoding)
-            # file.write(content.decode(encoding))
+            # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding), )
+            # # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n")
+            # # content = f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding)
+            # # file.write(content.decode(encoding))
+            # # file.write((self.__pi + "\n").encode(encoding), )
+            # # file.write(f"{self.__pi}\n")
+            # file.write(f"{self.__pi}\n".encode(encoding), )
+            # # content = (self.__pi + "\n").encode(encoding)
+            # # file.write(content.decode(encoding))
+            try:
+                log.debug("PIElementTree.write : Essaie d'écrire l'instruction de traitement du fichier.")
+                file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding))
+                file.write(f"{self.__pi}\n".encode(encoding))
+            except UnicodeEncodeError as e:
+                log.exception(f"PIElementTree.write : Erreur en écrivant l'instruction de traitement : {e}")
+                file.write(f"<?xml version='1.0' encoding='utf-8'?>\n".encode('utf-8', errors='replace'))
+                file.write(f"{self.__pi}\n".encode('utf-8', errors='replace'))
 
             kwargs["xml_declaration"] = False
-        # eTree.ElementTree.write(self, file, encoding=encoding, *args, **kwargs)
-        # eTree.ElementTree.write(self, file, encoding="unicode", *args, **kwargs)
-        if isinstance(file, io.BytesIO):
-            eTree.ElementTree.write(self, file, encoding="utf-8", *args, **kwargs)
-        else:
-            eTree.ElementTree.write(self, file, encoding="unicode", *args, **kwargs)
+        eTree.ElementTree.write(self, file, encoding=encoding, *args, **kwargs)
+        # # eTree.ElementTree.write(self, file, encoding="unicode", *args, **kwargs)
+        # if isinstance(file, io.BytesIO):
+        #     eTree.ElementTree.write(self, file, encoding="utf-8", *args, **kwargs)
+        # else:
+        #     eTree.ElementTree.write(self, file, encoding="unicode", *args, **kwargs)
 
 
 def sortedById(objects):
@@ -242,6 +288,7 @@ def sortedById(objects):
     Returns :
         (list) : Liste triée d'objets.
     """
+    log.debug(f"Trie d'une liste d'objets {objects} en fonction de leurs identifiants.")
     # s = [(obj.id(), obj) for obj in objects]
     # s.sort()
     # return [obj for dummy_id, obj in s]
@@ -268,6 +315,7 @@ class XMLWriter(object):
         - `effortNode` : Génère un nœud XML pour un effort.
     """
     maxDateTime = date.DateTime()
+    # maxDateTime = eTree.Element("maxDateTime") # Peut-être initialiser un élément vide ?
 
     def __init__(self, fd, versionnr=meta.data.tskversion):
         """
@@ -321,10 +369,25 @@ class XMLWriter(object):
         #     % (meta.data.version, self.__versionnr),
         #     root,
         # ).write(self.__fd, "utf-8")
-        PIElementTree(
-            f'<?taskcoach release="{meta.data.version}" tskversion="{self.__versionnr:d}"?>\n',
-            root,
-        ).write(self.__fd, encoding="utf-8")
+        # PIElementTree(
+        #     f'<?taskcoach release="{meta.data.version}" tskversion="{self.__versionnr:d}"?>\n',
+        #     root,
+        # ).write(self.__fd, encoding="utf-8")
+        pi_content = f'<?taskcoach release="{meta.data.version}" tskversion="{self.__versionnr}"?>\n'
+        log.debug(f"XMLWriter.write : Après flatten, root = {root}")
+        tree = eTree.ElementTree(root)
+        log.debug(f"XMLWriter.write : tree = {tree}")
+        tree_str = eTree.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False).decode('utf-8')
+        # xml_bytes = ET.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
+        log.debug(f"XMLWriter.write : tree_str = {tree_str}")
+        log.debug(f"XMLWriter.write : Écriture du fichier {self.__fd.name}.")
+        self.__fd.write(pi_content + tree_str)
+        # try:
+        #     self.__fd.write(pi_content.encode('utf-8'))
+        #     self.__fd.write(xml_bytes)
+        # except AttributeError:
+        #     log.error("XMLWriter.write : Le descripteur de fichier ne supporte pas l'écriture de bytes.")
+        #     raise
 
     # @staticmethod
     def notesOwnedByNoteOwners(self, *collectionOfNoteOwners):
@@ -472,13 +535,13 @@ class XMLWriter(object):
         """
         def inCategorizableContainer(categorizable):
             """
-            Renvoie si categorizable est dans le conteneur des catégorisables.
+            Renvoie Vrai si categorizable est dans le conteneur des catégorisables.
 
             Args :
                 categorizable : Objet catégorisable à vérifier.
 
             Returns :
-
+                (bool) : categorizable est dans le conteneur des catégorisables ?
             """
             for container in categorizableContainers:
                 if categorizable in container:
@@ -722,8 +785,8 @@ class ChangesXMLWriter(object):
         """
         root = eTree.Element("changes")
         if allChanges:
-            # for devName, monitor in allChanges.items():
-            for devName, monitor in list(allChanges.items()):
+            for devName, monitor in allChanges.items():
+                # for devName, monitor in list(allChanges.items()):
                 devNode = eTree.SubElement(root, "device")
                 devNode.attrib["guid"] = monitor.guid()
                 for id_, changes in list(monitor.allChanges().items()):
@@ -733,21 +796,27 @@ class ChangesXMLWriter(object):
                         objNode.text = ",".join(list(changes))
 
         tree = eTree.ElementTree(root)
-        # tree.write(self.__fd)
-        # tree.write(self.__fd, encoding="unicode")  # Sauf que ce n'est pas de l'unicode mais de l'utf-8 !
-        # tree.write(self.__fd, encoding="utf-8")
-        tree.write(self.__fd)
-        log.debug(f"ChangesXMLWriter.write : DEBUG - Contenu du fichier écrit:\n{self.__fd.getvalue()}")
+        # # tree.write(self.__fd)
+        # # tree.write(self.__fd, encoding="unicode")  # Sauf que ce n'est pas de l'unicode mais de l'utf-8 !
+        # # tree.write(self.__fd, encoding="utf-8")
+        log.info(f"ChangesXMLWriter.write : Écriture du fichier {self.__fd.name}.")
+        tree.write(self.__fd)  # Essayer avec tostring !
+        # log.debug(f"ChangesXMLWriter.write : DEBUG - Contenu du fichier écrit:\n{self.__fd.getvalue()}")
+        # tree_as_bytes = eTree.tostring(root, encoding="utf-8")
+        # xml_bytes = eTree.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
+        # self.__fd.write(tree_as_bytes)
+        # self.__fd.write(xml_bytes)
+        log.info(f"ChangesXMLWriter.write : Tentative de lecture du fichier {self.__fd.name} :")
         if hasattr(self.__fd, "getvalue"):  # StringIO ou BytesIO
-            log.debug(f"DEBUG - Contenu du fichier écrit:\n{self.__fd.getvalue()}")
+            log.info(f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.getvalue()}")
         # else:  # Fichier ouvert en mode écriture
         elif "r" in self.__fd.mode or "+" in self.__fd.mode:  # Si le fichier supporte la lecture
             # AttributeError: 'SafeWriteFile' object has no attribute 'mode'
             self.__fd.seek(0)  # Repositionne le curseur au début
-            log.debug(f"DEBUG - Contenu du fichier écrit:\n{self.__fd.read()}")
+            log.info(f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.read()}")
             self.__fd.seek(0)  # Remet le curseur au début du fichier
         else:
-            log.debug(f"⚠️ [DEBUG] Impossible de lire self.__fd, mode : {self.__fd.mode}")
+            log.warning(f"ChangesXMLWriter.write : ⚠️ Impossible de lire {self.__fd.name}, mode : {self.__fd.mode}")
 
 
 class TemplateXMLWriter(XMLWriter):
