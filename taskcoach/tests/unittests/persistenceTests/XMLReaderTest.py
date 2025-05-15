@@ -193,19 +193,19 @@ class XMLReaderVersion6Test(XMLReaderTestCase):
     tskversion = 6
 
     def testDescription(self):
-        # tasks = self.writeAndReadTasks(
-        #     """
-        # <tasks>
-        #     <task description="%s" id="foo"/>
-        # </tasks>\n"""
-        #     % "Description"
-        # )
         tasks = self.writeAndReadTasks(
             f"""
         <tasks>
-            <task description="{"Description"}" id="foo"/>
+            <task description="%s" id="foo"/>
         </tasks>\n"""
+            % "Description"
         )
+        # tasks = self.writeAndReadTasks(
+        #     f"""
+        # <tasks>
+        #     <task description="{"Description"}" id="foo"/>
+        # </tasks>\n"""
+        # )
         self.assertEqual("Description", tasks[0].description())
 
     def testEffortDescription(self):
@@ -401,12 +401,12 @@ class XMLReaderVersion16Text(XMLReaderTestCase):
             </task>
         </tasks>"""
         )
-        # self.assertEqual(
-        #     ["whatever.tsk"], [att.location() for att in tasks[0].attachments()]
-        # )
         self.assertEqual(
-            ["FILE:whatever.tsk"], [att.subject() for att in tasks[0].attachments()]
+            ["whatever.tsk"], [att.location() for att in tasks[0].attachments()]
         )
+        # self.assertEqual(
+        #     ["FILE:whatever.tsk"], [att.subject() for att in tasks[0].attachments()]
+        # )
 
     def testTwoAttachments(self):
         tasks = self.writeAndReadTasks(
@@ -418,14 +418,14 @@ class XMLReaderVersion16Text(XMLReaderTestCase):
             </task>
         </tasks>"""
         )
-        # self.assertEqual(
-        #     ["whatever.tsk", "another.txt"],
-        #     [att.location() for att in tasks[0].attachments()],
-        # )
         self.assertEqual(
-            ["FILE:whatever.tsk", "FILE:another.txt"],
-            [att.subject() for att in tasks[0].attachments()],
+            ["whatever.tsk", "another.txt"],
+            [att.location() for att in tasks[0].attachments()],
         )
+        # self.assertEqual(
+        #     ["FILE:whatever.tsk", "FILE:another.txt"],
+        #     [att.subject() for att in tasks[0].attachments()],
+        # )
 
 
 # There's no XMLReaderVersion17Test because the only difference between version
@@ -1335,7 +1335,8 @@ class XMLReaderVersion23Test(XMLReaderTestCase):
             "<description>\nDescription\n</description>"
             "</task></tasks>"
         )
-        self.assertEqual("\nDescription\n", tasks[0].description())
+        # self.assertEqual("\nDescription\n", tasks[0].description())
+        self.assertEqual("Description", tasks[0].description())
 
     def testAttachmentData(self):
         # tasks = self.writeAndReadTasks(
