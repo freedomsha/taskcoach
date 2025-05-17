@@ -1296,7 +1296,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             )
             self.widget.showColumn(column, show=show)
         if show:
-            log.debug(f"ViewerWith<Columns.initColumn ajoute la colonne {column} aux colonnes visibles : {self.__visibleColumns}")
+            log.debug(f"ViewerWithColumns.initColumn : ajoute la colonne {type(column).__name__} aux colonnes visibles : {self.__visibleColumns}")
             self.__visibleColumns.append(column)
             self.__startObserving(column.eventTypes())
 

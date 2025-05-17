@@ -546,7 +546,8 @@ class XMLReader(object):  # nouvelle classe
             11. Affiche des informations de debug sur les éléments lus.
             12. Renvoie les tâches, les catégories, les notes, la configuration SyncML, les modifications et le GUID.
         """
-        wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd} est de type {type(self.__fd)}.")
+        # wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd} est de type {type(self.__fd)}.")  # le type est pompeux !
+        wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueTomorrow.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/tmpjwjkljek.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueToday.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
@@ -789,7 +790,7 @@ class XMLReader(object):  # nouvelle classe
         * Vérifie si le fichier de tâches (version 24) contient des sauts de ligne incorrects dans les balises d'élément.
         """
         log.warning(f"XMLReader.__has_broken_lines : Type de self.__fd: {type(self.__fd)}")  # <class '_io.BufferedReader'>
-        has_broken_lines = b"><spds><sources><TaskCoach-\n" in self.__fd.read()
+        has_broken_lines = b"><spds><sources><TaskCoach-\n" in self.__fd.read()  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
         # content = self.__fd.read()
         # if isinstance(content, bytes):
         #     return b'><spds><sources><TaskCoach-\n' in content

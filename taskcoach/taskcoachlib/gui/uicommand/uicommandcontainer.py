@@ -78,7 +78,7 @@ class UICommandContainerMixin(object):
             elif self._window is None:
                 log.warning("UICommandContainerMixin.appendUICommands : l'attribut _window est None, cela peut causer une erreur.")
             self._window = wx.GetActiveWindow()  # Assigner une fenêtre active si manquante
-            log.warning(f"UICommandContainerMixin.appendUICommands : attribution : self._window={self._window}")
+            log.warning(f"UICommandContainerMixin.appendUICommands : Attribution : self._window={self._window}")
         # log.debug(f"UICommandContainerMixin.appendUICommands ajoute les UI commands: {uiCommands} au menu {self} id=?")  # Débogage
         # uicommands : taskcoachlib.gui.uicommand.uicommand.EditCut, EditCopy, EditPaste, EditPasteAsSubItem, Edit,
         # Delete, AddAtachment, OpenAllAttachments, AddNote, OpenAllNotes, Mail,...

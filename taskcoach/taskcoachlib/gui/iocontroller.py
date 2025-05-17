@@ -237,7 +237,7 @@ class IOController(object):
             # error messages are shown on top of it
             # On utilise CallAfter pour s'assurer que la fenêtre principale
             # est ouverte avant d'ouvrir le fichier.
-            log.info(f"IOController.openAfterStart : Appelle CallAfter avec self.open={self.open} et filename={filename}")
+            log.info(f"IOController.openAfterStart : Appelle CallAfter avec la méthode self.open={type(self.open)} et filename={filename}")
             wx.CallAfter(self.open, filename)
             log.info("IOController.openAfterStart : Appelle CallAfter réussi. Terminé.")
 

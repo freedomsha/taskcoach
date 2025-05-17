@@ -1046,11 +1046,11 @@ class MainWindow(
             self._lastSize = newSize
 
         if newSize != self._lastSize:
-            log.debug("MainWindow.onResize : Redimensionnement de la fenêtre : %s", newSize)
+            log.debug(f"MainWindow.onResize : Redimensionnement de la fenêtre : {newSize}, ancienne valeur={self._lastSize}")
             self._lastSize = newSize
 
         event.Skip()
-        log.debug("MainWindow.onResize : Fenêtre redimensionnée, résultat : %s", self.GetSize())
+        log.debug(f"MainWindow.onResize : Fenêtre redimensionnée, résultat : {self.GetSize()}")
         # # Éventuellement, forcer une mise à jour de la mise en page (AuiManager.Update())
         # # après le redimensionnement de la barre d'outils,
         # # bien que cela puisse être implicitement

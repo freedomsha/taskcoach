@@ -29,6 +29,7 @@ Classes :
 
     - CategoryPopupMenu : Le menu s’appuie fortement sur UICommandContainerMixin.
 """
+from wx.py.introspect import getAttributeNames
 
 # from builtins import object
 from taskcoachlib import operating_system
@@ -104,7 +105,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         log.debug(f"Menu : self._window={self._window}")
         # Très important : Vérifiez que window est bien
         # une instance valide de wx.Window (ou une de ses sous-classes).
-        log.debug(f"Menu : Type réel de window : {type(window)}")
+        # log.debug(f"Menu : Type réel de window : {type(window)}")  # Inutile car déjà donné dans {self._window} !
         if window:
             # log.info("Menu : window est une instance valide et non None.")
             if isinstance(window, wx.Window):
@@ -224,7 +225,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         # # Why this line try ?
         try:
             log.debug(f"Menu.appendUICommand Essaie d'ajouter {uiCommand.__class__.__name__} au menu {self.__class__.__name__}"
-                      f" dans {self._window} winId={self._window.GetId()}")
+                      f" dans la {self._window.ClassName} {type(self._window).__name__} winId={self._window.GetId()}")
             cmd = uiCommand.addToMenu(self, self._window)
             # cmd = self.addToMenu(uiCommand, self._window)
             # AttributeError: 'tuple' object has no attribute 'addToMenu'
@@ -292,7 +293,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         # Création du sous-menu :
         # self.AppendItem(subMenuItem)
         # Préférer :
-        log.debug(f"Menu.appendMenu : Ajout du sous-menu {subMenuItem.__getattribute__}")
+        log.debug(f"Menu.appendMenu : Ajout du sous-menu {type(subMenuItem).__name__} à self={type(self).__name__}")
         self.Append(subMenuItem)
 
         # nouvelle ligne conseillée par chatGPT
@@ -415,11 +416,11 @@ class DynamicMenu(Menu):
         if self._parentMenu:
             myId = self.myId()
             if myId != wx.NOT_FOUND:
-                log.debug("DynamicMenu.updateMenuItemInParentMenu : Activation menu parent pour ID=%s", myId)
+                log.debug(f"DynamicMenu.updateMenuItemInParentMenu : Activation de l'ID={myId} dans le menu parent {type(self._parentMenu)}.")
                 self._parentMenu.Enable(myId, self.enabled())
                 # TypeError: Menu.Enable(): argument 1 has unexpected type 'NoneType'
             else:
-                log.warning("DynamicMenu.updateMenuItemInParentMenu : ID du menu introuvable dans le parent.")
+                log.warning(f"DynamicMenu.updateMenuItemInParentMenu : ID du menu introuvable dans le parent {self._parentMenu}.")
 
     def myId(self):
         """ Renvoie l'identifiant de notre élément de menu dans le menu parent. """
@@ -428,15 +429,16 @@ class DynamicMenu(Menu):
         # pour les éléments de menu avec accélérateurs (wxPython 2.8.6 sur Ubuntu).
         # TODO: Lorsque cela sera corrigé, remplacez les 7 lignes ci-dessous par celle-ci:
         # myId = self._parentMenu.FindItem(self._labelInParentMenu)
-        log.info(f"DynamicMenu.myId : Appelé pour self={self}")
+        log.info(f"DynamicMenu.myId : Appelé pour self={type(self).__name__}")
         for item in self._parentMenu.MenuItems:
 
-            log.info(f"DynamicMenu.myId : item={item} dans {self._parentMenu.MenuItems}")
+            log.info(f"DynamicMenu.myId : item={type(item).__name__}  dans {self._parentMenu.MenuItems}")
+            log.debug(f"{self.__GetLabelText(item.GetItemLabel())} comparé à {self._labelInParentMenu}")
             # if self.__GetLabelText(item.GetText()) == self._labelInParentMenu:
             #     # AttributeError: 'MenuItem' object has no attribute 'GetText'
-            if self.__GetLabelText(item.GetItemLabel()) == self._labelInParentMenu:
+            if self.__GetLabelText(item.GetItemLabel()) == self._labelInParentMenu:  # TODO : A REVOIR !
                 return item.Id
-        log.warning(f"⚡DynamicMenu.myId : self={self} non trouvé !")
+        log.warning(f"⚡DynamicMenu.myId : self={type(self)} non trouvé !")
         return wx.NOT_FOUND
         # return myId
 

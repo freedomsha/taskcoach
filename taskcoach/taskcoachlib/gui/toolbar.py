@@ -289,7 +289,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
             settings (Settings) : Les paramètres de configuration de l'application.
             size (tuple, optional) : La taille des icônes de la barre d'outils. La valeur par défaut est (32, 32).
         """
-        log.debug("Initialisation de ToolBar dans la fenêtre parent : %s, taille : %s", window, size)
+        log.debug(f"Initialisation de ToolBar dans la fenêtre parent : {type(window).__name__}, taille : {size}")
         self.__window = window
         self.__settings = settings
         self.__visibleUICommands = list()

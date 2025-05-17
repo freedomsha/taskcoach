@@ -307,8 +307,10 @@ class Application(object, metaclass=patterns.Singleton):
         la gestion des signaux et la création d'icônes de barre des tâches."""
         # ... (initialisation des attributs d'instance)
         # nouveaux Attributs d'instance :
+        #   # Défini dans start
         self.__message_checker = None
         self.__version_checker = None
+        # Défini dans self.init :
         self.mainwindow = None
         self.iocontroller = None
         self.__auto_backup = None
@@ -339,7 +341,7 @@ class Application(object, metaclass=patterns.Singleton):
         # myapp = MyApp(redirect = 1, filename = 'filespec') # will redirect stdout to 'filespec'
         # myapp = MyApp(redirect = 0) #stdio will stay at the console...
         # self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=1, filename=RedirectedOutput().__path)
-        # Après cela, wx-2-création d'une Frame !(-> Dans init)
+        # Après cela, wx-2-création d'une Frame !(-> voir Dans init)
 
         # print("application.Application.__init__: self.__wx_app défini !")
         # log.debug("Application wxApp créée.")
@@ -598,6 +600,7 @@ class Application(object, metaclass=patterns.Singleton):
         # twisted.internet.testing.MemoryReactor.run
         # twisted.internet.wxreactor.WxReactor.run
         # twisted.internet.wxsupport.wxRunner.run
+        log.info("Application.start : Terminé.")
 
     def __copy_default_templates(self):
         """Copie les modèles par défaut qui n'existent pas encore dans le répertoire de modèles de l'utilisateur."""
@@ -700,7 +703,7 @@ class Application(object, metaclass=patterns.Singleton):
         #         str(e),
         #     )
         #     return False
-        log.info("Application.init: Composants de l'application initialisés. ✅")
+        log.info("Application.init: Composants de l'application initialisés. ✅Terminé")
 
     def __init_config(self, load_settings):
         """Fonction-méthode d'initialisation de la configuration.
@@ -929,7 +932,7 @@ class Application(object, metaclass=patterns.Singleton):
 
     @staticmethod
     def __close_splash(splash):
-        """Fonction-méthode si splash."""
+        """Fonction-méthode si splash, ferme et le détruit."""
         if splash:
             splash.Destroy()
 
@@ -976,9 +979,7 @@ class Application(object, metaclass=patterns.Singleton):
             # print(
             #     "application.py: Erreur lors de la fermeture de la session: %s", str(e)
             # )
-            log.exception(
-                "application.py: Erreur lors de la fermeture de la session: %s", str(e)
-            )
+            log.exception(f"Application : Erreur lors de la fermeture de la session : {e}")
 
     def on_reopen_app(self):
         """Fonction-méthode pour rouvrir l'application."""

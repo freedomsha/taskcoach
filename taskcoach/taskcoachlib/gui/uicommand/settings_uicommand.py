@@ -83,7 +83,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         # Définition de l'ID du menu ajouté via la méthode super :
         menuId = super().addToMenu(menu, window, position)
 
-        log.warning(f"BooleanSettingsCommand.addToMenu : Après super(), menu={menu, }menuId={menuId} de type {type(menuId)}")
+        log.warning(f"BooleanSettingsCommand.addToMenu : Après super(), menu={menu}, menuId={menuId} de type {type(menuId)}")
 
         # print(f'menuId: {menuId} ajouté' )
         # print(f'au menu: {menu} window: {window} position: {position}')
@@ -99,7 +99,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         # # 'NoneType' object has no attribute 'GetItemLabelText'
 
         # print(f"résultat: menuItem: {menuItem}")
-        log.debug(f"addToMenu : Vérification de menuItem: {menuItem}")
+        log.debug(f"BooleanSettingsCommand.addToMenu : Vérification de menuItem: {menuItem}")
         if menuItem is not None:
             # menuItem.Check(self.isSettingChecked())
             try:
@@ -107,7 +107,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
             except TypeError as e:
                 # menuItem = menu.FindItemById(menuId)  # ?
                 # print(f"tclib.gui.uicommand.settings_uicommand l75: Error d'ajout de UI command au menu: {e}")
-                log.debug("BooleanSettingsCommand.addToMenu: Error d'ajout de UI command au menu: %s", e)
+                log.error(f"BooleanSettingsCommand.addToMenu: Error d'ajout de UI command au menu: {e}")
                 # TypeError: Menu.FindItemById(): argument 1 has unexpected type 'MenuItem'
         else:
             # Gérer le cas où menuItem est None
