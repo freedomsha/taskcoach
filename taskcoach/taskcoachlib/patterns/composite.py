@@ -25,7 +25,7 @@ class Composite(object):
     Une classe représentant un objet composite dans le modèle composite.
 
     Attributs :
-        __parent (weakref) : faible référence au composite parent.
+        __parent (weakref) : Référence faible au composite parent.
         __children (list) : Liste des composites enfants.
     """
 
@@ -34,8 +34,8 @@ class Composite(object):
         Initialisez le composite avec une liste facultative d'enfants et de parents.
 
         Args :
-            children (list, facultatif) : Liste des composites enfants.
-            parent (Composite, facultatif) : Composite parent.
+            children (list | None) : (facultatif) Liste des composites enfants.
+            parent (Composite | None) : (facultatif) Référence faible au Composite parent.
         """
         super().__init__()
         self.__parent = parent if parent is None else weakref.ref(parent)
@@ -45,16 +45,18 @@ class Composite(object):
 
     def __getstate__(self):
         """
-        Obtenez l'état du décapage.
+        Obtenez l'état de l'objet composite.
 
         Renvoie :
-            dict : L'état du composite.
+            (dict) : L'état du composite.
         """
         return dict(children=self.__children[:], parent=self.parent())
 
     def __setstate__(self, state):
         """
-        Définissez l'état à partir du décapage.
+        Définir l'état à partir de state.
+        self.__parent est une référence faible à state["parent"].
+        self.__children est state["children"]
 
         Args :
             state (dict) : L'état du composite.
@@ -85,10 +87,10 @@ class Composite(object):
 
     def parent(self):
         """
-        Obtenez le composite parent.
+        Obtenez le parent du composite.
 
         Renvoie :
-            Composite : Le composite parent.
+            (Composite) : Le composite parent.
         """
         return None if self.__parent is None else self.__parent()
 
@@ -97,26 +99,26 @@ class Composite(object):
         Récupère la liste des ancêtres du composite.
 
         Renvoie :
-            list : La liste des ancêtres.
+            (list) : La liste des ancêtres.
         """
         parent = self.parent()
         return parent.ancestors() + [parent] if parent else []
 
     def family(self):
         """
-        Obtenez la famille du composite (ancêtres, soi et enfants).
+        Obtenez la famille du composite (ses ancêtres, lui-même et ses enfants).
 
         Renvoie :
-            liste : La famille du composite.
+            (liste) : La famille du composite.
         """
         return self.ancestors() + [self] + self.children(recursive=True)
 
     def setParent(self, parent):
         """
-        Définissez le composite parent.
+        Définir le composite parent.
 
         Args :
-            parent (Composite) : Le composite parent.
+            parent (Composite) : Le composite parent en référence faible.
         """
         self.__parent = None if parent is None else weakref.ref(parent)
 
@@ -125,15 +127,15 @@ class Composite(object):
         Récupère les enfants du composite.
 
         Args :
-            recursive (bool, facultatif) : Si True, récupère tous les descendants de manière récursive.
+            recursive (bool) : (facultatif) Si True, récupère tous les descendants de manière récursive.
 
         Returns :
-            list : La liste des enfants.
+            (list) : La liste des enfants.
         """
         if recursive:
             result = self.__children[:]
             for child in self.__children:
-                # print(f"Composite.children : DEBUG: Ajout de l'enfant {child.id()} à {self.id()}")
+                # log.debug(f"Composite.children : Ajout de l'enfant {child.id()} à {self.id()}")
                 result.extend(child.children(recursive=True))
             return result
         else:
@@ -144,10 +146,10 @@ class Composite(object):
         Obtenez les frères et sœurs du composite.
 
         Args :
-            recursive (bool, facultatif) : Si True, obtenez tous les descendants des frères et sœurs de manière récursive.
+            recursive (bool) : (facultatif) Si True, obtenez tous les descendants des frères et sœurs de manière récursive.
 
         Returns :
-            list : La liste de frères et sœurs.
+            (list) : La liste de frères et sœurs.
         """
         parent = self.parent()
         if parent:
@@ -161,10 +163,10 @@ class Composite(object):
 
     def copy(self, *args, **kwargs):
         """
-        Créez une copie du composite.
+        Créer une copie du composite.
 
         Returns :
-            Composite : Le composite copié.
+            (Composite) : Le composite copié.
         """
         kwargs["parent"] = self.parent()
         kwargs["children"] = [child.copy() for child in self.children()]
@@ -175,8 +177,9 @@ class Composite(object):
         Créez un nouveau composite enfant.
 
         Returns :
-            Composite : le nouveau composite enfant.
+            (Composite) : Le nouveau composite enfant.
         """
+        # L'objet devient parent :
         kwargs["parent"] = self
         return self.__class__(*args, **kwargs)
 
@@ -211,20 +214,27 @@ class ObservableComposite(Composite):
     @observer.eventSource
     def __setstate__(self, state, event=None):  # pylint: disable=W0221
         """
-        Définissez l'état du décapage avec la notification d'événement.
+        Définissez l'état de l'objet composite observable avec la notification d'événement.
 
         Args :
             state (dict) : L'état du composite.
-            event (Événement, facultatif) : L'événement à notifier.
+            event (Event | None) : (facultatif) L'événement à notifier.
         """
+        # Anciens enfants :
         oldChildren = set(self.children())
+        # Récupère l'état en mettant à jour l'état de l'objet composite :
         super().__setstate__(state)
+        # Nouveaux enfants :
         newChildren = set(self.children())
+        # Enfants supprimés :
         childrenRemoved = oldChildren - newChildren
         # pylint: disable=W0142
+        # Création d'événement de suppression d'enfant(s) :
         if childrenRemoved:
             self.removeChildEvent(event, *childrenRemoved)
+        # Enfants ajoutés :
         childrenAdded = newChildren - oldChildren
+        # Création d'événement d'ajout d'enfants(s) :
         if childrenAdded:
             self.addChildEvent(event, *childrenAdded)
 
@@ -235,7 +245,7 @@ class ObservableComposite(Composite):
 
         Args :
             child (Composite) : Le composite enfant à ajouter.
-            event (Event, facultatif) : L'événement à notifier.
+            event (Event | None) : (facultatif) L'événement à notifier.
         """
         super().addChild(child)
         self.addChildEvent(event, child)
@@ -255,10 +265,11 @@ class ObservableComposite(Composite):
         """
         Obtenez le type d'événement pour l'ajout d'enfants.
 
-        Renvoie :
-            str : Le type d'événement.
+        Returns :
+            (str) : Le type d'événement.
         """
-        return "composite(%s).child.add" % class_
+        # return "composite(%s).child.add" % class_
+        return f"composite({class_}).child.add"
 
     @observer.eventSource
     def removeChild(self, child, event=None):  # pylint: disable=W0221
@@ -289,18 +300,19 @@ class ObservableComposite(Composite):
         """
         Obtenez le type d'événement pour supprimer les enfants.
 
-        Renvoie :
-            str : Le type d'événement.
+        Returns :
+            (str) : Le type d'événement.
         """
-        return "composite(%s).child.remove" % class_
+        # return "composite(%s).child.remove" % class_
+        return f"composite({class_}).child.remove"
 
     @classmethod
     def modificationEventTypes(class_):
         """
         Obtenez la liste des types d'événements de modification.
 
-        Renvoie :
-            list : La liste des types d'événements de modification.
+        Returns :
+            (list) : La liste des types d'événements de modification.
         """
         try:
             eventTypes = super().modificationEventTypes()
@@ -317,8 +329,8 @@ class CompositeCollection(object):
     Une collection d'objets composites.
 
     Méthodes :
-        append (composite) : ajoutez un composite à la collection.
-        extend (composites) : ajoutez plusieurs composites à la collection.
+        append (composite) : Ajoutez un composite à la collection.
+        extend (composites) : Ajoutez plusieurs composites à la collection.
         remove (composite) : Supprimez un composite de la collection.
         removeItems (composites) : Supprimez plusieurs composites de la collection.
         rootItems () : Obtenez les éléments racine de la collection.
@@ -330,7 +342,7 @@ class CompositeCollection(object):
         Initialisez la collection avec une liste facultative de composites initiaux.
 
         Args :
-            initList (liste, facultatif) : liste initiale de composites.
+            initList (list) : (facultatif) Liste initiale de composites.
         """
         super().__init__(*args, **kwargs)
         self.extend(initList or [])
@@ -341,7 +353,7 @@ class CompositeCollection(object):
 
         Args :
             composite (Composite) : Le composite à ajouter.
-            event (Event, facultatif) : L'événement à notifier.
+            event (Event) : (facultatif) L'événement à notifier.
         """
         return self.extend([composite], event=event)
 
@@ -352,7 +364,7 @@ class CompositeCollection(object):
 
         Args :
             composites (list) : La liste des composites à ajouter.
-            event (Événement, facultatif) : L'événement à notifier.
+            event (Event | None) : (facultatif) L'événement à notifier.
         """
         if not composites:
             return
@@ -367,7 +379,7 @@ class CompositeCollection(object):
         Args :
             composites (list) : La liste des composites.
 
-        Returns:
+        Returns :
             list : La liste des composites et de leurs enfants.
         """
         compositesAndAllChildren = set(composites)
@@ -398,7 +410,7 @@ class CompositeCollection(object):
 
         Args :
             composite (Composite) : Le composite à supprimer.
-            event (Event, facultatif) : L'événement à notifier.
+            event (Event | None) : (facultatif) L'événement à notifier.
         """
         return (
             self.removeItems([composite], event=event)
@@ -413,7 +425,7 @@ class CompositeCollection(object):
 
         Args :
             composites (list) : La liste des composites à supprimer.
-            event (Événement, facultatif) : L'événement à notifier.
+            event (Event | None) : (facultatif) L'événement à notifier.
         """
         if not composites:
             return
@@ -438,8 +450,8 @@ class CompositeCollection(object):
         """
         Récupère les éléments racine de la collection.
 
-        Renvoie :
-            list : La liste des éléments racine.
+        Returns :
+            (list) : La liste des éléments racine.
         """
         return [
             composite
@@ -451,8 +463,8 @@ class CompositeCollection(object):
         """
         Obtenez tous les éléments triés par hiérarchie.
 
-        Renvoie :
-            liste : La liste de tous les éléments triés par hiérarchie.
+        Returns :
+            (list) : La liste de tous les éléments triés par hiérarchie.
         """
         result = []
         for item in self.rootItems():

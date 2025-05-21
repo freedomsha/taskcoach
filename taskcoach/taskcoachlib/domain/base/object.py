@@ -1543,7 +1543,7 @@ class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des probl
         Returns :
             (str) : La description de l'objet composite.
         """
-        # Autoriser l'indicateur récursif, mais ignorer le
+        # Autoriser l'indicateur récursif, mais l'ignorer !
         # return super().description()
         return super().description()
 

@@ -41,6 +41,9 @@ Dépendances :
 - wx
 """
 
+import logging
+import weakref
+import wx
 from taskcoachlib import patterns
 # from taskcoachlib.domain import date, categorizable, base
 from taskcoachlib.domain import date, categorizable, note, attachment, base
@@ -55,8 +58,8 @@ from pubsub import pub
 from _weakrefset import WeakSet
 from . import status as mod_status
 # from .status import TaskStatus
-import weakref
-import wx
+
+log = logging.getLogger(__name__)
 
 
 # class Task(base.NoteOwner, base.AttachmentOwner,
@@ -254,7 +257,7 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
 
     def __getstate__(self):
         state = super().__getstate__()
-        print(f"DEBUG - Task.__getstate__() avant update : {state}")  # Ajoute ce print
+        log.debug(f"Task.__getstate__() avant update : {state}")  # Ajoute ce print
         state.update(dict(dueDateTime=self.__dueDateTime,
                           plannedStartDateTime=self.__plannedStartDateTime,
                           actualStartDateTime=self.__actualStartDateTime,

@@ -98,7 +98,7 @@ def parseAndAdjustDateTime(string, *timeDefaults):
     print(adjusted_datetime)  # Affichage : 2023-10-27 23:59:59.999999
     """
     dateTime = date.parseDateTime(string, *timeDefaults)
-    # print(f"reader.parseAndAdjustDateTime : dateTime = {dateTime}")
+    # log.debug(f"reader.parseAndAdjustDateTime : dateTime = {dateTime}")
     # Si dateTime est différent d'aujourd'hui et qu'elle n'est pas vide et que l'heure est égal à 23:59:0:0
     # l'ajuster à (year, mont, day, 23:59:59:999999)
     if (
@@ -110,7 +110,7 @@ def parseAndAdjustDateTime(string, *timeDefaults):
                                  month=dateTime.month,
                                  day=dateTime.day,
                                  hour=23, minute=59, second=59, microsecond=999999)
-    # print(f"reader.parseAndAdjustDateTime : dateTime ajusté = {dateTime}")
+    # log.debug(f"reader.parseAndAdjustDateTime : dateTime ajusté = {dateTime}")
     return dateTime
 
 
@@ -199,7 +199,7 @@ class PIParser(ET.XMLTreeBuilder):  # XMLTreeBuilder don't exist. Si, dans lxml 
             <?taskcoach tskversion="78"?>
             Cette méthode extraira 78 et définira self.tskversion = 78.
         """
-        # print(f"PIParser.handle_pi : self = {self}, target = {target}, data = {data}.")
+        # log.debug(f"PIParser.handle_pi : self = {self}, target = {target}, data = {data}.")
         if target == "taskcoach":
             # print("target = taskcoach")
             # match_object = re.search('tskversion="(\d+)"', data)
@@ -213,6 +213,7 @@ class PIParser(ET.XMLTreeBuilder):  # XMLTreeBuilder don't exist. Si, dans lxml 
                 # self.tskversion = int(match_object.group(1))
                 try:
                     self.tskversion = int(match_object.group(1))
+                    log.debug(f"PIParser.handle_pi : La version de taskcoach du fichier est {self.tskversion}.")
                 except ValueError:
                     log.error(f"PIParser.handle_pi : Impossible de convertir la version '{match_object.group(1)}' en entier.")
             else:
@@ -493,9 +494,9 @@ class XMLReader(object):  # nouvelle classe
         # Taille de la police par défaut :
         self.__default_font_size = wx.SystemSettings.GetFont(
             wx.SYS_DEFAULT_GUI_FONT).GetPointSize()
-        # print(f"XMLReader.init : Création de self.__default_font_size = {self.__default_font_size}")
+        # log.debug(f"XMLReader.init : Création de self.__default_font_size = {self.__default_font_size}")
         # Dictionnaire des catégories :
-        # print("XMLReader.init : Création des dictionnaires self.categories, self.__modification_datetimes, self.__prerequisites et self.__categorizables")
+        # log.debug("XMLReader.init : Création des dictionnaires self.categories, self.__modification_datetimes, self.__prerequisites et self.__categorizables")
         # self.categories = self.categories or {}
         self.categories = dict()
         # Dictionnaire des dates&heures de modification :
@@ -504,7 +505,7 @@ class XMLReader(object):  # nouvelle classe
         self.__prerequisites = dict()
         # Dictionnaire des catégorisables :
         self.__categorizables = dict()
-        # print(f"📂 DEBUG - Contenu de self.__categorizables AVANT traitement : {self.__categorizables}")
+        # log.debug(f"📂 XMLReader : Contenu de self.__categorizables AVANT traitement : {self.__categorizables}")
         # Version de fichier :
         self.__tskversion = None
 
@@ -516,7 +517,7 @@ class XMLReader(object):  # nouvelle classe
         * Il s'agit de la version interne du fichier de tâches, distincte de la version de l'application Task Coach.
         * La version du fichier de tâches est incrémentée à chaque modification.
         """
-        # print(f"XMLReader.tskversion : est sensé renvoyer la version du fichier de tâches actuel en cours de lecture self.__tskversion = {self.__tskversion}")
+        # log.debug(f"XMLReader.tskversion : est sensé renvoyer la version du fichier de tâches actuel en cours de lecture self.__tskversion = {self.__tskversion}")
         return self.__tskversion
 
     def read(self):
@@ -558,9 +559,9 @@ class XMLReader(object):  # nouvelle classe
         # if isinstance(self.__fd, (io.StringIO, io.BytesIO)):
         if isinstance(self.__fd, (io.BytesIO)):
             if self.__fd.readable():
-                contenu = self.__fd.read().strip()
+                contenu = self.__fd.read().strip()  # io.BufferedIOBase.read() renvoie des bytes !
                 if not contenu:
-                    wx.LogDebug("XMLReader.read : Fichier XML vide.")
+                    wx.LogInfo("XMLReader.read : Fichier XML vide.")
                     # raise ValueError("Fichier XML vide, impossible de le charger.")
                 self.__fd.seek(0)  # Remettre le pointeur du fichier au début
             if not self.__fd.getvalue().strip():
@@ -807,6 +808,7 @@ class XMLReader(object):  # nouvelle classe
         * Corrige les sauts de ligne incorrects identifiés dans les balises d'élément du fichier de tâches.
         """
         # print(f"XMLReader.__fix_broken_lines : self.__fd avant changement = {self.__fd.read()}")
+        # Remettre la lecture au début du fichier :
         self.__fd.seek(0)
         # Enregistre le fichier d'origine dans __origFd
         self.__origFd = self.__fd  # pylint: disable=W0201
@@ -834,8 +836,8 @@ class XMLReader(object):  # nouvelle classe
         self.__fd.write(b"".join(lines))
         # Retourne la tête de lecture/écriture au début :
         self.__fd.seek(0)
-        # print(f"XMLReader.__fix_broken_lines : self.__fd après changement = {self.__fd.read()}")
-        self.__fd.seek(0)
+        # lgo.debug(f"XMLReader.__fix_broken_lines : self.__fd après changement = {self.__fd.read()}")
+        # self.__fd.seek(0)
 
     #             *** Méthodes privées ***
     def __parse_task_nodes(self, node):
@@ -844,6 +846,7 @@ class XMLReader(object):  # nouvelle classe
         * Analyse de manière récursive tous les noeuds de tâches de l'arbre XML et renvoie une liste d'instances de tâches.
         """
         # print(f"XMLReader.__parse_task_nodes : sur node = {node}")
+        # Initialisation de la liste des instances de tâches.
         # task_return = [self.__parse_task_node(child) for child in node.findall("task")]
         # Pour tout avoir récursivement, il est peut-être préférable d'utiliser iter !? -> Non, ne fonctionne pas, c'est pire !
         # task_return = [self.__parse_task_node(child) for child in node.iter("task")]
@@ -851,13 +854,14 @@ class XMLReader(object):  # nouvelle classe
         # notes = [self.__parse_note_node(child) for child in node.findall("note")]
         for task_to_parse in node.findall("task"):  # Voir si ce ne serait plus rapide avec iter ?
             task_parsed = self.__parse_task_node(task_to_parse)
-            # print(f"🔍 DEBUG - Tâche créée : {task_parsed.id()} | Instance mémoire : {id(task_parsed)}")
+            # log.debug(f"XMLReader.__parse_task_nodes : 🔍 Tâche créée : {task_parsed.id()} | Instance mémoire : {id(task_parsed)}")
             # for subchild in task_parsed.children():
-            #     print(f"🔍 DEBUG - Enfant : {subchild.id()} | Instance mémoire : {id(subchild)}")
+            #     log.debug(f"XMLReader.__perse_task_nodes : 🔍 Enfant : {subchild.id()} | Instance mémoire : {id(subchild)}")
             task_return.append(task_parsed)  # Ajoute explicite de la tâche task_parsed à la liste de tâches
-            # print(f"✅ Sous-Note ajoutée : {task_parsed.id()} dans la liste des tâches {task_return}")
-        # print(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
+            # log.debug(f"XMLReader.__perse_task_nodes : ✅ Sous-Note ajoutée : {task_parsed.id()} dans la liste des tâches {task_return}")
+        # log.debug(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
         return task_return
+
         # categories = []
         # for category_node in node.findall("category"):
         #     category = self.__parse_category_node(category_node)
@@ -950,7 +954,9 @@ class XMLReader(object):  # nouvelle classe
             KeyError : Si l'identifiant d'une catégorie référencée dans `self.__categorizables`
             n'est pas trouvé dans la carte de catégorie analysée.
         """
+        # Initialisation de la carte des catégorisables :
         categorizableMap = dict()
+        # Initialisation de la carte des catégories :
         categoryMap = dict()
 
         def mapCategorizables(obj, resultMap, categoryMap):
@@ -966,43 +972,44 @@ class XMLReader(object):  # nouvelle classe
             Returns :
                 None
             """
+            # lxml ne supporte pas les doublons !
             # Problème : Le code utilise des événements pour notifier
             # les changements dans les relations catégorisables de catégorie,
             # mais il n'y a pas de documentation claire sur la manière
             # dont ces événements sont gérés.
             # Solution : Documentez clairement la gestion des événements
             # et assurez-vous qu'ils sont correctement déclenchés et traités.
-            # print(f"DEBUG: mapCategorizables appelé avec obj={obj}, obj.id()={obj.id()}, resultMap={resultMap}, categoryMap={categoryMap}")
+            # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : appelé avec obj={obj}, obj.id()={obj.id()}, resultMap={resultMap}, categoryMap={categoryMap}")
             # print(self)
 
             # Si c'est un objet catégorisable (tâche, note, etc.), l'ajouter au resultMap
             if isinstance(obj, categorizable.CategorizableCompositeObject):
-                # print(f"DEBUG: ✅ Ajout de {obj}{obj.id()} à la liste des categorizables")
+                # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : ✅ Ajout de {obj}{obj.id()} à la liste des categorizables")
                 resultMap[obj.id()] = obj  # Ajoute l'objet au mapping des objets catégorisables
-                # print(f"DEBUG: État actuel de resultMap après ajout des catégorisables : {resultMap}")
+                # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : État actuel de resultMap après ajout des catégorisables : {resultMap}")
 
                 # # 🔥 Ajout récursif des sous-tâches
                 # # if hasattr(obj, "children"):
                 # for subtask in obj.children(recursive=True):
-                #     print(f"📌 Ajout de la sous-tâche {subtask.id()} à resultMap")
+                #     log.debug(f"📌 Ajout de la sous-tâche {subtask.id()} à resultMap")
                 #     resultMap[subtask.id()] = subtask  # Assurer que la sous-tâche est bien mappée
                 #     mapCategorizables(subtask, resultMap, categoryMap)  # Appel récursif
 
             # Si c'est une catégorie, l'ajouter au categoryMap immédiatement
             if isinstance(obj, category.Category):
                 if obj.id() not in categoryMap:
-                    # print(f"✅ Ajout immédiat de la catégorie {obj.id()} ({obj.subject()}) à la liste des catégories categoryMap")
-                    categoryMap[obj.id()] = obj  # Ajoute la catégorie au mapping des catégories
+                    # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : ✅ Ajout immédiat de la catégorie {obj.id()} ({obj.subject()}) à la liste des catégories categoryMap")
+                    categoryMap[obj.id()] = obj  # Ajoute la catégorie à la carte des catégories
                 else:
                     wx.LogDebug(f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})")
-                # print(f"DEBUG: État actuel de categoryMap après ajout des catégories = {categoryMap}")
+                # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : État actuel de categoryMap après ajout des catégories = {categoryMap}")
                 # # Gérer la récursivité des catégories
                 # for subcategory in obj.children(recursive=True):
-                #     print(f"🔄 Parcours de la sous-catégorie {subcategory.id()} ({subcategory.subject()})")
+                #     log.debug(f"XMLReader.__resolve_categories.mapCategorizables : 🔄 Parcours de la sous-catégorie {subcategory.id()} ({subcategory.subject()})")
                 #     mapCategorizables(subcategory, resultMap, categoryMap)
 
             # Vérifier si l'objet a des sous-tâches
-            # Méthode à revoir car XML peut gérer les enfants !
+            # Méthode à revoir car lxml peut gérer les enfants !
             if isinstance(obj, base.CompositeObject):
                 # print(f"DEBUG: mapCategorizables ajoute les enfants de {obj.id()} à la liste resultMap en les renvoyant dans mapCategorizables.")
                 for child in obj.children(recursive=True):
@@ -1012,60 +1019,60 @@ class XMLReader(object):  # nouvelle classe
 
             # if isinstance(obj, base.NoteOwner):
             if isinstance(obj, note.NoteOwner):
-                # print(
+                # log.deug(
                 #     f"DEBUG: mapCategorizables ajoute les notes de {obj.id()} à la liste resultMap en les renvoyant dans mapCategorizables.")
                 for child in obj.notes():
-                    # print(
+                    # log.debug(
                     #     f"✅ Ajout de la note {child.id()} (de {obj.notes()}) à la liste des catégories categoryMap via mapCategorizables.")
                     mapCategorizables(child, resultMap, categoryMap)
             # if isinstance(obj, base.AttachmentOwner):
             if isinstance(obj, attachment.AttachmentOwner):
-                # print(
+                # log.debug(
                 #     f"DEBUG: mapCategorizables ajoute les pièces jointes de {obj.id()} à la liste resultMap en les renvoyant dans mapCategorizables.")
                 for theAttachment in obj.attachments():
                     if theAttachment is not None:  # Vérifier si la pièce jointe n'est pas None
-                        # print(
+                        # log.debug(
                         #     f"✅ Ajout immédiat de la pièce jointe {theAttachment.id()} ({obj.attachments()}) à la liste des catégories categoryMap")
                         mapCategorizables(theAttachment, resultMap, categoryMap)
 
         # Chaque catégorie est mise à jour pour inclure ses objets catégorisables connexes.
         # Parcourt toutes les catégories, tâches et notes pour les ajouter aux dictionnaires de mappage respectifs.
         # Cartographie toutes les catégories, tâches et notes à leurs cartes respectives
-        # print("XMLReader.__resolve_categories :")
-        # print(f"DEBUG: Avant mapCategorizables - Catégories : {[c.id() for c in categories]}")
-        # print(f"DEBUG: Avant mapCategorizables - Tâches : {[t.id() for t in tasks]}")
-        # print(f"DEBUG: Avant mapCategorizables - Notes : {[n.id() for n in notes]}")
+        # log.debug("XMLReader.__resolve_categories :")
+        # log.debug(f"DEBUG: Avant mapCategorizables - Catégories : {[c.id() for c in categories]}")
+        # log.debug(f"DEBUG: Avant mapCategorizables - Tâches : {[t.id() for t in tasks]}")
+        # log.debug(f"DEBUG: Avant mapCategorizables - Notes : {[n.id() for n in notes]}")
         for theCategory in categories:
-            # print(f"DEBUG - Ajout de la catégorie {theCategory.id()} dans categorizableMap")
-            # print(f"🔍 Vérification de la catégorie {theCategory.id()}, catégories = {theCategory.categories()}")
-            # print(f"🔍 Vérification de la catégorie {theCategory.id()}, catégories = {theCategory.categorizables()}")
+            # log.debug(f"DEBUG - Ajout de la catégorie {theCategory.id()} dans categorizableMap")
+            # log.debug(f"🔍 Vérification de la catégorie {theCategory.id()}, catégories = {theCategory.categories()}")
+            # log.debug(f"🔍 Vérification de la catégorie {theCategory.id()}, catégorisables = {theCategory.categorizables()}")
             mapCategorizables(theCategory, categorizableMap, categoryMap)
             # NON : categories est utilisé autrement !!!
             # self.categories[theCategory.id()] = theCategory
-            # print(f"✅ Ajout de la catégorie {theCategory} à self.categories")
-            # # print(f"✅ Ajout de la catégorie {theCategory.id()} à self.categories")
-        # print(f"self.categories = {self.categories}")
-        # print("DEBUG: Après mapCategorizables - Catégories :")
-        # print(f"Liste des catégories : categoryMap = {categoryMap}")
-        # print(f"Liste des catégorisables : categorizablesMap = {categorizableMap}")
+            # log.debug(f"✅ Ajout de la catégorie {theCategory} à self.categories")
+            # # log.debug(f"✅ Ajout de la catégorie {theCategory.id()} à self.categories")
+        # log.debug(f"self.categories = {self.categories}")
+        # log.debug("DEBUG: Après mapCategorizables - Catégories :")
+        # log.debug(f"Liste des catégories : categoryMap = {categoryMap}")
+        # log.debug(f"Liste des catégorisables : categorizablesMap = {categorizableMap}")
 
         for theTask in tasks:
-            # print(f"DEBUG - Ajout de la tâche {theTask.id()} dans categorizableMap")
-            # print(f"🔍 Vérification de la tâche {theTask.id()}, catégories = {theTask.categories()}")
-            # print(f"DEBUG: Tâche {theTask.id()} - Enfants : {[child.id() for child in theTask.children()]}")
+            # log.debug(f"DEBUG - Ajout de la tâche {theTask.id()} dans categorizableMap")
+            # log.debug(f"🔍 Vérification de la tâche {theTask.id()}, catégories = {theTask.categories()}")
+            # log.debug(f"DEBUG: Tâche {theTask.id()} - Enfants : {[child.id() for child in theTask.children()]}")
             mapCategorizables(theTask, categorizableMap, categoryMap)
             # # 🚨 Vérification : est-ce que la sous-tâche 1.1 est bien enregistrée ?
             # for child in theTask.children():
-            #     print(f"📌 La tâche {theTask.id()} contient l'enfant : {child.id()}")
-            # print("DEBUG: Après mapCategorizables - Tâches :")
-            # print(f"Liste des catégories : categoryMap = {categoryMap}")
-            # print(f"Liste des catégorisables : categorizablesMap = {categorizableMap}")
+            #     log.debug(f"📌 La tâche {theTask.id()} contient l'enfant : {child.id()}")
+            # log.debug("DEBUG: Après mapCategorizables - Tâches :")
+            # log.debug(f"Liste des catégories : categoryMap = {categoryMap}")
+            # log.debug(f"Liste des catégorisables : categorizablesMap = {categorizableMap}")
         for theNote in notes:
-            # print(f"🔍 Vérification de la note {theNote.id()}, catégories = {theNote.categories()}")
+            # log.debug(f"🔍 Vérification de la note {theNote.id()}, catégories = {theNote.categories()}")
             mapCategorizables(theNote, categorizableMap, categoryMap)
-            # print("DEBUG: Après mapCategorizables - Notes :")
-            # print(f"Liste des catégories : categoryMap = {categoryMap}")
-            # print(f"Liste des catégorisables : categorizablesMap = {categorizableMap}")
+            # log.debug("DEBUG: Après mapCategorizables - Notes :")
+            # log.debug(f"Liste des catégories : categoryMap = {categoryMap}")
+            # log.debug(f"Liste des catégorisables : categorizablesMap = {categorizableMap}")
         # Faut-il le faire pour les pièces jointes ?
 
         # print(f"DEBUG: Contenu final de categorizableMap : {categorizableMap}")
@@ -1082,9 +1089,10 @@ class XMLReader(object):  # nouvelle classe
         # print(f"__resolve_categories : DEBUG - categoryMap = {categoryMap}")
         # print(f"DEBUG - Vérification self.__categorizables : {self.__categorizables}")
 
+        # Pour chaque catégorie avec liste des objets catégorisables dans la liste des catégorisables :
         for categoryId, categorizableIds in self.__categorizables.items():
             # for categoryId, categorizableIds in list(self.__categorizables.items()):
-            # print(f"🛠 DEBUG - Tentative d'assignation de la catégorie {categoryId} aux objets {categorizableIds}")
+            # log.debug(f"🛠 DEBUG - Tentative d'assignation de la catégorie {categoryId} aux objets {categorizableIds}")
             if not categorizableIds:
                 wx.LogWarning(
                     f"⚠️ Avertissement : La catégorie {categoryId} n'a pas d'objets catégorisables associés, elle sera ignorée.")
@@ -1098,15 +1106,15 @@ class XMLReader(object):  # nouvelle classe
 
                 # print(f"__resolve_categories : Création de theCategory = categoryMap[categoryId] pour categoryId = {categoryId}")
                 theCategory = categoryMap[categoryId]  # KeyError de categoryID
-                # print(f"theCategory = {theCategory}")
-                # print("Création de getted_category = self.categories.get(categoryId)")
+                # log.debug(f"theCategory = {theCategory}")
+                # log.debug("Création de getted_category = self.categories.get(categoryId)")
                 # getted_category = self.categories.get(categoryId)
-                # print(f"getted_category = {getted_category}")
+                # log.debug(f"getted_category = {getted_category}")
                 if theCategory:  #
                     # print(f"Résolution de theCategory={theCategory} : categoryId {categoryId}, objets categorisableIds {categorizableIds}")
                     for categorizableId in categorizableIds:
-                        # print(f"DEBUG - Contenu actuel de categorizableMap : {categorizableMap}")
-                        # print(
+                        # log.debug(f"DEBUG - Contenu actuel de categorizableMap : {categorizableMap}")
+                        # log.debug(
                         #     f"DEBUG - Recherche de l'objet catégorisable {categorizableId} pour la catégorie {categoryId}")
 
                         if categorizableId not in categorizableMap:
@@ -1114,33 +1122,33 @@ class XMLReader(object):  # nouvelle classe
                             wx.LogError(
                                 f"XMLReader.__resolve_categories : ⚠️ ERREUR - Impossible de trouver l'objet {categorizableId} dans categorizablesMap !")
                         if categorizableId in categorizableMap:
-                            # print(f"Pour categorizableId={categorizableId} dans categorizableMap={categorizableMap},")
+                            # log.debug(f"Pour categorizableId={categorizableId} dans categorizableMap={categorizableMap},")
                             # * Récupère l'objet catégorisable associé à l'identifiant dans la carte des objets catégorisables (vérifie les clés absentes).
                             theCategorizable = categorizableMap[categorizableId]
-                            # print(f"theCategorizable = {theCategorizable}")
-                            # print(f"🔍 DEBUG - Assignation de {theCategory.subject()} à {theCategorizable.subject()}")
+                            # log.debug(f"theCategorizable = {theCategorizable}")
+                            # log.debug(f"🔍 DEBUG - Assignation de {theCategory.subject()} à {theCategorizable.subject()}")
                             # getted_categorizable = self.objects.get(categorizableId)  # ajouté via gémini
-                            # print(f"getted_categorizable = {getted_categorizable}")
+                            # log.debug(f"getted_categorizable = {getted_categorizable}")
                             if theCategorizable:
                                 # * Ajoute l'objet catégorisable à la catégorie et inversement (déclenche des événements pour notifier les changements).
-                                # print(f"Ajout de l'objet categorizableId {categorizableId} à la catégorieId {categoryId}")
-                                # print(f"✅ Ajout de theCategorizable.subject()={theCategorizable.subject()} à theCategory.subject()={theCategory.subject()}")
-                                # print(f"Avant ajout avec addCategorizable: theCategory.categorizables() = {theCategory.categorizables()}")
+                                # log.debug(f"Ajout de l'objet categorizableId {categorizableId} à la catégorieId {categoryId}")
+                                # log.debug(f"✅ Ajout de theCategorizable.subject()={theCategorizable.subject()} à theCategory.subject()={theCategory.subject()}")
+                                # log.debug(f"Avant ajout avec addCategorizable: theCategory.categorizables() = {theCategory.categorizables()}")
                                 theCategory.addCategorizable(theCategorizable)
-                                # print(f"✅ Liste des objets de theCategory après ajout : theCategory.categorizables() = {theCategory.categorizables()}")
+                                # log.debug(f"✅ Liste des objets de theCategory après ajout : theCategory.categorizables() = {theCategory.categorizables()}")
                                 #
-                                # print(f"🟢 Ajout de la catégorieId {categoryId} à l'objet catégorizableId {categorizableId}")
-                                # print(f"Avant ajout : theCategorizable.categories() = {theCategorizable.categories()}")
+                                # log.debug(f"🟢 Ajout de la catégorieId {categoryId} à l'objet catégorizableId {categorizableId}")
+                                # log.debug(f"Avant ajout : theCategorizable.categories() = {theCategorizable.categories()}")
                                 theCategorizable.addCategory(theCategory, event=event)
-                                # print(f"Après ajout : theCategorizable.categories() = {theCategorizable.categories()}")
-                                # print(
+                                # log.debug(f"Après ajout : theCategorizable.categories() = {theCategorizable.categories()}")
+                                # log.debug(
                                 #     f"🔍 DEBUG - Catégories de {theCategorizable.subject()} après ajout = {theCategorizable.categories()}")
                                 #
-                                # print(
+                                # log.debug(
                                 #     f"🟢 Catégorie '{theCategory.subject()}' bien assignée à '{theCategorizable.subject()}'")
                                 #
                                 # # Debugging output
-                                # print(f"Category ID: {categoryId}, Categorizable ID: {categorizableId}")
+                                # log.debug(f"Category ID: {categoryId}, Categorizable ID: {categorizableId}")
                             else:
                                 wx.LogDebug(f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}")
             # KeyError : Si l'identifiant d'une catégorie référencée dans `self.__categorizables`
@@ -1148,23 +1156,24 @@ class XMLReader(object):  # nouvelle classe
             except KeyError as e:
                 # Enregistre la catégorie manquante ou catégorisable
                 wx.LogError(f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}")
-        # print(f"🛠 DEBUG - Assignation des catégories : {self.categories}")
+        # log.debug(f"🛠 DEBUG - Assignation des catégories : {self.categories}")
 
         # for task in tasks:
-        #     print(f"Vérification 🔍 DEBUG - Avant setCategories() | Task {task.id()} | Catégories actuelles = {task.categories()}")
+        #     log.debug(f"Vérification 🔍 DEBUG - Avant setCategories() | Task {task.id()} | Catégories actuelles = {task.categories()}")
         #     for child in task.children():
-        #         print(
+        #         log.debug(
         #             f"Vérification 🔍 DEBUG - Avant setCategories() | Sous-tâche {child.id()} | Catégories actuelles = {child.categories()}")
 
         for a_task in tasks:
-            # print(f"FORCAGE 🔍 DEBUG - Avant setCategories() | Task {task.id()} | Catégories actuelles = {task.categories()}")
+            # log.debug(f"FORCAGE 🔍 DEBUG - Avant setCategories() | Task {task.id()} | Catégories actuelles = {task.categories()}")
             # task.setCategories(set(task.categories()))  # Force l'affectation
             a_task.setCategories(a_task.categories() | set(a_task.categories()))
-            # print(f"🔍 DEBUG - Après setCategories() | Task {task.id()} | Catégories finales = {task.categories()}")
+            # log.debug(f"🔍 DEBUG - Après setCategories() | Task {task.id()} | Catégories finales = {task.categories()}")
         # for obj in tasks + notes:
-        #     print(f"🔍 DEBUG - Après résolution, {obj.id()} a les catégories {obj.categories()}")
+        #     log.debug(f"🔍 DEBUG - Après résolution, {obj.id()} a les catégories {obj.categories()}")
 
         # Send the event to notify changes
+        # Envoie l'événement pour notifier des changements :
         event.send()
 
     def __parse_category_nodes(self, node):
@@ -1487,8 +1496,7 @@ class XMLReader(object):  # nouvelle classe
             theTask :
         """
 
-        # print(f"XMLReader.__parse_task_node : Analyse récursive du noeud {task_node} pour  self.tskversion = {self.tskversion} :")
-        # print(f"XMLReader.__parse_task_node : self.tskversion = {self.tskversion}.")
+        # log.debug(f"XMLReader.__parse_task_node : Analyse récursive du noeud tâche {task_node} pour  self.tskversion = {self.tskversion} :")
         planned_start_datetime_attribute_name = (
             "startdate" if self.tskversion() <= 33 else "plannedstartdate"
         )
@@ -1724,7 +1732,7 @@ class XMLReader(object):  # nouvelle classe
         Returns :
             dict attributes : Un dictionnaire contenant ces attributs.
         """
-        # print(f"__parse_base_attributes : dans self={self} pour node={node}")
+        # log.debug(f"XMLReader.__parse_base_attributes : dans self={self} pour le noeud node={node}")
         bg_color_attribute = "color" if self.__tskversion <= 27 else "bgColor"
         # Dictionnaire des attributs du nœud node.
         attributes = dict(
@@ -1883,7 +1891,7 @@ class XMLReader(object):  # nouvelle classe
         return syncml_config
 
     def __parse_syncml_nodes(self, node, config_node):
-        """ Parse the SyncML nodes from the node.
+        """ Parse les noeuds SyncML depuis le noeud node.
 
         * Parse récursivement les nœuds SyncML.
         * Traite les nœuds "property" en définissant les propriétés correspondantes dans la configuration.
@@ -1993,7 +2001,7 @@ class XMLReader(object):  # nouvelle classe
                 with open(location, "wb") as to_location:
                     # to_location.write(data.decode("base64"))
                     to_location.write(base64.b64decode(data))  # ✅ Compatible Python 3
-                # print(f"XMLReader.__parse_attachment(): écriture de {data} dans {location}")
+                # log.debug(f"XMLReader.__parse_attachment(): écriture de {data} dans {location}")
 
                 # Problème : Les permissions du fichier temporaire sont
                 # modifiées pour être en lecture seule sur Windows,
@@ -2083,7 +2091,7 @@ class XMLReader(object):  # nouvelle classe
         * Retourne la police ou la valeur par défaut en cas d'échec.
         """
         if text:
-            # font = wxadv.FontFromNativeInfoString(text)
+            # font = wxadv.FontFromNativeInfoString(text)  # Obsolète
             font = wx.Font(text)
             if font and font.IsOk():
                 if font.GetPointSize() < 4:
@@ -2167,9 +2175,9 @@ class XMLReader(object):  # nouvelle classe
         # Solution : Envisagez d'utiliser un gestionnaire de contexte
         # ou une autre méthode pour garantir que les dates de modification soient correctement restaurées
         self.__modification_datetimes[item] = item.modificationDateTime()
-        # print(f"XMLReader.__save_modification_datetime: Enregistre {item}.modificationDateTime() = {self.__modification_datetimes[item]}"
-        #       f" dans {self}.__modification_datetimes[{item}] "
-        #       f"et retourne item = {item}")
+        # log.debug(f"XMLReader.__save_modification_datetime: Enregistre {item}.modificationDateTime() = {self.__modification_datetimes[item]}"
+        #           f" dans {self}.__modification_datetimes[{item}] "
+        #           f"et retourne item = {item}")
         return item
 
 
@@ -2221,7 +2229,9 @@ class ChangesXMLReader(object):
         #     allChanges[id_] = mon
         # return allChanges
 
+        # Création d'un dictionnaire de tous les changements à renvoyer :
         allChanges = dict()
+        # Création du lecteur de fd :
         xml_content = self.__fd.read()
         if isinstance(xml_content, bytes):
             xml_content = xml_content.decode('utf-8', errors='replace')
