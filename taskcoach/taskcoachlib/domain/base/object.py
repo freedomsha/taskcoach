@@ -1103,6 +1103,7 @@ class Object(SynchronizedObject):
         Returns :
             (str) La description de l'objet.
         """
+        log.debug(f"Object.description : Retourne {self.__description.get()}.")
         return self.__description.get()
 
     def setDescription(self, description, event=None):
