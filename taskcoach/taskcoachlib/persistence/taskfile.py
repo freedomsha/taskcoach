@@ -24,7 +24,7 @@ Donc c'est un fichier critique à bien logger :
 tout plantage ici impacte la sauvegarde, le chargement, les notifs, etc.
 """
 
-# import lockfile
+import lockfile
 import logging
 import os
 import tempfile
@@ -37,7 +37,7 @@ from taskcoachlib import patterns, operating_system
 from taskcoachlib.domain import base, task, category, note, effort, attachment
 from taskcoachlib.syncml.config import createDefaultSyncConfig
 from taskcoachlib.thirdparty.guid import generate
-from taskcoachlib.thirdparty import lockfile
+# from taskcoachlib.thirdparty import lockfile
 from taskcoachlib.changes import ChangeMonitor, ChangeSynchronizer
 from taskcoachlib.filesystem import (
     FilesystemNotifier,
@@ -153,8 +153,8 @@ class SafeWriteFile(object):
             self.__tempFilename = self._getTemporaryFileName(
                 os.path.dirname(filename)
             )
-            # self.__fd = open(self.__tempFilename, "wb")
-            self.__fd = open(file=self.__tempFilename, mode="wb", encoding="utf-8")
+            self.__fd = open(self.__tempFilename, "wb")
+            # self.__fd = open(file=self.__tempFilename, mode="wb", encoding="utf-8")
         # self.__fd = filename
         log.info("Initialisation de SafeWriteFile avec un nom de fichier."
                  f"self.__filename={self.__filename}"
@@ -229,22 +229,18 @@ class SafeWriteFile(object):
         Returns :
             name (str) : Le nom du fichier temporaire généré.
         """
-        # idx = 0
-        # while True:
-        #     # name = os.path.join(path, "tmp-%d" % idx)
-        #     name = os.path.join(path, f"tmp-{idx:d}")
-        #     if not os.path.exists(name):
-        #         return name
-        #     idx += 1
-        # while True:
-        #     name = os.path.join(path, f"tmp-{idx:d}")
-        #     if not os.path.exists(name):
-        #         return name
-        #     idx += 1
+        idx = 0
+        while True:
+            # name = os.path.join(path, "tmp-%d" % idx)
+            name = os.path.join(path, f"tmp-{idx:d}")
+            if not os.path.exists(name):
+                return name
+            idx += 1
         # Use `tempfile.NamedTemporaryFile`: This is the recommended way to create temporary files
         # in Python and provides better security and thread safety.
-        with tempfile.NamedTemporaryFile(dir=path, delete=False) as tf:
-            return tf.name
+        # TODO: A utiliser une fois le reste réglé :
+        # with tempfile.NamedTemporaryFile(dir=path, delete=False) as tf:
+        #     return tf.name
 
     def _isCloud(self):
         """
@@ -764,11 +760,12 @@ class TaskFile(patterns.Observer):
                 log.debug(f"TaskFile.close : Essaie de lire le fichier {self.filename()}.delta en mode r et d'enregistrer les changements précédents.")
                 with open(self.filename() + ".delta", "r") as f:
                     changes = xml.ChangesXMLReader(f).read()
+                    log.debug(f"TaskFile.close : lit changes = {changes}")
             except FileNotFoundError as e:
                 log.exception(f"TaskFile.close : Le fichier {self.filename()}.delta n'existe pas : {e}.")
                 changes = {}
             del changes[self.__monitor.guid()]
-            log.debug(f"TaskFile.close : Essaie d'écrire les changements dans le fichier {self.filename()}.delta en mode wb.")
+            log.debug(f"TaskFile.close : Essaie d'écrire les changements {changes} dans le fichier {self.filename()}.delta en mode wb.")
             # xml.ChangesXMLWriter(open(self.filename() + ".delta", "wb")).write(
             #     changes
             # )
@@ -844,9 +841,9 @@ class TaskFile(patterns.Observer):
         Returns :
             Le descripteur de fichier à lire.
         """
-        # return file(self.__filename, 'rU')
+        # return file(self.__filename, 'r')
         log.info(f"TaskFile._openForRead : Ouvre {self.__filename} en mode lecture binaire !")
-        return open(self.__filename, "rb")
+        return open(self.__filename, "r")
 
     def load(self, filename=None):
         """
@@ -893,6 +890,7 @@ class TaskFile(patterns.Observer):
                     except Exception:
                         log.exception("TaskFile.load : Erreur lors de la lecture du fichier principal '%s'", self.filename())
                         raise
+                    fd.close()
             else:
                 tasks = []
                 categories = []
@@ -944,6 +942,7 @@ class TaskFile(patterns.Observer):
                 with open(self.filename() + ".delta", "wb") as f:
                     writer = xml.ChangesXMLWriter(f)
                     writer.write(self.__changes)
+                    f.close()
         except Exception as e:
             log.info("TaskFile.load règle filename sur ''")
             self.setFilename("")
@@ -989,15 +988,15 @@ class TaskFile(patterns.Observer):
         log.info("TaskFile.save commence à Enregistrer le fichier de tâches sur le disque.")
         # # log.info("Sauvegarde de la base de tâches dans '%s'", filename)
         # # À modifier avec les nouvelles possibilités de with.
-        # try:
-        #     pub.sendMessage("taskfile.aboutToSave", taskFile=self)
-        # except Exception:
-        #     pass
+        try:
+            pub.sendMessage("taskfile.aboutToSave", taskFile=self)
+        except Exception:
+            pass
         # # When encountering a problem while saving (disk full,
         # # computer on fire), if we were writing directly to the file,
         # # it's lost. So write to a temporary file and rename it if
         # # everything went OK.
-        # self.__saving = True
+        self.__saving = True
         # try:
         #     # Fusionner les modifications du disque avec le fichier de tâches actuel.
         #     self.mergeDiskChanges()
@@ -1032,19 +1031,21 @@ class TaskFile(patterns.Observer):
         log.debug("TaskFile.save : Début de la sauvegarde vers le fichier : %s", self.__filename)
 
         try:
-            # with self.safeWriter(self.__filename) as file:
-            with SafeWriteFile(self.__filename) as file:
-                # xmlWriter = writer.XMLWriter(self)
-                xmlWriter = xml.writer.XMLWriter(file)
-                xmlWriter.write(
-                    self.tasks(),
-                    self.categories(),
-                    self.notes(),
-                    self.syncMLConfig(),
-                    self.guid(),
-                    )
-            # self.__dirty = False
-            # self.__needSave = False
+            self.mergeDiskChanges()
+
+            if self.__needSave or not os.path.exists(self.__filename):
+                # with self.safeWriter(self.__filename) as file:
+                with self._openForWrite() as fd:
+                    # xmlWriter = writer.XMLWriter(self)
+                    xmlWriter = xml.writer.XMLWriter(fd)
+                    xmlWriter.write(
+                        self.tasks(),
+                        self.categories(),
+                        self.notes(),
+                        self.syncMLConfig(),
+                        self.guid(),
+                        )
+                    fd.close()
             self.markClean()
             log.info("TaskFile.save : Fichier sauvegardé avec succès : %s", self.__filename)
         except IOError as e:
@@ -1053,6 +1054,14 @@ class TaskFile(patterns.Observer):
         except Exception as e:
             log.exception("TaskFile.save : Erreur inattendue lors de la sauvegarde du fichier : %s", self.__filename)
             raise
+        finally:
+            self.__needSave = False
+            self.__saving = False
+            self.__notifier.saved()
+            try:
+                pub.sendMessage("taskfile.justSaved", taskFile=self)
+            except:
+                pass
 
     def mergeDiskChanges(self):
         """
@@ -1081,7 +1090,7 @@ class TaskFile(patterns.Observer):
                         except Exception:
                             log.exception("TaskFile.mergeDiskChanges : Erreur lors de la lecture du fichier principal pour la fusion des changements '%s'", self.__filename)
                             raise
-                        # fd.close()
+                        fd.close()
                     self.__changes = allChanges
 
                     if self.__saving:
@@ -1117,6 +1126,7 @@ class TaskFile(patterns.Observer):
             with self._openForWrite(".delta") as fd:
                 writer = xml.ChangesXMLWriter(fd)
                 writer.write(self.changes())
+                fd.close()
 
             self.__changedOnDisk = False
         finally:
@@ -1326,12 +1336,14 @@ class LockedTaskFile(TaskFile):
                 with open("/proc/mounts", "r", encoding="utf-8") as mounts_file:
                     for line in mounts_file:
                         try:
-                            location, mount_point, fs_type, options, _, _ = line.strip().split()
-                            if os.path.abspath(path).startswith(mount_point) and fs_type.startswith("fuse."):
-                                return True
+                            location, mount_point, fs_type, options, a, b = line.strip().split()
+                            # if os.path.abspath(path).startswith(mount_point) and fs_type.startswith("fuse."):
+                            #     return True
                         except ValueError:
                             # Ignorer les lignes mal formées dans /proc/mounts
                             continue
+                        if os.path.abspath(path).startswith(mount_point) and fs_type.startswith("fuse."):
+                            return True
             except (FileNotFoundError, PermissionError) as e:
                 # Gérer les erreurs de lecture du fichier /proc/mounts
                 log.error(f"LockedTaskFile.__isFuse: Erreur lors de la lecture de /proc/mounts: {e}")

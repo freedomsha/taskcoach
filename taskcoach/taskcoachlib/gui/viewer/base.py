@@ -593,7 +593,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         class."""
         previousSectionNumber = self.__instanceNumber - 1
         while previousSectionNumber > 0:
-            previousSection = self.__settingsSection + str(previousSectionNumber)
+            previousSection = self.__settingsSection + str(
+                previousSectionNumber
+            )
             if self.settings.has_section(previousSection):
                 return previousSection
             previousSectionNumber -= 1
@@ -673,9 +675,13 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             modeToolBarUICommands,
         )
         editSeparator = separator(
-            editToolBarUICommands, actionToolBarUICommands, modeToolBarUICommands
+            editToolBarUICommands,
+            actionToolBarUICommands,
+            modeToolBarUICommands,
         )
-        actionSeparator = separator(actionToolBarUICommands, modeToolBarUICommands)
+        actionSeparator = separator(
+            actionToolBarUICommands, modeToolBarUICommands
+        )
 
         return (
             clipboardToolBarUICommands
@@ -693,7 +699,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         return self.settings.get(self.settingsSection(), "toolbarperspective")
 
     def saveToolBarPerspective(self, perspective):
-        self.settings.set(self.settingsSection(), "toolbarperspective", perspective)
+        self.settings.set(
+            self.settingsSection(), "toolbarperspective", perspective
+        )
 
     def createClipboardToolBarUICommands(self):
         """UI commands for manipulating the clipboard (cut, copy, paste)."""
@@ -737,14 +745,20 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         bitmap = kwargs.pop("bitmap")
         newItemCommand = self.newItemCommand(*args, **kwargs)
         newItemCommand.do()
-        return self.editItemDialog(newItemCommand.items, bitmap, items_are_new=True)
+        return self.editItemDialog(
+            newItemCommand.items, bitmap, items_are_new=True
+        )
 
     def newSubItemDialog(self, bitmap):
         newSubItemCommand = self.newSubItemCommand()
         newSubItemCommand.do()
-        return self.editItemDialog(newSubItemCommand.items, bitmap, items_are_new=True)
+        return self.editItemDialog(
+            newSubItemCommand.items, bitmap, items_are_new=True
+        )
 
-    def editItemDialog(self, items, bitmap, columnName="", items_are_new=False):
+    def editItemDialog(
+        self, items, bitmap, columnName="", items_are_new=False
+    ):
         Editor = self.itemEditorClass()
         return Editor(
             wx.GetTopLevelParent(self),
@@ -767,19 +781,25 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         raise NotImplementedError
 
     def newSubItemCommand(self):
-        return self.newSubItemCommandClass()(self.presentation(), self.curselection())
+        return self.newSubItemCommandClass()(
+            self.presentation(), self.curselection()
+        )
 
     def newSubItemCommandClass(self):
         raise NotImplementedError
 
     def deleteItemCommand(self):
-        return self.deleteItemCommandClass()(self.presentation(), self.curselection())
+        return self.deleteItemCommandClass()(
+            self.presentation(), self.curselection()
+        )
 
     def deleteItemCommandClass(self):
         return command.DeleteCommand
 
     def cutItemCommand(self):
-        return self.cutItemCommandClass()(self.presentation(), self.curselection())
+        return self.cutItemCommandClass()(
+            self.presentation(), self.curselection()
+        )
 
     def cutItemCommandClass(self):
         return command.CutCommand
@@ -804,7 +824,13 @@ class CategorizableViewerMixin(object):
             (
                 "folder_blue_arrow_icon",
                 (
-                    [", ".join(sorted([cat.subject() for cat in item.categories()]))]
+                    [
+                        ", ".join(
+                            sorted(
+                                [cat.subject() for cat in item.categories()]
+                            )
+                        )
+                    ]
                     if item.categories()
                     else []
                 ),
@@ -954,8 +980,8 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
             expanded (bool) : Indique si l'élément doit être expansé ou réduit.
         """
         event.Skip()
-        # treeItem = event.GetItem()
-        treeItem = event.GetEventObject()
+        treeItem = event.GetItem()
+        # treeItem = event.GetEventObject()
         # If we get an expanded or collapsed event for the root item, ignore it
         if treeItem == self.widget.GetRootItem():
             return
@@ -1031,7 +1057,9 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
             removedItems : Liste des éléments supprimés.
         """
         parents = [self.getItemParent(item) for item in removedItems]
-        parents = [parent for parent in parents if parent in self.presentation()]
+        parents = [
+            parent for parent in parents if parent in self.presentation()
+        ]
         parent = parents[0] if parents else None
         siblings = self.children(parent)
         newSelection = (
@@ -1055,7 +1083,9 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         if curselection:
             siblings = self.children(self.getItemParent(curselection[0]))
             self.__selectionIndex = (
-                siblings.index(curselection[0]) if curselection[0] in siblings else 0
+                siblings.index(curselection[0])
+                if curselection[0] in siblings
+                else 0
             )
         else:
             self.__selectionIndex = 0
@@ -1069,7 +1099,9 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         """
 
         def yieldItemsAndChildren(items):
-            sortedItems = [item for item in self.presentation() if item in items]
+            sortedItems = [
+                item for item in self.presentation() if item in items
+            ]
             for item in sortedItems:
                 yield item
                 children = self.children(item)
@@ -1134,7 +1166,9 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         if parent:
             children = parent.children()
             if children:
-                return [child for child in self.presentation() if child in children]
+                return [
+                    child for child in self.presentation() if child in children
+                ]
             else:
                 return []
         else:
@@ -1311,7 +1345,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         for column in self.hideableColumns():
             if columnName == column.name():
                 isVisibleColumn = self.isVisibleColumn(column)
-                if (show and not isVisibleColumn) or (not show and isVisibleColumn):
+                if (show and not isVisibleColumn) or (
+                    not show and isVisibleColumn
+                ):
                     self.showColumn(column, show)
                 break
 
@@ -1425,7 +1461,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             column
             for column in self._columns
             if column.name()
-            not in self.settings.getlist(self.settingsSection(), "columnsalwaysvisible")
+            not in self.settings.getlist(
+                self.settingsSection(), "columnsalwaysvisible"
+            )
         ]
 
     def isHideableColumn(self, visibleColumnIndex):
@@ -1469,7 +1507,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         """
         columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
         columnWidths[column.name()] = width
-        self.settings.setdict(self.settingsSection(), "columnwidths", columnWidths)
+        self.settings.setdict(
+            self.settingsSection(), "columnwidths", columnWidths
+        )
 
     def validateDrag(self, dropItem, dragItems, columnIndex):
         # def validateDrag(self, dropItem, dragItems, columnIndex: int) -> bool:
@@ -1585,7 +1625,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         normalIcon = item.icon(recursive=True)
         selectedIcon = item.selectedIcon(recursive=True) or normalIcon
         normalImageIndex = self.imageIndex[normalIcon] if normalIcon else -1
-        selectedImageIndex = self.imageIndex[selectedIcon] if selectedIcon else -1
+        selectedImageIndex = (
+            self.imageIndex[selectedIcon] if selectedIcon else -1
+        )
         return {
             wx.TreeItemIcon_Normal: normalImageIndex,
             wx.TreeItemIcon_Expanded: selectedImageIndex,
