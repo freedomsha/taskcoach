@@ -63,6 +63,13 @@ log = logging.getLogger(__name__)
 # ce qui peut poser problème avec des fichiers XML contenant des caractères non-ASCII.
 # Solution : Spécifiez explicitement l'encodage lors de l'ouverture des fichiers
 # (par exemple, open(file, encoding='utf-8')).
+# Quelques points pourraient être améliorés :
+#    Passage de os.path à pathlib.
+#    Remplacement de eval par ast.literal_eval.
+#    Gestion plus sûre des fichiers temporaires avec des context managers.
+#    Gestion explicite de l’encodage lors de l’ouverture des fichiers (certains TODO le signalent).
+
+
 def parseAndAdjustDateTime(string, *timeDefaults):
     """
     Cette fonction analyse et ajuste une chaîne de caractères représentant une date et une heure.
@@ -2139,6 +2146,7 @@ class XMLReader(object):  # nouvelle classe
         * Utilise `eval` pour convertir le texte en tuple si le texte commence par "(" et se termine par ")".
         * Retourne la valeur par défaut en cas d'échec.
         """
+        # Utilisation de eval dans __parse_tuple (potentiellement dangereux, il vaudrait mieux ast.literal_eval).
         if text.startswith("(") and text.endswith(")"):
             # Problème : La méthode __parse_tuple utilise eval pour convertir
             # une chaîne en tuple. Cela peut poser des problèmes de sécurité
