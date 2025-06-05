@@ -52,17 +52,30 @@ class SearchableViewerMixin:
         return base.SearchFilter(presentation, **self.searchOptions())
 
     def searchOptions(self):
-        searchString, matchCase, includeSubItems, searchDescription, regularExpression = self.getSearchFilter()
-        return dict(searchString=searchString,
-                    matchCase=matchCase,
-                    includeSubItems=includeSubItems,
-                    searchDescription=searchDescription,
-                    regularExpression=regularExpression,
-                    treeMode=self.isTreeViewer())
+        (
+            searchString,
+            matchCase,
+            includeSubItems,
+            searchDescription,
+            regularExpression,
+        ) = self.getSearchFilter()
+        return dict(
+            searchString=searchString,
+            matchCase=matchCase,
+            includeSubItems=includeSubItems,
+            searchDescription=searchDescription,
+            regularExpression=regularExpression,
+            treeMode=self.isTreeViewer(),
+        )
 
-    def setSearchFilter(self, searchString, matchCase=False,
-                        includeSubItems=False, searchDescription=False,
-                        regularExpression=False):
+    def setSearchFilter(
+        self,
+        searchString,
+        matchCase=False,
+        includeSubItems=False,
+        searchDescription=False,
+        regularExpression=False,
+    ):
         section = self.settingsSection()
         self.settings.set(section, "searchfilterstring", searchString)
         self.settings.set(section, "searchfiltermatchcase", str(matchCase))
@@ -98,7 +111,7 @@ class SearchableViewerMixin:
 
 
 # class FilterableViewerMixin:
-class FilterableViewerMixin:
+class FilterableViewerMixin(object):
     """ A viewer that is filterable. This is a mixin class. """
 
     def __init__(self, *args, **kwargs):
@@ -208,8 +221,7 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
             self.hideCompositeTasks(False)
 
     def hasFilter(self):
-        return super().hasFilter() or \
-            self.presentation().hasFilter()
+        return super().hasFilter() or self.presentation().hasFilter()
 
     def createFilterUICommands(self):
         return super().createFilterUICommands() + [uicommand.ViewerHideTasks(
@@ -223,7 +235,7 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
         self.settings.setboolean(self.settingsSection(), setting, booleanValue)
 
 
-class SortableViewerMixin:
+class SortableViewerMixin(object):
     """ A viewer that is sortable. This is a mixin class. """
 
     def __init__(self, *args, **kwargs):
@@ -540,7 +552,7 @@ class SortableViewerForTasksMixin(
         return commands
 
 
-class AttachmentDropTargetMixin:
+class AttachmentDropTargetMixin(object):
     """ Classe Mixin pour les téléspectateurs qui sont des cibles de dépôt pour les pièces jointes (attachments). """
 
     def widgetCreationKeywordArguments(self):

@@ -42,7 +42,8 @@ import stat
 import wx
 # from wx import adv as wxadv
 # import xml.etree.ElementTree as eTree
-from lxml import etree as ET
+# from lxml import etree as ET
+from xml.etree import ElementTree as ET
 from taskcoachlib.persistence import sessiontempfile  # pylint: disable=F0401
 from taskcoachlib import meta, patterns
 from taskcoachlib.changes import ChangeMonitor
@@ -121,13 +122,14 @@ def parseAndAdjustDateTime(string, *timeDefaults):
     return dateTime
 
 
-class PIParser(ET.XMLTreeBuilder):  # XMLTreeBuilder don't exist. Si, dans lxml !
-    # class PIParser(ET.TreeBuilder):
-    # class PIParser(ET.XMLParser):
+# class PIParser(ET.XMLTreeBuilder):  # XMLTreeBuilder don't exist. Si, dans lxml !
+# class PIParser(ET.TreeBuilder):  # AttributeError: 'PIParser' object has no attribute 'feed'
+class PIParser(ET.XMLParser):
     """See http://effbot.org/zone/element-pi.htm
+
     **Classe PIParser**
 
-    Cette classe personnalisée hérite de `ET.XMLTreeBuilder` (ou éventuellement `ET.TreeBuilder` selon la version de lxml)
+    Cette classe personnalisée hérite de `ET.XMLTreeBuilder` (ou éventuellement `ET.TreeBuilder` selon la version de xml)
     et est utilisée pour analyser des documents XML contenant des instructions de traitement (PI) spécifiques à Task Coach.
 
     **Référence**
@@ -555,7 +557,7 @@ class XMLReader(object):  # nouvelle classe
             12. Renvoie les tâches, les catégories, les notes, la configuration SyncML, les modifications et le GUID.
         """
         # wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd} est de type {type(self.__fd)}.")  # le type est pompeux !
-        wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
+        wx.LogDebug(f"XMLReader.read : Lit self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueTomorrow.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/tmpjwjkljek.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueToday.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
@@ -567,11 +569,13 @@ class XMLReader(object):  # nouvelle classe
         if isinstance(self.__fd, (io.BytesIO)):
             if self.__fd.readable():
                 contenu = self.__fd.read().strip()  # io.BufferedIOBase.read() renvoie des bytes !
+                print(f"XMLReader.read : contenu = {contenu}")
                 if not contenu:
                     wx.LogInfo("XMLReader.read : Fichier XML vide.")
                     # raise ValueError("Fichier XML vide, impossible de le charger.")
                 self.__fd.seek(0)  # Remettre le pointeur du fichier au début
             if not self.__fd.getvalue().strip():
+                # print("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
                 wx.LogDebug("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
                 return [], [], [], None, {}, None  # Retourne des listes et objets vides
         # if isinstance(content, bytes):
@@ -593,21 +597,22 @@ class XMLReader(object):  # nouvelle classe
 
         # Extraire la version du fichier si présente
         tskversion = 1  # Valeur par défaut
-        match = re.search(rb'tskversion=[\'"](\d+)[\'"]', first_line)
+        match = re.search(r'tskversion=[\'"](\d+)[\'"]', first_line)
         log.info(f"XMLReader.read : Récupère la version du fichier = {match}")
         if match:
             tskversion = int(match.group(1))
 
         # print(f"✅ XMLReader.read : tskversion du fichier lu extrait avant parsing = {tskversion}")
-
-        # 2. Crée une instance de `PIParser` pour analyser les instructions de traitement (PI) spécifiques à Task Coach.
-        # print("XMLReader.read : 2.Création d'une instance de PIParser.")
+        #
+        # # 2. Crée une instance de `PIParser` pour analyser les instructions de traitement (PI) spécifiques à Task Coach.
+        # # print("XMLReader.read : 2.Création d'une instance de PIParser.")
         parser = PIParser()
         # 3. Analyse l'arbre XML du fichier à l'aide de `ET.parse` et de l'analyseur `PIParser`.
         # try:
         self.__fd.seek(0)  # Remet le curseur au début du fichier
-        # wx.LogDebug(f"XMLReader.read : DEBUG - Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu
-        log.debug(f"XMLReader.read : DEBUG - Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu
+        # wx.LogDebug(f"XMLReader.read : Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu. Ne s'affiche pas dans les tests !
+        # log.debug(f"XMLReader.read : DEBUG - Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu. Ne s'affiche pas dans les tests !
+        print(f"XMLReader.read : Contenu du fichier :\n{self.__fd.read()}")  # Vérifie le contenu lu
         self.__fd.seek(0)  # Reviens au début avant parsing
         # print(f"XMLReader.read : 3. Valeur du fichier lu : self.__fd.getvalue = {self.__fd.getvalue()}")
         # tree = eTree.parse(self.__fd, parser)
@@ -698,7 +703,7 @@ class XMLReader(object):  # nouvelle classe
         # print("XMLReader.read: 6. ANALYSE DES DIFFERENTS ELEMENTS DU FICHIER.")
         # print(f"XMLReader.read : 6.a Analyse des noeuds de tâche de : root = {root} avec _parse_task_nodes.")
         tasks = self.__parse_task_nodes(root)
-        # print(f"XMLReader.read : Tâches lues avec status: {[(the_task, the_task.id(), the_task.getStatus()) for the_task in tasks]}")
+        print(f"XMLReader.read : Tâches lues avec status: {[(the_task, the_task.id(), the_task.getStatus()) for the_task in tasks]}")
         # print(f"XMLReader.read : Résultat d'analyse des noeuds de tâche : tasks = {tasks}")
         # print(f"XMLReader.read : DEBUG - Après parsing : tasks[0].completed() = {tasks[0].completed()}")
         # * Résout les prérequis et les dépendances entre les tâches.
@@ -772,7 +777,7 @@ class XMLReader(object):  # nouvelle classe
             changes = dict()
             # print(f"XMLReader.read : Création des Informations de modification du fichier delta : changes = {changes}")
         # print("XMLReader.read avant retour :")
-        # print(f"Tâches lues avant retour : {[(the_task.id(), the_task.status()) for the_task in tasks]}, tasks[0].completed() = {tasks[0].completed()}")
+        print(f"Tâches lues avant retour : {[(the_task.id(), the_task.status()) for the_task in tasks]}, tasks[0].completed() = {tasks[0].completed()}")
         # print(f"Catégories lues : {[the_category.id() for the_category in categories]}")
         # print(f"Notes lues : {[the_note.id() for the_note in notes]}")
         # print(f"Syncml_config lue : {[syncml_config]}")
@@ -798,7 +803,7 @@ class XMLReader(object):  # nouvelle classe
         * Vérifie si le fichier de tâches (version 24) contient des sauts de ligne incorrects dans les balises d'élément.
         """
         log.warning(f"XMLReader.__has_broken_lines : Type de self.__fd: {type(self.__fd)}")  # <class '_io.BufferedReader'>
-        has_broken_lines = b"><spds><sources><TaskCoach-\n" in self.__fd.read()  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
+        has_broken_lines = "><spds><sources><TaskCoach-\n" in self.__fd.read()  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
         # content = self.__fd.read()
         # if isinstance(content, bytes):
         #     return b'><spds><sources><TaskCoach-\n' in content
@@ -860,13 +865,14 @@ class XMLReader(object):  # nouvelle classe
         task_return = []
         # notes = [self.__parse_note_node(child) for child in node.findall("note")]
         for task_to_parse in node.findall("task"):  # Voir si ce ne serait plus rapide avec iter ?
+            print(f"XMLReader.__parser_task_nodes : Parse le noeud {task_to_parse.tag} d'attributs {task_to_parse.attrib}.")
             task_parsed = self.__parse_task_node(task_to_parse)
             # log.debug(f"XMLReader.__parse_task_nodes : 🔍 Tâche créée : {task_parsed.id()} | Instance mémoire : {id(task_parsed)}")
             # for subchild in task_parsed.children():
             #     log.debug(f"XMLReader.__perse_task_nodes : 🔍 Enfant : {subchild.id()} | Instance mémoire : {id(subchild)}")
             task_return.append(task_parsed)  # Ajoute explicite de la tâche task_parsed à la liste de tâches
             # log.debug(f"XMLReader.__perse_task_nodes : ✅ Sous-Note ajoutée : {task_parsed.id()} dans la liste des tâches {task_return}")
-        # log.debug(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
+        print(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
         return task_return
 
         # categories = []
@@ -1500,7 +1506,7 @@ class XMLReader(object):  # nouvelle classe
             task_node : Noeud XML de tâche à analyser.
 
         Returns :
-            theTask :
+            theTask : L'instance de la tâche contenant un dictionnaire d'arguments.
         """
 
         # log.debug(f"XMLReader.__parse_task_node : Analyse récursive du noeud tâche {task_node} pour  self.tskversion = {self.tskversion} :")
@@ -1585,7 +1591,7 @@ class XMLReader(object):  # nouvelle classe
         #     task.Task(**kwargs)
         # )  # pylint: disable=W0142
         # print(f"XMLReader.__parse_task_node : 🛠 FINAL kwargs avant création de la tâche : {kwargs}")
-        # 🔹 Création de la tâche
+        # 🔹 Création de l'instance de tâche à renvoyer
         # print("Création de la tâche.")
         # task_id = task_node.get("id")
         # print(f"🔍 DEBUG - Tentative de création de la tâche {task_id}")
@@ -1622,7 +1628,7 @@ class XMLReader(object):  # nouvelle classe
         # for sub_task_node in task_node.findall("task"):  # Trouve les sous-tâches
         #     sub_task = self.__parse_task_node(sub_task_node)  # Crée la sous-tâche
         #     theTask.addChild(sub_task)  # L'ajoute à la tâche parente
-        # print(f"XMLReader.__parse_task_node : Retourne la tâche theTask = {theTask}{theTask.id} de status {theTask.status()}")
+        print(f"XMLReader.__parse_task_node : Retourne la tâche theTask = {theTask}{theTask.id} de status {theTask.status()}")
         return theTask
 
     def __parse_recurrence(self, task_node):
@@ -2257,7 +2263,8 @@ class ChangesXMLReader(object):
                         changes = set()
                     mon.setChanges(objNode.attrib["id"], changes)
                 allChanges[id_] = mon
-        except ET.XMLSyntaxError:
+        # except ET.XMLSyntaxError:
+        except SyntaxError:
             log.error(f"Fichier de changements delta corrompu ou vide: {self.__fd.name}")
             return allChanges
         except Exception as e:

@@ -290,7 +290,6 @@ class ChangeMonitor(Observer):
     def onEffortTaskChanged(self, newValue, sender):
         changes = self._changes.get(sender.id(), None)
         if changes is not None:
-
             changes.add("__task__")
 
     def onCategoryAdded(self, event):

@@ -94,7 +94,9 @@ class DueDateTimeCtrl(inplace_editor.DateTimeCtrl):
         )
 
     def OnChoicesChange(self, event):
-        self.item().GetData().settings.settext("feature", "sdtcspans", event.GetValue())
+        self.item().GetData().settings.settext(
+            "feature", "sdtcspans", event.GetValue()
+        )
 
 
 class TaskViewerStatusMessages(object):
@@ -120,7 +122,9 @@ class TaskViewerStatusMessages(object):
         self.__presentation = viewer.presentation()
 
     def __call__(self):
-        count = self.__presentation.observable(recursive=True).nrOfTasksPerStatus()
+        count = self.__presentation.observable(
+            recursive=True
+        ).nrOfTasksPerStatus()
         return self.template1 % (
             len(self.__viewer.curselection()),
             self.__viewer.nrOfVisibleTasks(),
@@ -186,7 +190,8 @@ class BaseTaskViewer(
 
     def __DisplayBalloon(self):
         if (
-            self.toolbar.getToolIdByCommand("ViewerHideTasks_completed") != wx.ID_ANY
+            self.toolbar.getToolIdByCommand("ViewerHideTasks_completed")
+            != wx.ID_ANY
             and self.toolbar.IsShownOnScreen()
             and hasattr(wx.GetTopLevelParent(self), "AddBalloonTip")
         ):
@@ -195,7 +200,9 @@ class BaseTaskViewer(
                 "filtershiftclick",
                 self.toolbar,
                 getRect=lambda: self.toolbar.GetToolRect(
-                    self.toolbar.getToolIdByCommand("ViewerHideTasks_completed")
+                    self.toolbar.getToolIdByCommand(
+                        "ViewerHideTasks_completed"
+                    )
                 ),
                 message=_(
                     """Shift-click on a filter tool to see only tasks belonging to the corresponding status"""
@@ -234,7 +241,9 @@ class BaseTaskViewer(
                 )
             ]
             for appearanceSetting in appearanceSettings:
-                pub.subscribe(self.onAppearanceSettingChange, appearanceSetting)
+                pub.subscribe(
+                    self.onAppearanceSettingChange, appearanceSetting
+                )
         self.registerObserver(
             self.onAttributeChanged_Deprecated,
             eventType=task.Task.appearanceChangedEventType(),
@@ -425,7 +434,10 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         """
         if isinstance(items[0], task.Task):
             return super().editItemDialog(
-                items, bitmap, columnName=columnName, items_are_new=items_are_new
+                items,
+                bitmap,
+                columnName=columnName,
+                items_are_new=items_are_new,
             )
         else:
             return dialog.editor.EffortEditor(
@@ -465,12 +477,14 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         )
 
     def __shouldPresetPlannedStartDateTime(self):
-        return self.settings.get("view", "defaultplannedstartdatetime").startswith(
-            "preset"
-        )
+        return self.settings.get(
+            "view", "defaultplannedstartdatetime"
+        ).startswith("preset")
 
     def __shouldPresetDueDateTime(self):
-        return self.settings.get("view", "defaultduedatetime").startswith("preset")
+        return self.settings.get(
+            "view", "defaultduedatetime"
+        ).startswith("preset")
 
     def __shouldPresetActualStartDateTime(self):
         return self.settings.get("view", "defaultactualstartdatetime").startswith(
@@ -606,7 +620,9 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
             result.append(
                 (
                     "paperclip_icon",
-                    sorted([str(attachment) for attachment in task.attachments()]),
+                    sorted(
+                        [str(attachment) for attachment in task.attachments()]
+                    ),
                 )
             )
         return result + super().getItemTooltipData(task)
@@ -767,7 +783,9 @@ class SquareMapRootNode(RootNode):
                 return self.__zero
 
         self.__zero = (
-            date.TimeDelta() if attr in ("budget", "budgetLeft", "timeSpent") else 0
+            date.TimeDelta()
+            if attr in ("budget", "budgetLeft", "timeSpent")
+            else 0
         )  # pylint: disable=W0201
         return getTaskAttribute
 
@@ -812,7 +830,8 @@ class TimelineRootNode(RootNode):
 
     def dueDateTime(self, recursive=False):  # pylint: disable=W0613
         dueDateTimes = [
-            item.dueDateTime(recursive=True) for item in self.parallel_children()
+            item.dueDateTime(recursive=True)
+            for item in self.parallel_children()
         ]
         dueDateTimes = [dt for dt in dueDateTimes if dt != date.DateTime()]
         if not dueDateTimes:
@@ -854,7 +873,9 @@ class TimelineViewer(BaseTaskTreeViewer):
             if eventType.startswith("pubsub"):
                 pub.subscribe(self.onAttributeChanged, eventType)
             else:
-                self.registerObserver(self.onAttributeChanged_Deprecated, eventType)
+                self.registerObserver(
+                    self.onAttributeChanged_Deprecated, eventType
+                )
 
     def createWidget(self):
         self.rootNode = TimelineRootNode(self.presentation())  # pylint: disable=W0201
