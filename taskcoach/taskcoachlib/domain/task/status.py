@@ -79,7 +79,7 @@ class TaskStatus(object):
             settings (object ?) : L'objet des paramètres de l'application.
 
         Returns :
-            str : Le chemin d'accès au fichier d'icône.
+            (str) : Le chemin d'accès au fichier d'icône.
         """
         if settings.get("icon", "%stasks" % self.statusString):
             return settings.get("icon", "%stasks" % self.statusString)
@@ -90,10 +90,10 @@ class TaskStatus(object):
         Récupère l'icône pour masquer les tâches avec ce statut.
 
         Args :
-            settings (object ?) : L'objet des paramètres de l'application.
+            settings : (object) L'objet des paramètres de l'application.
 
-        Renvoie :
-            str : Le chemin d'accès de l'icône à déposer.
+        Returns :
+            (str) : Le chemin d'accès de l'icône à déposer.
         """
         if settings.get("icon", "%stasks" % self.statusString):
             return "%s+cross_red_icon" % settings.get(
@@ -108,8 +108,8 @@ class TaskStatus(object):
         """
         Renvoie une représentation sous forme de chaîne de l'objet TaskStatus.
 
-        Renvoie :
-            str : Une représentation sous forme de chaîne de l'objet.
+        Returns :
+            (str) : Une représentation sous forme de chaîne de l'objet.
         """
         return "%s(%s)" % (self.__class__.__name__, self.statusString)
 
@@ -117,8 +117,8 @@ class TaskStatus(object):
         """
         Renvoie la chaîne d'état.
 
-        Renvoie :
-            str : La chaîne d'état.
+        Returns :
+            (str) : La chaîne d'état.
         """
         return self.statusString
 
@@ -130,7 +130,7 @@ class TaskStatus(object):
             other (TaskStatus) : l'autre objet TaskStatus à comparer.
 
         Returns :
-            bool : True si les chaînes d'état sont égales, Faux sinon.
+            (bool) : True si les chaînes d'état sont égales, Faux sinon.
         """
         # return self.statusString == other.statusString
         if isinstance(other, TaskStatus):
@@ -142,8 +142,8 @@ class TaskStatus(object):
         """
         Renvoie le hachage de l'objet TaskStatus.
 
-        Renvoie :
-            int : La valeur de hachage.
+        Returns :
+            (int) : La valeur de hachage.
         """
         # Because of __eq__
         # return hash(id(self))
@@ -157,7 +157,7 @@ class TaskStatus(object):
             other (TaskStatus) : L'autre objet TaskStatus à comparer.
 
         Returns :
-            bool : True si les chaînes d'état ne sont pas égaux, Faux sinon.
+            (bool) : True si les chaînes d'état ne sont pas égaux, Faux sinon.
         """
         return self.statusString != other.statusString
 
@@ -165,8 +165,8 @@ class TaskStatus(object):
         """
         Renvoie True pour tous les objets TaskStatus.
 
-        Renvoie :
-            bool : toujours vrai.
+        Returns :
+            (bool) : toujours vrai.
         """
         return True
 
@@ -243,7 +243,7 @@ def from_int(value):
     """ Convertit un entier en instance de TaskStatus. """
     # print(f"TaskStatus.from_int() appelé avec {value}, _status_map = {_status_map}")
     # print(f"DEBUG - TaskStatus.from_int() appelé avec {value}, retourne {_status_map.get(int(value))}")
-    if isinstance(value, int) :
+    if isinstance(value, int):
         return _status_map.get(value)  # Par défaut, retourne "inactive" si inconnu
     else :
         return _status_map.get(int(value))  # Par défaut, retourne "inactive" si inconnu

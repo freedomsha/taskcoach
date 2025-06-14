@@ -16,8 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from . import observer
 import weakref
+
+log = logging.getLogger(__name__)
 
 
 class Composite(object):
@@ -37,6 +40,7 @@ class Composite(object):
             children (list | None) : (facultatif) Liste des composites enfants.
             parent (Composite | None) : (facultatif) Référence faible au Composite parent.
         """
+        log.debug("Composite : Initialisation.")
         super().__init__()
         self.__parent = parent if parent is None else weakref.ref(parent)
         self.__children = children or []
@@ -50,7 +54,10 @@ class Composite(object):
         Renvoie :
             (dict) : L'état du composite.
         """
-        return dict(children=self.__children[:], parent=self.parent())
+        # return dict(children=self.__children[:], parent=self.parent())
+        state = dict(children=self.__children[:], parent=self.parent())
+        log.debug(f"Composite.__getstate__ : retourne state : {state}.")
+        return state
 
     def __setstate__(self, state):
         """
@@ -61,10 +68,13 @@ class Composite(object):
         Args :
             state (dict) : L'état du composite.
         """
+        log.debug(f"Composite.__setstate__ : state : {state}.")
         self.__parent = (
             None if state["parent"] is None else weakref.ref(state["parent"])
         )
+        log.debug(f"Composite.__setstate__ : self.__parent = {self.__parent}")
         self.__children = state["children"]
+        log.debug(f"Composite.__setstate__ : self.__children = {self.__children}")
 
     def __getcopystate__(self):
         """
@@ -77,12 +87,14 @@ class Composite(object):
             state = super().__getcopystate__()
         except AttributeError:
             state = dict()
+        log.debug(f"Composite.__getcopystate__ : state avant update {state}.")
         state.update(
             dict(
                 children=[child.copy() for child in self.__children],
                 parent=self.parent(),
             )
         )
+        log.debug(f"Composite.__getcopystate__ : retourne state {state}.")
         return state
 
     def parent(self):
@@ -220,6 +232,7 @@ class ObservableComposite(Composite):
             state (dict) : L'état du composite.
             event (Event | None) : (facultatif) L'événement à notifier.
         """
+        log.debug(f"ObservableComposite.__setstate__ : pour state {state} et event {event}")
         # Anciens enfants :
         oldChildren = set(self.children())
         # Récupère l'état en mettant à jour l'état de l'objet composite :

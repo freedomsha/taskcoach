@@ -89,6 +89,8 @@ from taskcoachlib.i18n import _
 from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
 from taskcoachlib.help.balloontips import BalloonTipManager
 
+log = logging.getLogger(__name__)
+
 
 # Classe Page qui représente une page d'édition
 class Page(patterns.Observer, widgets.BookPage):
@@ -110,18 +112,114 @@ class Page(patterns.Observer, widgets.BookPage):
     """
     columns = 2  # Par défaut, deux colonnes pour l'édition.
 
-    def __init__(self, items, *args, **kwargs):
+    def __init__(self, items, parent, *args, **kwargs):
         # def __init__(self, items: List, *args, **kwargs) -> None:
         """
         Initialise la page avec les éléments à éditer.
 
         Args :
             items (list) : Liste des objets de domaine à éditer.
+            parent (wx.Window) : La fenêtre parente de cette page.
+            *args : Arguments positionnels génériques.
+            **kwargs : Arguments de mots clés génériques.
         """
+        # --- LOG 1 : À l'entrée de __init__ de Page ---
+        log.debug(f"--- Page.__init__ entrée ---")
+        log.debug(f"  items: {items}")
+        log.debug(f"  parent (reçu par Page): {parent}")
+        log.debug(f"  *args (reçus par Page): {args}")
+        log.debug(f"  **kwargs (reçus par Page): {kwargs}")
+        log.debug("Page : Initialisation MRO:", Page.__mro__)
         self.items = items
-        # self.__observers = []
-        super().__init__(columns=self.columns, *args, **kwargs)
-        self.addEntries()
+        self.__observers = []
+        # # super().__init__(columns=self.columns, *args, **kwargs)
+        # super().__init__(*args, **kwargs)
+
+        # --- LOG 2 : Avant la vérification/ajout de 'columns' ---
+        log.debug(f"  Page.__init__ - kwargs avant 'columns' check: {kwargs}")
+        # # Assurez-vous que 'columns' n'est pas déjà dans kwargs
+        # # et passez-le en tant qu'argument positionnel au constructeur de BookPage via super()
+        # # Note: Cela suppose que 'columns' est destiné à BookPage et que BookPage attend un argument positionnel pour cela.
+        # if 'columns' in kwargs:
+        #     # Si columns est déjà dans kwargs, c'est probablement un problème d'appelant
+        #     # ou un cas où l'appelant veut surcharger self.columns.
+        #     # Dans ce cas, il faut décider quelle valeur prendre.
+        #     # Pour l'erreur "multiple values", la solution est de le retirer de kwargs.
+        #     passed_columns = kwargs.pop('columns')
+        #     if passed_columns != self.columns:
+        #         print(f"Warning: Page.columns ({self.columns}) is different from columns passed in kwargs ({passed_columns}). Using {self.columns}.")
+        #     # Ou, si vous voulez toujours que la valeur passée dans kwargs prenne le dessus:
+        #     # self.columns = passed_columns
+        #
+        # # Passer self.columns comme premier argument positionnel attendu par BookPage
+        # # L'ordre dans *args est crucial ici.
+        # # Si BookPage attend (parent, columns, ...) alors le 'parent' doit venir des *args ou être passé explicitement.
+        # # Vous devez savoir comment BookPage est censé être appelé.
+        # # D'après votre BookPage.__init__(self, parent, columns, growableColumn=None, *args, **kwargs):
+        # # Il attend `parent` et `columns` comme arguments positionnels.
+        #
+        # # Donc, vous devez extraire le 'parent' des *args ou le passer directement.
+        # # Si 'parent' est le premier dans *args:
+        # parent_arg = args[0] if args else None # Assurez-vous que parent est bien passé
+        # remaining_args = args[1:] if args else args
+        #
+        # # Appel à super() en passant les arguments dans l'ordre attendu par BookPage
+        # # et en s'assurant que 'columns' n'est pas passé deux fois.
+        # # C'est la ligne la plus critique.
+        # super().__init__(parent_arg, self.columns, *remaining_args, **kwargs)
+
+        # S'assurer que 'columns' est dans kwargs avant d'appeler super().
+        # La valeur de 'Page.columns' est utilisée ici comme valeur par défaut pour *cette* page,
+        # mais elle peut être surchargée si 'columns' est déjà dans kwargs.
+        if 'columns' not in kwargs:
+            kwargs['columns'] = self.columns
+            # --- LOG 3 : Après l'ajout de 'columns' ---
+            log.debug(f"  Page.__init__ - Ajout de 'columns' à kwargs: {self.columns}")
+        log.debug(f"  Page.__init__ - kwargs après 'columns' check: {kwargs}")
+
+        # Appelle le constructeur de la super-classe (via le MRO).
+        # Ici, 'parent' n'est PAS passé explicitement car c'est la classe appelante (TaskCoach)
+        # qui devrait passer 'parent' au premier constructeur dans le MRO (probablement Observer ou Page elle-même).
+        # Chaque __init__ dans la chaîne super() va ensuite se passer les arguments nécessaires.
+        # Il est important que la classe qui *crée* une instance de Page fournisse le 'parent'.
+
+        # Si Page *doit* prendre un parent comme argument:
+        # def __init__(self, items, parent, *args, **kwargs):
+        #    self.items = items
+        #    if 'columns' not in kwargs:
+        #        kwargs['columns'] = self.columns
+        #    super().__init__(parent, *args, **kwargs)
+        # Cela suppose que le parent est toujours le premier argument positionnel après 'items'.
+
+        # --- LOG 4 : Avant l'appel à super().__init__ ---
+        log.debug(f"  Page.__init__ - Appel de super().__init__ avec:")
+        log.debug(f"    parent passé à super: {parent}")
+        log.debug(f"    *args passés à super: {args}")
+        log.debug(f"    **kwargs passés à super: {kwargs}")
+        # Appelle le constructeur de la super-classe via le MRO.
+        # # Si le parent est déjà géré par l'infrastructure de TaskCoach via le MRO et les kwargs:
+        # super().__init__(*args, **kwargs)  # Ceci est l'appel standard pour super() dans héritage multiple.
+        # # Il transmet *tous* les arguments restants.
+        # Le 'parent' est explicitement passé comme premier argument positionnel
+        # car wx.Panel (via BookPage) s'attend à cela.
+        super().__init__(parent, **kwargs)
+        # parent est passé explicitement : Vous passez parent directement
+        # comme le premier argument positionnel de super()
+        # (qui est BookPage via le MRO).
+        # Cela satisfait le premier paramètre attendu par BookPage.__init__.
+        # *args est supprimé : En retirant *args de l'appel à super(),
+        # le tuple problématique ((), {}) n'est plus passé comme argument positionnel.
+        # **kwargs est dépaqueté correctement :
+        # La ligne if 'columns' not in kwargs: kwargs['columns'] = self.columns
+        # garantit que kwargs contient {'columns': 2}.
+        # En passant **kwargs à super(), BookPage.__init__ reçoit columns=2
+        # comme argument nommé, ce qui est tout à fait valide car BookPage.__init__
+        # a un paramètre columns=None.
+
+        # --- LOG 5 : Après l'appel à super().__init__ ---
+        log.debug(f"--- Page.__init__ super().__init__ terminé ---")
+        # ⚠️ NE PAS appeler addEntries ici, pour laisser les sous-classes décider
+        # self.addEntries()
         self.fit()
 
     def selected(self):
@@ -178,7 +276,7 @@ class Page(patterns.Observer, widgets.BookPage):
         Args :
             the_entry (TextCtrl) : L'entrée à sélectionner et à mettre en focus.
         """
-        if self.focusTextControl():
+        if the_entry is not None and self.focusTextControl():
             the_entry.SetFocus()
             try:
                 if operating_system.isWindows() and isinstance(the_entry, wx.TextCtrl):
@@ -240,19 +338,34 @@ class SubjectPage(Page):
 
     def __init__(self, items, parent, settings, *args, **kwargs):
         """
-    Initializes the SubjectPage with the following arguments:
+        Initializes the SubjectPage with the following arguments:
 
-    - items: A list of task objects representing the selected tasks.
-    - parent: The parent window of this page.
-    - settings: The application settings object.
-    """
+        - items: A list of task objects representing the selected tasks.
+        - parent: The parent window of this page.
+        - settings: The application settings object.
+        """
+        # --- LOG 1 : À l'entrée de __init__ de SubjectPage ---
+        log.debug(f"--- SubjectPage.__init__ entrée ---")
+        log.debug(f"  items: {items}")
+        log.debug(f"  parent (reçu par SubjectPage): {parent}")
+        log.debug(f"  settings (reçu par SubjectPAge): {settings}")
+        log.debug(f"  *args (reçus par SubjectPage): {args}")
+        log.debug(f"  **kwargs (reçus par SubjectPage): {kwargs}")
         self._modificationTextEntry = None
         self._descriptionSync = None
         self._subjectSync = None
         self._descriptionEntry = None
         self._subjectEntry = None
         self._settings = settings
+        # --- LOG 2 : Avant l'appel à super().__init__ ---
+        log.debug(f"  SubjectPage.__init__ - Appel de super().__init__ avec:")
+        log.debug(f"    items passé à super: {items}")
+        log.debug(f"    parent passé à super: {parent}")
+        log.debug(f"    *args passés à super: {args}")
+        log.debug(f"    **kwargs passés à super: {kwargs}")
         super().__init__(items, parent, *args, **kwargs)
+        # Ajouter les champs d'entrée (comme les textCtrl pour le sujet et la description) :
+        self.addEntries()
 
     def SetFocus(self):
         """
@@ -296,6 +409,7 @@ class SubjectPage(Page):
     #         Objet à éditer, généralement un texte.
     #     """
     #     pass
+
     def addSubjectEntry(self):
         # pylint: disable=W0201
         """Adds a subject entry to the page.
@@ -323,10 +437,10 @@ class SubjectPage(Page):
             self.items[0].subjectChangedEventType(),
         )
         # TODO: Ajoutez un commentaire pour expliquer le but de ce code:
-        self.addEntry(
-            _("Subject"),
-            self._subjectEntry,
-            flags=[wx.ALIGN_RIGHT, wx.EXPAND],
+        self.addEntry(  # de BookPage !
+            _("Subject"),  # Ceci devient controls[0] (le texte du libellé)
+            self._subjectEntry,  # Ceci devient controls[1] (le wx.TextCtrl)
+            flags=[wx.ALIGN_RIGHT, wx.EXPAND],  # Ceci devient flags[0] et flags[1]
         )
         # Add a comment to explain the purpose of this code
 
@@ -343,24 +457,25 @@ class SubjectPage(Page):
         #     item.modificationDateTime() for item in self.items
         # ]
         # essai:
-        try:
-            return render.dateTime_range(min(modification_datetimes), max(modification_datetimes))
-            # return render.dateRange(min(modification_datetimes), max(modification_datetimes))
-            # return render.dateTime(range(min(modification_datetimes), max(modification_datetimes)))  # TODO : A essayer !
-        except ReferenceError or AttributeError as e:
-            # print(f"tclib.gui.dialog.editor: {str(e)}")
-            logging.error(f"tclib.gui.dialog.editor: {str(e)}")
-            # vieux code:
-            min_modification_datetime = min(modification_datetimes)
-            max_modification_datetime = max(modification_datetimes)
-            modification_text = render.dateTime(
-                min_modification_datetime, humanReadable=True
+        # try:
+        #     return render.dateTime_range(min(modification_datetimes), max(modification_datetimes))
+        #     # return render.dateRange(min(modification_datetimes), max(modification_datetimes))
+        #     # return render.dateTime(range(min(modification_datetimes), max(modification_datetimes)))  # TODO : A essayer !
+        #     return render.dateTimePeriod(min(modification_datetimes), max(modification_datetimes))
+        # except ReferenceError or AttributeError as e:
+        #     # print(f"tclib.gui.dialog.editor: {str(e)}")
+        #     logging.error(f"tclib.gui.dialog.editor: {str(e)}")
+        #     # vieux code:
+        min_modification_datetime = min(modification_datetimes)
+        max_modification_datetime = max(modification_datetimes)
+        modification_text = render.dateTime(
+            min_modification_datetime, humanReadable=True
+        )
+        if max_modification_datetime - min_modification_datetime > date.ONE_MINUTE:
+            modification_text += " - %s" % render.dateTime(
+                max_modification_datetime, humanReadable=True
             )
-            if max_modification_datetime - min_modification_datetime > date.ONE_MINUTE:
-                modification_text += " - %s" % render.dateTime(
-                    max_modification_datetime, humanReadable=True
-                )
-            return modification_text
+        return modification_text
 
     def addDescriptionEntry(self):
         # pylint: disable=W0201
@@ -506,6 +621,20 @@ class TaskSubjectPage(SubjectPage):
     #     self._priorityEntry = None
 
     def __init__(self, items, parent, settings, *args, **kwargs):
+        # --- LOG 1 : À l'entrée de __init__ de SubjectPage ---
+        log.debug(f"--- TaskSubjectPage.__init__ entrée ---")
+        log.debug(f"  items: {items}")
+        log.debug(f"  parent (reçu par SubjectPage): {parent}")
+        log.debug(f"  settings (reçu par SubjectPAge): {settings}")
+        log.debug(f"  *args (reçus par SubjectPage): {args}")
+        log.debug(f"  **kwargs (reçus par SubjectPage): {kwargs}")
+        # --- LOG 2 : Avant l'appel à super().__init__ ---
+        log.debug(f"  TaskSubjectPage.__init__ - Appel de super().__init__ avec:")
+        log.debug(f"    items passé à super: {items}")
+        log.debug(f"    parent passé à super: {parent}")
+        log.debug(f"    settings passé à super: {settings}")
+        log.debug(f"    *args passés à super: {args}")
+        log.debug(f"    **kwargs passés à super: {kwargs}")
         super().__init__(items, parent, settings, args, kwargs)
         self._prioritySync = None
         self._priorityEntry = None
@@ -586,8 +715,8 @@ class CategorySubjectPage(SubjectPage):
 
     def addEntries(self):
         """
-    Ajoute les entrées de l'interface, en insérant le champ de sous-catégories exclusives.
-    """
+        Ajoute les entrées de l'interface, en insérant le champ de sous-catégories exclusives.
+        """
         # Override to insert an exclusive subcategories entry
         # between the description and the creation Date/time entry
         self.addSubjectEntry()  # Sujet
@@ -599,8 +728,8 @@ class CategorySubjectPage(SubjectPage):
     def addExclusiveSubcategoriesEntry(self):
         # pylint: disable=W0201
         """
-    Ajoute un champ pour définir si les sous-catégories doivent être exclusives.
-    """
+        Ajoute un champ pour définir si les sous-catégories doivent être exclusives.
+        """
         currentExclusivity = (
             self.items[0].hasExclusiveSubcategories() if len(self.items) == 1 else False
         )
@@ -626,9 +755,9 @@ class CategorySubjectPage(SubjectPage):
 
 class AttachmentSubjectPage(SubjectPage):
     """
-       Classe de page d'édition pour les pièces jointes.
+    Classe de page d'édition pour les pièces jointes.
 
-       Cette classe hérite de `SubjectPage` et fournit des champs d'édition spécifiques aux pièces jointes, y compris :
+    Cette classe hérite de `SubjectPage` et fournit des champs d'édition spécifiques aux pièces jointes, y compris :
 
        * Sujet (hérité de `SubjectPage`)
        * Emplacement du fichier
@@ -636,22 +765,22 @@ class AttachmentSubjectPage(SubjectPage):
        * Date/heure de création (hérité de `SubjectPage`)
        * Date/heure de modification (hérité de `SubjectPage`)
 
-       La classe ajoute un champ d'édition supplémentaire pour l'emplacement du fichier de la pièce jointe.
-       Elle gère également la synchronisation de l'emplacement avec l'objet de tâche sous-jacent à l'aide de la classe `attributesync.AttributeSync`.
+    La classe ajoute un champ d'édition supplémentaire pour l'emplacement du fichier de la pièce jointe.
+    Elle gère également la synchronisation de l'emplacement avec l'objet de tâche sous-jacent à l'aide de la classe `attributesync.AttributeSync`.
 
-       Attributs :
-           _locationSync (attributesync.AttributeSync, optionnel) : Objet de synchronisation pour l'attribut "location" des pièces jointes.
-           _locationEntry (widgets.SingleLineTextCtrl): Champ de saisie pour l'emplacement du fichier de la pièce jointe.
+    Attributs :
+        _locationSync (attributesync.AttributeSync, optionnel) : Objet de synchronisation pour l'attribut "location" des pièces jointes.
+        _locationEntry (widgets.SingleLineTextCtrl): Champ de saisie pour l'emplacement du fichier de la pièce jointe.
 
-       Méthodes :
-           addEntries (self) :
-               Ajoute les champs d'édition spécifiques aux pièces jointes.
+    Méthodes :
+        addEntries (self) :
+           Ajoute les champs d'édition spécifiques aux pièces jointes.
 
-           addLocationEntry (self) :
-               Ajoute un champ d'édition pour l'emplacement du fichier de la pièce jointe. Gère également la synchronisation de l'emplacement avec l'objet de tâche.
+        addLocationEntry (self) :
+           Ajoute un champ d'édition pour l'emplacement du fichier de la pièce jointe. Gère également la synchronisation de l'emplacement avec l'objet de tâche.
 
-           onSelectLocation (self, event) :
-               Permet à l'utilisateur de sélectionner un fichier à l'aide d'un sélecteur de pièces jointes. Met à jour le champ d'emplacement et le sujet en conséquence.
+        onSelectLocation (self, event) :
+           Permet à l'utilisateur de sélectionner un fichier à l'aide d'un sélecteur de pièces jointes. Met à jour le champ d'emplacement et le sujet en conséquence.
        """
 
     # j'ai ajouté __init__
@@ -1318,16 +1447,28 @@ class PageWithViewer(Page):
         self.__taskFile = taskFile
         self.__settings = settings
         self.__settingsSection = settingsSection
-        # self.viewer = None
+        self.viewer = None  # Permet l'affichage de la page !
+        # self.addEntries()  # Non pas maintenant !
+        # Laisser les classes enfants (comme EffortPage, NotesPage, etc.) l'appeler à la fin.
+        # self.viewer = self.createViewer(
+        #     self.__taskFile, self.__settings, self.__settingsSection
+        # )  # Trop tôt aussi !
         super().__init__(items, parent, *args, **kwargs)
+        # self.addEntries()  # ?
 
     def addEntries(self):
         # pylint: disable=W0201
+        if not hasattr(self, 'items'):
+            log.warning("addEntries appelé trop tôt, items pas encore initialisé.")
+            return
         self.viewer = self.createViewer(
             self.__taskFile, self.__settings, self.__settingsSection
         )
         # self.addEntry(self.viewer, growable=True)
         self.addEntry(self.viewer, growable=True, flags=[wx.EXPAND])
+
+    def entries(self):
+        return {"firstEntry": self.viewer}
 
     def createViewer(self, taskFile, settings, settingsSection):
         raise NotImplementedError
@@ -1358,6 +1499,10 @@ class EffortPage(PageWithViewer):
     pageName = "effort"
     pageTitle = _("Effort")
     pageIcon = "clock_icon"
+
+    def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
+        super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
+        self.addEntries()
 
     def createViewer(self, taskFile, settings, settingsSection):
         # TODO: remplacer viewer.EffortViewer par EffortViewer
@@ -1932,8 +2077,19 @@ class EditBook(widgets.Notebook):
         """
         Initialise l'éditeur avec les objets à éditer.
         """
+        # --- LOG 1 : À l'entrée de __init__ de Page ---
+        log.debug(f"--- EditBook.__init__ Début de la boucle de création de pages ---")
+        log.debug(f"  parent (reçu par EditBook): {parent}")
+        log.debug(f"  items (reçu par EditBook): {items}")
+        log.debug(f"  taskFile (reçus par EditBook): {taskFile}")
+        log.debug(f"  settings (reçus par EditBook): {settings}")
+        log.debug(f"  items_are_new (reçus par EditBook): {items_are_new}")
+        log.debug("EditBook : Initialisation MRO:", Page.__mro__)
         self.items = items
         self.settings = settings
+        # --- LOG 2 : Avant l'appel à super().__init__ ---
+        log.debug(f"  EditBook.__init__ - Appel de super().__init__ avec:")
+        log.debug(f"    parent passé à super: {parent}")
         super().__init__(parent)
         self.addPages(taskFile, items_are_new)
         self.__load_perspective(items_are_new)
@@ -2017,7 +2173,11 @@ class EditBook(widgets.Notebook):
 
     def createPage(self, page_name, task_file, items_are_new):
         """Crée la page appropriée en fonction du nom de la page et du type d'objet. """
-        # TODO : changer la méthode. sans les if serait plus rapide !
+        # TODO : changer la méthode. sans les if serait plus rapide ! utiliser plutôt with for!
+        log.debug("EditBook.createPage : avec :")
+        log.debug(f" page_name={page_name}")
+        log.debug(f" task_file={task_file}")
+        log.debug(f" items_are_new={items_are_new}")
         if page_name == "subject":
             return self.create_subject_page()
         elif page_name == "dates":
@@ -2070,7 +2230,11 @@ class EditBook(widgets.Notebook):
             return TaskAppearancePage(self.items, self)
 
     def create_subject_page(self):
-        """crée la page sujet pour modifier le titre de l'objet. """
+        """Créer la page sujet pour modifier le titre de l'objet. """
+        log.debug("EditBook.create_subject_page: retourne une instance de SubjectPage avec les arguments :")
+        log.debug(f"self.items={self.items}")
+        log.debug(f"self={self}")
+        log.debug(f"self.settings={self.settings}")
         return SubjectPage(self.items, self, self.settings)
 
     def setFocus(self, columnName):
@@ -2227,6 +2391,16 @@ class TaskEditBook(EditBook):
     domainObject = "task"
 
     def create_subject_page(self):
+        """
+        Méthode pour créer les pages de l'éditeur.
+
+        Returns :
+            Une instance de TaskSubjectPage avec self.items, self, et self.settings.
+        """
+        log.debug("TaskEditBook.create_subject_page: retourne une instance de TaskSubjectPage avec les arguments :")
+        log.debug(f"self.items={self.items}")
+        log.debug(f"self={self}")
+        log.debug(f"self.settings={self.settings}")
         return TaskSubjectPage(self.items, self, self.settings)
 
 
@@ -2688,7 +2862,7 @@ class Editor(BalloonTipManager, widgets.Dialog):
     #     lambda *args: "Subclass responsibility"
     # )  # TODO: PEP 8: E731 do not assign a lambda expression, use a def
 
-    @staticmethod
+    # @staticmethod
     def EditBookClass(*args) -> str:
         return "Subclass responsibility"
 

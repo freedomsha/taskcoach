@@ -16,9 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from taskcoachlib import patterns
 from taskcoachlib.domain import base
 from taskcoachlib.domain.attribute import font, color
+
+log = logging.getLogger(__name__)
 
 
 class CategorizableCompositeObject(base.CompositeObject):
@@ -29,27 +32,45 @@ class CategorizableCompositeObject(base.CompositeObject):
     """
 
     def __init__(self, *args, **kwargs):
+        log.debug("CategorizableCompositeObject : Initialisation.")
         self.__categories = base.SetAttribute(
             kwargs.pop("categories", set()),
             self,
             self.addCategoryEvent,
             self.removeCategoryEvent,
         )
+        log.debug("CategorizableCompositeObject : méthode super:")
         super().__init__(*args, **kwargs)
+        log.debug("CategorizableCompositeObject : Initialisé.")
 
     def __getstate__(self):
         state = super().__getstate__()
+        log.debug(f"CategorizableCompositeObject.__getstate__ : state avant update : {state}")
         state.update(dict(categories=self.categories()))
+        log.debug(f"CategorizableCompositeObject.__getstate__ : renvoie {state}.")
         return state
 
     @patterns.eventSource
     def __setstate__(self, state, event=None):
+        log.debug(f"CategorizableCompositeObject.__setstate__ : pour state {state} et event {event}")
         super().__setstate__(state, event=event)
         self.setCategories(state["categories"], event=event)
+        # # Gérer uniquement les attributs spécifiques à CategorizableCompositeObject, comme 'categories'.
+        # categories_value = state.pop("categories", set()) # Exemple d'attribut spécifique à CategorizableCompositeObject
+        # if isinstance(categories_value, base.SetAttribute):
+        #     self.__categories = categories_value
+        # else:
+        #     self.__categories = base.SetAttribute(
+        #         categories_value, self, self.addCategoryEvent, self.removeCategoryEvent
+        #     )
+        log.debug(f"CategorizableCompositeObject.__setstate__() - subject après set: {self.__subject.get()}")
+
 
     def __getcopystate__(self):
         state = super().__getcopystate__()
+        log.debug(f"CategorizableCompositeObject.__getcopystate__ : state avant update {state}.")
         state.update(dict(categories=self.categories()))
+        log.debug(f"CategorizableCompositeObject.__getcopystate__ : retourne state {state}.")
         return state
 
     def categories(self, recursive=False, upwards=False):
@@ -89,10 +110,10 @@ class CategorizableCompositeObject(base.CompositeObject):
 
     def categoriesChangeAppearance(self, categories):
         return (
-            self.categoriesChangeFgColor(categories)
-            or self.categoriesChangeBgColor(categories)
-            or self.categoriesChangeFont(categories)
-            or self.categoriesChangeIcon(categories)
+                self.categoriesChangeFgColor(categories)
+                or self.categoriesChangeBgColor(categories)
+                or self.categoriesChangeFont(categories)
+                or self.categoriesChangeIcon(categories)
         )
 
     def categoriesChangeFgColor(self, categories):
@@ -190,8 +211,8 @@ class CategorizableCompositeObject(base.CompositeObject):
             isListMode = not kwargs.get("treeMode", False)
             # Retire les catégories triées de la liste des catégories catégorisables.
             childCategories = (
-                categorizable.categories(recursive=True, upwards=isListMode)
-                - categories
+                    categorizable.categories(recursive=True, upwards=isListMode)
+                    - categories
             )
             # Ajoute les catégories enfants triées par nom de sujet à la liste des catégories triées.
             sortedCategorySubjects.extend(sortedSubjects(childCategories))

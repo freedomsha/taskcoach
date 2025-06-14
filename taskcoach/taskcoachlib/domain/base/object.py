@@ -204,6 +204,9 @@ class SynchronizedObject(object):
 
     Cette classe fournit des méthodes pour marquer les objets comme nouveaux, modifiés, supprimés ou aucun
     et synchronise ces états avec des événements.
+
+    Elle gère des mécanismes de verrouillage ou de synchronisation d'accès aux attributs.
+
     """
 
     STATUS_NONE = 0
@@ -219,8 +222,8 @@ class SynchronizedObject(object):
             *args: Liste d’arguments de longueur(length) variable.
             **kwargs: Arbitrary keyword arguments.
         """
-        # print(f"SynchronizedObject.__init__ : 🔍 Avant super().__init__() : self.__status = kwargs.pop('status', self.STATUS_NEW)={kwargs.get('status', 'Non défini')}")
-
+        # log.debug(f"SynchronizedObject.__init__ : 🔍 Avant super().__init__() : self.__status = kwargs.pop('status', self.STATUS_NEW)={kwargs.get('status', 'Non défini')}")
+        log.debug("SynchronizedObject : Initialisation.")
         # self.__status = kwargs.pop("status", self.STATUS_NEW)
         self.__status = kwargs.pop("status", None)  # On ne met PAS STATUS_NEW par défaut !
         if self.__status is None:
@@ -241,6 +244,7 @@ class SynchronizedObject(object):
                 super().__init__()
         else:
             super().__init__()  # Sécurisé pour `object`
+        log.debug("SynchronizedObject : Initialisé.")
 
     @classmethod
     def markDeletedEventType(class_):
@@ -274,9 +278,10 @@ class SynchronizedObject(object):
             state = super().__getstate__()
         except AttributeError:
             state = dict()
-
+        log.debug(f"SynchronizedObject.__getstate__ : state avant update {state}.")
         # Ajout de l'attribut de statut de synchronisation
         state["status"] = self.__status
+        log.debug(f"SynchronizedObject.__getstate__ : retourne state {state}.")
         return state
 
     @patterns.eventSource
@@ -288,6 +293,7 @@ class SynchronizedObject(object):
             state (dict) : L’état à définir.
             event : (event) L'événement associé à la définition de l'état.
         """
+        log.debug(f"SynchronizedObject.__setstate__ : pour state {state} et event {event}.")
         # try:
         #     super().__setstate__(state, event=event)
         # except AttributeError:
@@ -337,7 +343,7 @@ class SynchronizedObject(object):
         #     # print("🟡 getStatus : self.__status est None → Forçage à STATUS_CHANGED (2)")
         #     self.__status = self.STATUS_CHANGED  # Force le recalcul
 
-        # print(f"✅ getStatus renvoie {self.__status} - de type {type(self.__status)}")
+        log.debug(f"✅ getStatus renvoie {self.__status} - de type {type(self.__status)}")
         return self.__status
 
     @patterns.eventSource
@@ -351,7 +357,9 @@ class SynchronizedObject(object):
         """
         if not self.setStatusDirty(force):
             return
-        event.addSource(self, self.__status, type=self.markNotDeletedEventType())
+        event.addSource(
+            self, self.__status, type=self.markNotDeletedEventType()
+        )
 
     def setStatusDirty(self, force=False):
         """
@@ -384,7 +392,9 @@ class SynchronizedObject(object):
         """
         if not self.setStatusNew():
             return
-        event.addSource(self, self.__status, type=self.markNotDeletedEventType())
+        event.addSource(
+            self, self.__status, type=self.markNotDeletedEventType()
+        )
 
     def setStatusNew(self):
         """
@@ -427,7 +437,9 @@ class SynchronizedObject(object):
         # print(f"🔄 cleanDirty appelé : self {self} __status {self.__status}")
         if not self.setStatusNone():
             return
-        event.addSource(self, self.__status, type=self.markNotDeletedEventType())
+        event.addSource(
+            self, self.__status, type=self.markNotDeletedEventType()
+        )
 
     def setStatusNone(self):
         """
@@ -494,9 +506,24 @@ class Object(SynchronizedObject):
     Hérite de SynchronizedObject et fournit des attributs comme le sujet, la description,
     les couleurs, la police, les icônes, etc. Tous ces attributs sont encapsulés
     dans des objets `Attribute` capables de déclencher des événements.
-    """
 
-    rx_attributes = re.compile(r'\[(\w+):(.+)\]')  # Expression régulière pour parser les attributs
+    Attributs principaux :
+        __subject,
+        __description,
+        __id,
+        __creationDateTime,
+        __modificationDateTime,
+        __fgColor,
+        __bgColor,
+        __font,
+        __icon,
+        __selectedIcon,
+        __ordering.
+
+    Encapsulation des attributs: Beaucoup d'attributs sont encapsulés par des classes Attribute (ex: self.__subject = attribute.Attribute(...)). C'est un pattern qui permet d'ajouter de la logique (validation, événements de changement) lors de la lecture/écriture des attributs.
+
+    """
+    rx_attributes = re.compile(r"\[(\w+):(.+)\]")  # Expression régulière pour parser les attributs
 
     # Gestion de la compatibilité Python 2/3 pour un entier long zéro
     if sys.version_info.major == 2:
@@ -513,6 +540,7 @@ class Object(SynchronizedObject):
         Initialise l'objet de base avec ses attributs standards, tout en filtrant
         les arguments non reconnus avant d'appeler le constructeur final.
 
+        Initialise tous les attributs avec une instance de attribute.Attribute.
 
         Args :
             args : Liste d'argument positionnel de longueur variable (souvent vides ici).
@@ -538,7 +566,9 @@ class Object(SynchronizedObject):
         # On extrait les attributs pour soi
         local_kwargs = {key: kwargs.pop(key) for key in accepted_keys if key in kwargs}
 
-        # print(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs}")
+        # Faut-il les garder ou les effacer de kwargs ?
+
+        log.debug(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs}")
         # Appel sécurisé au constructeur parent (sans kwargs dangereux)
         super().__init__(*args, **kwargs)
 
@@ -577,12 +607,13 @@ class Object(SynchronizedObject):
         # )
         # subject_value = kwargs.pop("subject", "")
         subject_value = local_kwargs.pop("subject", "")
-        # print(f"Object.__init__ : subject_value={subject_value}")
+        log.debug(f"Object.__init__ : subject_value={subject_value}")
         if isinstance(subject_value, attribute.Attribute):
             self.__subject = subject_value
         else:
             self.__subject = Attribute(subject_value, self, setSubjectEvent)
-        # print(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject!r}")
+        # log.debug(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject!r}")
+        log.debug(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject.get()}")
         # self.__description = Attribute(
         #     kwargs.pop("description", ""), self, self.descriptionChangedEvent
         # )
@@ -701,6 +732,8 @@ class Object(SynchronizedObject):
         pour la sauvegarde, en filtrant les attributs internes ou non pertinents.
         Conserve les données héritées depuis les classes parentes,
         tout en filtrant les attributs internes non désirés.
+        Collecte l'état de l'objet, en récupérant les valeurs .get() des objets
+        Attribute et les ajoutant au dictionnaire state retourné par super().__getstate__().
 
         Returns :
             (dict) : Un dictionnaire nettoyé représentant l'état de l'objet.
@@ -711,7 +744,8 @@ class Object(SynchronizedObject):
             state = super().__getstate__()
         except AttributeError:
             state = dict()
-        # print(f"DEBUG - Object.__getstate__() avant update : {state}")
+        # print(f"DEBUG - Object.__getstate__() avant update: {state}")
+        log.debug(f"DEBUG - Object.__getstate__() avant update subject.get() : {self.__subject.get()}")
 
         # On ajoute uniquement les champs publics attendus,
         # extraits via les attributs "Attribute"
@@ -738,7 +772,7 @@ class Object(SynchronizedObject):
             del state[key]
 
         # DEBUG : Affichage de l'état sérialisé pour vérification
-        # print(f"DEBUG - Object.__getstate__() renvoie : {state}")
+        log.debug(f"DEBUG - Object.__getstate__() renvoie : {state}")
         #
         return state
 
@@ -807,12 +841,20 @@ class Object(SynchronizedObject):
             state (dict) : L’état à définir.
             event : (event) L'événement associé à la définition de l'état.
         """
+        log.debug(f"Object.__setstate__ : avant super, state={state} et event={event}.")
+        # Appeler le parent
+        # C'est l'appel crucial qui va charger les attributs du parent SynchronizedObject
         try:
             super().__setstate__(state, event=event)
         except AttributeError:
             pass
+        log.debug(f"Object.__setstate__() - Entrée, state dict: {state}")
+
         self.__id = state["id"]
+        # Récupérer la valeur du sujet du dictionnaire d'état
+        log.debug(f"Object.__setstate__ : setSubject :")
         self.setSubject(state["subject"], event=event)
+        log.debug(f"Object.__setstate__() - subject après set: {self.__subject.get()}")
         self.setDescription(state["description"], event=event)
         self.setForegroundColor(state["fgColor"], event=event)
         self.setBackgroundColor(state["bgColor"], event=event)
@@ -841,6 +883,7 @@ class Object(SynchronizedObject):
             state = super().__getcopystate__()
         except AttributeError:
             state = dict()
+        log.debug(f"Object.__getcopystate__ : avant update state={state}.")
         if state is None:
             state = dict()
         # Notez que nous ne mettons pas l'identifiant et la date/heure de création dans le dict state,
@@ -857,6 +900,7 @@ class Object(SynchronizedObject):
                 ordering=self.__ordering.get(),
             )
         )
+        log.debug(f"Object.__getcopystate__ : retourne state={state}.")
         return state
 
     def copy(self):
@@ -995,7 +1039,9 @@ class Object(SynchronizedObject):
         Args :
             event : L'événement.
         """
-        event.addSource(self, self.subject(), type=self.subjectChangedEventType())
+        event.addSource(
+            self, self.subject(), type=self.subjectChangedEventType()
+        )
 
     @classmethod
     def subjectChangedEventType(class_):
@@ -1031,6 +1077,7 @@ class Object(SynchronizedObject):
         Returns :
             (tuple) Les types d'événements.
         """
+        # Est-ce que ce doit être vraiment un tuple ou une liste ?
         return (class_.subjectChangedEventType(),)
 
     # Ordering:
@@ -1103,7 +1150,7 @@ class Object(SynchronizedObject):
         Returns :
             (str) La description de l'objet.
         """
-        log.debug(f"Object.description : Retourne {self.__description.get()}.")
+        # log.debug(f"Object.description : Retourne {self.__description.get()}.")
         return self.__description.get()
 
     def setDescription(self, description, event=None):
@@ -1401,9 +1448,14 @@ class Object(SynchronizedObject):
         # ]
 
 
-# Les mixins doivent être avant les types parents !
-class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des problèmes
-    # class CompositeObject(Object, patterns.composite.ObservableComposite):
+# Les mixins doivent être avant les types parents ! Sauf ici !
+# class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des problèmes
+# La classe qui "possède" les attributs fondamentaux de l'objet
+# (comme Object possède __subject) devrait généralement être le premier parent
+# dans l'héritage multiple (ou être le parent le plus "à gauche"
+# qui définit ces attributs), de sorte que son __init__ et __setstate__
+# soient appelés tôt dans la chaîne super().
+class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le seul bon ordre !
     """
     Un objet composite qui peut contenir d'autres objets en tant qu'enfants.
 
@@ -1450,9 +1502,11 @@ class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des probl
         log.debug(f"CompositeObject.__init__() → kwargs avant Object: {kwargs}")
         # Initialisation de la logique Object (subject, description, etc.)
         Object.__init__(self, *args, **kwargs)
+        log.debug(f"CompositeObject.__init__() → kwargs après Object: {kwargs}")
 
         # Initialisation manuelle de Composite
         patterns.composite.Composite.__init__(self, children=children, parent=parent)
+        log.debug(f"CompositeObject.__init__() → kwargs après Composite: {kwargs}")
 
     def __getcopystate__(self) -> dict:
         """
@@ -1463,8 +1517,21 @@ class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des probl
             state (dict) : Le dictionnaire d'état pour créer une copie.
         """
         state = super().__getcopystate__()
+        log.debug(f"CompositeObject.__getcopystate__ : __getstate__() avant subject.get() : {self.__subject.get()}, state avant update {state}.")
         state.update(dict(expandedContexts=self.expandedContexts()))
+        log.debug(f"CompositeObject.__getcopystate__ : retourne state {state}.")
         return state
+
+    def __setstate__(self, state, event=None):
+        # C'est crucial : appeler d'abord le parent. Cela permettra à Object.__setstate__
+        # de s'exécuter et de gérer correctement l'attribut 'subject'.
+        super().__setstate__(state, event)
+
+        # NE PAS TENTER DE POPPER OU DE DÉFINIR 'subject' ICI.
+        # L'attribut 'subject' est déjà géré par Object.__setstate__.
+
+        # ... (ajouter ici le code pour gérer les attributs spécifiques à CompositeObject,
+        #       comme les enfants si tu en as une gestion personnalisée dans __setstate__)
 
     @classmethod
     def monitoredAttributes(class_) -> list[str]:
@@ -1489,6 +1556,7 @@ class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des probl
         Returns :
             (str) : Le sujet de l'objet composite.
         """
+        log.debug(f"CompositeObject.subject : Obtenir le sujet de {self.id()}.")
         subject = super().subject()
         # if recursive and self.parent():
         #     # subject = "%s -> %s" % (
@@ -1496,10 +1564,12 @@ class CompositeObject(patterns.ObservableComposite, Object):  # Ajoute des probl
         #     #     subject,
         #     # )
         #     subject = f"{self.parent().subject(recursive=True)} -> {subject}"
-        if recursive and hasattr(self, "parent") and callable(self.parent):
+        if recursive and ((hasattr(self, "parent") and callable(self.parent)) or self.parent()):
             parent = self.parent()
             if parent:
                 subject = f"{parent.subject(recursive=True)} -> {subject}"
+        log.debug(f"CompositeObject.subject : retourne {subject} de {self.__class__.__name__}")
+        # RecursionError: maximum recursion depth exceeded
         return subject
 
     def subjectChangedEvent(self, event):

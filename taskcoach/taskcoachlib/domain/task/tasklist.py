@@ -64,7 +64,8 @@ class TaskList(TaskListQueryMixin, categorizable.CategorizableContainer):
         """
         Fournir un moyen de contourner la méthode __len__ des décorateurs.
 
-        :return int:
+        Returns :
+            (int) :
         """
 
         return len([t for t in self if not t.isDeleted()])

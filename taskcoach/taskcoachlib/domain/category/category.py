@@ -20,18 +20,37 @@ from taskcoachlib import patterns
 from taskcoachlib.domain import base, note, attachment
 
 
-class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject):
-    def __init__(self, subject="", categorizables=None, children=None,
-                 filtered=False, parent=None, description="",
-                 exclusiveSubcategories=False, *args, **kwargs):
-        super().__init__(subject=subject, children=children or [],
-                         parent=parent, description=description,
-                         *args, **kwargs)
+class Category(
+    attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject
+):
+    def __init__(
+        self,
+        subject,  # =""
+        categorizables=None,
+        children=None,
+        filtered=False,
+        parent=None,
+        description="",
+        exclusiveSubcategories=False,
+        *args,
+        **kwargs
+    ):
+        super().__init__(
+            subject=subject,
+            children=children or [],
+            parent=parent,
+            description=description,
+            *args,
+            **kwargs
+        )
         # Liste d'attributs de base contenant la liste des catégorisables.
-        self.__categorizables = base.SetAttribute(values=set(categorizables or []),
-                                                  owner=self,
-                                                  addEvent=self.categorizableAddedEvent,
-                                                  removeEvent=self.categorizableRemovedEvent, weak=True)
+        self.__categorizables = base.SetAttribute(
+            values=set(categorizables or []),
+            owner=self,
+            addEvent=self.categorizableAddedEvent,
+            removeEvent=self.categorizableRemovedEvent,
+            weak=True
+        )
         self.__filtered = filtered
         self.__exclusiveSubcategories = exclusiveSubcategories
 
@@ -43,28 +62,28 @@ class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject)
     @classmethod
     def filterChangedEventType(class_):
         # def filterChangedEventType(cls):
-        """ Event type to Notify observers that categorizables belonging to
+        """ Event type to notify observers that categorizables belonging to
             this category are filtered or not. """
         return "category.filter"
 
     @classmethod
     def categorizableAddedEventType(class_):
         # def categorizableAddedEventType(cls):
-        """ Event type to Notify observers that categorizables have been added
+        """ Event type to notify observers that categorizables have been added
             to this category. """
         return "category.categorizable.added"
 
     @classmethod
     def categorizableRemovedEventType(class_):
         # def categorizableRemovedEventType(cls):
-        """ Event type to Notify observers that categorizables have been removed
+        """ Event type to notify observers that categorizables have been removed
             from this category. """
         return "category.categorizable.removed"
 
     @classmethod
     def exclusiveSubcategoriesChangedEventType(class_):
         # def exclusiveSubcategoriesChangedEventType(cls):
-        """ Event type to Notify observers that subcategories have become
+        """ Event type to notify observers that subcategories have become
             exclusive (or vice versa). """
         return "category.exclusiveSubcategories"
 
@@ -119,7 +138,9 @@ class Category(attachment.AttachmentOwner, note.NoteOwner, base.CompositeObject)
         return result
 
     def addCategorizable(self, *categorizables, **kwargs):
-        self.__categorizables.add(set(categorizables), event=kwargs.pop("event", None))
+        self.__categorizables.add(
+            set(categorizables), event=kwargs.pop("event", None)
+        )
 
     def categorizableAddedEvent(self, event, *categorizables):
         event.addSource(self, *categorizables,

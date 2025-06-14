@@ -19,6 +19,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+# Il serait préférable de remplacer wx.ListCtrl par wx.DataViewCtrl
+# (qui est plus moderne et puissant pour les données structurées).
 # from __future__ import division
 # from builtins import map
 # from builtins import zip
@@ -180,7 +182,7 @@ class BaseTaskViewer(
             **kwargs :
         """
 
-        log.debug(f"Création du Visualiseur de base pour les tâches.")
+        log.debug(f"BaseTaskViewer : Création du Visualiseur de base pour les tâches.")
         super().__init__(*args, **kwargs)
         self.statusMessages = TaskViewerStatusMessages(self)
         self.__registerForAppearanceChanges()
@@ -230,7 +232,8 @@ class BaseTaskViewer(
         # qui sont généralement sûrs.
         for appearance in ("font", "fgcolor", "bgcolor", "icon"):
             appearanceSettings = [
-                "settings.%s.%s" % (appearance, setting)
+                # "settings.%s.%s" % (appearance, setting)
+                f"settings.{appearance}.{setting}"
                 for setting in (
                     "activetasks",
                     "inactivetasks",
@@ -285,6 +288,7 @@ class BaseTaskViewer(
         Returns :
 
         """
+        # Rafraîchir les éléments affichés dans la visionneuse :
         if self:
             wx.CallAfter(self.refresh)  # Let domain objects update appearance first
         # Show/hide status in toolbar may change too
@@ -295,7 +299,7 @@ class BaseTaskViewer(
         Retourne les objets de domaine (tâches) à visualiser.
 
         Returns :
-
+            BaseTaskViewer.taskFile.tasks() :
         """
         return self.taskFile.tasks()
 
@@ -419,7 +423,9 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         kwargs["categories"] = self.taskFile.categories().filteredCategories()
         return super().newItemDialog(*args, **kwargs)
 
-    def editItemDialog(self, items, bitmap, columnName="", items_are_new=False):
+    def editItemDialog(
+        self, items, bitmap, columnName="", items_are_new=False
+    ):
         """
         Ouvre une boîte de dialogue pour éditer les tâches sélectionnées.
 
@@ -606,6 +612,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         )
 
     def getItemTooltipData(self, task):  # pylint: disable=W0621
+        log.debug(f"BaseTaskTreeViewer.getItemTooltipData : task={self.getItemText(task)}")
         result = [
             (self.iconName(task, task in self.curselection()), [self.getItemText(task)])
         ]
@@ -666,6 +673,7 @@ class RootNode(object):
         Retourne une chaîne vide (aucun sujet pour la racine).
 
         Returns :
+            Le sujet de la tâche.
 
         """
         return ""
@@ -1165,9 +1173,11 @@ class SquareTaskViewer(BaseTaskTreeViewer):
         return 0
 
     def getItemText(self, task):
+        log.debug()
         text = super().getItemText(task)
         value = self.render(getattr(task, self.__orderBy)(recursive=False))
-        return "%s (%s)" % (text, value) if value else text
+        # return "%s (%s)" % (text, value) if value else text
+        return f"{text} ({value})" if value else text
 
     def value(self, task, parent=None):  # pylint: disable=W0613
         return self.overall(task)
@@ -1781,7 +1791,7 @@ class TaskViewer(
                     task.Task.descriptionChangedEventType(),
                     sortCallback=uicommand.ViewerSortByCommand(
                         viewer=self, value="description"
-                        ),
+                    ),
                     renderCallback=lambda task: task.description(),
                     width=self.getColumnWidth("description"),
                     editCallback=self.onEditDescription,
@@ -1863,7 +1873,7 @@ class TaskViewer(
         for name, columnHeader, editCtrl, editCallback, eventTypes in [
             (
                 "plannedStartDateTime",
-                _("Planned start Date"),
+                _("Planned start Date"),  # TODO : Date ou date ?
                 inplace_editor.DateTimeCtrl,
                 self.onEditPlannedStartDateTime,
                 [],
@@ -2080,8 +2090,8 @@ class TaskViewer(
                 **kwargs
             )
         )
-        # log.debug(f"TaskViewer._createColumns retourne columns {columns}.")
-        log.debug(f"TaskViewer._createColumns retourne columns.")
+        log.debug(f"TaskViewer._createColumns retourne columns {columns}.")
+        # log.debug(f"TaskViewer._createColumns retourne columns.")
         return columns
 
     def createColumnUICommands(self):
@@ -2332,7 +2342,10 @@ class TaskViewer(
     # pylint: disable=W0621
 
     def renderSubject(self, task):
-        return task.subject(recursive=not self.isTreeViewer())
+        # return task.subject(recursive=not self.isTreeViewer())
+        subject_to_return = task.subject(recursive=not self.isTreeViewer())
+        log.debug(f"TaskViewer.renderSubject : Retourne {subject_to_return} pour task={task}")
+        return subject_to_return
 
     def renderPlannedStartDateTime(self, task, humanReadable=True):
         return self.renderedValue(

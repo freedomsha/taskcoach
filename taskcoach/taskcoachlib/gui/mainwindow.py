@@ -752,19 +752,20 @@ class MainWindow(
             title += f" - {self.__filename}"
         if self.__dirty:
             title += " *"
+        # Règle le titre de la fenêtre principale :
         self.SetTitle(title)
 
-    def Destroy(self):
-        """Surcharge la méthode Destroy pour détruire proprement les menus."""
-        log.debug("MainWindow.Destroy: Début de la destruction de MainWindow et de ses menus.")
-        if hasattr(self, 'task_popup_menu') and self.task_popup_menu:
-            self.task_popup_menu.Destroy()
-            del self.task_popup_menu  # Supprimez la référence pour éviter les problèmes
-        if hasattr(self, 'task_tree_viewer') and self.task_tree_viewer:
-            self.task_tree_viewer.Destroy()  # Assurez-vous de détruire le viewer
-            del self.task_tree_viewer
-        super().Destroy()
-        log.debug("MainWindow.Destroy: Fin de la destruction de MainWindow.")
+    # def Destroy(self):
+    #     """Surcharge la méthode Destroy pour détruire proprement les menus."""
+    #     log.debug("MainWindow.Destroy: Début de la destruction de MainWindow et de ses menus.")
+    #     # if hasattr(self, 'task_popup_menu') and self.task_popup_menu:
+    #     #     self.task_popup_menu.Destroy()
+    #     #     del self.task_popup_menu  # Supprimez la référence pour éviter les problèmes
+    #     # if hasattr(self, 'task_tree_viewer') and self.task_tree_viewer:
+    #     #     self.task_tree_viewer.Destroy()  # Assurez-vous de détruire le viewer
+    #     #     del self.task_tree_viewer
+    #     super().Destroy()
+    #     log.debug("MainWindow.Destroy: Fin de la destruction de MainWindow.")
 
     def displayMessage(self, message, pane=0):
         """
@@ -907,7 +908,8 @@ class MainWindow(
             # Simplifier la logique
             # Vérifier les paramètres de l'application. :
             should_quit = application.Application().quitApplication()
-            should_hide = event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed")
+            # should_hide = event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed")
+            should_hide = self.settings.getboolean("window", "hidewhenclosed")
 
             # TODO : Gérer la sauvegarde des données non enregistrées :
             #  Avant de fermer les éditeurs ou de quitter l'application,
@@ -1010,7 +1012,7 @@ class MainWindow(
                 #  Ajoutez un attribut à MainWindow (par exemple, self._is_hidden_when_iconified)
                 #  pour suivre si la fenêtre est cachée à cause de l'iconification.
                 #  Cela pourrait être utile ailleurs dans l'application.
-                self._is_hidden_when_iconified = True # Exemple de mise à jour d'un état interne
+                self._is_hidden_when_iconified = True  # Exemple de mise à jour d'un état interne
             else:
                 event.Skip()
                 self._is_hidden_when_iconified = False
@@ -1048,6 +1050,7 @@ class MainWindow(
         if newSize != self._lastSize:
             log.debug(f"MainWindow.onResize : Redimensionnement de la fenêtre : {newSize}, ancienne valeur={self._lastSize}")
             self._lastSize = newSize
+            # TODO : mettre self._lastSize = self._lastSize or self.GetSize() dans __init__
 
         event.Skip()
         log.debug(f"MainWindow.onResize : Fenêtre redimensionnée, résultat : {self.GetSize()}")

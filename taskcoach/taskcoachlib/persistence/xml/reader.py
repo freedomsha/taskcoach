@@ -565,11 +565,12 @@ class XMLReader(object):  # nouvelle classe
         # Vérification de self.__fd :
         # content = self.__fd.read()
         # if not self.__fd.getvalue().strip():
-        # if isinstance(self.__fd, (io.StringIO, io.BytesIO)):
-        if isinstance(self.__fd, (io.BytesIO)):
+        if isinstance(self.__fd, (io.StringIO, io.BytesIO)):  # Et si TextIOWrapper ?
+            # if isinstance(self.__fd, (io.StringIO, io.BytesIO, io.TextIOWrapper)):
+            # if isinstance(self.__fd, (io.BytesIO)):
             if self.__fd.readable():
                 contenu = self.__fd.read().strip()  # io.BufferedIOBase.read() renvoie des bytes !
-                print(f"XMLReader.read : contenu = {contenu}")
+                wx.LogDebug(f"XMLReader.read : contenu = {contenu}")
                 if not contenu:
                     wx.LogInfo("XMLReader.read : Fichier XML vide.")
                     # raise ValueError("Fichier XML vide, impossible de le charger.")
@@ -612,7 +613,7 @@ class XMLReader(object):  # nouvelle classe
         self.__fd.seek(0)  # Remet le curseur au début du fichier
         # wx.LogDebug(f"XMLReader.read : Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu. Ne s'affiche pas dans les tests !
         # log.debug(f"XMLReader.read : DEBUG - Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu. Ne s'affiche pas dans les tests !
-        print(f"XMLReader.read : Contenu du fichier :\n{self.__fd.read()}")  # Vérifie le contenu lu
+        log.debug(f"XMLReader.read : Contenu du fichier :\n{self.__fd.read()}")  # Vérifie le contenu lu
         self.__fd.seek(0)  # Reviens au début avant parsing
         # print(f"XMLReader.read : 3. Valeur du fichier lu : self.__fd.getvalue = {self.__fd.getvalue()}")
         # tree = eTree.parse(self.__fd, parser)
@@ -872,7 +873,7 @@ class XMLReader(object):  # nouvelle classe
             #     log.debug(f"XMLReader.__perse_task_nodes : 🔍 Enfant : {subchild.id()} | Instance mémoire : {id(subchild)}")
             task_return.append(task_parsed)  # Ajoute explicite de la tâche task_parsed à la liste de tâches
             # log.debug(f"XMLReader.__perse_task_nodes : ✅ Sous-Note ajoutée : {task_parsed.id()} dans la liste des tâches {task_return}")
-        print(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
+        log.debug(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
         return task_return
 
         # categories = []
@@ -1745,7 +1746,7 @@ class XMLReader(object):  # nouvelle classe
         Returns :
             dict attributes : Un dictionnaire contenant ces attributs.
         """
-        # log.debug(f"XMLReader.__parse_base_attributes : dans self={self} pour le noeud node={node}")
+        log.debug(f"XMLReader.__parse_base_attributes : dans self={self} pour le noeud node={node}")
         bg_color_attribute = "color" if self.__tskversion <= 27 else "bgColor"
         # Dictionnaire des attributs du nœud node.
         attributes = dict(
@@ -1776,7 +1777,7 @@ class XMLReader(object):  # nouvelle classe
         if self.__tskversion >= 22:
             attributes["status"] = int(node.attrib.get("status", "1"))
 
-        # print(f"__parse_base_attributes : retourne attributes={attributes}")
+        log.debug(f"__parse_base_attributes : retourne attributes={attributes}")
         return attributes
 
     def __parse_base_composite_attributes(self, node, parse_children,

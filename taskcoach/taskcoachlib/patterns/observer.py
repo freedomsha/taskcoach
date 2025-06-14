@@ -225,7 +225,7 @@ class Event(object):
         l'appelant est sûr que cette instance d'événement a exactement un type d'événement.
 
         Returns :
-            str : Le type d'événement.
+            (str) : Le type d'événement.
         """
         return list(self.types())[0] if self.types() else None
 
@@ -655,10 +655,10 @@ class Publisher(object, metaclass=singleton.Singleton):
         un type d'événement spécifique pour obtenir des observateurs pour ce type d'événement uniquement.
 
         Args :
-            eventType (str, facultatif) : le type d'événement par lequel filtrer les observateurs.
+            eventType (str | None) : (facultatif) Le type d'événement par lequel filtrer les observateurs.
 
         Returns :
-            set : L'ensemble des observateurs.
+            result (set) : L'ensemble des observateurs.
         """
         if eventType:
             return self.__observers.get((eventType, None), set())
@@ -760,7 +760,7 @@ class Decorator(Observer):
             attribute (str) : le nom de l'attribut.
 
         Returns :
-            (Any) La valeur de l'attribut.
+            (Any) : La valeur de l'attribut.
         """
         return getattr(self.observable(), attribute)
 
@@ -773,6 +773,7 @@ class ObservableCollection(object):
 
     def detach(self):
         """Met en pause les Cycles."""
+        pass
 
     @classmethod
     # def addItemEventType(class_) -> str:

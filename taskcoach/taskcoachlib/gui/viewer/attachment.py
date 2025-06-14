@@ -269,7 +269,7 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         return (uicommand.AttachmentNew(attachments=self.presentation(),
                                         settings=self.settings,
-                                        viewer=self)) + \
+                                        viewer=self),) + \
             super().createCreationToolBarUICommands()
 
     def createActionToolBarUICommands(self):
@@ -280,7 +280,7 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             (tuple) : Les commandes d'action.
         """
         return (uicommand.AttachmentOpen(attachments=attachment.AttachmentList(),
-                                         viewer=self, settings=self.settings)) + \
+                                         viewer=self, settings=self.settings),) + \
             super().createActionToolBarUICommands()
 
     def typeImageIndices(self, anAttachment, exists=os.path.exists):  # pylint: disable=W0613

@@ -382,7 +382,7 @@ class TaskFile(patterns.Observer):
         Obtenez l'instance ChangeMonitor.
 
         Returns :
-            ChangeMonitor : l'instance ChangeMonitor.
+            ChangeMonitor : L'instance ChangeMonitor.
         """
         return self.__monitor
 

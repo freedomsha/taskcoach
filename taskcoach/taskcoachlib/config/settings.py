@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import configparser
+import logging
 import os
 import sys
 import wx
@@ -30,6 +31,8 @@ from taskcoachlib import meta, patterns, operating_system
 from taskcoachlib.i18n import _
 # from taskcoachlib.workarounds import ExceptionAsUnicode  # unused import
 from . import defaults
+
+log = logging.getLogger(__name__)
 
 
 class UnicodeAwareConfigParser(configparser.RawConfigParser):
@@ -188,6 +191,13 @@ class Settings(CachingConfigParser):
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
         """
+        # --- LOG 1 : À l'entrée de __init__ de Page ---
+        log.debug(f"--- Settings.__init__ entrée ---")
+        log.debug(f"  load: {load}")
+        log.debug(f"  iniFile (reçu par Settings): {iniFile}")
+        log.debug(f"  *args (reçus par Settings): {args}")
+        log.debug(f"  **kwargs (reçus par Settings): {kwargs}")
+        log.debug("Settings : Initialisation MRO:", Settings.__mro__)
         # Soupir, ConfigParser.SafeConfigParser est une classe à l'ancienne, donc nous
         # devons appeler explicitement la superclasse __init__ :
         CachingConfigParser.__init__(self, *args, **kwargs)
@@ -1126,6 +1136,6 @@ class Settings(CachingConfigParser):
         Obtenez le hachage de l'objet Paramètres(Settings).
 
         Returns :
-            int : L'id de hachage de l'objet Paramètres.
+            id (int) : L'id de hachage de l'objet Paramètres.
         """
         return id(self)

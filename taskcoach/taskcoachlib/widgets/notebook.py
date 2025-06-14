@@ -21,6 +21,8 @@ import wx
 # from wx.lib.agw import aui
 import wx.lib.agw.aui as aui
 
+log = logging.getLogger(__name__)  # Logger pour ce fichier
+
 
 class GridCursor:
     """
@@ -93,26 +95,74 @@ class BookPage(wx.Panel):
         _borderWidth (int) : La largeur de la bordure autour des contrôles.
     """
 
-    def __init__(self, parent, columns, growableColumn=None, *args, **kwargs):
+    def __init__(self, parent, *args, columns=None, growableColumn=None, **kwargs):
         """
         Initialise l'instance BookPage.
 
         Args :
             parent (wx.Window) : La fenêtre parente.
+            *args : Liste d’arguments de longueur variable.
             columns (int) : Le nombre de colonnes dans la grille.
             growableColumn (int, optional) : L'index de la colonne augmentable. Defaults to None.
-            *args : Liste d’arguments de longueur variable.
             **kwargs : Arguments de mots clés arbitraires.
         """
+        # --- LOG 1 : À l'entrée de __init__ de BookPage ---
+        log.debug(f"--- BookPage.__init__ entrée ---")
+        log.debug(f"  parent (reçu par BookPage): {parent}")
+        log.debug(f"  *args (reçus par BookPage): {args}")
+        log.debug(f"  columns (arg direct): {columns}")
+        log.debug(f"  growableColumn (arg direct): {growableColumn}")
+        log.debug(f"  **kwargs (reçus par BookPage): {kwargs}")
+
+        # --- LOG 2 : Avant les pop de kwargs ---
+        log.debug(f"  BookPage.__init__ - kwargs avant les pops: {kwargs}")
+        # Récupère la valeur de 'columns' et 'growableColumn' des kwargs s'ils y sont,
+        # sinon utilise les valeurs par défaut définies dans la signature (__init__ arguments).
+        _columns_val = kwargs.pop('columns', columns)
+        _growable_column_val = kwargs.pop('growableColumn', growableColumn)
+        # --- LOG 3 : Après les pop de kwargs ---
+        log.debug(f"  BookPage.__init__ - kwargs après les pops: {kwargs}")
+        log.debug(f"  BookPage.__init__ - Valeur extraite _columns_val: {_columns_val}")
+        log.debug(f"  BookPage.__init__ - Valeur extraite _growable_column_val: {_growable_column_val}")
+
+        # Assurez-vous d'avoir une valeur par défaut si 'columns' n'est pas passé du tout.
+        # Par exemple, si vous voulez que 2 soit la valeur par défaut pour BookPage:
+        if _columns_val is None:
+            _columns_val = 2  # Valeur par défaut pour BookPage si non spécifiée
+            # --- LOG 4 : Quand _columns_val est mis par défaut ---
+            log.debug(f"  BookPage.__init__ - _columns_val mis par défaut à: {_columns_val}")
+
+        # --- LOG 5 : Avant l'appel à super().__init__ (wx.Panel) ---
+        log.debug(f"  BookPage.__init__ - Appel de super().__init__ (wx.Panel) avec:")
+        log.debug(f"    parent passé à super: {parent}")
+        log.debug(f"    style passé à super: {wx.TAB_TRAVERSAL}")
+        log.debug(f"    *args passés à super: {args}")
+        log.debug(f"    **kwargs passés à super: {kwargs}")
+        # Appelle le constructeur de la super-classe (wx.Panel),
+        # en passant les arguments génériques restants (*args, **kwargs)
         super().__init__(parent, style=wx.TAB_TRAVERSAL, *args, **kwargs)
-        self._sizer = wx.GridBagSizer(vgap=5, hgap=5)
-        self._columns = columns
-        self._position = GridCursor(columns)
-        if growableColumn is None:
-            self._growableColumn = columns - 1
+        # --- LOG 6 : Après l'appel à super().__init__ (wx.Panel) ---
+        log.debug(f"--- BookPage.__init__ super().__init__ (wx.Panel) terminé ---")
+
+        # Affectez les valeurs consommées aux attributs internes
+        # self._columns = columns
+        # self._position = GridCursor(columns)
+        self._columns = _columns_val
+        self._position = GridCursor(self._columns)  # Utilise la valeur correcte
+        # if growableColumn is None:
+        if _growable_column_val is None:
+            # self._growableColumn = columns - 1
+            self._growableColumn = self._columns - 1  # Le calcul est maintenant sûr
+
         else:
-            self._growableColumn = growableColumn
+            # self._growableColumn = growableColumn
+            self._growableColumn = _growable_column_val
         self._borderWidth = 5
+        self._sizer = wx.GridBagSizer(vgap=5, hgap=5)  # type de sizer pour organiser ses contrôles
+        # --- LOG 7 : Après l'initialisation des attributs de BookPage ---
+        log.debug(f"  BookPage.__init__ - self._columns final: {self._columns}")
+        log.debug(f"--- BookPage.__init__ terminé ---")
+
 
     def fit(self):
         """
@@ -197,11 +247,12 @@ class BookPage(wx.Panel):
             if control is not None
         ]
         lastColumnIndex = len(controls) - 1
+        # Itère sur les contrôles (libellé, puis champ de texte) :
         for columnIndex, control in enumerate(controls):
-            self.__addControl(
-                columnIndex,
-                control,
-                flags[columnIndex],
+            self.__addControl(  # Pour chaque contrôle, ajoute un contrôle au sizer
+                columnIndex,  # 0 pour le libellé, 1 pour le contrôle
+                control,  # l'objet wx.StaticText, puis le wx.TextCtrl
+                flags[columnIndex],  # flags[0] pour le libellé, flags[1] pour le contrôle
                 lastColumn=columnIndex == lastColumnIndex,
             )
             if columnIndex > 0:
@@ -231,6 +282,8 @@ class BookPage(wx.Panel):
         """
         Ajoutez un contrôle au sizer.
 
+        Place les éléments dans des colonnes spécifiques de la grille.
+
         Args :
             columnIndex (int) : L'index de la colonne.
             control (wx.Window) : Le contrôle à ajouter.
@@ -238,6 +291,7 @@ class BookPage(wx.Panel):
             lastColumn (bool) : Si le contrôle est dans la dernière colonne.
         """
         colspan = max(self._columns - columnIndex, 1) if lastColumn else 1
+        # Le calcul de la position et l'avancement du curseur :
         position = self._position.next(colspan)
         #
         # # Sortie de débogage pour vérifier les valeurs transmises
@@ -251,8 +305,8 @@ class BookPage(wx.Panel):
 
         self._sizer.Add(
             control,
-            # position,
-            self._position.next(colspan),
+            position,
+            # self._position.next(colspan),
             span=(1, colspan),
             flag=flag,
             border=self._borderWidth,

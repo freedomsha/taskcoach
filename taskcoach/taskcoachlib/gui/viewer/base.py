@@ -95,7 +95,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         """
         log.debug(f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
         patterns.Observer.__init__(self)
-        log.debug(f"parent={parent.__class__.__name__}")
+        log.debug(f"Viewer : parent={parent.__class__.__name__}")
         super().__init__(parent, -1)
         # new_id = wx.NewIdRef().GetId()
         # new_id = wx.ID_ANY
@@ -107,6 +107,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.__settingsSection = kwargs.pop("settingsSection")
         self.__freezeCount = 0
         # The how maniest of this viewer type are we? Used for settings
+        # Le quel plus grand nombre de ce type de visualiseur avons-nous? Utilisé pour les paramètres
         self.__instanceNumber = kwargs.pop("instanceNumber")  # KeyError: 'instanceNumber'
         # self.__instanceNumber = kwargs.pop("instanceNumber", 0)
         self.__use_separate_settings_section = kwargs.pop(
@@ -114,16 +115,16 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         )
         # Selection cache:
         self.__curselection = []
-        # Flag so that we don't Notify observers while we're selecting all items
+        # Indicateur pour que nous n'informions pas les observateurs pendant que nous sélectionnons tous les éléments
         self.__selectingAllItems = False
-        # Popup menus we have to Destroy before closing the viewer to prevent
-        # memory leakage:
+        # Menus contextuels que nous devons détruire avant de fermer le visualiseur pour empêcher
+        # les fuites de mémoire :
         self._popupMenus = []
-        # What are we presenting:
+        # Que présentons-nous:
         self.__presentation = self.createSorter(
             self.createFilter(self.domainObjectsToView())
         )
-        # The widget used to present the presentation:
+        # Le widget utilisé pour présenter la présentation:
         self.widget = self.createWidget()
         # log.error("VIEWER : Ici, s'arrête après cela ? :")
         self.widget.SetBackgroundColour(
@@ -141,7 +142,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         pub.subscribe(self.onEndIO, "taskfile.justCleared")
         pub.subscribe(self.onEndIO, "taskfile.justSaved")
 
-        if isinstance(self.widget, ToolTipMixin):  # si widget est une instance de ToolTupMixin
+        if isinstance(self.widget, ToolTipMixin):  # si widget est une instance de ToolTipMixin
             # Informer l'utilisateur
             pub.subscribe(self.onShowTooltipsChanged, "settings.view.descriptionpopups")
             # Régler les infos du widget
@@ -383,14 +384,17 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             event (Event) : L'événement indiquant l'ajout d'un nouvel élément.
         """
         self.select(
-            [item for item in list(event.values()) if item in self.presentation()]
+            [item
+             for item in list(event.values())
+             if item in self.presentation()]
         )
 
     def onPresentationChanged(self, event):  # pylint: disable=W0613
         """Gère les changements dans la présentation et rafraîchit la visionneuse.
 
-        Chaque fois que notre présentation est modifiée (éléments ajoutés, éléments supprimés)
-        , la visionneuse se rafraîchit."""
+        Chaque fois que notre présentation est modifiée (éléments ajoutés,
+        éléments supprimés), la visionneuse se rafraîchit.
+        """
 
         def itemsRemoved():
             return event.type() == self.presentation().removeItemEventType()
@@ -444,17 +448,15 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
 
     def thaw(self):
         """
-
         Réévaluer la mise à jour de la fenêtre après un appel précédent de freeze().
 
         Returns :
-
         """
         self.widget.Thaw()
 
     # def refresh(self):
     def refresh(self, *args, **kwargs):
-        """Rafraîchit les éléments affichés dans la visionneuse."""
+        """Rafraîchir les éléments affichés dans la visionneuse."""
         if self and not self.__freezeCount:
             self.widget.RefreshAllItems(len(self.presentation()))
             # Unresolved attribute reference 'RefreshAllItems' for class 'Window'

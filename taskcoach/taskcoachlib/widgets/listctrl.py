@@ -17,10 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import range
+import logging
 from taskcoachlib import operating_system
 from taskcoachlib.widgets import itemctrl
 import wx.lib.mixins.listctrl
 
+# Il serait préférable de remplacer wx.ListCtrl par wx.DataViewCtrl
+# (qui est plus moderne et puissant pour les données structurées).
+log = logging.getLogger(__name__)
 
 class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                       itemctrl.CtrlWithToolTipMixin, wx.ListCtrl):
@@ -56,7 +60,10 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
         return self.__parent.getItemWithIndex(rowIndex)
 
     def getItemText(self, domainObject, columnIndex):
-        return self.__parent.getItemText(domainObject, columnIndex)
+        # return self.__parent.getItemText(domainObject, columnIndex)
+        return_itemText = self.__parent.getItemText(domainObject, columnIndex)
+        log.debug(f"VirtualListCtrl.getItemText : renvoie {return_itemText} pour {domainObject} colonne {columnIndex}")
+        return return_itemText
 
     def getItemTooltipData(self, domainObject):
         return self.__parent.getItemTooltipData(domainObject)

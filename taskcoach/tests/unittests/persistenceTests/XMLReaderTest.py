@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Ce fichier contient des tests unitaires pour la lecture de fichiers XML dans Task Coach.
 
 """
 Task Coach - Your friendly task manager
@@ -16,24 +17,44 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Tests unitaires pour la lecture des fichiers XML dans Task Coach.
+
+Ce module contient une série de cas de test vérifiant que les différentes versions du format XML
+utilisé par Task Coach sont correctement prises en charge par le parseur XML (`persistence.XMLReader`).
+
+Les tests couvrent :
+- La rétrocompatibilité avec d'anciennes versions (v6 à v37)
+- Le traitement des tâches, catégories, notes et efforts
+- La gestion des pièces jointes, de la récurrence, des couleurs, des polices
+- La lecture d'attributs comme `priority`, `reminder`, `completionDateTime`, etc.
 """
 
 # from future import standard_library
-from xml.parsers import expat
-from xml.etree import ElementTree
-import wx
+import base64
 import io
+import logging
 import os
 import tempfile
-import base64
+import wx
+from xml.parsers import expat
+from xml.etree import ElementTree
+# import lxml.etree
 from ... import tctest
 from taskcoachlib import persistence, config, operating_system
 from taskcoachlib.domain import date, task
 
 # standard_library.install_aliases()
 
+log = logging.getLogger(__name__)
+
 
 class XMLTemplateReaderTestCase(tctest.TestCase):
+    """Tests pour la conversion d'expressions temporelles dans les modèles XML.
+
+    Ce test vérifie que certaines expressions temporelles comme `Now()`, `Today()`,
+    `Now().endOfDay()` ou `TimeDelta(...)` sont bien converties en chaînes lisibles.
+    """
     def convert(self, old_format, now=date.Now):
         return persistence.TemplateXMLReader.convert_old_format(old_format, now)
 
@@ -79,17 +100,33 @@ class XMLTemplateReaderTestCase(tctest.TestCase):
             expectedDate.year, expectedDate.month, expectedDate.day
         )
         expectedMinutes = (expectedDateTime - now).minutes()
-        actualMinutes = int(self.convert("Today() + TimeDelta(17)").split(" ")[0])
+        actualMinutes = int(
+            self.convert("Today() + TimeDelta(17)").split(" ")[0]
+        )
         self.assertTrue(abs(actualMinutes - expectedMinutes) <= 1)
 
     def testConvertTodayAndZeroTimeDelta(self):
         now = date.Now()
         expectedMinutes = (now - now.startOfDay()).minutes()
-        actualMinutes = int(self.convert("Today() + TimeDelta(0)").split(" ")[0])
+        actualMinutes = int(
+            self.convert("Today() + TimeDelta(0)").split(" ")[0]
+        )
         self.assertTrue(abs(actualMinutes - expectedMinutes) <= 1)
 
 
 class XMLReaderTestCase(tctest.TestCase):
+    """Classe de base pour les tests de lecture XML.
+
+    Fournit des utilitaires pour écrire des contenus XML simulés en mémoire, les lire
+    via `persistence.XMLReader`, et extraire les éléments de plus haut niveau :
+    - tâches
+    - catégories
+    - notes
+    - configuration SyncML
+    - GUID
+    - changements (`changes`)
+    """
+    # Géré en amont :
     tskversion = "Subclass responsibility"
 
     def setUp(self):
@@ -97,11 +134,12 @@ class XMLReaderTestCase(tctest.TestCase):
         task.Task.settings = config.Settings(load=False)
 
     def writeAndRead(self, xml_contents):
+        """Écrit une chaîne XML simulée dans un tampon mémoire, puis utilise XMLReader pour la lire."""
         # pylint: disable=W0201
         # Attributs :
         # Sortie de tampon d'écriture
-        # self.fd = io.StringIO()
-        self.fd = io.BytesIO()
+        self.fd = io.StringIO()
+        # self.fd = io.BytesIO()
         # Nom du fichier (inutile pour StringIO)
         self.fd.name = "testfile.tsk"
         # Classe pour lire le fichier
@@ -112,50 +150,78 @@ class XMLReaderTestCase(tctest.TestCase):
         all_xml = (
             "<?taskcoach release='whatever' "
             # 'tskversion="%d"?>\n' % self.tskversion + xml_contents
-            f"tskversion='{self.tskversion:d}'?>\n"
+            # f"tskversion='{self.tskversion:d}'?>\n"
+            f"tskversion='{self.tskversion:d}'?>"
             f"{xml_contents}"
-        ).encode(encoding="utf-8")
+        )
+        # ).encode(encoding="utf-8")
         # print(f"XMLReadertest.writeAndRead: Essaie d'écrire all_xml={all_xml} dans self.fd={self.fd}")
         self.fd.write(all_xml)
         self.fd.seek(0)
-        # print(f"XMLReadertest.writeAndRead: résultat de write dans self.fd avant seek = {self.fd.read()}")
+        print(f"XMLReadertest.writeAndRead: résultat de write dans self.fd avant seek = {self.fd.read()}")
         self.fd.seek(0)
-        return self.reader.read()
+        # return self.reader.read()
+        the_return = self.reader.read()
+        print(f"XMLReadertest.writeAndRead : Renvoie {the_return}")
+        return the_return
 
     def writeAndReadTasks(self, xml_contents):
-        return self.writeAndRead(xml_contents)[0]
+        """Lit uniquement la section `<tasks>` depuis un contenu XML simulé."""
+        # return self.writeAndRead(xml_contents)[0]
+        contents = self.writeAndRead(xml_contents)[0]
+        print(f"XMLReaderTestCase.writeAndReadTasks : Retourne la partie <tasks> : {contents}.")
+        return contents
 
     def writeAndReadCategories(self, xml_contents):
+        """Lit uniquement la section `<categories>` depuis un contenu XML simulé."""
         return self.writeAndRead(xml_contents)[1]
 
     def writeAndReadNotes(self, xml_contents):
+        """Lit uniquement la section `<notes>` depuis un contenu XML simulé."""
         return self.writeAndRead(xml_contents)[2]
 
     def writeAndReadSyncMLConfig(self, xml_contents):
+        """Lit uniquement la section `<>` depuis un contenu XML simulé."""
         return self.writeAndRead(xml_contents)[3]
 
     def writeAndReadGUID(self, xml_contents):
+        """Lit uniquement la section `<guid>` depuis un contenu XML simulé."""
         return self.writeAndRead(xml_contents)[5]
 
     def writeAndReadTasksAndCategories(self, xml_contents):
+        """Lit les sections `<tasks>` et `<categories>` d’un contenu XML simulé."""
         # print(f"writeAndReadTasksAndCategories: xml_contents = {xml_contents}")
         tasks, categories, _, _, _, _ = self.writeAndRead(xml_contents)
         return tasks, categories
 
     def writeAndReadTasksAndCategoriesAndNotes(self, xml_contents):
+        """Lit les sections `<tasks>`, `<categories>` et `<notes>` d’un contenu XML simulé."""
         tasks, categories, notes, _, _, _ = self.writeAndRead(xml_contents)
         return tasks, categories, notes
 
     def writeAndReadCategoriesAndNotes(self, xml_contents):
+        """Lit les sections `<categories>` et `<notes>` d’un contenu XML simulé."""
         _, categories, notes, _, _, _ = self.writeAndRead(xml_contents)
         return categories, notes
 
 
 class TempFileLockTest(XMLReaderTestCase):
+    """Test de verrouillage temporaire de fichiers dans le cas des pièces jointes.
+
+    Vérifie notamment que des fichiers temporaires sont bien créés et gérés sous Windows
+    lors du traitement des pièces jointes (email en base64).
+    """
     tskversion = 25
 
     def setUp(self):
         self.oldMkstemp = tempfile.mkstemp
+
+        # def newMkstemp(*args, **kwargs):  # pragma: no cover
+        #     handle, name = self.oldMkstemp(*args, **kwargs)
+        #     self.__filename = name  # pylint: disable=W0201
+        #     return handle, name
+
+        # tempfile.mkstemp = newMkstemp
         tempfile.mkstemp = self.newMkstemp
         super().setUp()
 
@@ -186,13 +252,21 @@ class TempFileLockTest(XMLReaderTestCase):
             except Exception:
                 pass  # pylint: disable=W0702
 
+            # self.assertTrue(os.path.exists(self.__filename))
             self.assert_(os.path.exists(self.__filename))
 
 
 class XMLReaderVersion6Test(XMLReaderTestCase):
+    """Tests pour le format XML version 6.
+
+    Vérifie la robustesse du parseur sur des fichiers XML vides ou minimaux,
+    ainsi que la gestion des éléments de base : tâches simples, catégories, etc.
+    """
     tskversion = 6
 
     def testDescription(self):
+        """Test si la description d'une tâche est bien lu.
+        """
         tasks = self.writeAndReadTasks(
             f"""
         <tasks>
@@ -206,6 +280,7 @@ class XMLReaderVersion6Test(XMLReaderTestCase):
         #     <task description="{"Description"}" id="foo"/>
         # </tasks>\n"""
         # )
+        print(f"XMLReaderVersion6Test.testDescription : tasks = {tasks}")
         self.assertEqual("Description", tasks[0].description())
 
     def testEffortDescription(self):
@@ -260,7 +335,9 @@ class XMLReaderVersion12Test(XMLReaderTestCase):
 
     def testReadTaskWithoutMarkCompletedWhenAllChildrenCompletedSetting(self):
         tasks = self.writeAndReadTasks('<tasks><task id="foo"/></tasks>')
-        self.assertEqual(None, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted())
+        self.assertEqual(
+            None, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted()
+        )
 
 
 class XMLReaderVersion13Test(XMLReaderTestCase):
@@ -309,10 +386,6 @@ class XMLReaderVersion13Test(XMLReaderTestCase):
                         <category>another</category>
                     </task>
                 </task>
-                <categories>
-                    <category id="test"/>
-                    <category id="another"/>
-                </categories>
             </tasks>
             """
         )
@@ -343,7 +416,7 @@ class XMLReaderVersion14Test(XMLReaderTestCase):
             """
         <tasks>
             <task>
-                <effort start="2004-01-01 10:00:00.123000"
+                <effort start="2004-01-01 10:00:00.123000" 
                         stop="2004-01-01 10:30:00.123000"/>
             </task>
         </tasks>"""
@@ -366,7 +439,8 @@ class XMLReaderVersion16Text(XMLReaderTestCase):
         </tasks>"""
         )
         self.assertEqual(
-            ["whatever.tsk"], [att.location() for att in tasks[0].attachments()]
+            ["whatever.tsk"],
+            [att.location() for att in tasks[0].attachments()],
         )
         self.assertEqual(
             ["whatever.tsk"], [att.subject() for att in tasks[0].attachments()]
@@ -422,10 +496,10 @@ class XMLReaderVersion16Text(XMLReaderTestCase):
             ["whatever.tsk", "another.txt"],
             [att.location() for att in tasks[0].attachments()],
         )
-        # self.assertEqual(
-        #     ["FILE:whatever.tsk", "FILE:another.txt"],
-        #     [att.subject() for att in tasks[0].attachments()],
-        # )
+        self.assertEqual(
+            ["whatever.tsk", "another.txt"],
+            [att.subject() for att in tasks[0].attachments()],
+        )
 
 
 # There's no XMLReaderVersion17Test because the only difference between version
@@ -505,6 +579,11 @@ class XMLReaderVersion19Test(XMLReaderTestCase):
 
 
 class XMLReaderVersion20Test(XMLReaderTestCase):
+    """Tests pour le format XML version 20 (introduit en release 0.71.0).
+
+    Vérifie la robustesse du parseur sur des fichiers XML vides ou minimaux,
+    ainsi que la gestion des éléments de base : tâches simples, catégories, etc.
+    """
     tskversion = 20  # New in release 0.71.0
 
     def testReadEmptyStream(self):
@@ -519,8 +598,8 @@ class XMLReaderVersion20Test(XMLReaderTestCase):
         Returns :
 
         """
-        # reader = persistence.XMLReader(io.StringIO())
-        reader = persistence.XMLReader(io.BytesIO())
+        reader = persistence.XMLReader(io.StringIO())
+        # reader = persistence.XMLReader(io.BytesIO())
         try:
             # reader.read()
             # self.fail("Expected ExpatError or ParseError")  # pragma: no cover
@@ -739,11 +818,15 @@ class XMLReaderVersion20Test(XMLReaderTestCase):
         self.assertEqual(5.5, tasks[1].hourlyFee())
 
     def testFixedFee(self):
-        tasks = self.writeAndReadTasks('<tasks><task fixedFee="240.50"/></tasks>')
+        tasks = self.writeAndReadTasks(
+            '<tasks><task fixedFee="240.50"/></tasks>'
+        )
         self.assertEqual(240.5, tasks[0].fixedFee())
 
     def testNoReminder(self):
-        tasks = self.writeAndReadTasks('<tasks><task reminder="None"/></tasks>')
+        tasks = self.writeAndReadTasks(
+            '<tasks><task reminder="None"/></tasks>'
+        )
         self.assertEqual(date.DateTime(), tasks[0].reminder())
 
     def testReminder(self):
@@ -753,7 +836,9 @@ class XMLReaderVersion20Test(XMLReaderTestCase):
             <task reminder="2004-01-01 10:00:00"/>
         </tasks>"""
         )
-        self.assertEqual(date.DateTime(2004, 1, 1, 10, 0, 0, 0), tasks[0].reminder())
+        self.assertEqual(
+            date.DateTime(2004, 1, 1, 10, 0, 0, 0), tasks[0].reminder()
+        )
 
     def testMarkCompletedWhenAllChildrenCompletedSetting_True(self):
         tasks = self.writeAndReadTasks(
@@ -762,7 +847,9 @@ class XMLReaderVersion20Test(XMLReaderTestCase):
             <task shouldMarkCompletedWhenAllChildrenCompleted="True"/>
         </tasks>"""
         )
-        self.assertEqual(True, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted())
+        self.assertEqual(
+            True, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted()
+        )
 
     def testMarkCompletedWhenAllChildrenCompletedSetting_False(self):
         tasks = self.writeAndReadTasks(
@@ -771,11 +858,15 @@ class XMLReaderVersion20Test(XMLReaderTestCase):
             <task shouldMarkCompletedWhenAllChildrenCompleted="False"/>
         </tasks>"""
         )
-        self.assertEqual(False, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted())
+        self.assertEqual(
+            False, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted()
+        )
 
     def testMarkCompletedWhenAllChildrenCompletedSetting_None(self):
         tasks = self.writeAndReadTasks("<tasks><task/></tasks>")
-        self.assertEqual(None, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted())
+        self.assertEqual(
+            None, tasks[0].shouldMarkCompletedWhenAllChildrenCompleted()
+        )
 
     def testTaskWithoutAttachments(self):
         tasks = self.writeAndReadTasks("<tasks><task/></tasks>")

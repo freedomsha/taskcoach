@@ -63,8 +63,11 @@ log = logging.getLogger(__name__)
 
 
 # class Task(base.NoteOwner, base.AttachmentOwner,
-class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
-           categorizable.CategorizableCompositeObject):
+class Task(
+    note.NoteOwner,
+    attachment.AttachmentOwner,
+    categorizable.CategorizableCompositeObject,
+):
     """
     Classe représentant une tâche dans Task Coach.
 
@@ -110,10 +113,10 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
             dependencies (list) : Liste des tâches dépendantes.
             status (TaskStatus) : Statut initial de la tâche.
         """
-        # print(f"Task.__init__ : kwargs['status'] = {kwargs.get('status')}, status = {status}")
-
+        log.debug(f"Task.__init__ : kwargs['status'] = {kwargs.get('status')}, status = {status}")
         kwargs["id"] = id
         kwargs["subject"] = subject
+        log.debug(f"Task.__init__ : kwargs['subject'] = subject = {subject}")
         kwargs["description"] = description
         # print(f"🔍 DEBUG - Init de Task '{subject}' avec catégories : {categories}")
         kwargs["categories"] = categories
@@ -231,11 +234,43 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
     def __setattr__(self, name, value):
         # if name == "_Task__status" and not isinstance(value, mod_status.TaskStatus):
         #     raise TypeError(f"Tentative d'assignation invalide à self.__status : {value} ({type(value)})")
-
+        log.debug(f"Task.__setattr__ : utilise la méthode super avec name={name} et value={value}.")
         super().__setattr__(name, value)
 
     @patterns.eventSource
     def __setstate__(self, state, event=None):
+        """
+
+        Args:
+            state:
+            event:
+
+        Returns:
+
+        Voici ce qui se passe :
+
+        1. La désérialisation commence au niveau de la classe la plus spécifique, Task.
+        2. Task.__setstate__(state) est appelée.
+        3. À l'intérieur de Task.__setstate__, tu appelles super().__setstate__(state). Cela signifie que tu passes le state entier à CategorizableCompositeObject.__setstate__.
+        4. CategorizableCompositeObject.__setstate__(state) est appelée. Elle fait son propre super().__setstate__(state) en passant encore le state entier.
+        5. CompositeObject.__setstate__(state) est appelée. Elle fait son propre super().__setstate__(state) en passant le state entier.
+        6. Object.__setstate__(state) est appelée.
+
+        C'est dans Object.__setstate__ que tu as cette ligne :
+            subject_from_state = state.pop('subject', '')
+
+        La Solution
+
+        La solution est de s'assurer que state.pop() est appelé une seule fois pour chaque attribut dans la classe la plus basse de la hiérarchie qui est responsable de cet attribut, et que les classes parentes n'essaient pas de "poppper" des attributs qui sont gérés par leurs enfants ou d'autres parents.
+
+        Puisque Object est la classe qui définit et gère l'attribut __subject, c'est elle qui devrait être la seule à pop le sujet du dictionnaire state.
+
+        Les __setstate__ des classes CompositeObject, CategorizableCompositeObject et Task ne devraient pas avoir la ligne subject_from_state = state.pop('subject', '') car elles ne sont pas les propriétaires de l'attribut __subject. Elles devraient uniquement appeler super().__setstate__(state) et gérer les attributs qui sont leur propre responsabilité.
+
+        L'idée est que le dictionnaire state est passé de haut en bas (de Task à Object), et chaque __setstate__ de chaque classe parent ne devrait pop et manipuler que les attributs qui sont strictement sous sa responsabilité. Le subject est une responsabilité de Object.
+
+        """
+        log.debug(f"Object.__setstate__() - Entrée, state dict: {state}")
         super().__setstate__(state, event=event)
         self.setPlannedStartDateTime(state["plannedStartDateTime"])
         self.setActualStartDateTime(state["actualStartDateTime"])
@@ -254,8 +289,10 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
         self.setShouldMarkCompletedWhenAllChildrenCompleted(
             state["shouldMarkCompletedWhenAllChildrenCompleted"]
         )
+        log.debug(f"Object.__setstate__() - subject après set: {self.__subject.get()}")
 
     def __getstate__(self):
+        log.debug("Task.__getstate : utilise la méthode super.")
         state = super().__getstate__()
         log.debug(f"Task.__getstate__() avant update : {state}")  # Ajoute ce print
         state.update(dict(dueDateTime=self.__dueDateTime,
@@ -273,12 +310,12 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
                           dependencies=set(self.__dependencies),
                           shouldMarkCompletedWhenAllChildrenCompleted=self.__shouldMarkCompletedWhenAllChildrenCompleted
                           ))
-        print(f"DEBUG - Task.__getstate__() renvoie : {state}")  # Ajoute ce print
+        log.debug(f"DEBUG - Task.__getstate__() renvoie : {state}")  # Ajoute ce print
         return state
 
     def __getcopystate__(self):
         state = super().__getcopystate__()
-        print(f"DEBUG - Task.__getcopystate__() avant update : {state}")  # Ajoute ce print
+        log.debug(f"DEBUG - Task.__getcopystate__() avant update : {state}")  # Ajoute ce print
         state.update(dict(plannedStartDateTime=self.__plannedStartDateTime,
                           dueDateTime=self.__dueDateTime,
                           actualStartDateTime=self.__actualStartDateTime,
@@ -293,7 +330,7 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
                           ))
         # state["children"] = list(self.children())  # Assure que les enfants sont inclus
         state["children"] = [child.copy() for child in self.children()]  # Créer de nouveaux objets
-        print(f"DEBUG - Task.__getcopystate__() renvoie : {state}")  # Ajoute ce print
+        log.debug(f"DEBUG - Task.__getcopystate__() renvoie : {state}")  # Ajoute ce print
         return state
 
     @classmethod
@@ -418,6 +455,7 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
 
     @patterns.eventSource
     def setSubject(self, subject, event=None):
+        log.debug(f"Task.setSubject : utilise la méthode super pour subject={subject} pour event={event}")
         super().setSubject(subject, event=event)
         # The subject of a dependency of our prerequisites has changed, Notify:
         for prerequisite in self.prerequisites():
@@ -491,10 +529,10 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
 
     @classmethod
     def dueDateTimeSortEventTypes(class_):
-        """ The event types that influence the due Date time sort order. """
+        """ The event types that influence the due date time sort order. """
         return (class_.dueDateTimeChangedEventType(),)
 
-    # Planned start Date
+    # Planned start date
 
     def plannedStartDateTime(self, recursive=False):
         if recursive:
@@ -534,8 +572,8 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
 
     @classmethod
     def plannedStartDateTimeSortEventTypes(class_):
-        """ The event types that influence the planned start Date time sort
-            order. """
+        """The event types that influence the planned start date time sort
+        order."""
         return (class_.plannedStartDateTimeChangedEventType(),)
 
     def timeLeft(self, recursive=False):
@@ -621,7 +659,7 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
             self.recur(completionDateTime)
         else:
             parent = self.parent()
-            oldParentPriority = None
+            oldParentPriority = None  # A Essayer mais risque d'effacer l'ancienne valeur !
             if parent:
                 oldParentPriority = parent.priority(recursive=True)
             self.__status = None
@@ -710,7 +748,8 @@ class Task(note.NoteOwner, attachment.attachmentowner.AttachmentOwner,
         # print(f"Task.completed() -> forcé status = {status}, attendu = {mod_status.completed}")
         return status == mod_status.completed
 
-    def overdue(self) -> bool:
+    def overdue(self):
+        # def overdue(self) -> bool:
         """ A task is over due if its due Date/time is in the past and it is
             not completed. Note that an over due task is also either active
             or inactive. """

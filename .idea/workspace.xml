@@ -9,12 +9,27 @@
   <component name="ChangeListManager">
     <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="Retouches de logs &amp; docstrings">
       <change afterPath="$PROJECT_DIR$/taskcoach/XMLReaderTest_Doc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/appmap.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/appmap.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/categorizable/categorizable.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/categorizable/categorizable.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/category/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/category/category.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/status.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/status.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/tasklist.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/tasklist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/attachment.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/attachment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/composite.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/composite.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/hypertreelist.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/hypertreelist.py.bak" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/listctrl.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/listctrl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/notebook.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -50,121 +65,121 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python tests.Unittests for tests.unittests.domainTests.test_attachment.FileAttachmentTest.testCopy.executor": "Run",
-    "Python tests.Unittests for tests.unittests.domainTests.test_base.CompositeObjectTest.testRecursiveSubject.executor": "Run",
-    "Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithAttachmentFixture.testAttachments.executor": "Run",
-    "Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithAttachmentFixture.testCopy.executor": "Run",
-    "Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithTwoChildrenTest.testCopy.executor": "Run",
-    "Python tests.Unittests for tests.unittests.guiTests.MainWindowTest.executor": "Run",
-    "Python tests.Unittests for tests.unittests.guiTests.MenuTest.ViewMenuTestCase.testSortByDescription.executor": "Run",
-    "Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion20Test.testCategoryId.executor": "Run",
-    "Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion22Test.executor": "Run",
-    "Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion22Test.testStatus.executor": "Run",
-    "Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion30Test.executor": "Run",
-    "Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion38Test.executor": "Run",
-    "Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.CheckTreeCtrlTest.testAddOneChild.executor": "Run",
-    "Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.CheckTreeCtrlTest.testRefreshItem.executor": "Run",
-    "Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.TreeCtrlTestCase.executor": "Run",
-    "Python tests.Unittests in AttachmentEditorTest.py.executor": "Run",
-    "Python tests.Unittests in AutoBackupTest.py.executor": "Run",
-    "Python tests.Unittests in AutoImporterExporterTest.py.executor": "Run",
-    "Python tests.Unittests in AutoSaverTest.py.executor": "Run",
-    "Python tests.Unittests in BaseCommandsTest.py.executor": "Run",
-    "Python tests.Unittests in CSVReaderTest.py.executor": "Run",
-    "Python tests.Unittests in CategoryEditorTest.py.executor": "Run",
-    "Python tests.Unittests in DateTimeCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in DragAndDropTest.py.executor": "Run",
-    "Python tests.Unittests in HTMLWriterTest.py.executor": "Run",
-    "Python tests.Unittests in ItemCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in ListCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in MainWindowTest.py.executor": "Run",
-    "Python tests.Unittests in MaskedCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in MenuTest.py.executor": "Run",
-    "Python tests.Unittests in SpinCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in SyncMLTest.py.executor": "Run",
-    "Python tests.Unittests in TaskBarIconTest.py.executor": "Run",
-    "Python tests.Unittests in TaskFileTest.py.executor": "Run",
-    "Python tests.Unittests in TemplateListTest.py.executor": "Run",
-    "Python tests.Unittests in TemplateXMLReaderTest.py.executor": "Run",
-    "Python tests.Unittests in TemplateXMLWriterTest.py.executor": "Run",
-    "Python tests.Unittests in TextCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in TodoTxtReaderTest.py.executor": "Run",
-    "Python tests.Unittests in TodoTxtWriterTest.py.executor": "Run",
-    "Python tests.Unittests in ToolBarTest.py.executor": "Run",
-    "Python tests.Unittests in ToolTipTest.py.executor": "Run",
-    "Python tests.Unittests in TreeCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in TreeListCtrlTest.py.executor": "Run",
-    "Python tests.Unittests in VCalendarReaderTest.py.executor": "Run",
-    "Python tests.Unittests in VCalendarWriterTest.py.executor": "Run",
-    "Python tests.Unittests in WindowDimensionsTrackerTest.py.executor": "Run",
-    "Python tests.Unittests in XMLReaderTest.py.executor": "Run",
-    "Python tests.Unittests in XMLReaderWriterIntegrationTest.py.executor": "Run",
-    "Python tests.Unittests in XMLWriterTest.py.executor": "Run",
-    "Python tests.Unittests in tctest.py.executor": "Run",
-    "Python tests.Unittests in test_app.py.executor": "Run",
-    "Python tests.Unittests in test_attachment.py.executor": "Run",
-    "Python tests.Unittests in test_base.py.executor": "Run",
-    "Python tests.Unittests in test_categorizable.py.executor": "Run",
-    "Python tests.Unittests in test_category.py.executor": "Run",
-    "Python tests.Unittests in test_categorycontainer.py.executor": "Run",
-    "Python tests.Unittests in test_categoryfilter.py.executor": "Run",
-    "Python tests.Unittests in test_command.py.executor": "Run",
-    "Python tests.Unittests in test_composite.py.executor": "Run",
-    "Python tests.Unittests in test_config.py.executor": "Run",
-    "Python tests.Unittests in test_date.py.executor": "Run",
-    "Python tests.Unittests in test_datetime.py.executor": "Run",
-    "Python tests.Unittests in test_desktop.py.executor": "Run",
-    "Python tests.Unittests in test_domainobjectownermetaclass.py.executor": "Run",
-    "Python tests.Unittests in test_effort.py.executor": "Run",
-    "Python tests.Unittests in test_effortaggregator.py.executor": "Run",
-    "Python tests.Unittests in test_effortcomposite.py.executor": "Run",
-    "Python tests.Unittests in test_effortcompositeperperiod.py.executor": "Run",
-    "Python tests.Unittests in test_effortlist.py.executor": "Run",
-    "Python tests.Unittests in test_filter.py.executor": "Run",
-    "Python tests.Unittests in test_font.py.executor": "Run",
-    "Python tests.Unittests in test_lockfile.py.executor": "Run",
-    "Python tests.Unittests in test_mailer.py.executor": "Run",
-    "Python tests.Unittests in test_metaclass.py.executor": "Run",
-    "Python tests.Unittests in test_note.py.executor": "Run",
-    "Python tests.Unittests in test_notecontainer.py.executor": "Run",
-    "Python tests.Unittests in test_observable.py.executor": "Run",
-    "Python tests.Unittests in test_owner.py.executor": "Run",
-    "Python tests.Unittests in test_pubsub.py.executor": "Run",
-    "Python tests.Unittests in test_recurrence.py.executor": "Run",
-    "Python tests.Unittests in test_render.py.executor": "Run",
-    "Python tests.Unittests in test_scheduler.py.executor": "Run",
-    "Python tests.Unittests in test_singleton.py.executor": "Run",
-    "Python tests.Unittests in test_sorter.py.executor": "Run",
-    "Python tests.Unittests in test_task.py.executor": "Run",
-    "Python tests.Unittests in test_taskfilter.py.executor": "Run",
-    "Python tests.Unittests in test_tasklist.py.executor": "Run",
-    "Python tests.Unittests in test_taskrecurrence.py.executor": "Run",
-    "Python tests.Unittests in test_taskrelations.py.executor": "Run",
-    "Python tests.Unittests in test_taskstatus.py.executor": "Run",
-    "Python tests.Unittests in test_timedelta.py.executor": "Run",
-    "Python tests.Unittests in test_wxpython.py.executor": "Run",
-    "Python.HTMLWriterTest.executor": "Run",
-    "Python.SyncMLTest.executor": "Run",
-    "Python.TodoTxtReaderTest.executor": "Run",
-    "Python.TodoTxtWriterTest.executor": "Run",
-    "Python.VCalendarReaderTest.executor": "Run",
-    "Python.XMLReaderWriterIntegrationTest.executor": "Run",
-    "Python.taskcoach.executor": "Run",
-    "Python.tctest.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "appmap.toolWindow.codeObjects.collapsed": "false",
-    "appmap.toolWindow.runtimeAnalysis.collapsed": "false",
-    "git-widget-placeholder": "master",
-    "last.edited.regexp": "Sample Text",
-    "last_opened_file_path": "/home/sylvain/Téléchargements/src/taskcoach-team/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "two.files.diff.last.used.file": "/home/sylvain/Téléchargements/src/taskcoach-team/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_attachment.FileAttachmentTest.testCopy.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_base.CompositeObjectTest.testRecursiveSubject.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithAttachmentFixture.testAttachments.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithAttachmentFixture.testCopy.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.domainTests.test_task.TaskWithTwoChildrenTest.testCopy.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.guiTests.MainWindowTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.guiTests.MenuTest.ViewMenuTestCase.testSortByDescription.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion20Test.testCategoryId.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion22Test.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion22Test.testStatus.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion30Test.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.persistenceTests.XMLReaderTest.XMLReaderVersion38Test.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.CheckTreeCtrlTest.testAddOneChild.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.CheckTreeCtrlTest.testRefreshItem.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests for tests.unittests.widgetTests.TreeCtrlTest.TreeCtrlTestCase.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in AttachmentEditorTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in AutoBackupTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in AutoImporterExporterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in AutoSaverTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in BaseCommandsTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in CSVReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in CategoryEditorTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in DateTimeCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in DragAndDropTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in HTMLWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ItemCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ListCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in MainWindowTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in MaskedCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in MenuTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in SpinCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in SyncMLTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TaskBarIconTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TaskFileTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TemplateListTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TemplateXMLReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TemplateXMLWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TextCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TodoTxtReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TodoTxtWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ToolBarTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in ToolTipTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TreeCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in TreeListCtrlTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in VCalendarReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in VCalendarWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in WindowDimensionsTrackerTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in XMLReaderTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in XMLReaderWriterIntegrationTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in XMLWriterTest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in tctest.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_app.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_attachment.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_base.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_categorizable.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_category.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_categorycontainer.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_categoryfilter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_command.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_composite.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_config.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_date.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_datetime.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_desktop.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_domainobjectownermetaclass.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effort.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortaggregator.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortcomposite.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortcompositeperperiod.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_effortlist.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_filter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_font.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_lockfile.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_mailer.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_metaclass.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_note.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_notecontainer.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_observable.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_owner.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_pubsub.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_recurrence.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_render.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_scheduler.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_singleton.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_sorter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_task.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskfilter.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_tasklist.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskrecurrence.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskrelations.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_taskstatus.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_timedelta.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_wxpython.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python.HTMLWriterTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.SyncMLTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.TodoTxtReaderTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.TodoTxtWriterTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.VCalendarReaderTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.XMLReaderWriterIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.taskcoach.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tctest.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;appmap.toolWindow.codeObjects.collapsed&quot;: &quot;false&quot;,
+    &quot;appmap.toolWindow.runtimeAnalysis.collapsed&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last.edited.regexp&quot;: &quot;Sample Text&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/sylvain/Téléchargements/src/taskcoach-team/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;two.files.diff.last.used.file&quot;: &quot;/home/sylvain/Téléchargements/src/taskcoach-team/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py&quot;
   }
-}]]></component>
+}</component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;export GTK_DEBUG=interactive" module-name="task-coach-git" is-module-sdk="true">
@@ -761,21 +776,21 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>622</line>
+          <line>623</line>
           <log-expression expression="print(f&quot;Task.setCompletionDateTime : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="NONE" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>806</line>
+          <line>807</line>
           <log-expression expression="print(f&quot;Task.status : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>1191</line>
+          <line>1192</line>
           <log-expression expression="print(f&quot;Task.iconForStatus : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
           <option name="timeStamp" value="15" />
         </line-breakpoint>
@@ -873,6 +888,11 @@
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py</url>
           <line>1624</line>
           <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="56" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
