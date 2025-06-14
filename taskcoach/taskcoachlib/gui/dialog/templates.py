@@ -55,6 +55,7 @@ Méthodes liées à la gestion des modèles de tâches :
     onDelete, OnUp, OnDown, onAdd : Ces méthodes permettent à l'utilisateur de modifier la structure de l'arbre des modèles de tâches en supprimant, déplaçant ou ajoutant des éléments.
     ok : Cette méthode est appelée lorsque l'utilisateur clique sur le bouton "OK" de la boîte de dialogue. Elle sauvegarde les modifications apportées aux modèles de tâches.
 """
+import logging
 
 import wx
 from taskcoachlib.domain.task import Task
@@ -62,6 +63,8 @@ from taskcoachlib import persistence, operating_system
 from taskcoachlib.i18n import _
 from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
 from wx.lib import sized_controls
+
+log = logging.getLogger(__name__)
 
 
 class TimeExpressionEntry(wx.TextCtrl):
@@ -81,7 +84,8 @@ class TimeExpressionEntry(wx.TextCtrl):
         if value:
             try:
                 res = nlTimeExpression.parseString(value)
-            except Exception:
+            except Exception as e:
+                logging.exception("Exception", exc_info=True)
                 return False  # pylint: disable=W0702
             return "calculatedTime" in res
         return True  # Empty is valid.
@@ -243,8 +247,9 @@ class TemplatesDialog(sized_controls.SizedDialog):
 
     def appendTemplate(self, parentItem, task):
         """Ajouter un nouveau nœud à l'arbre des modèles de tâches."""
-        # item = self._templateList.AppendItem(parentItem, task.subject(), data=wx.TreeItemData(task))
-        item = self._templateList.Append(parentItem, task.subject(), data=task)  # Unresolved attribute reference 'Append' for class 'TreeCtrl'
+        # Utilisez AppendItem() avec wx.TreeItemData pour envelopper les données de la tâche
+        item = self._templateList.AppendItem(parentItem, task.subject(), data=wx.TreeItemData(task))
+        # item = self._templateList.Append(parentItem, task.subject(), data=task)  # Unresolved attribute reference 'Append' for class 'TreeCtrl'
         for child in task.children():
             self.appendTemplate(item, child)
         return item

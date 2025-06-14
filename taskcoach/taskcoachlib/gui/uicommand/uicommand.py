@@ -339,7 +339,8 @@ class FileClose(IOCommand):
     def doCommand(self, event):
         """Ferme le fichier et les éditeurs associés."""
         self.mainWindow().closeEditors()
-        self.iocontroller.Close()
+        # self.iocontroller.Close()  # IOController ne possède pas de méthode Close()
+        self.iocontroller.close()
 
 
 class FileSave(IOCommand):
