@@ -68,35 +68,95 @@ log = logging.getLogger(__name__)
 
 
 class TimeExpressionEntry(wx.TextCtrl):
-    """Une classe dérivée de wx.TextCtrl permettant la saisie et la validation d'expressions temporelles."""
+    """Une classe dérivée de wx.TextCtrl permettant la saisie et la validation
+    d'expressions temporelles (par exemple, "demain", "dans 2 jours", "14h").
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.__defaultColor = self.GetBackgroundColour()
-        self.__invalidColor = wx.Colour(255, 128, 128)
-
-        # wx.EVT_TEXT(self, wx.ID_ANY, self._onTextChanged)
-        self.Bind(wx.EVT_TEXT, wx.ID_ANY, self._onTextChanged)
+    Elle fournit une indication visuelle (couleur de fond) si l'expression
+    saisie n'est pas une expression temporelle valide.
+    """
 
     @staticmethod
     def isValid(value):
+        """
+        Vérifie si la chaîne de caractères fournie est une expression temporelle valide.
+
+        Une expression vide est considérée comme valide.
+
+        Args :
+            value (str) : La chaîne de caractères à valider comme expression temporelle.
+
+        Returns :
+            (bool) : True si l'expression est valide ou vide, False sinon.
+        """
         if value:
             try:
+                # Tente d'analyser la chaîne comme une expression temporelle
+                # (nécessite l'importation de nlTimeExpression)
                 res = nlTimeExpression.parseString(value)
             except Exception as e:
-                logging.exception("Exception", exc_info=True)
-                return False  # pylint: disable=W0702
-            return "calculatedTime" in res
-        return True  # Empty is valid.
+                # Enregistre l'exception si l'analyse échoue
+                logging.exception(f"Exception: {e}", exc_info=True)
+                return False  # pylint: disable=W0702 L'expression est invalide
+            return "calculatedTime" in res  # Vérifie si le résultat contient un temps calculé
+        return True  # Une chaîne vide est toujours valide.
 
     def _onTextChanged(self, event):
-        event.Skip()
+        """
+        Gère l'événement de modification du texte dans le contrôle.
+
+        Met à jour la couleur de fond du contrôle pour indiquer
+        si l'expression temporelle saisie est valide ou non.
+
+        Args :
+            event (wx.EVT_TEXT) : L'événement de modification du texte.
+        """
+        event.Skip()  # Permet à d'autres gestionnaires d'événements de traiter l'événement
         self.SetBackgroundColour(
-            self.__defaultColor
-            if self.isValid(self.GetValue())
-            else self.__invalidColor
+            self.__defaultColor  # Couleur par défaut si valide
+            if self.isValid(self.GetValue())  # Vérifie la validité de la valeur actuelle
+            else self.__invalidColor  # Couleur d'erreur si invalide
         )
+
+    # Déplacer _onTextChanged et isValid avant __init__ pour s'assurer
+    # qu'elles soient liées à des événements dans __init_.
+    def __init__(self, *args, **kwargs):
+        """
+        Initialise une nouvelle instance de TimeExpressionEntry.
+
+        Configure les couleurs par défaut et d'erreur, et lie le gestionnaire
+        d'événements de modification du texte.
+
+        Args:
+            *args: Arguments positionnels passés à wx.TextCtrl.__init__.
+            **kwargs: Arguments nommés passés à wx.TextCtrl.__init__.
+        """
+        super().__init__(*args, **kwargs)
+
+        self.__defaultColor = self.GetBackgroundColour()  # Couleur de fond initiale
+        self.__invalidColor = wx.Colour(255, 128, 128)  # Couleur rouge clair pour les erreurs
+
+        # Ajoutez ces lignes de débogage
+        log.warning(f"DEBUG - Type de self._onTextChanged: {type(self._onTextChanged)}")
+        log.warning(f"DEBUG - Est-ce que self._onTextChanged est callable ? {callable(self._onTextChanged)}")
+        # Fin des lignes de débogage
+
+        # Lie l'événement de modification du texte à la méthode _onTextChanged.
+        # Cette ligne est le point de l'AssertionError si _onTextChanged n'est pas callable.
+        # wx.EVT_TEXT(self, wx.ID_ANY, self._onTextChanged)
+        self.Bind(wx.EVT_TEXT, wx.ID_ANY, self._onTextChanged)
+        # Cette AssertionError signifie que la fonction ou méthode passée
+        # à self.Bind() (qui doit être le gestionnaire d'événement)
+        # n'est ni callable (c'est-à-dire une fonction, une méthode
+        # ou un objet avec un __call__ défini) ni None.
+        # Au moment où cette ligne est exécutée,
+        # self._onTextChanged n'est pas une méthode ou une fonction valide
+        # de l'instance TimeExpressionEntry.
+        #
+        # Les raisons les plus courantes pour cela sont :
+        #     _onTextChanged n'est pas définie du tout dans la classe TimeExpressionEntry.
+        #     _onTextChanged est mal orthographiée.
+        #     _onTextChanged est définie plus tard dans le code de la classe (après l'appel à self.Bind()).
+        #     TimeExpressionEntry hérite d'une autre classe qui devrait définir _onTextChanged, mais il y a un problème avec l'initialisation de cette classe parente (par exemple, super().__init__() non appelé ou mal appelé).
 
 
 class TemplatesDialog(sized_controls.SizedDialog):
@@ -208,6 +268,12 @@ class TemplatesDialog(sized_controls.SizedDialog):
     def createTemplateEntries(self, pane):
         """Cette méthode est responsable de la construction de l'interface graphique de la boîte de dialogue,
         en créant les champs de saisie.
+
+        Args :
+            pane :
+
+        Returns :
+
         """
         panel = self._editPanel = sized_controls.SizedPanel(pane)
         panel.SetSizerType("form")
@@ -326,6 +392,8 @@ class TemplatesDialog(sized_controls.SizedDialog):
             else:
                 for ctrl in self._taskControls:
                     ctrl.SetValue("")
+        except Exception as e:
+            log.error(f"Exception: {e}", exc_info=True)
         finally:
             self._changing = False
 

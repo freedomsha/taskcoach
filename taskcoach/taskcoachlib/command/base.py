@@ -18,12 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
+
 # from builtins import zip
 # from builtins import object
 from taskcoachlib import patterns
 from taskcoachlib.domain import date
 from taskcoachlib.i18n import _
 from taskcoachlib.command.clipboard import Clipboard
+
+log = logging.getLogger(__name__)  # Logger pour ce fichier
 
 
 class BaseCommand(patterns.Command):
@@ -88,7 +92,8 @@ class BaseCommand(patterns.Command):
     def __tryInvokeMethodOnSuper(self, method_name, *args, **kwargs):
         try:
             method = getattr(super(), method_name)
-        except AttributeError:
+        except AttributeError as e:
+            log.error(f"AttributeError: {e}", exc_info=True)
             return  # no 'method' in any super class
         return method(*args, **kwargs)
 

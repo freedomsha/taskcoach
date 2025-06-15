@@ -364,8 +364,8 @@ class UICommand(object):
                 return self.doCommand(event)
             except Exception as e:
                 # Gestion de l'exception (par exemple, afficher un message d'erreur)
-                logging.error(f"tclib.gui.uicommand.base_uicommand: Error executing command: {str(e)}")
-                wx.MessageBox(f"tclib.gui.uicommand.base_uicommand: An error occurred: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+                log.error(f"tclib.gui.uicommand.base_uicommand: Error executing command: {e}", exc_info=True)
+                wx.MessageBox(f"tclib.gui.uicommand.base_uicommand: An error occurred: {e}", "Error", wx.OK | wx.ICON_ERROR)
 
     def __call__(self, *args, **kwargs):
         return self.onCommandActivate(*args, **kwargs)
