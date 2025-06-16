@@ -2531,8 +2531,8 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
             columnPopupMenu,
             **self.widgetCreationKeywordArguments()
         )
-        # widget.AssignImageList(imageList)  # pylint: disable=E1101
-        widget.AssignImageList(imageList, wx.IMAGE_LIST_NORMAL)  # pylint: disable=E1101
+        widget.AssignImageList(imageList)  # pylint: disable=E1101
+        # widget.AssignImageList(imageList, wx.IMAGE_LIST_NORMAL)  # pylint: disable=E1101
         return widget
 
     def onCheck(self, event, final):
