@@ -990,6 +990,8 @@ class DatesPage(Page):
         self.__items_are_new = items_are_new
         super().__init__(theTask, parent, *args, **kwargs)
         pub.subscribe(self.__onChoicesConfigChanged, "settings.feature.sdtcspans")
+        # Ajouter les champs d'entrée :
+        self.addEntries()
 
     def __onChoicesConfigChanged(self, value=""):
         self._dueDateTimeEntry.LoadChoices(value)
@@ -1155,12 +1157,14 @@ class ProgressPage(Page):
     pageIcon = "progress"
 
     # j'ai ajouté __init_
-    # def __init__(self, items, *args, **kwargs):
-    #     super().__init__(items, args, kwargs)
-    #     self._percentageCompleteEntry = None
-    #     self._percentageCompleteSync = None
-    #     self._shouldMarkCompletedEntry = None
-    #     self._shouldMarkCompletedSync = None
+    def __init__(self, items, *args, **kwargs):
+        super().__init__(items, *args, **kwargs)
+        self._percentageCompleteEntry = None
+        self._percentageCompleteSync = None
+        self._shouldMarkCompletedEntry = None
+        self._shouldMarkCompletedSync = None
+        # # Ajouter les champs d'entrée :
+        # self.addEntries()
 
     def addEntries(self):
         """
@@ -1253,17 +1257,19 @@ class BudgetPage(Page):
     pageIcon = "calculator_icon"
 
     # j'ai ajouté __init__
-    # def __init__(self, items, *args, **kwargs):
-    #     super().__init__(items, args, kwargs)
-    #     self._budgetEntry = None
-    #     self._budgetLeftEntry = None
-    #     self._budgetSync = None
-    #     self._fixedFeeEntry = None
-    #     self._fixedFeeSync = None
-    #     self._hourlyFeeEntry = None
-    #     self._hourlyFeeSync = None
-    #     self._revenueEntry = None
-    #     self._timeSpentEntry = None
+    def __init__(self, items, *args, **kwargs):
+        super().__init__(items, *args, **kwargs)
+        self._budgetEntry = None
+        self._budgetLeftEntry = None
+        self._budgetSync = None
+        self._fixedFeeEntry = None
+        self._fixedFeeSync = None
+        self._hourlyFeeEntry = None
+        self._hourlyFeeSync = None
+        self._revenueEntry = None
+        self._timeSpentEntry = None
+        # # Ajouter les champs d'entrée :
+        # self.addEntries()
 
     def NavigateBook(self, forward):
         self.GetParent().NavigateBook(forward)
@@ -1454,7 +1460,7 @@ class PageWithViewer(Page):
         #     self.__taskFile, self.__settings, self.__settingsSection
         # )  # Trop tôt aussi !
         super().__init__(items, parent, *args, **kwargs)
-        # self.addEntries()  # ?
+        self.addEntries()  # ?
 
     def addEntries(self):
         # pylint: disable=W0201
@@ -1502,7 +1508,7 @@ class EffortPage(PageWithViewer):
 
     def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
         super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
-        self.addEntries()
+        # self.addEntries()
 
     def createViewer(self, taskFile, settings, settingsSection):
         # TODO: remplacer viewer.EffortViewer par EffortViewer
@@ -1993,6 +1999,8 @@ class PrerequisitesPage(PageWithViewer):
     def __init__(self, *args, **kwargs):
         self.__realized = False
         super().__init__(*args, **kwargs)
+        # # Ajoute les champs d'entrée :
+        self.addEntries()
 
     def addEntries(self):
         """
