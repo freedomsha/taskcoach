@@ -289,7 +289,13 @@ class Task(
         self.setShouldMarkCompletedWhenAllChildrenCompleted(
             state["shouldMarkCompletedWhenAllChildrenCompleted"]
         )
-        log.debug(f"Object.__setstate__() - subject après set: {self.__subject.get()}")
+        # log.debug(f"Object.__setstate__() - subject après set: {self.__subject.get()}")
+        # tclib.gui.uicommand.base_uicommand:
+        # An error occurred: 'Task' object has no attribute '_Task__subject'
+        if hasattr(self, 'subject'):
+            log.debug(f"Task.__setstate__() - subject après set: {self.subject}")
+        else:
+            log.debug("Task.__setstate__() - subject non défini.")
 
     def __getstate__(self):
         log.debug("Task.__getstate : utilise la méthode super.")

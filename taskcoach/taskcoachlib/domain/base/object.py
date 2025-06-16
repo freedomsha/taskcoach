@@ -745,7 +745,11 @@ class Object(SynchronizedObject):
         except AttributeError:
             state = dict()
         # print(f"DEBUG - Object.__getstate__() avant update: {state}")
-        log.debug(f"DEBUG - Object.__getstate__() avant update subject.get() : {self.__subject.get()}")
+        # log.debug(f"DEBUG - Object.__getstate__() avant update subject.get() : {self.__subject.get()}")
+        if hasattr(self, 'subject'):
+            log.debug(f"Object.__setstate__() - subject avant update: {self.subject}")
+        else:
+            log.debug("Object.__setstate__() - subject non défini avant update.")
 
         # On ajoute uniquement les champs publics attendus,
         # extraits via les attributs "Attribute"
@@ -1517,7 +1521,9 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
             state (dict) : Le dictionnaire d'état pour créer une copie.
         """
         state = super().__getcopystate__()
-        log.debug(f"CompositeObject.__getcopystate__ : __getstate__() avant subject.get() : {self.__subject.get()}, state avant update {state}.")
+        # log.debug(f"CompositeObject.__getcopystate__ : __getstate__() avant subject.get() : {self.__subject.get()}, state avant update {state}.")
+        # AttributeError: 'Task' object has no attribute '_CompositeObject__subject'
+        log.debug(f"CompositeObject.__getcopystate__ : state avant update {state}.")
         state.update(dict(expandedContexts=self.expandedContexts()))
         log.debug(f"CompositeObject.__getcopystate__ : retourne state {state}.")
         return state
@@ -1525,7 +1531,8 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
     def __setstate__(self, state, event=None):
         # C'est crucial : appeler d'abord le parent. Cela permettra à Object.__setstate__
         # de s'exécuter et de gérer correctement l'attribut 'subject'.
-        super().__setstate__(state, event)
+        # super().__setstate__(state, event)  # Erreur, il faut qu'un seul argument !
+        super().__setstate__(state, event=event)
 
         # NE PAS TENTER DE POPPER OU DE DÉFINIR 'subject' ICI.
         # L'attribut 'subject' est déjà géré par Object.__setstate__.

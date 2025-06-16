@@ -63,8 +63,12 @@ class CategorizableCompositeObject(base.CompositeObject):
         #     self.__categories = base.SetAttribute(
         #         categories_value, self, self.addCategoryEvent, self.removeCategoryEvent
         #     )
-        log.debug(f"CategorizableCompositeObject.__setstate__() - subject après set: {self.__subject.get()}")
-
+        # log.debug(f"CategorizableCompositeObject.__setstate__() - subject après set: {self.__subject.get()}")
+        # AttributeError: 'Task' object has no attribute '_CategorizableCompositeObject__subject'
+        if hasattr(self, 'subject'):
+            log.debug(f"CategorizableCompositeObject.__setstate__() - subject après set: {self.subject}")
+        else:
+            log.debug("CategorizableCompositeObject.__setstate__() - subject non défini")
 
     def __getcopystate__(self):
         state = super().__getcopystate__()
