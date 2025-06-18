@@ -613,6 +613,7 @@ class TaskSubjectPage(SubjectPage):
 
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition du sujet et de la priorité.
+                            Méthode lancée dans la classe SubjectPage.
     """
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
@@ -873,14 +874,15 @@ class TaskAppearancePage(Page):
     columns = 5
 
     # j'ai ajouté __init__
-    # def __init__(self, items, *args, **kwargs):
-    #     super().__init__(items, args, kwargs)
-    #     self._foregroundColorEntry = None
-    #     self._fontEntry = None
-    #     self._fontSync = None
-    #     self._fontColorSync = None
-    #     self._iconEntry = None
-    #     self._iconSync = None
+    def __init__(self, items, *args, **kwargs):
+        super().__init__(items, *args, **kwargs)
+        self._foregroundColorEntry = None
+        self._fontEntry = None
+        self._fontSync = None
+        self._fontColorSync = None
+        self._iconEntry = None
+        self._iconSync = None
+        self.addEntries()
 
     def addEntries(self):
         """
@@ -959,7 +961,10 @@ class TaskAppearancePage(Page):
         self.addEntry(_("Icon"), self._iconEntry, flags=[wx.ALIGN_RIGHT, wx.ALL])
 
     def entries(self):
-        return dict(firstEntry=self._foregroundColorEntry)  # pylint: disable=E1101
+        # return dict(firstEntry=self._foregroundColorEntry)  # pylint: disable=E1101
+        if self._foregroundColorEntry:
+            return dict(firstEntry=self._foregroundColorEntry)
+        return dict()
 
 
 class DatesPage(Page):
@@ -1164,7 +1169,7 @@ class ProgressPage(Page):
         self._shouldMarkCompletedEntry = None
         self._shouldMarkCompletedSync = None
         # # Ajouter les champs d'entrée :
-        # self.addEntries()
+        self.addEntries()
 
     def addEntries(self):
         """
@@ -1268,8 +1273,8 @@ class BudgetPage(Page):
         self._hourlyFeeSync = None
         self._revenueEntry = None
         self._timeSpentEntry = None
-        # # Ajouter les champs d'entrée :
-        # self.addEntries()
+        # # Ajouter les champs d'entrée pour éditer le budget de la tâche :
+        self.addEntries()  # Ne doit être appelé qu'une seule fois par page.
 
     def NavigateBook(self, forward):
         self.GetParent().NavigateBook(forward)
@@ -1460,10 +1465,16 @@ class PageWithViewer(Page):
         #     self.__taskFile, self.__settings, self.__settingsSection
         # )  # Trop tôt aussi !
         super().__init__(items, parent, *args, **kwargs)
-        self.addEntries()  # ?
+        # self.addEntries()  # ? self.addEntries() ne doit être appelé qu'une seule fois par page.
+        # Prérequisites, Categories le lancent avec selected
+
 
     def addEntries(self):
         # pylint: disable=W0201
+        """
+        Ajoute les champs d'entrée pour l'édition de 4 pages
+        (Catégories, Effort, Notes et Prérequis) consacré à une tâche.
+        """
         if not hasattr(self, 'items'):
             log.warning("addEntries appelé trop tôt, items pas encore initialisé.")
             return
@@ -1501,6 +1512,7 @@ class EffortPage(PageWithViewer):
 
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition de l'effort.
+                            Lancé dans PageWithViewer.
     """
     pageName = "effort"
     pageTitle = _("Effort")
@@ -1508,7 +1520,7 @@ class EffortPage(PageWithViewer):
 
     def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
         super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
-        # self.addEntries()
+        self.addEntries()
 
     def createViewer(self, taskFile, settings, settingsSection):
         # TODO: remplacer viewer.EffortViewer par EffortViewer
@@ -1526,11 +1538,11 @@ class EffortPage(PageWithViewer):
             return dict(firstEntry=self.viewer, timeSpent=self.viewer)
         return dict()
 
-    def addEntries(self):
-        """
-        Ajoute les champs d'entrée pour l'édition de l'effort consacré à une tâche.
-        """
-        pass
+    # def addEntries(self):
+    #     """
+    #     Ajoute les champs d'entrée pour l'édition de l'effort consacré à une tâche.
+    #     """
+    #     pass
 
 
 class LocalCategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
@@ -1741,6 +1753,10 @@ class AttachmentsPage(PageWithViewer):
     # Nom de l'icône associée à la page ("paperclip_icon") :
     pageIcon = "paperclip_icon"
 
+    def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
+        super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
+        self.addEntries()
+
     def createViewer(self, taskFile, settings, settingsSection):
         """Crée un visualiseur d'attachements local pour l'objet.
 
@@ -1889,6 +1905,10 @@ class NotesPage(PageWithViewer):
     # Nom de l'icône associée à la page ("note_icon") :
     pageIcon = "note_icon"
 
+    def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
+        super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
+        self.addEntries()
+
     def createViewer(self, taskFile, settings, settingsSection):
         """Crée un visualiseur de notes local pour l'objet."""
         assert len(self.items) == 1
@@ -2000,19 +2020,34 @@ class PrerequisitesPage(PageWithViewer):
         self.__realized = False
         super().__init__(*args, **kwargs)
         # # Ajoute les champs d'entrée :
-        self.addEntries()
+        # self.addEntries()
 
-    def addEntries(self):
-        """
-        Ajoute les champs d'entrée pour définir les prérequis d'une tâche.
-        """
-        pass
+    # def addEntries(self):
+    #     pass
+
+    # def addEntries(self):
+    #     """
+    #     Ajoute les champs d'entrée pour définir les prérequis d'une tâche.
+    #     """
+    #     self.viewer = self.createViewer(
+    #         self.taskFile, self.settings, self.settingsSection
+    #     )
+    #     self.addEntry(self.viewer)
+
+    # def addEntries(self):
+    #     self.viewer = self.createViewer(
+    #         self.items[0].taskFile,  # à adapter selon le code
+    #         self.settings,
+    #         self.settingsSection
+    #     )
+    #     self.addEntry(self.viewer)
 
     def selected(self):
         """Gère la sélection de la page et ajoute les champs d'édition seulement lors du premier affichage."""
         if not self.__realized:
             self.__realized = True
-            super().addEntries()
+            # super().addEntries()  # Non, plutôt :
+            self.addEntries()
             self.fit()
 
     def createViewer(self, taskFile, settings, settingsSection):
@@ -2196,7 +2231,8 @@ class EditBook(widgets.Notebook):
                 self,
                 task_file,
                 self.settings,
-                settingsSection="prerequisiteviewerin%seditor" % self.domainObject,
+                # settingsSection="prerequisiteviewerin%seditor" % self.domainObject,
+                settingsSection=f"prerequisiteviewerin{self.domainObject}editor",
             )
         elif page_name == "progress":
             return ProgressPage(self.items, self)

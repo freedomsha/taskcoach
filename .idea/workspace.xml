@@ -7,30 +7,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="Retouches de logs &amp; docstrings">
-      <change afterPath="$PROJECT_DIR$/taskcoach/XMLReaderTest_Doc" afterDir="false" />
+    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="tentative de Résolution d'édition de tâche">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/appmap.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/categorizable/categorizable.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/categorizable/categorizable.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/category/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/category/category.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/status.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/status.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/tasklist.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/tasklist.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/attachment.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/attachment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/composite.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/composite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/hypertreelist.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/hypertreelist.py.bak" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/listctrl.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/listctrl.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/notebook.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/notebook.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/XMLReaderTest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -301,54 +281,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1719646752457</updated>
-    </task>
-    <task id="LOCAL-00185" summary="XMLWriterTest.py&#10;self.fd = io.StringIO() ou BytesIO() ?&#10;encode(&quot;utf-8&quot;) ou non ?">
-      <option name="closed" value="true" />
-      <created>1745846938761</created>
-      <option name="number" value="00185" />
-      <option name="presentableId" value="LOCAL-00185" />
-      <option name="project" value="LOCAL" />
-      <updated>1745846938761</updated>
-    </task>
-    <task id="LOCAL-00186" summary="+ wxhelper-0.0.7.tar.gz">
-      <option name="closed" value="true" />
-      <created>1745846969056</created>
-      <option name="number" value="00186" />
-      <option name="presentableId" value="LOCAL-00186" />
-      <option name="project" value="LOCAL" />
-      <updated>1745846969056</updated>
-    </task>
-    <task id="LOCAL-00187" summary="+ tests-py2/AutoBackupTest.py, CSVReaderTest.py, EffortViewerTest, VCalendarWriterTest.py">
-      <option name="closed" value="true" />
-      <created>1745847107135</created>
-      <option name="number" value="00187" />
-      <option name="presentableId" value="LOCAL-00187" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847107135</updated>
-    </task>
-    <task id="LOCAL-00188" summary="+ tests-py3/AutoBackupTest.py, CSVReaderTest.py, EffortViewerTest, VCalendarWriterTest.py">
-      <option name="closed" value="true" />
-      <created>1745847131412</created>
-      <option name="number" value="00188" />
-      <option name="presentableId" value="LOCAL-00188" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847131412</updated>
-    </task>
-    <task id="LOCAL-00189" summary="MAJ appmap.log">
-      <option name="closed" value="true" />
-      <created>1745847168262</created>
-      <option name="number" value="00189" />
-      <option name="presentableId" value="LOCAL-00189" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847168262</updated>
-    </task>
-    <task id="LOCAL-00190" summary="uicommand.__init__">
-      <option name="closed" value="true" />
-      <created>1745847238118</created>
-      <option name="number" value="00190" />
-      <option name="presentableId" value="LOCAL-00190" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847238118</updated>
     </task>
     <task id="LOCAL-00191" summary="gui.__init__&#10;retrait du doublon MainWindow">
       <option name="closed" value="true" />
@@ -694,7 +626,55 @@
       <option name="project" value="LOCAL" />
       <updated>1747811998515</updated>
     </task>
-    <option name="localTasksCounter" value="234" />
+    <task id="LOCAL-00234" summary="Résolution de problèmes d'édition de tâche">
+      <option name="closed" value="true" />
+      <created>1749886765033</created>
+      <option name="number" value="00234" />
+      <option name="presentableId" value="LOCAL-00234" />
+      <option name="project" value="LOCAL" />
+      <updated>1749886765034</updated>
+    </task>
+    <task id="LOCAL-00235" summary="Résolution de problèmes de fermeture de fichier">
+      <option name="closed" value="true" />
+      <created>1749891557260</created>
+      <option name="number" value="00235" />
+      <option name="presentableId" value="LOCAL-00235" />
+      <option name="project" value="LOCAL" />
+      <updated>1749891557260</updated>
+    </task>
+    <task id="LOCAL-00236" summary="tentative de Résolution de problèmes d'ouverture de fichier templates">
+      <option name="closed" value="true" />
+      <created>1749971677002</created>
+      <option name="number" value="00236" />
+      <option name="presentableId" value="LOCAL-00236" />
+      <option name="project" value="LOCAL" />
+      <updated>1749971677002</updated>
+    </task>
+    <task id="LOCAL-00237" summary="tentative de Résolution de problèmes d'annulation de copier/coller.">
+      <option name="closed" value="true" />
+      <created>1750070377594</created>
+      <option name="number" value="00237" />
+      <option name="presentableId" value="LOCAL-00237" />
+      <option name="project" value="LOCAL" />
+      <updated>1750070377594</updated>
+    </task>
+    <task id="LOCAL-00238" summary="tentative de Résolution d'édition de tâche">
+      <option name="closed" value="true" />
+      <created>1750099309038</created>
+      <option name="number" value="00238" />
+      <option name="presentableId" value="LOCAL-00238" />
+      <option name="project" value="LOCAL" />
+      <updated>1750099309038</updated>
+    </task>
+    <task id="LOCAL-00239" summary="tentative de Résolution d'édition de tâche">
+      <option name="closed" value="true" />
+      <created>1750100787434</created>
+      <option name="number" value="00239" />
+      <option name="presentableId" value="LOCAL-00239" />
+      <option name="project" value="LOCAL" />
+      <updated>1750100787434</updated>
+    </task>
+    <option name="localTasksCounter" value="240" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -736,11 +716,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="log avec wx pour l'utilisation de wx.CallAfter !" />
-    <MESSAGE value="Quoi utiliser wx.ID_ANY ou IdProvider.get() ?" />
-    <MESSAGE value="Précision sur l'utilisation de NewEvent()" />
-    <MESSAGE value="Mise en place de logging.&#10;Alors, wx.ID_ANY ou wx.NewIdRef().GetId() ?" />
-    <MESSAGE value="id_ = IdProvider.get() ou wx.ID_ANY ?" />
     <MESSAGE value="Revueet ajout de docstrings.&#10;log sur wx.CallAfter, createWidget et _createColumns." />
     <MESSAGE value="Commentaires." />
     <MESSAGE value="Mise en place de logging.&#10;Revue des docstrings.&#10;Dans SafeWriteFile, commentaires, open en &quot;wb&quot; plutôt que &quot;w&quot;.&#10;Dans close, vérification du fichier .delta.&#10;Dans _read instanciation du lecteur. Idem dans exists.&#10;Dans _openForRead, &quot;rb&quot; au lieu de &quot;r&quot; !&#10;Dans load, retour en arrière, debuggage !&#10;Dans mergeDiskChanges, utilisation de with" />
@@ -761,7 +736,12 @@
     <MESSAGE value="Retouches de docstring" />
     <MESSAGE value="Retouches de logs" />
     <MESSAGE value="Retouches de logs &amp; docstrings" />
-    <option name="LAST_COMMIT_MESSAGE" value="Retouches de logs &amp; docstrings" />
+    <MESSAGE value="Résolution de problèmes d'édition de tâche" />
+    <MESSAGE value="Résolution de problèmes de fermeture de fichier" />
+    <MESSAGE value="tentative de Résolution de problèmes d'ouverture de fichier templates" />
+    <MESSAGE value="tentative de Résolution de problèmes d'annulation de copier/coller." />
+    <MESSAGE value="tentative de Résolution d'édition de tâche" />
+    <option name="LAST_COMMIT_MESSAGE" value="tentative de Résolution d'édition de tâche" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -776,21 +756,21 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>623</line>
+          <line>626</line>
           <log-expression expression="print(f&quot;Task.setCompletionDateTime : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="NONE" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>807</line>
+          <line>810</line>
           <log-expression expression="print(f&quot;Task.status : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>1192</line>
+          <line>1195</line>
           <log-expression expression="print(f&quot;Task.iconForStatus : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
           <option name="timeStamp" value="15" />
         </line-breakpoint>
