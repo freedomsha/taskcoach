@@ -8,7 +8,7 @@ import traceback
 
 
 def timeFunction(func):
-    """Decorator which displays the total time a function used at exit, grouped by stack frame."""
+    """Décorateur qui affiche la durée totale d'une fonction utilisée à la sortie, regroupée par stack frame."""
 
     func.elapsed = dict()
 
@@ -41,12 +41,12 @@ def timeFunction(func):
 
 
 def copyDate(value):
-    """Simple method for copy the Date (Y,M,D)."""
+    """Méthode simple pour copier la date (Y, M, D)."""
     return wx.DateTime.FromDMY(value.GetDay(), value.GetMonth(), value.GetYear())
 
 
 def copyDateTime(value):
-    """Return a copy of input wxDateTime object"""
+    """Retourner une copie de l’objet wxDateTime d’entrée."""
     if value.IsValid():
         return wx.DateTime.FromDMY(
             value.GetDay(),
@@ -62,9 +62,9 @@ def copyDateTime(value):
 
 
 def setToWeekDayInSameWeek(day, offset, startDay=1):
-    """wxDateTime's    SetToWeekDayInSameWeek   appears    to   be
-    buggish. When told that the  week starts on Monday, it results
-    in   the  following   'week'  on   Jan,  31st,   2010:  31/01,
+    """wxDateTime’s SetToWeekDayInSameWeek semble être buggé.
+    Lorsqu’on lui dit que la semaine commence lundi, il en résulte
+    la 'semaine' suivant le 31 Jan 2010:  31/01,
     25/01-30/01..."""
     # Loop backwards until we find the start day
     while True:
