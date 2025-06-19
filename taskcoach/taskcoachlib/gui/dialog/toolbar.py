@@ -353,15 +353,15 @@ class _ToolBarEditorInterior(wx.Panel):
                 else:
                     text = uiCommand.getHelpText()
 
-                # item = tree.AppendItem(root, text)
-                item = tree.Append(root, text)
+                item = tree.AppendItem(root, text)  # HyperTreeList utilise AppendItem()
+                # item = tree.Append(root, text)
                 if uiCommand is not None and not isinstance(uiCommand, int):
                     tree.SetItemImage(
                         item, self.__imgListIndex.get(uiCommand.bitmap, -1)
                     )
                     tree.EnableItem(item, enableCallback(uiCommand))
-                # tree.SetItemPyData(item, uiCommand)
-                tree.SetItemData(item, uiCommand)
+                tree.SetItemPyData(item, uiCommand)  # HyperTreeList utilise plutôt SetPyData
+                # tree.SetPyData(item, uiCommand)
         finally:
             tree.Thaw()
 

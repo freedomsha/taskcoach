@@ -42,9 +42,22 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         Utiliser self.start et self.end pour définir le début et la fin de la planification.
         Si les deux dates/horaires sont à 00:00, la planification est considérée comme relative à la ou les journées entières.
         """
-        kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
+        # kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
+        if "style" not in kwds:
+            kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
 
         super().__init__(*args, **kwds)
+        # Le bug wxSchedulerPaint : tu passes style dans **kwds à une classe qui ne l’accepte pas.
+        # wxPython attend le paramètre style en tant qu’argument positionnel,
+        # pas dans **kwds.
+        # Il faut donc que toutes les classes de la hiérarchie transmettent
+        # style en positionnel.
+        # Donc :
+        #     Modifie la signature de chaque classe héritée de wx.Panel
+        #     (wxSchedule, wxScheduler, etc.) pour inclure style=... et
+        #     le transmettre en positionnel à super().__init__.
+        # Le fix propre : mets style explicitement dans la signature de chaque init,
+        # et transmets-le à wx.Panel en argument positionnel.
 
         # timerId = wx.NewId()
         # NewId is deprecieted
@@ -164,7 +177,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
                 self.RefreshSchedule(event.schedule)
 
     def _controlBindSchedules(self):
-       """Vérifie que tous les objets schedule de self._schedules ont bien leur événement EVT_SCHEDULE_CHANGE associé."""
+        """Vérifie que tous les objets schedule de self._schedules ont bien leur événement EVT_SCHEDULE_CHANGE associé."""
         currentSc = set(self._schedules)
         bindSc = set(self._schBind)
 

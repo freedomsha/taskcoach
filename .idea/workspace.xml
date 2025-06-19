@@ -7,10 +7,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="tentative de Résolution d'édition de tâche">
+    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="tentative de Résolution de l'affichage de l'édition de tâche">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/appmap.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/editor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/toolbar.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/toolbar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxScheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxScheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerPaint.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerPaint.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/wxevents.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/wxevents.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -281,14 +285,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1719646752457</updated>
-    </task>
-    <task id="LOCAL-00191" summary="gui.__init__&#10;retrait du doublon MainWindow">
-      <option name="closed" value="true" />
-      <created>1745847294607</created>
-      <option name="number" value="00191" />
-      <option name="presentableId" value="LOCAL-00191" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847294607</updated>
     </task>
     <task id="LOCAL-00192" summary="syncml.__init__&#10;doc">
       <option name="closed" value="true" />
@@ -674,7 +670,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750100787434</updated>
     </task>
-    <option name="localTasksCounter" value="240" />
+    <task id="LOCAL-00240" summary="tentative de Résolution de l'affichage de l'édition de tâche">
+      <option name="closed" value="true" />
+      <created>1750241289500</created>
+      <option name="number" value="00240" />
+      <option name="presentableId" value="LOCAL-00240" />
+      <option name="project" value="LOCAL" />
+      <updated>1750241289500</updated>
+    </task>
+    <option name="localTasksCounter" value="241" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -716,7 +720,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Revueet ajout de docstrings.&#10;log sur wx.CallAfter, createWidget et _createColumns." />
     <MESSAGE value="Commentaires." />
     <MESSAGE value="Mise en place de logging.&#10;Revue des docstrings.&#10;Dans SafeWriteFile, commentaires, open en &quot;wb&quot; plutôt que &quot;w&quot;.&#10;Dans close, vérification du fichier .delta.&#10;Dans _read instanciation du lecteur. Idem dans exists.&#10;Dans _openForRead, &quot;rb&quot; au lieu de &quot;r&quot; !&#10;Dans load, retour en arrière, debuggage !&#10;Dans mergeDiskChanges, utilisation de with" />
     <MESSAGE value="Mise en place de logging." />
@@ -741,7 +744,8 @@
     <MESSAGE value="tentative de Résolution de problèmes d'ouverture de fichier templates" />
     <MESSAGE value="tentative de Résolution de problèmes d'annulation de copier/coller." />
     <MESSAGE value="tentative de Résolution d'édition de tâche" />
-    <option name="LAST_COMMIT_MESSAGE" value="tentative de Résolution d'édition de tâche" />
+    <MESSAGE value="tentative de Résolution de l'affichage de l'édition de tâche" />
+    <option name="LAST_COMMIT_MESSAGE" value="tentative de Résolution de l'affichage de l'édition de tâche" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

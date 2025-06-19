@@ -188,7 +188,8 @@ class CalendarCanvas(wx.Panel):
         self._eventWidthMin = 0.1
         self._eventWidth = 0.1
         self._margin = 5.0
-        self._marginTop = 22.0
+        # self._marginTop = 22.0
+        self._marginTop = 22
         self._outlineColorDark = wx.Colour(180, 180, 180)
         self._outlineColorLight = wx.Colour(210, 210, 210)
         self._headerSpans = []
@@ -1012,7 +1013,7 @@ class CalendarCanvas(wx.Panel):
             self._vScroll.SetScrollbar(
                 self._vScroll.GetThumbPosition(),
                 h - hh - self._marginTop,
-                minH,
+                int(minH),
                 h - hh - self._marginTop,
                 True,
             )

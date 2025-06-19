@@ -64,6 +64,22 @@ class wxSchedulerPaint(object):
         Initialise les paramètres graphiques, les états d'interaction et les options de rendu du planificateur.
         """
         super().__init__(*args, **kwds)
+        # super().__init__(*args, style=style, **kwds)
+        # Le bug : tu passes style dans **kwds à une classe qui ne l’accepte pas.
+        # wxPython attend le paramètre style en tant qu’argument positionnel,
+        # pas dans **kwds.
+        # Il faut donc que toutes les classes de la hiérarchie transmettent
+        # style en positionnel.
+        # Donc :
+        #     Modifie la signature de chaque classe héritée de wx.Panel
+        #     (wxSchedule, wxScheduler, etc.) pour inclure style=... et
+        #     le transmettre en positionnel à super().__init__.
+        # Le fix propre : mets style explicitement dans la signature de chaque init,
+        # et transmets-le à wx.Panel en argument positionnel.
+
+        # def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize,
+        #              style=wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE, name="wxSchedule"):
+        #     super().__init__(parent, id, pos, size, style, name)
 
         self._resizable = False
         self._style = wxSCHEDULER_VERTICAL

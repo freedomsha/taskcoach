@@ -1243,7 +1243,7 @@ class HierarchicalCalendarViewer(
             task.Task.trackingChangedEventType(),
             task.Task.percentageCompleteChangedEventType(),
         ):
-            if eventType.startswith("pubsub"):
+            if eventType is not None and eventType.startswith("pubsub"):
                 pub.subscribe(self.onAttributeChanged, eventType)
             else:
                 self.registerObserver(self.onAttributeChanged_Deprecated, eventType)

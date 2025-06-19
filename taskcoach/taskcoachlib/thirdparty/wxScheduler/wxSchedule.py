@@ -140,7 +140,7 @@ class wxSchedule(wx.EvtHandler):
     # Internal methods
 
     def _eventNotification(self, layoutNeeded=False):
-        """Si non gelé (freeze), réveille et déclenche la notification d'événement.""
+        """Si non gelé (freeze), réveille et déclenche la notification d'événement."""
         if self._freeze:
             self._layoutNeeded = self._layoutNeeded or layoutNeeded
             return

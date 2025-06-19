@@ -5,7 +5,7 @@ from .wxSchedulerCore import wxSchedulerCore
 
 
 class wxSchedulerPrint(wxSchedulerCore):
-        """
+    """
     Classe spécialisée pour l'impression du planificateur.
     Hérite de wxSchedulerCore et permet de dessiner le planning sur un contexte graphique pour l'impression.
     """
