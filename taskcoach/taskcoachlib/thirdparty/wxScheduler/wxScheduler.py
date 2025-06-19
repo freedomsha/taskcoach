@@ -77,26 +77,33 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
 
     # Events
     def OnClick(self, evt):
+        """Gère le clic gauche de la souris sur le planning."""
         self._doClickControl(self._getEventCoordinates(evt), shiftDown=evt.ShiftDown())
 
     def OnClickEnd(self, evt):
+        """Gère la fin du clic gauche de la souris (relâchement) sur le planning."""
         self._doEndClickControl(self._getEventCoordinates(evt))
 
     def OnMotion(self, evt):
+        """Gère le mouvement de la souris sur le planning."""
         self._doMove(self._getEventCoordinates(evt))
 
     def OnRightClick(self, evt):
+        """Gère le clic droit de la souris sur le planning."""
         self._doRightClickControl(self._getEventCoordinates(evt))
 
     def OnDClick(self, evt):
+        """Gère le double-clic gauche de la souris sur le planning."""
         self._doDClickControl(self._getEventCoordinates(evt))
 
     def OnSize(self, evt):
+        """Gère le redimensionnement du composant et déclenche un ajustement différé."""
         if not self._refreshing:
             self._sizeTimer.Start(250, True)
         evt.Skip()
 
     def OnSizeTimer(self, evt):
+        """Effectue le recalcul et le rafraîchissement de la vue après un redimensionnement."""
         self._refreshing = True
         try:
             self.InvalidateMinSize()
@@ -109,14 +116,17 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self._refreshing = False
 
     def OnRefreshTimer(self, evt):
+        """Rafraîchit l’affichage à chaque minute pour mettre à jour la vue courante."""
         self.Refresh()
         self._refreshTimer.Start(60000, True)
 
     def Add(self, *args, **kwds):
+        """Ajoute un ou plusieurs événements au planning et lie les signaux nécessaires."""
         wxSchedulerCore.Add(self, *args, **kwds)
         self._controlBindSchedules()
 
     def Refresh(self):
+        """Rafraîchit l’affichage du planning si ce n’est pas gelé, sinon marque comme sale."""
         if self._frozen:
             self._dirty = True
         else:
@@ -126,22 +136,25 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self._dirty = False
 
     def Freeze(self):
+        """Gèle les rafraîchissements du planning (mode pause)."""
         # Freeze the event notification
         self._frozen = True
 
     def Thaw(self):
+        """Dégèle les rafraîchissements du planning et effectue un rafraîchissement différé si nécessaire."""
         # Wake up the event
         self._frozen = False
         if self._dirty:
             self.Refresh()
 
     def SetResizable(self, value):
-        """ Call derived method and force wxDC refresh. """
+        """Appelle la méthode dérivée et force le rafraîchissement wxDC."""
         super().SetResizable(value)
         self.InvalidateMinSize()
         self.Refresh()
 
     def OnScheduleChanged(self, event):
+        """Gère la notification de modification d’un événement planifié."""
         if self._frozen:
             self._dirty = True
         else:
@@ -151,7 +164,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
                 self.RefreshSchedule(event.schedule)
 
     def _controlBindSchedules(self):
-        """ Control if all the schedules into self._schedules have its EVT_SCHEDULE_CHANGE binded. """
+       """Vérifie que tous les objets schedule de self._schedules ont bien leur événement EVT_SCHEDULE_CHANGE associé."""
         currentSc = set(self._schedules)
         bindSc = set(self._schBind)
 
@@ -160,11 +173,11 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self._schBind.append(sc)
 
     def _getEventCoordinates(self, event):
-        """ Return the coordinates associated with the given mouse event.
+        """Renvoie les coordonnées associées à l'événement souris donné.
+        
+        Les coordonnées sont ajustées afin de tenir compte de la position actuelle du scroll.
+        """
 
-        The coordinates have to be adjusted to allow for the current scroll
-        position.
-"""
         originX, originY = self.GetViewStart()
         unitX, unitY = self.GetScrollPixelsPerUnit()
 
@@ -176,13 +189,14 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         return coords
 
     def SetViewType(self, view=None):
+        """Change le type de vue du planning (jour, semaine, mois…) et rafraîchit l’affichage."""
         super().SetViewType(view)
         self.InvalidateMinSize()
         self.Refresh()
 
     def SetShowNow(self, show=True):
+        """Affiche ou masque l’indicateur de l’heure courante sur le planning."""
         self._showNow = show
-
         if show:
             self._refreshTimer.Start(int(1000 * (60 - (time.time() % 60))), True)
         else:
