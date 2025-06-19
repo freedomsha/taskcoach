@@ -76,6 +76,7 @@ class wxSchedule(wx.EvtHandler):
         self._layoutNeeded = False
 
     def __getattr__(self, name):
+        # Gère la rétrocompatibilité des anciens getters/setters.
         if name[:3] in ["get", "set"]:
             warnings.warn(
                 "getData() is deprecated, use GetData() instead",
@@ -102,7 +103,7 @@ class wxSchedule(wx.EvtHandler):
 
     def GetData(self):
         """
-        Return wxSchedule data into a dict
+        Retourne les données du wxSchedule sous forme de dictionnaire.
         """
         attributes = [
             "category",
@@ -127,6 +128,7 @@ class wxSchedule(wx.EvtHandler):
         return data
 
     def Clone(self):
+        # Clone l'objet wxSchedule.
         newSchedule = wxSchedule()
         for name, value in self.GetData().items():
             setattr(newSchedule, name, value)
@@ -138,7 +140,7 @@ class wxSchedule(wx.EvtHandler):
     # Internal methods
 
     def _eventNotification(self, layoutNeeded=False):
-        """If not freeze, wake up and call the event notification"""
+        """Si non gelé (freeze), réveille et déclenche la notification d'événement.""
         if self._freeze:
             self._layoutNeeded = self._layoutNeeded or layoutNeeded
             return
@@ -166,7 +168,7 @@ class wxSchedule(wx.EvtHandler):
 
     def __eq__(self, schedule):
         """
-        Control if the schedule passed are equal than me
+        Contrôle si le wxSchedule passé est égal à l'instance courante.
         """
         # Is not a wxSchedule
         if not isinstance(schedule, wxSchedule):
@@ -178,7 +180,7 @@ class wxSchedule(wx.EvtHandler):
     # Properties
     def SetCategory(self, category):
         """
-        Set the color
+        Définit la catégorie.
         """
         if category not in self.CATEGORIES.keys():
             raise ValueError("%s is not a valid category" % category)
@@ -188,13 +190,13 @@ class wxSchedule(wx.EvtHandler):
 
     def GetCategory(self):
         """
-        Return the current category
+        Retourne la catégorie courante.
         """
         return self._category
 
     def SetColor(self, color):
         """
-        Set the color
+        Définit la couleur.
         """
         if not isinstance(color, wx.Colour):
             raise ValueError("Color can be only a wx.Colour value")
@@ -204,13 +206,13 @@ class wxSchedule(wx.EvtHandler):
 
     def GetColor(self):
         """
-        Return the color
+        Retourne la couleur.
         """
         return self._color
 
     def SetFont(self, font):
         """
-        Set the font
+        Définit la police de caractère.
         """
 
         if font is None:
@@ -222,25 +224,25 @@ class wxSchedule(wx.EvtHandler):
 
     def GetFont(self):
         """
-        Return the font
+        Retourne la police de caractère.
         """
         return self._font
 
     def SetForeground(self, color):
         """
-        Sets the text color
+        Définit la couleur du texte.
         """
         self._foreground = color
 
     def GetForeground(self):
         """
-        Returns the text color
+        Retourne la couleur du texte.
         """
         return self._foreground
 
     def SetDescription(self, description):
         """
-        Set the description
+        Définit la description de la planification.
         """
         if not isinstance(description, str):
             raise ValueError("Description can be only a str value")
@@ -250,13 +252,13 @@ class wxSchedule(wx.EvtHandler):
 
     def GetDescription(self):
         """
-        Return the description
+        Retourne la description de la planification.
         """
         return self._description
 
     def SetDone(self, done):
         """
-        Are this schedule complete?
+        Règle si la planification est terminée.
         """
         if not isinstance(done, bool):
             raise ValueError("Done can be only a bool value")
@@ -266,13 +268,13 @@ class wxSchedule(wx.EvtHandler):
 
     def GetDone(self):
         """
-        Return the done value
+        Retourne l'état d'achèvement (fait ou non).
         """
         return self._done
 
     def SetEnd(self, dtEnd):
         """
-        Set the end
+        Définit la date/heure de fin.
         """
         if not isinstance(dtEnd, wx.DateTime):
             raise ValueError("dateTime can be only a wx.DateTime value")
@@ -282,13 +284,13 @@ class wxSchedule(wx.EvtHandler):
 
     def GetEnd(self):
         """
-        Return the end
+        Retourne la date/heure de fin.
         """
         return self._end
 
     def SetNotes(self, notes):
         """
-        Set the notes
+        Définit les notes associées.
         """
         if not isinstance(notes, str):
             raise ValueError("notes can be only a str value")
@@ -298,12 +300,12 @@ class wxSchedule(wx.EvtHandler):
 
     def GetNotes(self):
         """
-        Return the notes
+        Retourne les notes associées.
         """
         return self._notes
 
     def SetStart(self, dtStart):
-        """Set the start"""
+        """Définit la date/heure de début."""
         if not isinstance(dtStart, wx.DateTime):
             raise ValueError("dateTime can be only a wx.DateTime value")
 
@@ -312,13 +314,13 @@ class wxSchedule(wx.EvtHandler):
 
     def GetStart(self):
         """
-        Return the start
+        Retourne la date/heure de début.
         """
         return self._start
 
     def Offset(self, ts):
         """
-        Offsets the schedule by the specified time span.
+        Décale la planification du laps de temps indiqué.
         """
         self._start.AddTS(ts)
         self._end.AddTS(ts)
