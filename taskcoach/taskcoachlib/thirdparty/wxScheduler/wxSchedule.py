@@ -16,7 +16,25 @@ EVT_SCHEDULE_CHANGE = wx.PyEventBinder(wxEVT_COMMAND_SCHEDULE_CHANGE)
 
 
 class wxSchedule(wx.EvtHandler):
+    """
+    Classe représentant un événement ou une planification, avec gestion de catégorie, couleur, période de début/fin, état d’achèvement, description et autres métadonnées.
 
+    - Utilise les propriétés `start` et `end` pour définir le début et la fin de la planification.
+    - Si les heures de début et de fin sont à 00:00, l’événement est considéré comme couvrant une ou plusieurs journées entières.
+    - Supporte la notification d’événements lors des modifications (pattern observer via wx).
+    - Permet de définir une catégorie, une couleur, une police, une description, un état "fait", des notes, des icônes et des données associées.
+    - Fournit des méthodes pour sérialiser les données, cloner la planification, geler/dégeler les notifications, et comparer des instances.
+
+    Propriétés principales :
+        - category : Catégorie de l’événement (ex : Travail, Congé…)
+        - color : Couleur associée
+        - start, end : wx.DateTime de début et de fin
+        - done : Booléen indiquant si la tâche est terminée
+        - description, notes : Texte libre
+        - icons, clientdata, complete, id : Métadonnées diverses
+
+    Pour plus de détails, voir l’implémentation de chaque méthode.
+    """
     SCHEDULE_DEFAULT_COLOR = wx.Colour(247, 212, 57)
     SCHEDULE_DEFAULT_FOREGROUND = wx.BLACK
 
