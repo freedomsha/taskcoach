@@ -205,4 +205,5 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         self.Refresh()
 
     def GetShowNow(self):
+        """Indique si l’heure courante est affichée sur le planning."""
         return self._showNow
