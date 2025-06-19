@@ -28,17 +28,33 @@ from . import wxScheduleUtils as utils
 
 
 class InvalidSchedule(Exception):
-
+    """
+    Exception levée lorsqu'un objet planning (schedule) invalide est fourni.
+    """
     def __init__(self, value):
+        """
+        Initialise l'exception avec la valeur donnée.
+        :param value: Valeur décrivant l'erreur.
+        """
         self.value = value
 
     def __str__(self):
+        """
+        Retourne la représentation textuelle de l'exception.
+        """
         return repr(self.value)
 
 
 class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
-
+    """
+    Classe principale pour la gestion et l'affichage des plannings dans wxScheduler.
+    Hérite des fonctionnalités de rendu et de gestion de planning.
+    """
     def __init__(self, *args, **kwds):
+        """
+        Initialise le cœur du planificateur avec les paramètres par défaut.
+        Configure les heures de travail et autres paramètres initiaux.
+        """
         self._viewType = None
         self._currentDate = wx.DateTime.Now()
         self._weekstart = wxSCHEDULER_WEEKSTART_MONDAY
@@ -79,8 +95,8 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def _calculateWorkHour(self):
         """
-        Do the calculation for work hour
-        TODO: Make a better calculation!!
+        Calcule les heures de travail à afficher.
+        TODO : À améliorer pour une gestion plus précise.
         """
 
         # Update the current Date according to
@@ -122,8 +138,8 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def _calcRightDateOnMove(self, side):
         """
-        Calculate the right Date when the user
-        move the Date on the next period
+        Calcule la date correcte lors du déplacement (avant/arrière) dans la période.
+        :param side: Indique si on avance ou recule dans la période.
         """
 
         if self._viewType == wxSCHEDULER_DAILY:
@@ -149,6 +165,11 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
     # -----------------------
 
     def Add(self, schedules):
+        """
+        Ajoute un ou plusieurs plannings à la liste pour visualisation.
+        Rafraîchit l'affichage si au moins un planning est dans la plage visible.
+        :param schedules: Objet wxSchedule ou liste/tuple de wxSchedule.
+        """
         # Add schedules in list for visualization. Default is empty list
         # Call automatically Refresh() if at least one schedule is in range of
         # current visualization
@@ -192,7 +213,8 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def DeleteAll(self):
         """
-        Delete all schedules
+        Supprime tous les plannings.
+        Gèle l'affichage pendant l'opération pour éviter les clignotements.
         """
         self.Freeze()  # dans wxScheduler ou plutôt wxSchedule ?
         try:
@@ -203,35 +225,49 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def GetDate(self):
         """
-        Return the current day view
-        If my view type is different than wxSCHEDULER_DAILY, I'll
-        return the first day of the period
+        Retourne la date courante affichée.
+        Si la vue n'est pas journalière, retourne le premier jour de la période.
+        :return: wx.DateTime de la date affichée.
         """
         return utils.copyDateTime(self._currentDate)
 
     def GetDc(self):
         """
-        Return current DC
+        Retourne le contexte graphique (DC) courant utilisé pour l'affichage.
+        :return: Objet DC courant.
         """
         return self._dc
 
     def GetSchedules(self):
+        """
+        Retourne la liste des plannings dans la plage de jours affichée.
+        Utile pour le rendu.
+        :return: Liste des plannings affichés.
+        """
         # Returns schedules in current days range. Useful for retrieve schedules
         # in rendering mode
         return self._schedules
 
     def GetShowWorkHour(self):
-        # Return show work hour
+        """
+        Indique si seules les heures de travail sont affichées.
+        :return: Booléen indiquant le mode d'affichage.
+        """
         return self._showOnlyWorkHour
 
     def GetViewType(self):
-        # Return the current view type
+        """
+        Retourne le type de vue courant (journalier, hebdomadaire, mensuel, etc.).
+        :return: Type de vue.
+        """
         return self._viewType
 
     def GetWeekdayDate(self, weekday, day):
         """
-        Return Date of week day passed by
-        Range values is 0 to 6
+        Retourne la date correspondant au jour de la semaine donné dans la même semaine.
+        :param weekday: Jour de la semaine (0 à 6).
+        :param day: wx.DateTime de référence.
+        :return: wx.DateTime du jour demandé.
         """
         if weekday == 6:
             weekday = 0
@@ -244,8 +280,10 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def IsInRange(self, date=None, schedule=None):
         """
-        Return True if the Date or schedule is in the range of days displayed
-        in current visualization type
+        Indique si la date ou le planning spécifié se trouve dans la plage visible actuelle.
+        :param date: wx.DateTime à vérifier.
+        :param schedule: wxSchedule à vérifier.
+        :return: Booléen.
         """
 
         # Make the control
@@ -296,6 +334,10 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
             return start.IsEarlierThan(schedule.start) and end.IsLaterThan(schedule.end)
 
     def Next(self, steps=1):
+        """
+        Passe à la période suivante (jour, semaine ou mois) selon la vue courante.
+        :param steps: Nombre de périodes à avancer.
+        """
         self.Freeze()
         try:
             for step in range(steps):
@@ -304,6 +346,10 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
             self.Thaw()
 
     def Previous(self, steps=1):
+        """
+        Revient à la période précédente selon la vue courante.
+        :param steps: Nombre de périodes à reculer.
+        """
         self.Freeze()
         try:
             for step in range(steps):
@@ -312,6 +358,10 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
             self.Thaw()
 
     def SetDate(self, date=None):
+        """
+        Définit la date courante affichée. Par défaut, utilise la date du jour.
+        :param date: wx.DateTime à afficher.
+        """
         # Go to the Date. Default is Today.
         if date is None:
             date = wx.DateTime.Now()
@@ -321,14 +371,17 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def SetDc(self, dc=None):
         """
-        Set alternative user defined DC.
-        Call this method without arguments set automatically to wx.PaintDC on
-        OnPaint()
+        Définit un contexte graphique utilisateur personnalisé (DC).
+        Si aucun argument n'est fourni, utilise wx.PaintDC lors de OnPaint().
+        :param dc: Objet DC à utiliser.
         """
         self._dc = dc
 
     def SetShowWorkHour(self, value):
-        # Set the show work hour value
+        """
+        Active ou désactive l'affichage des seules heures de travail.
+        :param value: Booléen ou entier.
+        """
         if not isinstance(value, (bool, int)):
             raise ValueError("Passme a bool at SetShowWorkHour")
 
@@ -338,7 +391,11 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         self.Refresh()
 
     def SetViewType(self, view=None):
-        # Set the visualization type for the control. Default is daily
+        """
+        Définit le type de visualisation (journalier, hebdomadaire, mensuel, etc.).
+        Par défaut, utilise la vue journalière.
+        :param view: Type de vue à utiliser.
+        """
         if view is None:
             view = wxSCHEDULER_DAILY
 
@@ -364,19 +421,25 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def SetWeekStart(self, weekstart):
         """
-        Set when the week start, on Monday or on Sunday
-        Defaults it's start on Monday
+        Définit le jour de début de semaine (lundi ou dimanche).
+        Par défaut, la semaine commence le lundi.
+        :param weekstart: Jour de début de la semaine.
         """
         self._weekstart = weekstart
         self.Refresh()
 
     def GetWeekStart(self):
-        """Returns the day the week starts."""
+        """
+        Retourne le jour où commence la semaine (lundi ou dimanche).
+        :return: Jour de début de la semaine.
+        """
         return self._weekstart
 
     def SetWorkHours(self, start, stop):
         """
-        Set start and end work hours
+        Définit l'heure de début et de fin de la journée de travail.
+        :param start: Heure de début.
+        :param stop: Heure de fin.
         """
         self._startingHour.SetHour(max(0, start))
         self._endingHour.SetHour(min(23, stop))
@@ -386,11 +449,16 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
     def SetPeriodCount(self, count):
         """
-        Set the number of periods to display
+        Définit le nombre de périodes à afficher.
+        :param count: Nombre de périodes.
         """
         self._periodCount = count
         self.InvalidateMinSize()
         self.Refresh()
 
     def GetPeriodCount(self):
+        """
+        Retourne le nombre de périodes affichées.
+        :return: Nombre de périodes.
+        """
         return self._periodCount
