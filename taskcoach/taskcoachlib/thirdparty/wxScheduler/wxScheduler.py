@@ -10,8 +10,38 @@ from . import wxSchedule
 
 
 class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
+    """
+    wxScheduler - Composant de planification pour wxPython
+    
+    Ce module fournit la classe principale `wxSchedule`, utilisée pour représenter et manipuler des événements de planning dans une application wxPython. Il inclut également la gestion des notifications d'événements personnalisés et diverses propriétés associées à une planification (catégorie, couleur, police, état, etc.).
+    
+    Fonctionnalités principales :
+    - Définition d'un événement ou d'une tâche planifiée avec date/heure de début et de fin (`start`, `end`).
+    - Gestion de catégories prédéfinies (Travail, Congé, Anniversaire, etc.), couleurs associées, et autres attributs visuels.
+    - Support complet des propriétés : description, notes, état d’achèvement, données client, icônes, etc.
+    - Possibilité de sérialiser et cloner un événement via `GetData()` et `Clone()`.
+    - Système d’événement personnalisé pour notifier l’application des changements sur une planification (événement `EVT_SCHEDULE_CHANGE`).
+    - Méthodes utilitaires pour geler/dégeler les notifications, décaler un événement dans le temps, comparer deux événements, etc.
+    
+    Utilisation :
+    - Instancier un objet `wxSchedule`.
+    - Définir les propriétés souhaitées (dates, catégorie, description...).
+    - Attacher des gestionnaires d’événements pour réagir aux modifications de planning dans l’interface wxPython.
+    
+    Ce module est destiné à être intégré dans des applications wxPython nécessitant la gestion d’événements calendaires avancés, comme des gestionnaires de tâches ou d’agendas visuels.
+    
+    Dépendances :
+    - wxPython pour l’interface graphique.
+    - Le module compagnon `wxScheduleUtils` pour certaines opérations utilitaires sur les dates.
+    
+    Auteur : Inspiré par les besoins des gestionnaires de tâches graphiques, adapté pour Task Coach.
+    """
 
     def __init__(self, *args, **kwds):
+        """
+        Utiliser self.start et self.end pour définir le début et la fin de la planification.
+        Si les deux dates/horaires sont à 00:00, la planification est considérée comme relative à la ou les journées entières.
+        """
         kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
 
         super().__init__(*args, **kwds)
@@ -96,9 +126,11 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self._dirty = False
 
     def Freeze(self):
+        # Freeze the event notification
         self._frozen = True
 
     def Thaw(self):
+        # Wake up the event
         self._frozen = False
         if self._dirty:
             self.Refresh()
