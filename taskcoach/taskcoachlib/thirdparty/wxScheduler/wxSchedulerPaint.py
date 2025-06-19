@@ -34,19 +34,35 @@ EVT_PERIODWIDTH_CHANGED = wx.PyEventBinder(wxEVT_COMMAND_PERIODWIDTH_CHANGED)
 
 # class wxSchedulerSizer(wx.PySizer):  # PySizer deprecated , use Sizer instead
 class wxSchedulerSizer(wx.Sizer):
+    """
+    Sizer personnalisé pour le planificateur, permettant de calculer dynamiquement la taille minimale grâce à un callback.
+    """
     def __init__(self, minSizeCallback):
+        """
+        Initialise le sizer avec une fonction de rappel pour la taille minimale.
+        :param minSizeCallback: Fonction retournant la taille minimale actuelle.
+        """
         super().__init__()
-
         self._minSizeCallback = minSizeCallback
 
     def CalcMin(self):
+        """
+        Calcule et retourne la taille minimale à utiliser pour le sizer.
+        :return: Taille minimale (wx.Size)
+        """
         return self._minSizeCallback()
 
 
 # Main class
 class wxSchedulerPaint(object):
-
+    """
+    Classe principale responsable de la gestion du rendu graphique du planificateur (scheduler).
+    Gère l'affichage, le dessin, l'interaction avec les événements souris et le redimensionnement.
+    """
     def __init__(self, *args, **kwds):
+        """
+        Initialise les paramètres graphiques, les états d'interaction et les options de rendu du planificateur.
+        """
         super().__init__(*args, **kwds)
 
         self._resizable = False
@@ -101,6 +117,11 @@ class wxSchedulerPaint(object):
             self.SetSizer(wxSchedulerSizer(self.CalcMinSize))
 
     def _doClickControl(self, point, shiftDown=False):
+        """
+        Gère le clic de souris sur le planificateur (sélection, début de déplacement/redimensionnement d'un planning).
+        :param point: Position du clic (wx.Point)
+        :param shiftDown: Indique si la touche Shift était enfoncée
+        """
         if self._scheduleDraggingState in [3, 4]:
             self._scheduleDraggingState += 2
             self._scheduleDraggingOrigin = self._computeCoords(point, 0, 0)
@@ -119,6 +140,10 @@ class wxSchedulerPaint(object):
                 self._processEvt(wxEVT_COMMAND_SCHEDULE_ACTIVATED, point)
 
     def _doEndClickControl(self, point):
+        """
+        Gère la fin du clic (relâchement souris) sur le planificateur, finalise le déplacement ou le redimensionnement.
+        :param point: Position du relâchement
+        """
         if self._scheduleDraggingState == 1:
             self._processEvt(wxEVT_COMMAND_SCHEDULE_ACTIVATED, point)
         elif self._scheduleDraggingState == 2:
@@ -151,6 +176,10 @@ class wxSchedulerPaint(object):
         self._scheduleDraggingPrevious = None
 
     def _doMove(self, point):
+        """
+        Gère le déplacement de la souris sur le planificateur, met à jour l'état de survol/déplacement/redimensionnement.
+        :param point: Position actuelle de la souris
+        """
         if self._scheduleDraggingState in [0, 3, 4]:
             for sched, pointMin, pointMax in self._schedulesCoords:
                 if self._style == wxSCHEDULER_VERTICAL:
@@ -217,6 +246,13 @@ class wxSchedulerPaint(object):
             self._drawDragging(point, self._computeAllCoords)
 
     def _computeCoords(self, point, dx, dy):
+        """
+        Calcule les coordonnées ajustées dans le planificateur en fonction du déplacement.
+        :param point: Position du point de base
+        :param dx: Décalage en X
+        :param dy: Décalage en Y
+        :return: (wx.Point, wx.DateTime) coordonnées et heure correspondante
+        """
         pp = wx.Point(point.x + dx, point.y + dy)
         if pp.y < 0:
             pp.y = 0
@@ -262,7 +298,11 @@ class wxSchedulerPaint(object):
         return pp, theTime
 
     def _computeAllCoords(self, point):
-        """Dragging the whole schedule"""
+        """
+        Calcule les nouvelles coordonnées pour un planning lors d'un déplacement complet.
+        :param point: Position de la souris
+        :return: Tuple (rMin, rMax, theTime)
+        """
 
         pMin, pMax, sch = self._scheduleDragged
 
@@ -275,7 +315,11 @@ class wxSchedulerPaint(object):
         return rMin, rMax, theTime
 
     def _computeStartCoords(self, point):
-        """Left/up resizing"""
+        """
+        Calcule les coordonnées lors du redimensionnement du début d'un planning (gauche/haut).
+        :param point: Position de la souris
+        :return: Tuple (rMin, rMax, theTime)
+        """
 
         pMin, pMax, sch = self._scheduleDragged
 
@@ -300,7 +344,11 @@ class wxSchedulerPaint(object):
         return rMin, rMax, theTime
 
     def _computeEndCoords(self, point):
-        """Right/down resizing"""
+        """
+        Calcule les coordonnées lors du redimensionnement de la fin d'un planning (droite/bas).
+        :param point: Position de la souris
+        :return: Tuple (rMin, rMax, theTime)
+        """
 
         pMin, pMax, sch = self._scheduleDragged
 
@@ -324,6 +372,11 @@ class wxSchedulerPaint(object):
         return rMin, rMax, theTime
 
     def _drawDragging(self, point, coords):
+        """
+        Dessine le planning pendant une opération de déplacement ou de redimensionnement.
+        :param point: Position courante de la souris
+        :param coords: Fonction de calcul des coordonnées à utiliser
+        """
         if self._scheduleDraggingPrevious is not None:
             x, y = self.GetViewStart()
             mx, my = self.GetScrollPixelsPerUnit()
@@ -350,15 +403,24 @@ class wxSchedulerPaint(object):
             dc.DrawRoundedRectangle(rMin.x, rMin.y, rMax.x - rMin.x, rMax.y - rMin.y, 5)
 
     def _doRightClickControl(self, point):
+        """
+        Gère le clic droit sur le planificateur (affiche le menu contextuel ou équivalent).
+        :param point: Position du clic droit
+        """
         self._processEvt(wxEVT_COMMAND_SCHEDULE_RIGHT_CLICK, point)
 
     def _doDClickControl(self, point):
+        """
+        Gère le double-clic sur le planificateur (édition rapide ou autre action).
+        :param point: Position du double-clic
+        """
         self._processEvt(wxEVT_COMMAND_SCHEDULE_DCLICK, point)
 
     def _findSchedule(self, point):
         """
-        Check if the point is on a schedule and return the schedule and its
-        coordinates
+        Vérifie si le point donné se trouve sur un planning et retourne ce planning avec ses coordonnées.
+        :param point: Position à tester
+        :return: (pointMin, pointMax, schedule) ou (pointMin, pointMax, date)
         """
         for schedule, pointMin, pointMax in self._schedulesCoords:
             inX = (pointMin.x <= point.x) & (point.x <= pointMax.x)
@@ -374,12 +436,15 @@ class wxSchedulerPaint(object):
             if inX & inY:
                 return pointMin, pointMax, dt
 
+    @staticmethod
     def _getSchedInPeriod(schedules, start, end):
         """
-        Returns a list of copied schedules that intersect with
-        the  period  defined by	 'start'  and 'end'.  Schedule
-        start and end are trimmed so as to lie between 'start'
-        and 'end'.
+        Retourne la liste des plannings qui intersectent la période définie par 'start' et 'end'.
+        Les dates de début/fin sont ajustées à la plage si nécessaire.
+        :param schedules: Liste de plannings
+        :param start: Date de début
+        :param end: Date de fin
+        :return: Liste de plannings ajustés
         """
         results = []
 
@@ -408,12 +473,13 @@ class wxSchedulerPaint(object):
 
         return results
 
-    _getSchedInPeriod = staticmethod(_getSchedInPeriod)
+    # _getSchedInPeriod = staticmethod(_getSchedInPeriod)
 
     def _splitSchedules(self, schedules):
         """
-        Returns	 a list	 of lists  of schedules.  Schedules in
-        each list are guaranteed not to collide.
+        Sépare les plannings en groupes qui ne se chevauchent pas mutuellement.
+        :param schedules: Liste de plannings
+        :return: Liste de listes de plannings non chevauchants
         """
         results = []
         current = []
@@ -448,6 +514,18 @@ class wxSchedulerPaint(object):
     def _paintPeriod(
         self, drawer, start, daysCount, x, y, width, height, highlight=None
     ):
+        """
+        Effectue le rendu des plannings pour une période donnée (jour/semaine/mois).
+        :param drawer: Objet de dessin
+        :param start: Date de début
+        :param daysCount: Nombre de jours à afficher
+        :param x: Position X
+        :param y: Position Y
+        :param width: Largeur d'affichage
+        :param height: Hauteur d'affichage
+        :param highlight: Couleur de surbrillance optionnelle
+        :return: Dimensions réelles utilisées (width, height)
+        """
         end = utils.copyDateTime(start)
         end.AddDS(wx.DateSpan(days=daysCount))
 
@@ -647,9 +725,15 @@ class wxSchedulerPaint(object):
 
     def _paintDay(self, drawer, day, x, y, width, height):
         """
-        Draw column schedules
+        Dessine les plannings d'une journée dans la colonne correspondante.
+        :param drawer: Objet de dessin
+        :param day: Date du jour à afficher
+        :param x: Position X
+        :param y: Position Y
+        :param width: Largeur
+        :param height: Hauteur
+        :return: Dimensions utilisées (width, height)
         """
-
         start = utils.copyDateTime(day)
         start.SetHour(0)
         start.SetMinute(0)
@@ -662,6 +746,14 @@ class wxSchedulerPaint(object):
         return self._paintPeriod(drawer, start, 1, x, y, width, height, highlight=color)
 
     def _paintDailyHeaders(self, drawer, day, x, y, width, height, includeText=True):
+        """
+        Dessine les en-têtes de la vue journalière.
+        :param drawer: Objet de dessin
+        :param day: Date du jour
+        :param x, y, width, height: Dimensions de la zone d'en-tête
+        :param includeText: Affiche le texte de la date si vrai
+        :return: Largeur et hauteur occupées
+        """
         if self._style == wxSCHEDULER_HORIZONTAL:
             self._headerBounds.append((x, y, height))
 
@@ -684,9 +776,15 @@ class wxSchedulerPaint(object):
 
     def _paintDaily(self, drawer, day, x, y, width, height):
         """
-        Display day schedules
+        Affiche les plannings de la journée (vue journalière, éventuellement multi-jours).
+        :param drawer: Objet de dessin
+        :param day: Date de départ
+        :param x: Position X
+        :param y: Position Y
+        :param width: Largeur
+        :param height: Hauteur
+        :return: Dimensions utilisées (width, height)
         """
-
         minWidth = minHeight = 0
 
         if self._style == wxSCHEDULER_VERTICAL:
@@ -784,6 +882,13 @@ class wxSchedulerPaint(object):
         return minWidth, minHeight
 
     def _paintWeeklyHeaders(self, drawer, day, x, y, width, height):
+        """
+        Dessine les en-têtes des jours pour la vue hebdomadaire.
+        :param drawer: Objet de dessin
+        :param day: Date de référence
+        :param x, y, width, height: Dimensions de la zone d'en-tête
+        :return: Hauteur occupée
+        """
         firstDay = utils.setToWeekDayInSameWeek(day, 0, self._weekstart)
         firstDay.SetHour(0)
         firstDay.SetMinute(0)
@@ -816,9 +921,15 @@ class wxSchedulerPaint(object):
 
     def _paintWeekly(self, drawer, day, x, y, width, height):
         """
-        Display weekly schedule
+        Affiche les plannings de la semaine courante.
+        :param drawer: Objet de dessin
+        :param day: Date de référence
+        :param x: Position X
+        :param y: Position Y
+        :param width: Largeur
+        :param height: Hauteur
+        :return: Dimensions utilisées (width, height)
         """
-
         firstDay = utils.setToWeekDayInSameWeek(day, 0, self._weekstart)
         firstDay.SetHour(0)
         firstDay.SetMinute(0)
@@ -897,6 +1008,13 @@ class wxSchedulerPaint(object):
             )
 
     def _paintMonthlyHeaders(self, drawer, day, x, y, width, height):
+        """
+        Dessine les en-têtes pour la vue mensuelle.
+        :param drawer: Objet de dessin
+        :param day: Date de référence
+        :param x, y, width, height: Dimensions de la zone d'en-tête
+        :return: Largeur et hauteur occupées
+        """
         if isinstance(self, wx.ScrolledWindow):
             # _, h = drawer.DrawMonthHeader(day, 0, 0, self.GetSizeTuple()[0], height)
             _, h = drawer.DrawMonthHeader(day, 0, 0, self.GetSize()[0], height)
@@ -940,9 +1058,15 @@ class wxSchedulerPaint(object):
 
     def _paintMonthly(self, drawer, day, x, y, width, height):
         """
-        Draw month's calendar using calendar module functions
+        Affiche la grille du mois en utilisant le module calendar.
+        :param drawer: Objet de dessin
+        :param day: Date de référence (premier jour du mois)
+        :param x: Position X
+        :param y: Position Y
+        :param width: Largeur
+        :param height: Hauteur
+        :return: Dimensions utilisées (width, height)
         """
-
         if self._drawHeaders:
             w, h = self._paintMonthlyHeaders(drawer, day, x, y, width, height)
         else:
@@ -1020,7 +1144,9 @@ class wxSchedulerPaint(object):
 
     def _processEvt(self, commandEvent, point):
         """
-        Process the command event passed at the given point
+        Traite un événement de commande utilisateur à la position spécifiée.
+        :param commandEvent: Type d'événement wxPython
+        :param point: Position concernée
         """
         evt = wx.PyCommandEvent(commandEvent)
         _, _, sch = self._findSchedule(point)
@@ -1037,6 +1163,13 @@ class wxSchedulerPaint(object):
         self.ProcessEvent(evt)
 
     def DoPaint(self, drawer, x, y, width, height):
+        """
+        Effectue le rendu principal du planificateur selon la vue courante.
+        :param drawer: Objet de dessin
+        :param x, y: Position d'origine
+        :param width, height: Dimensions d'affichage
+        :return: Dimensions utilisées (width, height)
+        """
         for schedule, _, _ in self._schedulesCoords:
             schedule.Destroy()
 
@@ -1052,6 +1185,10 @@ class wxSchedulerPaint(object):
             return self._paintMonthly(drawer, day, x, y, width, height)
 
     def GetViewSize(self):
+        """
+        Retourne la taille réelle de la vue planificateur (pour gestion du rapport).
+        :return: wx.Size
+        """
         # Used by wxSchedulerReport
 
         size = self.GetSize()
@@ -1060,6 +1197,10 @@ class wxSchedulerPaint(object):
         return wx.Size(max(size.width, minSize.width), max(size.height, minSize.height))
 
     def _CalcMinSize(self):
+        """
+        Calcule la taille minimale nécessaire du planificateur selon la vue courante.
+        :return: wx.Size
+        """
         if self._viewType == wxSCHEDULER_DAILY:
             minW, minH = DAY_SIZE_MIN.width, DAY_SIZE_MIN.height
         elif self._viewType == wxSCHEDULER_WEEKLY:
@@ -1126,15 +1267,25 @@ class wxSchedulerPaint(object):
         return wx.Size(minW * self._periodCount, minH)
 
     def CalcMinSize(self):
+        """
+        Retourne la taille minimale, en la recalculant si nécessaire.
+        :return: wx.Size
+        """
         if self._minSize is None:
             self._minSize = self._CalcMinSize()
         return self._minSize
 
     def InvalidateMinSize(self):
+        """
+        Invalide la taille minimale mémorisée pour forcer un recalcul.
+        """
         self._minSize = None
         self._datetimeCoords = list()
 
     def DrawBuffer(self):
+        """
+        Dessine le contenu du planificateur dans un bitmap tampon pour l'affichage.
+        """
         if isinstance(self, wx.ScrolledWindow):
             if self._resizable:
                 size = self.GetVirtualSize()
@@ -1185,6 +1336,10 @@ class wxSchedulerPaint(object):
                     self._guardRedraw = False
 
     def RefreshSchedule(self, schedule):
+        """
+        Rafraîchit uniquement la zone d'un planning donné.
+        :param schedule: Planning à rafraîchir
+        """
         if schedule.bounds is not None:
             memDC = wx.MemoryDC()
             memDC.SelectObject(self._bitmap)
@@ -1220,8 +1375,11 @@ class wxSchedulerPaint(object):
             )
 
     def OnPaint(self, evt=None):
-        # Do the draw
-
+        """
+        Gère l'événement de dessin (paint) du widget wxPython.
+        :param evt: Événement wxPython (optionnel)
+        """
+        # TODO : Certainement plus nécessaire depuis Phoenix.
         if self._dc:
             dc = self._dc
         else:
@@ -1236,16 +1394,15 @@ class wxSchedulerPaint(object):
 
     def SetResizable(self, value):
         """
-        Draw proportionally of actual space but not down on minimun sizes
-        The actual sze is retrieved by GetSize() method of derived object
+        Définit si la vue doit être redimensionnable proportionnellement à la zone disponible.
+        :param value: booléen
         """
         self._resizable = bool(value)
 
     def SetStyle(self, style):
         """
-        Sets  the drawing  style.  Values  for 'style'	may be
-        wxSCHEDULER_VERTICAL	   (the	      default)	    or
-        wxSCHEDULER_HORIZONTAL.
+        Définit le style d'affichage (vertical ou horizontal).
+        :param style: wxSCHEDULER_VERTICAL ou wxSCHEDULER_HORIZONTAL
         """
         self._style = style
         self.InvalidateMinSize()
@@ -1253,45 +1410,56 @@ class wxSchedulerPaint(object):
 
     def GetStyle(self):
         """
-        Returns the current drawing style.
+        Retourne le style d'affichage courant.
+        :return: Style
         """
         return self._style
 
     def SetHighlightColor(self, color):
         """
-        Sets the highlight color, i.e. the color used to draw
-        Today's background.
+        Définit la couleur de surbrillance (pour aujourd'hui par exemple).
+        :param color: Couleur wx.Colour
         """
 
         self._highlightColor = color
 
     def GetHighlightColor(self):
         """
-        Returns the current highlight color.
+        Retourne la couleur de surbrillance actuelle.
+        :return: wx.Colour
         """
-
         return self._highlightColor
 
     def SetDrawer(self, drawerClass):
         """
-        Sets the drawer class.
+        Définit la classe de dessin à utiliser pour le rendu graphique.
+        :param drawerClass: Classe de dessin
         """
         self._drawerClass = drawerClass
         self.InvalidateMinSize()
         self.Refresh()
 
     def GetDrawer(self):
+        """
+        Retourne la classe de dessin actuelle.
+        :return: Classe de dessin
+        """
         return self._drawerClass
 
     def SetPeriodWidth(self, width):
-        """Sets the width of a day in horizontal mode."""
-
+        """
+        Définit la largeur d'une période (jour) en mode horizontal.
+        :param width: Largeur en pixels
+        """
         self._periodWidth = width
 
     def GetPeriodWidth(self):
         return self._periodWidth
 
     def Refresh(self):
+        """
+        Rafraîchit le planificateur et force le redessin du contenu et de l'en-tête si présent.
+        """
         self.DrawBuffer()
         super(wxSchedulerPaint, self).Refresh()
         if self._headerPanel is not None:
@@ -1299,10 +1467,9 @@ class wxSchedulerPaint(object):
 
     def SetHeaderPanel(self, panel):
         """
-        Call this with an instance of wx.Panel. The headers
-        will then be painted on this panel, and thus will be
-        unaffected by vertical scrolling. The panel will be
-        resized as needed.
+        Définit un panneau wx.Panel comme zone d'en-tête indépendante.
+        Les en-têtes seront alors dessinés sur ce panneau, indépendamment du scroll vertical.
+        :param panel: Instance de wx.Panel
         """
 
         self._drawHeaders = False
