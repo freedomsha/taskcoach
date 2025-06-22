@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 import warnings
 import wx
 import time
 
 from .wxScheduleUtils import copyDateTime
+
+log = logging.getLogger(__name__)
 
 # New event
 wxEVT_COMMAND_SCHEDULE_CHANGE = wx.NewEventType()
@@ -15,7 +18,8 @@ EVT_SCHEDULE_CHANGE = wx.PyEventBinder(wxEVT_COMMAND_SCHEDULE_CHANGE)
 # Constants
 
 
-class wxSchedule(wx.EvtHandler):
+# class wxSchedule(wx.EvtHandler):
+class wxSchedule(object):
     """
     Classe représentant un événement ou une planification, avec gestion de catégorie, couleur, période de début/fin, état d’achèvement, description et autres métadonnées.
 
@@ -49,13 +53,21 @@ class wxSchedule(wx.EvtHandler):
         "Fax": wx.GREEN,
     }
 
-    def __init__(self):
+    # def __init__(self):
+    def __init__(self, *args, **kwargs):
+        # def __init__(self, parent=None, id=wx.ID_ANY, *args, **kwds):
         """
         Use self.start and self.end for set the star and the end of the schedule.
         If both start and end datetime have time set to 00:00 the schedule is
         relative on entire day/days.
         """
-        super(wxSchedule, self).__init__()
+        # La chaîne d’héritage passe des arguments positionnels (parent, id, ...) tout du long.
+        # Si une classe dans la chaîne ne les accepte pas, tu as "takes 1 positional argument but 3 were given".
+
+        # log.debug(f"wxSchedule.__init__ : avant super args={args}, kwds={kwds}")
+        # super(wxSchedule, self).__init__()
+        super().__init__(*args, **kwargs)
+        # super().__init__(parent, id, *args, **kwds)
 
         self._color = self.SCHEDULE_DEFAULT_COLOR
         self._font = wx.NORMAL_FONT

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 import wx
 from itertools import chain
 # from .wxSchedule import *
@@ -21,6 +22,7 @@ from .wxSchedulerConstants import (
 from .wxSchedulerPaint import wxSchedulerPaint
 from . import wxScheduleUtils as utils
 
+log = logging.getLogger(__name__)
 
 # if sys.version.startswith("2.3"):
 # 	from sets import Set as set
@@ -51,15 +53,19 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
     Hérite des fonctionnalités de rendu et de gestion de planning.
     """
     def __init__(self, *args, **kwds):
+        # def __init__(self, parent=None, id=wx.ID_ANY,  *args, **kwds):
         """
         Initialise le cœur du planificateur avec les paramètres par défaut.
         Configure les heures de travail et autres paramètres initiaux.
         """
+        log.debug(f"wxSchedulerCore.__init__ : reçoit args={args}, kwargs={kwds}")
+        log.debug(f"wxSchedulerCore.__init__ : avant super args={args}, kwargs={kwds}")
+        super().__init__(*args, **kwds)
+        # super().__init__(parent, id, *args, **kwds)
         self._viewType = None
         self._currentDate = wx.DateTime.Now()
         self._weekstart = wxSCHEDULER_WEEKSTART_MONDAY
-
-        super().__init__(*args, **kwds)
+        kwds.pop('style', None)  # retirer style non utilisé
 
         self._showOnlyWorkHour = True
         self._dc = None
@@ -156,9 +162,11 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
             offset = wx.DateSpan(months=1)
 
         if side == wxSCHEDULER_NEXT:
-            self._currentDate.AddDS(offset)
+            # self._currentDate.AddDS(offset)
+            self._currentDate += offset
         elif side == wxSCHEDULER_PREV:
-            self._currentDate.SubtractDS(offset)
+            # self._currentDate.SubtractDS(offset)
+            self._currentDate -= offset
 
     # -----------------------
     #  External methods

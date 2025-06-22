@@ -70,6 +70,8 @@ def setToWeekDayInSameWeek(day, offset, startDay=1):
     while True:
         if day.GetWeekDay() == startDay:
             break
-        day.SubtractDS(wx.DateSpan(days=1))
-    day.AddDS(wx.DateSpan(days=offset))
+        # day.SubtractDS(wx.DateSpan(days=1))
+        day -= wx.DateSpan(days=1)
+    # day.AddDS(wx.DateSpan(days=offset))
+    day += wx.DateSpan(days=offset)
     return day

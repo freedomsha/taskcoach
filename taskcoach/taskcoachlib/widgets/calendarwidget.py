@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from __future__ import division
 # from past.utils import old_div
+import logging
 import wx
 from taskcoachlib.thirdparty.wxScheduler import (wxScheduler, wxSchedule,
                                                  wxReportScheduler, wxTimeFormat)
@@ -34,21 +35,27 @@ from taskcoachlib.widgets import draganddrop
 from taskcoachlib import command, render
 from . import tooltip
 
+log = logging.getLogger(__name__)
+
 
 class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
     def __init__(self, parent, taskList, iconProvider, onSelect, onEdit,
                  onCreate, onChangeConfig, popupMenu, *args, **kwargs):
-        self.getItemTooltipData = parent.getItemTooltipData
+        log.debug(f"_CalendarContent.__init__ : args={args}, kwargs={kwargs}")
+        log.debug(_CalendarContent.__mro__)
 
         self.__onDropURLCallback = kwargs.pop("onDropURL", None)
         self.__onDropFilesCallback = kwargs.pop("onDropFiles", None)
         self.__onDropMailCallback = kwargs.pop("onDropMail", None)
 
+        log.debug(f"ToolTipMixin.__init__ : avant super args={args}, kwargs={kwargs}")
+        # super().__init__(id=wx.ID_ANY, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)  # Faire attention à faire suivre les arguments dans tous les Parents-Enfants de la classe en suivant le MRO
+        self.getItemTooltipData = parent.getItemTooltipData
+
         self.dropTarget = draganddrop.DropTarget(self.OnDropURL,
                                                  self.OnDropFiles,
                                                  self.OnDropMail)
-
-        super().__init__(parent, wx.ID_ANY, *args, **kwargs)
 
         self.SetDropTarget(self.dropTarget)
 
@@ -285,14 +292,15 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
 class Calendar(wx.Panel):
     def __init__(self, parent, taskList, iconProvider, onSelect, onEdit,
-                 onCreate, popupMenu, *args, **kwargs):
+                 onCreate, onChangeConfig=None, popupMenu=None, *args, **kwargs):
         self.getItemTooltipData = parent.getItemTooltipData
 
         super().__init__(parent)
 
         self._headers = wx.Panel(self)
         self._content = _CalendarContent(self, taskList, iconProvider,
-                                         onSelect, onEdit, onCreate, popupMenu,
+                                         onSelect, onEdit, onCreate,
+                                         onChangeConfig=onChangeConfig, popupMenu=popupMenu,
                                          *args, **kwargs)
 
         sizer = wx.BoxSizer(wx.VERTICAL)

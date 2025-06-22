@@ -36,8 +36,8 @@ class wxDrawer(object):
         while True:
             font.SetPointSize(pointSize)
             _, th = self.context.GetTextExtent(
-                # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
-                " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                # " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
             )
             if th <= height:
                 return
@@ -51,8 +51,8 @@ class wxDrawer(object):
             font.SetPointSize(pointSize)
             self.context.SetFont(font)
             tw, _ = self.context.GetTextExtent(
-                # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
-                " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                # " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
             )
             if tw <= width:
                 return
@@ -358,7 +358,8 @@ class wxDrawer(object):
 
         for dayNumber in range(dayCount):
             currentDay = copyDateTime(firstDay)
-            currentDay.AddDS(wx.DateSpan(days=dayNumber))
+            # currentDay.AddDS(wx.DateSpan(days=dayNumber))
+            currentDay += wx.DateSpan(days=dayNumber)
 
             for startHour, endHour in workingHours:
                 startHourCopy = wx.DateTimeFromDMY(
@@ -525,7 +526,8 @@ class wxDrawer(object):
         return textlist
 
 
-class BackgroundDrawerDCMixin(wxDrawer, wx.DC):
+# class BackgroundDrawerDCMixin(wxDrawer, wx.DC):
+class BackgroundDrawerDCMixin(wxDrawer):
     """
     Mixin to draw day background with a DC.
     """
@@ -538,10 +540,11 @@ class BackgroundDrawerDCMixin(wxDrawer, wx.DC):
 
         self.context.SetPen(FOREGROUND_PEN)
 
-        self.context.DrawRectangle(x, y - 1, w, h + 1)
+        self.context.DrawRectangle(int(x), int(y - 1), int(w), int(h + 1))
 
 
-class HeaderDrawerDCMixin(wxDrawer, wx.DC):
+# class HeaderDrawerDCMixin(wxDrawer, wx.DC):
+class HeaderDrawerDCMixin(wxDrawer):
     """
     A mixin to draw headers with a regular DC.
     """
@@ -558,6 +561,10 @@ class HeaderDrawerDCMixin(wxDrawer, wx.DC):
         alignRight=False,
         highlight=None,
     ):
+        x = int(x)
+        y = int(y)
+        w = int(w)
+        h = int(h)
         font = self.context.GetFont()
         font.SetPointSize(pointSize)
         font.SetWeight(weight)
@@ -570,24 +577,29 @@ class HeaderDrawerDCMixin(wxDrawer, wx.DC):
         else:
             self.context.SetBrush(wx.Brush(SCHEDULER_BACKGROUND_BRUSH()))
 
-        self.context.DrawRectangle(x, y, w, textH * 1.5)
+        self.context.DrawRectangle(int(x), int(y), int(w), int(textH * 1.5))
 
         self.context.SetTextForeground(wx.BLACK)
 
         if alignRight:
-            self.context.DrawText(text, x + w - textW * 1.5, y + textH * 0.25)
+            self.context.DrawText(text, int(x + w - textW * 1.5), int(y + textH * 0.25))
         else:
-            self.context.DrawText(text, x + (w - textW) / 2, y + textH * 0.25)
+            self.context.DrawText(text, int(x + (w - textW) / 2), int(y + textH * 0.25))
 
         return w, textH * 1.5
+        return max(1, int(w)), max(0, int(textH * 1.5))
 
     def DrawSchedulesCompact(self, day, schedules, x, y, width, height, highlightColor):
+        x = int(x)
+        y = int(y)
+        width = int(width)
+        height = int(height)
         if day is None:
             self.context.SetBrush(wx.LIGHT_GREY_BRUSH)
         else:
             self.context.SetBrush(wx.Brush(DAY_BACKGROUND_BRUSH()))
 
-        self.context.DrawRectangle(x, y, width, height)
+        self.context.DrawRectangle(int(x), int(y), int(width), int(height))
 
         results = []
 
@@ -618,7 +630,8 @@ class HeaderDrawerDCMixin(wxDrawer, wx.DC):
                     #     wxTimeFormat.FormatTime(schedule.start, includeMinutes=True),
                     #     schedule.description,
                     # )
-                    description = f"{wxTimeFormat.FormatTime(self, schedule.start, includeMinutes=True)} {schedule.description}"
+                    # description = f"{wxTimeFormat.FormatTime(self, schedule.start, includeMinutes=True)} {schedule.description}"
+                    description = f"{wxTimeFormat.FormatTime(schedule.start, includeMinutes=True)} {schedule.description}"
                 else:
                     description = schedule.description
                 description = self._shrinkText(
@@ -633,14 +646,14 @@ class HeaderDrawerDCMixin(wxDrawer, wx.DC):
                     break
 
                 self.context.SetBrush(wx.Brush(schedule.color))
-                self.context.DrawRectangle(x, y, width, textH * 1.2)
+                self.context.DrawRectangle(x, y, width, int(textH * 1.2))
                 results.append(
-                    (schedule, wx.Point(x, y), wx.Point(x + width, y + textH * 1.2))
+                    (schedule, wx.Point(x, y), wx.Point(x + width, int(y + textH * 1.2)))
                 )
 
                 self.context.SetTextForeground(schedule.foreground)
                 self.context.DrawText(
-                    description, x + SCHEDULE_INSIDE_MARGIN, y + textH * 0.1
+                    description, x + SCHEDULE_INSIDE_MARGIN, int(y + textH * 0.1)
                 )
 
                 y += textH * 1.2
@@ -726,14 +739,15 @@ class HeaderDrawerGCMixin(wxDrawer):
                         SCHEDULER_BACKGROUND_BRUSH(),
                     )
                 )
-            self.context.DrawRectangle(x1, y1, x2 - x1, y2 - y1)
+            self.context.DrawRectangle(int(x1), int(y1), int(x2 - x1), int(y2 - y1))
 
             if alignRight:
-                self.context.DrawText(text, x + w - 1.5 * textW, y + textH * 0.25)
+                self.context.DrawText(text, int(x + w - 1.5 * textW), int(y + textH * 0.25))
             else:
-                self.context.DrawText(text, x + (w - textW) / 2, y + textH * 0.25)
+                self.context.DrawText(text, int(x + (w - textW) / 2), int(y + textH * 0.25))
 
-            return w, textH * 1.5
+            # return w, textH * 1.5
+            return max(1, int(w)), max(0, int(textH * 1.5))
         finally:
             font.SetPointSize(fsize)
             font.SetWeight(fweight)
@@ -749,7 +763,7 @@ class HeaderDrawerGCMixin(wxDrawer):
             )
 
         self.context.SetBrush(brush)
-        self.context.DrawRectangle(x, y, width, height)
+        self.context.DrawRectangle(int(x), int(y), int(width), int(height))
 
         font = wx.NORMAL_FONT
         fsize = font.GetPointSize()
@@ -790,7 +804,8 @@ class HeaderDrawerGCMixin(wxDrawer):
                         #     ),
                         #     schedule.description,
                         # )
-                        description = f"{wxTimeFormat.FormatTime(self, schedule.start, includeMinutes=True)} {schedule.description}"
+                        # description = f"{wxTimeFormat.FormatTime(self, schedule.start, includeMinutes=True)} {schedule.description}"
+                        description = f"{wxTimeFormat.FormatTime(schedule.start, includeMinutes=True)} {schedule.description}"
                     else:
                         description = schedule.description
                     description = self._shrinkText(
@@ -814,15 +829,15 @@ class HeaderDrawerGCMixin(wxDrawer):
                     )
                     self.context.SetBrush(brush)
                     self.context.DrawRoundedRectangle(
-                        x, y, width, textH * 1.2, 1.0 * textH / 2
+                        int(x), int(y), int(width), int(textH * 1.2, 1.0 * textH / 2)
                     )
                     results.append(
-                        (schedule, wx.Point(x, y), wx.Point(x + width, y + textH * 1.2))
+                        (schedule, wx.Point(int(x), int(y)), wx.Point(int(x + width), int(y + textH * 1.2)))
                     )
 
                     self.context.SetFont(schedule.font, schedule.foreground)
                     self.context.DrawText(
-                        description, x + SCHEDULE_INSIDE_MARGIN, y + textH * 0.1
+                        description, int(x + SCHEDULE_INSIDE_MARGIN), int(y + textH * 0.1)
                     )
 
                     y += textH * 1.2
@@ -855,8 +870,11 @@ class HeaderDrawerMixin(HeaderDrawerDCMixin):
         )
 
     def DrawMonthHeader(self, day, x, y, w, h):
+        # return self._DrawHeader(
+        #     "%s %s" % (day.GetMonthName(day.GetMonth()), day.GetYear()), x, y, w, h
+        # )
         return self._DrawHeader(
-            "%s %s" % (day.GetMonthName(day.GetMonth()), day.GetYear()), x, y, w, h
+            f"{day.GetMonthName(day.GetMonth())} {day.GetYear()}", x, y, w, h
         )
 
     def DrawSimpleDayHeader(self, day, x, y, w, h, highlight=None):
@@ -882,7 +900,7 @@ class wxBaseDrawer(
     def DrawHours(self, x, y, w, h, direction, includeText=True):
         if direction == wxSCHEDULER_VERTICAL:
             self.context.SetBrush(wx.Brush(SCHEDULER_BACKGROUND_BRUSH()))
-            self.context.DrawRectangle(x, y, LEFT_COLUMN_SIZE, h)
+            self.context.DrawRectangle(x, int(y), LEFT_COLUMN_SIZE, int(h))
 
         font = self.context.GetFont()
         fWeight = font.GetWeight()
@@ -896,13 +914,15 @@ class wxBaseDrawer(
                 hourH = 1.0 * h / len(self.displayedHours)
                 self.AdjustFontForHeight(font, hourH)
                 hourW, _ = self.context.GetTextExtent(
-                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                    # " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
                 )
             else:
                 hourW = 1.0 * w / len(self.displayedHours)
                 self.AdjustFontForWidth(font, int(hourW * 2 * 0.9))
                 _, hourH = self.context.GetTextExtent(
-                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                    # " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
                 )
 
             if not includeText:
@@ -912,53 +932,59 @@ class wxBaseDrawer(
                 if hour.GetMinute() == 0:
                     if direction == wxSCHEDULER_VERTICAL:
                         self.context.DrawLine(
-                            x + LEFT_COLUMN_SIZE - hourW / 2,
-                            y + i * hourH,
-                            x + w,
-                            y + i * hourH,
+                            int(x + LEFT_COLUMN_SIZE - hourW // 2),
+                            int(y + i * hourH),
+                            int(x + w),
+                            int(y + i * hourH),
                         )
                         if includeText:
                             self.context.DrawText(
-                                # wxTimeFormat.FormatTime(hour),
-                                wxTimeFormat.FormatTime(self, hour),
-                                x + LEFT_COLUMN_SIZE - hourW - 5,
-                                y + i * hourH,
+                                wxTimeFormat.FormatTime(hour),
+                                # wxTimeFormat.FormatTime(self, hour),
+                                int(x + LEFT_COLUMN_SIZE - hourW - 5),
+                                int(y + i * hourH),
                             )
                     else:
                         self.context.DrawLine(
-                            x + i * hourW, y + hourH * 1.25, x + i * hourW, y + h
+                            int(x + i * hourW), int(y + hourH * 1.25), int(x + i * hourW), int(y + h)
                         )
                         if includeText:
                             self.context.DrawText(
-                                # wxTimeFormat.FormatTime(hour),
-                                wxTimeFormat.FormatTime(self, hour),
-                                x + i * hourW + 5,
-                                y + hourH * 0.25,
+                                wxTimeFormat.FormatTime(hour),
+                                # wxTimeFormat.FormatTime(self, hour),
+                                int(x + i * hourW + 5),
+                                int(y + hourH * 0.25),
                             )
                 else:
                     if direction == wxSCHEDULER_VERTICAL:
                         self.context.DrawLine(
-                            x + LEFT_COLUMN_SIZE,
-                            y + i * hourH,
-                            x + w,
-                            y + i * hourH,
+                            int(x + LEFT_COLUMN_SIZE),
+                            int(y + i * hourH),
+                            int(x + w),
+                            int(y + i * hourH),
                         )
                     else:
                         self.context.DrawLine(
-                            x + i * hourW, y + hourH * 1.4, x + i * hourW, y + h
+                            int(x + i * hourW),
+                            int(y + hourH * 1.4),
+                            int(x + i * hourW),
+                            int(y + h)
                         )
 
             if direction == wxSCHEDULER_VERTICAL:
                 self.context.DrawLine(
-                    x + LEFT_COLUMN_SIZE - 1,
-                    y,
-                    x + LEFT_COLUMN_SIZE - 1,
-                    y + h,
+                    int(x + LEFT_COLUMN_SIZE - 1),
+                    int(y),
+                    int(x + LEFT_COLUMN_SIZE - 1),
+                    int(y + h),
                 )
                 return LEFT_COLUMN_SIZE, max(h, DAY_SIZE_MIN.height)
             else:
                 self.context.DrawLine(
-                    x, y + hourH * 1.5 - 1, x + w, y + hourH * 1.5 - 1
+                    int(x),
+                    int(y + hourH * 1.5 - 1),
+                    int(x + w),
+                    int(y + hourH * 1.5 - 1)
                 )
                 return max(w, DAY_SIZE_MIN.width), hourH * 1.5
         finally:
@@ -968,14 +994,14 @@ class wxBaseDrawer(
     def DrawNowHorizontal(self, x, y, w):
         self.context.SetBrush(wx.Brush(wx.Colour(0, 128, 0)))
         self.context.SetPen(wx.Pen(wx.Colour(0, 128, 0)))
-        self.context.DrawArc(x, y + 5, x, y - 5, x, y)
-        self.context.DrawRectangle(x, y - 1, w, 3)
+        self.context.DrawArc(int(x), int(y + 5), int(x), int(y - 5), int(x), int(y))
+        self.context.DrawRectangle(int(x), int(y - 1), int(w), 3)
 
     def DrawNowVertical(self, x, y, h):
         self.context.SetBrush(wx.Brush(wx.Colour(0, 128, 0)))
         self.context.SetPen(wx.Pen(wx.Colour(0, 128, 0)))
-        self.context.DrawArc(x - 5, y, x + 5, y, x, y)
-        self.context.DrawRectangle(x - 1, y, 3, h)
+        self.context.DrawArc(int(x - 5), int(y), int(x + 5), int(y), int(x), int(y))
+        self.context.DrawRectangle(int(x - 1), int(y), 3, int(h))
 
 
 class wxFancyDrawer(
@@ -998,7 +1024,7 @@ class wxFancyDrawer(
                 DAY_BACKGROUND_BRUSH(),
             )
             self.context.SetBrush(brush)
-            self.context.DrawRectangle(x, y, LEFT_COLUMN_SIZE, h)
+            self.context.DrawRectangle(int(x), int(y), int(LEFT_COLUMN_SIZE), int(h))
 
         font = wx.NORMAL_FONT
         fsize = font.GetPointSize()
@@ -1012,17 +1038,17 @@ class wxFancyDrawer(
 
             if direction == wxSCHEDULER_VERTICAL:
                 hourH = 1.0 * h / len(self.displayedHours)
-                self.AdjustFontForHeight(font, hourH)
+                self.AdjustFontForHeight(font, int(hourH))
                 hourW, _ = self.context.GetTextExtent(
-                    # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
-                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    # " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
                 )
             else:
                 hourW = 1.0 * w / len(self.displayedHours)
                 self.AdjustFontForWidth(font, int(hourW * 2 * 0.9))
                 _, hourH = self.context.GetTextExtent(
-                    # " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
-                    " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
+                    " " + wxTimeFormat.FormatTime(wx.DateTimeFromHMS(23, 59, 59))
+                    # " " + wxTimeFormat.FormatTime(self, wx.DateTimeFromHMS(23, 59, 59))
                 )
 
             if not includeText:
@@ -1033,57 +1059,59 @@ class wxFancyDrawer(
                     if direction == wxSCHEDULER_VERTICAL:
                         self.context.DrawLines(
                             [
-                                (x + LEFT_COLUMN_SIZE - hourW / 2, y + i * hourH),
-                                (x + w, y + i * hourH),
+                                (int(x + LEFT_COLUMN_SIZE - hourW / 2), int(y + i * hourH)),
+                                (int(x + w), int(y + i * hourH)),
                             ]
                         )
                         if includeText:
                             self.context.DrawText(
-                                # " " + wxTimeFormat.FormatTime(hour),
-                                " " + wxTimeFormat.FormatTime(self, hour),
-                                x + LEFT_COLUMN_SIZE - hourW - 10,
-                                y + i * hourH,
+                                " " + wxTimeFormat.FormatTime(hour),
+                                # " " + wxTimeFormat.FormatTime(self, hour),
+                                int(x + LEFT_COLUMN_SIZE - hourW - 10),
+                                int(y + i * hourH),
                             )
                     else:
                         self.context.DrawLines(
                             [
-                                (x + i * hourW, y + hourH * 1.25),
-                                (x + i * hourW, y + h + 10),
+                                (int(x + i * hourW), int(y + hourH * 1.25)),
+                                (int(x + i * hourW), int(y + h + 10)),
                             ]
                         )
                         if includeText:
                             self.context.DrawText(
-                                # wxTimeFormat.FormatTime(hour),
-                                wxTimeFormat.FormatTime(self, hour),
-                                x + i * hourW + 5,
-                                y + hourH * 0.25,
+                                wxTimeFormat.FormatTime(hour),
+                                # wxTimeFormat.FormatTime(self, hour),
+                                int(x + i * hourW + 5),
+                                int(y + hourH * 0.25),
                             )
                 else:
                     if direction == wxSCHEDULER_VERTICAL:
                         self.context.DrawLines(
                             [
-                                (x + LEFT_COLUMN_SIZE, y + i * hourH),
-                                (x + w, y + i * hourH),
+                                (int(x + LEFT_COLUMN_SIZE), int(y + i * hourH)),
+                                (int(x + w), int(y + i * hourH)),
                             ]
                         )
                     else:
                         self.context.DrawLines(
-                            [(x + i * hourW, y + hourH * 1.4), (x + i * hourW, y + h)]
+                            [(int(x + i * hourW), int(y + hourH * 1.4)),
+                             (int(x + i * hourW), int(y + h))]
                         )
 
             if direction == wxSCHEDULER_VERTICAL:
                 self.context.DrawLines(
                     [
-                        (x + LEFT_COLUMN_SIZE - 1, y),
-                        (x + LEFT_COLUMN_SIZE - 1, y + h),
+                        (int(x + LEFT_COLUMN_SIZE - 1), int(y)),
+                        (int(x + LEFT_COLUMN_SIZE - 1), int(y + h)),
                     ]
                 )
                 return LEFT_COLUMN_SIZE, max(h, DAY_SIZE_MIN.height)
             else:
                 self.context.DrawLines(
-                    [(x, y + hourH * 1.5 - 1), (x + w, y + hourH * 1.5 - 1)]
+                    [(int(x), int(y + hourH * 1.5 - 1)),
+                     (int(x + w), int(y + hourH * 1.5 - 1))]
                 )
-                return max(w, DAY_SIZE_MIN.width), hourH * 1.5
+                return max(1, int(max(w, DAY_SIZE_MIN.width))), max(0, int(hourH * 1.5))
         finally:
             font.SetPointSize(fsize)
             font.SetWeight(fweight)
@@ -1098,7 +1126,7 @@ class wxFancyDrawer(
             wx.Colour(0, 255, 0, 128),
         )
         self.context.SetBrush(brush)
-        self.context.DrawRectangle(x + 4, y - 2, w - 4, 3)
+        self.context.DrawRectangle(int(x + 4), int(y - 2), int(w - 4), 3)
 
         brush = self.context.CreateRadialGradientBrush(
             x, y - 5, x, y, 5, wx.Colour(0, 128, 0, 128), wx.Colour(0, 255, 0, 128)
@@ -1119,7 +1147,7 @@ class wxFancyDrawer(
             wx.Colour(0, 255, 0, 128),
         )
         self.context.SetBrush(brush)
-        self.context.DrawRectangle(x - 2, y + 4, 3, h - 4)
+        self.context.DrawRectangle(int(x - 2), int(y + 4), 3, int(h - 4))
 
         brush = self.context.CreateRadialGradientBrush(
             x - 5, y, x, y, 5, wx.Colour(0, 128, 0, 128), wx.Colour(0, 255, 0, 128)

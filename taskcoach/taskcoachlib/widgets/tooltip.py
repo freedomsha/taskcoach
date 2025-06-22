@@ -37,9 +37,12 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 
 # from builtins import range
 # from builtins import object
+import logging
 from taskcoachlib import operating_system
 import wx
 import textwrap
+
+log = logging.getLogger(__name__)
 
 
 class ToolTipMixin(object):
@@ -97,8 +100,11 @@ class ToolTipMixin(object):
     """
 
     def __init__(self, *args, **kwargs):
-        self.__enabled = kwargs.pop("tooltipsEnabled", True)
+        # def __init__(self, parent, id=wx.ID_ANY,  *args, **kwargs):
+        log.debug(f"ToolTipMixin.__init__ : avant super args={args}, kwargs={kwargs}")
         super().__init__(*args, **kwargs)
+        self.__enabled = kwargs.pop("tooltipsEnabled", True)
+        # super().__init__(parent, id, *args, **kwargs)
 
         # self.__timer = wx.Timer(self, wx.NewId())
         # self.__timer = wx.Timer(self, wx.NewIdRef().GetId())

@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 
 # from .wxSchedulerCore import *
+import logging
 import time
 import wx
+
 import wx.lib.scrolledpanel as scrolled
 from .wxSchedulerCore import wxSchedulerCore
 from . import wxSchedule
+
+log = logging.getLogger(__name__)
 
 
 class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
@@ -37,16 +41,19 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
     Auteur : Inspiré par les besoins des gestionnaires de tâches graphiques, adapté pour Task Coach.
     """
 
-    def __init__(self, *args, **kwds):
+    # def __init__(self, *args, **kwds):
+    def __init__(self, parent, id=wx.ID_ANY, *args, style=wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE, **kwds):
         """
         Utiliser self.start et self.end pour définir le début et la fin de la planification.
         Si les deux dates/horaires sont à 00:00, la planification est considérée comme relative à la ou les journées entières.
         """
         # kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
-        if "style" not in kwds:
-            kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
+        # if "style" not in kwds:
+        #     kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
 
-        super().__init__(*args, **kwds)
+        log.debug(f"ToolTipMixin.__init__ : avant super args={args}, kwds={kwds}")
+        # super().__init__(*args, **kwds)
+        super().__init__(parent, id, *args, style=style, **kwds)
         # Le bug wxSchedulerPaint : tu passes style dans **kwds à une classe qui ne l’accepte pas.
         # wxPython attend le paramètre style en tant qu’argument positionnel,
         # pas dans **kwds.
@@ -58,6 +65,8 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         #     le transmettre en positionnel à super().__init__.
         # Le fix propre : mets style explicitement dans la signature de chaque init,
         # et transmets-le à wx.Panel en argument positionnel.
+        for child in self.GetChildren():
+            log.debug(f"[DEBUG] child: {child}, sizer: {child.GetSizer()}")
 
         # timerId = wx.NewId()
         # NewId is deprecieted
@@ -144,7 +153,15 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self._dirty = True
         else:
             self.DrawBuffer()
-            self.GetSizer().FitInside(self)
+            # # self.GetSizer().FitInside(self)
+            # sizer = self.GetSizer()
+            # if sizer:
+            #     #     sizer.FitInside(self)
+            #     # # else:
+            #     self.Layout()  # Demander un recalcul du layout
+            #     # else:
+            #     self.SetupScrolling()  # Préférable à FitInside() pour crolledPanel
+            # Rien ne fonctionne !
             super().Refresh()
             self._dirty = False
 
