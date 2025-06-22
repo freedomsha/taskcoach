@@ -1410,6 +1410,9 @@ class CalendarViewer(
             task.Task.trackingChangedEventType(),
             task.Task.percentageCompleteChangedEventType(),
         ):
+            # Si tu veux savoir D’OÙ vient ce eventType None pour corriger à la source,
+            # donne le code où eventType est défini ou passé à ce constructeur,
+            # il est possible de sécuriser toute la chaîne.
             if isinstance(eventType, str) and eventType.startswith("pubsub"):
                 pub.subscribe(self.onAttributeChanged, eventType)
             else:
