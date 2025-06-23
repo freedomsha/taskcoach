@@ -116,8 +116,13 @@ class ViewerPicker(sized_controls.SizedPanel):
     def createPicker(self):
         """Crée le composant graphique pour choisir un viewer."""
         label = wx.StaticText(self, label=_("Export items from:"))
-        # label = wx.TextCtrl(self, label=_("Export items from:"))  # TODO : A Essayer
+        # label = wx.TextCtrl(self, value=_("Export items from:"))  # TODO : A Essayer
+        # TextCtrl(parent, id=ID_ANY, value='', pos=DefaultPosition,
+        # size=DefaultSize, style=0, validator=DefaultValidator,
+        # name=TextCtrlNameStr) -> None
         label.SetSizerProps(valign="center")
+        # label.SetSizerProps(valign="center", expand=True)
+        # valid strings are “proportion”, “hgrow”, “vgrow”, “align”, “halign”, “valign”, “border”, “minsize” and “expand”
         self.viewerComboBox = wx.ComboBox(
             self, style=wx.CB_READONLY | wx.CB_SORT
         )  # pylint: disable=W0201
@@ -200,7 +205,7 @@ class ColumnPicker(sized_controls.SizedPanel):
     def createColumnPicker(self):
         """Crée le composant graphique pour sélectionner les colonnes à exporter."""
         label = wx.StaticText(self, label=_("Columns to export:"))
-        # label = wx.TextCtrl(self, label=_("Columns to export:"))  # TODO : A Essayer ! plus approprié !?
+        # label = wx.TextCtrl(self, value=_("Columns to export:"))  # TODO : A Essayer ! plus approprié !?
         label.SetSizerProps(valign="top")
         self.columnPicker = widgets.CheckListBox(self)  # pylint: disable=W0201
         self.columnPicker.SetSizerProps(expand=True, proportion=1)
