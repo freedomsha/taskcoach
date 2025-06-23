@@ -36,7 +36,8 @@ def FontFromNativeInfoString(nativeInfoString):
             if nfi.FromString(nativeInfoString):
                 return wx.Font(nfi)
             return None
-        except wx.PyAssertionError:  # cannot find reference
+        # except wx.PyAssertionError:  # cannot find reference
+        except wx.wxAssertionError
             pass
     return None
 
