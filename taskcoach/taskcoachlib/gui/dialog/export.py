@@ -28,13 +28,18 @@ from taskcoachlib import meta, widgets
 
 
 class ExportDialog(sized_controls.SizedDialog):
-    """ Base class for all export dialogs. Use control classes below to add
-        features. """
+    """Classe de base pour tous les dialogues d'exportation.
+    
+    Utilisez les classes de contrôle ci-dessous pour ajouter des fonctionnalités.
+    """
 
     title = "Override in subclass"
     section = "export"
 
     def __init__(self, *args, **kwargs):
+        """Initialise la boîte de dialogue d'exportation,
+        crée l'interface utilisateur et configure les boutons.
+        """
         self.window = args[0]
         self.settings = kwargs.pop("settings")
         super().__init__(title=self.title, *args, **kwargs)
@@ -51,21 +56,31 @@ class ExportDialog(sized_controls.SizedDialog):
         self.CentreOnParent()
 
     def createInterior(self, pane):
+        """Crée et retourne les composants internes du dialogue d'exportation.
+        À redéfinir dans les sous-classes."""
         raise NotImplementedError
 
     def exportableViewers(self):
+        """Retourne la liste des viewers exportables de la fenêtre principale."""
         return self.window.viewer
 
     def activeViewer(self):
+        """Retourne le viewer actuellement actif dans la fenêtre principale."""
         return self.window.viewer.activeViewer()
 
     def options(self):
+        """Retourne un dictionnaire contenant les options sélectionnées
+        par l'utilisateur dans la boîte de dialogue.
+        """
         result = dict()
         for component in self.components:
             result.update(component.options())
         return result
 
     def onOk(self, event):
+        """Gère l'événement de validation (OK)
+        en sauvegardant les paramètres des composants.
+        """
         event.Skip()
         for component in self.components:
             component.saveSettings()
@@ -78,7 +93,7 @@ ViewerPickedEvent, EVT_VIEWERPICKED = wx.lib.newevent.NewEvent()
 
 
 class ViewerPicker(sized_controls.SizedPanel):
-    """ Control for adding a viewer chooser widget to the export dialog. """
+    """Contrôle permettant d'ajouter un sélecteur de viewer au dialogue d'exportation."""
     # Attention à l'utilisation des SizedPanel :
     # self.SetSizerType("horizontal")
     #
@@ -90,6 +105,8 @@ class ViewerPicker(sized_controls.SizedPanel):
     #   Called automatically by wx, do not call it from user code.
 
     def __init__(self, parent, viewers, activeViewer):
+        """Initialise le sélecteur de viewer avec la liste des viewers disponibles et le viewer actif.
+        """
         super().__init__(parent)
         self.SetSizerType("horizontal")
         self.createPicker()
@@ -97,6 +114,7 @@ class ViewerPicker(sized_controls.SizedPanel):
         self.selectActiveViewer(viewers, activeViewer)
 
     def createPicker(self):
+        """Crée le composant graphique pour choisir un viewer."""
         label = wx.StaticText(self, label=_("Export items from:"))
         # label = wx.TextCtrl(self, label=_("Export items from:"))  # TODO : A Essayer
         label.SetSizerProps(valign="center")
@@ -106,6 +124,7 @@ class ViewerPicker(sized_controls.SizedPanel):
         self.viewerComboBox.Bind(wx.EVT_COMBOBOX, self.onViewerChanged)
 
     def populatePicker(self, viewers):
+        """Remplit le composant de sélection avec les viewers disponibles."""
         self.titleToViewer = dict()  # pylint: disable=W0201
         for viewer in viewers:
             self.viewerComboBox.Append(viewer.title())  # pylint: disable=E1101
@@ -114,28 +133,37 @@ class ViewerPicker(sized_controls.SizedPanel):
             self.titleToViewer[viewer.title()] = viewer
 
     def selectActiveViewer(self, viewers, activeViewer):
+        """Sélectionne le viewer actif dans la liste déroulante."""
         selectedViewer = activeViewer if activeViewer in viewers else viewers[0]
         self.viewerComboBox.SetValue(selectedViewer.title())
 
     def selectedViewer(self):
+        """Retourne le viewer actuellement sélectionné par l'utilisateur."""
         return self.titleToViewer[self.viewerComboBox.GetValue()]
 
     def options(self):
+        """Retourne le viewer sélectionné sous forme de dictionnaire d'options."""
         return dict(selectedViewer=self.selectedViewer())
 
     def onViewerChanged(self, event):
+        """Gère le changement de viewer sélectionné par l'utilisateur."""
         event.Skip()
         wx.PostEvent(self, ViewerPickedEvent(viewer=self.selectedViewer()))
 
     def saveSettings(self):
+        """Sauvegarde les paramètres du sélecteur de viewer
+        (aucun paramètre à sauvegarder ici).
+        """
         pass  # No settings to remember
 
 
 class SelectionOnlyCheckBox(wx.CheckBox):
-    """ Control for adding a widget to the export dialog that lets the
-        user choose between exporting all items or just the selected items. """
+    """Contrôle permettant à l'utilisateur de choisir d'exporter
+    uniquement les éléments sélectionnés.
+    """
 
     def __init__(self, parent, settings, section, setting):
+        """Initialise la case à cocher selon la configuration existante."""
         super().__init__(parent,
                          label=_("Export only the selected items"))
         self.settings = settings
@@ -144,22 +172,25 @@ class SelectionOnlyCheckBox(wx.CheckBox):
         self.initializeCheckBox()
 
     def initializeCheckBox(self):
+        """Initialise l'état de la case à cocher à partir des paramètres enregistrés."""
         selectionOnly = self.settings.getboolean(self.section, self.setting)
         self.SetValue(selectionOnly)
 
     def options(self):
+        """Retourne l'état de la case à cocher sous forme de dictionnaire d'options."""
         return dict(selectionOnly=self.GetValue())
 
     def saveSettings(self):
+        """Sauvegarde l'état de la case à cocher dans les paramètres."""
         self.settings.set(self.section, self.setting,  # pylint: disable=E1101
                           str(self.GetValue()))
 
 
 class ColumnPicker(sized_controls.SizedPanel):
-    """ Control that lets the user select which columns should be used for
-        exporting. """
+    """Contrôle permettant à l'utilisateur de sélectionner les colonnes à exporter."""
 
     def __init__(self, parent, viewer):
+        """Initialise le sélecteur de colonnes avec le viewer donné."""
         super().__init__(parent)
         self.SetSizerType("horizontal")
         self.SetSizerProps(expand=True, proportion=1)
@@ -167,6 +198,7 @@ class ColumnPicker(sized_controls.SizedPanel):
         self.populateColumnPicker(viewer)
 
     def createColumnPicker(self):
+        """Crée le composant graphique pour sélectionner les colonnes à exporter."""
         label = wx.StaticText(self, label=_("Columns to export:"))
         # label = wx.TextCtrl(self, label=_("Columns to export:"))  # TODO : A Essayer ! plus approprié !?
         label.SetSizerProps(valign="top")
@@ -174,10 +206,12 @@ class ColumnPicker(sized_controls.SizedPanel):
         self.columnPicker.SetSizerProps(expand=True, proportion=1)
 
     def populateColumnPicker(self, viewer):
+        """Remplit le sélecteur de colonnes avec les colonnes disponibles du viewer."""
         self.columnPicker.Clear()
         self.fillColumnPicker(viewer)
 
     def fillColumnPicker(self, viewer):
+        """Ajoute les colonnes sélectionnables et coche celles qui sont visibles."""
         if not viewer.hasHideableColumns():
             return
         visibleColumns = viewer.visibleColumns()
@@ -187,21 +221,28 @@ class ColumnPicker(sized_controls.SizedPanel):
                 self.columnPicker.Check(index, column in visibleColumns)
 
     def selectedColumns(self):
+        """Retourne la liste des colonnes actuellement sélectionnées par l'utilisateur."""
         indices = [index for index in range(self.columnPicker.GetCount()) if self.columnPicker.IsChecked(index)]
         return [self.columnPicker.GetClientData(index) for index in indices]
 
     def options(self):
+        """Retourne les colonnes sélectionnées sous forme de dictionnaire d'options."""
         return dict(columns=self.selectedColumns())
 
     def saveSettings(self):
+        """Sauvegarde les paramètres du sélecteur de colonnes
+        (aucun paramètre à sauvegarder ici).
+        """
         pass  # No settings to save
 
 
 class SeparateDateAndTimeColumnsCheckBox(wx.CheckBox):
-    """ Control that lets the user decide whether dates and times should be
-        separated or kept together. """
+    """Contrôle permettant de choisir si les dates et heures
+    doivent être séparées dans l'export.
+    """
 
     def __init__(self, parent, settings, section, setting):
+        """Initialise la case à cocher selon la configuration existante."""
         super().__init__(
             parent, label=_("Put task dates and times in separate columns")
         )
@@ -211,21 +252,26 @@ class SeparateDateAndTimeColumnsCheckBox(wx.CheckBox):
         self.initializeCheckBox()
 
     def initializeCheckBox(self):
+        """Initialise l'état de la case à cocher à partir des paramètres enregistrés."""
         separateDateAndTimeColumns = self.settings.getboolean(self.section, self.setting)
         self.SetValue(separateDateAndTimeColumns)
 
     def options(self):
+        """Retourne l'état de la case à cocher sous forme de dictionnaire d'options."""
         return dict(separateDateAndTimeColumns=self.GetValue())
 
     def saveSettings(self):
+        """Sauvegarde l'état de la case à cocher dans les paramètres."""
         self.settings.setboolean(self.section, self.setting, self.GetValue())
 
 
 class SeparateCSSCheckBox(sized_controls.SizedPanel):
-    """ Control to let the user write CSS style information to a
-        separate file instead of including it into the HTML file. """
+    """Contrôle permettant de choisir si les informations de style CSS
+    doivent être écrites dans un fichier séparé.
+    """
 
     def __init__(self, parent, settings, section, setting):
+        """Initialise le contrôle pour la gestion du CSS séparé."""
         super().__init__(parent)
         self.settings = settings
         self.section = section
@@ -235,6 +281,7 @@ class SeparateCSSCheckBox(sized_controls.SizedPanel):
         self.createHelpInformation(parent)
 
     def createCheckBox(self):
+        """Crée la case à cocher pour l'option de CSS séparé."""
         self.separateCSSCheckBox = wx.CheckBox(
             self,  # pylint: disable=W0201
             label=_("Write style information to a separate CSS file")
@@ -243,6 +290,7 @@ class SeparateCSSCheckBox(sized_controls.SizedPanel):
         self.separateCSSCheckBox.SetValue(separateCSS)
 
     def createHelpInformation(self, parent):
+        """Affiche une aide expliquant le fonctionnement de l'option CSS séparé."""
         width = max([child.GetSize()[0] for child in [self.separateCSSCheckBox] + list(parent.GetChildren())])
         info = wx.StaticText(self,
                              label=_('If a CSS file exists for the exported file, %(name)s will not overwrite it. '
@@ -251,9 +299,11 @@ class SeparateCSSCheckBox(sized_controls.SizedPanel):
         info.Wrap(width)
 
     def options(self):
+        """Retourne l'état de l'option CSS séparé sous forme de dictionnaire d'options."""
         return dict(separateCSS=self.separateCSSCheckBox.GetValue())
 
     def saveSettings(self):
+        """Sauvegarde l'état de l'option CSS séparé dans les paramètres."""
         self.settings.set(self.section, self.setting,
                           str(self.separateCSSCheckBox.GetValue()))
 
@@ -261,9 +311,11 @@ class SeparateCSSCheckBox(sized_controls.SizedPanel):
 # Export dialogs for different file types:
 
 class ExportAsCSVDialog(ExportDialog):
+    """Dialogue permettant d'exporter les données au format CSV."""
     title = _("Export as CSV")
 
     def createInterior(self, pane):
+        """Crée et retourne les composants internes spécifiques à l'export CSV."""
         viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         viewerPicker.Bind(EVT_VIEWERPICKED, self.onViewerChanged)
         # pylint: disable=W0201
@@ -277,24 +329,29 @@ class ExportAsCSVDialog(ExportDialog):
         return viewerPicker, self.columnPicker, selectionOnlyCheckBox, self.separateDateAndTimeColumnsCheckBox
 
     def onViewerChanged(self, event):
+        """Met à jour le sélecteur de colonnes et les options lors d'un changement de viewer."""
         event.Skip()
         self.columnPicker.populateColumnPicker(event.viewer)
         self.__check(event.viewer)
 
     def __check(self, viewer):
+        """Active ou désactive l'option de séparation des dates et heures suivant le type de viewer."""
         self.separateDateAndTimeColumnsCheckBox.Enable(viewer.isShowingTasks() or viewer.isShowingEffort())
 
 
 class ExportAsICalendarDialog(ExportDialog):
+    """Dialogue permettant d'exporter les données au format iCalendar."""
     title = _("Export as iCalendar")
 
     def createInterior(self, pane):
+        """Crée et retourne les composants internes spécifiques à l'export iCalendar."""
         viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         selectionOnlyCheckBox = SelectionOnlyCheckBox(pane, self.settings,
                                                       self.section, "ical_selectiononly")
         return viewerPicker, selectionOnlyCheckBox
 
     def exportableViewers(self):
+        """Retourne la liste des viewers exportables pour l'iCalendar (tâches et efforts non agrégés)."""
         viewers = super().exportableViewers()
         return [viewer for viewer in viewers if
                 viewer.isShowingTasks() or
@@ -302,9 +359,11 @@ class ExportAsICalendarDialog(ExportDialog):
 
 
 class ExportAsHTMLDialog(ExportDialog):
+    """Dialogue permettant d'exporter les données au format HTML."""
     title = _("Export as HTML")
 
     def createInterior(self, pane):
+        """Crée et retourne les composants internes spécifiques à l'export HTML."""
         viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         viewerPicker.Bind(EVT_VIEWERPICKED, self.onViewerChanged)
         self.columnPicker = ColumnPicker(pane, viewerPicker.selectedViewer())  # pylint: disable=W0201
@@ -315,19 +374,23 @@ class ExportAsHTMLDialog(ExportDialog):
         return viewerPicker, self.columnPicker, selectionOnlyCheckBox, separateCSSChooser
 
     def onViewerChanged(self, event):
+        """Met à jour le sélecteur de colonnes lors d'un changement de viewer."""
         event.Skip()
         self.columnPicker.populateColumnPicker(event.viewer)
 
 
 class ExportAsTodoTxtDialog(ExportDialog):
+    """Dialogue permettant d'exporter les données au format Todo.txt."""
     title = _("Export as Todo.txt")
 
     def createInterior(self, pane):
+        """Crée et retourne les composants internes spécifiques à l'export Todo.txt."""
         viewerPicker = ViewerPicker(pane, self.exportableViewers(), self.activeViewer())
         selectionOnlyCheckBox = SelectionOnlyCheckBox(
             pane, self.settings, self.section, "todotxt_selectiononly")
         return viewerPicker, selectionOnlyCheckBox
 
     def exportableViewers(self):
+        """Retourne la liste des viewers exportables pour Todo.txt (uniquement les tâches)."""
         viewers = super().exportableViewers()
         return [viewer for viewer in viewers if viewer.isShowingTasks()]
