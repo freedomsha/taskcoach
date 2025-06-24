@@ -65,19 +65,91 @@ class Attribute(object):
         super().__init__()
         self.__value = value
         self.__owner = weakref.ref(owner)
-        # self.__setEvent = setEvent.__func__
+        # Définit la fonction sous-jacente setEvent
+        # self.__setEvent = setEvent.__func__  # Différent en python 3
         # En Python, quand on passe method.__func__, on enlève la partie liée (self).
+        # Cet attribut est disponible dans les méthodes de type bound_method (méthodes liées à une instance).
+        # Exemple pratique :
+        # class MyClass:
+        #    def method(self):
+        #        pass
+        # obj = MyClass()
+        # m = obj.method
+        # # Accéder à la fonction sous-jacente
+        # print(m.__func__)
+
+        # Dans cet exemple, m.__func__ renvoie la fonction définie dans la classe MyClass. Cela permet d'accéder à la définition de la méthode indépendamment de l'instance.
+        # Utilité :
+        #     Permet de récupérer la fonction originale pour des opérations d'introspection ou de manipulation.
+        #     Utile dans la programmation avancée, notamment pour la création de décorateurs ou pour la réflexion sur les méthodes.
+
         # Donc au lieu d’appeler :
-        #
-        # owner._Object__setDescriptionEvent(event)
+        #     owner._Object__setDescriptionEvent(event)
         #
         # Tu appelles :
-        #
-        # Object._Object__setDescriptionEvent(event)  # <- manque le self ici !
+        #     Object._Object__setDescriptionEvent(event)  # <- manque le self ici !
         #
         # Cela peut :
         #     soit planter silencieusement,
         #     soit ne rien faire du tout (ex. pas d'appel à event.addSource).
+        # Lorsque vous accédez Foo.fou Foo().fune méthode est renvoyée;
+        # elle n'est pas liée dans le premier cas et liée dans le second.
+        # Une méthode de python est essentiellement une enveloppe autour d'une fonction
+        # qui contient également une référence à la classe où il est une méthode.
+        # Lorsqu'elle est liée, elle contient également une référence à l'instance.
+
+        # Lorsque vous appelez une méthode, il fera un contrôle de type
+        # sur le premier argument passé pour s'assurer qu'il s'agit d'une instance
+        # (il doit s'agir d'une instance de la classe référencée,
+        # ou d'une sous-classe de cette classe).
+        # Quand la méthode est liée, elle fournira ce premier argument,
+        # sur une méthode non liée que vous lui fournissez vous-même.
+
+        # C'est cet objet de méthode qui a l'attribut __func__attribut,
+        # qui n'est qu'une référence à la fonction emballée.
+        # En accédant à la fonction sous-jacente au lieu d'appeler la méthode,
+        # vous supprimez le code de contrôle,
+        # et vous pouvez passer tout ce que vous voulez comme premier argument.
+        # Les fonctions ne se soucient pas de leurs types d'arguments, mais les méthodes le font.
+
+        # Notez que dans Python 3, cela a changé;
+        # Foo.f retourne simplement la fonction, pas une méthode non liée.
+        # Foo().f retournant une méthode immobile, toujours liée,
+        # mais il n'y a plus de moyen de créer une méthode non liée.
+
+        # Sous le capot, chaque objet de fonction a un __get__méthode, voici ce qui retourne l'objet de méthode:
+
+        # >>> class Foo(object):
+        # ...     def f(self): pass
+        # ... 
+        # >>> Foo.f
+        # <unbound method Foo.f>
+        # >>> Foo().f
+        # <bound method Foo.f of <__main__.Foo object at 0x11046bc10>>
+        # >>> Foo.__dict__['f']
+        # <function f at 0x110450230>
+        # >>> Foo.f.__func__
+        # <function f at 0x110450230>
+        # >>> Foo.f.__func__.__get__(Foo(), Foo)
+        # <bound method Foo.f of <__main__.Foo object at 0x11046bc50>>
+        # >>> Foo.f.__func__.__get__(None, Foo)
+        # <unbound method Foo.f>
+
+        # Ce n'est pas le chemin de code le plus efficace, donc,
+        # Python 3.7 ajoute une nouvelle paire de codes opératoires LOAD_METHOD-CALL_METHOD
+        # qui remplace la Paire de code opératoires courante LOAD_ATTRIBUTE-CALL_FUNCTION
+        # précisément pour éviter de créer un nouvel objet de méthode à chaque fois.
+        # Cette optimisation transforme la voie d'exécution pour instance.foo()
+        # de type(instance).__dict__['foo'].__get__(instance, type(instance))()
+        # avec type(instance).__dict__['foo'](instance),
+        # donc passant "manuellement" dans l'instance directement à l'objet de la fonction.
+        # Cela permet d'économiser environ 20 % de temps sur les micro-repères existants.
+
+        # Dans ce cas, l’attribut __func__ n’est utilisé que pour implémenter divers attributs, mais pas pour appeler la méthode.
+        # Lors de la construction d’une nouvelle méthode à partir d’un base_function,
+        # nous vérifions que l’objet self est une instance de __objclass__
+        # (si une classe a été spécifiée comme parent) et levons une TypeError dans le cas contraire.
+
         self.__setEvent = setEvent
 
     def get(self):
