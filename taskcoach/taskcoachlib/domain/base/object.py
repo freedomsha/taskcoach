@@ -343,7 +343,7 @@ class SynchronizedObject(object):
         #     # print("🟡 getStatus : self.__status est None → Forçage à STATUS_CHANGED (2)")
         #     self.__status = self.STATUS_CHANGED  # Force le recalcul
 
-        log.debug(f"✅ getStatus renvoie {self.__status} - de type {type(self.__status)}")
+        log.debug(f"✅ SynchronizedObject.getStatus renvoie {self.__status} - de type {type(self.__status)}")
         return self.__status
 
     @patterns.eventSource
@@ -376,7 +376,8 @@ class SynchronizedObject(object):
         oldStatus = self.__status
         if self.__status == self.STATUS_NONE or force:
             self.__status = self.STATUS_CHANGED
-            print(f"SynchronizedObject.setStatusDirty : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}")
+            # print(f"SynchronizedObject.setStatusDirty : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}")
+            log.debug(f"SynchronizedObject.setStatusDirty : 🛑 Modification de self.__status pour {self} : {self.__status}")
 
             return oldStatus == self.STATUS_DELETED
         else:
@@ -520,8 +521,8 @@ class Object(SynchronizedObject):
         __selectedIcon,
         __ordering.
 
-    Encapsulation des attributs: Beaucoup d'attributs sont encapsulés par des classes Attribute (ex: self.__subject = attribute.Attribute(...)). C'est un pattern qui permet d'ajouter de la logique (validation, événements de changement) lors de la lecture/écriture des attributs.
-
+    Encapsulation des attributs: Beaucoup d'attributs sont encapsulés par des classes Attribute (ex: self.__subject = attribute.Attribute(...)).
+    C'est un pattern qui permet d'ajouter de la logique (validation, événements de changement) lors de la lecture/écriture des attributs.
     """
     rx_attributes = re.compile(r"\[(\w+):(.+)\]")  # Expression régulière pour parser les attributs
 
@@ -568,7 +569,7 @@ class Object(SynchronizedObject):
 
         # Faut-il les garder ou les effacer de kwargs ?
 
-        log.debug(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs}")
+        log.debug(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs} avant appel à super.")
         # Appel sécurisé au constructeur parent (sans kwargs dangereux)
         super().__init__(*args, **kwargs)
 
@@ -723,6 +724,7 @@ class Object(SynchronizedObject):
             (str) : La représentation sous forme de chaîne.
         """
         return self.subject()
+        # return str(self.subject()) or __repr__(self.subject())
 
     def __getstate__(self):
         """
@@ -745,6 +747,7 @@ class Object(SynchronizedObject):
         except AttributeError:
             state = dict()
         # print(f"DEBUG - Object.__getstate__() avant update: {state}")
+        log.debug(f"Object.__getstate__() : state avant update: {state}")
         # log.debug(f"DEBUG - Object.__getstate__() avant update subject.get() : {self.__subject.get()}")
         if hasattr(self, 'subject'):
             log.debug(f"Object.__setstate__() - subject avant update: {self.subject}")
