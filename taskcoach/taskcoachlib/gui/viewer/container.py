@@ -103,8 +103,22 @@ class ViewerContainer(object):
     
     def __getattr__(self, attribute):
         """ Transférez les attributs inconnus au visualiseur actif ou au premier visualiseur
-            s'il n'y a pas de visualiseur actif. """
-        return getattr(self.activeViewer() or self.viewers[0], attribute)
+            s'il n'y a pas de visualiseur actif.
+
+        Prend en compte le stockage spécial d'attributs dans wxPython Phoenix.
+        """
+        # return getattr(self.activeViewer() or self.viewers[0], attribute)
+
+        viewer = self.activeViewer() or (self.viewers[0] if self.viewers else None)
+        if viewer is None:
+            raise AttributeError(f"'ViewerContainer' object has no attribute '{attribute}'")
+        # Pour les objets hérités de wx.PyEvent ou wx.PyCommandEvent sous Phoenix
+        if hasattr(viewer, "_getAttrDict"):
+            d = viewer._getAttrDict()
+            if attribute in d:
+                return d[attribute]
+        # Fallback classique
+        return getattr(viewer, attribute)
 
     def activeViewer(self):
         """ Renvoie la visionneuse active (sélectionnée). """

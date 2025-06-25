@@ -777,16 +777,29 @@ class SquareMapRootNode(RootNode):
         """
         def getTaskAttribute(recursive=True):
             if recursive:
-                return max(
-                    sum(
-                        (
-                            getattr(task, attr)(recursive=True)
-                            for task in self.children()
-                        ),
-                        self.__zero,
-                    ),
-                    self.__zero,
-                )
+                # return max(
+                #     sum(
+                #         (
+                #             getattr(task, attr)(recursive=True)
+                #             for task in self.children()
+                #         ),
+                #         self.__zero,
+                #     ),
+                #     self.__zero,
+                # )
+                s = 0
+                for task in self.children():
+                    # Patch Phoenix compatibility:
+                    if hasattr(task, "_getAttrDict"):
+                        d = task._getAttrDict()
+                        if attr in d:
+                            value = d[attr]
+                        else:
+                            value = getattr(task, attr)
+                    else:
+                        value = getattr(task, attr)
+                    s += value(recursive=True)
+                return max(s, self.__zero)
             else:
                 return self.__zero
 

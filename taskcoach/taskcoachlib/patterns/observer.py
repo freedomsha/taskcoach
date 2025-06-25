@@ -762,7 +762,15 @@ class Decorator(Observer):
         Returns :
             (Any) : La valeur de l'attribut.
         """
-        return getattr(self.observable(), attribute)
+        # return getattr(self.observable(), attribute)
+        observable = self.observable()
+        # Pour wxPython Phoenix
+        if hasattr(observable, "_getAttrDict"):
+            d = observable._getAttrDict()
+            if attribute in d:
+                return d[attribute]
+        # Fallback classique
+        return getattr(observable, attribute)
 
 
 class ObservableCollection(object):

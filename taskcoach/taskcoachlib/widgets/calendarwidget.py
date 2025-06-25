@@ -351,8 +351,14 @@ class Calendar(wx.Panel):
             self._content.Select(None)
 
     def __getattr__(self, name):
-        return getattr(self._content, name)
-
+        # return getattr(self._content, name)
+        # Version adaptée pour Phoenix :
+        content = self._content
+        if hasattr(content, "_getAttrDict"):
+            d = content._getAttrDict()
+            if name in d:
+                return d[name]
+        return getattr(content, name)
 
 class TaskSchedule(wxSchedule):
     def __init__(self, task, iconProvider):

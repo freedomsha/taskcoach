@@ -373,7 +373,14 @@ class TaskEntry(wx.Panel):
         """ Delegate unknown attributes to the ComboTreeBox. This is needed
             since we cannot inherit from ComboTreeBox, but have to use
             delegation. """
-        return getattr(self._comboTreeBox, attr)
+        # return getattr(self._comboTreeBox, attr)
+        # Phoenix: check for dynamic attributes in the C++ dict
+        combo = self._comboTreeBox
+        if hasattr(combo, "_getAttrDict"):
+            d = combo._getAttrDict()
+            if attr in d:
+                return d[attr]
+        return getattr(combo, attr)
 
     def _createInterior(self):
         """ Create the ComboTreebox widget. """

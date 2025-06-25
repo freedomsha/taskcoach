@@ -528,10 +528,10 @@ class TimeLine(wx.Panel):
         alpha_dc = wx.GCDC(dc)
         alpha_dc.SetPen(wx.Pen(wx.Colour(128, 200, 128, 128), width=3))
         now = self.scaleX(self.adapter.now())
-        alpha_dc.DrawLine(now, 0, now, self.height)
+        alpha_dc.DrawLine(int(now), 0, int(now), int(self.height))
         label = self.adapter.nowlabel()
         textWidth = alpha_dc.GetTextExtent(label)[0]
-        alpha_dc.DrawText(label, now - (textWidth / 2), 0)
+        alpha_dc.DrawText(label, int(now - (textWidth / 2)), 0)
 
     def scaleX(self, x) -> float:
         """
@@ -550,7 +550,7 @@ class TimeLine(wx.Panel):
         Mettre à l'échelle la largeur.
 
         Args :
-            width (float): La largeur à mettre à l'échelle.
+            width (float) : La largeur à mettre à l'échelle.
 
         Returns :
             (float) : La largeur mise à l'échelle.

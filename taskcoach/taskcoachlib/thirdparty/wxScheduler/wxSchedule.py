@@ -88,6 +88,12 @@ class wxSchedule(object):
         self._layoutNeeded = False
 
     def __getattr__(self, name):
+        # Gestion des attributs Phoenix si présent
+        if hasattr(self, "_getAttrDict"):
+            d = self._getAttrDict()
+            if name in d:
+                return d[name]
+
         # Gère la rétrocompatibilité des anciens getters/setters.
         if name[:3] in ["get", "set"]:
             warnings.warn(
@@ -97,7 +103,6 @@ class wxSchedule(object):
             )
 
             name = name[0].upper() + name[1:]
-
             return getattr(self, name)
 
         raise AttributeError(name)

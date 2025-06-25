@@ -7,14 +7,24 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="tentative de Résolution de l'affichage de l'édition de tâche">
+    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="Résolution de l'affichage de Calendar. Reste à corriger ce qui apparaît.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/appmap.log" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/appmap.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/toolbar.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/toolbar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/application/application.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/application/application.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/filesystem/fs_poller.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/filesystem/fs_poller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/entry.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/entry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/preferences.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/dialog/preferences.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/base_uicommand.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/base_uicommand.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/uicommand.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/uicommand/uicommand.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/container.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/container.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxScheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxScheduler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerPaint.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerPaint.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/wxevents.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/wxevents.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/taskfile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/timeline/timeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/timeline/timeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedule.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedule.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/calendarwidget.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/calendarwidget.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/dirchooser.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/dirchooser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/workarounds/font.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/workarounds/font.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -285,22 +295,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1719646752457</updated>
-    </task>
-    <task id="LOCAL-00192" summary="syncml.__init__&#10;doc">
-      <option name="closed" value="true" />
-      <created>1745847318027</created>
-      <option name="number" value="00192" />
-      <option name="presentableId" value="LOCAL-00192" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847318027</updated>
-    </task>
-    <task id="LOCAL-00193" summary="*.xml">
-      <option name="closed" value="true" />
-      <created>1745847350605</created>
-      <option name="number" value="00193" />
-      <option name="presentableId" value="LOCAL-00193" />
-      <option name="project" value="LOCAL" />
-      <updated>1745847350606</updated>
     </task>
     <task id="LOCAL-00194" summary="*.xml">
       <option name="closed" value="true" />
@@ -678,7 +672,23 @@
       <option name="project" value="LOCAL" />
       <updated>1750241289500</updated>
     </task>
-    <option name="localTasksCounter" value="241" />
+    <task id="LOCAL-00241" summary="tentative de Résolution de l'affichage de Calendar. Résolution du problème de sizer. Il manquait une méthode de recalcule dans le sizer de wxSchedulerPaint.">
+      <option name="closed" value="true" />
+      <created>1750621960989</created>
+      <option name="number" value="00241" />
+      <option name="presentableId" value="LOCAL-00241" />
+      <option name="project" value="LOCAL" />
+      <updated>1750621960990</updated>
+    </task>
+    <task id="LOCAL-00242" summary="Résolution de l'affichage de Calendar. Reste à corriger ce qui apparaît.">
+      <option name="closed" value="true" />
+      <created>1750622329926</created>
+      <option name="number" value="00242" />
+      <option name="presentableId" value="LOCAL-00242" />
+      <option name="project" value="LOCAL" />
+      <updated>1750622329926</updated>
+    </task>
+    <option name="localTasksCounter" value="243" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -720,8 +730,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Commentaires." />
-    <MESSAGE value="Mise en place de logging.&#10;Revue des docstrings.&#10;Dans SafeWriteFile, commentaires, open en &quot;wb&quot; plutôt que &quot;w&quot;.&#10;Dans close, vérification du fichier .delta.&#10;Dans _read instanciation du lecteur. Idem dans exists.&#10;Dans _openForRead, &quot;rb&quot; au lieu de &quot;r&quot; !&#10;Dans load, retour en arrière, debuggage !&#10;Dans mergeDiskChanges, utilisation de with" />
     <MESSAGE value="Mise en place de logging." />
     <MESSAGE value="Mise en place de logging.&#10;Docstring.&#10;Changements dans MakeDisabledBitmap.&#10;Dans _filterCommands, split utilisé avec &quot;, &quot; plutôt que &quot;,&quot; !&#10;Suivi des wx.CallAfter()." />
     <MESSAGE value="# self.__timer = wx.Timer(self, wx.NewId())&#10;# self.__timer = wx.Timer(self, wx.NewIdRef().GetId())&#10;self.__timer = wx.Timer(self, wx.ID_ANY)&#10;Lequel utiliser ?" />
@@ -745,7 +753,9 @@
     <MESSAGE value="tentative de Résolution de problèmes d'annulation de copier/coller." />
     <MESSAGE value="tentative de Résolution d'édition de tâche" />
     <MESSAGE value="tentative de Résolution de l'affichage de l'édition de tâche" />
-    <option name="LAST_COMMIT_MESSAGE" value="tentative de Résolution de l'affichage de l'édition de tâche" />
+    <MESSAGE value="tentative de Résolution de l'affichage de Calendar. Résolution du problème de sizer. Il manquait une méthode de recalcule dans le sizer de wxSchedulerPaint." />
+    <MESSAGE value="Résolution de l'affichage de Calendar. Reste à corriger ce qui apparaît." />
+    <option name="LAST_COMMIT_MESSAGE" value="Résolution de l'affichage de Calendar. Reste à corriger ce qui apparaît." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -753,7 +763,7 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py</url>
-          <line>394</line>
+          <line>395</line>
           <log-expression expression="print(f&quot;object.SynchronizedObject.setStatusNew : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
           <option name="timeStamp" value="9" />
         </line-breakpoint>
@@ -877,6 +887,11 @@
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/patterns/observer.py</url>
           <line>19</line>
           <option name="timeStamp" value="56" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/wxScheduler/wxSchedulerCore.py</url>
+          <line>4</line>
+          <option name="timeStamp" value="57" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

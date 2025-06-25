@@ -178,9 +178,9 @@ class SettingsPageBase(widgets.BookPage):
                              bgColorSection, bgColorSetting, fontSection,
                              fontSetting, iconSection, iconSetting, text):
         currentFgColor = self.getvalue(fgColorSection, fgColorSetting)
-        fgColorButton = wx.ColourPickerCtrl(self, col=currentFgColor)
+        fgColorButton = wx.ColourPickerCtrl(self, colour=currentFgColor)
         currentBgColor = self.getvalue(bgColorSection, bgColorSetting)
-        bgColorButton = wx.ColourPickerCtrl(self, col=currentBgColor)
+        bgColorButton = wx.ColourPickerCtrl(self, colour=currentBgColor)
         defaultFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         nativeInfoString = self.gettext(fontSection, fontSetting)
         currentFont = wx.Font(nativeInfoString) if nativeInfoString else None

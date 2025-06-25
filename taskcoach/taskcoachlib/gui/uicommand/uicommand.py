@@ -1081,7 +1081,7 @@ class FileQuit(base_uicommand.UICommand):
         """
         Exécute la commande pour quitter l'application. Ferme la fenêtre principale de l'application.
         """
-        log.debug(f"FileQuit.doCommand : Essaie de fermer {self.mainWindow()}.")
+        log.debug(f"FileQuit.doCommand : Essaie de forcer à fermer {self.mainWindow()}.")
         self.mainWindow().Close(force=True)
         log.debug("FileQuit.doCommand : self.mainWindow={self.mainWindow()} est fermé.")
 

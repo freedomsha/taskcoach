@@ -101,7 +101,8 @@ import logging  # Attendre avant son implantation
 import os
 import re
 import sys
-# import threading  # Unused import
+import threading  # Unused import
+import traceback
 import time
 import wx
 # try:
@@ -507,12 +508,28 @@ class Application(object, metaclass=patterns.Singleton):
         # from twisted.internet import reactor, error
         from twisted.internet import reactor, error
 
+        log.debug("Application.stopTwisted : Essaie d'arrêter reactor.")
         try:
             reactor.stop()  # cannot find stop in reactor, but don't use yourApp.ExitMainLoop()
-        except error.ReactorNotRunning:
+            log.debug("Application.stopTwisted : A lancé reactorstop().")
+        except error.ReactorNotRunning as e:
             # Happens on Fedora 14 when running unit tests. Old Twisted ?
             # in Arch, reference 'stop' not find in 'reactor.py'
+            log.error("Application.stopTwisted : Reactor n'a pas démarré !", exc_info=True, stack_info=True)
             pass
+        # Arrêter les threads workers
+        log.debug("Application.stopTwisted : Essaie d'arrêter les threads workers")
+        try:
+            reactor.getThreadPool().stop()
+            log.debug("Application.stopTwisted : avec la méthode getThreadPool().stop().")
+        except AttributeError:
+            # Certains réacteurs n'ont pas de threadpool explicite
+            try:
+                reactor.threadpool.stop()
+                log.debug("Application.stopTwisted : avec la méthode threadpool().stop().")
+            except AttributeError:
+                log.debug("Application.stopTwisted : aucune méthode ne fonctionne pour arrêter les workers.")
+        time.sleep(0.1)  # Donne un peu de temps au worker pour s'arrêter
 
     def registerApp(self):
         """Fonction-méthode pour Enregistrez l'instance d'application avec Twisted:"""
@@ -540,7 +557,7 @@ class Application(object, metaclass=patterns.Singleton):
         # pylint: disable=W0201
         from taskcoachlib import meta
 
-        log.info("Lancement de la fenêtre principale")
+        log.info("Application.start : Lancement de la fenêtre principale")
         if self.settings.getboolean("version", "notify"):
             self.__version_checker = meta.VersionChecker(self.settings)
             self.__version_checker.start()
@@ -703,7 +720,7 @@ class Application(object, metaclass=patterns.Singleton):
         #         str(e),
         #     )
         #     return False
-        log.info("Application.init: Composants de l'application initialisés. ✅Terminé")
+        log.info("Application.init : Composants de l'application initialisés. ✅Terminé")
 
     def __init_config(self, load_settings):
         """Fonction-méthode d'initialisation de la configuration.
@@ -727,7 +744,7 @@ class Application(object, metaclass=patterns.Singleton):
             #     str(e),
             # )
             log.error(
-                "application.py: Erreur lors de la lecture du fichier de configuration: %s",
+                "Application.__init_config :  Erreur lors de la lecture du fichier de configuration: %s",
                 str(e),
             )
             raise
@@ -744,7 +761,7 @@ class Application(object, metaclass=patterns.Singleton):
             #     str(e),
             # )
             log.error(
-                "application.py: Erreur lors de l'initialisation de la langue: %s",
+                "Application.__init_language : Erreur lors de l'initialisation de la langue: %s",
                 str(e),
             )
 
@@ -819,7 +836,6 @@ class Application(object, metaclass=patterns.Singleton):
             and not operating_system.isMacOsXMountainLion_OrNewer()
         ):
             # wx.SystemOptions.SetOptionInt("mac.textcontrol-use-spell-checker", value)
-
             wx.SystemOptions.SetOption("mac.textcontrol-use-spell-checker", value)
 
     def __register_signal_handlers(self):
@@ -848,17 +864,21 @@ class Application(object, metaclass=patterns.Singleton):
         # else:
         import signal
 
+        log.debug("Application.__register_signal_handlers : Quitter à cause d'un signal !")
+
         def quit_adapter(*args):
             # Parameter 'args' value is not used
+            log.debug("Application.__register_signal_handlers.quit_adapter : Retourne la fonction pour quitter l'application.")
             return self.quitApplication()
-
+        log.debug("Application.__register_signal_handlers : Signale pour quitter l'application.")
         signal.signal(signal.SIGTERM, quit_adapter)
         if hasattr(signal, "SIGHUP"):
             # forced_quit = lambda *args: self.quitApplication(force=True)
             def forced_quit(*args):
                 # Parameter 'args' value is not used
+                log.debug("Application.__register_signal_handlers.forced_quit : Force à quitter l'application.")
                 return self.quitApplication(force=True)
-
+            log.debug("Application.__register_signal_handlers : Signale de forçage pour quitter l'application.")
             signal.signal(signal.SIGHUP, forced_quit)  # pylint: disable=E1101
 
     @staticmethod
@@ -972,6 +992,7 @@ class Application(object, metaclass=patterns.Singleton):
         """
         # self.mainwindow.setShutdownInProgress()
         # self.quitApplication(force=True)
+        log.debug("Application.on_end_session : Essaie de terminer la session et fermer l'application.")
         try:
             self.mainwindow.setShutdownInProgress()
             self.quitApplication(force=True)
@@ -997,7 +1018,7 @@ class Application(object, metaclass=patterns.Singleton):
             bool : True si l'application a été arrêtée avec succès, False sinon.
         """
         # Voir https://pythonhosted.org/wxPython/window_deletion_overview.html#window-deletion
-        log.info("Fermeture de l'application")
+        log.info("Application.quitApplication : Début de la Fermeture de l'application")
 
         if not self.iocontroller.close(force=force):
             return False
@@ -1005,6 +1026,9 @@ class Application(object, metaclass=patterns.Singleton):
         self.settings.set("file", "lastfile", self.taskFile.lastFilename())
         self.mainwindow.save_settings()
         self.settings.save()
+        if self.taskFile:
+            self.taskFile.stop()
+        log.info("Avant suppression de l'icône barre de tâches")
         if hasattr(self, "taskBarIcon"):
             self.taskBarIcon.RemoveIcon()
         if self.mainwindow.bonjourRegister is not None:
@@ -1016,6 +1040,7 @@ class Application(object, metaclass=patterns.Singleton):
         wx.GUIEventLoop.GetActive().ProcessIdle()  # wxApp/ProcessIdle is not in application.py but used in tests !
 
         # For PowerStateMixin
+        log.info("Avant appel à mainwindow.OnQuit")
         self.mainwindow.OnQuit()
 
         if operating_system.isGTK() and self.sessionMonitor is not None:
@@ -1024,17 +1049,90 @@ class Application(object, metaclass=patterns.Singleton):
         if isinstance(sys.stdout, RedirectedOutput):
             sys.stdout.summary()
 
+        log.info("Avant appel stopTwisted()")
+        log.debug("Application.quitApplication : Essaie d'arrêter Twisted.")
         try:
             self.stopTwisted()
         except Exception as e:
             # print(
             #     "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
             # )
-            log.exception(
-                f"application.py:Erreur lors de l'arrêt de Twisted: {str(e)}", exc_info=True
+            log.error(
+                f"Application.quitApplication : Erreur lors de l'arrêt de Twisted: {str(e)}", exc_info=True
             )
 
-        sys.exit()  # Quitter proprement l'application
+        log.info("Avant appel sys.exit()")
+        if self.mainwindow:
+            try:
+                self.mainwindow.Destroy()
+            except Exception as e:
+                log.error(f"Erreur lors de la destruction de la fenêtre principale: {e}")
+        log.info("Fenêtre principale détruite, appel de sys.exit()")
+        log.info("Threads actifs avant sys.exit(): %s", threading.enumerate())
+        for t in threading.enumerate():
+            log.debug(f"Thread: {t.name}, Daemon: {t.daemon}, Class: {type(t)}")
+            log.debug(f"Stack for thread {t.name}:\n{''.join(traceback.format_stack(sys._current_frames()[t.ident])) if t.is_alive() else 'Thread not alive'}")
+        log.debug("Application.quitApplication : Essaie de quitter proprement l'application avec sys.exit().")
+        # sys.exit()  # Quitter proprement l'application
+        #
+        # Toutes les étapes avant sys.exit() doivent être exécutées sans erreur (fermeture du fichier de tâches, sauvegarde des paramètres, suppression de l’icône de la barre, etc).
+        # Si iocontroller.close(force=force) retourne False, la méthode quitte sans jamais appeler sys.exit().
+        # Si une exception est levée avant d’atteindre sys.exit(), la fermeture peut échouer.
+        # S’il existe des threads ou des boucles événementielles Twisted encore actives, la fermeture peut être bloquée.
+        # Raisons fréquentes pour lesquelles la fenêtre ne se ferme pas :
+        #
+        #     iocontroller.close(force=force) retourne False
+        #     Cela signifie que la fermeture a été annulée (ex : dialogue de confirmation, fichier non sauvegardé, etc).
+        #
+        #     Un bug ou une exception dans la séquence de fermeture
+        #     Si une exception est levée, elle peut empêcher l’appel à sys.exit().
+        #
+        #     La boucle d’événements Twisted/Wx n’est pas arrêtée
+        #     Si le réacteur Twisted ne s’arrête pas, la fenêtre principale peut rester ouverte.
+        #
+        #     Le bouton "Quitter" n’appelle pas vraiment quitApplication.
+        #     Il faut vérifier que l’action du bouton "Quitter" déclenche bien cette méthode.
+
+        # Même si tu appelles sys.exit(), il existe des situations (notamment sous Linux/GTK) où :
+        #
+        #     Le process ne se termine pas si la boucle d’événements wxPython n’est pas proprement arrêtée.
+        #     Un thread, timer, ou callback wx/Twisted reste actif et garde le process vivant.
+
+        # 1. Problème d’intégration wxPython/Twisted
+        #
+        # Même si tu appelles sys.exit(), il existe des situations (notamment sous Linux/GTK) où :
+        #
+        #     Le process ne se termine pas si la boucle d’événements wxPython n’est pas proprement arrêtée.
+        #     Un thread, timer, ou callback wx/Twisted reste actif et garde le process vivant.
+        #
+        # 2. sys.exit() dans un callback wx
+        #
+        # Si tu appelles sys.exit() dans un contexte qui n’est pas le thread principal, ou dans un callback wx, cela peut ne pas tuer le process (ou lever une exception SystemExit qui est attrapée “quelque part”).
+        # Il est parfois recommandé d’appeler directement à la place de sys.exit():
+        # --- Fermeture forcée du process ---
+        # Nous utilisons os._exit(0) au lieu de sys.exit() pour garantir une terminaison immédiate du process.
+        # En effet, Twisted crée un thread worker interne non-daemon ("Thread-4 (work)") qui reste vivant
+        # même après reactor.stop() et threadpool.stop(). Tant qu'il existe, sys.exit() ne termine pas
+        # le process Python (car tous les threads non-daemon doivent être morts pour cela).
+        # Comme tout nettoyage/sauvegarde a déjà été fait à ce stade, il n'y a pas de risque de fuite.
+        # Voir : https://github.com/freedomsha/taskcoach/issues/<ton-issue> pour le détail du diagnostic.
+        os._exit(0)  # Attention, c'est brutal !
+
+        # Si ça ferme tout instantanément,
+        # c’est bien un problème de threads/boucles non stoppés proprement dans wx/Twisted.
+        # 3. Destruction de la fenêtre wx
+        #
+        # Si la fenêtre principale n’est pas explicitement détruite avant la fin du process, wxPython peut garder le process vivant.
+        # Tu as ajouté mainwindow.Destroy(), c’est bien, mais parfois il faut forcer la destruction :
+        # Python
+        #
+        # if self.mainwindow:
+        #     self.mainwindow.Close(True)
+        #     self.mainwindow.Destroy()
+
+        # 4. Threads ou timers en arrière-plan
+        #
+        # Des threads Python ou des timers wx peuvent garder le process vivant. Vérifie si tu utilises des threads, timers, ou des callbacks récurrents dans Task Coach.
         return True  # This code is unreachable
 
     def delete_instance(self):

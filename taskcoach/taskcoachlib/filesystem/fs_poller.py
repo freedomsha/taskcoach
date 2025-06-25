@@ -42,11 +42,14 @@ Sous-classe conçue pour surveiller les modifications des fichiers système de m
     pour gérer les événements de modification de fichier.
 """
 
+import logging
 import os
 import time
 import threading
 # from . import base
 from taskcoachlib.filesystem import base
+
+log = logging.getLogger(__name__)
 
 
 class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
@@ -134,6 +137,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
                     self.lock.release()
 
                 self.evt.wait(10)
+                log.info("FilesystemPollerNotifier.run() terminé")
         except TypeError:
             pass
 
@@ -143,6 +147,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
 
         Cette méthode annule le thread du notificateur.
         """
+        log.info("FilesystemPollerNotifier.stop() appelée")
         self.cancelled = True
         self.evt.set()
         # with self.lock:

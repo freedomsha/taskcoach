@@ -91,7 +91,7 @@ class TaskCoachFilesystemNotifier(FilesystemNotifier):
         Gérez les modifications de fichiers en notifiant l’instance TaskFile associée.
         """
         self.__taskFile.onFileChanged()
-        log.info("TaskCoachFileSystemNotifier.onFileChanges : Modification détectée sur le fichier '%s'", self.__taskFile)
+        log.info("TaskCoachFileSystemNotifier.onFileChanged : Modification détectée sur le fichier '%s'", self.__taskFile)
 
 
 class TaskCoachFilesystemPollerNotifier(FilesystemPollerNotifier):
@@ -118,6 +118,7 @@ class TaskCoachFilesystemPollerNotifier(FilesystemPollerNotifier):
         Gérez les modifications de fichiers en notifiant l’instance TaskFile associée.
         """
         self.__taskFile.onFileChanged()
+        log.info("TaskCoachFileSystemPollerNotifier.onFileChanged : Modification détectée sur le fichier '%s'", self.__taskFile)
 
 
 class SafeWriteFile(object):
@@ -788,6 +789,7 @@ class TaskFile(patterns.Observer):
         """
         Arrêter le notificateur du système de fichiers.
         """
+        log.info("TaskFile.stop() appelé.")
         self.__notifier.stop()
 
     def _read(self, fd):

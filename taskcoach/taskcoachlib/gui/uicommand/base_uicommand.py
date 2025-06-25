@@ -437,7 +437,7 @@ class UICommand(object):
 
     # @staticmethod
     def mainWindow(self):
-        log.debug(f"UICommand.mainWindow appelé par self={self} pour retourner wx.App.TopWindow : {wx.GetApp().TopWindow}.")
+        log.debug(f"UICommand.mainWindow appelé par self={self} pour retourner wx.App.TopWindow : {wx.GetApp().TopWindow}{repr(wx.GetApp().TopWindow)}.")
         return wx.GetApp().TopWindow
 
     def getMenuText(self):
