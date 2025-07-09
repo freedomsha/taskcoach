@@ -711,7 +711,9 @@ class CalendarCanvas(wx.Panel):
             vw -= self._vScroll.GetClientSize()[0]
             dy = self._vScroll.GetThumbPosition()
 
+        # Crée un bitmap tampon pour dessiner hors écran
         bmp = wx.Bitmap(vw, vh)
+        # Crée un contexte mémoire pour dessiner dans le bitmap
         memDC = wx.MemoryDC()
         memDC.SelectObject(bmp)
         try:
@@ -719,9 +721,11 @@ class CalendarCanvas(wx.Panel):
             memDC.Clear()
             gc = wx.GraphicsContext.Create(memDC)
             self._Draw(gc, vw, vh, dx, dy)
+            # Appelle la méthode de dessin principale pour remplir le DC
             dc = wx.PaintDC(self)
             dc.Blit(0, 0, vw, vh, memDC, 0, 0)
         finally:
+            # Libère le bitmap du contexte mémoire
             memDC.SelectObject(wx.NullBitmap)
 
     def _Draw(self, gc, vw, vh, dx, dy):
