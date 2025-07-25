@@ -718,7 +718,7 @@ class Settings(CachingConfigParser):
 
         Args :
             showerror (fonction, optional) : La fonction pour afficher les erreurs. La valeur par défaut est le fichier wx.MessageBox.
-            file (fonction, optional) : la fonction pour ouvrir les fichiers. Par défaut, open.
+            file (fonction, optional) : La fonction pour ouvrir les fichiers. Par défaut, open.
         """
         self.set("version", "python", sys.version)
         # self.set(

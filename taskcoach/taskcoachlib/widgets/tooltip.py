@@ -119,6 +119,7 @@ class ToolTipMixin(object):
         self.GetMainWindow().Bind(wx.EVT_MOTION, self.__OnMotion)
         self.GetMainWindow().Bind(wx.EVT_LEAVE_WINDOW, self.__OnLeave)
         self.Bind(wx.EVT_TIMER, self.__OnTimer, id=self.__timer.GetId())
+        log.debug(f"ToolTipMixin initialisé !")
 
     # Cette méthode ne passe pas le test TreeCtrlTest ! :
     def GetMainWindow(self):
@@ -334,7 +335,7 @@ if operating_system.isWindows():
                 h (int) : Hauteur de l'info-bulle.
             """
             # self.SetDimensions(x, y, w, h)
-            self.SetSize(x, y, w, h)
+            self.SetSize(x, y, w, h)  # Inverser les 2 lignes ? non ?
             super().Show()
 
 elif operating_system.isMac():

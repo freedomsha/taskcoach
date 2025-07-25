@@ -51,7 +51,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         # if "style" not in kwds:
         #     kwds["style"] = wx.TAB_TRAVERSAL | wx.FULL_REPAINT_ON_RESIZE
 
-        log.debug(f"ToolTipMixin.__init__ : avant super args={args}, kwds={kwds}")
+        log.debug(f"wxScheduler.__init__ : avant super args={args}, kwds={kwds}")
         # super().__init__(*args, **kwds)
         super().__init__(parent, id, *args, style=style, **kwds)
         # Le bug wxSchedulerPaint : tu passes style dans **kwds à une classe qui ne l’accepte pas.
@@ -96,6 +96,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         self.Bind(wx.EVT_TIMER, self.OnRefreshTimer, id=self._refreshTimer.GetId())
 
         self.SetScrollRate(10, 10)
+        log.info("wxScheduler initialisé !")
 
     # Events
     def OnClick(self, evt):
@@ -149,6 +150,10 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
 
     def Refresh(self):
         """Rafraîchit l’affichage du planning si ce n’est pas gelé, sinon marque comme sale."""
+        log.info("wxScheduler.Refresh : Rafraîchit l’affichage du planning.")
+        # Les appels à sizer.FitInside(self), self.Layout(), et self.SetupScrolling()
+        # dans Refresh() sont des mécanismes pour s'assurer que le panneau défilant s'adapte correctement à son contenu,
+        # que ce contenu soit géré par un sizer externe ou par le dessin interne du widget.
         if self._frozen:
             self._dirty = True
         else:
@@ -164,6 +169,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             # Rien ne fonctionne !
             super().Refresh()
             self._dirty = False
+        log.info("wxScheduler.Refresh : L’affichage du planning est rafraîchit !.")
 
     def Freeze(self):
         """Gèle les rafraîchissements du planning (mode pause)."""

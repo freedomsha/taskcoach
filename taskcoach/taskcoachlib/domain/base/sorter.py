@@ -32,13 +32,13 @@ class Sorter(patterns.ListDecorator):  # classe enfant
     def __init__(self, *args, **kwargs):
         self._sortKeys = kwargs.pop("sortBy", ["subject"])
         self._sortCaseSensitive = kwargs.pop("sortCaseSensitive", True)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)   # Cela appelle CollectionDecorator.__init__
         for sortKey in self._sortKeys:
             self._registerObserverForAttribute(sortKey.lstrip("-"))
         self.reset()
 
     def thaw(self):
-        super().thaw()
+        super().thaw()  # <--- Cet appel remonte à CollectionDecorator.thaw()
         if not self.isFrozen():
             self.reset()
 
@@ -49,7 +49,8 @@ class Sorter(patterns.ListDecorator):  # classe enfant
 
     @classmethod
     def sortEventType(cls):
-        return "pubsub.%s.sorted" % cls.__name__
+        # return "pubsub.%s.sorted" % cls.__name__
+        return f"pubsub.{cls.__name__}.sorted"
 
     @patterns.eventSource
     def extendSelf(self, items, event=None):
@@ -125,7 +126,8 @@ class Sorter(patterns.ListDecorator):  # classe enfant
 
     def _getSortKeyFunction(self, sortKey):
         try:
-            return getattr(self.DomainObjectClass, "%sSortFunction" % sortKey)
+            # return getattr(self.DomainObjectClass, "%sSortFunction" % sortKey)
+            return getattr(self.DomainObjectClass, f"{sortKey}SortFunction")
         except AttributeError:
             return self._getSortKeyFunction("subject")
 
@@ -153,8 +155,11 @@ class Sorter(patterns.ListDecorator):  # classe enfant
 
     def _getSortEventTypes(self, attribute):
         try:
+            # return getattr(
+            #     self.DomainObjectClass, "%sSortEventTypes" % attribute
+            # )()
             return getattr(
-                self.DomainObjectClass, "%sSortEventTypes" % attribute
+                self.DomainObjectClass, f"{attribute}SortEventTypes"
             )()
         except AttributeError:
             return []

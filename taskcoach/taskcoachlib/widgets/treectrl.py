@@ -490,9 +490,22 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         agw_style = wx.TR_DEFAULT_STYLE | wx.TR_HIDE_ROOT | wx.TR_MULTIPLE \
                     | wx.TR_EDIT_LABELS | wx.TR_HAS_BUTTONS | wx.TR_FULL_ROW_HIGHLIGHT \
                     | customtree.TR_HAS_VARIABLE_ROW_HEIGHT
+        #  L'initialisation de la classe parente est fondamentale.
+        #  Les styles agwStyle (TR_NO_HEADER_BUTTONS, TR_FULL_ROW_HIGHLIGHT,
+        #  TR_COLUMN_LOCK, etc.) influencent le comportement de l'en-tête et des colonnes.
+        # agw_style = hypertreelist.TR_HAS_BUTTONS \
+        #             | hypertreelist.TR_NO_HEADER_BUTTONS \
+        #             | hypertreelist.TR_FULL_ROW_HIGHLIGHT \
+        #             | hypertreelist.TR_HIDE_ROOT \
+        #             | hypertreelist.TR_COLUMN_LOCK \
+        #             | hypertreelist.TR_LINES_AT_ROOT \
+        #             | hypertreelist.TR_ROW_LINES \
+        #             | hypertreelist.TR_HAS_VARIABLE_ROW_HEIGHT
+        # Ne fonctionne pas !
+
         if operating_system.isMac():
             agw_style |= wx.TR_NO_LINES
-        agw_style &= ~hypertreelist.TR_NO_HEADER
+        agw_style &= ~hypertreelist.TR_NO_HEADER  # TR_NO_HEADER_BUTTONS ?
         return agw_style
 
     # pylint: disable=W0221
@@ -532,6 +545,7 @@ class CheckTreeCtrl(TreeListCtrl):
         self.Bind(customtree.EVT_TREE_ITEM_CHECKED, self.onItemChecked)
         # self.GetMainWindow().bind(wx.EVT_LEFT_DOWN, self.onMouseLeftDown)
         # AttributeError: 'TreeListMainWindow' object has no attribute 'bind'
+        # Sauf que mainwindow crée la méthode bind() !
         self.GetMainWindow().Bind(wx.EVT_LEFT_DOWN, self.onMouseLeftDown)
         # self._mainWin = self.MainWindow()  # TODO : Test car attribut manquant
         # mais TypeError: 'TreeListMainWindow' object is not callable

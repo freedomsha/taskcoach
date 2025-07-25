@@ -27,7 +27,7 @@ class NotifierBase(object):
     Cette classe fournit une structure de base pour l'implémentation des notificateurs dans TaskCoach.
     Les sous-classes doivent remplacer la méthode `stop` si nécessaire.
 
-    Attributs:
+    Attributs :
         _filename (str) : Le nom de fichier associé au notificateur.
         _path (str) : Le chemin du fichier.
         _name (str) : Le nom du fichier.
@@ -50,7 +50,7 @@ class NotifierBase(object):
         """
         Arrêtez le notificateur.
 
-        Cette méthode doit être (overridden)remplacée/surchargée par des sous-classes si nécessaire.
+        Cette méthode doit être (overridden) remplacée/surchargée par des sous-classes si nécessaire.
         """
         pass
 
@@ -58,11 +58,11 @@ class NotifierBase(object):
         """
         Vérifiez si le fichier a été modifié.
 
-        Args:
+        Args :
             filename (str) : Le nom du fichier à vérifier.
 
-        Returns:
-            bool : True si le fichier a été modifié, Faux sinon.
+        Returns :
+            (bool) : True si le fichier a été modifié, Faux sinon.
         """
         return self.stamp is None or (
             filename
@@ -74,7 +74,7 @@ class NotifierBase(object):
         """
         Définissez le nom de fichier associé au notificateur.
 
-        Args:
+        Args :
             filename (str) : Le nom de fichier à définir.
         """
         self._filename = filename
@@ -92,7 +92,7 @@ class NotifierBase(object):
 
         Cette méthode doit être appelée une fois le fichier enregistré.
 
-        Note:
+        Note :
             Si le nom de fichier n'est pas défini ou si le fichier n'existe pas, l'horodatage est défini sur Aucun.
         """
         if self._filename and os.path.exists(self._filename):

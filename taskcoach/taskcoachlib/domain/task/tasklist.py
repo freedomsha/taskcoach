@@ -28,7 +28,19 @@ from . import task
 
 
 class TaskListQueryMixin(object):
+    """
+    Classe mixin.
+    """
     def nrOfTasksPerStatus(self):
+        """
+        Calculer le nombre de tâches pour chaque statut possible.
+
+        Elle parcourt les tâches (en ignorant celles qui sont supprimées)
+        et compte leur statut, puis retourne un dictionnaire avec ces totaux.
+
+        Returns:
+
+        """
         statuses = [eachTask.status() for eachTask in self if not eachTask.isDeleted()]
         count = dict()
         for status in task.Task.possibleStatuses():
@@ -37,6 +49,43 @@ class TaskListQueryMixin(object):
 
 
 class TaskList(TaskListQueryMixin, categorizable.CategorizableContainer):
+    """
+    Hérite de TaskListQueryMixin pour accéder à nrOfTasksParStatus() et
+    de categorizable.CategorizableContainer qui indique que TaskList est
+    une collection d'éléments qui peuvent être catégorisés,
+    et qu'elle fournit probablement des méthodes pour gérer ces éléments
+    (ajouter, supprimer, itérer, etc.).
+
+    Attributs :
+        newItemMenuText : Définit le texte du menu pour créer une nouvelle tâche.
+                          Il utilise la fonction _() pour l'internationalisation et
+                          ajoute un raccourci clavier (INSERT ou Ctrl+N pour Mac).
+
+        newItemHelpText : Contient le texte d'aide pour la création d'une nouvelle tâche,
+                          provenant de help.taskNew.
+
+    Méthodes principales :
+
+        nrBeingTracked() : Retourne le nombre de tâches actuellement suivies (en cours).
+
+        tasksBeingTracked() : Retourne une liste de tâches qui sont actuellement suivies.
+
+        efforts() : Collecte et retourne tous les efforts associés à toutes les tâches de la liste.
+
+        originalLength() : Fournit la longueur originale de la liste de tâches,
+                           en excluant les tâches marquées comme supprimées.
+                           Cela contourne potentiellement la méthode __len__
+                           si elle a été modifiée par des décorateurs.
+
+        minPriority() : Retourne la priorité minimale parmi toutes les tâches non supprimées.
+
+        maxPriority() : Retourne la priorité maximale parmi toutes les tâches non supprimées.
+
+        __allPriorities() : Une méthode privée qui récupère toutes les priorités
+                            des tâches non supprimées, retournant (0,)
+                            si aucune tâche n'est trouvée pour éviter une erreur
+                            min() ou max() sur une liste vide.
+    """
     # FIXME: TaskList should be called TaskCollection or TaskSet
 
     # newItemMenuText = _("&New task...") + (

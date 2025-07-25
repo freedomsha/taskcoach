@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 # except ImportError:
 from wx.lib.agw import aui
 USING_AGW = True
-log.warning("wx.lib.agw.aui utilisé (fallback), wx.aui ne fonctionne pas!")
+# log.warning("wx.lib.agw.aui utilisé (fallback), wx.aui ne fonctionne pas, AGW est plus flexible!")
 
 
 class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
@@ -128,7 +128,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         # x, y = window.ClientToScreen(x, y)  # J'ai ClientToScreen cannot work when toplevel window is not shown même si window.shown est True
         # #     # pour window CategoryViewer (gui.viewer.category.CategoryViewer)
         if window.IsShown():
-            x, y = window.ClientToScreen(x, y) # Convertit la position en coordonnées écran si affichée
+            x, y = window.ClientToScreen(x, y)  # Convertit la position en coordonnées écran si affichée
         else:
             log.debug("La fenêtre %s n'est pas encore affiché, ClientToScreen ignoré.", window)
         #     print("frame.py: Debug: ClientToScreen cannot work when toplevel window is not shown")
@@ -154,7 +154,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
 
         if floating:
             # Positionner la fenêtre flottante de manière relative à l'écran ou à la fenêtre principale après l'ajout.
-            paneInfo.Float()  # Active le mode flottant
+            paneInfo.Float()  # Active le mode flottant (voir description de wx.lib.agw.aui.framemanager)
             # Vous pourriez définir une position initiale approximative ici,
             # puis potentiellement l'ajuster après l'affichage.
             # Par exemple, centrer approximativement :
@@ -166,7 +166,8 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         if not self.dockedPanes():  # S'il n'y a aucun panneau ancré
             paneInfo = paneInfo.Center()  # Définit ce panneau comme central
 
-        self.manager.AddPane(window, paneInfo)  # Ajoute le panneau au gestionnaire
+        # Ajoute les panneaux au gestionnaire :
+        self.manager.AddPane(window, paneInfo)
         self.manager.Update()  # Rafraîchit l'affichage
 
     def setPaneTitle(self, window, title):

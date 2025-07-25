@@ -107,13 +107,13 @@ class Set(set):
         Comparez deux ensembles pour l'égalité.
 
         Si set.__cmp__ est appelé, nous obtenons une TypeError dans Python 2.5, donc
-        appelez set.__eq__ à la place
+        appelez set.__eq__ à la place.
 
         Args :
             other (Set or set) : L'ensemble à comparer.
 
         Returns :
-            int : 0 si les ensembles sont égaux, -1 sinon.
+            (int) : Retourne 0 si les ensembles sont égaux, -1 sinon.
         """
         if self == other:
             return 0
@@ -139,7 +139,7 @@ class Event(object):
     Pour ajouter plus de sources d'événements avec leur propre valeur :
     >> event.addSource('une autre source', 'une autre valeur')
 
-    Pour ajouter une source avec une type d'événement différent :
+    Pour ajouter une source avec un type d'événement différent :
     >> event.addSource('encore une autre source', 'sa valeur', type='un autre type')
     """
 
@@ -148,9 +148,9 @@ class Event(object):
         Initialisez l'événement.
 
         Args :
-            type (str, facultatif) : le type d'événement.
-            source (object, facultatif) : la source de l'événement.
-            *values : valeurs supplémentaires associées à l'événement.
+            type (str) : (facultatif) Le type d'événement.
+            source (object) : (facultatif) La source de l'événement.
+            *values : Valeurs supplémentaires associées à l'événement.
         """
         # self.__sourcesAndValuesByType = {} if type is None else \
         #     {type: {} if source is None else {source: values}}
@@ -178,7 +178,7 @@ class Event(object):
             other (event) : L'événement avec lequel comparer.
 
         Returns :
-            bool : vrai si les événements sont égaux, faux sinon.
+            (bool) : Vrai si les événements sont égaux, faux sinon.
         """
         return self.sourcesAndValuesByType() == other.sourcesAndValuesByType()
 
@@ -203,7 +203,7 @@ class Event(object):
 
         # TODO : à vérifier problèmes dans les tests
         eventType = kwargs.pop("type", self.type())  # Définit le type d'événement
-        # print(f"Event: Ajout de source : {source}, type : {eventType}, valeurs : {values}")
+        # log.debug(f"Event: Ajout de source : {source}, type : {eventType}, valeurs : {values}")
         currentValues = set(
             self.__sourcesAndValuesByType.setdefault(eventType, {}).setdefault(
                 source, tuple()
@@ -225,7 +225,7 @@ class Event(object):
         l'appelant est sûr que cette instance d'événement a exactement un type d'événement.
 
         Returns :
-            (str) : Le type d'événement.
+            (str | none) : Le type d'événement.
         """
         return list(self.types())[0] if self.types() else None
 
@@ -235,7 +235,7 @@ class Event(object):
         Renvoie l'ensemble des types d'événements que cet événement notifie.
 
         Returns :
-            set : l'ensemble des types d'événements.
+            set : L'ensemble des types d'événements.
         """
         return set(self.__sourcesAndValuesByType.keys())
 
@@ -631,7 +631,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         if not event.sources():
             return
         # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
-        observers = dict()  # {observer: set([(type, source), ...])}  liste set ou dict ?
+        observers = dict()  # {observer: set([(type, source), ...])}  liste set ou dict ? TODO !
         types = event.types()
         # Inclure les observateurs non inscrits pour une source d'événement spécifique :
         sources = event.sources() | {None}
@@ -676,7 +676,7 @@ class Observer(object):
 
     def __init__(self, *args, **kwargs):
         """
-        Initialisez l'observateur.
+        Initialisez la liste des observateurs.
         """
         self.__observers = set()
         super().__init__(*args, **kwargs)
@@ -768,6 +768,7 @@ class Decorator(Observer):
         if hasattr(observable, "_getAttrDict"):
             d = observable._getAttrDict()
             if attribute in d:
+                # log.debug(f"Decorator.__getattr__ : retourne {d[attribute]} d'observable._getAttrDict()")
                 return d[attribute]
         # Fallback classique
         return getattr(observable, attribute)
@@ -991,7 +992,8 @@ class CollectionDecorator(Decorator, ObservableCollection):
     Les utilisateurs de cette classe ne devraient pas voir de différence entre
     l'utilisation de la collection originale ou une version décorée.
 
-    Cette classe est une sous-classe de ObservableComposite qui décore une collection (liste, ensemble, etc.) et notifie les observateurs lorsqu'un élément est ajouté ou supprimé de la collection.
+    Cette classe est une sous-classe de ObservableComposite qui décore une collection
+    (liste, ensemble, etc.) et notifie les observateurs lorsqu'un élément est ajouté ou supprimé de la collection.
 
     Les méthodes de cette classe sont des méthodes de délégation qui appellent les méthodes correspondantes de la collection sous-jacente.
 
@@ -1025,7 +1027,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         """
         super().__init__(observedCollection, *args, **kwargs)
         self.__freezeCount = 0
-        observable = self.observable()
+        observable = self.observable()  # C'est ici que l'observable est stocké.
         # Observe les événements d'ajout et de suppression dans la collection observable
         self.registerObserver(
             self.onAddItem,
@@ -1057,10 +1059,22 @@ class CollectionDecorator(Decorator, ObservableCollection):
 
     def thaw(self):
         """
+        Désactive le gel de l'objet, ce qui permet à nouveau les notifications.
+
+
         Dégèle la collection, permettant de reprendre les notifications de changements aux observateurs.
 
-        Si la collection observée est elle-même un CollectionDecorator, appelle également la méthode thaw sur cette collection.
+        Si la collection observée est elle-même un CollectionDecorator,
+        appelle également la méthode thaw sur cette collection.
         """
+        # CollectionDecorator est une classe qui "décore" (encapsule)
+        # un autre objet "observable".
+        # thaw() appelle thaw() sur l'objet qu'il décore (self.observable()).
+        # La cause de l'erreur est donc que l'attribut self.__observable
+        # (qui est retourné par self.observable()) est None
+        # lorsque CollectionDecorator.thaw() est appelée.
+        log.debug(f"{self.__class__.__name__}.thaw() - Entrée")
+        # if self.isFrozen():
         self.__freezeCount -= 1
         if isinstance(self.observable(), CollectionDecorator):
             self.observable().thaw()

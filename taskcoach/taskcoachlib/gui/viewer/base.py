@@ -67,15 +67,15 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     # TypeError: metaclass conflict: the metaclass of a derived class must be
     # a (non-strict) subclass of the metaclasses of all its bases
     """
-        Classe de base pour les visionneuses dans Task Coach.
+    Classe de base pour les visionneuses dans Task Coach.
 
-        Une visionneuse affiche les objets du domaine (par exemple, les tâches ou les efforts) au moyen d'un widget
-        comme un ListCtrl ou un TreeListCtrl. Cette classe gère la présentation et l'interaction avec ces objets.
+    Une visionneuse affiche les objets du domaine (par exemple, les tâches ou les efforts) au moyen d'un widget
+    comme un ListCtrl ou un TreeListCtrl. Cette classe gère la présentation et l'interaction avec ces objets.
 
-        Attributs :
-            defaultTitle (str) : Le titre par défaut de la visionneuse.
-            defaultBitmap (str) : L'icône par défaut pour la visionneuse.
-            viewerImages (list) : Les images utilisées pour afficher les objets de la visionneuse.
+    Attributs :
+        defaultTitle (str) : Le titre par défaut de la visionneuse.
+        defaultBitmap (str) : L'icône par défaut pour la visionneuse.
+        viewerImages (list) : Les images utilisées pour afficher les objets de la visionneuse.
     """
 
     defaultTitle = "Subclass responsibility"
@@ -124,6 +124,36 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.__presentation = self.createSorter(
             self.createFilter(self.domainObjectsToView())
         )
+        #     Viewer est un Observer.
+        #     Il stocke une référence à self.__presentation.
+        #     Cette __presentation est passée via les kwargs à l'initialisation.
+        #
+        #     Si self.__presentation est None lors de l'appel à thaw()
+        #     ou s'il est un objet NoneType pour une raison quelconque,
+        #     ou s'il n'a pas été correctement initialisé avec un observable valide,
+        #     l'erreur se produira.
+        #
+        # La cause de l'erreur confirmée
+        # L'erreur AttributeError: 'NoneType' object has no attribute 'parent'
+        # se produit parce que :
+        #     taskcoachlib/gui/viewer/base.py (votre Viewer ou une sous-classe)
+        #     appelle self.__presentation.thaw().
+        #
+        #     self.__presentation est une instance de Sorter
+        #     (ou une classe qui hérite de Sorter, ici createSorter() ou un descendant de domainObjectsToView()).
+        #
+        #     Sorter.thaw() appelle super().thaw(),
+        #     qui remonte à patterns.observer.CollectionDecorator.thaw().
+        #
+        #     Dans CollectionDecorator.thaw(), il y a la ligne self.observable().thaw().
+        #     À ce moment-là, self.observable() retourne None
+        #     pour l'instance __presentation.
+        #     L'erreur AttributeError: 'NoneType' object has no attribute 'parent'
+        #     est étrange, elle suggère que la méthode thaw()
+        #     (ou une méthode appelée par elle) d'une classe parente
+        #     essaie d'accéder à parent sur ce None juste
+        #     avant que le NoneType ne cause l'erreur sur thaw().
+        #     Mais la cause sous-jacente est bien self.observable() étant None.
         # Le widget utilisé pour présenter la présentation:
         self.widget = self.createWidget()
         # log.error("VIEWER : Ici, s'arrête après cela ? :")
@@ -181,9 +211,10 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.__freezeCount += 1
         self.__presentation.freeze()
 
-    def onEndIO(self, taskFile):
+    def onEndIO(self, taskFile):  # Cette méthode est appelée lors de l'événement pubsub "taskfile.justRead"
         """Termine les opérations de lecture/écriture dans le fichier de tâches."""
         self.__freezeCount -= 1
+        # Voici l'appel initial de la traceback de thaw():
         self.__presentation.thaw()  # TypeError: UltimateListCtrl.Append() got an unexpected keyword argument 'data'
         if self.__freezeCount == 0:
             self.refresh()
@@ -194,9 +225,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def domainObjectsToView(self):
         """Retourne les objets du domaine que cette visionneuse doit afficher. Doit être implémentée dans les sous-classes.
 
-        Renvoie les objets de domaine que cette visionneuse doit afficher. Pour les visualiseurs globaux
-        , cela fera partie du fichier de tâches
-        , par ex. self.taskFile.tasks(), pour les visualiseurs locaux, ce sera une liste
+        Renvoie les objets de domaine que cette visionneuse doit afficher.
+        Pour les visualiseurs globaux, cela fera partie du fichier de tâches,
+        par ex. self.taskFile.tasks(), pour les visualiseurs locaux, ce sera une liste
         d'objets transmis au constructeur du visualiseur."""
         raise NotImplementedError
 
@@ -295,7 +326,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         titleToSaveInSettings = "" if title == self.defaultTitle else title
         self.settings.set(self.settingsSection(), "title", titleToSaveInSettings)
         self.parent.setPaneTitle(self, title)  # setPaneTitle is for frame ! not window. SetLabel or SetName for window !
-        self.parent.manager.Update()
+        self.parent.manager.Update()  # L'affichage
 
     def initLayout(self):
         """Initialise la mise en page de la visionneuse."""
@@ -519,12 +550,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         return self.widget.GetItemCount()
 
     def presentation(self):
-        """Return the domain objects that this viewer is currently
-        displaying."""
+        """Renvoie les objets de domaine que cette visionneuse affiche actuellement. """
         return self.__presentation
 
     def setPresentation(self, presentation):
-        """Change the presentation of the viewer."""
+        """Change the presentation of the viewer.
+        Changer la présentation de la visionneuse."""
         self.__presentation = presentation
 
     # @staticmethod
@@ -573,7 +604,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         return self.defaultBitmap  # Class attribute of concrete viewers
 
     def settingsSection(self):
-        """Return the settings section of this viewer."""
+        """Retourner la section Paramètres de cette visionneuse."""
         section = self.__settingsSection
         if self.__use_separate_settings_section and self.__instanceNumber > 0:
             # We're not the first viewer of our class, so we need a different
@@ -1251,6 +1282,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         super().__init__(*args, **kwargs)
         self.initColumns()
         self.__initDone = True
+        # refresh permet d'afficher les listes des tâches et catégories dans les colonnes.
         self.refresh()
 
     def hasHideableColumns(self):

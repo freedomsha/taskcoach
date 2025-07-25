@@ -779,7 +779,7 @@ class Object(SynchronizedObject):
             del state[key]
 
         # DEBUG : Affichage de l'état sérialisé pour vérification
-        log.debug(f"DEBUG - Object.__getstate__() renvoie : {state}")
+        # log.debug(f"DEBUG - Object.__getstate__() renvoie : {state}")
         #
         return state
 
@@ -855,7 +855,7 @@ class Object(SynchronizedObject):
             super().__setstate__(state, event=event)
         except AttributeError:
             pass
-        log.debug(f"Object.__setstate__() - Entrée, state dict: {state}")
+        # log.debug(f"Object.__setstate__() - Entrée, state dict: {state}")
 
         self.__id = state["id"]
         # Récupérer la valeur du sujet du dictionnaire d'état
@@ -890,7 +890,7 @@ class Object(SynchronizedObject):
             state = super().__getcopystate__()
         except AttributeError:
             state = dict()
-        log.debug(f"Object.__getcopystate__ : avant update state={state}.")
+        # log.debug(f"Object.__getcopystate__ : avant update state={state}.")
         if state is None:
             state = dict()
         # Notez que nous ne mettons pas l'identifiant et la date/heure de création dans le dict state,
@@ -907,7 +907,7 @@ class Object(SynchronizedObject):
                 ordering=self.__ordering.get(),
             )
         )
-        log.debug(f"Object.__getcopystate__ : retourne state={state}.")
+        # log.debug(f"Object.__getcopystate__ : retourne state={state}.")
         return state
 
     def copy(self):

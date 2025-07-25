@@ -251,7 +251,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         #  à la liste des accélérateurs du menu.
         self._accels.extend(uiCommand.accelerators())
         # Gestion des observateurs :
-        #  Si la UICommand est également un observateur (selon le pattern Observer),
+        #  Si la UICommand est également un observateur (selon le pattern.Observer),
         #  elle est ajoutée à la liste des observateurs du menu.
         if isinstance(uiCommand, patterns.Observer):
             # Ajoute le menu uiCommand à la liste de menus _observers
@@ -293,7 +293,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         # Création du sous-menu :
         # self.AppendItem(subMenuItem)
         # Préférer :
-        log.debug(f"Menu.appendMenu : Ajout du sous-menu {type(subMenuItem).__name__} à self={type(self).__name__}")
+        log.debug(f"Menu.appendMenu : Ajout du sous-menu {type(subMenuItem).__name__} à self={type(self).__name__}.")
         self.Append(subMenuItem)
 
         # nouvelle ligne conseillée par chatGPT

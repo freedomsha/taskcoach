@@ -54,15 +54,10 @@ def viewerTypes():
 
 
 class addViewers(object):  # pylint: disable=C0103, R0903
-    """ addViewers is a class masquerading as a method. It's a class because
-        that makes it easier to split the work over different methods that
-        use the same instance variables.
-
-        addViewers est une classe se faisant passer pour une méthode.
+    """ addViewers est une classe se faisant passer pour une méthode.
         C'est une classe car cela facilite la répartition du travail
         entre différentes méthodes utilisant les mêmes variables d'instance.
-
-        """
+    """
 
     floating = False  # Start viewers floating? Not when restoring layout
 
@@ -96,11 +91,8 @@ class addViewers(object):  # pylint: disable=C0103, R0903
         self.__add_viewers(note.NoteViewer)
 
     def __add_viewers(self, viewer_class):
-        """ Open viewers of the specified viewer class as saved previously in
-            the settings.
-
-            Ouvrez les visionneuses de la classe de visionneuse spécifiée
-            telle que enregistrée précédemment dans les paramètres.
+        """Ouvrez les visionneuses de la classe de visionneuse spécifiée
+        telle que enregistrée précédemment dans les paramètres.
         """
         number_of_viewers_to_add = self._number_of_viewers_to_add(viewer_class)
         for _ in range(number_of_viewers_to_add):
@@ -110,12 +102,10 @@ class addViewers(object):  # pylint: disable=C0103, R0903
                                               floating=self.floating)
 
     def _number_of_viewers_to_add(self, viewer_class):
-        """ Return the number of viewers of the specified viewer class the
-            user has opened previously.
-
-            Renvoie le nombre de visionneuses de la classe de visionneuse spécifiée
-            que l'utilisateur a ouverte précédemment.
-            """
+        """
+        Renvoie le nombre de visionneuses de la classe de visionneuse spécifiée
+        que l'utilisateur a ouverte précédemment.
+        """
         return self.__settings.getint(
             "view", viewer_class.__name__.lower() + "count"
         )

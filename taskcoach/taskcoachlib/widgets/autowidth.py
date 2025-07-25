@@ -52,10 +52,13 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 import wx
 from wx.lib.agw import hypertreelist
 # from wx.lib.agw.hypertreelist import HyperTreeList
+# from wx.lib.agw.hypertreelist.HyperTreeList import GetColumnWidth
+# from wx.lib.agw.hypertreelist import HyperTreeList
 # try:
 #    from ..thirdparty import hypertreelist
 # except ImportError:
 #    from ..thirdparty.agw import hypertreelist
+
 from taskcoachlib import operating_system
 
 

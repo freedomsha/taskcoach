@@ -224,10 +224,9 @@ class CalendarCanvas(wx.Panel):
         self.Bind(wx.EVT_RIGHT_DOWN, self._OnRightDown)
         # wx.EVT_MOTION(self, self._OnMotion)
         self.Bind(wx.EVT_MOTION, self._OnMotion)
-        self._Invalidate()
+        self._Invalidate()  # ???
 
     # Methods to override
-
     def IsWorked(self, date):
         """
         Vérifiez si la date indiquée est un jour ouvrable.
@@ -256,8 +255,8 @@ class CalendarCanvas(wx.Panel):
         """
         Obtenez les événements racine du calendrier.
 
-        Returns:
-            list: A list of root events.
+        Returns :
+            list : A list of root events.
         """
         return list()
 
@@ -269,7 +268,7 @@ class CalendarCanvas(wx.Panel):
             event: The event to get the start date and time for.
 
         Returns:
-            datetime.datetime: The start date and time.
+            (datetime.datetime) : The start date and time.
         """
         raise NotImplementedError
 
@@ -497,8 +496,8 @@ class CalendarCanvas(wx.Panel):
         """
         Obtenez la couleur de la date d'aujourd'hui.
 
-        Returns:
-            wx.Colour: The color for Today's date.
+        Returns :
+            (wx.Colour) : The color for Today's date.
         """
         return self._todayColor
 
@@ -538,8 +537,8 @@ class CalendarCanvas(wx.Panel):
         """
         Obtenez les événements sélectionnés.
 
-        Returns:
-            set: The set of selected events.
+        Returns :
+            (set) : The set of selected events.
         """
         return self._selection
 
@@ -547,8 +546,8 @@ class CalendarCanvas(wx.Panel):
         """
         Sélectionnez les événements donnés.
 
-        Args:
-            events (list): The events to select.
+        Args :
+            events (list) : The events to select.
         """
         self._selection = set(events) & set(self._coords.keys())
         e = wx.PyCommandEvent(wxEVT_EVENT_SELECTION_CHANGED)
@@ -557,17 +556,17 @@ class CalendarCanvas(wx.Panel):
         self.ProcessEvent(e)
         self.Refresh()
 
-    def HitTest(self, x, y):
-        """
-        Effectuez un test de réussite pour déterminer quel événement se trouve sous les coordonnées données.
-
-        Args:
-            x (int): The x-coordinate.
-            y (int): The y-coordinate.
-
-        Returns:
-            _HitResult: The result of the hit test.
-        """
+    def HitTest(self, x: int, y: int):
+        # """
+        # Effectuez un test de réussite pour déterminer quel événement se trouve sous les coordonnées données.
+        #
+        # Args :
+        #     x (int) : The x-coordinate.
+        #     y (int) : The y-coordinate.
+        #
+        # Returns :
+        #     result (_HitResult) : The result of the hit test.
+        # """
         w, h = self.GetClientSize()
 
         if y <= self._marginTop:
@@ -712,6 +711,7 @@ class CalendarCanvas(wx.Panel):
             dy = self._vScroll.GetThumbPosition()
 
         bmp = wx.Bitmap(vw, vh)
+        # Créer un contexte de périphérique de mémoire pour dessiner des graphiques sur un bitmap.
         memDC = wx.MemoryDC()
         memDC.SelectObject(bmp)
         try:

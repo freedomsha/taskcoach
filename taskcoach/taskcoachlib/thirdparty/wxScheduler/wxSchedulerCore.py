@@ -50,7 +50,8 @@ class InvalidSchedule(Exception):
 class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
     """
     Classe principale pour la gestion et l'affichage des plannings dans wxScheduler.
-    Hérite des fonctionnalités de rendu et de gestion de planning.
+
+    Hérite des fonctionnalités de rendu et de gestion de planning de wxSchedulerPaint et de wxSchedule.
     """
     def __init__(self, *args, **kwds):
         # def __init__(self, parent=None, id=wx.ID_ANY,  *args, **kwds):
@@ -94,6 +95,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
         self._calculateWorkHour()
         wxSchedulerCore.SetViewType(self)
+        log.info("wxSchedulerCore initialisé !")
 
     # -----------------------
     #   Internal methods
@@ -176,6 +178,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         """
         Ajoute un ou plusieurs plannings à la liste pour visualisation.
         Rafraîchit l'affichage si au moins un planning est dans la plage visible.
+
         :param schedules: Objet wxSchedule ou liste/tuple de wxSchedule.
         """
         # Add schedules in list for visualization. Default is empty list

@@ -44,9 +44,9 @@ class ViewerContainer(object):
         d'un spectateur régulier. """
         
     def __init__(self, containerWidget, settings, *args, **kwargs):
-        self.containerWidget = containerWidget
+        self.containerWidget = containerWidget  # L'afficheur de visionneuse. Trame gérée par AUI.
         self._notifyActiveViewer = False
-        self.__bind_event_handlers()
+        self.__bind_event_handlers()  # Inscription aux événements de fermeture, d'activation et de flottement du volet.
         self._settings = settings
         self.viewers = []
         super().__init__(*args, **kwargs)
@@ -69,7 +69,7 @@ class ViewerContainer(object):
         
     # @staticmethod
     def isViewerContainer(self):
-        """ Indique s'il s'agit d'un conteneur de visionneuse ou d'une visionneuse réelle. """
+        """ Indique s'il s'agit d'un conteneur de visionneuse ou sinon d'une visionneuse réelle. """
         return True
 
     def __bind_event_handlers(self):
@@ -116,13 +116,17 @@ class ViewerContainer(object):
         if hasattr(viewer, "_getAttrDict"):
             d = viewer._getAttrDict()
             if attribute in d:
+                log.info("ViewerContainer.__getattr__ retourne l'attribut {d[attribute]} de _getAttrDict !")
                 return d[attribute]
         # Fallback classique
-        return getattr(viewer, attribute)
+        # return getattr(viewer, attribute)
+        attr_to_ret = getattr(viewer, attribute)
+        log.info("ViewerContainer.__getattr__ retourne l'attribut {attr_to_ret} avec l'ancienne méthode !")
+        return attr_to_ret
 
     def activeViewer(self):
         """ Renvoie la visionneuse active (sélectionnée). """
-        all_panes = self.containerWidget.manager.GetAllPanes()
+        all_panes = self.containerWidget.manager.GetAllPanes()  # Obtenir une référence de toutes les structures d'information de volet.
         for pane in all_panes:
             if pane.IsToolbar():
                 continue

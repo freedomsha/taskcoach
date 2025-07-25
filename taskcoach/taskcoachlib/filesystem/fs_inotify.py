@@ -41,13 +41,14 @@ class FilesystemNotifier(base.NotifierBase):
         """
         super(FilesystemNotifier, self).__init__()
         self.notifier = INotify()
+        # Commencer à attendre l'accessibilité de la lecture :
         self.notifier.startReading()
 
     def setFilename(self, filename):
         """
         Définissez le nom du fichier à surveiller.
 
-        Args:
+        Args :
             filename (str) : Le nom du fichier à surveiller.
         """
         if self._path is not None:
@@ -70,7 +71,7 @@ class FilesystemNotifier(base.NotifierBase):
         """
         Fonction de rappel pour les événements inotify.
 
-        Args:
+        Args :
             handle : Le handle inotify.
             filepath (FilePath) : Le chemin du fichier qui a déclenché l'événement.
             mask (int) : Le masque d'événement.

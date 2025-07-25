@@ -57,15 +57,16 @@ class wxSchedule(object):
     def __init__(self, *args, **kwargs):
         # def __init__(self, parent=None, id=wx.ID_ANY, *args, **kwds):
         """
-        Use self.start and self.end for set the star and the end of the schedule.
-        If both start and end datetime have time set to 00:00 the schedule is
-        relative on entire day/days.
+        Utilisez self.start et self.end pour définir le début et la fin du calendrier.
+        Si les deux et la fin de DateTime ont du temps à 00:00
+        Le calendrier est relatif sur toute la journée/jours.
         """
         # La chaîne d’héritage passe des arguments positionnels (parent, id, ...) tout du long.
         # Si une classe dans la chaîne ne les accepte pas, tu as "takes 1 positional argument but 3 were given".
 
         # log.debug(f"wxSchedule.__init__ : avant super args={args}, kwds={kwds}")
         # super(wxSchedule, self).__init__()
+        # super().__init__()
         super().__init__(*args, **kwargs)
         # super().__init__(parent, id, *args, **kwds)
 
@@ -149,7 +150,7 @@ class wxSchedule(object):
         newSchedule = wxSchedule()
         for name, value in self.GetData().items():
             setattr(newSchedule, name, value)
-        # start and end should be copied as well
+        # Le début et la fin doivent également être copiés
         newSchedule._start = copyDateTime(newSchedule._start)
         newSchedule._end = copyDateTime(newSchedule._end)
         return newSchedule
@@ -162,7 +163,7 @@ class wxSchedule(object):
             self._layoutNeeded = self._layoutNeeded or layoutNeeded
             return
 
-        # Create the event and propagete it
+        # Crée l'événement et le propage.
         evt = wx.PyCommandEvent(wxEVT_COMMAND_SCHEDULE_CHANGE)
 
         evt.category = self._category
@@ -338,9 +339,14 @@ class wxSchedule(object):
     def Offset(self, ts):
         """
         Décale la planification du laps de temps indiqué.
+
+        Args :
+            ts :
         """
-        self._start.AddTS(ts)
-        self._end.AddTS(ts)
+        # self._start.AddTS(ts)
+        self._start += ts
+        # self._end.AddTS(ts)
+        self._end += ts
         self._eventNotification(True)
 
     def GetIcons(self):

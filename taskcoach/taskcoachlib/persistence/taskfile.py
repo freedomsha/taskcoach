@@ -70,6 +70,8 @@ def _isCloud(path):
 class TaskCoachFilesystemNotifier(FilesystemNotifier):
     """
     Une classe de notification pour gérer les modifications de fichiers pour Task Coach.
+
+    Basé sur FilesystemNotifier qui charge le notificateur selon le système (linux->inotify, win->win32, mac->notifeur) ou FileSystemPollerNotifier.
     """
 
     def __init__(self, taskFile):
@@ -147,14 +149,14 @@ class SafeWriteFile(object):
         if self._isCloud():
             # Ideally we should create a temporary file on the same filesystem (so that
             # os.rename works) but outside the Dropbox folder...
-            self.__fd = open(self.__filename, "wb")
+            self.__fd = open(self.__filename, "wb")  # texte ou binaire ?
             # self.__fd = open(self.__filename, "w")
             # self.__tempFilename = ?
         else:
             self.__tempFilename = self._getTemporaryFileName(
                 os.path.dirname(filename)
             )
-            self.__fd = open(self.__tempFilename, "wb")
+            self.__fd = open(self.__tempFilename, "wb")  # texte ou binaire ?
             # self.__fd = open(file=self.__tempFilename, mode="wb", encoding="utf-8")
         # self.__fd = filename
         log.info("Initialisation de SafeWriteFile avec un nom de fichier."
@@ -170,9 +172,8 @@ class SafeWriteFile(object):
             bf (str) : Les données à écrire.
         """
         log.info(f"SafeWriteFile.write essaie d'écrire {bf} dans {self.__fd}.")
-
         if isinstance(bf, str):
-            self.__fd.write(bf)  # comment transformer bf(bytes) en string ?
+            self.__fd.write(bf)  # comment transformer bf(bytes) en string ? Non, ici, init est en bytes !!!
         else:
             self.__fd.write(str(bf))
 
@@ -261,7 +262,7 @@ class TaskFile(patterns.Observer):
 
     def __init__(self, *args, **kwargs):
         """
-        Initialisez le TaskFile.
+        Initialisez le fichier TaskFile  contenant la liste de tâches.
 
         Args :
             *args : arguments supplémentaires.
@@ -273,13 +274,13 @@ class TaskFile(patterns.Observer):
         # log.info("TaskFile : self.__filename = self.__lastFilename = ''")
         self.__needSave = self.__loading = False
         # log.info("TaskFile : self.__needSave = self.__loading = False")
-        self.__tasks = task.TaskList()
+        self.__tasks = task.TaskList()  # La liste de tâches.
         # log.info(f"TaskFile : self.__tasks = {self.__tasks}")
-        self.__categories = category.CategoryList()
+        self.__categories = category.CategoryList()  # La liste des catégories.
         # log.info(f"TaskFile : self.__categories = {self.__categories}")
-        self.__notes = note.NoteContainer()
+        self.__notes = note.NoteContainer()  # La liste des notes.
         # log.info(f"TaskFile : self.__notes = {self.__notes}")
-        self.__efforts = effort.EffortList(self.tasks())
+        self.__efforts = effort.EffortList(self.tasks())  # Les listes des efforts des tâches.
         # log.info(f"TaskFile : self.__efforts = {self.__efforts}")
         self.__guid = generate()
         # log.info(f"TaskFile : self.__guid = {self.__guid}")
@@ -354,6 +355,7 @@ class TaskFile(patterns.Observer):
 
         # log.info("TaskFile : Tâches initiales : %s", self.tasks())
         # log.info("TaskFile : Notes initiales : %s", self.notes())
+        log.info("TaskFile initialisé.")
 
     def __str__(self):
         """Retourne une représentation sous forme de chaîne du fichier de tâches (le nom du fichier)."""
@@ -407,19 +409,19 @@ class TaskFile(patterns.Observer):
 
     def tasks(self):
         """
-        Obtenez l'instance TaskList.
+        Obtenez l'instance TaskList (Liste de tâches).
 
         Returns :
-            TaskList : l'instance TaskList.
+            TaskList : L'instance TaskList. La liste de tâches.
         """
         return self.__tasks
 
     def efforts(self):
         """
-        Obtenez l'instance EffortList.
+        Obtenez l'instance EffortList. (Liste des efforts)
 
         Returns :
-            EffortList : l'instance EffortList.
+            EffortList : L'instance EffortList. La liste des efforts.
         """
         return self.__efforts
 
@@ -487,7 +489,9 @@ class TaskFile(patterns.Observer):
 
     def onTaskChanged(self, newValue, sender):
         """
-        Gérer les événements modifiés par la tâche.
+        Listener pour Gérer les événements modifiés par la tâche.
+
+        Utilisé avec pubsub pour recevoir les messages.
 
         Args :
             newValue : La nouvelle valeur.
@@ -1196,6 +1200,11 @@ class TaskFile(patterns.Observer):
             try:
                 # Unresolved attribute reference 'getObjectById' for class 'list'
                 # Vient de domain.base.collection.Collection !
+                # get_object_by_Id = base.collection.Collection.getObjectById(domainObject.id())
+                # @staticmethod
+                # def getObjectById(the_Id):
+                #     get_object_by_id = base.collection.Collection.getObjectById(the_Id)
+                # from taskcoachlib.domain.base.collection import Collection
                 objectsToOverwrite.append(
                     originalObjects.getObjectById(domainObject.id())  # getObjectById vient de domain.base.collection.Collection ! Un ensemble d'objets composites observables.
                 )

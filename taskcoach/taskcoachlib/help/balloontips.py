@@ -22,6 +22,7 @@ import wx
 
 class BalloonTipManager(balloontip.BalloonTipManager):
     def AddBalloonTip(self, settings, name, target, message=None, title=None, bitmap=None, getRect=None):
+        # BallonTipManager.AddBalloonTip(self, target, message=None, title=None, bitmap=None, getRect=None, **kwargs):
         # Signature of method 'BalloonTipManager.AddBalloonTip()' does not match signature of the base
         # method in class 'BalloonTipManager'
         # (self, parent, target, message=None, title=None, bitmap=None, getRect=None):

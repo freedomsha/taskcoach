@@ -20,11 +20,11 @@ import math
 
 class wxDrawer(object):
     """
-    This class handles the actual painting of headers and schedules.
+    Cette classe gère la peinture réelle des en-têtes et des horaires.
     """
 
-    # Set this to True if you want your methods to be passed a
-    # wx.GraphicsContext instead of wx.DC.
+    # Définissez ceci sur true si vous voulez que vos méthodes soient
+    # transmises à un wx.graphicsContext au lieu de WX.DC.
     use_gc = False
 
     def __init__(self, context, displayedHours):
@@ -113,7 +113,7 @@ class wxDrawer(object):
 
     def _DrawSchedule(self, schedule, x, y, w, h):
         """
-        Draws a schedule in the specified rectangle.
+        Dessine un calendrier dans le rectangle spécifié.
         """
 
         offsetY = SCHEDULE_INSIDE_MARGIN
@@ -533,10 +533,25 @@ class BackgroundDrawerDCMixin(wxDrawer):
     """
 
     def DrawDayBackground(self, x, y, w, h, highlight=None):
+        """
+        Dessine le fond du jour.
+
+        Args:
+            x:
+            y:
+            w:
+            h:
+            highlight:
+
+        Returns:
+
+        """
         if highlight is not None:
             self.context.SetBrush(wx.Brush(highlight))
+            # self.context.SetBackground(wx.Brush(highlight))
         else:
             self.context.SetBrush(wx.TRANSPARENT_BRUSH)
+            # self.context.SetBackground(wx.TRANSPARENT_BRUSH)
 
         self.context.SetPen(FOREGROUND_PEN)
 
@@ -855,6 +870,21 @@ class HeaderDrawerMixin(HeaderDrawerDCMixin):
     """
 
     def DrawDayHeader(self, day, x, y, width, height, highlight=None):
+        """
+        Cela affiche une date dans le format "Lun 1 Janvier" en appelant ensuite _DrawHeader.
+
+        Args:
+            day:
+            x:
+            y:
+            width:
+            height:
+            highlight:
+
+        Returns :
+            La méthode _DrawHeader.
+        """
+        # Le texte est bien converti en nom du jour, jour, mois !
         return self._DrawHeader(
             "%s %s %s"
             % (
@@ -894,10 +924,25 @@ class wxBaseDrawer(
     HeaderDrawerMixin, HeaderDrawerDCMixin, BackgroundDrawerDCMixin, wxDrawer
 ):
     """
-    Concrete subclass of wxDrawer; regular style.
+    Sous-classe concrète de wxDrawer et des mixins HeaderDrawer, HeaderDrawerDC et BackgroundDrawerDC; regular style.
     """
 
     def DrawHours(self, x, y, w, h, direction, includeText=True):
+        """
+        Dessine les heures.
+
+        Args:
+            x:
+            y:
+            w:
+            h:
+            direction:
+            includeText:
+
+        Returns:
+
+        """
+        log.debug(f"wxBaseDrawer.DrawHours : dessine des heures.")
         if direction == wxSCHEDULER_VERTICAL:
             self.context.SetBrush(wx.Brush(SCHEDULER_BACKGROUND_BRUSH()))
             self.context.DrawRectangle(x, int(y), LEFT_COLUMN_SIZE, int(h))
@@ -992,14 +1037,39 @@ class wxBaseDrawer(
             font.SetPointSize(fSize)
 
     def DrawNowHorizontal(self, x, y, w):
+        """
+        Dessine maintenant horizontalement.
+
+        Args :
+            x : coordonnée
+            y : coordonnée
+            w : coordonnée
+
+        Returns :
+
+        """
         self.context.SetBrush(wx.Brush(wx.Colour(0, 128, 0)))
         self.context.SetPen(wx.Pen(wx.Colour(0, 128, 0)))
         self.context.DrawArc(int(x), int(y + 5), int(x), int(y - 5), int(x), int(y))
         self.context.DrawRectangle(int(x), int(y - 1), int(w), 3)
 
     def DrawNowVertical(self, x, y, h):
+        """
+        Dessine Maintenant verticalement.
+
+        Args :
+            x :
+            y :
+            h :
+
+        Returns :
+
+        """
+        log.debug(f"wxBaseDrawer.DrawNowVertical : Dessine maintenant verticalement.")
+        # Règle le pinceau et le crayon sur la couleur verte.
         self.context.SetBrush(wx.Brush(wx.Colour(0, 128, 0)))
         self.context.SetPen(wx.Pen(wx.Colour(0, 128, 0)))
+        # Dessine un arc de cercle et un rectangle
         self.context.DrawArc(int(x - 5), int(y), int(x + 5), int(y), int(x), int(y))
         self.context.DrawRectangle(int(x - 1), int(y), 3, int(h))
 
@@ -1014,6 +1084,21 @@ class wxFancyDrawer(
     use_gc = True
 
     def DrawHours(self, x, y, w, h, direction, includeText=True):
+        """
+        Dessine des heures.
+
+        Args:
+            x:
+            y:
+            w:
+            h:
+            direction:
+            includeText:
+
+        Returns:
+
+        """
+        log.debug(f"wxFancyDrawer.DrawHours : Dessine des heures.")
         if direction == wxSCHEDULER_VERTICAL:
             brush = self.context.CreateLinearGradientBrush(
                 x,
@@ -1138,6 +1223,17 @@ class wxFancyDrawer(
         self.context.FillPath(path)
 
     def DrawNowVertical(self, x, y, h):
+        """
+        Dessine maintenant verticalement en vert.
+        Args:
+            x:
+            y:
+            h:
+
+        Returns:
+
+        """
+        log.debug(f"wxFancyDrawer.DrawNowVertical : Dessine maintenant verticalement en vert.")
         brush = self.context.CreateLinearGradientBrush(
             x - 1,
             y + 4,

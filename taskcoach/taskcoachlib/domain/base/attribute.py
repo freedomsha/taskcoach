@@ -78,7 +78,8 @@ class Attribute(object):
         # # Accéder à la fonction sous-jacente
         # print(m.__func__)
 
-        # Dans cet exemple, m.__func__ renvoie la fonction définie dans la classe MyClass. Cela permet d'accéder à la définition de la méthode indépendamment de l'instance.
+        # Dans cet exemple, m.__func__ renvoie la fonction définie dans la classe MyClass.
+        # Cela permet d'accéder à la définition de la méthode indépendamment de l'instance.
         # Utilité :
         #     Permet de récupérer la fonction originale pour des opérations d'introspection ou de manipulation.
         #     Utile dans la programmation avancée, notamment pour la création de décorateurs ou pour la réflexion sur les méthodes.
@@ -229,7 +230,7 @@ class SetAttribute(object):
         
     def get(self):
         """
-        Obtenir une copie de l'ensemble actuel de valeurs.
+        Obtenir une copie de l'ensemble actuel des valeurs.
 
         Returns :
             Un nouvel ensemble contenant les valeurs actuelles de l'attribut.

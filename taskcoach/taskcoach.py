@@ -61,6 +61,10 @@ log = logging.getLogger(__name__)
 #     Les formateurs (formatters)
 #       spécifient la structure de l'entrée de journal dans la sortie finale.
 
+# TODO : Faire un tri selon les dossiers name importants (application, changes, command,
+#  config, domain, filesystem, gui, help, i18n, iphone, mailer, meta, notify, patterns,
+#  persistence, powermgt, speak, syncml, thirdparty, tools, widgets, workaround)
+
 logging.basicConfig(
     level=logging.DEBUG,  # DEBUG, Tu peux passer à INFO ou WARNING en production
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',

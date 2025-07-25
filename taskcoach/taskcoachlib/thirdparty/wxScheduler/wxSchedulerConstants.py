@@ -20,6 +20,12 @@ wxSCHEDULER_WEEKSTART_SUNDAY = 0
 
 # Not actually a constant :)
 def SCHEDULER_BACKGROUND_BRUSH():
+    """
+    Définit et retourne la couleur de fond du pinceau.
+
+    Returns:
+        (wx.colour) : La couleur de fond du pinceau.
+    """
     _bg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
     _r, _g, _b = _bg.Red(), _bg.Green(), _bg.Blue()
     return wx.Colour(max(0, _r - 15), max(0, _g - 15), max(0, _b - 15))

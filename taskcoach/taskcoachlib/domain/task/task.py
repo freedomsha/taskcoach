@@ -270,7 +270,7 @@ class Task(
         L'idée est que le dictionnaire state est passé de haut en bas (de Task à Object), et chaque __setstate__ de chaque classe parent ne devrait pop et manipuler que les attributs qui sont strictement sous sa responsabilité. Le subject est une responsabilité de Object.
 
         """
-        log.debug(f"Object.__setstate__() - Entrée, state dict: {state}")
+        # log.debug(f"Object.__setstate__() - Entrée, state dict: {state}")
         super().__setstate__(state, event=event)
         self.setPlannedStartDateTime(state["plannedStartDateTime"])
         self.setActualStartDateTime(state["actualStartDateTime"])
@@ -298,9 +298,9 @@ class Task(
             log.debug("Task.__setstate__() - subject non défini.")
 
     def __getstate__(self):
-        log.debug("Task.__getstate : utilise la méthode super.")
+        # log.debug("Task.__getstate : utilise la méthode super.")
         state = super().__getstate__()
-        log.debug(f"Task.__getstate__() avant update : {state}")  # Ajoute ce print
+        # log.debug(f"Task.__getstate__() avant update : {state}")
         state.update(dict(dueDateTime=self.__dueDateTime,
                           plannedStartDateTime=self.__plannedStartDateTime,
                           actualStartDateTime=self.__actualStartDateTime,
@@ -316,12 +316,12 @@ class Task(
                           dependencies=set(self.__dependencies),
                           shouldMarkCompletedWhenAllChildrenCompleted=self.__shouldMarkCompletedWhenAllChildrenCompleted
                           ))
-        log.debug(f"DEBUG - Task.__getstate__() renvoie : {state}")  # Ajoute ce print
+        # log.debug(f"DEBUG - Task.__getstate__() renvoie : {state}")
         return state
 
     def __getcopystate__(self):
         state = super().__getcopystate__()
-        log.debug(f"DEBUG - Task.__getcopystate__() avant update : {state}")  # Ajoute ce print
+        # log.debug(f"DEBUG - Task.__getcopystate__() avant update : {state}")
         state.update(dict(plannedStartDateTime=self.__plannedStartDateTime,
                           dueDateTime=self.__dueDateTime,
                           actualStartDateTime=self.__actualStartDateTime,
@@ -336,7 +336,7 @@ class Task(
                           ))
         # state["children"] = list(self.children())  # Assure que les enfants sont inclus
         state["children"] = [child.copy() for child in self.children()]  # Créer de nouveaux objets
-        log.debug(f"DEBUG - Task.__getcopystate__() renvoie : {state}")  # Ajoute ce print
+        # log.debug(f"DEBUG - Task.__getcopystate__() renvoie : {state}")
         return state
 
     @classmethod
@@ -441,7 +441,7 @@ class Task(
         childHasBudgetLeft = child.budgetLeft(recursive=True)
         childHasRevenue = child.revenue(recursive=True)
         childPriority = child.priority(recursive=True)
-        # Determine what changes due to the child being added or removed:
+        # Détermine les modifications dues à l'enfant ajouté ou supprimé :
         if childHasTimeSpent:
             self.sendTimeSpentChangedMessage()
         if childHasRevenue:
@@ -461,6 +461,16 @@ class Task(
 
     @patterns.eventSource
     def setSubject(self, subject, event=None):
+        """
+        Régler le sujet de la tâche.
+
+        Args:
+            subject:
+            event:
+
+        Returns:
+
+        """
         log.debug(f"Task.setSubject : utilise la méthode super pour subject={subject} pour event={event}")
         super().setSubject(subject, event=event)
         # The subject of a dependency of our prerequisites has changed, Notify:
@@ -1542,6 +1552,7 @@ class Task(
         recur = self.recurrence(recursive=True, upwards=True)
 
         currentDueDateTime = self.dueDateTime()
+        nextDueDateTime = None  # A changer si nécessaire !
         if currentDueDateTime != date.DateTime():
             basisForRecurrence = completionDateTime if recur.recurBasedOnCompletion else currentDueDateTime
             nextDueDateTime = recur(basisForRecurrence, next=False)

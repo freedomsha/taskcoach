@@ -112,7 +112,9 @@ class SearchableViewerMixin:
 
 # class FilterableViewerMixin:
 class FilterableViewerMixin(object):
-    """ A viewer that is filterable. This is a mixin class. """
+    """ A viewer that is filterable. This is a mixin class.
+    Créer une visionneuse filtrable.
+    """
 
     def __init__(self, *args, **kwargs):
         self.__filterUICommands = None

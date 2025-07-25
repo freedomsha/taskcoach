@@ -76,7 +76,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         Returns :
             menuId (int) : ID du Menu ajouté.
         """
-        # log.debug(f"BooleanSettingsCommand.addToMenu ajoute le sous-menu {self} au menu {menu} de la fenêtre {window} à la position {position}.")
+        # log.debug(f"BooleanSettingsCommand.addToMenu ajoute le sous-menu {menu} au menu {self} de la fenêtre {window} à la position {position}.")
         # print(f"tclib.gui.uicommand.setings_uicommand.py BooleanSettingCommand.addToMenu essaie d'ajouter: self =",
         #      repr(self), " au",
         #      f"menu: {menu} dans window: {window}")
@@ -112,10 +112,10 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         else:
             # Gérer le cas où menuItem est None
             # print("Erreur: menuItem est None.")
-            log.info("BooleanSettingsCommand.addToMenu: Erreur: menuItem est None.")
+            log.warning("BooleanSettingsCommand.addToMenu: Erreur: menuItem est None.")
             pass
 
-        log.debug(f"BooleanSettingsCommand.addToMenu retourne menuId={menuId}")
+        log.debug(f"BooleanSettingsCommand.addToMenu retourne le menuId={menuId}")
         return menuId
 
     def isSettingChecked(self):

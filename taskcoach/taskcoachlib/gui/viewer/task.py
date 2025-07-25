@@ -197,7 +197,7 @@ class BaseTaskViewer(
             and self.toolbar.IsShownOnScreen()
             and hasattr(wx.GetTopLevelParent(self), "AddBalloonTip")
         ):
-            wx.GetTopLevelParent(self).AddBalloonTip(
+            wx.GetTopLevelParent(self).AddBalloonTip(  # Unresolved attribute reference 'AddBalloonTip' for class 'Window'
                 self.settings,
                 "filtershiftclick",
                 self.toolbar,
@@ -309,7 +309,6 @@ class BaseTaskViewer(
     def createFilter(self, taskList):
         """
         Crée un filtre pour les tâches à visualiser.
-
 
         Crée un filtre pour exclure les tâches supprimées.
 
@@ -674,7 +673,6 @@ class RootNode(object):
 
         Returns :
             Le sujet de la tâche.
-
         """
         return ""
 
@@ -788,6 +786,7 @@ class SquareMapRootNode(RootNode):
                 #     self.__zero,
                 # )
                 s = 0
+                # s = timedelta(0)
                 for task in self.children():
                     # Patch Phoenix compatibility:
                     if hasattr(task, "_getAttrDict"):
@@ -798,7 +797,7 @@ class SquareMapRootNode(RootNode):
                             value = getattr(task, attr)
                     else:
                         value = getattr(task, attr)
-                    s += value(recursive=True)
+                    s += value(recursive=True)  # value = task._getAttrDict[attr]
                 return max(s, self.__zero)
             else:
                 return self.__zero
@@ -1384,10 +1383,29 @@ class CalendarViewer(
     mixin.SortableViewerForTasksMixin,
     BaseTaskTreeViewer,
 ):
+    """
+    Classe d'affichage des tâches sous forme de calendrier.
+
+    Hérite de :
+    - AttachmentDropTargetMixin : permet le glisser-déposer de pièces jointes,
+    - SortableViewerForTasksMixin : tri des tâches par colonnes,
+    - BaseTaskTreeViewer : base des vues arborescentes de tâches (même si ici ce n'est pas un arbre).
+
+    Cette vue permet de visualiser les tâches sur une période, avec personnalisation
+    du nombre de périodes, du style, de l'orientation, etc. L'utilisateur peut aussi
+    configurer les couleurs, l'affichage du "maintenant", et d'autres filtres.
+    """
     defaultTitle = _("Calendar")
     defaultBitmap = "calendar_icon"
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la vue calendrier avec les paramètres et préférences utilisateurs :
+        - Restaure la date de vue si enregistrée,
+        - Applique le jour de début de semaine,
+        - Configure les heures de travail et les préférences d'affichage,
+        - S'abonne aux modifications des tâches et des paramètres.
+        """
         kwargs.setdefault("settingsSection", "calendarviewer")
         kwargs["doRefresh"] = False
         super().__init__(*args, **kwargs)
@@ -1433,28 +1451,51 @@ class CalendarViewer(
         date.Scheduler().schedule_interval(self.atMidnight, days=1)
 
     def detach(self):
+        """
+        Méthode appelée lors du détachement de la vue.
+        Annule la tâche planifiée qui met à jour la vue à minuit.
+        """
         super().detach()
         date.Scheduler().unschedule(self.atMidnight)
 
     def isTreeViewer(self):
+        """
+        Indique que cette vue n'est pas une arborescence (contrairement aux autres vues héritées).
+        :return: False
+        """
         return False
 
     def onEverySecond(self, event):  # pylint: disable=W0221,W0613
+        """
+        Surcharge inactive : inutile ici car coûteuse en performances.
+        """
         pass  # Too expensive
 
     def atMidnight(self):
+        """
+        Appelée automatiquement chaque jour à minuit.
+        Met à jour la vue si elle est configurée pour afficher la date actuelle.
+        """
         if not self.settings.get(self.settingsSection(), "viewdate"):
             # User has selected the "current" Date/time; it may have
             # changed Now
             self.SetViewType(wxSCHEDULER_TODAY)
 
     def onWorkingHourChanged(self, value=None):  # pylint: disable=W0613
+        """
+        Applique les heures de travail (début et fin) à la vue calendrier.
+        Utilisé lorsque l'utilisateur modifie les paramètres.
+        """
         self.widget.SetWorkHours(
             self.settings.getint("view", "efforthourstart"),
             self.settings.getint("view", "efforthourend"),
         )
 
     def onWeekStartChanged(self, value):
+        """
+        Change le jour de début de semaine dans le calendrier (lundi ou dimanche).
+        :param value: 'monday' ou 'sunday'
+        """
         assert value in ("monday", "sunday")
         if value == "monday":
             self.widget.SetWeekStartMonday()
@@ -1462,9 +1503,15 @@ class CalendarViewer(
             self.widget.SetWeekStartSunday()
 
     def createWidget(self):
+        """
+        Crée le widget principal (vue calendrier) avec son menu contextuel.
+        Applique aussi un style de dessin personnalisé (gradient) si activé.
+        :return: instance de Calendar (widgets.Calendar)
+        """
+        log.info("CalendarViewer.createWidget : Crée le widget principal avec son menu contextuel.")
         itemPopupMenu = self.createTaskPopupMenu()
         self._popupMenus.append(itemPopupMenu)
-        widget = widgets.Calendar(
+        widget = widgets.Calendar(  # Est-il bien configuré ?
             self,
             self.presentation(),
             self.iconName,
@@ -1483,15 +1530,29 @@ class CalendarViewer(
         return widget
 
     def onChangeConfig(self):
+        """
+        Enregistre la largeur de période actuelle dans les paramètres après modification de la configuration.
+        """
         self.settings.set(
             self.settingsSection(), "periodwidth", str(self.widget.GetPeriodWidth())
         )
 
     def onEdit(self, item):
+        """
+        Ouvre la fenêtre d'édition d'une tâche.
+        :param item: tâche à éditer
+        """
         edit = uicommand.Edit(viewer=self)
         edit(item)
 
     def onCreate(self, dateTime, show=True):
+        """
+        Crée une nouvelle tâche à une date donnée.
+
+        :param dateTime: Date/heure de début planifiée.
+        :param show: Affiche la tâche après création si True.
+        :return: objet uicommand.TaskNew exécuté.
+        """
         plannedStartDateTime = dateTime
         dueDateTime = (
             dateTime.endOfDay() if dateTime == dateTime.startOfDay() else dateTime
@@ -1506,6 +1567,11 @@ class CalendarViewer(
         return create(event=None, show=show)
 
     def createModeToolBarUICommands(self):
+        """
+        Ajoute les commandes spécifiques à la vue calendrier dans la barre d’outils :
+        configuration, période précédente, aujourd’hui, période suivante.
+        :return: tuple de commandes UI.
+        """
         return super().createModeToolBarUICommands() + (
             None,
             uicommand.CalendarViewerConfigure(viewer=self),
@@ -1515,6 +1581,10 @@ class CalendarViewer(
         )
 
     def SetViewType(self, type_):
+        """
+        Définit le type de vue du calendrier (jour, semaine, mois, etc.)
+        et enregistre la date affichée dans les paramètres.
+        """
         self.widget.SetViewType(type_)
         dt = self.widget.GetDate()
         now = wx.DateTime.Today()
@@ -1532,12 +1602,26 @@ class CalendarViewer(
     # CalendarViewer is not. There is probably a better solution...
 
     def isAnyItemExpandable(self):
+        """
+        Aucun élément n'est extensible dans une vue calendrier.
+        """
         return False
 
     def isAnyItemCollapsable(self):
+        """
+        Aucun élément n'est repliable dans une vue calendrier.
+        """
         return False
 
     def reconfig(self):
+        """
+        Applique la configuration de l'utilisateur à la vue :
+        - Nombre de périodes affichées
+        - Type et orientation de la vue
+        - Affichage des tâches sans dates
+        - Affichage du moment présent
+        - Couleur de surbrillance
+        """
         self.widget.Freeze()
         try:
             self.widget.SetPeriodCount(
@@ -1571,6 +1655,10 @@ class CalendarViewer(
             self.widget.Thaw()
 
     def configure(self):
+        """
+         Affiche la boîte de dialogue de configuration de la vue calendrier.
+         Applique les changements si l'utilisateur clique sur OK.
+         """
         dialog = CalendarConfigDialog(
             self.settings,
             self.settingsSection(),
@@ -1582,6 +1670,12 @@ class CalendarViewer(
             self.reconfig()
 
     def GetPrintout(self, settings):
+        """
+        Retourne un objet imprimable basé sur le contenu affiché du calendrier.
+
+        :param settings: paramètres d'impression
+        :return: objet wx.Printout
+        """
         return self.widget.GetPrintout(settings)
 
 
@@ -1655,7 +1749,7 @@ class TaskViewer(
 
         """
         if hasattr(wx.GetTopLevelParent(self), "AddBalloonTip"):
-            wx.GetTopLevelParent(self).AddBalloonTip(
+            wx.GetTopLevelParent(self).AddBalloonTip(  # Unresolved attribute reference 'AddBalloonTip' for class 'Window'
                 self.settings,
                 "manualordering",
                 self.widget,
@@ -1916,6 +2010,9 @@ class TaskViewer(
                 [task.Task.expansionChangedEventType()],
             ),
         ]:
+            # renderCallback = getattr(
+            #     self, "render%s" % (name[0].capitalize() + name[1:])
+            # )
             renderCallback = getattr(
                 self, "render%s" % (name[0].capitalize() + name[1:])
             )
@@ -2041,6 +2138,9 @@ class TaskViewer(
             ),
         ]:
             if (name in dependsOnEffortFeature) or name not in dependsOnEffortFeature:
+                # renderCallback = getattr(
+                #     self, "render%s" % (name[0].capitalize() + name[1:])
+                # )
                 renderCallback = getattr(
                     self, "render%s" % (name[0].capitalize() + name[1:])
                 )
@@ -2547,7 +2647,7 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
             columnPopupMenu,
             **self.widgetCreationKeywordArguments()
         )
-        widget.AssignImageList(imageList)  # pylint: disable=E1101
+        widget.AssignImageList(imageList)  # pylint: disable=E1101  Parameter 'which' unfilled
         # widget.AssignImageList(imageList, wx.IMAGE_LIST_NORMAL)  # pylint: disable=E1101
         return widget
 
@@ -2682,7 +2782,6 @@ try:
 except ImportError:
     pass
 else:
-
     class TaskInterdepsViewer(BaseTaskViewer):
         # defaultTitle = _("Tasks Interdependencies")
         defaultTitle = "Tasks Interdependencies"
