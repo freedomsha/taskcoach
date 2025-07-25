@@ -223,7 +223,7 @@ class wxApp(wx.App):
         # La classe wx.App est initialisée différemment des classes Python classiques.
         # Ce n'est pas la méthode __init__() qui doit être implémentée,
         # mais une méthode OnInit() sans paramètre (sauf le mot clé self qui lui permet de s'auto-référencer).
-        """Fonction-méthode qui gère la sortie standard renvoie true sur l'initialisation.
+        """Fonction-méthode wxPython qui gère la sortie standard renvoie true sur l'initialisation.
 
         Initialise l'application et gère la redirection de sortie standard sur des plates-formes spécifiques.
 
@@ -692,7 +692,9 @@ class Application(object, metaclass=patterns.Singleton):
         # Désignation de la fenêtre en tant que principale par la méthode SetTopWindow() spécifique à la classe wx.App
         # ligne qui devrait être en 3e position dans OnInit:
         log.info("Application.init: Fenêtre principale mise en avant.")
+        # Notre classe dérivée de WXApp normale, comme d'habitude (même avec wx.lib.agw.aui).
         self.__wx_app.SetTopWindow(self.mainwindow)
+        # Ensuite : frame.Show()
 
         self.__init_spell_checking()  # Attention changements
         if not self.settings.getboolean("file", "inifileloaded"):
@@ -708,7 +710,9 @@ class Application(object, metaclass=patterns.Singleton):
         # self.__register_signal_handlers()  # Est-elle bien implémentée ?
         self.__create_mutex()
         self.__create_task_bar_icon()
+        # wxPython ferme l'écran splash.
         wx.CallAfter(self.__close_splash, splash)
+        # wxPython affiche un écran Tips.
         wx.CallAfter(self.__show_tips)
         # except Exception as e:
         #     print(
@@ -720,6 +724,7 @@ class Application(object, metaclass=patterns.Singleton):
         #         str(e),
         #     )
         #     return False
+        # self.mainwindow.Show()  # Ré-affiche la fenêtre principale pour éviter de voir les scintillements ! Ne fonctionne pas !
         log.info("Application.init : Composants de l'application initialisés. ✅Terminé")
 
     def __init_config(self, load_settings):
@@ -1116,7 +1121,7 @@ class Application(object, metaclass=patterns.Singleton):
         # le process Python (car tous les threads non-daemon doivent être morts pour cela).
         # Comme tout nettoyage/sauvegarde a déjà été fait à ce stade, il n'y a pas de risque de fuite.
         # Voir : https://github.com/freedomsha/taskcoach/issues/<ton-issue> pour le détail du diagnostic.
-        os._exit(0)  # Attention, c'est brutal !
+        os._exit(0)  # TODO : Attention, c'est brutal ! Revenir à sys.exit() dès que possible.
 
         # Si ça ferme tout instantanément,
         # c’est bien un problème de threads/boucles non stoppés proprement dans wx/Twisted.
