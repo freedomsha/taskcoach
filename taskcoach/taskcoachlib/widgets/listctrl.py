@@ -28,6 +28,10 @@ log = logging.getLogger(__name__)
 
 class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                       itemctrl.CtrlWithToolTipMixin, wx.ListCtrl):
+    """
+    Widget utilisé dans gui.viewer.attachment pour pour afficher les pièces jointes
+    dans gui.viewer.effort.EffortViewer pour créer le widget avec createWidget.
+    """
     def __init__(self, parent, columns, selectCommand=None, editCommand=None,
                  itemPopupMenu=None, columnPopupMenu=None, resizeableColumn=0,
                  *args, **kwargs):
