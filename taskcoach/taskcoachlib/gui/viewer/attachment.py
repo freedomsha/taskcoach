@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import wx
 
-from taskcoachlib import command, widgets
+from taskcoachlib import command, widgets  # besoin de Column, VirtualListCtrl, AssignImageList, SetColumnWidth
 from taskcoachlib.domain import attachment
 # from taskcoachlib.domain.attachment import attachment, sorter
 # from taskcoachlib.domain.attachment import *
