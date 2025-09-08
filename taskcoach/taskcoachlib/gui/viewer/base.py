@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import wx
 from taskcoachlib.widgets.tooltip import ToolTipMixin
-from taskcoachlib import patterns, widgets, command, render
+from taskcoachlib import patterns, widgets, command, render  # base à besoin des widgets .tooltip.ToolTipMixin, SetFocus, .itemctrl.Column,
 from taskcoachlib.i18n import _
 from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui import toolbar, artprovider
