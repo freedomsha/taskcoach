@@ -729,14 +729,15 @@ class Application(object, metaclass=patterns.Singleton):
             load_settings (bool) : Charger les paramètres de l'application.
         """
         try:
-            from taskcoachlib import config
+            # from taskcoachlib import config  # Settings est importé au début
 
             ini_file = self._options.inifile if self._options else None
             # est-ce qu'il existe un fichier inifile ? si non load_settings is False !
             # AttributeError: 'Values' object has no attribute 'inifile'
             # AttributeError: 'Namespace' object has no attribute 'inifile'
             # pylint: disable=W0201
-            self.settings = config.Settings(load_settings, ini_file)  #
+            # self.settings = config.Settings(load_settings, ini_file)  #
+            self.settings = Settings(load_settings, ini_file)  #
             # TODO : ini_file is None !
         except IOError or Exception as e:
             # print(
