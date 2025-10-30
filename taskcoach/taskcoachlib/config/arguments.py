@@ -110,6 +110,16 @@ class ApplicationArgumentParser:
             action="store",
             help="Use the specified POFILE for translation of the GUI.",
         )
+        self.parser.add_argument(
+            "-g",
+            "--gui",
+            action="store",
+            nargs=1,
+            default="tk",
+            choices=["tk", "wx"],
+            dest="gui_name",
+            help="Use the specified GUI_NAME for choose the GUI to use(wx or tk)."
+        )
 
     def parse_args(self, args: List[str] = None) -> argparse.Namespace:
         # return self.parser.parse_args(args)
@@ -117,3 +127,18 @@ class ApplicationArgumentParser:
 
     def OptionGroup(self, *args, **kwargs):
         return self.parser.add_argument_group(*args, **kwargs)
+
+
+# Valeur globale utilisée dans tout TaskCoach
+CURRENT_GUI = None
+
+
+def set_gui(gui_name: str):
+    """Définit le nom de l'interface graphique courante ('tk' ou 'wx')."""
+    global CURRENT_GUI
+    CURRENT_GUI = gui_name
+
+
+def get_gui() -> str:
+    """Renvoie le nom de l'interface graphique courante ('tk' ou 'wx')."""
+    return CURRENT_GUI or "wx"  # Valeur par défaut pour compatibilité
