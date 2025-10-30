@@ -16,7 +16,8 @@
 #    along with smartdatetimectrl.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Ce module `smartdatetimectrl.py` contient diverses classes pour la gestion des entrées de date et d'heure dans l'interface utilisateur à l'aide de `wxPython`.
+Ce module `smartdatetimectrl.py` contient diverses classes pour la gestion des
+entrées de date et d'heure dans l'interface utilisateur à l'aide de `wxPython`.
 
 Fonctions principales :
 - `defaultEncodingName()` : Renvoie l'encodage du système.
@@ -1956,11 +1957,14 @@ class _PopupWindow(wx.Dialog):
             self, style=wx.WANTS_CHARS if "__WXMSW__" in wx.PlatformInfo else 0
         )
 
-        wx.EVT_ACTIVATE(self, self.OnActivate)
+        # wx.EVT_ACTIVATE(self, self.OnActivate)
+        self.Bind(wx.EVT_ACTIVATE, self.OnActivate)
         if "__WXMAC__" in wx.PlatformInfo:
-            wx.EVT_CHAR(self, self.OnChar)
+            # wx.EVT_CHAR(self, self.OnChar)
+            self.Bind(wx.EVT_CHAR, self.OnChar)
         else:
-            wx.EVT_CHAR(self.__interior, self.OnChar)
+            # wx.EVT_CHAR(self.__interior, self.OnChar)
+            self.__interior.Bind(wx.EVT_CHAR, self.OnChar)
 
         self.Fill(self.__interior)  # Unresolved attribute reference 'Fill' for class '_PopupWindow'
         # valable pour panel, layout et sizers.
@@ -2021,7 +2025,7 @@ class _RelativeChoicePopup(_PopupWindow):
         super().__init__(*args, **kwargs)
 
     def Fill(self, interior):
-        sizer = wx.FlexGridSizer(0, 2)
+        sizer = wx.FlexGridSizer(0, 0, 2)
         sizer.AddGrowableCol(0)
         interior.SetSizer(sizer)
         self.__sizer = sizer
@@ -2163,6 +2167,7 @@ class _RelativeChoicePopup(_PopupWindow):
     def OnChoose(self, event):
         for delta, idSpan, idDel, btn in self.__lines:
             if idSpan == event.get_id():
+                # if idSpan == event.GetId():
                 self.GetParent().SetDateTime(self.__start + delta, notify=True)
                 self.Dismiss()
                 break
@@ -2630,6 +2635,7 @@ class SmartDateTimeCtrl(wx.Panel):
                 wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_BUTTON, (16, 16)),
             )
             wx.EVT_BUTTON(self.__relButton, wx.ID_ANY, self.__OnPopupRelativeChoices)
+            # self.__relButton.Bind(wx.EVT_BUTTON, self.__OnPopupRelativeChoices, wx.ID_ANY)
             sizer.Add(self.__relButton, 0, wx.ALL | wx.ALIGN_CENTRE, 1)
             self.__relButton.Enable(False)
         else:
@@ -2834,8 +2840,10 @@ class DateTimeSpanCtrl(wx.EvtHandler):
         self.__ctrlEnd.EnableChoices()
         self.__ctrlEnd.SetRelativeChoicesStart(self.__ctrlStart.GetDateTime())
 
-        EVT_DATETIME_CHANGE(self.__ctrlStart, self.OnStartChange)
-        EVT_DATETIME_CHANGE(self.__ctrlEnd, self.OnEndChange)
+        # EVT_DATETIME_CHANGE(self.__ctrlStart, self.OnStartChange)
+        self.__ctrlStart.Bind(EVT_DATETIME_CHANGE, self.OnStartChange)
+        # EVT_DATETIME_CHANGE(self.__ctrlEnd, self.OnEndChange)
+        self.__ctrlEnd.Bind(EVT_DATETIME_CHANGE, self.OnEndChange)
 
         w1 = self.__ctrlStart.GetLabelWidth()
         w2 = self.__ctrlEnd.GetLabelWidth()
@@ -2941,14 +2949,16 @@ if __name__ == "__main__":
             self.SetSizer(sz)
 
             spanCtrl = DateTimeSpanCtrl(pnl1, pnl2, minSpan=datetime.timedelta(hours=1))
-            EVT_DATETIMESPAN_CHANGE(spanCtrl, self.OnChange)
+            # EVT_DATETIMESPAN_CHANGE(spanCtrl, self.OnChange)
+            spanCtrl.Bind(EVT_DATETIMESPAN_CHANGE, self.OnChange)
 
             cfg = wx.Config("SmartDateTimeCtrlSample")  # TODO : qu'est devenu wx.Config ? Deprecatted ! Disparu.
-            # à remplacer par  import json et cerberus.Validator
+            # à remplacer par import json et cerberus.Validator
             # ou par la bibliothèque standard configparser
             if cfg.HasEntry("Choices"):
                 pnl2.LoadChoices(cfg.Read("Choices"))
-            EVT_TIME_CHOICES_CHANGE(pnl2, self.OnChoicesChanged)
+            # EVT_TIME_CHOICES_CHANGE(pnl2, self.OnChoicesChanged)
+            pnl2.Bind(EVT_TIME_CHOICES_CHANGE, self.OnChoicesChanged)
 
             # wx.EVT_CLOSE(self, self.OnClose)
             self.Bind(wx.EVT_CLOSE, self.OnClose)
