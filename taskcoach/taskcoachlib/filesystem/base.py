@@ -35,12 +35,14 @@ class NotifierBase(object):
     """
 
     def __init__(self):
-        super(NotifierBase, self).__init__()
+        # super(NotifierBase, self).__init__()
+        super().__init__()
 
         self._filename = None
         self._path = None
         self._name = None
         self.stamp = None
+        # Enregistrer __stopWhenExit comme fonction à exécuter lors d'un arrêt normal du programme.
         atexit.register(self.__stopWhenExit)
 
     def __stopWhenExit(self):
