@@ -49,6 +49,7 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 # from builtins import range
 # from builtins import object
 # from past.utils import old_div
+import logging
 import wx
 from wx.lib.agw import hypertreelist
 # from wx.lib.agw.hypertreelist import HyperTreeList
@@ -60,6 +61,8 @@ from wx.lib.agw import hypertreelist
 #    from ..thirdparty.agw import hypertreelist
 
 from taskcoachlib import operating_system
+
+log = logging.getLogger(__name__)
 
 
 class AutoColumnWidthMixin(object):
@@ -119,10 +122,12 @@ class AutoColumnWidthMixin(object):
             resizeableColumnMinWidth (int) : Largeur minimale de la colonne
                                              redimensionnable (par défaut : 50).
         """
+        log.debug("AutoColumnWidthMixin.__init__ : initialisation du Mixin pour ajouter un redimensionnement automatique des colonnes dans un contrôle.")
         self.__is_auto_resizing = False
         self.ResizeColumn = kwargs.pop("resizeableColumn", -1)
         self.ResizeColumnMinWidth = kwargs.pop("resizeableColumnMinWidth", 50)
         super().__init__(*args, **kwargs)
+        log.debug("AutoColumnWidthMixin initialisé !")
 
     def SetResizeColumn(self, column):
         """
@@ -133,7 +138,8 @@ class AutoColumnWidthMixin(object):
         """
         self.ResizeColumn = column
 
-    def ToggleAutoResizing(self, on):
+    # def ToggleAutoResizing(self, on):
+    def ToggleAutoResizing(self, on=True):
         """
         Active ou désactive le redimensionnement automatique des colonnes.
 
