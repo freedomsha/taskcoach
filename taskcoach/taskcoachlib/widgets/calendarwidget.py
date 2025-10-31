@@ -63,7 +63,7 @@ from taskcoachlib.widgets import draganddrop  # Module pour la gestion du glisse
 from taskcoachlib import command, render  # Modules pour les commandes et le rendu.
 from . import tooltip  # Module pour les info-bulles.
 
-log = logging.getLogger(__name__) # Initialise le logger pour ce module.
+log = logging.getLogger(__name__)  # Initialise le logger pour ce module.
 
 
 class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
@@ -134,10 +134,14 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         self.taskList = taskList
         self.RefreshAllItems(0)
 
-        EVT_SCHEDULE_ACTIVATED(self, self.OnActivation)
-        EVT_SCHEDULE_RIGHT_CLICK(self, self.OnPopup)
-        EVT_SCHEDULE_DCLICK(self, self.OnEdit)
-        EVT_PERIODWIDTH_CHANGED(self, self.OnChangeConfig)
+        # EVT_SCHEDULE_ACTIVATED(self, self.OnActivation)
+        self.Bind(EVT_SCHEDULE_ACTIVATED, self.OnActivation)
+        # EVT_SCHEDULE_RIGHT_CLICK(self, self.OnPopup)
+        self.Bind(EVT_SCHEDULE_RIGHT_CLICK, self.OnPopup)
+        # EVT_SCHEDULE_DCLICK(self, self.OnEdit)
+        self.Bind(EVT_SCHEDULE_DCLICK, self.OnEdit)
+        # EVT_PERIODWIDTH_CHANGED(self, self.OnChangeConfig)
+        self.Bind(EVT_PERIODWIDTH_CHANGED, self.OnChangeConfig)
 
         wxTimeFormat.SetFormatFunction(self.__formatTime)
         # wxTimeFormat.SetFormatFunction(self, self.__formatTime)
@@ -546,6 +550,7 @@ class Calendar(wx.Panel):
         """
         log.info(f"Calendar.RefreshAllItems : Rafraîchit entièrement le contenu du calendrier avec {count} éléments.")
         self._content.RefreshAllItems(count)
+        log.info(f"Calendar.RefreshAllItems : Les {count} éléments du calendrier ont été rafraîchit !")
 
     def RefreshItems(self, *args):
         """
@@ -609,6 +614,9 @@ class Calendar(wx.Panel):
             d = content._getAttrDict()
             if name in d:
                 return d[name]
+        #
+        # if hasattr(self._content, "_getAttrDict") and (name in self._content._getAttrDict()):
+        #         return self._content._getAttrDict()[name]
         return getattr(content, name)
 
 
@@ -711,7 +719,7 @@ class TaskSchedule(wxSchedule):
                                            newValue=self.tcDateTime(end)).do()
 
     def Offset(self, ts):
-        kwargs = dict()
+        # kwargs = dict()
         """
         Déplace la tâche dans le temps d'une durée spécifiée.
 
@@ -722,6 +730,7 @@ class TaskSchedule(wxSchedule):
         Args :
             ts (wx.TimeSpan) : Le décalage temporel à appliquer.
         """
+        kwargs = dict()  # Cette ligne n'est pas utilisée.
 
         # Si la tâche a une date de début planifiée.
         if self.task.plannedStartDateTime() != date.DateTime():
