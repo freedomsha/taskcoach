@@ -18,6 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Ce fichier définit la vue des pièces jointes (AttachmentViewer).
 """
 
 import os
@@ -123,6 +125,8 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
         self._columns = self._createColumns()
+
+        # Création du Treeview
         widget = widgets.VirtualListCtrl(self, self.columns(), self.onSelect,
                                          uicommand.Edit(viewer=self),
                                          itemPopupMenu, columnPopupMenu,
