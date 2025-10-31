@@ -31,7 +31,10 @@ class BalloonTipManager(balloontip.BalloonTipManager):
             #                      bitmap=wx.ArtProvider.getBitmap('lamp_icon', wx.ART_MENU, (16, 16)),
             #                      getRect=get_rect, name=name, settings=settings)
             # Unresolved attribute reference 'getBitmap' for class 'ArtProvider'
-            super().AddBalloonTip(settings=settings, name=name, target=target, message=message, title=title,
+            # super().AddBalloonTip(settings=settings, name=name, target=target, message=message, title=title,
+            #                       bitmap=wx.ArtProvider.GetBitmap("lamp_icon", wx.ART_MENU, (16, 16)),
+            #                       getRect=getRect)
+            super().AddBalloonTip(target=target, message=message, title=title,
                                   bitmap=wx.ArtProvider.GetBitmap("lamp_icon", wx.ART_MENU, (16, 16)),
                                   getRect=getRect)
 
