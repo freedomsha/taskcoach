@@ -595,7 +595,7 @@ defaults = {
         "margin_bottom": "0",
         "margin_right": "0",
         "paper_id": "0",
-        "orientation": str(wx.PORTRAIT),
+        "orientation": str(wx.PORTRAIT),  # TODO : A changer pour le rendre compatible tk !
     },
     "export": {
         "html_selectiononly": "False",
