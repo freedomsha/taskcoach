@@ -96,7 +96,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         log.debug(f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
         patterns.Observer.__init__(self)
         log.debug(f"Viewer : parent={parent.__class__.__name__}")
-        super().__init__(parent, -1)
+        super().__init__(parent, -1)  # Pourquoi -1 ? Pour définir l'Id automatiquement.
         # new_id = wx.NewIdRef().GetId()
         # new_id = wx.ID_ANY
         # super().__init__(parent, new_id)
@@ -119,7 +119,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.__selectingAllItems = False
         # Menus contextuels que nous devons détruire avant de fermer le visualiseur pour empêcher
         # les fuites de mémoire :
-        self._popupMenus = []
+        self._popupMenus = []  # Menus contextuels
         # Que présentons-nous:
         self.__presentation = self.createSorter(
             self.createFilter(self.domainObjectsToView())
@@ -156,7 +156,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         #     Mais la cause sous-jacente est bien self.observable() étant None.
         # Le widget utilisé pour présenter la présentation:
         self.widget = self.createWidget()
-        # log.error("VIEWER : Ici, s'arrête après cela ? :")
+        # log.error(f"VIEWER : Ici, s'arrête après cela ? : {self.widget} présente la présentation.")
         self.widget.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
         )
@@ -180,9 +180,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
                 settings.getboolean("view", "descriptionpopups")
             )
 
+        # self.refresh()
         log.debug("Viewer : Appel de CallAfter.")
         wx.CallAfter(self.__DisplayBalloon)
         log.debug("Viewer : CallAfter passé avec succès.")
+        log.debug(f"Viewer.__init__ : La nouvelle visionneuse self={self.__class__.__name__} est initialisée !")
 
     def __DisplayBalloon(self):
         """Affiche une info-bulle pour informer l'utilisateur que la barre d'outils est personnalisable."""
@@ -329,8 +331,13 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.parent.manager.Update()  # L'affichage
 
     def initLayout(self):
-        """Initialise la mise en page de la visionneuse."""
-        log.debug("Viewer.initLayout : Initialisation de la mise en page de la visionneuse.")
+        """
+        Initialise la mise en page de la visionneuse.
+
+        !!!TRES IMPORTANTE !!!
+        """
+
+        log.debug(f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}.")
         self._sizer = wx.BoxSizer(wx.VERTICAL)  # pylint: disable=W0201
         # log.debug(f"Viewer.initLayout : _sizer de {self} créé: {self._sizer}")
         self._sizer.Add(self.toolbar, flag=wx.EXPAND)
@@ -338,7 +345,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self._sizer.Add(self.widget, proportion=1, flag=wx.EXPAND)
         # log.debug(f"Viewer.initLayout : widget ajoutée, widget: {self.widget}, taille: {self.widget.GetSize()}")
         self.SetSizerAndFit(self._sizer)
-        log.debug(f"Viewer.initLayout : initLayout terminé, taille: {self.GetSize()}")
+        log.debug(f"Viewer.initLayout : initLayout de {self.__class__.__name__} terminé, taille: {self.GetSize()}")
 
     def createWidget(self, *args):
         """Crée le widget utilisé pour afficher les objets. À implémenter dans les sous-classes.
@@ -438,6 +445,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             self.selectNextItemsAfterRemoval(list(event.values()))
         self.updateSelection(sendViewerStatusEvent=False)
         self.sendViewerStatusEvent()
+        # self.refresh()  # TODO : A vérifier si nécessaire !
 
     def selectNextItemsAfterRemoval(self, removedItems):
         raise NotImplementedError
@@ -461,6 +469,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         #     pass
 
     def updateSelection(self, sendViewerStatusEvent=True):
+        """Met à jour la sélection actuelle."""
         newSelection = self.widget.curselection()
         if newSelection != self.__curselection:
             self.__curselection = newSelection
@@ -995,6 +1004,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         log.info(f"TreeViewer : Liaison des événements de collapse.")
         # self.widget.bind(wx.EVT_TREE_ITEM_COLLAPSED, self.onItemCollapsed)
         self.widget.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.onItemCollapsed)
+        log.debug("TreeViewer : Initialisé !")
 
     def onItemExpanded(self, event):
         """Gère l'événement d'expansion d'un élément."""
@@ -1029,7 +1039,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         # all items, we have to do the bookkeeping ourselves:
         for item in self.visibleItems():
             item.expand(True, context=self.settingsSection(), notify=False)
-        self.refresh()
+        # self.refresh()
 
     def collapseAll(self):
         """Réduit tous les éléments de manière récursive."""
@@ -1037,7 +1047,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         # all items, we have to do the bookkeeping ourselves:
         for item in self.visibleItems():
             item.expand(False, context=self.settingsSection(), notify=False)
-        self.refresh()
+        # self.refresh()
 
     def isAnyItemExpandable(self):
         """Vérifie si un élément est expansible."""
@@ -1067,6 +1077,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
             self.__expandItemRecursively(item)
         self.refresh()
         super().select(items)
+        # self.refresh()
 
     def __expandItemRecursively(self, item):
         # def __expandItemRecursively(self, item: object):
@@ -1080,6 +1091,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         if parent:
             parent.expand(True, context=self.settingsSection(), notify=False)
             self.__expandItemRecursively(parent)
+        # self.refresh()
 
     def selectNextItemsAfterRemoval(self, removedItems):
         # def selectNextItemsAfterRemoval(self, removedItems: list):
@@ -1284,6 +1296,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         self.__initDone = True
         # refresh permet d'afficher les listes des tâches et catégories dans les colonnes.
         self.refresh()
+        log.debug("ViewerWithColumns initialisé !")
 
     def hasHideableColumns(self):
         """
@@ -1346,6 +1359,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         if self.hasOrderingColumn():
             self.widget.SetResizeColumn(1)
             self.widget.SetMainColumn(1)
+        # self.refresh()
 
     def initColumn(self, column):
         """
@@ -1367,6 +1381,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             log.debug(f"ViewerWithColumns.initColumn : ajoute la colonne {type(column).__name__} aux colonnes visibles : {self.__visibleColumns}")
             self.__visibleColumns.append(column)
             self.__startObserving(column.eventTypes())
+        # self.refresh()
 
     def showColumnByName(self, columnName, show=True):
         """
@@ -1384,6 +1399,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
                 ):
                     self.showColumn(column, show)
                 break
+        # self.refresh()
 
     def showColumn(self, column, show=True, refresh=True):
         """
@@ -1426,6 +1442,7 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         """
         column = self.visibleColumns()[visibleColumnIndex]
         self.showColumn(column, show=False)
+        # self.refresh()
 
     def columns(self):
         # def columns(self) -> list:
