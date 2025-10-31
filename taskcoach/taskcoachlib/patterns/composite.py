@@ -134,7 +134,7 @@ class Composite(object):
         """
         self.__parent = None if parent is None else weakref.ref(parent)
 
-    def children(self, recursive=False):
+    def children(self, recursive=False) -> list | None:
         """
         Récupère les enfants du composite.
 
