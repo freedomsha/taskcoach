@@ -369,9 +369,9 @@ class SubjectPage(Page):
 
     def SetFocus(self):
         """
-    Sets focus to the page, but avoids selecting the text control on GTK platforms
-    to prevent overriding the X selection.
-    """
+        Sets focus to the page, but avoids selecting the text control on GTK platforms
+        to prevent overriding the X selection.
+        """
         # Skip this on GTK because it selects the control's text, which
         # overrides the X selection. Simply commenting out the SetFocus() in
         # __load_perspective is not enough because the aui notebook calls this
@@ -526,9 +526,13 @@ class SubjectPage(Page):
         date_text = render.dateTime(range(min_date, max_date))
 
     def addCreationDateTimeEntry(self):
-        """Cette méthode ajoute des étiquettes affichant les dates de création des tâches sélectionnées.
-Elles calculent les dates minimale et maximale pour les tâches multiples et affichent un intervalle si nécessaire.
-Elles s'abonnent à des événements pour mettre à jour l'affichage de la date de modification lorsque celle-ci change."""
+        """Cette méthode ajoute des étiquettes affichant les dates de création
+        des tâches sélectionnées.
+        Elles calculent les dates minimale et maximale pour les tâches multiples
+        et affichent un intervalle si nécessaire.
+        Elles s'abonnent à des événements pour mettre à jour l'affichage
+        de la date de modification lorsque celle-ci change.
+        """
         creation_datetimes = [item.creationDateTime() for item in self.items]
         min_creation_datetime = min(creation_datetimes)
         max_creation_datetime = max(creation_datetimes)
@@ -568,7 +572,8 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
                 )
 
     def onAttributeChanged(self, newValue, sender):
-        """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change.
+        """Ces méthodes sont des callbacks appelés lorsque la date de modification
+        d'une tâche change.
         Elles mettent à jour le texte de l'étiquette correspondante.
         """
         self._modificationTextEntry.SetLabel(self.__modification_text())
@@ -592,7 +597,8 @@ Elles s'abonnent à des événements pour mettre à jour l'affichage de la date 
         patterns.Publisher().removeObserver(self.onAttributeChanged_Deprecated)
 
     def entries(self):
-        """Cette méthode retourne un dictionnaire contenant des références vers les contrôles de la page,
+        """Cette méthode retourne un dictionnaire contenant des références
+        vers les contrôles de la page,
         utilisé probablement pour la navigation ou d'autres fonctionnalités.
         """
         return dict(
@@ -835,8 +841,9 @@ class AttachmentSubjectPage(SubjectPage):
         self.addEntry(_("Location"), panel, flags=[None, wx.ALL | wx.EXPAND])
 
     def onSelectLocation(self, event):  # pylint: disable=W0613
-        """Permet à l'utilisateur de sélectionner un fichier à l'aide d'un sélecteur de pièces jointes.
-         Met à jour le champ d'emplacement et le sujet en conséquence."""
+        """Permet à l'utilisateur de sélectionner un fichier à l'aide d'un
+        sélecteur de pièces jointes.
+        Met à jour le champ d'emplacement et le sujet en conséquence."""
         base_path = self._settings.get("file", "lastattachmentpath")
         if not base_path:
             base_path = os.getcwd()
@@ -864,6 +871,8 @@ class TaskAppearancePage(Page):
 
     Cette page permet de modifier des éléments visuels liés aux tâches, comme la couleur,
     la mise en forme, ou d'autres attributs visuels.
+
+    Objectif : Gérer l'apparence des tâches (couleur, police, icône).
 
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition de l'apparence.
@@ -1468,7 +1477,6 @@ class PageWithViewer(Page):
         # self.addEntries()  # ? self.addEntries() ne doit être appelé qu'une seule fois par page.
         # Prérequisites, Categories le lancent avec selected
 
-
     def addEntries(self):
         # pylint: disable=W0201
         """
@@ -1562,7 +1570,8 @@ class LocalCategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
 
     def onCheck(self, event, final):
         """Ici, nous gardons une trace des éléments cochés par l'utilisateur afin que ces éléments
-        restent cochés lors de l'actualisation de la visionneuse.."""
+        restent cochés lors de l'actualisation de la visionneuse.
+        """
         if final:
             category = self.widget.GetItemPyData(
                 event.GetItem()
