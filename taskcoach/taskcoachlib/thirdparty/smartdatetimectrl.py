@@ -2025,6 +2025,7 @@ class _RelativeChoicePopup(_PopupWindow):
         super().__init__(*args, **kwargs)
 
     def Fill(self, interior):
+        # sizer = wx.FlexGridSizer(0, 2)
         sizer = wx.FlexGridSizer(0, 0, 2)
         sizer.AddGrowableCol(0)
         interior.SetSizer(sizer)
@@ -2949,16 +2950,18 @@ if __name__ == "__main__":
             self.SetSizer(sz)
 
             spanCtrl = DateTimeSpanCtrl(pnl1, pnl2, minSpan=datetime.timedelta(hours=1))
-            # EVT_DATETIMESPAN_CHANGE(spanCtrl, self.OnChange)
-            spanCtrl.Bind(EVT_DATETIMESPAN_CHANGE, self.OnChange)
+            EVT_DATETIMESPAN_CHANGE(spanCtrl, self.OnChange)
+            # TODO : a remplacer par
+            # spanCtrl.Bind(EVT_DATETIMESPAN_CHANGE, self.OnChange)
 
             cfg = wx.Config("SmartDateTimeCtrlSample")  # TODO : qu'est devenu wx.Config ? Deprecatted ! Disparu.
             # à remplacer par import json et cerberus.Validator
             # ou par la bibliothèque standard configparser
             if cfg.HasEntry("Choices"):
                 pnl2.LoadChoices(cfg.Read("Choices"))
-            # EVT_TIME_CHOICES_CHANGE(pnl2, self.OnChoicesChanged)
-            pnl2.Bind(EVT_TIME_CHOICES_CHANGE, self.OnChoicesChanged)
+            EVT_TIME_CHOICES_CHANGE(pnl2, self.OnChoicesChanged)
+            # TODO : à remplacer par
+            # pnl2.Bind(EVT_TIME_CHOICES_CHANGE, self.OnChoicesChanged)
 
             # wx.EVT_CLOSE(self, self.OnClose)
             self.Bind(wx.EVT_CLOSE, self.OnClose)
