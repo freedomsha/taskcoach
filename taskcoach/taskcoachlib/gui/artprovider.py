@@ -299,6 +299,7 @@ def init():
     # wx.ArtProvider.PushBack(ArtProvider())
 
 
+# Dictionnaire des images sélectionnables
 chooseableItemImages = dict(
     arrow_down_icon=_("Arrow down"),
     arrow_down_with_status_icon=_("Arrow down with status"),
