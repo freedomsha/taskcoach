@@ -143,12 +143,20 @@ class CalendarConfigDialog(sized_controls.SizedDialog):
         """
         log.debug(f"CalendarConfigDialog.createPeriodEntry : crée les contrôles pour configurer le type et le nombre de périodes affichées.")
         label = wx.StaticText(pane,
-                              label=_("Kind of period displayed and its count"))
-        label.SetSizerProps(valign="center")
-        panel = sized_controls.SizedPanel(pane)
-        panel.SetSizerType("horizontal")
-        self._spanCount = wx.SpinCtrl(panel, value="1", min=1)  # pylint: disable=W0201
-        self._spanCount.SetSizerProps(valign="center")
+                              label=_("Kind of period displayed and its count"))  # Label descriptif.
+        # label = wx.TextCtrl(pane,  # Ligne commentée: utilisation d'un TextCtrl au lieu de StaticText.
+        #                     value=_("Kind of period displayed and its count"))
+        # Définit les propriétés de sizer pour le label (alignement vertical au centre).
+        label.SetSizerProps(valign="center")  # Unresolved attribute reference 'SetSizerProps' for class 'StaticText'
+
+        panel = sized_controls.SizedPanel(pane)  # Crée un sous-panneau pour regrouper les contrôles de période.
+        panel.SetSizerType("horizontal")  # Le sizer du sous-panneau est horizontal.
+
+        # Crée un SpinCtrl pour le nombre de périodes, avec une valeur par défaut de 1 et un minimum de 1.
+        self._spanCount = wx.SpinCtrl(panel, value="1", min=1)  # pylint: disable=W0201 # Affectation dans __init__ est ok.
+        self._spanCount.SetSizerProps(valign="center")  # Alignement vertical au centre pour le SpinCtrl.
+
+        # Définition des options pour le type de période (traduisibles).
         periods = (_("Day(s)"), _("Week(s)"), _("Month"))
         # Crée un wx.Choice (liste déroulante) pour le type de période.
         self._spanType = wx.Choice(panel, choices=periods)  # pylint: disable=W0201 # Affectation dans __init__ est ok.
