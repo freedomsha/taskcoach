@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import str
 # from builtins import range
 # from builtins import object
+import logging
 import wx
 import urllib.request
 import urllib.parse
@@ -30,8 +31,13 @@ import urllib.error
 from taskcoachlib.mailer import thunderbird, outlook
 from taskcoachlib.i18n import _
 
+log = logging.getLogger(__name__)
+
 
 class FileDropTarget(wx.FileDropTarget):
+    """
+    Gère le lâcher de fichiers.
+    """
     def __init__(self, onDropCallback=None, onDragOverCallback=None):
         wx.FileDropTarget.__init__(self)
         self.__onDropCallback = onDropCallback
@@ -52,6 +58,9 @@ class FileDropTarget(wx.FileDropTarget):
 
 
 class TextDropTarget(wx.TextDropTarget):
+    """
+    Gère le lâcher de texte.
+    """
     def __init__(self, onDropCallback):
         wx.TextDropTarget.__init__(self)
         self.__onDropCallback = onDropCallback
@@ -61,6 +70,9 @@ class TextDropTarget(wx.TextDropTarget):
 
 
 class DropTarget(wx.DropTarget):
+    """
+    Gère le lâcher d'objet.
+    """
     def __init__(self, onDropURLCallback, onDropFileCallback,
                  onDropMailCallback, onDragOverCallback=None):
         super().__init__()
@@ -206,10 +218,11 @@ class DropTarget(wx.DropTarget):
 
 
 class TreeHelperMixin(object):
-    """ This class provides methods that are not part of the API of any
-    tree control, but are convenient to have available. """
+    """Cette classe fournit des méthodes qui ne font pas partie de l'API
+    du contrôle total de l'arbre, mais qui sont pratiques à disposer."""
 
     def __init__(self, *args, **kwargs) -> None:
+        log.debug("TreeHelperMixin.__init__ : Initialisation ! Rien à faire !")
         pass
 
     def GetItemChildren(self, item=None, recursively=False):
@@ -245,6 +258,7 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     and then call RefreshItems to let the virtual tree refresh itself. """
 
     def __init__(self, *args, **kwargs):
+        log.debug("TreeCtrlDragAndDropMixin.__init__ : initialisation du drag and drop dans l'arborescence.")
         kwargs["style"] = (
             kwargs.get("style", wx.TR_DEFAULT_STYLE) | wx.TR_HIDE_ROOT
         )
@@ -254,6 +268,7 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         self._dragStartPos = None
         self.GetMainWindow().Bind(wx.EVT_LEFT_DOWN, self._OnLeftDown)
         self._dragItems = []
+        log.debug("TreeCtrlDragAndDropMixin.__init__ : D    Équivalent simplifié de wx.FileDropTarget et wx.TextDropTarget.rag and drop dans l'arborescence initialisé.")
 
     def OnDrop(self, dropItem, dragItems, part, column):
         """ This function must be overloaded in the derived class. dragItems
@@ -357,12 +372,12 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         self.selectDraggedItems()
 
     def SetCursorToDragging(self):
-        # self.GetMainWindow().SetCursor(wx.StockCursor(wx.CURSOR_HAND))
-        self.GetMainWindow().SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        self.GetMainWindow().SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+        # self.GetMainWindow().SetCursor(wx.Cursor(wx.CURSOR_HAND))
 
     def SetCursorToDroppingImpossible(self):
-        # self.GetMainWindow().SetCursor(wx.StockCursor(wx.CURSOR_NO_ENTRY))
-        self.GetMainWindow().SetCursor(wx.Cursor(wx.CURSOR_NO_ENTRY))
+        self.GetMainWindow().SetCursor(wx.StockCursor(wx.CURSOR_NO_ENTRY))
+        # self.GetMainWindow().SetCursor(wx.Cursor(wx.CURSOR_NO_ENTRY))
 
     def ResetCursor(self):
         self.GetMainWindow().SetCursor(wx.NullCursor)
