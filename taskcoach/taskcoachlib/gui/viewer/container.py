@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import range
 # from builtins import object
+import logging
 from taskcoachlib import operating_system
 import taskcoachlib.gui.menu
 # from taskcoachlib.gui.menu import *
@@ -28,22 +29,36 @@ from pubsub import pub
 #        from ...thirdparty.pubsub import pub
 #    except ImportError:
 #        from wx.lib.pubsub import pub
+import wx
 # from taskcoachlib.thirdparty import aui as aui
 import wx.lib.agw.aui as aui
 # import aui2 as aui
-import wx
+
+log = logging.getLogger(__name__)
 
 
 class ViewerContainer(object):
-    """ ViewerContainer est un conteneur de visionneuses. Il possède un conteneurWidget
-        qui affiche les visionneuses. Le conteneurWidget est supposé être
-        une trame gérée par AUI. Le ViewerContainer sait lequel de ses visualiseurs
-        est actif et distribue les appels de méthode au visualiseur actif ou au premier visualiseur
-        capable de gérer la méthode. Cela permet à d'autres composants GUI,
-        par ex. menu, pour parler au ViewerContainer comme s'il s'agissait
-        d'un spectateur régulier. """
+    """ ViewerContainer est un conteneur de visionneuses.
+
+    Il possède un conteneurWidget qui affiche les visionneuses.
+    Le conteneurWidget est supposé être une trame gérée par AUI.
+    Le ViewerContainer sait lequel de ses visualiseurs est actif et
+    distribue les appels de méthode au visualiseur actif ou
+    au premier visualiseur capable de gérer la méthode.
+    Cela permet à d'autres composants GUI, par ex. menu,
+    pour parler au ViewerContainer comme s'il s'agissait d'un spectateur régulier.
+    """
         
     def __init__(self, containerWidget, settings, *args, **kwargs):
+        """
+        Initialise le conteneur de visionneuse.
+
+        Args:
+            containerWidget: L'afficheur de visionneuse. Trame gérée par AUI.
+            settings:
+            *args:
+            **kwargs:
+        """
         self.containerWidget = containerWidget  # L'afficheur de visionneuse. Trame gérée par AUI.
         self._notifyActiveViewer = False
         self.__bind_event_handlers()  # Inscription aux événements de fermeture, d'activation et de flottement du volet.
@@ -68,12 +83,12 @@ class ViewerContainer(object):
         self.activateViewer(self.viewers[new_index])
         
     # @staticmethod
-    def isViewerContainer(self):
+    def isViewerContainer(self) -> bool:
         """ Indique s'il s'agit d'un conteneur de visionneuse ou sinon d'une visionneuse réelle. """
         return True
 
     def __bind_event_handlers(self):
-        """ Inscrivez-vous aux événements de fermeture, d'activation et de flottement du volet."""
+        """ Inscrivez-vous aux événements de fermeture, d'activation et de flottement du volet (PANE)."""
         self.containerWidget.Bind(aui.EVT_AUI_PANE_CLOSE, self.onPageClosed)
         self.containerWidget.Bind(aui.EVT_AUI_PANE_ACTIVATED,
                                   self.onPageChanged)
@@ -155,6 +170,7 @@ class ViewerContainer(object):
         pub.sendMessage("all.viewer.status", viewer=viewer)
 
     def onPageChanged(self, event):
+        """Gestionnaire de l'événement de changement de page."""
         self.__ensure_active_viewer_has_focus()
         self.sendViewerStatusEvent()
         if self._notifyActiveViewer and self.activeViewer() is not None:
@@ -163,6 +179,7 @@ class ViewerContainer(object):
 
     # @staticmethod
     def sendViewerStatusEvent(self):
+        """Envoie un événement de statut de la visionneuse."""
         pub.sendMessage("viewer.status")
 
     def __ensure_active_viewer_has_focus(self):
@@ -211,7 +228,10 @@ class ViewerContainer(object):
 
     @staticmethod
     def onPageFloated(event):
-        """ Donnez des touches d'accélération du volet flottant pour activer la visionneuse suivante et précédente."""
+        """
+        Donnez des touches d'accélération du volet flottant
+        pour activer la visionneuse suivante et précédente.
+        """
         viewer = event.GetPane().window
         table = wx.AcceleratorTable([(wx.ACCEL_CTRL, wx.WXK_PAGEDOWN,
                                      taskcoachlib.gui.menu.activateNextViewerId),
