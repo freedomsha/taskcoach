@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 # from .wxSchedulerConstants import *
 from .wxSchedulerConstants import (DAY_BACKGROUND_BRUSH,
                                    DAY_SIZE_MIN,
@@ -17,6 +18,8 @@ from .wxTimeFormat import wxTimeFormat
 import wx
 import math
 
+log = logging.getLogger(__name__)
+
 
 class wxDrawer(object):
     """
@@ -28,6 +31,7 @@ class wxDrawer(object):
     use_gc = False
 
     def __init__(self, context, displayedHours):
+        log.debug(f"wxDrawer s'initialise avec context={context} et displayedHours={displayedHours}.")
         self.context = context
         self.displayedHours = displayedHours
 
@@ -42,7 +46,8 @@ class wxDrawer(object):
             if th <= height:
                 return
             pointSize -= 1
-            if pointSize == 1:
+            # if pointSize == 1:
+            if pointSize <= 1:
                 return  # Hum
 
     def AdjustFontForWidth(self, font, width):
@@ -57,7 +62,8 @@ class wxDrawer(object):
             if tw <= width:
                 return
             pointSize -= 1
-            if pointSize == 1:
+            # if pointSize == 1:
+            if pointSize <= 1:
                 return  # Hum
 
     def DrawDayHeader(self, day, x, y, w, h, highlight=None):
@@ -115,7 +121,7 @@ class wxDrawer(object):
         """
         Dessine un calendrier dans le rectangle spécifié.
         """
-
+        log.debug(f"wxDrawer._DrawSchedule : self={self.__class__.__name__} dessine un calendrier {schedule} dans le rectangle ({x}, {y}, {w}, {h}).")
         offsetY = SCHEDULE_INSIDE_MARGIN
         offsetX = SCHEDULE_INSIDE_MARGIN
 
@@ -467,7 +473,7 @@ class wxDrawer(object):
                 x,
                 ny,
                 w,
-                None if h is None else h - (ny - y),  # Cannot find reference '-' in 'None'
+                None if h is None else (h - (ny - y)),  # Cannot find reference '-' in 'None'
             )
 
         return th + SCHEDULE_INSIDE_MARGIN
@@ -527,7 +533,7 @@ class wxDrawer(object):
 
 
 # class BackgroundDrawerDCMixin(wxDrawer, wx.DC):
-class BackgroundDrawerDCMixin(wxDrawer):
+class BackgroundDrawerDCMixin(wxDrawer, wx.GCDC):
     """
     Mixin to draw day background with a DC.
     """
@@ -546,6 +552,7 @@ class BackgroundDrawerDCMixin(wxDrawer):
         Returns:
 
         """
+        log.debug(f"wxDrawer.DrawDayBackground : lancé avec x={x}, y={y}, w={w}, h={h}, highlight={highlight}")
         if highlight is not None:
             self.context.SetBrush(wx.Brush(highlight))
             # self.context.SetBackground(wx.Brush(highlight))
@@ -559,7 +566,8 @@ class BackgroundDrawerDCMixin(wxDrawer):
 
 
 # class HeaderDrawerDCMixin(wxDrawer, wx.DC):
-class HeaderDrawerDCMixin(wxDrawer):
+# class HeaderDrawerDCMixin(wxDrawer):
+class HeaderDrawerDCMixin(wxDrawer, wx.GCDC):
     """
     A mixin to draw headers with a regular DC.
     """
@@ -576,22 +584,39 @@ class HeaderDrawerDCMixin(wxDrawer):
         alignRight=False,
         highlight=None,
     ):
-        x = int(x)
-        y = int(y)
-        w = int(w)
-        h = int(h)
-        font = self.context.GetFont()
+        log.debug("HeaderDrawerDCMixin._DrawHeader : lancé avec text:%s, x=%s, y=%s, w=%s, h=%s, pointSize=%s, weight=%s, alignRight=%s et highlight=%s", text,
+                  x,
+                  y,
+                  w,
+                  h,
+                  pointSize,
+                  weight,
+                  alignRight,
+                  highlight)
+        # Coordonnées inadaptées ? :
+        if h <= 0:
+            log.warning("Hauteur invalide pour DrawHeader: %s — forcée à 20", h)
+            h = 20
+
+        # x = int(x)
+        # y = int(y)
+        # w = int(w)
+        # h = int(h)
+        font = self.context.GetFont()  # police trop grande ou non appliquée ?
         font.SetPointSize(pointSize)
         font.SetWeight(weight)
         self.context.SetFont(font)
 
         textW, textH = self.context.GetTextExtent(text)
+        log.debug(f"HeaderDrawerDCMixin._DrawHeader : textW={textW}, textH={textH}.")
 
+        # !!! Si le fond est blanc et le texte aussi -> invisible !!!:
         if highlight is not None:
             self.context.SetBrush(wx.Brush(highlight))
         else:
             self.context.SetBrush(wx.Brush(SCHEDULER_BACKGROUND_BRUSH()))
 
+        log.debug(f"HeaderDrawerDCMixin._DrawHeader : dessine un rectangle ({x}, {y}, {w}, {textH * 1.5}).")
         self.context.DrawRectangle(int(x), int(y), int(w), int(textH * 1.5))
 
         self.context.SetTextForeground(wx.BLACK)
@@ -721,6 +746,7 @@ class HeaderDrawerGCMixin(wxDrawer):
         alignRight=False,
         highlight=None,
     ):
+        log.debug(f"HeaderDrawerGCMixin._DrawHeader : Lancé par self={self.__class__.__name__} avec text, x={x}, y={y}, w={w}, h={h}, pointSize=12, weight=wx.FONTWEIGHT_BOLD, alignRight=False, highlight=None,")
         font = wx.NORMAL_FONT
         fsize = font.GetPointSize()
         fweight = font.GetWeight()
@@ -731,11 +757,12 @@ class HeaderDrawerGCMixin(wxDrawer):
             self.context.SetFont(font, wx.BLACK)
 
             textW, textH = self.context.GetTextExtent(text)
+            log.debug(f"HeaderDrawerGCMixin._DrawHeader : textW={textW} et textH={textH}.")
 
             x1 = x
             y1 = y
             x2 = x + w
-            y2 = y + textH * 1.5
+            y2 = y + textH * 1.5  # Hauteur de l'en-tête
 
             if highlight is not None:
                 self.context.SetBrush(
@@ -884,6 +911,7 @@ class HeaderDrawerMixin(HeaderDrawerDCMixin):
         Returns :
             La méthode _DrawHeader.
         """
+        log.debug("HeaderDrawerMixin.DrawDayHeader : lancé avec day:%s, x=%s, y=%s, w=%s, h=%s et highlight=%s", day.FormatISODate(), x, y, width, height, highlight)
         # Le texte est bien converti en nom du jour, jour, mois !
         return self._DrawHeader(
             "%s %s %s"
@@ -1190,6 +1218,7 @@ class wxFancyDrawer(
                         (int(x + LEFT_COLUMN_SIZE - 1), int(y + h)),
                     ]
                 )
+                log.debug(f"wxFancyDrawer.DrawHours : retourne LEFT_COLUMN_SIZE={LEFT_COLUMN_SIZE}, max(h, DAY_SIZE_MIN.height)={max(h, DAY_SIZE_MIN.height)}.")
                 return LEFT_COLUMN_SIZE, max(h, DAY_SIZE_MIN.height)
             else:
                 self.context.DrawLines(
@@ -1202,6 +1231,7 @@ class wxFancyDrawer(
             font.SetWeight(fweight)
 
     def DrawNowHorizontal(self, x, y, w):
+        log.debug(f"wxFancyDrawer.DrawNowHorizontal : Dessine maintenant horizontalement en vert.")
         brush = self.context.CreateLinearGradientBrush(
             x + 4,
             y - 1,
