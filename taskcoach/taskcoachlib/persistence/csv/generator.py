@@ -82,7 +82,13 @@ class RowBuilder(object):
                     spaces = "  " * indent
                     for note in sorted(notes, key=lambda note: note.subject()):
                         bf.write("%s%s\n%s%s\n" % (spaces, note.subject(), spaces, note.description()))
-                        bf.write(renderNotes(note.children(), indent + 1))
+                        # bf.write(renderNotes(note.children(), indent + 1))
+                        bf.write(renderNotes(note.get_domain_children(), indent + 1))
+                        # TODO : Choix à faire !
+                        # utiliser gui.viewer.task.RootNode.children()
+                        # pour retourner les tâches enfants de note ?
+                        # ou utiliser guitk.viewer.basetk.TreeViexer.get_domain_children() ?
+                        # Je crois que cela dépendra de l'utilisation de wx ou de tk !
                     return bf.getvalue()
 
                 row.append(renderNotes(item.notes()))
