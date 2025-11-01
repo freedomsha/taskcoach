@@ -3229,7 +3229,7 @@ class DragAndDropCommand(ViewerCommand):
             dropItem,
             dragItems,
             part,
-            None if column == -1 else self.viewer.visibleColumns()[column],
+            column=None if column == -1 else self.viewer.visibleColumns()[column],
         )
 
     def doCommand(self, dropItem, dragItems, part, column):  # pylint: disable=W0221
@@ -3253,12 +3253,12 @@ class DragAndDropCommand(ViewerCommand):
             dragAndDropCommand.do()
             return dragAndDropCommand
 
-    def createCommand(self, dropItem, dragItems, part, isTree):
+    def createCommand(self, dropItem, dragItems, part, column, isTree):
         """Méthode abstraite à implémenter pour créer la commande de glisser-déposer.
 
         Cette méthode doit être redéfinie par les classes filles pour créer la commande
         spécifique en fonction des informations fournies (élément de dépôt, éléments glissés,
-        partie de la vue et structure arborescente).
+        partie de la vue, colonne et structure arborescente).
 
         La commande créée doit encapsuler la logique de déplacement des éléments.
         """
