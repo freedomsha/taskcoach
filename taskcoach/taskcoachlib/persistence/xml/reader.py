@@ -226,10 +226,12 @@ class PIParser(ET.XMLParser):
                 except ValueError:
                     log.error(f"PIParser.handle_pi : Impossible de convertir la version '{match_object.group(1)}' en entier.")
             else:
-                wx.LogError("PIParser.handle_pi : tskversion non trouvée dans la PI.")
+                # wx.LogError("PIParser.handle_pi : tskversion non trouvée dans la PI.")
+                log.error("PIParser.handle_pi : tskversion non trouvée dans la PI.")
             # print(f"PIParser.handle_pi définit self.tskversion = {self.tskversion}")
         else:
-            wx.LogError("PIParser.handle_pi : target différent de taskcoach")
+            # wx.LogError("PIParser.handle_pi : target différent de taskcoach")
+            log.error("PIParser.handle_pi : target différent de taskcoach")
 
 
 class XMLReaderTooNewException(Exception):
@@ -557,7 +559,8 @@ class XMLReader(object):  # nouvelle classe
             12. Renvoie les tâches, les catégories, les notes, la configuration SyncML, les modifications et le GUID.
         """
         # wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd} est de type {type(self.__fd)}.")  # le type est pompeux !
-        wx.LogDebug(f"XMLReader.read : Lit self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
+        # wx.LogDebug(f"XMLReader.read : Lit self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
+        log.debug(f"XMLReader.read : Lit self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueTomorrow.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/tmpjwjkljek.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueToday.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
@@ -570,14 +573,17 @@ class XMLReader(object):  # nouvelle classe
             # if isinstance(self.__fd, (io.BytesIO)):
             if self.__fd.readable():
                 contenu = self.__fd.read().strip()  # io.BufferedIOBase.read() renvoie des bytes !
-                wx.LogDebug(f"XMLReader.read : contenu = {contenu}")
+                # wx.LogDebug(f"XMLReader.read : contenu = {contenu}")
+                log.debug(f"XMLReader.read : contenu = {contenu}")
                 if not contenu:
-                    wx.LogInfo("XMLReader.read : Fichier XML vide.")
+                    # wx.LogInfo("XMLReader.read : Fichier XML vide.")
+                    log.info("XMLReader.read : Fichier XML vide.")
                     # raise ValueError("Fichier XML vide, impossible de le charger.")
                 self.__fd.seek(0)  # Remettre le pointeur du fichier au début
             if not self.__fd.getvalue().strip():
                 # print("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
-                wx.LogDebug("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
+                # wx.LogDebug("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
+                log.debug("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
                 return [], [], [], None, {}, None  # Retourne des listes et objets vides
         # if isinstance(content, bytes):
         #     content = content.decode('utf-8', errors='replace')  # Décode en UTF-8, remplace les erreurs
@@ -1015,7 +1021,8 @@ class XMLReader(object):  # nouvelle classe
                     # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : ✅ Ajout immédiat de la catégorie {obj.id()} ({obj.subject()}) à la liste des catégories categoryMap")
                     categoryMap[obj.id()] = obj  # Ajoute la catégorie à la carte des catégories
                 else:
-                    wx.LogDebug(f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})")
+                    # wx.LogDebug(f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})")
+                    log.debug(f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})")
                 # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : État actuel de categoryMap après ajout des catégories = {categoryMap}")
                 # # Gérer la récursivité des catégories
                 # for subcategory in obj.children(recursive=True):
@@ -1108,15 +1115,19 @@ class XMLReader(object):  # nouvelle classe
             # for categoryId, categorizableIds in list(self.__categorizables.items()):
             # log.debug(f"🛠 DEBUG - Tentative d'assignation de la catégorie {categoryId} aux objets {categorizableIds}")
             if not categorizableIds:
-                wx.LogWarning(
+                # wx.LogWarning(
+                #     f"⚠️ Avertissement : La catégorie {categoryId} n'a pas d'objets catégorisables associés, elle sera ignorée.")
+                log.warning(
                     f"⚠️ Avertissement : La catégorie {categoryId} n'a pas d'objets catégorisables associés, elle sera ignorée.")
                 continue
             try:
                 # * Récupère la catégorie correspondante à l'identifiant (vérifie les clés absentes).
                 if categoryId not in categoryMap:
-                    wx.LogWarning(f"XMLReader.__resolve_categories : ⚠️ Catégorie introuvable dans categoryMap : {categoryId}")
+                    # wx.LogWarning(f"XMLReader.__resolve_categories : ⚠️ Catégorie introuvable dans categoryMap : {categoryId}")
+                    log.warning(f"XMLReader.__resolve_categories : ⚠️ Catégorie introuvable dans categoryMap : {categoryId}")
                 else:
-                    wx.LogDebug(f"XMLReader.__resolve_categories : 🟢 Catégorie trouvée : {categoryId} -> categoryMap : {categoryMap}")
+                    # wx.LogDebug(f"XMLReader.__resolve_categories : 🟢 Catégorie trouvée : {categoryId} -> categoryMap : {categoryMap}")
+                    log.debug(f"XMLReader.__resolve_categories : 🟢 Catégorie trouvée : {categoryId} -> categoryMap : {categoryMap}")
 
                 # print(f"__resolve_categories : Création de theCategory = categoryMap[categoryId] pour categoryId = {categoryId}")
                 theCategory = categoryMap[categoryId]  # KeyError de categoryID
@@ -1132,8 +1143,11 @@ class XMLReader(object):  # nouvelle classe
                         #     f"DEBUG - Recherche de l'objet catégorisable {categorizableId} pour la catégorie {categoryId}")
 
                         if categorizableId not in categorizableMap:
-                            wx.LogWarning(f"XMLReader.__resolve_categories : ⚠️ Objet catégorisable {categorizableId} introuvable dans categorizableMap")
-                            wx.LogError(
+                            # wx.LogWarning(f"XMLReader.__resolve_categories : ⚠️ Objet catégorisable {categorizableId} introuvable dans categorizableMap")
+                            log.warning(f"XMLReader.__resolve_categories : ⚠️ Objet catégorisable {categorizableId} introuvable dans categorizableMap")
+                            # wx.LogError(
+                            #     f"XMLReader.__resolve_categories : ⚠️ ERREUR - Impossible de trouver l'objet {categorizableId} dans categorizablesMap !")
+                            log.error(
                                 f"XMLReader.__resolve_categories : ⚠️ ERREUR - Impossible de trouver l'objet {categorizableId} dans categorizablesMap !")
                         if categorizableId in categorizableMap:
                             # log.debug(f"Pour categorizableId={categorizableId} dans categorizableMap={categorizableMap},")
@@ -1164,12 +1178,14 @@ class XMLReader(object):  # nouvelle classe
                                 # # Debugging output
                                 # log.debug(f"Category ID: {categoryId}, Categorizable ID: {categorizableId}")
                             else:
-                                wx.LogDebug(f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}")
+                                # wx.LogDebug(f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}")
+                                log.debug(f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}")
             # KeyError : Si l'identifiant d'une catégorie référencée dans `self.__categorizables`
             #            n'est pas trouvé dans la carte de catégorie analysée.
             except KeyError as e:
                 # Enregistre la catégorie manquante ou catégorisable
-                wx.LogError(f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}")
+                # wx.LogError(f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}")
+                log.error(f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}")
         # log.debug(f"🛠 DEBUG - Assignation des catégories : {self.categories}")
 
         # for task in tasks:
@@ -1239,7 +1255,8 @@ class XMLReader(object):  # nouvelle classe
             # print(f"DEBUG - Catégorie analysée : {theCategory}, id={theCategory.id() if theCategory else 'None'}")
             # Vérifier si la catégorie a été bien créée
             if theCategory is None:
-                wx.LogWarning(f"XMLReader.__parse_category_nodes : ⚠️ WARNING - self.__parse_category_node() a retourné None pour {child}")
+                # wx.LogWarning(f"XMLReader.__parse_category_nodes : ⚠️ WARNING - self.__parse_category_node() a retourné None pour {child}")
+                log.warning(f"XMLReader.__parse_category_nodes : ⚠️ WARNING - self.__parse_category_node() a retourné None pour {child}")
                 # continue  # Ignore cette catégorie et passe à la suivante
             else:
                 # category_id = child.attrib.get("id", None)
@@ -1331,7 +1348,9 @@ class XMLReader(object):  # nouvelle classe
                                                         self.__parse_category_nodes)
         # print(f"kwargs = {kwargs}")
         if not kwargs:
-            wx.LogWarning(
+            # wx.LogWarning(
+            #     f"⚠️ WARNING - __parse_base_composite_attributes a retourné un dictionnaire vide pour {category_node}")
+            log.warning(
                 f"⚠️ WARNING - __parse_base_composite_attributes a retourné un dictionnaire vide pour {category_node}")
 
         # Analyse les notes directement associées à la catégorie à l'aide de `__parse_note_nodes`.
@@ -1382,7 +1401,8 @@ class XMLReader(object):  # nouvelle classe
             theCategory = category.Category(**kwargs)
             # print(f"✅ DEBUG - Catégorie créée avec succès : {theCategory}")
         except Exception as e:
-            wx.LogError(f"❌ ERREUR - Impossible de créer la catégorie : {e}")
+            # wx.LogError(f"❌ ERREUR - Impossible de créer la catégorie : {e}")
+            log.error(f"❌ ERREUR - Impossible de créer la catégorie : {e}")
             return None
 
         # Ajoute cette catégorie dans le mapping des catégories de l'instance (pour y accéder plus tard)
@@ -1606,7 +1626,8 @@ class XMLReader(object):  # nouvelle classe
         # print(f"✅ Tâche créée : {task_id} | Instance mémoire : {id(task)}")
         # print(f"XMLReader.__parse_task_node : avant les sous-tâches, theTask = {theTask}, type={type(theTask)}, status={theTask.status()}, getstatus={theTask.getStatus()}")
         if theTask is None or theTask == "":
-            wx.LogDebug(f"!!! ATTENTION la tâche {theTask} est VIDE !!!")
+            # wx.LogDebug(f"!!! ATTENTION la tâche {theTask} est VIDE !!!")
+            log.debug(f"!!! ATTENTION la tâche {theTask} est VIDE !!!")
         # print(f"XMLReader.__parse_task_node : theTask.id = {theTask.id}")
         # print("XMLReader.__parse_task_node : theTask.tag = ERREUR")
         # print("XMLReader.__parse_task_node : theTask.text = ERREUR")
@@ -1956,7 +1977,8 @@ class XMLReader(object):  # nouvelle classe
             try:
                 attachments.append(self.__parse_attachment(child_node))
             except IOError as IOErr:
-                wx.LogError(f"XMLReader.__parse_attachments : IOErr = {IOErr}")
+                # wx.LogError(f"XMLReader.__parse_attachments : IOErr = {IOErr}")
+                log.error(f"XMLReader.__parse_attachments : IOErr = {IOErr}")
                 pass
         return attachments
 
