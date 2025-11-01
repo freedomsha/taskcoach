@@ -14,6 +14,210 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=======
+# Documentation Technique : `taskcoachlib/widgets/listctrl.py`
+
+## 1. Aperçu Général
+
+Ce module fournit la classe `VirtualListCtrl`, un widget de contrôle de liste personnalisé basé sur `wx.ListCtrl` de `wxPython`. Il est spécifiquement conçu pour afficher de grands ensembles de données de manière efficace en utilisant le mode "virtuel".
+
+**Fonctionnalités principales :**
+- **Mode Virtuel** : Le contrôle ne charge en mémoire que les données des éléments actuellement visibles à l'écran, ce qui le rend très performant pour les listes contenant des milliers d'éléments.
+- **Gestion des Colonnes** : S'intègre avec `CtrlWithColumnsMixin` pour une gestion flexible des colonnes.
+- **Info-bulles (Tooltips)** : Supporte l'affichage d'info-bulles personnalisées pour chaque élément via `CtrlWithToolTipMixin`.
+- **Gestion de la Sélection** : Fournit des méthodes pour gérer la sélection d'un ou plusieurs éléments.
+- **Intégration avec l'Application** : Conçu pour déléguer la logique de récupération des données et la gestion des événements à un widget parent, favorisant une séparation claire des préoccupations.
+
+Dans l'application Task Coach, ce widget est notamment utilisé pour afficher les listes de pièces jointes et les enregistrements d'efforts.
+
+## 2. Architecture et Patrons de Conception
+
+L'architecture de `VirtualListCtrl` repose sur plusieurs patrons de conception clés.
+
+### Héritage Multiple
+`VirtualListCtrl` utilise l'héritage multiple pour combiner les fonctionnalités de `wx.ListCtrl` avec plusieurs "mixins" personnalisés.
+
+```mermaid
+classDiagram
+    class wx.ListCtrl {
+        +HitTest()
+        +Select()
+    }
+    class CtrlWithItemsMixin {
+        +getItemWithIndex()
+    }
+    class CtrlWithColumnsMixin {
+        +getIndexOfColumn()
+    }
+    class CtrlWithToolTipMixin {
+        +getItemTooltipData()
+    }
+    class VirtualListCtrl {
+        +__init__()
+        +bindEventHandlers()
+        +OnGetItemText()
+        +OnGetItemImage()
+        +OnGetItemAttr()
+        +HitTest()
+        +select()
+    }
+
+    wx.ListCtrl <|-- VirtualListCtrl
+    CtrlWithItemsMixin <|-- VirtualListCtrl
+    CtrlWithColumnsMixin <|-- VirtualListCtrl
+    CtrlWithToolTipMixin <|-- VirtualListCtrl
+
+Mode Virtuel (Patron Flyweight)
+Le widget est initialisé avec le style wx.LC_VIRTUAL.
+Ce mode est une application du patron de conception Flyweight,
+où le widget (VirtualListCtrl) est un objet léger qui ne contient pas les données.
+Au lieu de cela, lorsque wxPython a besoin d'afficher un élément (son texte, son icône, ses attributs),
+il appelle une méthode de rappel (OnGetItemText, OnGetItemImage, etc.).
+VirtualListCtrl récupère alors uniquement les données nécessaires
+pour cet élément spécifique auprès de sa source de données.
+
+Délégation (Patron Delegate)
+VirtualListCtrl ne connaît pas la structure des données qu'il affiche.
+Il délègue entièrement la responsabilité de la récupération des données à son widget parent
+(fourni lors de l'initialisation).
+Le parent agit comme un "délégué" ou une source de données et
+doit implémenter une interface implicite.
+
+sequenceDiagram
+    participant User
+    participant wx.ListCtrl as wx.ListCtrl (backend)
+    participant VirtualListCtrl
+    participant ParentWidget as Parent Widget (Data Source)
+
+    User->>wx.ListCtrl: Fait défiler la liste
+    wx.ListCtrl->>VirtualListCtrl: OnGetItemText(rowIndex=10, colIndex=1)
+    VirtualListCtrl->>VirtualListCtrl: getItemWithIndex(rowIndex=10)
+    VirtualListCtrl->>ParentWidget: getItemWithIndex(rowIndex=10)
+    ParentWidget-->>VirtualListCtrl: domainObject
+    VirtualListCtrl->>VirtualListCtrl: getItemText(domainObject, colIndex=1)
+    VirtualListCtrl->>ParentWidget: getItemText(domainObject, colIndex=1)
+    ParentWidget-->>VirtualListCtrl: "Texte de l'item"
+    VirtualListCtrl-->>wx.ListCtrl: "Texte de l'item"
+    wx.ListCtrl->>User: Affiche le texte
+
+3. Description des Composants Clés
+Classe VirtualListCtrl
+C'est la classe principale du module. Elle hérite de itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin, itemctrl.CtrlWithToolTipMixin et wx.ListCtrl.
+
+Méthodes de rappel (Callbacks) pour le mode virtuel
+Ces méthodes sont appelées par le backend de wx.ListCtrl chaque fois qu'il a besoin d'informations sur un élément à afficher.
+
+OnGetItemText(rowIndex, columnIndex): Retourne le texte à afficher pour un élément et une colonne donnés.
+OnGetItemImage(rowIndex): Retourne l'index de l'image (dans une wx.ImageList) pour l'élément donné.
+OnGetItemAttr(rowIndex): Retourne un objet wx.ItemAttr contenant les attributs de style (couleur de fond, couleur du texte, police) pour l'élément. Cela permet de personnaliser l'apparence de chaque ligne.
+Gestion des Événements
+__init__(..., selectCommand=None, editCommand=None, ...): Le constructeur accepte des commandes (callbacks) qui sont appelées en réponse aux actions de l'utilisateur.
+bindEventHandlers(selectCommand, editCommand): Lie les événements wxPython (comme EVT_LIST_ITEM_SELECTED ou EVT_LIST_ITEM_ACTIVATED) aux commandes fournies.
+onItemActivated(event): Surchargée pour déterminer sur quelle colonne l'utilisateur a double-cliqué et ajoute cette information à l'événement avant d'appeler editCommand.
+Méthodes d'Interaction avec le Parent (Délégation)
+getItemWithIndex(rowIndex): Demande au parent l'objet de domaine correspondant à un index de ligne.
+getItemText(domainObject, columnIndex): Demande au parent le texte pour un objet de domaine et une colonne.
+getItemTooltipData(domainObject): Demande au parent les données pour l'info-bulle d'un objet.
+getItemImage(domainObject, columnIndex): Demande au parent l'image pour un objet.
+Autres Méthodes Notables
+HitTest(point): Surcharge de la méthode de wx.ListCtrl pour retourner non seulement l'index de l'élément et les "flags", mais aussi l'index de la colonne cliquée.
+RefreshAllItems(count) / RefreshItems(*items): Permet de notifier le contrôle que les données ont changé et qu'il doit se redessiner.
+curselection(), select(items), clear_selection(), select_all(): Méthodes utilitaires pour la gestion de la sélection des éléments.
+
+4. Dépendances
+graph TD
+    A[VirtualListCtrl] --> B[wx.ListCtrl];
+    A --> C[Mixins personnalisés<br>(itemctrl, etc.)];
+    A --> D{Parent Widget};
+
+    subgraph wxPython
+        B
+    end
+
+    subgraph Task Coach Lib
+        C
+        D
+    end
+
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+
+wx.ListCtrl: Classe de base du framework wxPython.
+Mixins (itemctrl.*): Fournissent des fonctionnalités réutilisables pour les contrôles d'items
+                     de colonnes et d'info-bulles.
+Parent Widget: Dépendance la plus critique. Le parent doit implémenter l'API attendue par VirtualListCtrl
+               pour la récupération des données (ex: getItemWithIndex, getItemText, getIndexOfItem).
+               Ce couplage est basé sur une interface implicite ("duck typing").
+
+5. Exemple d'Utilisation
+Voici un exemple conceptuel de la manière dont un widget parent (par exemple, un wx.Panel)
+utiliserait VirtualListCtrl.
+
+import wx
+# Supposons que VirtualListCtrl et les objets de données (DataObject) sont définis
+
+class MyDataViewer(wx.Panel):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        # 1. Nos données (par exemple, une liste d'objets)
+        self.data = [DataObject(f"Item {i}") for i in range(10000)]
+
+        # 2. Définition des colonnes
+        columns = [Column("Nom"), Column("Valeur")]
+
+        # 3. Création du VirtualListCtrl
+        self.list_ctrl = VirtualListCtrl(self, columns,
+                                         selectCommand=self.on_item_selected,
+                                         editCommand=self.on_item_edited)
+
+        # 4. Configuration du layout
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.list_ctrl, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+
+        # 5. Initialiser le nombre d'éléments
+        self.list_ctrl.SetItemCount(len(self.data))
+
+    # --- Implémentation de l'interface pour VirtualListCtrl ---
+
+    def getItemWithIndex(self, rowIndex):
+        "Retourne l'objet de données à un index donné."
+        return self.data[rowIndex]
+
+    def getIndexOfItem(self, item):
+        "Retourne l'index d'un objet de données."
+        return self.data.index(item)
+
+    def getItemText(self, item, columnIndex):
+        "Retourne le texte pour un item et une colonne."
+        if columnIndex == 0:
+            return item.name
+        elif columnIndex == 1:
+            return str(item.value)
+        return ""
+
+    def getItemImages(self, item, columnIndex):
+        # Retourne des index d'images pour les icônes
+        return [0, 0, 0, 0] # Normal, Selected, Expanded, SelectedExpanded
+
+    def getItemTooltipData(self, item):
+        "Retourne le texte de l'info-bulle."
+        return f"Info pour {item.name}"
+
+    # --- Commandes (callbacks) ---
+
+    def on_item_selected(self, event=None):
+        selected_items = self.list_ctrl.curselection()
+        print(f"Sélection : {[item.name for item in selected_items]}")
+
+    def on_item_edited(self, event):
+        item = self.list_ctrl.GetItem(event.GetIndex())
+        print(f"Édition de {item.name} sur la colonne {getattr(event, 'columnName', 'N/A')}")
+
+Cet exemple illustre bien le patron de délégation :
+MyDataViewer contient à la fois les données et la logique pour les interpréter,
+tandis que VirtualListCtrl se concentre uniquement sur leur affichage efficace.
 """
 
 # from builtins import range
@@ -26,15 +230,55 @@ import wx.lib.mixins.listctrl
 # (qui est plus moderne et puissant pour les données structurées).
 log = logging.getLogger(__name__)
 
+
 class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                       itemctrl.CtrlWithToolTipMixin, wx.ListCtrl):
     """
-    Widget utilisé dans gui.viewer.attachment pour pour afficher les pièces jointes
-    dans gui.viewer.effort.EffortViewer pour créer le widget avec createWidget.
+    Contrôle de liste virtuel personnalisé pour Task Coach.
+
+    Cette classe étend `wx.ListCtrl` en mode virtuel (`wx.LC_VIRTUAL`) et combine plusieurs mixins
+    afin de fournir une interface riche pour afficher de grandes quantités de données efficacement.
+
+    Le contrôle ne stocke pas directement les éléments ; il délègue la récupération
+    des données à son parent (généralement un `Viewer`) via des méthodes comme
+    `getItemWithIndex()`, `getItemText()` ou `getItemTooltipData()`.
+
+    Fonctionnalités principales :
+        - Mode virtuel (affichage efficace de milliers d’éléments)
+        - Gestion des colonnes et des info-bulles
+        - Rafraîchissement partiel ou complet des éléments
+        - Sélection multiple et navigation clavier
+        - Délégation des événements de sélection et d’édition à des callbacks externes
+
+    Args:
+        parent (wx.Window) : Widget parent.
+        columns (list) : Liste des colonnes à afficher.
+        selectCommand (callable, optionnel) : Callback appelé lors d’une sélection.
+        editCommand (callable, optionnel) : Callback appelé lors d’une activation (double clic).
+        itemPopupMenu (wx.Menu, optionnel) : Menu contextuel associé aux éléments.
+        columnPopupMenu (wx.Menu, optionnel) : Menu contextuel associé aux colonnes.
+        resizeableColumn (int, optionnel) : Index de la colonne redimensionnable.
+        *args : Arguments supplémentaires transmis à `wx.ListCtrl`.
+        **kwargs : Arguments nommés supplémentaires transmis à `wx.ListCtrl`.
     """
     def __init__(self, parent, columns, selectCommand=None, editCommand=None,
                  itemPopupMenu=None, columnPopupMenu=None, resizeableColumn=0,
                  *args, **kwargs):
+        """
+        Initialise le contrôle virtuel et lie les événements nécessaires.
+
+        Cette méthode configure le contrôle pour fonctionner en mode virtuel et
+        relie les événements de sélection et d’édition aux commandes fournies.
+
+        Args:
+            parent (wx.Window) : Widget parent.
+            columns (list) : Colonnes à afficher.
+            selectCommand (callable, optionnel) : Fonction appelée lors de la sélection.
+            editCommand (callable, optionnel) : Fonction appelée lors de l’édition (activation).
+            itemPopupMenu (wx.Menu, optionnel) : Menu contextuel pour les items.
+            columnPopupMenu (wx.Menu, optionnel) : Menu contextuel pour les colonnes.
+            resizeableColumn (int) : Colonne redimensionnable par défaut.
+        """
         super().__init__(parent,
                          style=wx.LC_REPORT | wx.LC_VIRTUAL, columns=columns,
                          resizeableColumn=resizeableColumn, itemPopupMenu=itemPopupMenu,
@@ -44,6 +288,16 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
 
     def bindEventHandlers(self, selectCommand, editCommand):
         # pylint: disable=W0201
+        """
+        Lie les gestionnaires d’événements de sélection et d’édition.
+
+        Cette méthode connecte les événements `wx.EVT_LIST_ITEM_*` aux commandes
+        de rappel fournies, permettant à l’interface d’interagir avec le parent.
+
+        Args:
+            selectCommand (callable | None) : Fonction appelée lors de la sélection.
+            editCommand (callable | None) : Fonction appelée lors d’une activation.
+        """
         if selectCommand:
             self.selectCommand = selectCommand
             self.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.onSelect)
@@ -55,44 +309,123 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
         self.Bind(wx.EVT_SET_FOCUS, self.onSetFocus)
 
     def onSetFocus(self, event):  # pylint: disable=W0613
+        """
+        Notifie le gestionnaire de fenêtres (AUI) que le contrôle a reçu le focus.
+
+        Ceci est nécessaire pour que le gestionnaire `AuiManager` active correctement
+        le panneau contenant ce contrôle.
+
+        Args:
+            event (wx.FocusEvent) : Événement de focus.
+        """
         # Send a child focus event to let the AuiManager know we received focus
         # so it will activate our pane
         wx.PostEvent(self, wx.ChildFocusEvent(self))
         event.Skip()
 
     def getItemWithIndex(self, rowIndex):
+        """
+        Récupère l’objet de domaine correspondant à une ligne donnée.
+
+        Args:
+            rowIndex (int) : Index de la ligne.
+
+        Returns:
+            object : L’objet métier correspondant.
+        """
         return self.__parent.getItemWithIndex(rowIndex)
 
     def getItemText(self, domainObject, columnIndex):
+        """
+        Demande au parent le texte à afficher pour une cellule donnée.
+
+        Args:
+            domainObject (object) : Objet métier correspondant à la ligne.
+            columnIndex (int) : Index de la colonne.
+
+        Returns :
+            str : Texte à afficher.
+        """
         # return self.__parent.getItemText(domainObject, columnIndex)
         return_itemText = self.__parent.getItemText(domainObject, columnIndex)
         log.debug(f"VirtualListCtrl.getItemText : renvoie {return_itemText} pour {domainObject} colonne {columnIndex}")
         return return_itemText
 
     def getItemTooltipData(self, domainObject):
+        """
+        Retourne les données de l’info-bulle pour un élément donné.
+
+        Args:
+            domainObject (object): Élément concerné.
+
+        Returns:
+            str: Texte de l’info-bulle.
+        """
         return self.__parent.getItemTooltipData(domainObject)
 
     def getItemImage(self, domainObject, columnIndex=0):
+        """
+        Retourne l’image associée à un élément et une colonne donnés.
+
+        Args:
+            domainObject (object): Élément concerné.
+            columnIndex (int, optionnel): Index de la colonne.
+
+        Returns:
+            int: Index de l’image dans la `wx.ImageList`.
+        """
         return self.__parent.getItemImages(domainObject,
                                            columnIndex)[wx.TreeItemIcon_Normal]
 
     def OnGetItemText(self, rowIndex, columnIndex):
+        """
+        Callback wxPython pour obtenir le texte d’un élément virtuel.
+
+        Appelé automatiquement par le moteur de rendu du `ListCtrl`
+        lorsqu’il doit afficher une cellule spécifique.
+
+        Args:
+            rowIndex (int): Ligne demandée.
+            columnIndex (int): Colonne demandée.
+
+        Returns:
+            str: Texte à afficher.
+        """
         item = self.getItemWithIndex(rowIndex)
         return self.getItemText(item, columnIndex)
 
     def OnGetItemTooltipData(self, rowIndex, columnIndex):
+        """
+        Retourne les données de l’info-bulle pour un élément donné.
+
+        Args:
+            rowIndex (int): Ligne demandée.
+            columnIndex (int): Colonne demandée.
+
+        Returns:
+
+        """
         item = self.getItemWithIndex(rowIndex)
         return self.getItemTooltipData(item)
 
     def OnGetItemImage(self, rowIndex):
+        """
+        Retourne l’image associée à un élément donné.
+        """
         item = self.getItemWithIndex(rowIndex)
         return self.getItemImage(item)
 
     def OnGetItemColumnImage(self, rowIndex, columnIndex):
+        """
+        Retourne l’image associée à un élément pour une colonne donnée.
+        """
         item = self.getItemWithIndex(rowIndex)
         return self.getItemImage(item, columnIndex)
 
     def OnGetItemAttr(self, rowIndex):
+        """
+        Définit les attributs visuels pour une ligne donnée.
+        """
         item = self.getItemWithIndex(rowIndex)
         foreground_color = item.foregroundColor(recursive=True)
         background_color = item.backgroundColor(recursive=True)
@@ -114,12 +447,17 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
         return self.__item_attribute
 
     def onSelect(self, event):
+        """
+        Callback wxPython pour gérer l’événement de sélection d’un élément.
+        """
         event.Skip()
         self.selectCommand(event)
 
     def onItemActivated(self, event):
-        """ Override default behavior to attach the column clicked on
-            to the event so we can use it elsewhere. """
+        """
+        Remplacer le comportement par défaut pour attacher la colonne sur laquelle vous avez cliqué
+        à l'événement afin que nous puissions l'utiliser ailleurs.
+        """
         window = self.GetMainWindow()
         if operating_system.isMac():
             window = window.GetChildren()[0]
@@ -134,6 +472,7 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
         self.editCommand(event)
 
     def RefreshAllItems(self, count):
+        """ Mettre à jour tous les éléments de la liste. """
         self.SetItemCount(count)
         if count == 0:
             self.DeleteAllItems()
@@ -143,7 +482,7 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
         self.selectCommand()
 
     def RefreshItems(self, *items):
-        """ Refresh specific items. """
+        """ Actualisez des éléments spécifiques. """
         if len(items) <= 7:
             for item in items:
                 self.RefreshItem(self.__parent.getIndexOfItem(item))
@@ -166,10 +505,12 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
         return index, flags, column
 
     def curselection(self):
-        return [self.getItemWithIndex(index) \
+        """ Retourne la liste des éléments sélectionnés. """
+        return [self.getItemWithIndex(index)
                 for index in self.__curselection_indices()]
 
     def select(self, items):
+        """ Sélectionnez les éléments spécifiés. """
         indices = [self.__parent.getIndexOfItem(item) for item in items]
         for index in range(self.GetItemCount()):
             self.Select(index, index in indices)
@@ -177,15 +518,15 @@ class VirtualListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin
             self.Focus(self.GetFirstSelected())
 
     def clear_selection(self):
-        """ Unselect all selected items. """
+        """ Désélectionnez tous les éléments sélectionnés. """
         for index in self.__curselection_indices():
             self.Select(index, False)
 
     def select_all(self):
-        """ Select all items. """
+        """ Sélectionnez tous les éléments. """
         for index in range(self.GetItemCount()):
             self.Select(index)
 
     def __curselection_indices(self):
-        """ Return the indices of the currently selected items. """
+        """ Renvoie les indices des éléments actuellement sélectionnés. """
         return wx.lib.mixins.listctrl.getListCtrlSelection(self)
