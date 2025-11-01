@@ -627,6 +627,7 @@ class Object(SynchronizedObject):
             self.__description = description_value
         else:
             self.__description = Attribute(description_value, self, setDescriptionEvent)
+        log.debug(f"Object.__init__() : description reçu: {self.__description}")
         # self.__fgColor = Attribute(
         #     kwargs.pop("fgColor", None), self, self.appearanceChangedEvent
         # )
@@ -747,11 +748,12 @@ class Object(SynchronizedObject):
         except AttributeError:
             state = dict()
         # print(f"DEBUG - Object.__getstate__() avant update: {state}")
-        log.debug(f"Object.__getstate__() : state avant update: {state}")
+        # log.debug(f"Object.__getstate__() : state avant update: {state}")
         # log.debug(f"DEBUG - Object.__getstate__() avant update subject.get() : {self.__subject.get()}")
-        if hasattr(self, 'subject'):
-            log.debug(f"Object.__setstate__() - subject avant update: {self.subject}")
-        else:
+        # if hasattr(self, 'subject'):
+        #     log.debug(f"Object.__setstate__() - subject avant update: {self.subject}")
+        # else:
+        if not hasattr(self, 'subject'):
             log.debug("Object.__setstate__() - subject non défini avant update.")
 
         # On ajoute uniquement les champs publics attendus,
@@ -1215,7 +1217,7 @@ class Object(SynchronizedObject):
         new_description = self.description()
 
         # DEBUG facultatif :
-        print(f"[DEBUG] descriptionChangedEvent — new_description = {new_description!r}")
+        log.debug(f"descriptionChangedEvent — new_description = {new_description!r}")
 
         # Ajoute la description comme source et comme valeur pour ce type d'événement
         event.addSource(
@@ -1578,7 +1580,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
             parent = self.parent()
             if parent:
                 subject = f"{parent.subject(recursive=True)} -> {subject}"
-        log.debug(f"CompositeObject.subject : retourne {subject} de {self.__class__.__name__}")
+        # log.debug(f"CompositeObject.subject : retourne {subject} de {self.__class__.__name__}")
         # RecursionError: maximum recursion depth exceeded
         return subject
 
