@@ -22,8 +22,8 @@ from taskcoachlib import operating_system
 
 
 class _Tracker(object):
-    """ Utility methods for setting and getting values from/to the
-        settings. """
+    """ Méthodes utilitaires pour définir et obtenir des valeurs depuis/vers
+        les paramètres. """
 
     def __init__(self, settings, section):
         super().__init__()
@@ -31,7 +31,7 @@ class _Tracker(object):
         self.__section = section
 
     def set_setting(self, setting, value) -> None:
-        """ Store the value for the setting in the settings. """
+        """ Stocke la valeur du paramètre dans les paramètres. """
         self.__settings.setvalue(self.__section, setting, value)
 
     def get_setting(self, setting):
@@ -40,7 +40,7 @@ class _Tracker(object):
 
 
 class WindowSizeAndPositionTracker(_Tracker):
-    """ Track the size and position of a window in the settings. """
+    """ Suit la taille et la position d'une fenêtre dans les paramètres. """
 
     def __init__(self, window, settings, section):
         super().__init__(settings, section)
@@ -103,24 +103,28 @@ class WindowSizeAndPositionTracker(_Tracker):
         # Check that the window is on a valid display and move if necessary:
         if wx.Display.GetFromWindow(self._window) == wx.NOT_FOUND:
             # Not (0, 0) because on OSX this hides the window bar...
-            self._window.SetDimensions(50, 50, width, height)
+            # self._window.SetDimensions(50, 50, width, height)
+            self._window.SetSize(50, 50, width, height)
             if operating_system.isMac():
                 self._window.SetClientSize((width, height))
 
 
 class WindowDimensionsTracker(WindowSizeAndPositionTracker):
-    """ Track the dimensions of a window in the settings. """
+    """ Suit les dimensions d'une fenêtre dans les paramètres. """
 
     def __init__(self, window, settings):
         super().__init__(window, settings, "window")
         self.__settings = settings
         if self.__start_iconized():
+            # Si on doit démarrer icônisé
             if operating_system.isMac() or operating_system.isGTK():
+                # Pour Mac/GTK, il est souvent nécessaire de montrer d'abord, puis d'icôniser
                 # Need to show the window on Mac OS X first, otherwise it
                 # won't be properly minimized. On wxGTK we need to show the
                 # window first, otherwise clicking the task bar icon won't
                 # show it.
-                self._window.Show()
+                # Iconise la fenêtre
+                self._window.Show()  # Assure que la fenêtre est visible si elle était cachée
             self._window.Iconize(True)
             if not operating_system.isMac() and \
                     self.get_setting("hidewheniconized"):
