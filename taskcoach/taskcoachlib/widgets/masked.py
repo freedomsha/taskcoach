@@ -307,7 +307,8 @@ class TimeDeltaCtrl(TextCtrl):
 
     @staticmethod
     def __hour_string(hours, negative_value):
-        """        Génère une chaîne pour représenter les heures.
+        """
+        Génère une chaîne pour représenter les heures.
 
         Si la valeur est négative, ajoute un signe moins devant le nombre d'heures.
 
