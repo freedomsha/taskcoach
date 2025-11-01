@@ -64,7 +64,10 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         # Initialisation du gestionnaire AUI
         self.manager = aui.AuiManager(self, agwStyle)  # Création du gestionnaire AUI
         # self.manager = aui.AuiManager(self, options=agwStyle)  # Variante avec aui à la place de AGW.
-        # Configuration des onglets (si AGW, on peut utiliser des options avancées):
+        # notify AUI which frame to use
+        self.manager.SetManagedWindow(self)
+
+        # Configuration des onglets (si AGW, on peut utiliser des options avancées) :
         if USING_AGW:
             self.manager.SetAutoNotebookStyle(aui.AUI_NB_TOP |  # Configuration des onglets automatiques
                                               aui.AUI_NB_CLOSE_BUTTON |
@@ -128,7 +131,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         # x, y = window.ClientToScreen(x, y)  # J'ai ClientToScreen cannot work when toplevel window is not shown même si window.shown est True
         # #     # pour window CategoryViewer (gui.viewer.category.CategoryViewer)
         if window.IsShown():
-            x, y = window.ClientToScreen(x, y)  # Convertit la position en coordonnées écran si affichée
+            x, y = window.ClientToScreenXY(x, y)  # Convertit la position en coordonnées écran si affichée
         else:
             log.debug("La fenêtre %s n'est pas encore affiché, ClientToScreen ignoré.", window)
         #     print("frame.py: Debug: ClientToScreen cannot work when toplevel window is not shown")
@@ -178,6 +181,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         :param title: Nouveau titre à appliquer
         """
         self.manager.GetPane(window).Caption(title)  # Mise à jour du titre
+        # self.manager.Update()  # Rafraîchit l'affichage
 
     def dockedPanes(self):
         """
@@ -196,6 +200,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
                 pane for pane in self.manager.GetAllPanes()
                 if not pane.IsFloating() and not pane.IsToolbar()
             ]
+        # self.manager.Update()  # Rafraîchit l'affichage
 
     def float(self, window):
         """
@@ -205,6 +210,8 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         """
         # Met le panneau en mode flottant
         self.manager.GetPane(window).Float()
+        # self.manager.Update()  # Rafraîchit l'affichage
+
 
     @staticmethod
     def isCenterPane(pane):
