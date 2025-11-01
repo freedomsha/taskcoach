@@ -48,8 +48,11 @@ class EffortUICommandNamesMixin(object):
 
 class EffortList(patterns.SetDecorator, MaxDateTimeMixin,
                  EffortUICommandNamesMixin):
-    """ EffortList observes a TaskList and contains all effort records of
-        all tasks in the underlying TaskList. """
+    """
+    EffortList observe une liste de tâches et contient
+    tous les enregistrements d'effort de toutes les tâches
+    de la liste de tâche sous-jacente.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
