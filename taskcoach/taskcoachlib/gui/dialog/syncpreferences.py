@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from builtins import str
 import wx
 from taskcoachlib.gui.dialog.preferences import SettingsPageBase
-from taskcoachlib import widgets, operating_system
+from taskcoachlib import widgets, operating_system  # pour widgets.dialog.NotebookDialog et operating_system.isMac()
 from taskcoachlib.i18n import _
 
 
