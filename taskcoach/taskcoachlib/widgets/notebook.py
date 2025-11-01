@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 import wx
-# from wx.lib.agw import aui
-import wx.lib.agw.aui as aui
+from wx.lib.agw import aui
+# import wx.lib.agw.aui as aui
 
 log = logging.getLogger(__name__)  # Logger pour ce fichier
 
