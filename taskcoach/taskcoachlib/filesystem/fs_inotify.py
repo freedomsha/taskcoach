@@ -19,12 +19,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # inotify wrapper from this recipe: http://code.activestate.com/recipes/576375-low-level-inotify-wrapper/
 # Slightly modified to handle timeout and use select(); cleanup error handling
 
+import logging
 from twisted.internet.inotify import INotify
 from twisted.python.filepath import FilePath
 
 # from . import base
 from taskcoachlib.filesystem import base
 import os
+
+log = logging.getLogger(__name__)
 
 
 class FilesystemNotifier(base.NotifierBase):
@@ -39,10 +42,13 @@ class FilesystemNotifier(base.NotifierBase):
         """
         Initialisez le FilesystemNotifier.
         """
-        super(FilesystemNotifier, self).__init__()
+        log.debug("FilesystemNotifier.__init__ : initialisation du notificateur utilisant inotify")
+        # super(FilesystemNotifier, self).__init__()
+        super().__init__()
         self.notifier = INotify()
         # Commencer à attendre l'accessibilité de la lecture :
         self.notifier.startReading()
+        log.debug("FilesystemNotifier initialisé !")
 
     def setFilename(self, filename):
         """
@@ -53,7 +59,8 @@ class FilesystemNotifier(base.NotifierBase):
         """
         if self._path is not None:
             self.notifier.ignore(FilePath(self._path))
-        super(FilesystemNotifier, self).setFilename(filename)
+        # super(FilesystemNotifier, self).setFilename(filename)
+        super().setFilename(filename)
         if self._path is not None:
             self.notifier.watch(
                 FilePath(self._path), callbacks=[self.__notify]
