@@ -46,7 +46,7 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("settingsSection", "noteviewer")
         self.notesToShow = kwargs.get("notesToShow", None)
-        super(BaseNoteViewer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for eventType in (
             note.Note.appearanceChangedEventType(),
             note.Note.subjectChangedEventType(),
@@ -251,6 +251,12 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         return True
 
     def statusMessages(self):
+        """
+        Retourne les messages d'état.
+
+        Returns:
+            Les messages d'état.
+        """
         status1 = _("Notes: %d selected, %d total") % (
             len(self.curselection()),
             len(self.presentation()),
