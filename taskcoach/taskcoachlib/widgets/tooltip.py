@@ -55,14 +55,14 @@ class ToolTipMixin(object):
     intégrée définissent une méthode `GetMainWindow` pour fournir la fenêtre
     principale associée.
         Ce mixin dépend de la méthode `GetMainWindow`, qui doit être implémentée
-    par les classes finales. Les classes suivantes utilisent ce mixin et
-    fournissent une implémentation de `GetMainWindow` :
-        - calendarwidget
-        - hcalendar
-        - itemctrl
-        - searchctrl
-        - squaremap
-        - timeline
+        par les classes finales. Les classes suivantes utilisent ce mixin et
+        fournissent une implémentation de `GetMainWindow` :
+            - calendarwidget
+            - hcalendar
+            - itemctrl
+            - searchctrl
+            - squaremap
+            - timeline
 
     Utilisez ce mixin uniquement avec des classes fournissant cette méthode.
 
