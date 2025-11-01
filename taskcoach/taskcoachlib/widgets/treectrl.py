@@ -1,37 +1,31 @@
 """
-Task Coach - Your friendly task manager
-Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
+Task Coach - Votre gestionnaire de tâches amical
+Copyright (C) 2004-2016 Développeurs Task Coach <developers@taskcoach.org>
 
-Task Coach is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Task Coach est un logiciel libre : vous pouvez le redistribuer et/ou le modifier
+sous les termes de la licence GNU General Public License telle que publiée par
+la Free Software Foundation, soit la version 3 de la Licence, soit
+(à votre option) toute version ultérieure.
 
-Task Coach is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Task Coach est distribué dans l'espoir qu'il sera utile,
+mais SANS AUCUNE GARANTIE ; sans même la garantie implicite de
+COMMERCIALISABILITÉ ou D'ADAPTATION À UN USAGE PARTICULIER.  Voir la
+licence GNU General Public License pour plus de détails.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Vous devriez avoir reçu une copie de la licence GNU General Public License
+avec ce programme.  Si ce n'est pas le cas, consultez <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import range
 from taskcoachlib import operating_system
-# from ..thirdparty import customtreectrl as customtree, hypertreelist
-# from taskcoachlib.thirdparty import customtreectrl as customtree
 import logging
 import wx
-# from wx import TreeCtrl as customtree
 from wx.lib.agw import customtreectrl as customtree
 from wx.lib.agw import hypertreelist
 from wx.lib.agw.ultimatelistctrl import UltimateListCtrl, UltimateListMainWindow
-# TODO : voir si on peux utiliser TreeListCtrl
 from wx.dataview import TreeListCtrl
 from taskcoachlib.widgets import itemctrl, draganddrop
 
-
-# pylint: disable=E1101,E1103
 log = logging.getLogger(__name__)
 
 
@@ -55,9 +49,8 @@ class BaseHyperTreeList(hypertreelist.HyperTreeList, customtree.CustomTreeCtrl):
 
 
 class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
-    # pylint: disable=W0223
-
     def __init__(self, *args, **kwargs):
+        log.debug("HyperTreeList.__init__ : initialisation d'HyperTreeList.")
         self._editCtrl = None  # nouvel attribut pour TreeListCtrl
         super().__init__(*args, **kwargs)
         if operating_system.isGTK():
@@ -71,9 +64,11 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         wx.CallAfter(self.MainWindow.Refresh)
 
     def GetSelections(self):  # pylint: disable=C0103
-        """ Si l'élément racine est masqué, il ne doit jamais être sélectionné.
-            Malheureusement, CustomTreeCtrl et HyperTreeList permettent de le sélectionner.
-            Remplacez GetSelections pour résoudre ce problème."""
+        """
+        Si l'élément racine est masqué, il ne doit jamais être sélectionné.
+        Malheureusement, CustomTreeCtrl et HyperTreeList permettent de le sélectionner.
+        Remplacez GetSelections pour résoudre ce problème.
+        """
         selections = super().GetSelections()
         if self.HasFlag(wx.TR_HIDE_ROOT):
             root_item = self.GetRootItem()
@@ -82,7 +77,9 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         return selections
 
     def GetMainWindow(self, *args, **kwargs):  # pylint: disable=C0103
-        """ Avoir un GetMainWindow local afin que nous puissions créer une propriété MainWindow. """
+        """
+        Avoir un GetMainWindow local afin que nous puissions créer une propriété MainWindow.
+        """
         # return super().GetMainWindow(*args, **kwargs)  # *args et **kwargs semblent inutiles ici !
         return super().GetMainWindow()  # *args et **kwargs semblent inutiles ici !
 
@@ -101,8 +98,10 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         return hit_test_result
 
     def isClickablePartOfNodeClicked(self, event):
-        """ Indique si l'utilisateur a double-cliqué sur une partie du nœud qui
-            peut également recevoir des clics de souris réguliers. """
+        """
+        Indique si l'utilisateur a double-cliqué sur une partie du nœud qui
+        peut également recevoir des clics de souris réguliers.
+        """
         return self.__is_collapse_expand_button_clicked(event)
 
     def __is_collapse_expand_button_clicked(self, event):
@@ -147,9 +146,6 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
         # return bool(self.GetLabelTextCtrl())
         # # Ancien code
         return bool(self._editCtrl)
-        # # Nouveau code (wxPython Phoenix compatible)
-        # def IsLabelBeingEdited(self):
-        #     return self.IsEditing()  # Méthode de wx.TreeCtrl - wxPython Phoenix
 
     def StopEditing(self):
         if self.IsLabelBeingEdited():
@@ -191,6 +187,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
     def __init__(self, parent, columns, selectCommand, editCommand,
                  dragAndDropCommand, itemPopupMenu=None, columnPopupMenu=None,
                  *args, **kwargs):
+        log.debug("TreeListCtrl.__init__ : initialisation du contrôle de liste en arbre.")
         self.__adapter = parent
         self.__selection = []
         self.__user_double_clicked = False
@@ -203,22 +200,15 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         self.dragAndDropCommand = dragAndDropCommand
         kwargs.setdefault("resizeableColumn", 0)
         self._mainWin = None
+        log.debug("TreeListCtrl.__init__ : avant super().")
         super().__init__(parent, style=self.__get_style(),
                          agwStyle=self.__get_agw_style(), columns=columns,
                          itemPopupMenu=itemPopupMenu,
                          columnPopupMenu=columnPopupMenu, *args, **kwargs)
+        log.debug("TreeListCtrl.__init__ : après super()")
         self.bindEventHandlers(selectCommand, editCommand, dragAndDropCommand)
 
-        # # TODO:
-        # # AttributeError: 'TreeListCtrl' object has no attribute '_mainWin'
-        # # donc test de cette ligne copié de ultimatelistctrl.__init__
-        # self._mainWin = UltimateListMainWindow(self, wx.ID_ANY, wx.Point(0, 0), wx.DefaultSize, self.__get_style(), self.__get_agw_style())
-        # # AttributeError: 'TreeListCtrl' object has no attribute '_headerWin'
-        # self._headerWin = None
-        # # AttributeError: 'TreeListCtrl' object has no attribute '_editCtrl'
-
     def bindEventHandlers(self, selectCommand, editCommand, dragAndDropCommand):
-        # pylint: disable=W0201
         self.selectCommand = selectCommand
         self.editCommand = editCommand
         self.dragAndDropCommand = dragAndDropCommand
@@ -246,8 +236,6 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         return self.ct_type
 
     def curselection(self):
-        # return [self.GetItemPyData(item) for item in self.GetSelections()]
-        # wx.lib.agw.ultimatelistctrl.UltimateListCtrl.GetItemPyData
         return [self.GetItemPyData(item) for item in self.GetSelections()]
 
     def RefreshAllItems(self, count=0):  # pylint: disable=W0613
@@ -298,9 +286,6 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
 
     def _addObjectRecursively(self, parent_item, parent_object=None):
         for child_object in self.__adapter.children(parent_object):
-            # child_item = self.AppendItem(parent_item, '',
-            # child_item = self.Append(parent_item, "",
-            # AppendItem est utilisé dans wx !
             child_item = self.AppendItem(parent_item, "",
                                          self.getItemCTType(child_object),
                                          data=child_object)
@@ -391,8 +376,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         if event.GetKeyCode() == wx.WXK_RETURN:
             self.editCommand(event)
         elif event.GetKeyCode() == wx.WXK_F2 and self.GetSelections():
-            # self.EditLabel(self.GetSelections()[0], column=0)  # TODO :
-            self.EditLabel(self.GetSelections()[0])  # TODO :
+            self.EditLabel(self.GetSelections()[0])
         else:
             event.Skip()
 
@@ -417,7 +401,8 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             self.onItemActivated(event)
 
     def onItemActivated(self, event):
-        """ Attachez la colonne sur laquelle vous avez cliqué à l'événement
+        """
+        Attacher la colonne sur laquelle vous avez cliqué à l'événement
         afin que nous puissions l'utiliser ailleurs.
         """
         column_index = self.__column_under_mouse()
@@ -435,8 +420,7 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
             # otherwise the item was activated from the menu or by double-clicking
             #  on a portion of the tree view not containing an item.
             log.debug(f"TreeListCtrl.__column_under_mouse : fin1 colonne={column}")
-            return max(0, column)  # FIXME: Why can the column be -1? It is the default value.
-
+            return max(0, column)
         else:
             log.debug("TreeListCtrl.__column_under_mouse : fin2")
             return -1
@@ -493,22 +477,10 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
         #  L'initialisation de la classe parente est fondamentale.
         #  Les styles agwStyle (TR_NO_HEADER_BUTTONS, TR_FULL_ROW_HIGHLIGHT,
         #  TR_COLUMN_LOCK, etc.) influencent le comportement de l'en-tête et des colonnes.
-        # agw_style = hypertreelist.TR_HAS_BUTTONS \
-        #             | hypertreelist.TR_NO_HEADER_BUTTONS \
-        #             | hypertreelist.TR_FULL_ROW_HIGHLIGHT \
-        #             | hypertreelist.TR_HIDE_ROOT \
-        #             | hypertreelist.TR_COLUMN_LOCK \
-        #             | hypertreelist.TR_LINES_AT_ROOT \
-        #             | hypertreelist.TR_ROW_LINES \
-        #             | hypertreelist.TR_HAS_VARIABLE_ROW_HEIGHT
-        # Ne fonctionne pas !
-
         if operating_system.isMac():
             agw_style |= wx.TR_NO_LINES
         agw_style &= ~hypertreelist.TR_NO_HEADER  # TR_NO_HEADER_BUTTONS ?
         return agw_style
-
-    # pylint: disable=W0221
 
     def DeleteColumn(self, column_index):
         self.RemoveColumn(column_index)
@@ -525,8 +497,11 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                                self._getColumn(column_index).isEditable())
 
     def showColumn(self, *args, **kwargs):
-        """ Arrêtez l'édition avant de masquer ou d'afficher une colonne pour éviter les problèmes
-        lors du redessinage du contenu du contrôle de la liste arborescente. """
+        """
+        Arrêter l'édition avant de masquer ou d'afficher une colonne
+        pour éviter les problèmes
+        lors du redessinage du contenu du contrôle de la liste arborescente.
+        """
         self.StopEditing()
         super().showColumn(*args, **kwargs)
 
@@ -547,33 +522,16 @@ class CheckTreeCtrl(TreeListCtrl):
         # AttributeError: 'TreeListMainWindow' object has no attribute 'bind'
         # Sauf que mainwindow crée la méthode bind() !
         self.GetMainWindow().Bind(wx.EVT_LEFT_DOWN, self.onMouseLeftDown)
-        # self._mainWin = self.MainWindow()  # TODO : Test car attribut manquant
-        # mais TypeError: 'TreeListMainWindow' object is not callable
-        self.getIsItemCheckable = (
-            parent.getIsItemCheckable
-            if hasattr(parent, "getIsItemCheckable")
-            else lambda item: True
-        )
-        self.getIsItemChecked = parent.getIsItemChecked
-        self.getItemParentHasExclusiveChildren = parent.getItemParentHasExclusiveChildren
-        # AttributeError: 'TreeListCtrl' object has no attribute '_mainWin'
-        # donc test de cette ligne copié de ultimatelistctrl.__init__
-        # self._mainWin = UltimateListMainWindow(self, wx.ID_ANY, wx.Point(0, 0), wx.DefaultSize, self.__get_style(),
-        #                                        self.__get_agw_style())
-        # AttributeError: 'CheckTreeCtrl' object has no attribute '_CheckTreeCtrl__get_style'
-        # self._mainWin = None
-        # AttributeError: 'CheckTreeCtrl' object has no attribute '_headerWin'
-        # self._headerWin = None
 
     def getItemCTType(self, domain_object):
         """ Use radio buttons (ct_type == 2) when the object has "exclusive"
-            children, meaning that only one child can be checked at a time. Use
-            check boxes (ct_type == 1) otherwise. """
-        if self.getIsItemCheckable(domain_object):
-            return 2 if self.getItemParentHasExclusiveChildren(domain_object)\
-                else 1
-        else:
-            return 0
+        children, meaning that only one child can be checked at a time. Use
+        check boxes (ct_type == 1) otherwise. """
+        # if self.getIsItemCheckable(domain_object):
+        return 2 if self.getItemParentHasExclusiveChildren(domain_object)\
+            else 1
+        # else:
+        #    return 0
 
     def CheckItem(self, item, checked=True):
         if self.GetItemType(item) == 2:
@@ -584,11 +542,12 @@ class CheckTreeCtrl(TreeListCtrl):
             super().CheckItem(item, checked)
 
     def onMouseLeftDown(self, event):
-        """ By default, the HyperTreeList widget doesn't allow for unchecking
-            a radio item. Since we do want to support unchecking a radio
-            item, we look for mouse left down and uncheck the item and all of
-            its children if the user clicks on an already selected radio
-            item. """
+        """ Par défaut, le widget HyperTreeList ne permet pas de décocher
+            un élément radio. Puisque nous souhaitons prendre en charge
+            la décoche d'un élément radio, nous recherchons la souris
+            laissée enfoncée et décochons l'élément et tous
+            ses enfants si l'utilisateur clique sur un élément radio
+            déjà sélectionné. """
         position = self.GetMainWindow().CalcUnscrolledPosition(event.GetPosition())
         item, flags, dummy_column = self.HitTest(position)
         if (
