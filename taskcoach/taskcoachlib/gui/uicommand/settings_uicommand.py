@@ -82,8 +82,7 @@ class BooleanSettingsCommand(SettingsCommand):  # pylint: disable=W0223
         #      f"menu: {menu} dans window: {window}")
         # Définition de l'ID du menu ajouté via la méthode super :
         menuId = super().addToMenu(menu, window, position)
-
-        log.warning(f"BooleanSettingsCommand.addToMenu : Après super(), menu={menu}, menuId={menuId} de type {type(menuId)}")
+        log.info(f"BooleanSettingsCommand.addToMenu : Après super(), window={window}, self={self}, menu={menu}, menuId={menuId} de type {type(menuId)}, position={position}.")
 
         # print(f'menuId: {menuId} ajouté' )
         # print(f'au menu: {menu} window: {window} position: {position}')
