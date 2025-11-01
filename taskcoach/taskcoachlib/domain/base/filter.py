@@ -112,7 +112,7 @@ class Filter(patterns.SetDecorator):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def rootItems(self):
+    def rootItems(self) -> list:
         """
         Renvoie les éléments racinaires dans l'ensemble filtré.
 
