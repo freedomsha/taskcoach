@@ -57,6 +57,7 @@ appropriés pour éviter des erreurs.
 # from builtins import str
 # from builtins import range
 # from builtins import object
+import logging
 import wx
 import inspect
 from taskcoachlib.widgets import draganddrop
@@ -65,6 +66,8 @@ from taskcoachlib.widgets import tooltip
 # from taskcoachlib.thirdparty import hypertreelist
 # from taskcoachlib.thirdparty.customtreectrl import *
 from wx.lib.agw import hypertreelist
+
+log = logging.getLogger(__name__)
 
 
 class _CtrlWithItemsMixin(object):
@@ -161,12 +164,14 @@ class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
     """
 
     def __init__(self, *args, **kwargs):
+        log.debug("_CtrlWithItemPopupMenuMixin.__init__ : Initialisation du menu contextuel sur les éléments.")
         self.__popupMenu = kwargs.pop("itemPopupMenu")
         super().__init__(*args, **kwargs)
         if self.__popupMenu is not None:
             self._attachPopupMenu(self,
                                   (wx.EVT_TREE_ITEM_RIGHT_CLICK, wx.EVT_CONTEXT_MENU),
                                   self.onItemPopupMenu)
+        log.debug("_CtrlWithItemPopupMenuMixin initialisé !")
 
     def onItemPopupMenu(self, event):
         """
@@ -204,11 +209,13 @@ class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
     """
 
     def __init__(self, *args, **kwargs):
+        log.debug("_CtrlWithColumnPopupMenuMixin.__init__ : initialisation  pour activer un menu contextuel sur les en-têtes de colonnes.")
         self.__popupMenu = kwargs.pop("columnPopupMenu")
         super().__init__(*args, **kwargs)
         if self.__popupMenu is not None:
             self._attachPopupMenu(self, [wx.EVT_LIST_COL_RIGHT_CLICK],
                                   self.onColumnPopupMenu)
+        log.debug("_CtrlWithColumnPopupMenuMixin initialisé !")
 
     def onColumnPopupMenu(self, event):
         # We store the columnIndex in the menu, because it's near to
@@ -223,14 +230,14 @@ class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
         except AttributeError:
             window = event.GetEventObject()
         window.SetFocus()
-        # self.PopupMenuXY(self.__popupMenu, *event.GetPosition())
+        # self.PopupMenuXY(self.__popupMenu, *event.GetPosition())  # TODO : A changer !
         self.PopupMenu(self.__popupMenu)
         event.Skip(False)
 
 
 class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
     """
-    Permet aux contrôles d'accepter des fichiers, URL ou e-mails déposés.
+    Mixin qui Permet aux contrôles d'accepter des fichiers, URL ou e-mails déposés.
 
     Contrôle qui accepte que des fichiers, des e-mails ou des URL soient déposés sur des éléments.
 
@@ -241,10 +248,13 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
     """
 
     def __init__(self, *args, **kwargs):
+        log.debug("_CtrlWithDropTargetMixin.__init__ : initialise le mixin qui permet aux contrôles d'accepter des fichiers déposés.")
         self.__onDropURLCallback = kwargs.pop("onDropURL", None)
         self.__onDropFilesCallback = kwargs.pop("onDropFiles", None)
         self.__onDropMailCallback = kwargs.pop("onDropMail", None)
         super().__init__(*args, **kwargs)
+
+        # Initialise la gestionnaire de glisser-déposer de draganddrop.py
         if (
                 self.__onDropURLCallback
                 or self.__onDropFilesCallback
@@ -257,6 +267,7 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):
                 self.onDragOver,
             )
             self.GetMainWindow().SetDropTarget(dropTarget)
+        log.debug("_CtrlWithDropTargetMixin initialisé !")
 
     def onDropURL(self, x, y, url):
         """
@@ -304,8 +315,10 @@ class CtrlWithToolTipMixin(_CtrlWithItemsMixin, tooltip.ToolTipMixin):
     """ Contrôle qui a une info-bulle différente pour chaque élément. """
 
     def __init__(self, *args, **kwargs):
+        log.debug("CtrlWithToolTipMixin.__init__ : initialise le contrôle qui a une info-bulle différente pour chaque élément.")
         super().__init__(*args, **kwargs)
         self.__tip = tooltip.SimpleToolTip(self)
+        log.debug("CtrlWithToolTipMixin initialisé !")
 
     def OnBeforeShowToolTip(self, x, y):
         item, _, column = self.HitTest(wx.Point(x, y))
@@ -431,6 +444,7 @@ class _BaseCtrlWithColumnsMixin(object):
         le paramètre initial des colonnes. """
 
     def __init__(self, *args, **kwargs):
+        log.debug("_BaseCtrlWithColumnsMixin.__init__ : initialisation de tous les contrôles avec des colonnes.")
         self.__allColumns = kwargs.pop("columns")
         super().__init__(*args, **kwargs)
         # Ceci est utilisé pour garder une trace de quelle colonne a quel
@@ -439,6 +453,7 @@ class _BaseCtrlWithColumnsMixin(object):
         # ont le même en-tête. C'est une liste de tuples (index, colonne).
         self.__indexMap = []
         self._setColumns()
+        log.debug("_BaseCtrlWithColumnsMixin initialisé !")
 
     def _setColumns(self):
         for columnIndex, column in enumerate(self.__allColumns):
@@ -491,7 +506,8 @@ class _BaseCtrlWithColumnsMixin(object):
         try:
             return self.__allColumns.index(column)  # Uses overriden __eq__
         except ValueError:
-            raise ValueError("%s: unknown column" % column.name())
+            # raise ValueError("%s: unknown column" % column.name())
+            raise ValueError(f"{column.name()}: unknown column")
 
 
 class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
@@ -528,10 +544,13 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
     def _getColumnIndex(self, column):
         """ _getColumnIndex renvoie le columnIndex réel de la colonne si elle
             est visible, ou la position qu'elle aurait si elle était visible. """
+        log.debug(f"_CtrlWithHideableColumnsMixin._getColumnIndex : appelé par {self.__class__.__name__} avec column ={column}")
         columnIndexWhenAllColumnsVisible = super()._getColumnIndex(column)
         for columnIndex, visibleColumn in enumerate(self._visibleColumns()):
             if super()._getColumnIndex(visibleColumn) >= columnIndexWhenAllColumnsVisible:
+                log.debug(f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {columnIndex} de la colonne {column} visible si toutes les colonnes sont visibles.")
                 return columnIndex
+        log.debug(f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {self.GetColumnCount()} de la colonne {column} !")
         return self.GetColumnCount()  # Column header not found
 
     def _visibleColumns(self):
@@ -543,10 +562,12 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
         déclenchent des rappels pour (re)trier le contenu du contrôle. """
 
     def __init__(self, *args, **kwargs):
+        log.debug("_CtrlWithSortableColumnsMixin.__init__ : Initialisation des ajouts des indicateurs de tri.")
         super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_LIST_COL_CLICK, self.onColumnClick)
         self.__currentSortColumn = self._getColumn(0)
         self.__currentSortImageIndex = -1
+        log.debug("_CtrlWithSortableColumnsMixin initialisé ! Ajout des indicateurs de tri !")
 
     def onColumnClick(self, event):
         event.Skip(False)
@@ -570,6 +591,7 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
         self._showSortImage()
 
     def showSortOrder(self, imageIndex):
+        """Affiche l'ordre de tri actuel dans la visionneuse."""
         self.__currentSortImageIndex = imageIndex
         self._showSortImage()
 
@@ -593,12 +615,17 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
 
 
 class _CtrlWithAutoResizedColumnsMixin(autowidth.AutoColumnWidthMixin):
+    """
+    Classe de contrôle avec redimensionnement automatique des colonnes.
+    """
     def __init__(self, *args, **kwargs):
+        log.debug("_CtrlWithAutoResizedColumnsMixin.__init__ : initialisation.")
         super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_LIST_COL_END_DRAG, self.onEndColumnResize)
+        log.debug("_CtrlWithAutoResizedColumnsMixin initialisé !")
 
     def onEndColumnResize(self, event):
-        """ Enregistrez les largeurs de colonne après que l'utilisateur ait fait un redimensionnement. """
+        """ Enregistrer les largeurs de colonne après que l'utilisateur a fait un redimensionnement. """
         for index, column in enumerate(self._visibleColumns()):
             column.setWidth(self.GetColumnWidth(index))
         event.Skip()
