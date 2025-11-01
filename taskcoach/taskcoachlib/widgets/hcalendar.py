@@ -24,6 +24,7 @@ from .wxevents import CalendarCanvas, CalendarPrintout, EVT_EVENT_SELECTION_CHAN
 from taskcoachlib.domain import date
 from taskcoachlib.widgets import draganddrop
 from taskcoachlib import command, render
+from taskcoachlib.i18n import _  # Utilisé dans GetPrintout ! A la fin du fichier
 from . import tooltip
 import wx
 import datetime
@@ -78,7 +79,8 @@ class HierarchicalCalendar(tooltip.ToolTipMixin, CalendarCanvas):
         end = date.DateTime.fromDateTime(event.end)
 
         if task.plannedStartDateTime() != start:
-            command.EditPlannedStartDateTimeCommand(items=[task], newValue=start).do()
+            command.EditPlannedStartDateTimeCommand(items=[task],
+                                                    newValue=start).do()
         if task.dueDateTime() != end:
             command.EditDueDateTimeCommand(items=[task],
                                            newValue=end).do()
