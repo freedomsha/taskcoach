@@ -23,7 +23,7 @@ import wx
 from wx.lib.agw import hypertreelist as htl
 
 from taskcoachlib import widgets
-from taskcoachlib.widgets import autowidth
+from taskcoachlib.widgets import autowidth, dialog  # Dialog est nécessaire pour la dernière classe ToolBarEditor.
 from taskcoachlib.help.balloontips import BalloonTipManager
 from taskcoachlib.gui import uicommand
 from taskcoachlib.i18n import _
@@ -400,7 +400,7 @@ class _ToolBarEditorInterior(wx.Panel):
         return self.__toolbar.uiCommands(cache=False)
 
 
-class ToolBarEditor(BalloonTipManager, widgets.Dialog):
+class ToolBarEditor(BalloonTipManager, dialog.Dialog):
     def __init__(self, toolbar, settings, *args, **kwargs):
         self.__toolbar = toolbar
         self.__settings = settings
