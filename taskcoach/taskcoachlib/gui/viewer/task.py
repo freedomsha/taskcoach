@@ -36,10 +36,12 @@ import wx
 import struct
 import tempfile
 
+from future.backports.datetime import timedelta
 from wx.lib.scrolledpanel import ScrolledPanel
 import wx.lib.agw.piectrl
 from taskcoachlib import operating_system
-from taskcoachlib import command, widgets, domain, render
+from taskcoachlib import command, domain, render
+from taskcoachlib import widgets
 from taskcoachlib.domain import task, date
 # from taskcoachlib.gui import uicommand, dialog
 from taskcoachlib.gui import dialog
@@ -391,6 +393,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
             self.minuteRefresher = refresher.MinuteRefresher(self)
         else:
             self.secondRefresher = self.minuteRefresher = None
+        log.debug("BaseTaskTreeViewer initialisé !")
 
     def detach(self):
         """
@@ -663,6 +666,7 @@ class RootNode(object):
         Args :
             tasks : Liste des tâches à la racine de l'arborescence.
         """
+        log.debug(f"RootNode : Initialise la racine avec les tâches {tasks}.")
         # Liste des tâches à la racine de l'arborescence :
         self.tasks = tasks
 
@@ -824,6 +828,8 @@ class TimelineRootNode(RootNode):
         plannedStartDateTime(self, recursive=False) : Retourne la date de début planifiée la plus tôt.
         dueDateTime(self, recursive=False) : Retourne la date d'échéance la plus tardive.
     """
+    # log.debug(f"TimelineRootNode : lancé avec RootNode={RootNode}")
+    # log crée des erreurs !
     def children(self, recursive=False):
         children = super().children(recursive)
         children.sort(key=lambda task: task.plannedStartDateTime())
@@ -1123,6 +1129,7 @@ class SquareTaskViewer(BaseTaskTreeViewer):
             self.removeObserver(self.onAttributeChanged_Deprecated, oldEventType)
         try:
             newEventType = getattr(task.Task, "%sChangedEventType" % choice)()
+            # newEventType = getattr(task.Task, f"{choice}ChangedEventType")()
         except AttributeError:
             newEventType = "task.%s" % choice
         if newEventType.startswith("pubsub"):
@@ -1523,10 +1530,15 @@ class CalendarViewer(
             **self.widgetCreationKeywordArguments()
         )
 
+        widget.SetDrawHeaders(True)  # <- Active l'affichage des numéros de jour
         if self.settings.getboolean("calendarviewer", "gradient"):
             # If called directly, we crash with a Cairo assert failing...
+            log.debug("CalendarViewer.createWidget : Lance un CallAfter avec widgets.Calendar.SetDrawer et wxFancyDrawer.")
             wx.CallAfter(widget.SetDrawer, wxFancyDrawer)
+            log.debug("CalendarViewer.createWidget : CallAfter avec widgets.Calendar.SetDrawer et wxFancyDrawer est passé ! Terminé et pass !")
+            # pass
 
+        # log.info(f"CalendarViewer.createWidget : Renvoie widget à {self}.")
         return widget
 
     def onChangeConfig(self):
@@ -1732,7 +1744,7 @@ class TaskViewer(
             **kwargs :
         """
         # self._instance_count = taskcoachlib.patterns.NumberedInstances.lowestUnusedNumber(self) + 1  # pas sur !
-        log.debug("TaskViewer : Initialisation, Création du Visualiseur de tâches standard.")
+        log.debug("TaskViewer.__init__ : Initialisation, Création du Visualiseur de tâches standard.")
         kwargs.setdefault("settingsSection", "taskviewer")
         super().__init__(*args, **kwargs)
         if self.isVisibleColumnByName("timeLeft"):
@@ -1740,6 +1752,7 @@ class TaskViewer(
         pub.subscribe(
             self.onTreeListModeChanged, "settings.%s.treemode" % self.settingsSection()
         )
+        log.debug("TaskViewer.__init__ initialisé !")
 
     def activate(self):
         """
@@ -1811,6 +1824,7 @@ class TaskViewer(
         itemPopupMenu = self.createTaskPopupMenu()
         columnPopupMenu = self.createColumnPopupMenu()
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
+        log.debug("TaskViewer.createWidget : definit le widget TreeListCtrl.")
         widget = widgets.TreeListCtrl(
             self,
             self.columns(),
@@ -1823,8 +1837,9 @@ class TaskViewer(
             validateDrag=self.validateDrag,
             **self.widgetCreationKeywordArguments()
         )
+        log.debug("TaskViewer.createWidget: ?")
         if self.hasOrderingColumn():
-            widget.SetMainColumn(1)
+            widget.SetMainColumn(1)  # SetMainColumn est une fonction d'hypertreelist !
         widget.AssignImageList(imageList)  # pylint: disable=E1101
         widget.Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT, self.onBeginEdit)
         widget.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.onEndEdit)
@@ -2014,8 +2029,11 @@ class TaskViewer(
             #     self, "render%s" % (name[0].capitalize() + name[1:])
             # )
             renderCallback = getattr(
-                self, "render%s" % (name[0].capitalize() + name[1:])
+                self, f"render{name[0].capitalize() + name[1:]}"
             )
+            # renderCallback = getattr(
+            #     self, f"render{name[0].capitalize()}{name[1:]}"
+            # )
             columns.append(
                 widgets.Column(
                     name,
@@ -2142,8 +2160,11 @@ class TaskViewer(
                 #     self, "render%s" % (name[0].capitalize() + name[1:])
                 # )
                 renderCallback = getattr(
-                    self, "render%s" % (name[0].capitalize() + name[1:])
+                    self, f"render{name[0].capitalize() + name[1:]}"
                 )
+                # renderCallback = getattr(
+                #     self, f"render{name[0].capitalize()}{name[1:]}"
+                # )
                 columns.append(
                     widgets.Column(
                         name,
