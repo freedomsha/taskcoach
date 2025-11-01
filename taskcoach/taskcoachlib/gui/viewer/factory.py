@@ -18,12 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import range
 # from builtins import object
+import logging
 from taskcoachlib import operating_system
 
 from taskcoachlib.gui.viewer import effort
 from taskcoachlib.gui.viewer import task
 from taskcoachlib.gui.viewer import category
 from taskcoachlib.gui.viewer import note
+
+log = logging.getLogger(__name__)  # Initialise le logger pour ce module.
 
 
 def viewerTypes():
@@ -55,6 +58,7 @@ def viewerTypes():
 
 class addViewers(object):  # pylint: disable=C0103, R0903
     """ addViewers est une classe se faisant passer pour une méthode.
+
         C'est une classe car cela facilite la répartition du travail
         entre différentes méthodes utilisant les mêmes variables d'instance.
     """
@@ -111,11 +115,12 @@ class addViewers(object):  # pylint: disable=C0103, R0903
         )
 
     def _viewer_kwargs(self, viewer_class):  # pylint: disable=R0201
-        """ Return the keyword arguments to be passed to the viewer
-            initializer.
+        """
+        Return the keyword arguments to be passed to the viewer
+        initializer.
 
-            Renvoie les arguments de mot-clé à transmettre à l'initialiseur du visualiseur.
-            """
+        Renvoie les arguments de mot-clé à transmettre à l'initialiseur du visualiseur.
+        """
         return dict(viewerContainer=self.__viewer_container) if issubclass(viewer_class,
                                                                            effort.EffortViewerForSelectedTasks) \
             else dict()
