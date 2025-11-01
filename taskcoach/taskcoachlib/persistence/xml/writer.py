@@ -830,6 +830,8 @@ class TemplateXMLWriter(XMLWriter):
     # def write(self, tsk):  # pylint: disable=W0221 # Méthode de XMLWrite avec signature différente -> à changer !?
     def write(self, tsk, categoryContainer,
               noteContainer, syncMLConfig, guid):
+        # def write(self, tsk, categoryContainer=None,
+        #           noteContainer=None, syncMLConfig=None, guid=None):
         """
         Sérialise une tâche en tant que modèle XML.
 
