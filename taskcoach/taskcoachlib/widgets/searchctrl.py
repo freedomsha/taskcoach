@@ -163,7 +163,7 @@ class SearchCtrl(tooltip.ToolTipMixin, wx.SearchCtrl):
             # x, y = self.GetParent().ClientToScreenXY(*self.GetPosition())
             # x, y = self.GetParent().ClientToScreen(*self.GetPosition())
             if self.GetParent().IsShown():
-                x, y = self.GetParent().ClientToScreen(*self.GetPosition())
+                x, y = self.GetParent().ClientToScreenXY(*self.GetPosition())
 
                 # height = self.GetClientSizeTuple()[1]
                 height = self.GetClientSize()[1]
