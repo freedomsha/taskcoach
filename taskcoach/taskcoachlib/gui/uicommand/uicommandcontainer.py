@@ -91,7 +91,7 @@ class UICommandContainerMixin(object):
             # log.debug(f"UICommandContainerMixin.appendUICommands : dir(self)={dir(self)}")
             if uiCommand is None:
                 self.AppendSeparator()
-            elif isinstance(uiCommand, int): # Toolbars only
+            elif isinstance(uiCommand, int):  # Toolbars only
                 self.AppendStretchSpacer(uiCommand)
                 # elif isinstance(uiCommand, (str, unicode)):
             elif isinstance(uiCommand, (str, str)):
