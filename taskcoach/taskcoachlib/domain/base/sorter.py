@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from taskcoachlib import patterns
 # try:
 #    from taskcoachlib.thirdparty.pubsub import pub
@@ -23,6 +24,8 @@ from taskcoachlib import patterns
 #    from wx.lib.pubsub import pub
 # except ModuleNotFoundError:
 from pubsub import pub
+
+log = logging.getLogger(__name__)
 
 
 class Sorter(patterns.ListDecorator):  # classe enfant
