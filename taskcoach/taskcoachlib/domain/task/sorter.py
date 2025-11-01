@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from taskcoachlib.domain import base
 # try:
 #     from taskcoachlib.thirdparty.pubsub import pub
@@ -24,6 +25,8 @@ from taskcoachlib.domain import base
 # except ModuleNotFoundError:
 from pubsub import pub
 from . import task
+
+log = logging.getLogger(__name__)
 
 
 class Sorter(base.TreeSorter):
@@ -69,16 +72,16 @@ class Sorter(base.TreeSorter):
     def createSortKeyFunction(self, sortKey):
         statusSortKey = self.__createStatusSortKey()
         regularSortKey = super().createSortKeyFunction(sortKey)
-        return lambda task: statusSortKey(task) + [regularSortKey(task)]
+        return lambda the_task: statusSortKey(the_task) + [regularSortKey(the_task)]
 
     def __createStatusSortKey(self):
         if self.__sortByTaskStatusFirst:
             if self.isAscending():
-                return lambda task: [task.completed(), task.inactive()]
+                return lambda the_task: [the_task.completed(), the_task.inactive()]
             else:
-                return lambda task: [not task.completed(), not task.inactive()]
+                return lambda the_task: [not the_task.completed(), not the_task.inactive()]
         else:
-            return lambda task: []
+            return lambda the_task: []
 
     def _registerObserverForAttribute(self, attribute):
         # Sorter is always observing task dates and prerequisites because
