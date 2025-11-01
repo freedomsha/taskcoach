@@ -51,7 +51,8 @@ class BaseTextCtrl(wx.TextCtrl):
             self.__undone_value = None
 
     def GetValue(self, *args, **kwargs):
-        value = super().GetValue(*args, **kwargs)
+        # value = super().GetValue(*args, **kwargs)
+        value = super().GetValue()
         # Don't allow unicode control characters:
         return value.translate(UNICODE_CONTROL_CHARACTERS_TO_WEED)
 
