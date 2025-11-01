@@ -115,7 +115,7 @@ class IOController(object):
 
         Returns :
             (dict) : La configuration de synchronisation du fichier de tâches.
-       """
+        """
         return self.__taskFile.syncMLConfig()
 
     def setSyncMLConfig(self, config):
@@ -192,7 +192,7 @@ class IOController(object):
 
         Returns :
             None
-            """
+        """
         filename = None
         log.info("IOController.openAfterStart : Ouvre le fichier spécifié en ligne de commande"
                  " ou le dernier fichier ouvert par l'utilisateur, ou aucun fichier du tout.")
@@ -481,7 +481,6 @@ class IOController(object):
     def mergeDiskChanges(self):
         """La méthode mergeDiskChanges permet de fusionner les modifications apportées au fichier de tâches
         sur le disque avec le fichier courant.
-
 
         Si le fichier a été modifié depuis la dernière sauvegarde,
         elle affiche une boîte de dialogue pour demander à l'utilisateur de confirmer la sauvegarde.
@@ -889,7 +888,7 @@ class IOController(object):
 
         Si la synchronisation échoue, une exception "AuthenticationFailure" est levée et
         l'utilisateur peut choisir de réessayer ou d'annuler.
-"""
+        """
         doReset = False
         while True:
             password = GetPassword("Task Coach", "SyncML", reset=doReset)
@@ -964,7 +963,7 @@ class IOController(object):
 
         Les fichiers récents sont stockés dans la section "file" des paramètres
         de l'objet "self.__settings" sous la clé "recentfiles".
-"""
+        """
         recentFiles = self.__settings.getlist("file", "recentfiles")
         if fileName in recentFiles:
             recentFiles.remove(fileName)
@@ -982,7 +981,7 @@ class IOController(object):
 
         Les fichiers récents sont stockés dans la section "file" des paramètres
         de l'objet "self.__settings" sous la clé "recentfiles".
-"""
+        """
         recentFiles = self.__settings.getlist("file", "recentfiles")
         if fileName in recentFiles:
             recentFiles.remove(fileName)
@@ -1208,7 +1207,8 @@ class IOController(object):
     def __updateDefaultPath(self, filename):
         """Met à jour les chemins par défaut.
 
-        Pour chaque option dans ..., définit l'option du chemin par défaut pour le fichier .tsk à ouvrir."""
+        Pour chaque option dans ..., définit l'option du chemin par défaut pour le fichier .tsk à ouvrir.
+        """
         for options in [self.__tskFileOpenDialogOpts,
                         self.__tskFileSaveDialogOpts,
                         self.__csvFileDialogOpts,
