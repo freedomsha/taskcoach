@@ -87,6 +87,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
     # s'assurer que self.join() n'est appelé qu'une seule fois, même si stop() est appelé plusieurs fois.
 
     def __init__(self):
+        log.debug("FilesystemPollerNotifier.__init__ : initialisation du Notifier qui interroge le système de fichiers pour les modifications.")
         super().__init__()
 
         # Un verrou réentrant pour la sécurité des threads :
@@ -108,13 +109,14 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
             filename (str) : Le nom de fichier à définir.
         """
         self.lock.acquire()
-        try:
-            super().setFilename(filename)
-        finally:
-            self.lock.release()
+        # try:
+        #     super().setFilename(filename)
+        # finally:
+        #     self.lock.release()
         # TODO: Essayer plutôt :
-        # with self.lock:
-        #    super().setFilename(filename)
+        with self.lock:
+            super().setFilename(filename)
+            self.lock.release()
 
     def run(self):
         """
@@ -123,17 +125,18 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
         Cette méthode vérifie périodiquement si le fichier associé a été modifié.
         Si une modification est détectée, la méthode `onFileChanged` est appelée.
         """
+        log.info("FilesystemPollerNotifier.run vérifie si le fichier a été modifié.")
         try:
             while not self.cancelled:
                 self.lock.acquire()
-                # with self.lock:  # sans try:
-                try:
+                with self.lock:  # sans try:
+                    # try:
                     if self._filename and os.path.exists(self._filename):
                         stamp = os.stat(self._filename).st_mtime
                         if stamp > self.stamp:
                             self.stamp = stamp
                             self.onFileChanged()
-                finally:
+                    # finally:
                     self.lock.release()
 
                 self.evt.wait(10)
@@ -148,16 +151,17 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
         Cette méthode annule le thread du notificateur.
         """
         log.info("FilesystemPollerNotifier.stop() appelée")
-        self.cancelled = True
-        self.evt.set()
-        # with self.lock:
-        #    if not self.cancelled:
-        #        self.cancelled = True
-        #        self.evt.set()
-        self.join()
-        # if not self.join_called:
-        #    self.join_called = True
-        #    self.join()
+        # self.cancelled = True
+        # self.evt.set()
+        with self.lock:
+           if not self.cancelled:
+               self.cancelled = True
+               self.evt.set()
+        # self.join()
+        if not self.join_called:
+           self.join_called = True
+           self.join()
+        log.info("FilesystemPollerNotifier.stop() terminé !")
 
     def saved(self):
         """
@@ -169,8 +173,12 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
             Si le nom de fichier n'est pas défini ou si le fichier n'existe pas,
             l'horodatage est défini sur Aucun.
         """
+        log.debug("FilesystemPollerNotifier.saved appelée. Tente de mettre à jour l'horodatage de modification du fichier.")
         with self.lock:
+            log.debug("FilesystemPollerNotifier.saved utilise NotifierBase.saved pour mettre à jour l'horodatage de modification du fichier.")
             super().saved()
+            log.debug("FilesystemPollerNotifier.saved terminé !")
+        log.debug("FilesystemPollerNotifier.saved doit s'être terminé en utilisant NotifierBase.saved sinon rien n'est fait!")
 
     def onFileChanged(self):
         """
