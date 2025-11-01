@@ -16,9 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import wx
 import datetime
 import math
+
+log = logging.getLogger(__name__)
+
 
 # Define new event types and binders
 wxEVT_EVENT_SELECTION_CHANGED = wx.NewEventType()
@@ -134,7 +138,9 @@ def shortenText(gc, text, maxW):
     shortText = text
     idx = len(text) // 2
     while True:
-        w, h = gc.GetFullTextExtent(shortText)
+        # w, h = gc.GetFullTextExtent(shortText)
+        # w, h, d, eL = gc.GetFullTextExtent(shortText)
+        w, h, _, _ = gc.GetFullTextExtent(shortText)
         if w <= maxW:
             return shortText
         idx -= 1
@@ -571,10 +577,12 @@ class CalendarCanvas(wx.Panel):
 
         if y <= self._marginTop:
             return None
+        # Vérification de l'existence de la barre de défilement et ajustement de la hauteur
         if self._hScroll.IsShown():
             h -= self._hScroll.GetClientSize()[1]
             if y >= h:
                 return None
+        # Vérification de l'existence de la barre de défilement et ajustement de la largeur
         if self._vScroll.IsShown():
             w -= self._vScroll.GetClientSize()[0]
             if x >= w:
@@ -616,27 +624,27 @@ class CalendarCanvas(wx.Panel):
                                 and abs(x - si * self._eventWidth) <= self._margin
                                 and ymin <= yIndex < ymax
                         ):
-                            result = _HitResult(x, y, candidate, dateTime)
-                            result.position = result.HIT_START
-                            return result
+                            _result = _HitResult(x, y, candidate, dateTime)
+                            _result.position = _result.HIT_START
+                            return _result
                         if (
                                 ei is not None
                                 and abs(x - ei * self._eventWidth) <= self._margin
                                 and ymin <= yIndex < ymax
                         ):
-                            result = _HitResult(x, y, candidate, dateTime)
-                            result.position = result.HIT_END
-                            return result
+                            _result = _HitResult(x, y, candidate, dateTime)
+                            _result.position = _result.HIT_END
+                            return _result
                         if sir <= xIndex < eir and ymin <= yIndex < ymax:
-                            result = _HitResult(x, y, candidate, dateTime)
-                            result.position = result.HIT_IN
-                            return result
+                            _result = _HitResult(x, y, candidate, dateTime)
+                            _result.position = _result.HIT_IN
+                            return _result
                 # Puisque la liste contient au moins "event"...
                 assert 0
 
         # Nous n’avons touché aucun événement.
-        result = _HitResult(x, y, None, dateTime)
-        return result
+        _result = _HitResult(x, y, None, dateTime)
+        return _result
 
     def _Flatten(self, event, result):
         """
@@ -699,9 +707,12 @@ class CalendarCanvas(wx.Panel):
         Args:
             event (wx.PaintEvent): The paint event.
         """
+        log.debug(f"CalendarCanvas._OnPaint : lancé pour event={event}")
         w, h = self.GetClientSize()
+        log.debug("CalendarCanvas._OnPaint : w=%s et h=%s", w, h)
         vw = max(w, self._minSize[0])
         vh = max(h, self._minSize[1])
+        log.debug("CalendarCanvas._OnPaint : vw=%s et vh=%s", vw, vh)
         dx = dy = 0
         if self._hScroll.IsShown():
             vh -= self._hScroll.GetClientSize()[1]
@@ -709,15 +720,18 @@ class CalendarCanvas(wx.Panel):
         if self._vScroll.IsShown():
             vw -= self._vScroll.GetClientSize()[0]
             dy = self._vScroll.GetThumbPosition()
+        log.debug("CalendarCanvas._OnPaint : vw=%s, vh=%s, dx=%s et dy=%s", vw, vh, dx, dy)
 
         # Crée un bitmap tampon pour dessiner hors écran
         bmp = wx.Bitmap(vw, vh)
         # Créer un contexte de périphérique de mémoire pour dessiner des graphiques dans le bitmap.
         memDC = wx.MemoryDC()
         memDC.SelectObject(bmp)
+        log.debug("CalendarCanvas._OnPaint : wx.MemoryDC.IsOk ? %s", memDC.IsOk())
         try:
             memDC.SetBackground(wx.WHITE_BRUSH)
             memDC.Clear()
+            # Créer un context graphique pour memDC
             gc = wx.GraphicsContext.Create(memDC)
             self._Draw(gc, vw, vh, dx, dy)
             # Appelle la méthode de dessin principale pour remplir le DC
@@ -738,6 +752,7 @@ class CalendarCanvas(wx.Panel):
             dx (int): The horizontal offset.
             dy (int): The vertical offset.
         """
+        log.debug(f"CalendarCanvas._Draw : Lancé avec gc={gc}, vw={vw}, vh={vh}, dx={dx}, dy={dy}.")
         gc.PushState()
         try:
             gc.Translate(-dx, 0.0)
@@ -765,6 +780,7 @@ class CalendarCanvas(wx.Panel):
             w (int): The width.
             h (int): The height.
         """
+        log.debug(f"CalendarCanvas._DrawHeader: Dessinez l'en-tête de la vue du calendrier avec gc={gc}, w={w}, h={h}.")
         gc.SetPen(wx.Pen(self._outlineColorDark))
         for startIndex, endIndex in self._daySpans:
             date = (
@@ -818,7 +834,7 @@ class CalendarCanvas(wx.Panel):
                 ),
                 x1 - x0,
             )
-            tw, th = gc.GetFullTextExtent(text)
+            tw, th, _, _ = gc.GetFullTextExtent(text)
             gc.DrawText(
                 text, x0 + (x1 - x0 - tw) / 2, (self._marginTop - 2.0 - th) / 2
             )
@@ -895,7 +911,7 @@ class CalendarCanvas(wx.Panel):
 
                 gc.SetFont(wx.NORMAL_FONT, wx.RED)
                 text = self._mouseDragPos.strftime("%c")
-                tw, th = gc.GetFullTextExtent(text)
+                tw, th, _, _ = gc.GetFullTextExtent(text)
                 tx = 0
                 if self._mouseState == self.MS_DRAG_LEFT:
                     tx = x0 + self._margin
@@ -953,7 +969,7 @@ class CalendarCanvas(wx.Panel):
                             )
                     ).strftime("%c"),
                 )
-                tw, th = gc.GetFullTextExtent(text)
+                tw, th, _, _ = gc.GetFullTextExtent(text)
                 gc.DrawText(
                     text, x0 + (x1 - x0 - tw) / 2, y0 + (y1 - y0 - th) / 2
                 )
@@ -1490,6 +1506,7 @@ class CalendarCanvas(wx.Panel):
             x1 (float): The x-coordinate of the bottom-right corner.
             y1 (float): The y-coordinate of the bottom-right corner.
         """
+        log.debug(f"CalendarCanvas._DrawText : Dessine le texte avec gc={gc}, event={event}, x0={x0}, y0={y0}, x1={x1}, y1={y1}.")
         gc.SetFont(
             self.GetFont(event),
             (
@@ -1499,7 +1516,8 @@ class CalendarCanvas(wx.Panel):
             ),
         )
         text = shortenText(gc, self.GetText(event), int(x1 - x0 - self._margin * 2))
-        w, h = gc.GetFullTextExtent(text)
+        w, h, _, _ = gc.GetFullTextExtent(text)
+        log.debug(f"CalendarCanvas._DrawText : Dessine {text} ici : ({x0 + self._margin}, {y0 + self._eventHeight / 3 + (y1 - y0 - h - 2 * self._eventHeight / 3) / 2}).")
         gc.DrawText(
             text,
             x0 + self._margin,
