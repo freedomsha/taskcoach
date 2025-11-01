@@ -42,6 +42,7 @@ log = logging.getLogger(__name__)
 
 # class PrinterSettings(metaclass=patterns.Singleton):
 class PrinterSettings(object, metaclass=patterns.Singleton):
+    """Classe pour gérer les paramètres d'impression."""
     edges = ("top", "left", "bottom", "right")
 
     def __init__(self, settings):
@@ -95,6 +96,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
 
 
 class HTMLPrintout(wx.html.HtmlPrintout):
+    """Classe pour imprimer du contenu HTML."""
     def __init__(self, html_text, settings):
         super().__init__()
         # Définit le contenu HTML à imprimer
@@ -141,6 +143,7 @@ class HTMLPrintout(wx.html.HtmlPrintout):
 
 
 class DCPrintout(wx.Printout):
+    """Classe pour imprimer le contenu d'un widget."""
     def __init__(self, widget):
         self.widget = widget
         super().__init__()
@@ -150,10 +153,12 @@ class DCPrintout(wx.Printout):
 
     # @staticmethod
     def GetPageInfo(self):  # pylint: disable=W0221
-        return (1, 1, 1, 1)
+        # return (1, 1, 1, 1)
+        return 1, 1, 1, 1
 
 
 def Printout(viewer, settings, printSelectionOnly=False, twoPrintouts=False):
+    """Fonction principale pour gérer l'impression."""
     widget = viewer.getWidget()
     if hasattr(widget, "GetPrintout"):
         _printout = widget.GetPrintout
