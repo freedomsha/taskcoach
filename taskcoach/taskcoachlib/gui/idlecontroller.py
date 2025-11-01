@@ -32,6 +32,9 @@ import wx
 
 
 class WakeFromIdleFrame(NotificationFrameBase):
+    """
+    Fenêtre de notification affichée lorsque le système est réveillé de l'inactivité.
+    """
     def __init__(self, idleTime, effort, displayedEfforts, *args, **kwargs):
         self._idleTime = idleTime
         self._effort = effort
@@ -40,6 +43,9 @@ class WakeFromIdleFrame(NotificationFrameBase):
         super().__init__(*args, **kwargs)
 
     def AddInnerContent(self, sizer, panel):
+        """
+        Crée les widgets à l'intérieur de la fenêtre.
+        """
         idleTimeFormatted = render.dateTime(self._idleTime)
         sizer.Add(wx.StaticText(panel, wx.ID_ANY,
                                 _("No user input since %s. The following task was\nbeing tracked:") %
@@ -60,18 +66,30 @@ class WakeFromIdleFrame(NotificationFrameBase):
         wx.EVT_BUTTON(btnStopResume, wx.ID_ANY, self.DoStopResume)
 
     def CloseButton(self, panel):
+        """
+        Ferme la fenêtre.
+        """
         return None
 
     def DoNothing(self, event):
+        """
+        Action pour le bouton "Do nothing".
+        """
         self._displayed.remove(self._effort)
         self.DoClose()
 
     def DoStopAt(self, event):
+        """
+        Action pour le bouton "Stop it at...".
+        """
         self._displayed.remove(self._effort)
         EditEffortStopDateTimeCommand(newValue=self._idleTime, items=[self._effort]).do()
         self.DoClose()
 
     def DoStopResume(self, event):
+        """
+        Action pour le bouton "Stop it at... and resume Now".
+        """
         self._displayed.remove(self._effort)
         EditEffortStopDateTimeCommand(newValue=self._idleTime, items=[self._effort]).do()
         NewEffortCommand(items=[self._effort.task()]).do()
@@ -79,6 +97,9 @@ class WakeFromIdleFrame(NotificationFrameBase):
 
 
 class IdleController(Observer, IdleNotifier):
+    """
+    Contrôleur pour l'inactivité du système.
+    """
     def __init__(self, mainWindow, settings, effortList):
         self._mainWindow = mainWindow
         self._settings = settings
@@ -94,19 +115,31 @@ class IdleController(Observer, IdleNotifier):
         pub.subscribe(self.poweron, "powermgt.on")
 
     def __onTrackedChanged(self, efforts):
+        """
+        Gère les changements dans la liste des efforts suivis.
+        """
         if len(efforts):
             self.resume()
         else:
             self.pause()
 
     def getMinIdleTime(self):
+        """
+        Retourne le temps d'inactivité minimum.
+        """
         return self._settings.getint("feature", "minidletime") * 60
 
     def wake(self, timestamp):
+        """
+        Est appelée lorsque le système est réveillé.
+        """
         self._lastActivity = timestamp
         self.OnWake()
 
     def OnWake(self):
+        """
+        Gère le réveil du système et affiche la notification si nécessaire.
+        """
         for effort in self.__tracker.trackedEfforts():
             if effort not in self._displayed:
                 self._displayed.add(effort)
