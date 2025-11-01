@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from . import singleton
+import logging
 from collections.abc import Iterable
 from taskcoachlib.patterns import singleton
 import functools
@@ -27,6 +28,8 @@ from pubsub import pub
 # - W0142: * or ** magic
 # - W0622: Redefining builtin types
 # pylint: disable=W0142,W0622
+
+log = logging.getLogger(__name__)
 
 
 class List(list):
@@ -628,6 +631,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         Args :
             event (event) : L'événement dont il faut informer les observateurs.
         """
+        log.debug(f"Publisher.notifyObservers : lancé par {self.__class__.__name__} pour informer les observateurs de l'événement {event}.")
         if not event.sources():
             return
         # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
@@ -639,6 +643,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         eventTypesAndSources = [
             (type, source) for source in sources for type in types
         ]
+        log.debug(f"Publisher.notifyObservers : pour chaque sources {sources} de chaque types {types} récupère {eventTypesAndSources}.")
         for eventTypeAndSource in eventTypesAndSources:
             for observer in self.__observers.get(eventTypeAndSource, set()):
                 observers.setdefault(observer, set()).add(eventTypeAndSource)
@@ -646,6 +651,7 @@ class Publisher(object, metaclass=singleton.Singleton):
             subEvent = event.subEvent(*eventTypesAndSources)
             if subEvent.types():
                 observer(subEvent)
+        log.debug(f"Publisher.notifyObservers : observers={observers} et observers.items={observers.items()} sont définis !")
 
     @unwrapObservers
     def observers(self, eventType=None):
@@ -680,6 +686,7 @@ class Observer(object):
         """
         self.__observers = set()
         super().__init__(*args, **kwargs)
+        # log.debug(f"Observer.__init__ : Liste des observateurs : {self.__observers}")
 
     def registerObserver(self, observer, *args, **kwargs):
         """
@@ -771,7 +778,10 @@ class Decorator(Observer):
                 # log.debug(f"Decorator.__getattr__ : retourne {d[attribute]} d'observable._getAttrDict()")
                 return d[attribute]
         # Fallback classique
-        return getattr(observable, attribute)
+        # return getattr(observable, attribute)
+        observable_to_ret = getattr(observable, attribute)
+        # log.debug(f"Decorator.__getattr__ : retourne les attributs {observable_to_ret} d'observable")
+        return observable_to_ret
 
 
 class ObservableCollection(object):
@@ -1046,6 +1056,58 @@ class CollectionDecorator(Decorator, ObservableCollection):
         """Retourne une représentation sous forme de chaîne de la collection décorée."""
         return f"{self.__class__}({super().__repr__()})"
 
+    def __str__(self) -> str:
+        """Retourne une représentation sous forme de chaîne de la collection décorée."""
+        return f"{self.__class__.__name__}({super().__str__()})"
+
+    # Explication :
+    #
+    # En ajoutant cette méthode refresh au décorateur, lorsque thaw() appellera self.refresh(),
+    # il trouvera cette méthode. La méthode refresh que nous venons d'ajouter est "intelligente" :
+    # elle essaie d'appeler refresh() sur l'objet qu'elle enveloppe (si cet objet le peut),
+    # mais si l'objet de base (comme NoteContainer) ne le peut pas,
+    # elle se contente de notifier ses propres observateurs (le Noteviewer),
+    # qui eux savent comment se rafraîchir.
+    def refresh(self):
+        """
+        Rafraîchit la collection. Si l'observable sous-jacent a une méthode
+        de rafraîchissement, appelle-la. Sinon, propage la notification
+        de changement.
+        """
+        observable = self.observable()
+        if hasattr(observable, 'refresh'):
+            observable.refresh()
+        else:
+            # # Si l'objet de base ne peut pas être rafraîchi (comme un NoteContainer),
+            # # on notifie les observateurs que cette collection (le décorateur)
+            # # a changé, ce qui déclenchera le refresh() du Viewer.
+            # self.notifyObservers(Event(self))
+            # VERSION CORRIGÉE :
+            # Appelle explicitement la méthode de la classe parente 'Publisher'
+            # pour éviter d'être intercepté par __getattr__.
+            Publisher.notifyObservers(self, Event(self))
+            # Cette modification force Python à appeler la méthode notifyObservers
+            # de la classe Publisher (la classe parente)
+            # au lieu de laisser __getattr__ la chercher sur le NoteContainer.
+
+    # La classe CollectionDecorator (utilisée par Sorter, Filter, etc.)
+    # gère un mécanisme freeze()/thaw() pour suspendre les mises à jour.
+    # Quand thaw() est appelé, il diminue son propre compteur _frozen
+    # et essaie ensuite d'appeler thaw() (ou d'accéder à _frozen)
+    # sur l'objet qu'il enveloppe (self.observable()).
+    # Le problème est que la chaîne de décorateurs (NoteSorter -> CategoryFilter -> SearchFilter)
+    # finit par envelopper directement le NoteContainer (la collection de notes elle-même).
+    # Or, NoteContainer n'est pas un CollectionDecorator et n'a pas d'attribut _frozen.
+    # L'accès via __getattr__ dans CollectionDecorator tente de propager l'accès à _frozen jusqu'au NoteContainer,
+    # ce qui cause l'AttributeError.
+    # Le CollectionDecorator ne devrait appeler freeze() ou thaw()
+    # sur l'objet qu'il contient (self.observable())
+    # que si cet objet possède effectivement ces méthodes.
+    # Explication:
+    #     En utilisant hasattr(observable, 'freeze') et hasattr(observable, 'thaw'),
+    #     on s'assure que l'appel récursif ne se produit que si l'objet enveloppé supporte explicitement ces méthodes.
+    #     Cela empêchera l'appel d'atteindre le NoteContainer (ou tout autre objet de base qui n'est pas "freezable")
+    #     et résoudra l'AttributeError.
     def freeze(self):
         """
         Gèle la collection, arrêtant temporairement les notifications de changements aux observateurs.
@@ -1053,9 +1115,15 @@ class CollectionDecorator(Decorator, ObservableCollection):
         Si la collection observée est elle-même un CollectionDecorator,
         elle appelle également la méthode freeze sur cette collection.
         """
-        if isinstance(self.observable(), CollectionDecorator):
-            self.observable().freeze()
+        log.debug(f"{self.__class__.__name__}.freeze() - Entrée")
+        # if isinstance(self.observable(), CollectionDecorator):
+        #     self.observable().freeze()
+        # AJOUTER LA VÉRIFICATION :
+        observable = self.observable()
+        if hasattr(observable, 'freeze'):
+            observable.freeze()
         self.__freezeCount += 1
+        log.debug(f"{self.__class__.__name__}.freeze() - Sortie, compteur = {self.__freezeCount}")
 
     def thaw(self):
         """
@@ -1074,10 +1142,29 @@ class CollectionDecorator(Decorator, ObservableCollection):
         # (qui est retourné par self.observable()) est None
         # lorsque CollectionDecorator.thaw() est appelée.
         log.debug(f"{self.__class__.__name__}.thaw() - Entrée")
-        # if self.isFrozen():
-        self.__freezeCount -= 1
-        if isinstance(self.observable(), CollectionDecorator):
-            self.observable().thaw()
+        # # if self.isFrozen():
+        # self.__freezeCount -= 1
+        # Ensure counter does not go below zero
+        # if self._frozen > 0:
+        if self.isFrozen():
+            # self._frozen -= 1
+            self.__freezeCount -= 1
+        # if isinstance(self.observable(), CollectionDecorator):
+        #     self.observable().thaw()
+        #     if not self._frozen:
+        #         log.debug(f"{self.__class__.__name__}.thaw() - Dégelé, appelle notifyFrozenObservers")
+        #         # self.notifyFrozenObservers()
+        # AJOUTER LA VÉRIFICATION :
+        observable = self.observable()
+        if hasattr(observable, 'thaw'):
+            observable.thaw()
+
+        # if not self._frozen:
+        if not self.__freezeCount:
+            self.refresh()  # Update the collection if counter is back to zero
+        # log.debug(f"{self.__class__.__name__}.thaw() - Sortie")
+        # log.debug(f"{self.__class__.__name__}.thaw() - Sortie, compteur = {self._frozen}")
+        log.debug(f"{self.__class__.__name__}.thaw() - Sortie, compteur = {self.__freezeCount}")
 
     # def isFrozen(self) -> bool:
     def isFrozen(self):
@@ -1087,7 +1174,8 @@ class CollectionDecorator(Decorator, ObservableCollection):
         Returns :
             (bool) : True si la collection est gelée, sinon False.
         """
-        return self.__freezeCount != 0
+        # return self.__freezeCount != 0
+        return self.__freezeCount > 0 or self.__freezeCount != 0
 
     def detach(self):
         """
