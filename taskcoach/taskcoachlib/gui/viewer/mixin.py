@@ -27,6 +27,7 @@ Vous devez spécifier les classes de mixin avant les autres classes.
 # standard_library.install_aliases()
 # from builtins import str
 # from builtins import object
+import logging
 from taskcoachlib import command
 from taskcoachlib.domain import base, task, category, attachment
 from taskcoachlib.gui.uicommand import uicommand
@@ -38,10 +39,26 @@ from taskcoachlib.i18n import _
 from pubsub import pub
 import wx
 
+log = logging.getLogger(__name__)
 
-# Il manque les classes mères, normal ce sont des Mixins
-class SearchableViewerMixin:
-    """ Classe Mixin pour obtenir une visionneuse consultable."""
+
+# Il manque les classes mères ! Normal, ce sont des Mixins !
+class SearchableViewerMixin(object):
+    """ Classe Mixin pour obtenir une visionneuse consultable.
+
+    Fournit des méthodes:
+        -createFilter:
+
+        -createToolBarUICommands:
+
+        -getSearchFilter:
+
+        -isSearchable:
+
+        -searchOptions:
+
+        -setSearchFilter:
+    """
 
     # @staticmethod
     def isSearchable(self):
@@ -117,8 +134,10 @@ class FilterableViewerMixin(object):
     """
 
     def __init__(self, *args, **kwargs):
+        log.debug("FilterableViewerMixin.__init__ : initialisation d'une visionneuse filtrable.")
         self.__filterUICommands = None
         super().__init__(*args, **kwargs)
+        log.debug("FilterableViewerMixin initialisé !")
 
     # @staticmethod
     def isFilterable(self):
@@ -192,7 +211,8 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
                     statusesToHide=self.hiddenTaskStatuses())
 
     def hideTaskStatus(self, status, hide=True):
-        self.__setBooleanSetting("hide%stasks" % status, hide)
+        # self.__setBooleanSetting("hide%stasks" % status, hide)
+        self.__setBooleanSetting(f"hide{status}tasks", hide)
         self.presentation().hideTaskStatus(status, hide)
 
     def showOnlyTaskStatus(self, status):
@@ -200,7 +220,8 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
             self.hideTaskStatus(taskStatus, hide=status != taskStatus)
 
     def isHidingTaskStatus(self, status):
-        return self.__getBooleanSetting("hide%stasks" % status)
+        # return self.__getBooleanSetting("hide%stasks" % status)
+        return self.__getBooleanSetting(f"hide{status}tasks")
 
     def hiddenTaskStatuses(self):
         return [status for status in task.Task.possibleStatuses()
@@ -241,8 +262,10 @@ class SortableViewerMixin(object):
     """ A viewer that is sortable. This is a mixin class. """
 
     def __init__(self, *args, **kwargs):
+        log.debug("SortableViewerMixin.__init__ : initialisation d'une visionneuse triable.")
         self._sortUICommands = []
         super().__init__(*args, **kwargs)
+        log.debug("SortableViewerMixin initialisée !")
 
     # @staticmethod
     def isSortable(self):
@@ -368,9 +391,12 @@ class SortableViewerForEffortMixin(SortableViewerMixin):
 
 class ManualOrderingMixin(object):
     def __init__(self, *args, **kwargs):
+        log.debug("ManualOrderingMixin.__init__ : initialisation de l'ordre manuel.")
         if "sort" not in self.viewerImages:
+            log.debug("ManualOrderingMixin.__init__ : ajoute 'sort' à la liste des icones visibles pour le tri manuel.")
             self.viewerImages = self.viewerImages + ["sort"]
         super().__init__(*args, **kwargs)
+        log.debug("ManualOrderingMixin initialisée.")
 
     def createSortByUICommands(self):
         return [
@@ -441,9 +467,7 @@ class SortableViewerForTasksMixin(
     sortByDescriptionHelpText = _("Sort tasks by description")
     sortByCategoryHelpText = _("Sort tasks by category")
     sortByCreationDateTimeHelpText = _("Sort tasks by creation date")
-    sortByModificationDateTimeHelpText = _(
-        "Sort tasks by last modification date"
-    )
+    sortByModificationDateTimeHelpText = _("Sort tasks by last modification date")
     sortByOrderingHelpText = _("Sort tasks manually")
 
     def __init__(self, *args, **kwargs):
