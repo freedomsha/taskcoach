@@ -61,8 +61,8 @@ import taskcoachlib.gui.viewer
 log = logging.getLogger(__name__)
 
 
-# class Menu(uicommandcontainer.UICommandContainerMixin, wx.Menu):  # Crée des problème d'initialisation avec self._window !
-class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne mieux !
+class Menu(uicommandcontainer.UICommandContainerMixin, wx.Menu):  # Crée des problème d'initialisation avec self._window !
+    # class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne mieux !
     """
     Classe de base pour les menus dans Task Coach (comme Fichier, Editer,
     Affichage, Nouveau, Actions et Aide)
@@ -122,7 +122,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         # cela pourrait causer des problèmes d'ID.
         self._accels = list()  # Liste des accélérateurs du menu.
         self._observers = list()  # Liste des menus/observateurs liés au menu.
-        log.info(f"Menu : Fin d'Initialisation de Menu. (self est {self.__class__.__name__}, window est {window.__class__.__name__})")
+        log.info(f"Menu : Fin d'Initialisation de Menu ! (self est {self.__class__.__name__}, window est {window.__class__.__name__})")
 
     def __len__(self):
         return self.GetMenuItemCount()  # wx. Returns the number of items in the menu.
@@ -156,6 +156,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         super().DestroyItem(menuItem)
         # nouvelle ligne conseillée par chatGPT
         IdProvider.put(menuItem.GetId())  # Libérer l'identifiant. Incorrect call arguments option. Parameter 'id_' unfilled
+        log.info(f"Menu.DestroyItem : {menuItem} supprimé de {self.__class__.__name__} !")
 
     def clearMenu(self):
         """ Remove all menu items.
@@ -225,7 +226,7 @@ class Menu(wx.Menu, uicommandcontainer.UICommandContainerMixin):  # Fonctionne m
         # # Why this line try ?
         try:
             log.debug(f"Menu.appendUICommand Essaie d'ajouter {uiCommand.__class__.__name__} au menu {self.__class__.__name__}"
-                      f" dans la {self._window.ClassName} {type(self._window).__name__} winId={self._window.GetId()}")
+                      f" dans la classe {self._window.ClassName} {type(self._window).__name__} winId={self._window.GetId()}")
             cmd = uiCommand.addToMenu(self, self._window)
             # cmd = self.addToMenu(uiCommand, self._window)
             # AttributeError: 'tuple' object has no attribute 'addToMenu'
@@ -543,6 +544,7 @@ class MainMenu(wx.MenuBar):
             self.Append(menulisted, text)  # Tous doivent être de forme (wx.Menu(), '&Name')
             accels.extend(menulisted.accelerators())
         mainwindow.SetAcceleratorTable(wx.AcceleratorTable(accels))
+        log.info("MainMenu : Menu principal créé !")
 
 
 class FileMenu(Menu):
@@ -1382,6 +1384,7 @@ class StartEffortForTaskMenu(DynamicMenu):
 
         self.tasks = tasks
         super().__init__(taskBarIcon, parentMenu, labelInParentMenu)
+        log.info("StartEffortForTaskMenu : Menu début d'effort de tâche créé !")
 
     def registerForMenuUpdate(self):
         for eventType in (self.tasks.addItemEventType(),
@@ -1441,8 +1444,8 @@ class TaskPopupMenu(Menu):
             Initialise le menu contextuel des tâches.
     """
     def __init__(self, mainwindow, settings, tasks, efforts, categories, taskViewer):
-        super().__init__(mainwindow)
         log.info("TaskPopupMenu : Création du menu Popup de Tâche.")
+        super().__init__(mainwindow)
         # log.info("TaskPopuMenu : Initialisation du menu contextuel : %s", self.__class__.__name__)
         # log.debug(f"mainwindow={mainwindow}, settings={settings},"
         #           f"tasks={tasks}, efforts={efforts},"
@@ -1496,7 +1499,7 @@ class TaskPopupMenu(Menu):
                 viewer=taskViewer, effortList=efforts, taskList=tasks),
             None,
             uicommand.NewSubItem(viewer=taskViewer))
-        log.info("TaskPopupMenu : Création terminée - Menu Popup de Tâche créé.")
+        log.info("TaskPopupMenu : Terminé - Menu Popup de Tâche créé !")
 
 
 class EffortPopupMenu(Menu):
@@ -1521,6 +1524,7 @@ class EffortPopupMenu(Menu):
             uicommand.EffortStop(
                 viewer=effortViewer, effortList=efforts, taskList=tasks),
         )
+        log.info("EffortPopupMenu : Menu Popup Effort créé !")
 
 
 class CategoryPopupMenu(Menu):
@@ -1569,6 +1573,7 @@ class CategoryPopupMenu(Menu):
         self.appendUICommands(
             None,
             uicommand.NewSubItem(viewer=categoryViewer))
+        log.info("CategoryPopupMenu : Menu Popup Catégorie créé !")
 
 
 class NotePopupMenu(Menu):
@@ -1600,6 +1605,7 @@ class NotePopupMenu(Menu):
         self.appendUICommands(
             None,
             uicommand.NewSubItem(viewer=noteViewer))
+        log.debug("NotePopupMenu : Menu créé !")
 
 
 class ColumnPopupMenuMixin(object):
@@ -1635,7 +1641,7 @@ class ColumnPopupMenu(ColumnPopupMenuMixin, Menu):
         super().__init__(window)
         log.debug("ColumnPopupMenu : Appel de CallAfter.")
         wx.CallAfter(self.appendUICommands, *self.getUICommands())
-        log.debug("ColumnPopupMenu : CallAfter passé avec succès.")
+        log.debug("ColumnPopupMenu : CallAfter passé avec succès. Menu Popup Colonne terminé !")
 
     def appendUICommands(self, *args, **kwargs):
         # Prepare for PyDeadObjectError since we're called from wx.CallAfter
@@ -1646,6 +1652,7 @@ class ColumnPopupMenu(ColumnPopupMenuMixin, Menu):
         # except wx.PyDeadObjectError:
         except RuntimeError as e:
             log.error(f"ColumnPopupMenu.appendUICommands : La méthode super plante à cause de {e}.", exc_info=True)
+        log.debug("ColumnPopupMenu.appendUICommands : Commande ajoutée !")
 
 
 class EffortViewerColumnPopupMenu(ColumnPopupMenuMixin,
