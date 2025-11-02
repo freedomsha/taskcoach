@@ -6,7 +6,6 @@ import wx
 from itertools import chain
 # from .wxSchedule import *
 from .wxSchedule import wxSchedule, EVT_SCHEDULE_CHANGE
-
 # from .wxSchedulerConstants import *
 from .wxSchedulerConstants import (
     wxSCHEDULER_WEEKSTART_MONDAY,
@@ -17,10 +16,9 @@ from .wxSchedulerConstants import (
     wxSCHEDULER_NEXT,
     wxSCHEDULER_PREV,
 )
-
 # from .wxSchedulerPaint import *
 from .wxSchedulerPaint import wxSchedulerPaint
-from . import wxScheduleUtils as utils
+from . import wxScheduleUtils as Utils
 
 log = logging.getLogger(__name__)
 
@@ -108,13 +106,13 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         """
 
         # Update the current Date according to
-        for i in (
+        for idate in (
             self._startingHour,
             self._startingPauseHour,
             self._endingPauseHour,
             self._endingPauseHour,
         ):
-            i = utils.copyDate(self._currentDate)
+            idate = Utils.copyDate(self._currentDate)  # ? A revoir
 
         # Create the list
         self._lstDisplayedHours = []
@@ -139,7 +137,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         for H in rangeWorkHour:
             for M in (0, 30):
                 hour = wx.DateTime().Now()
-                hour = utils.copyDate(self._currentDate)
+                hour = Utils.copyDate(self._currentDate)
                 hour.SetHour(H)
                 hour.SetMinute(M)
                 self._lstDisplayedHours.append(hour)
@@ -149,7 +147,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         Calcule la date correcte lors du déplacement (avant/arrière) dans la période.
         :param side: Indique si on avance ou recule dans la période.
         """
-
+        offset = wx.DateSpan(days=1)  # Initialisation de l'offset
         if self._viewType == wxSCHEDULER_DAILY:
             offset = wx.DateSpan(days=1)
         elif self._viewType == wxSCHEDULER_WEEKLY:
@@ -233,6 +231,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
                 self.Delete(0)
         finally:
             self.Thaw()  # dans wxScheduler ou plutôt wxSchedule ?
+            # self.Refresh()
 
     def GetDate(self):
         """
@@ -240,7 +239,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         Si la vue n'est pas journalière, retourne le premier jour de la période.
         :return: wx.DateTime de la date affichée.
         """
-        return utils.copyDateTime(self._currentDate)
+        return Utils.copyDateTime(self._currentDate)
 
     def GetDc(self):
         """
@@ -287,7 +286,7 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
 
         date = day.GetWeekDayInSameWeek(weekday, self._weekstart)
 
-        return utils.copyDateTime(date)
+        return Utils.copyDateTime(date)
 
     def IsInRange(self, date=None, schedule=None):
         """
@@ -400,6 +399,15 @@ class wxSchedulerCore(wxSchedulerPaint, wxSchedule):
         self._calculateWorkHour()
         self.InvalidateMinSize()
         self.Refresh()
+
+    def SetDrawHeaders(self, doDraw=True):
+        """
+        Active ou désactive l'affichage des en-têtes de jours (numéros de date) dans le calendrier.
+
+        :param doDraw: booléen, True pour afficher les dates, False pour les masquer.
+        """
+        self._drawHeaders = bool(doDraw)
+        self.Refresh()  # Redessine le calendrier
 
     def SetViewType(self, view=None):
         """
