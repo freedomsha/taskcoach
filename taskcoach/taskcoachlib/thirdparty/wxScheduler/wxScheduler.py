@@ -78,6 +78,8 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         self._dirty = False
         self._refreshing = False
 
+        self._drawHeaders = True
+
         self._showNow = True
         # self._refreshTimer = wx.Timer(self, wx.NewId() )
         # NewId is deprecieted
@@ -147,6 +149,7 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
         """Ajoute un ou plusieurs événements au planning et lie les signaux nécessaires."""
         wxSchedulerCore.Add(self, *args, **kwds)
         self._controlBindSchedules()
+        # self.Refresh()
 
     def Refresh(self):
         """Rafraîchit l’affichage du planning si ce n’est pas gelé, sinon marque comme sale."""
@@ -158,14 +161,23 @@ class wxScheduler(wxSchedulerCore, scrolled.ScrolledPanel):
             self._dirty = True
         else:
             self.DrawBuffer()
-            # # self.GetSizer().FitInside(self)
-            # sizer = self.GetSizer()
-            # if sizer:
-            #     #     sizer.FitInside(self)
-            #     # # else:
-            #     self.Layout()  # Demander un recalcul du layout
-            #     # else:
-            #     self.SetupScrolling()  # Préférable à FitInside() pour crolledPanel
+            # Récupérer le sizer qui a été défini sur wxScheduler par son parent.
+            # nous avons vu que Calendar lui-même ne définit pas de sizer sur _CalendarContent.
+            # Cependant, si un autre parent de wxScheduler définissait un sizer, cet appel serait pertinent.
+            # self.GetSizer().FitInside(self)
+            sizer = self.GetSizer()
+            # Si un sizer est présent,
+            if sizer:
+                # demander au sizer de redimensionner ses enfants pour qu'ils tiennent à l'intérieur du panneau défilant.
+                sizer.FitInside(self)
+            else:
+                #  Si aucun sizer n'est défini sur wxScheduler lui-même,
+                #  Layout() est appelé pour forcer un recalcul du layout des enfants.
+                self.Layout()  # Demander un recalcul du layout
+                # else:
+                # Cette méthode est spécifique à ScrolledPanel et
+                # est cruciale pour configurer les barres de défilement en fonction de la taille virtuelle du contenu.
+                self.SetupScrolling()  # Préférable à FitInside() pour crolledPanel
             # Rien ne fonctionne !
             super().Refresh()
             self._dirty = False
