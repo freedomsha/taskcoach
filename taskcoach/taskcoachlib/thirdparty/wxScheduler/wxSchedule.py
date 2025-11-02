@@ -4,6 +4,7 @@
 import logging
 import warnings
 import wx
+import wx.lib.newevent
 import time
 
 from .wxScheduleUtils import copyDateTime
@@ -64,12 +65,13 @@ class wxSchedule(object):
         # La chaîne d’héritage passe des arguments positionnels (parent, id, ...) tout du long.
         # Si une classe dans la chaîne ne les accepte pas, tu as "takes 1 positional argument but 3 were given".
 
-        # log.debug(f"wxSchedule.__init__ : avant super args={args}, kwds={kwds}")
+        log.debug(f"wxSchedule.__init__ : self={self.__class__.__name__} avant super args={args}, kwargs={kwargs}")
         # super(wxSchedule, self).__init__()
         # super().__init__()
         super().__init__(*args, **kwargs)
         # super().__init__(parent, id, *args, **kwds)
 
+        log.debug("wxSchedule.__init__ : plante après cela !")
         self._color = self.SCHEDULE_DEFAULT_COLOR
         self._font = wx.NORMAL_FONT
         self._foreground = self.SCHEDULE_DEFAULT_FOREGROUND
@@ -82,15 +84,20 @@ class wxSchedule(object):
         self._clientdata = None
         self._icons = []
         self._complete = None
-        self._id = "%.f-%s" % (time.time(), id(self))
+        # self._id = "%.f-%s" % (time.time(), id(self))
+        self._id = f"{time.time():f}-{id(self)}"
 
         # Need for freeze the event notification
         self._freeze = False
         self._layoutNeeded = False
+        self.passed = 0
+        log.info("wxSchedule initialisé !")
 
     def __getattr__(self, name):
         # Gestion des attributs Phoenix si présent
-        if hasattr(self, "_getAttrDict"):
+        self.passed += 1  # gestion de boucle infinie sur hasttr
+        # if hasattr(self, "_getAttrDict"):
+        if 0 < self.passed < 2 and hasattr(self, "_getAttrDict"):
             d = self._getAttrDict()
             if name in d:
                 return d[name]
