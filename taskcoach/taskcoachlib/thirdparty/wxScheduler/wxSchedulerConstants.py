@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 import wx
+
+log = logging.getLogger(__name__)
 
 wxSCHEDULER_VERSION = "1.3"
 
@@ -28,10 +31,17 @@ def SCHEDULER_BACKGROUND_BRUSH():
     """
     _bg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
     _r, _g, _b = _bg.Red(), _bg.Green(), _bg.Blue()
+    log.debug(f"SCHEDULER_BACKGROUND_BRUSH renvoie la couleur ({max(0, _r - 15)}, {max(0, _g - 15)}, {max(0, _b - 15)})")
     return wx.Colour(max(0, _r - 15), max(0, _g - 15), max(0, _b - 15))
 
 
 def DAY_BACKGROUND_BRUSH():
+    """
+    Retourne la couleur de fond des jours (non modifiée).
+
+    Returns:
+        Couleur du fond du jour.
+    """
     _bg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
     _r, _g, _b = _bg.Red(), _bg.Green(), _bg.Blue()
     return wx.Colour(_r, _g, _b)
