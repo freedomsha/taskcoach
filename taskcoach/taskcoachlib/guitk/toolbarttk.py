@@ -1,0 +1,201 @@
+# Points clés et considérations :
+#
+# Gestion des images :
+# L’exemple comprend des espaces réservés pour le chargement d’images à l’aide de PIL (Pillow).
+# Vous devrez installer Pillow (pip install Pillow) et adapter la logique de chargement
+# et de désactivation des images à votre format d’image spécifique
+# et à vos exigences de désactivation.
+
+# createToolBarUICommands :
+# Cette méthode, à l’origine dans MainWindow, devra être adaptée
+# pour créer des instances de vos sous-classes UICommand compatibles avec Tkinter.
+#
+# Boîte de dialogue de personnalisation :
+# La fonctionnalité ToolBarEditor doit être complètement réimplémentée
+# à l’aide des boîtes de dialogue Tkinter.
+# uniqueName :
+# assurez-vous que vos sous-classes UICommand disposent d’une méthode uniqueName
+# qui renvoie un identificateur de chaîne pour chaque commande.
+# Ceci est utilisé pour conserver la perspective de la barre d’outils.
+# Paramètres :
+# L’objet settings (à l’origine pour stocker les paramètres spécifiques à wxPython)
+# devra être adapté pour stocker et récupérer les données de configuration
+# de la barre d’outils d’une manière compatible avec Tkinter
+# (par exemple, en utilisant tkinter.filedialog
+# ou un fichier de paramètres personnalisés).
+
+# La solution : Séparer le parent (widget) du contrôleur (logique)
+#
+# Le constructeur ToolBar utilise son premier argument window à deux fins :
+#     Comme parent pour le widget ttk.Frame (dans super().__init__(window, **kwargs)).
+#     Comme contrôleur pour obtenir la logique métier (comme getToolBarPerspective()).
+#
+# Le parent (visuel) doit être self._sizer.
+# Le contrôleur (logique) doit être self (l'instance de Viewer,
+# ex: Noteviewer, qui a bien la méthode getToolBarPerspective définie dans basetk.py).
+#
+# Nous devons modifier ToolBar pour qu'il accepte ces deux informations distinctement.
+# Modifie le constructeur __init__ de la classe ToolBar
+# pour accepter un parent (pour Tkinter) et une window (pour la logique).
+import tkinter as tk
+from tkinter import ttk
+import logging
+# from PIL import Image, ImageTk # If you need more image format support
+
+log = logging.getLogger(__name__)
+
+
+class ToolBar(ttk.Frame):
+    """A class that represents a customizable toolbar in the Task Coach UI."""
+
+    # def __init__(self, window, settings, size=(32, 32), **kwargs):
+    # CHANGEMENT : La signature accepte 'parent' (pour le widget) et 'window' (pour la logique)
+    def __init__(self, parent, window, settings, size=(32, 32), **kwargs):
+        # super().__init__(window, **kwargs)
+        # CHANGEMENT : On passe 'parent' au constructeur de ttk.Frame
+        super().__init__(parent, **kwargs)
+        # log.debug(f"Initializing ToolBar in parent window: {type(window).__name__}, size: {size}")
+        log.debug(f"Initializing ToolBar in parent widget: {type(parent).__name__}, controller window: {type(window).__name__}, size: {size}")
+        self.__window = window  # On garde 'window' pour la logique
+        self.__settings = settings
+        self.__visibleUICommands = []
+        self.__cache = None
+        self.__customizeId = None
+        self.tool_bitmap_size = size  # Store the tool bitmap size
+
+        self.tools = []  # Use a list to store the tools
+        # self.load_perspective(window.getToolBarPerspective())
+        # Cet appel fonctionne maintenant car self.__window est le Viewer
+        self.load_perspective(self.__window.getToolBarPerspective())
+        self.configure(relief="raised", borderwidth=1)  # Add border for visual appearance
+        # La "bonne pratique" est la suivante :
+        # si tu stockes une variable (window) dans une variable d'instance (self.__window),
+        # c'est parce que tu as l'intention d'utiliser self.__window partout ailleurs dans la classe.
+        #
+        # Utiliser self.__window.get...() au lieu de window.get...() est plus cohérent.
+        # Cela montre que la barre d'outils dépend de sa variable d'instance (self.__window) pour fonctionner,
+        # et non d'une variable locale qui n'existe que dans __init__.
+        # C'est plus propre et plus facile à maintenir si jamais on doit réorganiser le code.
+
+    def load_perspective(self, perspective, customizable=True, cache=True):
+        log.debug(f"ToolBar.load_perspective: Loading toolbar perspective: {perspective}")
+        self.clear()
+        commands = self._filter_commands(perspective, cache=cache)
+        self.__visibleUICommands = commands[:]
+
+        if customizable:
+            if 1 not in commands:
+                commands.append(1)
+
+                # from taskcoachlib.gui.dialog.toolbar import ToolBarEditor  #Needs to be converted
+            # log.debug("ToolBar.loadPerspective : Ajout du bouton de personnalisation de la barre d'outils")
+            # uiCommand = uicommand.EditToolBarPerspective( #Needs to be converted
+            #     self, ToolBarEditor, settings=self.__settings)
+            # commands.append(uiCommand)
+            # self.__customizeId = uiCommand.id
+            # if operating_system.isMac():
+            #     commands.append(None)  # Errr...
+
+        self.appendUICommands(*commands)
+
+    def _filter_commands(self, perspective, cache=True):  # Identique à la version wx.
+        commands = []
+        if perspective:
+            index = {command.uniqueName(): command for command in self.ui_commands(cache=cache)
+                     if command is not None and not isinstance(command, int)}
+            index["Separator"] = None
+            index["Spacer"] = 1
+
+            for class_name in perspective.split(", "):
+                if class_name in index:
+                    commands.append(index[class_name])
+                else:
+                    commands = list(self.ui_commands(cache=cache))
+        return commands
+
+    def clear(self):
+        """Clears the toolbar and all its widgets."""
+        for widget in self.winfo_children():
+            widget.destroy()
+        self.__visibleUICommands = []
+
+    def detach(self):
+        self.clear()
+        self.__visibleUICommands = self.__cache = None
+
+    def appendUICommands(self, *commands):  # Méthode de appendUICommands !
+        """Appends multiple UI commands to the toolbar."""
+        for command in commands:
+            self.appendUICommand(command)
+
+    def appendUICommand(self, ui_command):
+        """Appends a single UI command to the toolbar."""
+        if ui_command is None:
+            # Separator
+            ttk.Separator(self, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=2)
+        elif isinstance(ui_command, int):
+            # Spacer (using an empty label with weight)
+            spacer = ttk.Label(self, text="")
+            spacer.pack(side=tk.LEFT, expand=True, fill=tk.X)  # Expand and fill
+        else:
+            # UICommand (create a button)
+            try:
+                # Adapt appendToToolBar to create ttk.Button
+                button = ui_command.appendToToolBar(self)  # Pass the toolbar instance
+                self.tools.append(button)
+            except Exception as e:
+                log.error(f"Error adding command {ui_command}: {e}")
+                raise
+
+    def ui_commands(self, cache=True):  # Identique à la version wx
+        """Returns a list of UI commands to display on the toolbar."""
+        if self.__cache is None or not cache:
+            self.__cache = self.__window.createToolBarUICommands()  # needs to be converted
+        return self.__cache
+
+    def visibleUICommands(self):  # Identique à v. wx
+        """Returns a list of the UI commands currently displayed on the toolbar."""
+        return self.__visibleUICommands[:]
+
+
+class UICommand:  # Base class, needs conversion
+    """Base class for UI commands."""
+    def __init__(self, toolbar, command=None, tooltip=None, image_path=None):
+        self.toolbar = toolbar
+        self.command = command
+        self.tooltip = tooltip
+        self.image_path = image_path
+        self.normal_image = None   # To store the normal image
+        self.disabled_image = None  # To store the disabled image
+        self.button = None
+
+    def appendToToolBar(self, toolbar):
+        """Creates a ttk.Button for the toolbar."""
+        # Load the image
+        # image = Image.open(self.image_path)
+        # self.normal_image = ImageTk.PhotoImage(image) # Store the normal image
+
+        # # Create a disabled version (e.g., grayscale)
+        # disabled_image = image.convert('L')  # Convert to grayscale
+        # self.disabled_image = ImageTk.PhotoImage(disabled_image) # Store the disabled image
+
+        button = ttk.Button(toolbar,
+                            # image=self.normal_image, # Use the normal image initially
+                            # state=tk.NORMAL,        # Start as enabled
+                            command=self.do_command,
+                            # compound=tk.TOP          # To put image above text
+                            )
+
+        button.pack(side=tk.LEFT, padx=1, pady=1)  # Pack the button into the toolbar
+        self.button = button
+
+        return button  # Return the button instance
+
+    def do_command(self):
+        """Executes the command associated with the UI command."""
+        if self.command:
+            self.command()
+
+        # Example Usage (in your main application window):
+# self.toolbar = ToolBar(self, self.settings, relief=tk.RAISED, bd=2)
+# self.toolbar.pack(side=tk.TOP, fill=tk.X)
