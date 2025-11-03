@@ -174,7 +174,8 @@ class HyperTreeList(BaseHyperTreeList, draganddrop.TreeCtrlDragAndDropMixin):
 
 
 class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
-                   itemctrl.CtrlWithToolTipMixin, HyperTreeList, UltimateListCtrl, hypertreelist.TreeListMainWindow):
+                   itemctrl.CtrlWithToolTipMixin, HyperTreeList):
+    # itemctrl.CtrlWithToolTipMixin, HyperTreeList, UltimateListCtrl, hypertreelist.TreeListMainWindow):
     # TreeListCtrl uses ALIGN_LEFT, ..., ListCtrl uses LIST_FORMAT_LEFT, ... for
     # specifying alignment of columns. This dictionary allows us to map from the
     # ListCtrl constants to the TreeListCtrl constants:
