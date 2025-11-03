@@ -267,7 +267,7 @@ class TimeDeltaEntryEvent:
         self.source = source
 
 
-class TimeDeltaEntry(widgetstk.paneltk.PanelWithBoxSizer):
+class TimeDeltaEntry(widgetstk.paneltk.FrameWithBoxSizer):
     # class TimeDeltaEntry(ttk.frame):
     """
     Widget d'entrée pour les durées (TimeDelta).
@@ -380,7 +380,7 @@ class TimeDeltaEntry(widgetstk.paneltk.PanelWithBoxSizer):
 # Cette conversion s'appuie sur le fait que tu as déjà converti widgets.masked.AmountCtrl en widgetstk.maskedtk.AmountCtrl et que cette nouvelle version fonctionne correctement dans un environnement Tkinter .
 # Assure-toi que la méthode GetValue() de widgetstk.maskedtk.AmountCtrl renvoie bien une valeur numérique et que SetValue() accepte une valeur numérique en argument.
 # N'oublie pas d'ajouter les imports nécessaires dans entrytk.py .
-class AmountEntry(paneltk.PanelWithBoxSizer):
+class AmountEntry(paneltk.FrameWithBoxSizer):
     """Widget d'entrée pour les montants numériques."""
 
     def __init__(self, parent, amount=0.0, readonly=False, *args, **kwargs):
@@ -463,7 +463,7 @@ class PercentageEntryEvent:
         self.source = source
 
 
-class PercentageEntry(paneltk.PanelWithBoxSizer):
+class PercentageEntry(paneltk.FrameWithBoxSizer):
     """Widget d'entrée pour les pourcentages avec slider."""
 
     # def __init__(self, parent, percentage=0, *args, **kwargs):
@@ -590,7 +590,7 @@ class FontEntryEvent:
     def __init__(self, source):
         self.source = source
 
-class FontEntry(paneltk.PanelWithBoxSizer):
+class FontEntry(paneltk.FrameWithBoxSizer):
     """Widget d'entrée pour la sélection de police."""
 
     def __init__(self, parent, currentFont=None, currentColor="black", *args, **kwargs):
@@ -682,7 +682,7 @@ class ColorEntryEvent:
         self.source = source  # Widget source de l'événement
 
 
-class ColorEntry(paneltk.PanelWithBoxSizer):
+class ColorEntry(paneltk.FrameWithBoxSizer):
     """
     Widget d'entrée pour la sélection de couleur.
 
