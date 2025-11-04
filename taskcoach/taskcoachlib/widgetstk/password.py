@@ -35,7 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Le code inclut une section de test qui montre comment les fonctions GetPassword fonctionnent en demandant, en cachant et en réinitialisant un mot de passe.
 
-# tODO : A refaire !
+# TODO : A refaire !
 import tkinter as tk
 from tkinter import simpledialog
 from tkinter import messagebox
