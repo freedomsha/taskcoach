@@ -24,7 +24,7 @@ Ce module fournit des icônes et des images en utilisant le module
 `icons.py` et les fonctions d'aide de `tkhelper.py`.
 Il implémente une logique de création et de mise en cache pour
 optimiser la gestion des ressources graphiques.
-Il utilise la classe wx.ArtProvider pour fournir des bitmaps et icônes avec la possibilité de superposer des images
+La version utilise la classe wx.ArtProvider pour fournir des bitmaps et icônes avec la possibilité de superposer des images
 ou d'ajuster les canaux alpha (transparence) des bitmaps.
 
 Classes :
@@ -99,9 +99,15 @@ Les fonctions internes telles que `convertAlphaToMask` gèrent des détails spé
 #
 # Voici la logique que j'ai suivie :
 #
-#     ArtProvider: La classe ArtProviderTk dans le nouveau code joue le rôle de la classe ArtProvider originale. Elle gère la récupération et la mise en cache des images. La méthode GetBitmap remplace la méthode CreateBitmap de la version wxPython, car Tkinter n'utilise pas le même modèle d'objets.
+#     ArtProvider: La classe ArtProviderTk dans le nouveau code joue le rôle de la classe ArtProvider originale.
+#                  Elle gère la récupération et la mise en cache des images.
+#                  La méthode GetBitmap remplace la méthode CreateBitmap de la version wxPython, car Tkinter n'utilise pas le même modèle d'objets.
 #
-#     IconProvider: La classe IconProvider du code wxPython gérait un cache d'icônes et des tailles spécifiques. Dans le nouveau code, cette fonctionnalité est intégrée directement dans ArtProviderTk. Le dictionnaire self._icon_cache remplit exactement la même fonction, en stockant les objets PhotoImage pour éviter de les recréer à chaque fois. Cela rend la gestion des icônes plus simple et plus efficace dans le contexte de Tkinter.
+#     IconProvider: La classe IconProvider du code wxPython gérait un cache d'icônes et des tailles spécifiques.
+#                   Dans le nouveau code, cette fonctionnalité est intégrée directement dans ArtProviderTk.
+#                   Le dictionnaire self._icon_cache remplit exactement la même fonction,
+#                   en stockant les objets PhotoImage pour éviter de les recréer à chaque fois.
+#                   Cela rend la gestion des icônes plus simple et plus efficace dans le contexte de Tkinter.
 #
 # En bref, les fonctionnalités de ces deux classes ont été fusionnées en une seule, ArtProviderTk, pour s'aligner sur la manière dont Tkinter gère les images.
 
@@ -109,8 +115,13 @@ Les fonctions internes telles que `convertAlphaToMask` gèrent des détails spé
 #
 # Gestion des erreurs :
 #
-# Dans la méthode GetBitmap, ajoute une gestion des erreurs plus robuste pour les cas où l'icône n'est pas trouvée ou ne peut pas être chargée. Cela peut inclure l'enregistrement d'un message d'erreur plus détaillé et le retour d'une icône par défaut au lieu de None.
-# Dans convertAlphaToMask, la conversion directe d'un PhotoImage en PIL Image n'est pas supportée et une simulation est utilisée. Dans un environnement de production, assurez-vous d'utiliser les images sources originales avec PIL pour cette manipulation  .
+# Dans la méthode GetBitmap,
+#    ajoute une gestion des erreurs plus robuste pour les cas où l'icône n'est pas trouvée ou ne peut pas être chargée.
+#    Cela peut inclure l'enregistrement d'un message d'erreur plus détaillé et le retour d'une icône par défaut au lieu de None.
+# Dans convertAlphaToMask,
+#    la conversion directe d'un PhotoImage en PIL Image n'est pas supportée et une simulation est utilisée.
+#    Dans un environnement de production, assurez-vous d'utiliser les images sources originales avec PIL pour cette manipulation.
+#    C'est fait !
 #
 #
 # Documentation :
