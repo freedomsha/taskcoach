@@ -57,7 +57,7 @@ from taskcoachlib.guitk import dialog
 from taskcoachlib.guitk.dialog import editor
 from taskcoachlib.guitk import uicommand
 from taskcoachlib import render
-import taskcoachlib.guitk.menu
+import taskcoachlib.guitk.menutk
 from taskcoachlib.guitk.viewer import basetk, mixintk
 
 log = logging.getLogger(__name__)

@@ -145,7 +145,7 @@ import logging
 import tkinter as tk
 import tkinter.ttk as ttk
 from taskcoachlib import operating_system
-import taskcoachlib.guitk.menu
+import taskcoachlib.guitk.menutk
 from pubsub import pub  # pip install PyPubSub
 
 log = logging.getLogger(__name__)

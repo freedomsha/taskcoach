@@ -90,7 +90,7 @@ from taskcoachlib.domain.base import filter  # pylint: disable=W0622
 from taskcoachlib.guitk.uicommand import uicommandtk as uicommand  # CHANGED: taskcoachlib.gui -> taskcoachlib.guitk
 from taskcoachlib.guitk import dialog  # CHANGED: taskcoachlib.gui -> taskcoachlib.guitk
 # from taskcoachlib.guitk.dialog import editor  # Seul itemEditorClass en a besoin !
-import taskcoachlib.guitk.menu  # CHANGED: taskcoachlib.gui -> taskcoachlib.guitk
+import taskcoachlib.guitk.menutk  # CHANGED: taskcoachlib.gui -> taskcoachlib.guitk
 
 # from taskcoachlib.guitk.menu import * # CHANGED
 from taskcoachlib.i18n import _
@@ -265,7 +265,7 @@ class Effortviewer(
         #     self.widget.ToggleAutoResizing(False)
 
         # Remplacement par des suppositions tk ou retrait :
-        autoResizing = False # Hypothèse que cette fonctionnalité n'est pas nécessaire ou gérée dans le widgetstk
+        autoResizing = False  # Hypothèse que cette fonctionnalité n'est pas nécessaire ou gérée dans le widgetstk
         # if hasattr(self.widget, 'IsAutoResizing') and self.widget.IsAutoResizing():
         #     autoResizing = True
         #     self.widget.ToggleAutoResizing(False)
@@ -317,7 +317,7 @@ class Effortviewer(
         imageList = self.createImageList()  # Has side-effects
         self._columns = self._createColumns()  # pylint: disable=W0201
         # itemPopupMenu = taskcoachlib.guitk.menu.EffortPopupMenu(self.parent, self.taskFile.tasks(),
-        itemPopupMenu = taskcoachlib.guitk.menu.EffortPopupMenu(  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
+        itemPopupMenu = taskcoachlib.guitk.menutk.EffortPopupMenu(  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
             self.parent,
             self.taskFile.tasks(),
             self.taskFile.efforts(),
@@ -325,7 +325,7 @@ class Effortviewer(
             self,
         )
         # columnPopupMenu = taskcoachlib.guitk.menu.EffortViewerColumnPopupMenu(self)
-        columnPopupMenu = taskcoachlib.guitk.menu.EffortViewerColumnPopupMenu(self) # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
+        columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(self) # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
         log.debug("Effortviewer.createWidget : création du tableau treeviewer")
         widget = widgetstk.listctrltk.VirtualListCtrl(  # CHANGED: widgets.VirtualListCtrl -> widgetstk.VirtualListCtrl

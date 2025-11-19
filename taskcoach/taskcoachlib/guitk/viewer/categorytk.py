@@ -96,7 +96,7 @@ from taskcoachlib.guitk import dialog
 # from taskcoachlib.guitk.dialog import editor  # itemEditorClass l'importera en local
 
 # from taskcoachlib.gui.dialog.editor import CategoryEditor  # circular import
-import taskcoachlib.guitk.menu
+import taskcoachlib.guitk.menutk
 
 # from taskcoachlib.gui.menu import *
 from taskcoachlib.guitk.viewer import basetk

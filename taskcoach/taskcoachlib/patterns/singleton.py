@@ -15,6 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Singleton(type):
@@ -36,6 +39,7 @@ class Singleton(type):
         if not class_.hasInstance():
             # pylint: disable=W0201
             class_.instance = super().__call__(*args, **kwargs)
+        # log.debug(f"Singleton.__call__ : retourne la classe instanciée {class_.instance.__class__.__name__}")
         return class_.instance
 
     def deleteInstance(class_):

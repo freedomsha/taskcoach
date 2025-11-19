@@ -1136,4 +1136,3 @@ if __name__ == "__main__":
     # on_datetime_change(None)
 
     root.mainloop()
-    

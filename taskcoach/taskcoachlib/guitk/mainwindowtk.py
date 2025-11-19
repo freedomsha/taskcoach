@@ -231,6 +231,7 @@ class MockStatusBar(tk.Label):
     def __init__(self, parent, viewer_container):
         super().__init__(parent, text="Barre de statut", bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.viewer = viewer_container
+
     def SetStatusText(self, text, pane=0): self.config(text=text)  # Simplifié pour tkinter
 
 
@@ -302,7 +303,7 @@ class MockXFCE4WarningDialog(tk.Toplevel):
 # Remplacer les imports wx par nos mocks ou tkinter
 from taskcoachlib import application, meta, widgetstk, operating_system
 from taskcoachlib.config.settings import Settings
-from taskcoachlib.guitk import toolbarttk, artprovidertk, idlecontroller, iocontroller  # , viewer,  windowdimensionstracker
+from taskcoachlib.guitk import toolbarttk, artprovidertk, idlecontrollertk, iocontrollertk, statustk  # , viewer,  windowdimensionstracker
 # , remindercontroller, status
 # !!! viewer crée une boucle infinie d'import avec dialog.editor
 from taskcoachlib.guitk.viewer import factorytk
@@ -329,7 +330,7 @@ from taskcoachlib.i18n import _
 # artprovider = MockArtProvider()
 # idlecontroller = MockIdleController
 remindercontroller = MockReminderController
-status = type('Status', (object,), {'StatusBar': MockStatusBar})()  # Mock pour StatusBar
+# status = type('Status', (object,), {'StatusBar': MockStatusBar})()  # Mock pour StatusBar
 # viewer = type('Viewer', (object,), {'container': type('Container', (object,), {'ViewerContainer': MockViewerContainer})(), 'viewerTypes': lambda: []})()
 # windowdimensionstracker = type('WindowDimensionsTracker', (object,), {'WindowDimensionsTracker': lambda a, b: type('Tracker', (object,), {'save_position': lambda: None})()})()
 # uicommand = type('UICommand', (object,), {
@@ -450,7 +451,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
 
         # Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches. :
         log.debug("MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts")
-        self._idleController = idlecontroller.IdleController(self, self.settings, self.taskFile.efforts())
+        self._idleController = idlecontrollertk.IdleController(self, self.settings, self.taskFile.efforts())
 
         # wx.CallAfter n'est pas directement nécessaire ici si les composants sont déjà packés/gridés
         # self.after(100, self.checkXFCE4) # Utiliser after pour différer l'appel
@@ -565,7 +566,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         log.debug("MainWindow._create_window_components: Création du contrôleur de rappel des tâches et efforts.")
         self.__create_reminder_controller()
         log.debug("MainWindow._create_window_components: Composants créés.")
-        self.viewer.componentsCreated()  # Appeler la méthode mock
+        self.viewer.componentsCreated()  # Appeler la méthode
         self.showToolBar(self.settings.getboolean("view", "toolbar"))
 
     def _create_viewer_container(self) -> None:
@@ -659,7 +660,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
             - La barre de statut est ensuite associée à la fenêtre principale à l'aide de `SetStatusBar`.
         """
         log.info("MainWindow._create_status_bar : Création d'une barre de status et association avec la fenêtre principale.")
-        self.status_bar = status.StatusBar(self, self.viewer)
+        self.status_bar = statustk.StatusBar(self, self.viewer)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         log.info("MainWindow._create_status_bar: Barre de statut créée et associée.")
 
@@ -682,21 +683,27 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         # Tkinter utilise self.config(menu=...) pour la barre de menus
         # Tkinter utilise self.parent.config(menu=...) pour la barre de menus de la fenêtre racine
 
-        from taskcoachlib.guitk import menu
-        log.info("MainWindow.__create_menu_bar : Création d'une barre de menus et association avec la fenêtre principale.")
+        from taskcoachlib.guitk import menutk as menu
+        log.info(f"MainWindow.__create_menu_bar : Création d'une barre de menus et association avec la fenêtre principale {self.parent.__class__.__name__}.")
         # self.menu_bar = MockMainMenu(self, self.settings, self.iocontroller, self.viewer, self.taskFile)
         # self.menu_bar = MockMainMenu(self.parent, self.settings, self.iocontroller, self.viewer, self.taskFile)
-        self.menu_bar = menu.MainMenu(self.parent, self.settings, self.iocontroller, self.viewer, self.taskFile)
-        log.debug(f"Menu bar created: {self.menu_bar}")
+        # self.menu_bar = menu.MainMenu(self.parent, self.settings, self.iocontroller, self.viewer, self.taskFile)
+        self.menu_bar = menu.MainMenu(parent=self.parent, parent_window=self.parent, settings=self.settings,
+                                      iocontroller=self.iocontroller, viewerContainer=self.viewer,
+                                      taskFile=self.taskFile)
+        log.debug(f"MainWindow.__create_menu_bar : Menu bar created: {self.menu_bar}")
         # self.config(menu=self.menu_bar)
         self.parent.config(menu=self.menu_bar)
-        log.debug(f"Menu bar attached to parent.")
+        # root.config(menu=self.menu_bar)  # root non défini !
+        log.debug(f"MainWindow.__create_menu_bar : Menu bar attached to parent.")
+        # self.parent["menu"] = self.menu_bar
         # # menu_bar = tk.Menu(self.root)
         # menu_bar = tk.Menu(self.parent)
         # # self.root.config(menu=menu_bar)
         # self.parent.config(menu=menu_bar)
         # file_menu = tk.Menu(self.menu_bar, tearoff=0)
         # self.menu_bar.add_cascade(label="Fichier", menu=file_menu)
+        # self.menu_bar.appendMenu(menu=, label=) ?
         # file_menu.add_command(label="Quitter", command=self.on_quit)
 
         # log.info("MainWindow.__create_menu_bar: Barre de menus créée et associée.")
@@ -1076,7 +1083,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         et son comportement de redockage.
 
         Args :
-            value (bool | int) : Si `value` est `False`, la barre d'outils est masquée et supprimée. Si `value` est un
+            show (bool | int) : Si `value` est `False`, la barre d'outils est masquée et supprimée. Si `value` est un
             entier, il est utilisé pour définir la taille de la nouvelle barre d'outils à afficher en haut de la fenêtre.
 
         Actions :
@@ -1414,8 +1421,9 @@ if __name__ == "__main__":
 
     # # Créez des instances factices pour les dépendances
     # mock_iocontroller = MockIOController()
-    mock_iocontroller = iocontroller.IOController(root, taskFile, "messageCallback", Settings)
-    mock_taskfile = MockIOController()  # Utilisation de MockIOController comme mock pour TaskFile
+    mock_iocontroller = iocontrollertk.IOController(root, taskFile, "messageCallback", Settings)
+    # mock_taskfile = MockIOController()  # Utilisation de MockIOController comme mock pour TaskFile
+    mock_taskfile = mock_iocontroller  # Utilisation de MockIOController comme mock pour TaskFile
     mock_settings = MockSettings()
 
     # Créez la fenêtre racine (root)

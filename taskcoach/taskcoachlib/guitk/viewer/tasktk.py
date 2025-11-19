@@ -117,7 +117,7 @@ from taskcoachlib.guitk import dialog
 # from taskcoachlib.guitk.dialog import editor
 from taskcoachlib.guitk.uicommand import uicommandtk as uicommand
 from taskcoachlib.guitk.uicommand.base_uicommandtk import UICommand
-import taskcoachlib.guitk.menu
+import taskcoachlib.guitk.menutk
 from taskcoachlib.guitk.viewer import basetk
 from taskcoachlib.guitk.viewer import inplace_editortk
 from taskcoachlib.guitk.viewer import mixintk

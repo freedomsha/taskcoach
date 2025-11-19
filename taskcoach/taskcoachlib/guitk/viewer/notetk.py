@@ -57,6 +57,8 @@ Basé sur le fichier note.py original de Task Coach.
 #         J'ai réécrit la méthode _createColumns() en utilisant la classe simulée/existante widgetstk.Column
 #         et les classes uicommand.ViewerSortByCommand pour créer la liste complète des colonnes de notes
 #         (ordre, sujet, description, pièces jointes, etc.). Ceci est une étape de conversion directe de note.py.
+
+import logging
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
@@ -75,6 +77,9 @@ from taskcoachlib.guitk.viewer import basetk
 # from . import basetk
 from taskcoachlib.guitk.viewer import mixintk
 from taskcoachlib.guitk.viewer import inplace_editortk
+
+log = logging.getLogger(__name__)
+
 
 # --- SIMULATIONS DE MODULES POUR LA DÉMONSTRATION ---
 # Dans votre code, vous importeriez les modules réels.

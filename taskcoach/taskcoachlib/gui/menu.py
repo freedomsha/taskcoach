@@ -224,6 +224,7 @@ class Menu(uicommandcontainer.UICommandContainerMixin, wx.Menu):  # Crée des pr
 
         # # test conseillé par chatGPT
         # # Why this line try ?
+        cmd = None
         try:
             log.debug(f"Menu.appendUICommand Essaie d'ajouter {uiCommand.__class__.__name__} au menu {self.__class__.__name__}"
                       f" dans la classe {self._window.ClassName} {type(self._window).__name__} winId={self._window.GetId()}")
