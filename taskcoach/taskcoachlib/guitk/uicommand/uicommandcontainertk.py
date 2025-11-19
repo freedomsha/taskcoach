@@ -25,7 +25,7 @@ L'attribut _window est essentiel car il représente la fenêtre Tkinter
 
 import logging
 import tkinter as tk
-from tkinter import Menu
+# from tkinter import Menu
 
 # Assurez-vous que taskcoachlib.gui.newid existe et est compatible avec Tkinter
 # Sauf qu'il est inutile !
@@ -48,10 +48,13 @@ class UICommandContainerMixin(object):
         :param parent_window: La fenêtre parente Tkinter (tk.Tk ou tk.Frame)
         """
         self._window = parent_window
+        log.debug(f"UICommandContainerMixin : La classe {self.__class__.__name__} initialise pour ajouter des commandes UI.")
+        if not isinstance(parent_window, (tk.Tk, tk.Frame)):
+            log.warning(f"{self.__class__.__name__} doit être de type tk.Tk ou tk.Frame !")
         self._tearoff = tearoff
 
     def appendUICommands(self, *uiCommands, **kwargs):
-        """ Ajout de *uiCommand.
+        """ Ajout des *uiCommands.
 
         Cette méthode, qui est mélangée dans une classe de menu,
         prend une liste de UICommand et les ajoute au menu.
@@ -68,18 +71,26 @@ class UICommandContainerMixin(object):
             log.warning("Aucune UICommand n’a été fournie à appendUICommands.")
             return
 
+        # Ajouter les commandes au menu
         for uiCommand in uiCommands:
             if uiCommand is None:
                 # None : Ajoute un séparateur.
                 # self.AppendSeparator()
                 self.add_separator()
+                log.debug("UICommandContainerMixin.appendUICommands : ajoute un séparateur !")
+                # self.add_separator()
             elif isinstance(uiCommand, tuple):
                 # tuple : Crée un sous-menu et y ajoute les commandes UI.
                 menuTitle, menuUICommands = uiCommand[0], uiCommand[1:]
+                log.debug(f"UICommandContainerMixin.appendUICommands : ajoute le sous-menu {menuTitle} avec une liste de commandes {menuUICommands}!")
                 self.appendSubMenuWithUICommands(menuTitle, menuUICommands)
-            # else:
-            #     # Autre (supposé être une instance de UICommand) : ajoute la commande.
-            #     self.appendUICommand(uiCommand)
+            else:
+                # Autre (supposé être une instance de UICommand) : ajoute la commande.
+                self.appendUICommand(uiCommand)
+                log.debug(f"UICommandContainerMixin.appendUICommands : ajoute la commande {uiCommand} !")
+
+            # fileopen_command = uicommand.FileOpen(iocontroller=self._iocontroller)
+            # fileopen_command.addToMenu(self, parent_window)
 
     def appendSubMenuWithUICommands(self, menuTitle, uiCommands):
         """
@@ -94,13 +105,14 @@ class UICommandContainerMixin(object):
         """
         # Pour éviter une importation circulaire, nous supposons
         # que la classe Menu est disponible dans taskcoachlib.guitk
-        from taskcoachlib.guitk import menu
+        from taskcoachlib.guitk import menutk
         if not hasattr(self, '_window') or self._window is None:
             log.warning("UICommandContainerMixin.appendSubMenuWithUICommands : l'attribut _window est manquant ou None.")
             return
 
-        subMenu = menu.Menu(self._window, tearoff=0)
-        self.add_cascade(label=menuTitle, menu=subMenu)
+        subMenu = menutk.Menu(self._window, tearoff=0)
+        # self.add_cascade(label=menuTitle, menu=subMenu)
+        self._window.add_cascade(label=menuTitle, menu=subMenu)
         subMenu.appendUICommands(*uiCommands)
 
     def appendUICommand(self, uiCommand):
@@ -110,7 +122,7 @@ class UICommandContainerMixin(object):
         """
         raise NotImplementedError("La méthode 'appendUICommand' doit être implémentée par la classe qui utilise ce mixin.")
 
-    def AppendSeparator(self):
+    def add_separator(self):
         """
         Ajoute un séparateur.
         Cette méthode doit être implémentée par la classe qui utilise ce mixin.
@@ -118,10 +130,12 @@ class UICommandContainerMixin(object):
         self.add_separator()
         # raise NotImplementedError("La méthode 'AppendSeparator' doit être implémentée par la classe qui utilise ce mixin.")
 
-    def add_cascade(self, label, menu):
-        """
-        Ajoute un sous-menu.
-        Cette méthode doit être implémentée par la classe qui utilise ce mixin.
-        """
-        Menu.add_cascade(self, label=label, menu=menu)
-        # raise NotImplementedError("La méthode 'add_cascade' doit être implémentée par la classe qui utilise ce mixin.")
+    # def add_cascade(self, label, menu):
+    #     """
+    #     Ajoute un sous-menu.
+    #     Cette méthode doit être implémentée par la classe qui utilise ce mixin.
+    #     """
+    #     # Menu.add_cascade(self, label=label, menu=menu)
+    #     from taskcoachlib.guitk import menutk
+    #     menutk.Menu.add_cascade(self, label=label, menu=menu)
+    #     # raise NotImplementedError("La méthode 'add_cascade' doit être implémentée par la classe qui utilise ce mixin.")

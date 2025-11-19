@@ -22,8 +22,11 @@ Vous devez spécifier les classes de mixin avant les autres classes.
 """
 
 # from builtins import object
+import logging
 from taskcoachlib.domain import task, note, category, effort, attachment
 import tkinter as tk  # Remplacer 'wx' par 'tkinter'
+
+log = logging.getLogger(__name__)
 
 
 # Quels sont ces types de classes ? Mixin
@@ -272,6 +275,7 @@ class PopupButtonMixin(object):
 
     def menuXY(self):
         """ Emplacement pour afficher le menu. """
+        log.warning("PopupButtonMixin.menuXY : retourne une fonction wx.ScreenToClient() !")
         return self.mainWindow().ScreenToClient((self.menuX(), self.menuY()))  # ScreenToClient est une méthode wx !
 
     def menuX(self):

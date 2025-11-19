@@ -389,9 +389,12 @@ class FileEditTemplates(settings_uicommandtk.SettingsCommand, base_uicommandtk.U
 
     def doCommand(self, event=None):
         """Affiche la boîte de dialogue pour éditer les modèles existants."""
-        templateDialog = dialog.templates.TemplatesDialog(
-            self.settings, self.mainWindow(), title=_("Edit templates")
+        templateDialog = dialog.templatestk.TemplatesDialog(
+            self.mainWindow(), self.settings, title=_("Edit templates")
         )
+        # templateDialog = dialog.templatestk.TemplatesDialog(
+        #     self.mainWindow(), self.settings
+        # )
         # templateDialog.Show()
 
 
@@ -5020,6 +5023,7 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
 
         Bind wx.EVT_KEY_DOWN to self.onViewerKeyDown so we can catch
         Ctrl-F."""
+        # TODO
         widget = self.viewer.getWidget()
         try:
             window = widget.GetMainWindow()
@@ -5033,6 +5037,7 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
 
         Bind wx.EVT_KEY_DOWN to self.onSearchCtrlKeyDown so we can catch
         the Escape key and drop down the menu on Ctrl-Down."""
+        # TODO
         # self.searchControl.getTextCtrl().Bind(wx.EVT_KEY_DOWN, self.onSearchCtrlKeyDown)
         pass
 
@@ -5057,6 +5062,7 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
 
         On Escape, move focus to the viewer, on Ctrl-Down popup the
         menu."""
+        # TODO
         # if event.KeyCode == wx.WXK_ESCAPE:
         #     self.viewer.SetFocus()
         # elif event.KeyCode == wx.WXK_DOWN and event.AltDown():
@@ -5103,6 +5109,7 @@ class ToolbarChoiceCommandMixin(object):
 
         Ajoute le contrôle de choix à la barre d'outils spécifiée."""
         log.info("ToobarChoice.appendToToolBar ajoute le contrôle de choix (à remplir).")
+        # TODO
         # # pylint: disable=W0201
         # self.choiceCtrl = wx.Choice(toolbar, choices=self.choiceLabels)
         # self.choiceCtrl =
@@ -5116,6 +5123,7 @@ class ToolbarChoiceCommandMixin(object):
     def unbind(self, window, id_):
         """Détache les liaisons d'événements du contrôle de choix."""
         log.info("ToobarChoice.unbind détache les liaisons d'événements du contrôle de choix. (à remplir)")
+        # TODO
         # if self.choiceCtrl is not None:
         #     self.choiceCtrl.Unbind(wx.EVT_CHOICE)
         #     self.choiceCtrl = None

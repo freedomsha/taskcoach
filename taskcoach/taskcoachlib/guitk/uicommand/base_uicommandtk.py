@@ -78,6 +78,8 @@ class UICommand(object):
     """
     Commande d'interface utilisateur de base pour Tkinter.
 
+    Une classe pour représenter une commande UI.
+
     Une UICommand est une action qui peut être associée à des menus ou des barres d'outils.
     Elle contient le texte du menu, l'aide contextuelle à afficher, et gère les événements.
     Les sous-classes doivent implémenter la méthode doCommand() et peuvent
@@ -95,7 +97,9 @@ class UICommand(object):
         app (tk.Tk) : L'instance principale de l'application Tkinter.
     """
 
-    def __init__(self, menuText="", helpText="", bitmap="nobitmap",
+    def __init__(self, menuText="", helpText="",
+                 # bitmap="nobitmap",
+                 bitmap="",
                  kind="normal", id=None, bitmap2=None,
                  *args, **kwargs):  # pylint: disable=W0622
         super().__init__()
@@ -108,7 +112,7 @@ class UICommand(object):
         self.bitmap = bitmap
         # Nom de l'icône secondaire pour les éléments checkables :
         self.bitmap2 = bitmap2
-        # Le type d'élément (normal, checkbutton) :
+        # Le type d'élément (normal, checkbutton, radiobutton) :
         self.kind = kind
         # L'identifiant de la commande.
         # self.id = id if id is not None else IdProvider.get()
@@ -132,8 +136,31 @@ class UICommand(object):
         """ Retourne le nom unique de la classe de commande. """
         return self.__class__.__name__
 
+    # Le problème : Tkinter n'accepte pas d'option type.
+    # Pour créer un "checkbutton" dans un menu,
+    # il faut appeler une méthode différente : menu.add_checkbutton().
+    # Explication de la correction
+    #
+    #     Plus d'option type : J'ai supprimé menu_item_options['type'] = 'checkbutton'.
+    #
+    #     Appel de la bonne méthode : Le code vérifie maintenant self.kind.
+    #
+    #         Si self.kind == "checkbutton", il utilise menu.add_checkbutton().
+    #
+    #         Si self.kind == "radiobutton", il utilise menu.add_radiobutton().
+    #
+    #         Sinon, il utilise menu.add_command().
+    #
+    #     Variables Tkinter : Pour que les checkbutton et radiobutton fonctionnent, ils ont besoin d'une variable Tkinter (tk.BooleanVar ou tk.StringVar). J'ai ajouté la logique pour les lier (vous les aviez déjà définis dans settings_uicommandtk.py, donc ils devraient être trouvés).
+    #
+    #     Gestion de la position : J'ai corrigé la logique pour utiliser menu.insert_...() si une position est donnée, et menu.add_...() sinon.
+    # Ne pas utiliser add_to_menu pour être raccord avec le reste de l'application compatible wxpython.
     def addToMenu(self, menu, window, position=None):
-        """ Ajoute un sous-menu au Menu menu.
+        # """ Ajoute un sous-menu au Menu menu.
+        """
+        Ajoute cette commande à un menu.
+
+        Les paramètres du menu doivent être menuText, HelpText et kind.
 
         Args :
             menu (tk.Menu) : Le menu parent auquel ajouter la commande.
@@ -144,32 +171,136 @@ class UICommand(object):
 
         log.debug(f"💥UICommand.addToMenu essaye d'ajouter le sous-menu {self.menuText} d'ID={self.id} dans le menu {menu} à la position {position}.")
 
+        # --- Options communes à tous les types ---
+        # menu_item_options = {
+        #     'label': self.getMenuText(),
+        #     'command': self.onCommandActivate,
+        # }
         menu_item_options = {
             'label': self.getMenuText(),
-            'command': self.onCommandActivate,
+            'command': self.onCommandActivate,  # ne pas mettre de parenthèse !
+            'state': 'normal' if self.enabled() else 'disabled'
         }
+        # menu_item_options['label'] = self.getMenuText()
+        # menu_item_options['command'] = self.onCommandActivate
+        # menu_item_options['state'] = 'normal' if self.enabled() else 'disabled'
+
+        # Accélérateur (texte affiché)
+        # Note : 'accelerator' est un attribut défini dans uicommandtk.py
+        if hasattr(self, 'accelerator') and self.accelerator:
+            menu_item_options['accelerator'] = self.accelerator
+
+        # Icône
+        # # Check for bitmap and add it if available
+        # if self.bitmap:
+        #     bitmap = self.__getBitmap(self.bitmap)
+        #     # bitmap = ArtProviderTk.GetBitmap(self.bitmap, self)
+        #     if bitmap:
+        #         # Assurez-vous que l'icône est une instance de PhotoImage de Tkinter
+        #         menu_item_options['image'] = bitmap
+        #         menu_item_options['compound'] = 'left'  # Place l'image à gauche du texte
+
+        # TODO : à revoir une fois la barre de menu bien implémentée !
+        # Cette condition crée un problème : les listes de menu ne s'affichent plus !
+        # if hasattr(self, 'bitmap') and self.bitmap:
+        #     # menu_item_options['image'] = self.bitmap  # Erreur, il faut obtenir l'image ici, le nom ne suffit pas !
+        #     try:
+        #         menu_item_options['image'] = artprovidertk.getIcon(self.bitmap)
+        #     except Exception as e:
+        #         log.error(f"Erreur lors de la récupération de l'icône '{self.bitmap}': {e}", exc_info=True)
+        #         menu_item_options['image'] = artprovidertk.getIcon('No icon')
+        #     menu_item_options['compound'] = 'left'  # Place l'icône à gauche du texte
+        #     # compound : Cette option est utilisée pour spécifier la position de l'icône
+        #     # par rapport au texte. 'left' place l'icône à gauche du texte.
+
+        # --- Logique spécifique au type ---
+
+        # Déterminer la méthode d'ajout (add ou insert)
+        use_insert = position is not None
+        if use_insert:
+            # L'option 'index' n'est pas un argument standard pour add/insert,
+            # nous devons l'utiliser séparément.
+            # del menu_item_options['label']  # 'label' est géré par 'index' pour insert
+            pass  # La logique d'insertion est gérée ci-dessous
+
+        # add_method = None
+        add_method = menu.add_command  # méthode standard si non définit
 
         # Handle different kinds of menu items
+        log.debug(f"Vérification de self.kind={self.kind} qui doit être 'normal', 'checkbutton' ou 'radiobutton'")
         if self.kind == "checkbutton":
-            menu_item_options['type'] = 'checkbutton'
-            # You would need a variable to track the state, like a tkinter.BooleanVar
-            # For now, we'll just add the command
-            # TODO: Implement state variable for checkbutton
-            log.warning("Tkinter checkbutton kind not fully implemented, state variable is missing.")
+            # menu_item_options['type'] = 'checkbutton'
+            # # You would need a variable to track the state, like a tkinter.BooleanVar
+            # # For now, we'll just add the command
+            # # TODO: Implement state variable for checkbutton
+            # log.warning("Tkinter checkbutton kind not fully implemented, state variable is missing.")
+            # Les checkbuttons (de settings_uicommandtk.py) ont un attribut _variable
+            if hasattr(self, '_variable') and isinstance(self._variable, (tk.BooleanVar, tk.StringVar)):
+                menu_item_options['variable'] = self._variable
+                log.debug(f"UICommand '{self.menuText}' est un 'checkbutton' avec variable={self._variable}")
+            else:
+                log.warning(f"UICommand '{self.menuText}' est 'checkbutton' mais n'a pas de '_variable' Tkinter.")
 
-        # Check for bitmap and add it if available
-        bitmap = self.__getBitmap(self.bitmap)
-        # bitmap = ArtProviderTk.GetBitmap(self.bitmap, self)
-        if bitmap:
-            menu_item_options['image'] = bitmap
-            menu_item_options['compound'] = 'left'
+            add_method = menu.insert_checkbutton if use_insert else menu.add_checkbutton
 
-        if position is None:
-            menu.add_command(**menu_item_options)
-        else:
-            menu.insert_command(position, **menu_item_options)
+        elif self.kind == "radiobutton":
+            # Les radiobuttons (de settings_uicommandtk.py) ont _variable et value
+            if hasattr(self, '_variable') and isinstance(self._variable, (tk.StringVar, tk.IntVar)):
+                menu_item_options['variable'] = self._variable
+                # La 'value' est cruciale pour un radiobutton
+                if hasattr(self, 'value'):
+                    menu_item_options['value'] = self.value
+                    log.debug(f"UICommand '{self.menuText}' est un 'radiobutton' avec value={self.value}")
+                else:
+                    log.error(f"UICommand '{self.menuText}' est 'radiobutton' mais n'a pas d'attribut 'value'.")
+            else:
+                log.warning(f"UICommand '{self.menuText}' est 'radiobutton' mais n'a pas de '_variable' Tkinter.")
 
-        self.menuItems.append(menu)  # Stocke la référence au menu
+            add_method = menu.insert_radiobutton if use_insert else menu.add_radiobutton
+
+        elif self.kind == "normal":
+            log.debug(f"Add normal Command : {self.menuText}")
+            # self._menu.add_command(
+            # self.add_command(
+            #     label=menu_text,
+            #     command=command_func,
+            #     accelerator=shortcut_text,
+            #     state=state
+            # )
+            # add_method = menu.insert_command if use_insert else menu.add_command
+            if use_insert:
+                add_method = menu.insert_command
+                log.debug("Utilisation de menu.insert_command")
+            else:
+                add_method = menu.add_command
+                log.debug("Utilisation de menu.add_command")
+
+        else:  # "normal"
+            # add_method = menu.insert_command if use_insert else menu.add_command
+            log.debug(f"! self.kind={self.kind} est inconnu !")
+
+        # if position is None:
+        #     menu.add_command(**menu_item_options)
+        # else:
+        #     menu.insert_command(position, **menu_item_options)
+        # --- Ajout final ---
+        # Ajouter l'élément au menu
+        try:
+            if use_insert:
+                # La méthode insert prend la position comme premier argument
+                add_method(position, **menu_item_options)
+                log.debug(f"Ajout de '{self.menuText}' au menu avec position={position} et options={menu_item_options}")
+            else:
+                # Ajouter l'icône
+                add_method(**menu_item_options)
+                log.debug(f"Ajout de '{self.menuText}' au menu {menu} avec options={menu_item_options}")
+        except tk.TclError as e:
+            log.error(f"Erreur Tcl lors de l'ajout de '{self.menuText}' au menu : {e}. Options: {menu_item_options}", exc_info=True)
+            pass  # Ne pas planter si une option est mauvaise
+
+        self.menuItems.append(menu)  # Stocke la référence au menu. Est-ce nécessaire avec tkinter ?
+        log.debug(f"Le premier menu de {menu} est {menu.entrycget(0, 'label')}.")
+        log.debug(f"Le menu {menu} est référencé dans {self.menuItems}.")
 
     def addBitmapToMenuItem(self, menuItem) -> None:
         """ Tkinter gère les icônes directement via les options du menu. """
@@ -210,7 +341,7 @@ class UICommand(object):
         }
 
         if self.kind == "checkbutton":
-            # TODO: Implement a checkbutton for the toolbar
+            # TODO: Implement a checkbutton for the toolbar copier la méthode add_to_menu !
             log.warning("Tkinter checkbutton kind for toolbar not fully implemented.")
 
         if bitmap:
@@ -242,11 +373,17 @@ class UICommand(object):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def enabled(self):
+    # def enabled(self):
+    def enabled(self, event=None):
         """
         Détermine si la commande est activée.
 
         Peut être remplacé dans une sous-classe.
+
+        Args:
+            event: L'événement qui a déclenché la vérification (non utilisé
+                   dans la classe de base, mais requis pour la compatibilité
+                   avec les sous-classes et mixins).
 
         Returns :
             (bool) : True si la commande est activée, sinon False.
