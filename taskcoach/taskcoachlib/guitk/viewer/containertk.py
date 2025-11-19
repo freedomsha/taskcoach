@@ -287,6 +287,7 @@ class ViewerContainer(ttk.Frame):
 
         # Placez le visualiseur à l'intérieur du nouveau cadre
         viewer.pack(expand=True, fill="both")
+        # viewer.grid(row=0, column=0)  # A essayer !
 
         # Ajoutez le nouveau cadre (qui contient le visualiseur) comme onglet
         # self.notebook.add(viewer_frame, text=viewer.title())
