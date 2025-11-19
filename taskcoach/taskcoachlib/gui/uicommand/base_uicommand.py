@@ -139,6 +139,8 @@ class UICommand(object):
         au wx.Menu spécifié. Elle gère également l'association de ce menu item
         à la fenêtre et potentiellement à une position spécifique.
 
+        Ses paramètres doivent être id, menuText, HelpText et kind.
+
         Args :
             menu (wx.Menu) : Le menu parent auquel ajouter la commande.
             window (wx.Window) : La fenêtre parent associée.
@@ -212,7 +214,9 @@ class UICommand(object):
         #     # return menu.Append(menuItem)  # ?
 
         # log.debug(f"UICommand.addToMenu : Ajoute l'élément {menuItem} à la fin du menuItems {self.menuItems}.")
+        # Ajout à la liste des menuItems.
         self.menuItems.append(menuItem)
+        # Ajoute une icône
         self.addBitmapToMenuItem(menuItem)
         # L'élément de menu est ajouté à la fin du menu ou à une position spécifiée.
         if position is None:
