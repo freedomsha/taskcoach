@@ -300,7 +300,7 @@ class _NotificationCenter(wx.EvtHandler):
         #         self.Bind(wx.EVT_TIMER, self.OnTimer, self.__timer)
         # wx.EVT_TIMER(self, id_, self.onEverySecond)
         # self.Bind(wx.EVT_TIMER, self.__OnTick, self.__tmr)
-        self.Bind(wx.EVT_TIMER, self.__OnTick, id_)
+        self.Bind(wx.EVT_TIMER, self.__OnTick, id_)  # TODO : Vérifier si cela fonctionne !
         self.__tmr.Start(1000)
 
     def NotifyFrame(self, frm, timeout=None):

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import object
 from taskcoachlib import operating_system
+from taskcoachlib.config.arguments import get_gui
 
 
 class AbstractNotifier(object):
@@ -53,14 +54,22 @@ class AbstractNotifier(object):
         Returns a notifier suitable for simple notifications. This
         defaults to Growl/Snarl depending on their availability.
         """
-
+        # TODO : intégrer Knotifier
         if klass._enabled:
-            if operating_system.isMac():
-                return klass.get("Growl") or klass.get("Task Coach")
-            elif operating_system.isWindows():
-                return klass.get("Snarl") or klass.get("Task Coach")
-            else:
-                return klass.get("Task Coach")
+            if get_gui() == "wx":
+                if operating_system.isMac():
+                    return klass.get("Growl") or klass.get("Task Coach")
+                elif operating_system.isWindows():
+                    return klass.get("Snarl") or klass.get("Task Coach")
+                else:
+                    return klass.get("Task Coach")
+            else:  # options.gui_name == "tk"
+                if operating_system.isMac():
+                    return klass.get("TkinterGrowl") or klass.get("Task Coach")
+                elif operating_system.isWindows():
+                    return klass.get("TkinterSnarl") or klass.get("Task Coach")
+                else:
+                    return klass.get("Tkinter notifier Task Coach")
         else:
             class DummyNotifier(AbstractNotifier):
                 def getName(self):
