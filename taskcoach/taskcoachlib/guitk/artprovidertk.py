@@ -334,11 +334,13 @@ class ArtProviderTk(object):
             else:
                 # log.error(f"Icône non trouvé dans le catalogue : {art_id}", stack_info=True)
                 log.error(f"Icône non trouvé dans le catalogue : {icon_id}", stack_info=True)
-                return None
+                # return None
+                return ""
         except Exception as e:
             # log.exception(f"Erreur lors du chargement de l'icône {art_id}: {e}")
             log.exception(f"Erreur lors du chargement de l'icône {icon_id}: {e}")
-            return None  # Retourne None en cas d'erreur
+            # return None  # Retourne None en cas d'erreur
+            return ""  # Retourne "" en cas d'erreur
 
     # def GetIcon(self, art_id: str, art_client: str = ART_TOOLBAR, desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
     #     """
@@ -889,7 +891,8 @@ if __name__ == '__main__':
 
         # Tester le chargement d'une icône de taille standard (16x16)
         # icon_copy_16 = art_provider_tk.GetIcon('copy16x16')
-        icon_copy_16 = art_provider_tk.GetIcon('copy')
+        # icon_copy_16 = art_provider_tk.GetIcon('copy')
+        icon_copy_16 = getIcon('copy')
         if icon_copy_16:
             label_copy_16 = ttk.Label(frame, text="copy16x16", image=icon_copy_16, compound="left")
             label_copy_16.image = icon_copy_16  # Garde une référence pour éviter la suppression par le garbage collector
@@ -897,14 +900,16 @@ if __name__ == '__main__':
 
         # Tester le chargement d'une icône de taille différente (mise à l'échelle)
         # icon_copy_32 = art_provider_tk.GetIcon('copy16x16', desired_size=(32, 32))
-        icon_copy_32 = art_provider_tk.GetIcon('copy', desired_size=(32, 32))
+        # icon_copy_32 = art_provider_tk.GetIcon('copy', desired_size=(32, 32))
+        icon_copy_32 = getIcon('copy', desired_size=(32, 32))
         if icon_copy_32:
             label_copy_32 = ttk.Label(frame, text="copy16x16 redimensionnée à 32x32", image=icon_copy_32, compound="left")
             label_copy_32.image = icon_copy_32
             label_copy_32.pack(pady=5)
 
         # Tester une icône inexistante
-        icon_non_existent = art_provider_tk.GetIcon('non_existent_icon')
+        # icon_non_existent = art_provider_tk.GetIcon('non_existent_icon')
+        icon_non_existent = getIcon('non_existent_icon')
         if not icon_non_existent:
             label_non_existent = ttk.Label(frame, text="Icone 'non_existent_icon' non trouvée (c'est normal)")
             label_non_existent.pack(pady=5)
