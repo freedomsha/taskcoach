@@ -305,15 +305,14 @@ class UICommand(object):
         #               longHelp = self.helpText)
         # C'est ici que `UICommand` appelle directement `toolbar.AddTool()`.
         # Les arguments `shortHelp` et `longHelp` sont explicitement passés.
-        toolbar.AddTool(self.id,
-                        "",
-                        bitmap,
-                        wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType !
-                        self.kind,
-                        wx.MenuItem.GetLabelText(self.menuText),
-                        self.helpText,
-                        None,
-                        None)
+        toolbar.AddTool(toolId=self.id,
+                        label="",
+                        bitmap=bitmap,
+                        bmpDisabled=wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType !
+                        kind=self.kind,
+                        shortHelp=wx.MenuItem.GetLabelText(self.menuText),
+                        longHelp=self.helpText,
+                        )
         self.bind(toolbar, self.id)
         # self.bind(self, toolbar, self.id)
         return self.id
@@ -354,13 +353,15 @@ class UICommand(object):
 
     # def onCommandActivate(self, event, *args, **kwargs):
     def onCommandActivate(self, event: wx.Event, *args, **kwargs):
-        """ For Menu's and ToolBars, activating the command is not
-            possible when not enabled, because menu items and toolbar
-            buttons are disabled through onUpdateUI. For other controls such
-            as the ListCtrl and the TreeCtrl the EVT_UPDATE_UI event is not
-            sent, so we need an explicit check here. Otherwise hitting return
-            on an empty selection in the ListCtrl would bring up the
-            TaskEditor. """
+        """
+        For Menu's and ToolBars, activating the command is not
+        possible when not enabled, because menu items and toolbar
+        buttons are disabled through onUpdateUI. For other controls such
+        as the ListCtrl and the TreeCtrl the EVT_UPDATE_UI event is not
+        sent, so we need an explicit check here. Otherwise hitting return
+        on an empty selection in the ListCtrl would bring up the
+        TaskEditor.
+        """
         if self.enabled(event):
             # return self.doCommand(event, *args, **kwargs)
             try:
@@ -370,6 +371,7 @@ class UICommand(object):
                 # Gestion de l'exception (par exemple, afficher un message d'erreur)
                 log.error(f"tclib.gui.uicommand.base_uicommand: Error executing command: {e}", exc_info=True)
                 wx.MessageBox(f"tclib.gui.uicommand.base_uicommand: An error occurred: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        return None
 
     def __call__(self, *args, **kwargs):
         return self.onCommandActivate(*args, **kwargs)
