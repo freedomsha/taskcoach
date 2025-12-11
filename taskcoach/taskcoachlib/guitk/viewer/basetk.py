@@ -95,7 +95,7 @@ import tkinter as tk
 from tkinter import ttk, PhotoImage
 from abc import ABC, abstractmethod
 from pubsub import pub  # pip install PyPubSub
-from taskcoachlib import patterns, command, render  #  , widgetstk
+from taskcoachlib import patterns, command, render  # , widgetstk
 from taskcoachlib.config import settings
 from taskcoachlib.i18n import _
 from taskcoachlib.guitk.uicommand import uicommandtk as uicommand
@@ -112,6 +112,20 @@ log = logging.getLogger(__name__)
 # La classe PreViewer et la gestion des métaclasses ont été simplifiées
 # pour Tkinter, car la complexité de wxPython n'est pas nécessaire ici.
 # On utilise une approche plus simple avec une classe de base abstraite.
+
+# Ordre d’appel des __init__ / initLayout (Viewer et mixins)
+# Situation actuelle
+#
+# Viewer.__init__ (dans basetk.py) crée d’abord la présentation, puis appelle self.initLayout().
+# Dans CategoryViewer (categorytk.py),
+# createWidget crée un TreeListCtrl avec les colonnes self._columns = self.createColumns().
+
+# Donc, pour la vue catégories :
+#
+# BaseCategoryViewer.__init__ appelle super().__init__, ce qui finit dans Viewer.__init__.
+# Viewer.__init__ appelle initLayout, qui finit par appeler createWidget.
+# CategoryViewer.createWidget crée le TreeListCtrl après avoir créé les colonnes.
+# ✅ L’ordre est donc logique : les colonnes sont créées avant le TreeListCtrl.
 
 # class Viewer(ttk.Frame, patterns.Observer, ABC):
 class Viewer(ttk.Frame, patterns.Observer):
@@ -148,6 +162,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         log.debug(f"Viewer.__init__ : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
         ttk.Frame.__init__(self, parent)  # Initialisation de ttk.Frame
         # ttk.Frame.__init__(self, parent, *args, **kwargs)  # Initialisation de ttk.Frame
+        # TODO : init du Frame avant ou après l'Observer ?
         patterns.Observer.__init__(self)  # initialisation de Observer
 
         self.parent = parent  # window or frame ?
@@ -188,26 +203,13 @@ class Viewer(ttk.Frame, patterns.Observer):
         # Initialiser les widgets à None. Ils seront créés dans initLayout.
         self._sizer = None
         self.toolbar = None
-        self.widget = None
+        log.debug(f"Viewer.__init__ : crée le widget {self} avec parent={parent}.")
+        self.widget = self.createWidget(parent)  # Crée le widget pour afficher les objets.(Taskviewer,...)
 
+        self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        # !!! self.widget est aussi créé dans initLayout ! ?
         # Appeler initLayout MAINTENANT pour créer la structure.
         self.initLayout()
-
-        # Tentative de configuration du background avec gestion d'erreur
-        try:
-            self.widget.configure(background="#f0f0f0")  # Couleur par défaut (à adapter)
-        except tk.TclError:
-            # Pour les widgets ttk, utiliser le système de style
-            if isinstance(self.widget, ttk.Widget):
-                style = ttk.Style()
-                widget_class = self.widget.winfo_class()
-                style_name = f"Custom.{widget_class}"
-                try:
-                    style.configure(style_name, background="#f0f0f0")
-                    self.widget.configure(style=style_name)
-                except tk.TclError:
-                    # Certains widgets ttk ne supportent même pas les styles personnalisés
-                    pass
 
         # self.toolbar = toolbarttk.ToolBar(self, settings, (16, 16))  # -> déplacer dans initLayout
         # # self.toolbar.pack(fill="both", side="top", expand=True)  # -> déplacer dans initLayout
@@ -279,17 +281,32 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def activate(self):
         """Active la visionneuse, lui donnant le focus."""
-        # if self.widget:
-        #     self.widget.focus_set()
-        pass
+        if self.widget:
+            self.widget.focus_set()
+        # pass
 
     # ## Explication détaillée
-    # 1. **Méthode abstraite** : La classe de base définit `domainObjectsToView()` comme une méthode abstraite qui doit être implémentée par toutes les classes dérivées. comme Noteviewer
-    # 2. **Objectif de la méthode** : Elle permet à chaque visualiseur de spécifier quel type d'objets de domaine il doit afficher (tâches, notes, efforts, etc.).
-    # 3. **Implémentation pour Noteviewer** : Pour un visualiseur de notes, la méthode doit retourner `self.taskFile.notes()`, qui est la collection de toutes les notes dans le fichier de tâches.
-    # 4. **Architecture** : Cette approche permet une architecture flexible où chaque visualiseur peut afficher différents types d'objets sans modifier la classe de base.
+    # 1. **Méthode abstraite** : La classe de base définit
+    #       `domainObjectsToView()` comme une méthode abstraite qui doit
+    #       être implémentée par toutes les classes dérivées. comme Noteviewer
+    # 2. **Objectif de la méthode** : Elle permet à chaque visualiseur
+    #       de spécifier quel type d'objets de domaine doit être affiché
+    #       (tâches, notes, efforts, etc.).
+    # 3. **Implémentation pour Noteviewer** : Pour un visualiseur de notes,
+    #       la méthode doit retourner `self.taskFile.notes()`,
+    #       qui est la collection de toutes les notes dans le fichier de tâches.
+    # 4. **Architecture** : Cette approche permet une architecture flexible
+    #       où chaque visualiseur peut afficher différents types d'objets
+    #       sans modifier la classe de base.
     def domainObjectsToView(self):
-        """Retourne les objets du domaine que cette visionneuse doit afficher.  À implémenter."""
+        """Retourne les objets du domaine que cette visionneuse doit afficher.
+        Doit être implémentée dans les sous-classes.
+
+        Renvoie les objets de domaine que cette visionneuse doit afficher.
+        Pour les visualiseurs globaux, cela fera partie du fichier de tâches,
+        par ex. self.taskFile.tasks(), pour les visualiseurs locaux, ce sera une liste
+        d'objets transmis au constructeur du visualiseur.
+        À implémenter."""
         raise NotImplementedError
 
     def registerPresentationObservers(self):
@@ -397,7 +414,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         log.debug(f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}.")
         # 1. Créer le sizer principal, enfant de 'self'
         self._sizer = tk.Frame(self)  # Utilisation de Frame pour le sizer
-        # self._sizer.pack(side="top", fill="both", expand=True) # Gérez votre layout avec pack, grid ou place
+        self._sizer.pack(side="top", fill="both", expand=True)  # Gérez votre layout avec pack, grid ou place
 
         # 2. Créer la barre d'outils, enfant de 'self._sizer'
         # self.toolbar = toolbarttk.ToolBar(self._sizer, self.settings, (16, 16))
@@ -418,12 +435,17 @@ class Viewer(ttk.Frame, patterns.Observer):
 
         # 3. Créer le widget principal, enfant de 'self._sizer'
         #    On passe self._sizer comme parent à la méthode createWidget
-        self.widget = self.createWidget(self._sizer)
+        # self.widget = self.createWidget(self._sizer)
+        self.widget = self.createWidget(parent=self._sizer)
         # Ajout du widget principal
         # 4. Packer le widget principal à l'intérieur de 'self._sizer'
         # # self._sizer.Add(self.widget, proportion=1, flag=wx.EXPAND)
         # self.widget.pack(in_=self._sizer, fill=tk.BOTH, expand=True)  # Remplissage horizontal et vertical, expansion
         self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        # if hasattr(self.widget, "GetCanvas"):
+        #     self.widget.GetCanvas().pack(padx=10, pady=10, expand=True, fill="both")
+        # else:
+        #     self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
         # En Tkinter, un widget (comme un bouton, un cadre, ou ta liste)
         # ne peut être "packé" (placé) que à l'intérieur de son parent direct.
         # Le parent est le widget que tu passes comme premier argument lors de sa création
@@ -433,14 +455,30 @@ class Viewer(ttk.Frame, patterns.Observer):
         # à l'intérieur d'un autre widget (.!...frame ou self._sizer) qui n'est pas son parent.
 
         # 5. Packer le sizer principal pour qu'il remplisse 'self'
-        self._sizer.pack(expand=True, fill="both")  # Mise en place finale du sizer
+        # self._sizer.pack(expand=True, fill="both")  # Mise en place finale du sizer
 
+        # Tentative de configuration du background avec gestion d'erreur
+        try:
+            # self.widget.configure(background="#f0f0f0")  # Couleur par défaut (à adapter)
+            self.widget.config(background="#f0f0f0")  # Couleur par défaut (à adapter)
+        except tk.TclError:
+            # Pour les widgets ttk, utiliser le système de style
+            if isinstance(self.widget, ttk.Widget):
+                style = ttk.Style()
+                widget_class = self.widget.winfo_class()
+                style_name = f"Custom.{widget_class}"
+                try:
+                    style.configure(style_name, background="#f0f0f0")
+                    self.widget.configure(style=style_name)
+                except tk.TclError:
+                    # Certains widgets ttk ne supportent même pas les styles personnalisés
+                    pass
         log.debug(f"Viewer.initLayout : initLayout de {self.__class__.__name__} terminé.")
 
     # @abstractmethod  # Laisser @abstractmethod si ABC est utilisé
     # def createWidget(self, *args):
     def createWidget(self, parent):  # CHANGEMENT: Ajout de 'parent'
-        """Crée le widget utilisé pour afficher les objets. À implémenter dans les sous-classes."""
+        """Crée le widget utilisé pour afficher les objets. (penser à gérer sa géométrie) À implémenter dans les sous-classes."""
         raise NotImplementedError
 
     def createImageList(self):
@@ -482,7 +520,7 @@ class Viewer(ttk.Frame, patterns.Observer):
             # # self.imageIndex[image_name] = images[image_name]
             # Récupérer l'icône via ArtProvider
             # artprovidertk.getIcon(name, size) doit retourner un objet PhotoImage ou None
-            image = artprovidertk.getIcon(image_name)
+            image = artprovidertk.getIcon(image_name, size)
             if image:
                 imageList.append(image)
                 self.imageIndex[image_name] = image_index  # Mapper le nom à l'index généré
@@ -867,6 +905,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         # cutCommand.Bind(self, wx.ID_CUT)
         # cutCommand.bind(self, ID_CUT)  # ? cela ou le suivant ?
         # self.bind("<cutCommand>", ID_CUT?)
+        # self.bind("<cutCommand>", cutCommand)  # _tkinter.TclError: bad event type or keysym "cutCommand"
         # copyCommand.Bind(self, wx.ID_COPY)
         # self.bind("<copyCommand>", ID_COPY?)
         # pasteCommand.Bind(self, wx.ID_PASTE)
@@ -880,6 +919,7 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def createEditToolBarUICommands(self):
         """UI commands for editing items."""
+        # Laquelle des deux est la meilleure façon de faire !
         editCommand = uicommand.Edit(viewer=self)
         self.deleteUICommand = uicommand.Delete(
             viewer=self
@@ -1006,6 +1046,12 @@ class WithAttachmentsViewerMixin(object):
 class ListViewer(Viewer):
     """
     Classe de base pour les vues en liste.
+
+    Hérite de Viewer.
+
+    Cette classe est utilisée pour afficher des objets dans une vue en liste,
+    contrairement à une vue arborescente.
+    Elle implémente des méthodes spécifiques pour gérer les objets sous forme de liste.
     """
 
     def isTreeViewer(self):
