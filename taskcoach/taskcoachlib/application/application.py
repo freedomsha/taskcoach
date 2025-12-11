@@ -169,7 +169,7 @@ class RedirectedOutput(object):
         pass
 
     def close(self):
-        """Fonction-méthode pour fermer taskcoachlig.txt"""
+        """Fonction-méthode pour fermer taskcoachlog.txt"""
         # si l'Argument-fichier à utiliser existe, le fermer et le rendre inaccessible.
         if self.__handle is not None:
             self.__handle.close()
