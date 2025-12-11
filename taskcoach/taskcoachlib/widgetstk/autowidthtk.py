@@ -140,8 +140,8 @@ from tkinter import ttk
 log = logging.getLogger(__name__)
 
 
-class AutoColumnWidthMixin(ttk.Treeview):
-    # class AutoColumnWidthMixin(object):  # TODO : A Essayer car mixin !
+# class AutoColumnWidthMixin(ttk.Treeview):
+class AutoColumnWidthMixin(object):  # TODO : A Essayer car mixin !
     """
     Initialise le mixin avec des paramètres spécifiques.
 
@@ -153,7 +153,7 @@ class AutoColumnWidthMixin(ttk.Treeview):
     """
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-        self.bind('<Configure>', self.on_resize)
+        # self.bind('<Configure>', self.on_resize)  # TODO : peut-être trop tôt puisque c'est appelé dans itemctrltk._CtrlWithAutoResizedColumnsMixin
         self.__is_auto_resizing = False
         # self.resize_column = 'task_name'
         self.resize_column = kwargs.pop("resizeableColumn", -1)
