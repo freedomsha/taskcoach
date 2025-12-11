@@ -102,10 +102,22 @@ class UICommand(object):
                  bitmap="",
                  kind="normal", id=None, bitmap2=None,
                  *args, **kwargs):  # pylint: disable=W0622
+        """
+        Initialise la commande d'interface utilisateur.
+
+        Args :
+            menuText (str, optionnel) : Le texte à afficher dans le menu. Par défaut à "".
+            helpText (str, optionnel) : Le texte d'aide contextuelle. Par défaut à "".
+            bitmap (str, optionnel) : L'icône du menu ou de la barre d'outils. Par défaut à "nobitmap".
+            kind (wx.ItemKind, optionnel) : Le type d'élément (normal, checkable, etc.). Par défaut à wx.ITEM_NORMAL.
+            id (int, optionnel) : L'identifiant de la commande. Si non spécifié, un identifiant unique sera généré.
+            bitmap2 (str, optionnel) : Icône secondaire pour les éléments checkables. Par défaut à None.
+        """
         super().__init__()
         # Le texte à afficher dans le menu :
         menuText = menuText or f"<{_('None')}>"
-        self.menuText = menuText
+        # self.menuText = menuText
+        self.menuText = menuText if '&' in menuText else '&' + menuText
         # Le texte d'aide contextuelle :
         self.helpText = helpText
         # Le nom de l'icône :
@@ -116,7 +128,7 @@ class UICommand(object):
         self.kind = kind
         # L'identifiant de la commande.
         # self.id = id if id is not None else IdProvider.get()
-        self.id = id
+        self.id = id  # IdProvider.get() ?
         #
         self.toolbar = None
         #
@@ -151,9 +163,13 @@ class UICommand(object):
     #
     #         Sinon, il utilise menu.add_command().
     #
-    #     Variables Tkinter : Pour que les checkbutton et radiobutton fonctionnent, ils ont besoin d'une variable Tkinter (tk.BooleanVar ou tk.StringVar). J'ai ajouté la logique pour les lier (vous les aviez déjà définis dans settings_uicommandtk.py, donc ils devraient être trouvés).
+    #     Variables Tkinter : Pour que les checkbutton et radiobutton fonctionnent,
+    #     ils ont besoin d'une variable Tkinter (tk.BooleanVar ou tk.StringVar).
+    #     J'ai ajouté la logique pour les lier (vous les aviez déjà définis dans settings_uicommandtk.py,
+    #     donc ils devraient être trouvés).
     #
-    #     Gestion de la position : J'ai corrigé la logique pour utiliser menu.insert_...() si une position est donnée, et menu.add_...() sinon.
+    #     Gestion de la position : J'ai corrigé la logique pour utiliser menu.insert_...()
+    #     si une position est donnée, et menu.add_...() sinon.
     # Ne pas utiliser add_to_menu pour être raccord avec le reste de l'application compatible wxpython.
     def addToMenu(self, menu, window, position=None):
         # """ Ajoute un sous-menu au Menu menu.
@@ -181,6 +197,7 @@ class UICommand(object):
             'command': self.onCommandActivate,  # ne pas mettre de parenthèse !
             'state': 'normal' if self.enabled() else 'disabled'
         }
+        log.debug(f"UICommand.addToMenu : création de menu_item_options={menu_item_options}.")
         # menu_item_options['label'] = self.getMenuText()
         # menu_item_options['command'] = self.onCommandActivate
         # menu_item_options['state'] = 'normal' if self.enabled() else 'disabled'
@@ -206,6 +223,7 @@ class UICommand(object):
         #     # menu_item_options['image'] = self.bitmap  # Erreur, il faut obtenir l'image ici, le nom ne suffit pas !
         #     try:
         #         menu_item_options['image'] = artprovidertk.getIcon(self.bitmap)
+        #         log.debug("")
         #     except Exception as e:
         #         log.error(f"Erreur lors de la récupération de l'icône '{self.bitmap}': {e}", exc_info=True)
         #         menu_item_options['image'] = artprovidertk.getIcon('No icon')
@@ -303,7 +321,7 @@ class UICommand(object):
         log.debug(f"Le menu {menu} est référencé dans {self.menuItems}.")
 
     def addBitmapToMenuItem(self, menuItem) -> None:
-        """ Tkinter gère les icônes directement via les options du menu. """
+        """Ignorer! Tkinter gère les icônes directement via les options du menu. """
         pass
 
     def removeFromMenu(self, menu):
@@ -322,6 +340,8 @@ class UICommand(object):
         """
         Ajoute cette commande à une barre d'outils (Frame).
 
+        Crée un tk.Button pour la barre d'outils.
+
         Args :
             toolbar (tk.Frame) : La barre d'outils à laquelle ajouter la commande.
 
@@ -329,28 +349,86 @@ class UICommand(object):
             (int) : L'identifiant de la commande.
         """
         self.toolbar = toolbar
-        bitmap = self.__getBitmap(self.bitmap)
+        # Load the bitmap
+        # the_bitmap = self.__getBitmap(_("No icon"))
+        # Tentative de récupération de l'image
+        the_bitmap = None
+        # bitmap = Image.open(self.image_path)
+        # self.normal_image = ImageTk.PhotoImage(bitmap) # Store the normal image
+        if hasattr(self, 'bitmap') and self.bitmap:
+            the_bitmap = self.__getBitmap(self.bitmap)  # TODO : trouver une alternative à wx.core.ToolBar.GEtToolBitmapSize()
+
+        # Si l'image spécifique échoue, on tente l'image par défaut
+        if not the_bitmap:
+            the_bitmap = self.__getBitmap(_("No icon"))
+
+        # # Create a disabled version (e.g., grayscale)
+        # disabled_image = the_bitmap.convert('L')  # Convert to grayscale
+        # self.disabled_image = ImageTk.PhotoImage(disabled_image)  # Store the disabled image
 
         button_options = {
-            'image': bitmap,
-            'command': self.onCommandActivate,
+            # 'image': the_bitmap,
+            # image=self.normal_image,  # Use the normal image initially  # TODO
+            'state': tk.NORMAL,        # Start as enabled
+            'command': self.onCommandActivate,  # ou self.doCommand ?  # TODO
             'bd': 0,
             'relief': 'flat',
             'padx': 5,
-            'pady': 5
+            'pady': 5,
+            # compound=tk.TOP          # To put image above text
         }
+
+        # Si on a une image, on l'utilise. Sinon, on met du texte.
+        if the_bitmap:
+            button_options['image'] = the_bitmap
+        else:
+            # Fallback : Utiliser le texte du menu ou un point d'interrogation
+            text_label = self.getMenuText()
+            # On nettoie le texte (retirer les raccourcis clavier ex: "New\tCtrl+N")
+            if "\t" in text_label:
+                text_label = text_label.split("\t")[0]
+            button_options['text'] = text_label if text_label else "??"
+            # Optionnel : ajouter compound si on veut gérer texte et image
+            # button_options['compound'] = tk.LEFT
 
         if self.kind == "checkbutton":
             # TODO: Implement a checkbutton for the toolbar copier la méthode add_to_menu !
             log.warning("Tkinter checkbutton kind for toolbar not fully implemented.")
+            # Pour un checkbutton, on utiliserait tk.Checkbutton avec indicatoron=0
 
-        if bitmap:
-            button = tk.Button(toolbar, **button_options)
-            button.pack(side="left", padx=2, pady=2)
-            # Stocke le bouton pour la gestion de l'état
-            self._kwargs['button'] = button
+        # if the_bitmap:
+        #     button = tk.Button(toolbar, **button_options)  # TODO : la variante quand le bouton est grisé
+        #     button.image = the_bitmap
+        #     button.pack(side="left", padx=2, pady=2)  # ou (padx, padx)=(2,2)
+        #     # Stocke le bouton pour la gestion de l'état
+        #     self._kwargs['button'] = button
+        #     log.debug(f"UICommand.appendToToolBar : le bouton {button.__class__.__name__} avec les options {button_options} a été ajouté à la toolbar {toolbar.__class__.__name__}.")
 
-        return self.id
+        # Création du bouton (qu'il y ait une image ou non)
+        button = tk.Button(toolbar, **button_options)
+
+        # Important : Garder une référence à l'image pour éviter le Garbage Collector
+        if the_bitmap:
+            button.image = the_bitmap
+
+        button.pack(side="left", padx=2, pady=2)
+
+        # Stocke le bouton pour la gestion de l'état (enable/disable)
+        self._kwargs['button'] = button
+
+        log.debug(f"UICommand.appendToToolBar : Bouton créé pour '{self.menuText}' (Icone trouvée: {bool(the_bitmap)})")
+
+        # TODO : Lier l'action du button !
+        # Avec ces changements, le bouton sera :
+        #
+        #     Fonctionnel via l'attribut command lors du clic.
+        #
+        #     Activable via le raccourci clavier.
+        #
+        #     Mis à jour dynamiquement (activé/désactivé) par la boucle onUpdateUI.
+        toolbar.bind(self, self.id)
+        # return self.id
+        return button  # Return the button instance
 
     def onCommandActivate(self, event=None):
         """ Active la commande. """
@@ -389,32 +467,143 @@ class UICommand(object):
             (bool) : True si la commande est activée, sinon False.
         """
         return True
-    
+
+    # def bind(self):
+    #     """
+    #     Lie les raccourcis clavier (accelerators) et les événements de mise à jour de l'UI.
+    #     """
+    #     # 1. Liaison du Raccourci Clavier
+    #     if hasattr(self, 'accelerator') and self.accelerator:
+    #         try:
+    #             # Convertir l'accélérateur Task Coach/wxPython (ex: "Ctrl+N") en format Tkinter (ex: "<Control-n>")
+    #             tk_accelerator = self._convert_accelerator(self.accelerator)
+    #
+    #             # Récupérer la fenêtre racine (root) de l'application
+    #             # root = self._getWindowRoot()
+    #             root = self.mainWindow()
+    #
+    #             if root and tk_accelerator:
+    #                 # Lier l'événement à la méthode onCommandActivate
+    #                 # bind_all lie l'événement à n'importe quel widget de l'application.
+    #                 root.bind_all(tk_accelerator, lambda event: self.onCommandActivate())
+    #                 log.debug(f"UICommand.bind() : Raccourci lié : {self.accelerator} -> {tk_accelerator}")
+    #
+    #         except Exception as e:
+    #             log.error(f"Erreur lors de la liaison de l'accélérateur '{self.accelerator}' : {e}")
+    #
+    #     # # 2. Mise en place de la mise à jour de l'UI (voir section suivante)
+    #     # self.update_ui_binding()
+    #     # 2. Démarrage de la boucle de Mise à Jour de l'UI
+    #     # On appelle une première fois onUpdateUI, qui se rappellera lui-même périodiquement.
+    #     self.onUpdateUI()
+
+    def _convert_accelerator(self, accelerator_str):
+        """
+        Convertit une chaîne d'accélérateur de Task Coach (ex: "Ctrl+N") en format Tkinter (ex: "<Control-n>").
+        """
+        # Remplace les mots-clés
+        mapping = {
+            'Ctrl+': 'Control-',
+            'Shift+': 'Shift-',
+            'Alt+': 'Alt-',
+            'Del': 'Delete',
+            'Space': 'space'
+            # Ajouter d'autres mappings au besoin
+        }
+
+        tk_accel = accelerator_str
+        for old, new in mapping.items():
+            tk_accel = tk_accel.replace(old, new)
+
+        # # Ajoute les chevrons Tkinter et met la dernière lettre en minuscule
+        # if tk_accel.startswith(('<', '[')): # Si déjà formaté
+        #     return tk_accel
+        #
+        # parts = tk_accel.split('-')
+        # last_part = parts[-1]
+        #
+        # if len(parts) > 1:
+        #     # Reconstruit la chaîne avec la dernière partie en minuscule
+        #     tk_accel = "".join(parts[:-1]) + last_part.lower()
+        # else:
+        #     tk_accel = tk_accel.lower()
+
+        # Met la dernière partie en minuscule (ex: Control-N -> Control-n)
+        parts = tk_accel.split('-')
+        if parts and parts[-1]:
+            parts[-1] = parts[-1].lower()
+        tk_accel = "-".join(parts)
+
+        return f"<{tk_accel}>"
+
     def onUpdateUI(self, event=None) -> None:
         """Met à jour l'état d'activation du widget Tkinter."""
-        # Récupère le bouton de la toolbar s'il existe
+        # Récupère le bouton de la toolbar associé à la commande s'il existe
         button = self._kwargs.get('button')
     
-        # Vérifie si la commande est activée
-        is_enabled = bool(self.enabled(event))
-    
-        # Met à jour l'état du bouton de la toolbar s'il existe
-        if button and isinstance(button, tk.Button):
-            button.configure(state='normal' if is_enabled else 'disabled')
-    
-        # Met à jour les éléments de menu associés
-        for menu in self.menuItems:
-            if isinstance(menu, tk.Menu):
-                for i in range(menu.index('end') + 1):
-                    try:
-                        if menu.entrycget(i, 'label') == self.getMenuText():
-                            menu.entryconfigure(i, state='normal' if is_enabled else 'disabled')
-                    except tk.TclError:
-                        continue
-    
-        # Met à jour l'aide de la toolbar si nécessaire            
-        if self.toolbar and (not self.helpText or self.menuText == "?"):
-            self.updateToolHelp()
+        # # Vérifie si la commande est activée
+        # is_enabled = bool(self.enabled(event))
+        #
+        # # Met à jour l'état du bouton de la toolbar s'il existe
+        # if button and isinstance(button, tk.Button):
+        #     button.configure(state='normal' if is_enabled else 'disabled')
+        #
+        # # Met à jour les éléments de menu associés
+        # for menu in self.menuItems:
+        #     if isinstance(menu, tk.Menu):
+        #         for i in range(menu.index('end') + 1):
+        #             try:
+        #                 if menu.entrycget(i, 'label') == self.getMenuText():
+        #                     menu.entryconfigure(i, state='normal' if is_enabled else 'disabled')
+        #             except tk.TclError:
+        #                 continue
+        #
+        # # Met à jour l'aide de la toolbar si nécessaire
+        # if self.toolbar and (not self.helpText or self.menuText == "?"):
+        #     self.updateToolHelp()
+
+        if button:
+            try:
+                # 2. Vérifie si la commande peut s'exécuter
+                # enabled = self.canExecute()
+                enabled = bool(self.enabled(event))
+
+                # 3. Met à jour l'état du bouton si nécessaire
+                if enabled and button['state'] == tk.DISABLED:
+                    button['state'] = tk.NORMAL
+                elif not enabled and button['state'] == tk.NORMAL:
+                    button['state'] = tk.DISABLED
+
+            except Exception as e:
+                # Log l'erreur mais continue la boucle de rafraîchissement
+                logging.error(f"Erreur dans onUpdateUI pour {self.uniqueName()}: {e}")
+
+            # 4. Planifie la prochaine vérification (ex: toutes les 250 ms)
+            if self.toolbar and self.toolbar.winfo_exists():
+                self.toolbar.after(250, self.onUpdateUI)
+
+    def update_ui_binding(self):
+        """
+        Met en place la boucle de rafraîchissement pour l'état du bouton.
+        """
+        # Récupère le bouton créé (stocké dans le constructeur appendToToolBar)
+        button = self._kwargs.get('button')
+
+        if button:
+            # On vérifie si la commande devrait être activée ou désactivée
+            enabled = self.canExecute()
+
+            # On met à jour l'état du bouton
+            if enabled and button['state'] == tk.DISABLED:
+                button['state'] = tk.NORMAL
+            elif not enabled and button['state'] == tk.NORMAL:
+                button['state'] = tk.DISABLED
+
+            # On planifie la prochaine vérification (par exemple, toutes les 500 ms)
+            # On suppose que `self.toolbar` (le parent) est un widget valide
+            if self.toolbar:
+                # `after` est la méthode Tkinter standard pour les appels différés
+                self.toolbar.after(500, self.update_ui_binding)
 
     def updateMenuText(self, menuText):
         self.menuText = menuText
@@ -443,7 +632,7 @@ class UICommand(object):
         long_help = self.getHelpText()
         if hasattr(button, '_long_help') and button._long_help != long_help:
             button._long_help = long_help
-        
+
     def _show_tooltip(self, event, text):
         """Affiche un tooltip avec le texte donné."""
         x, y, _, _ = event.widget.bbox("insert")
@@ -506,12 +695,13 @@ class UICommand(object):
         """ Retourne le texte d'aide. """
         return self.helpText
 
-    def __getBitmap(self, bitmapName):
+    def __getBitmap(self, bitmapName, bitmapSize=(16, 16)):
         """
         Obtient une icône à partir du nom spécifié en utilisant tkartprovider.
 
         Args :
             bitmapName (str) : Le nom de l'icône.
+            bitmapSize (tuple, optionnel) : La taille de l'icône. Par défaut à (16, 16).
 
         Returns :
             (tk.PhotoImage) : L'icône PhotoImage obtenue, ou None en cas d'erreur.
@@ -522,9 +712,10 @@ class UICommand(object):
             # qui peut charger des images.
             # return ArtProvider.getPhotoImage(bitmapName)
             # return ArtProviderTk.GetBitmap(bitmapName)
-            return artprovidertk.getIcon(bitmapName)
+            return artprovidertk.getIcon(bitmapName, bitmapSize)
         except Exception as e:
             # print(f"UICommand.__getBitmap : Error getting bitmap: {e}")
             logging.error(f"UICommand.__getBitmap : Error loading bitmap '{bitmapName}': {str(e)}")
+            # raise FileNotFoundError(f"Bitmap '{bitmapName}' not found")
             return None
 
