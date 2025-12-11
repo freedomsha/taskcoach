@@ -43,7 +43,7 @@ from wx.lib.agw import hypertreelist
 #    from wx.lib.pubsub import pub
 from pubsub import pub
 
-from taskcoachlib.widgets import ToolTipMixin
+from taskcoachlib.widgets.tooltip import ToolTipMixin
 from . import mixin
 
 log = logging.getLogger(__name__)
@@ -225,7 +225,8 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         pass
 
     def domainObjectsToView(self):
-        """Retourne les objets du domaine que cette visionneuse doit afficher. Doit être implémentée dans les sous-classes.
+        """Retourne les objets du domaine que cette visionneuse doit afficher.
+        Doit être implémentée dans les sous-classes.
 
         Renvoie les objets de domaine que cette visionneuse doit afficher.
         Pour les visualiseurs globaux, cela fera partie du fichier de tâches,
@@ -894,7 +895,8 @@ class ListViewer(Viewer):  # pylint: disable=W0223
     """
     Classe ListViewer, héritant de Viewer.
 
-    Cette classe est utilisée pour afficher des objets dans une vue en liste, contrairement à une vue arborescente.
+    Cette classe est utilisée pour afficher des objets dans une vue en liste,
+    contrairement à une vue arborescente.
     Elle implémente des méthodes spécifiques pour gérer les objets sous forme de liste.
 
     Explication des méthodes :
