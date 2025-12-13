@@ -226,7 +226,6 @@ class IOController(object):
             # convertir le premier argument de la ligne de commande
             # en une chaîne de caractères Unicode,
             # en utilisant l'encodage du système de fichiers.
-
         else:
             # Sinon, on récupère le nom du dernier fichier ouvert par
             # l'utilisateur à partir des paramètres de configuration.
