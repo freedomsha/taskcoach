@@ -122,16 +122,19 @@ def viewerTypes() -> List[str]:
 
 # Double initialisation : Je vois deux initialisations des visionneuses dans les journaux.
 # Cela se produit parce que l’initialisation des visionneuses se trouve dans la classe factory,
-# mais aussi dans addViewersToContainer .
+# mais aussi dans addViewersToContainer.
 # Supprimez l’initialisation de la fabrique et
 # laissez addViewersToContainer exécuter les initialisations des utilisateurs.
 class addViewers:
     """
     Classe se faisant passer pour une méthode pour ajouter des visualisateurs.
     """
+
+    floating = False
+
     # def __init__(self, viewer_container: Any, task_file: Any, settings: settings):
     def __init__(self, viewer_container: Any, task_file: Any, settings):
-        log.debug("addViewers.__init__ : Ajoute des visualiseurs.")
+        log.debug(f"addViewers.__init__ : Ajoute des visualiseurs dans le viewer_container={viewer_container} avec task_file={task_file} et settings={settings}.")
         self.__viewer_container = viewer_container
         self.__task_file = task_file
         self.__settings = settings
@@ -153,13 +156,13 @@ class addViewers:
         Ouvrez les visionneuses telles qu'elles ont été enregistrées précédemment dans les paramètres.
         """
         log.debug("addViewers.__add_all_viewers : Ouvre toutes les visionneuses.")
-        self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
+        # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
 
         # self._add_viewer(category.Categoryviewer)
-        # self._add_viewer(task.Taskviewer)
-        # self._add_viewer(task.TaskStatsViewer)
-        # self._add_viewer(task.SquareTaskViewer)
-        # self._add_viewer(task.TimelineViewer)
+        self._add_viewer(tasktk.Taskviewer)  # 24/11/2025 échoue, passe le 03/12
+        self._add_viewer(tasktk.TaskStatsViewer)  # 03/12/2025
+        # self._add_viewer(tasktk.SquareTaskViewer)  # 03/12/2025 il faut trouver une alternative au module squaremap(wxpython)
+        self._add_viewer(tasktk.TimelineViewer)
         # self._add_viewer(task.CalendarViewer)
         # self._add_viewer(task.HierarchicalCalendarViewer)
         # try:
@@ -170,6 +173,8 @@ class addViewers:
         #     self._add_viewer(task.TaskInterdepsViewer)
         self._add_viewer(efforttk.Effortviewer)
         # self._add_viewer(effort.EffortViewerForSelectedTasks)
+        self._add_viewer(categorytk.Categoryviewer)
+        # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
         #
         # # viewer_classes: List[Type[Viewer]] = [task.Taskviewer, category.Categoryviewer, effort.Effortviewer, note.Noteviewer]
         # #
@@ -295,7 +300,7 @@ class addViewers:
         self.__add_all_viewers()
 
     def _viewer_classes(self) -> List[Type[ttk.Frame]]:
-        """Retourne les classes de visualisateurs à ajouter."""
+        """Retourne la liste des classes de visualisateurs à ajouter."""
         viewer_classes: List[Type[ttk.Frame]] = []
         for viewer_type in viewerTypes():
             number_of_viewers = self._number_of_viewers_to_add(
@@ -374,8 +379,8 @@ if __name__ == '__main__':
     class MockViewerContainer(ttk.Frame):
         def __init__(self, parent: tk.Tk):
             super().__init__(parent)
-            self.viewer_count = 0
-            self.pack(fill="both", expand=True)
+            self.viewer_count = 0  # Copié dans containertk.ViewerContainer
+            self.pack(fill="both", expand=True)  # Copié dans mainmenutk._create_viewer_container
             self._label = ttk.Label(self, text="Conteneur de visualisateurs...")
             self._label.pack(pady=20)
             print("Conteneur de visualisateurs créé.")
