@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from builtins import str
-import wx
+import wx  # TODO : a changer pour la compatibilité avec tkinter
 from taskcoachlib import meta
 
 defaults = {
@@ -34,7 +34,7 @@ defaults = {
     },
     "view": {
         "statusbar": "True",
-        "toolbar": "(22, 22)",
+        "toolbar": "(22, 22)",  # TODO : provoque une erreur !
         "toolbarperspective": "FileOpen,Print,Separator,EditUndo,EditRedo,Separator,EffortStartButton,EffortStop",
         # Index of the active effort viewer in task editor:
         "effortviewerintaskeditor": "0",
@@ -595,7 +595,7 @@ defaults = {
         "margin_bottom": "0",
         "margin_right": "0",
         "paper_id": "0",
-        "orientation": str(wx.PORTRAIT),  # TODO : A changer pour le rendre compatible tk !
+        "orientation": str(wx.PORTRAIT),  # TODO : A changer pour le rendre compatible tk ! side="top" ou sticky="n"
     },
     "export": {
         "html_selectiononly": "False",
