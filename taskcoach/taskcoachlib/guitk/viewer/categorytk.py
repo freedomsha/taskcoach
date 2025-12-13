@@ -54,7 +54,10 @@ Elle est ajoutée à l’ensemble des commandes de la barre d’outils « mode �
 # Mise à jour des imports : Remplacer les anciens imports wxPython par les nouveaux imports Tkinter que vous avez spécifiés.
 # Adaptation des classes :
 #
-# BaseCategoryViewer: Adapter cette classe pour utiliser les composants Tkinter au lieu de wxPython. Cela inclut le remplacement de wx.CheckTreeCtrl par un équivalent Tkinter (possiblement un arbre créé avec tkinter.ttk.Treeview et des cases à cocher).
+# BaseCategoryViewer: Adapter cette classe pour utiliser les composants Tkinter
+#                     au lieu de wxPython. Cela inclut le remplacement de
+#                     wx.CheckTreeCtrl par un équivalent Tkinter
+#                     (possiblement un arbre créé avec tkinter.ttk.Treeview et des cases à cocher).
 # CategoryViewer: Mettre à jour l'initialisation et toute méthode utilisant des éléments spécifiques à wxPython.
 #
 #
@@ -83,6 +86,7 @@ Elle est ajoutée à l’ensemble des commandes de la barre d’outils « mode �
 
 # from future import standard_library
 # standard_library.install_aliases()
+import logging
 import tkinter as tk
 from tkinter import ttk  # Pour l'arbre (Treeview)
 from taskcoachlib import command, widgetstk
@@ -105,6 +109,8 @@ from taskcoachlib.guitk.viewer import mixintk
 # from taskcoachlib.guitk.viewer.mixintk import AttachmentDropTargetMixin
 from taskcoachlib.guitk.viewer import inplace_editortk
 
+log = logging.getLogger(__name__)
+
 
 class BaseCategoryViewer(
     mixintk.AttachmentDropTargetMixin,  # pylint: disable=W0223
@@ -115,7 +121,7 @@ class BaseCategoryViewer(
     mixintk.NoteColumnMixin,
     mixintk.AttachmentColumnMixin,
     basetk.SortableViewerWithColumns,
-    basetk.TreeViewer,
+    basetk.TreeViewer
 ):
     """
     Classe de base pour la vue des catégories.
@@ -191,35 +197,62 @@ class BaseCategoryViewer(
     # Implémenter onSelect et onEdit : Assurez-vous que ces méthodes sont définies et qu'elles gèrent correctement les événements de sélection et d'édition du TreeListCtrl.
     # Tester la gestion des colonnes : Vérifiez que l'affichage et le masquage des colonnes fonctionnent correctement.
     # Adapter la gestion des événements : Liez les événements nécessaires du TreeListCtrl (clics, double-clics, etc.) aux fonctions correspondantes dans votre classe.
-    def createWidget(self):
+
+    # D'après le message d'erreur, il semble qu'il y ait un problème lors de la création du TreeListCtrl avec Tkinter. L'erreur spécifique est _tkinter.TclError: unknown option "-selectCommand". Cela indique que l'option selectCommand n'est pas une option valide pour le widget ttk.Treeview de Tkinter.
+    # Dans le code wxPython, il était possible de passer des arguments comme selectCommand directement au constructeur du TreeCtrl. Cependant, Tkinter a une approche différente. Les gestionnaires d'événements (comme la sélection) doivent être liés au widget via la méthode bind.
+    # Voici comment je pense qu'on peut résoudre ce problème :
+    #
+    # 1-Supprimer selectCommand et editCommand des arguments de TreeListCtrl :
+    # Dans taskcoachlib/widgetstk/treectrltk.py,
+    # supprimez selectCommand et editCommand de la liste des arguments
+    # passés à la classe parente (CtrlWithItemsMixin).
+    #
+    # 2-Lier les événements de sélection et d'édition
+    # après la création du TreeListCtrl :
+    # Après avoir créé l'instance de TreeListCtrl
+    # dans taskcoachlib/guitk/viewer/categorytk.py,
+    # utilisez la méthode bind pour lier les événements de sélection et d'édition
+    # aux fonctions onSelect et Edit.
+    # def createWidget(self):
+    def createWidget(self, parent):
         """
         Crée et retourne le widget utilisé pour afficher les catégories.
         Returns :
-            widget (ttk.Treeview) : Le widget Treeview utilisé pour afficher les catégories.
-            widget (treectrltk.TreeListCtrl) : Le widget TreeListCtrl utilisé pour afficher les catégories.
+            widget (ttk.Treeview) : (treectrltk.CheckTreeCtrl) Le widget CheckTreeCtrl utilisé pour afficher les catégories.
         """
+        log.debug(f"BaseCategoryViewer.createWidget : Utilisation dans self={self.__class__.__name__} avec parent={parent}.")
         # imageList = self.createImageList()  # À adapter pour Tkinter
         self._columns = self.createColumns()
+        log.debug(f"BaseCategoryViewer.createWidget : colonnes créées ={self._columns}.")
         itemPopupMenu = self.createCategoryPopupMenu()
-        columnPopupMenu = taskcoachlib.guitk.menu.ColumnPopupMenu(self)
+        columnPopupMenu = taskcoachlib.guitk.menutk.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
 
         # # Création du Treeview avec des colonnes
         # widget = ttk.Treeview(self, columns=[col.name for col in self._columns], show="tree headings")
 
         # Création du TreeListCtrl
-        widget = widgetstk.treectrltk.TreeListCtrl(
-            parent=self,
-            columns=self._columns,
-            selectCommand=self.onSelect,
-            editCommand=self.onEdit,
+        # widget = widgetstk.treectrltk.CheckTreeCtrl(
+        widget = widgetstk.treectrltk.TreeListCtrl(  # Sauf que ce n'est pas un TreeListCtrl qu'il faut !? Si !
+            # self,  # self ou parent ?
+            parent,
+            # self,  # adapter ?
+            parent,
+            # self.adapter, # passer l'adapter ici'
+            # parent=self,
+            # adapter= ,
+            columns=self._columns,  # Les colonnes
+            # selectCommand=self.onSelect,  # Enlever ça, les commandes utilisent bind !
+            checkCommand=self.onCheck,
+            # editCommand=self.onEdit,
+            # editCommand=uicommand.Edit(viewer=self),
             dragAndDropCommand=uicommand.CategoryDragAndDrop(
                 viewer=self, categories=self.presentation()
             ),
             itemPopupMenu=itemPopupMenu,
             columnPopupMenu=columnPopupMenu,
             # resizeableColumn=1 if self.hasOrderingColumn() else 0, #pas utilisé
-            validateDrag=self.validateDrag,
+            # validateDrag=self.validateDrag,
             **self.widgetCreationKeywordArguments()  # Problèmes ?  taskcoachlib.gui.viewer.mixin.AttachmentDropTargetMixin
         )
 
@@ -234,6 +267,14 @@ class BaseCategoryViewer(
         # Configuration de l'ImageList si nécessaire
         # widget.AssignImageList(imageList)  # À adapter pour Tkinter
         # pylint: disable=E1101
+        # self.widget.pack(expand=True, fill="both")
+        widget.pack(expand=True, fill="both")
+
+        widget.bind("<ButtonRelease-1>", self.onSelect)  # Binding pour la selection (clic gauche)
+        widget.bind("<Double-Button-1>", uicommand.Edit(viewer=self))  # Binding pour l'édition (double clic)
+
+        # return self.widget
+        log.debug(f"BaseCategoryViewer.createWidget : widget TreeListCtrl créé ={widget.__class__.__name__}{widget}.")
         return widget
 
     def createCategoryPopupMenu(self, localOnly=False):
@@ -244,9 +285,19 @@ class BaseCategoryViewer(
         Returns :
             (tk.Menu) : Le menu contextuel pour les catégories.
         """
-        return taskcoachlib.guitk.menu.CategoryPopupMenu(
-            self.parent, self.settings, self.taskFile, self, localOnly
+        # # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+        # #     self.parent, self.settings, self.taskFile, self, localOnly
+        # # )  # il manque self, self.parent à la place de parent mais quoi mettre ?
+        # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+        #     self.parent, self, self.settings, self.taskFile,  localOnly
+        # )  # En modifiant l'appel à CategoryPopupMenu,
+        # # on s'assure que l'objet de type CategoryViewer est bien passé à CategoryPopupMenu.
+        return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+            self, self.parent, self.settings, self.taskFile, self, localOnly
         )
+        # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+        #     parent=self.parent, parent_window=self, settings=self.settings, taskFile=self.taskFile, categoryViewer=self, localOnly=localOnly
+        # )
 
     def _createColumns(self):
         """
@@ -258,6 +309,7 @@ class BaseCategoryViewer(
         kwargs = dict(resizeCallback=self.onResizeColumn)
         columns = [
             widgetstk.itemctrltk.Column(
+                # self.widget.column(
                 "ordering",
                 "",
                 category.Category.orderingChangedEventType(),
@@ -299,10 +351,10 @@ class BaseCategoryViewer(
                 "",
                 category.Category.attachmentsChangedEventType(),
                 # pylint: disable=E1101
-                width=self.getWidth("attachments"),
+                width=self.getColumnWidth("attachments"),
                 alignment=tk.LEFT,  # Remplacer wx.LIST_FORMAT_LEFT
                 imageIndicesCallback=self.attachmentImageIndices,
-                headerImageIndex=self.imageIndex["paperclip_icon"],
+                # headerImageIndex=self.imageIndex["paperclip_icon"],  # imageIndex ne fonctionne pas pour l'instant, la liste semble vide !
                 renderCallback=lambda category: "",
                 **kwargs
             ),
@@ -314,7 +366,7 @@ class BaseCategoryViewer(
                 width=self.getColumnWidth("notes"),
                 alignment=tk.LEFT,  # Remplacer wx.LIST_FORMAT_LEFT
                 imageIndicesCallback=self.noteImageIndices,
-                headerImageIndex=self.imageIndex["note_icon"],
+                # headerImageIndex=self.imageIndex["note_icon"],
                 renderCallback=lambda category: "",
                 **kwargs
             ),
@@ -340,6 +392,7 @@ class BaseCategoryViewer(
                 **kwargs
             ),
         ]
+        # columns.pack(expand=True, fill="both")
         return columns
 
     def createCreationToolBarUICommands(self):
