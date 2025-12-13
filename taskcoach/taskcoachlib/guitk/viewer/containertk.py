@@ -152,7 +152,7 @@ log = logging.getLogger(__name__)
 
 
 # class ViewerContainer:
-class ViewerContainer(ttk.Frame):
+class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
     # class ViewerContainer():
     """
     ViewerContainer est un conteneur de visionneuses. Il utilise un Panedwindow Tkinter
@@ -178,6 +178,10 @@ class ViewerContainer(ttk.Frame):
         # super().__init__(containerWidget)
         # super().__init__(parent_widget)
         super().__init__(parent_widget, *args, **kwargs)
+        # TODO : copier factorytk Mock
+        self.viewer_count = 0  # copie de factorytk.MockViewerContainer
+        self._label = ttk.Label(self, text="Conteneur de visualisateurs...")
+        self._label.pack(pady=20)
         # self.containerWidget = containerWidget  # Le widget conteneur (par exemple, une fenêtre Tk).
         self.containerWidget = parent_widget  # Le widget conteneur (par exemple, une fenêtre Tk).
         self._settings = settings
@@ -282,11 +286,14 @@ class ViewerContainer(ttk.Frame):
 
         # Créez le visualiseur avec le nouveau cadre comme parent
         # viewer = viewer_class(viewer_frame, *args, **kwargs)
+        # Ajoute le viewer à la liste des viewers.
         self.viewers.append(viewer)
+        # Ajoute le viewer au bandeau de viewers
         self.paned_window.add(viewer)  # viewer doit être un widget Tkinter
 
         # Placez le visualiseur à l'intérieur du nouveau cadre
         viewer.pack(expand=True, fill="both")
+        # viewer.pack(fill="both", expand=True, padx=10, pady=5)  # copie de factorytk.MockViewerContainer
         # viewer.grid(row=0, column=0)  # A essayer !
 
         # Ajoutez le nouveau cadre (qui contient le visualiseur) comme onglet
@@ -295,13 +302,13 @@ class ViewerContainer(ttk.Frame):
         # Met à jour les listes de viewers
         # self.viewers.append(viewer)
         # self.viewer_widget_map[viewer] = viewer_frame
-        # self.viewer_count += 1
+        self.viewer_count += 1
 
         if len(self.viewers) == 1:
             self.activateViewer(viewer)
         if self._active_viewer is None:
             self.activateViewer(viewer)
-        log.info(f"ViewerContainer.addViewer : Le visualiseur {viewer.title()} a été ajouté au conteneur.")
+        log.info(f"ViewerContainer.addViewer : Le visualiseur {viewer.title()} a été ajouté au conteneur. Total = {self.viewer_count} visulaiseurs.")
 
     def removeViewer(self, viewer):
         """Retire un visualiseur du conteneur."""
