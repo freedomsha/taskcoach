@@ -79,6 +79,7 @@ class IOController(object):
         super().__init__()
         # Le fichier de tâches
         self.__taskFile = taskFile
+        # Boîte de dialogue pour les messages.
         self.__messageCallback = messageCallback
         self.__settings = settings
         self.__parent_window = parent_window  # La fenêtre principale tkinter
@@ -120,6 +121,9 @@ class IOController(object):
             "filetypes": [(_("Todo.txt files"), "*.txt"), (_("All files"), "*.*")],
             "initialdir": defaultPath
         }
+        self.__errorMessageOptions = dict(
+            caption=_("%s file error") % meta.name  # , style=ICON_ERROR
+        )
 
     def syncMLConfig(self):
         """
@@ -191,10 +195,27 @@ class IOController(object):
         Returns :
             None
         """
+        # commandLineArgs[0] est le premier argument de la ligne de commande,
+        # qui est une chaîne de caractères encodée en bytes.
+        # La méthode decode() est appelée sur cette chaîne de caractères
+        # pour la convertir en une chaîne de caractères Unicode.
+        # La méthode decode() prend en paramètre l'encodage
+        # utilisé pour encoder la chaîne de caractères en bytes.
+        # sys.getfilesystemencoding() retourne l'encodage utilisé
+        # par le système de fichiers. Cela permet de s'assurer que
+        # la chaîne de caractères est correctement décodée,
+        # même si l'encodage par défaut de l'application
+        # n'est pas le même que celui du système de fichiers.
+        # En résumé, cette commande permet de
+        # convertir le premier argument de la ligne de commande
+        # en une chaîne de caractères Unicode,
+        # en utilisant l'encodage du système de fichiers.
         filename = None
         log.info("IOController.openAfterStart : Ouvre le fichier spécifié en ligne de commande"
                  " ou le dernier fichier ouvert par l'utilisateur, ou aucun fichier du tout.")
         if commandLineArgs:
+            # Si un argument de ligne de commande est présent, on considère
+            # que c'est le nom du fichier à ouvrir.
             try:
                 filename = commandLineArgs[0]
                 if isinstance(filename, bytes):
@@ -204,13 +225,17 @@ class IOController(object):
                 messagebox.showerror("File Open Error", f"Cannot open file due to: {e}")
                 return
         else:
+            # Sinon, on récupère le nom du dernier fichier ouvert par
+            # l'utilisateur à partir des paramètres de configuration.
             filename = self.__settings.get("file", "lastfile")
             log.info(f"IOController.openAfterStart : Récupère le dernier fichier ouvert {filename} comme nom de fichier.")
         if filename:
             # Use `after` to ensure the main window is ready
+            # On utilise CallAfter pour s'assurer que la fenêtre principale
+            # est ouverte avant d'ouvrir le fichier.
             log.info(f"IOController.openAfterStart : Appelle after avec la méthode self.open et filename={filename}")
-            self.__parent_window.after(10, self.open, filename)
-            log.info("IOController.openAfterStart : Appelle after réussi. Terminé.")
+            self.__parent_window.after(10, self.open, filename)  # TODO : est-ce sur self.__parent_window ?
+            log.info(f"IOController.openAfterStart : Appelle after réussi. Fichier {filename} ouvert. Terminé !")
 
     def open(self, filename=None, showerror=messagebox.showerror,
              fileExists=os.path.exists, breakLock=False, lock=True):
@@ -308,13 +333,16 @@ class IOController(object):
             None
         """
         if not filename:
-            filename = self.__askUserForFile(_("Merge"), self.__tskFileOpenDialogOpts, flag="open")
+            filename = self.__askUserForFile(
+                _("Merge"), self.__tskFileOpenDialogOpts, flag="open"
+            )
         if filename:
             try:
                 self.__taskFile.merge(filename)
             except lockfile.LockTimeout:
                 showerror(_("%s file error") % meta.name,
-                          _("Cannot open %(filename)s\nbecause it is locked.") % dict(filename=filename))
+                          _("Cannot open %(filename)s\nbecause it is locked.")
+                          % dict(filename=filename))
                 return
             except persistence.xml.reader.XMLReaderTooNewException:
                 self.__showTooNewErrorMessage(filename, showerror)
@@ -391,7 +419,8 @@ class IOController(object):
             filename = self.__askUserForFile(
                 _("Save as"),
                 self.__tskFileSaveDialogOpts,
-                flag="save"
+                flag="save",
+                fileExists=fileExists,
             )
             if not filename:
                 return False  # User didn't enter a filename, cancel save
@@ -408,10 +437,11 @@ class IOController(object):
             filename = self.__askUserForFile(
                 _("Save selection"),
                 self.__tskFileSaveDialogOpts,
-                flag="save"
+                flag="save",
+                fileExists=fileExists,
             )
             if not filename:
-                return False # User didn't enter a filename, cancel save
+                return False  # User didn't enter a filename, cancel save
         selectionFile = self._createSelectionFile(tasks, TaskFileClass)
         if self._saveSave(selectionFile, showerror, filename):
             return True
@@ -614,7 +644,9 @@ class IOController(object):
         """
         log.info("IOController.export ouvre le fichier filename pour écriture et renvoie si tout s'est bien passé.")
         # filename est filename s'il existe sinon ouvre une boîte de dialogue.
-        filename = filename or self.__askUserForFile(title, fileDialogOpts, flag="save")
+        filename = filename or self.__askUserForFile(title, fileDialogOpts,
+                                                     flag="save",
+                                                     fileExists=fileExists)
         # Si filename existe :
         if filename:
             # revoir la méthode avec with ! :
@@ -844,7 +876,7 @@ class IOController(object):
         except IOError as reason:
             errorMessage = _("Cannot open %s\n%s") % (filename,
                                                       ExceptionAsUnicode(reason))
-            showerror(_("%s file error") % meta.name, errorMessage)
+            messagebox.showerror(_("%s file error") % meta.name, errorMessage)
             return None
 
     def __addRecentFile(self, fileName):
@@ -906,7 +938,7 @@ class IOController(object):
         filename = None
         options = {
             "title": title,
-            "initialdir": fileDialogOpts["initialdir"],
+            # "initialdir": fileDialogOpts["initialdir"],
             "filetypes": fileDialogOpts["filetypes"]
         }
         if flag == "open":
@@ -978,7 +1010,8 @@ class IOController(object):
         """
         result = messagebox.askyesnocancel(_("%s: save changes?") % meta.name,
                                            _("You have unsaved changes.\nSave before closing?"))
-        if result is True:  # YES
+        # if result is True:  # YES
+        if result:  # YES
             if not self.save():
                 return False
         elif result is None:  # CANCEL
@@ -1112,3 +1145,4 @@ class IOController(object):
                         self.__icsFileDialogOpts,
                         self.__htmlFileDialogOpts]:
             options["initialdir"] = new_path
+            options["default_path"] = new_path
