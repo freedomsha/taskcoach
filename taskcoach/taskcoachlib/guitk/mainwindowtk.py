@@ -193,22 +193,22 @@ from PIL import Image, ImageTk
 #     def categories(self): return []
 
 
-class MockSettings:
-    def __init__(self):
-        self._settings = {
-            "window": {"hidewhenclosed": False, "hidewheniconized": False, "maximized": False},
-            "view": {"toolbar": True, "statusbar": True, "perspective": "", "toolbarperspective": ""},
-            "feature": {"syncml": False, "iphone": False, "usesm2": False, "showsmwarning": False},
-            "syncml": {"showwarning": True}
-        }
-    def getboolean(self, section, option): return self._settings.get(section, {}).get(option, False)
-    def get(self, section, option): return self._settings.get(section, {}).get(option)
-    def getvalue(self, section, option): return self._settings.get(section, {}).get(option)
-    def set(self, section, option, value):
-        if section not in self._settings: self._settings[section] = {}
-        self._settings[section][option] = value
-    def setboolean(self, section, option, value): self.set(section, option, value)
-    def getint(self, section, option): return int(self._settings.get(section, {}).get(option, 0))
+# class MockSettings:
+#     def __init__(self):
+#         self._settings = {
+#             "window": {"hidewhenclosed": False, "hidewheniconized": False, "maximized": False},
+#             "view": {"toolbar": True, "statusbar": True, "perspective": "", "toolbarperspective": ""},
+#             "feature": {"syncml": False, "iphone": False, "usesm2": False, "showsmwarning": False},
+#             "syncml": {"showwarning": True}
+#         }
+#     def getboolean(self, section, option): return self._settings.get(section, {}).get(option, False)
+#     def get(self, section, option): return self._settings.get(section, {}).get(option)
+#     def getvalue(self, section, option): return self._settings.get(section, {}).get(option)
+#     def set(self, section, option, value):
+#         if section not in self._settings: self._settings[section] = {}
+#         self._settings[section][option] = value
+#     def setboolean(self, section, option, value): self.set(section, option, value)
+#     def getint(self, section, option): return int(self._settings.get(section, {}).get(option, 0))
 
 
 # class MockApplication:
@@ -227,12 +227,12 @@ class MockSettings:
 #     def componentsCreated(self): logging.info("MockViewerContainer: Composants créés.")
 
 
-class MockStatusBar(tk.Label):
-    def __init__(self, parent, viewer_container):
-        super().__init__(parent, text="Barre de statut", bd=1, relief=tk.SUNKEN, anchor=tk.W)
-        self.viewer = viewer_container
-
-    def SetStatusText(self, text, pane=0): self.config(text=text)  # Simplifié pour tkinter
+# class MockStatusBar(tk.Label):
+#     def __init__(self, parent, viewer_container):
+#         super().__init__(parent, text="Barre de statut", bd=1, relief=tk.SUNKEN, anchor=tk.W)
+#         self.viewer = viewer_container
+#
+#     def SetStatusText(self, text, pane=0): self.config(text=text)  # Simplifié pour tkinter
 
 
 # class MockMainMenu(tk.Menu):
@@ -400,7 +400,9 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
             settings (Settings) : Paramètres utilisateur de l'application à appliquer à la fenêtre principale.
             *args, **kwargs : Arguments supplémentaires pour la fenêtre.
         """
-        log.info("Début d'initialisation de MainWindow (Tkinter)")
+        log.info("****************************************************")
+        log.info("* Début d'initialisation de MainWindow (Tkinter) *****")
+        log.info("****************************************************")
         self.__splash = kwargs.pop("splash", None)
         super().__init__(parent, *args, **kwargs)  # Initialisation de tk.Frame
 
@@ -426,6 +428,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         self.__shutdown = False  # Indicateur indiquant si l'application est en cours d'arrêt (initialisé à False).
         self.toolbar_frame = None  # Initialisation de la Barre d'outils pour les actions courantes
 
+        self._handling_resize = False
         # self.__dimensions_tracker = windowdimensionstracker.WindowDimensionsTracker(self, settings)
 
         log.info("MainWindow: Création et initialisation des composants de la fenêtre :")
@@ -458,8 +461,9 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
 
         # Placeholder pour l'icône de la fenêtre
         # self.iconphoto(False, artprovidertk.iconBundle("taskcoach"))
-
-        log.info("MainWindow: ✅ Initialisé avec succès !")
+        log.info("*********************************************")
+        log.info("* MainWindow: ✅ Initialisé avec succès ! *****")
+        log.info("*********************************************")
 
     def onClose(self):
         """
@@ -525,12 +529,17 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         """
         Gère le redimensionnement de la fenêtre, notamment l'ajustement de la barre d'outils.
         """
+        # ignorer les événements déclenchés par ton propre code
+        if self._handling_resize:
+            return
+        self._handling_resize = True
         # Tkinter gère automatiquement le redimensionnement des widgets packés/gridés
         # Cette méthode peut être utilisée pour des logiques de redimensionnement personnalisées
         # new_width = self.winfo_width()
         new_width = self.parent.winfo_width()
         # new_height = self.winfo_height()
         new_height = self.parent.winfo_height()
+        self.after(10, lambda: setattr(self, "_handling_resize", False))
         log.debug(f"MainWindow.onResize: Fenêtre redimensionnée à {new_width}x{new_height}.")
 
         # Pour les barres d'outils et de statut, Tkinter gère la géométrie automatiquement
@@ -559,6 +568,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         # add_viewers_strategy = viewer.factory.addViewers(self.viewer, self.taskFile, self.settings)
         # add_viewers_strategy()
         # self.viewer.addViewer(self.viewer, self.taskFile, self.settings)
+
         log.debug("MainWindow._create_window_components: Création de la barre de statut.")
         self._create_status_bar()
         log.debug("MainWindow._create_window_components: Création de la barre de menu.")
@@ -567,7 +577,8 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         self.__create_reminder_controller()
         log.debug("MainWindow._create_window_components: Composants créés.")
         self.viewer.componentsCreated()  # Appeler la méthode
-        self.showToolBar(self.settings.getboolean("view", "toolbar"))
+        log.debug("mainWindow._create_window_components : Terminé !")
+        # self.showToolBar(self.settings.getboolean("view", "toolbar"))
 
     def _create_viewer_container(self) -> None:
         """
@@ -601,7 +612,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         #
         # Pour le moment, votre journal (taskcoach.log) confirme que la MainWindow est initialisée avec succès, mais il n'y a pas de mention explicite de l'initialisation du Taskviewer après cette étape.
         # Assurez-vous que cette partie est bien présente et fonctionnelle
-        log.debug("MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses.")
+        log.debug("MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses self.viewer.")
         # self.viewer = viewer.containertk.ViewerContainer(self, self.settings)
         self.viewer = containertk.ViewerContainer(self, self.settings)
         # Tkinter: Les viewers seraient des widgets Tkinter packés ou gridés
@@ -641,7 +652,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         # log.debug("MainWindow._create_viewer_container : Le ViewerContainer pour les viewers sont instanciés et positionnés dans le MainWindow.")
 
         self.viewer.pack(fill="both", expand=True)  # pas sûr que cela fonctionne
-        log.debug("MainWindow._create_viewer_container : Conteneur de visionneuses créé !")
+        log.debug(f"MainWindow._create_viewer_container : Conteneur {self.viewer} de visionneuses créé !")
 
     def _create_status_bar(self) -> None:
         """
@@ -772,7 +783,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
             - Restaure la disposition des panneaux de la fenêtre en appelant `__restore_perspective`.
         """
         log.debug("MainWindow.__init_window_components: Initialisation des composants principaux.")
-        # self.showToolBar(self.settings.getvalue("view", "toolbar"))  # TODO : a remettre dès que possible.
+        self.showToolBar(self.settings.getvalue("view", "toolbar"))  # TODO : a remettre dès que possible.
         self.showStatusBar(self.settings.getboolean("view", "statusbar"))
         self.__restore_perspective()  # Appelle la méthode mock
         log.debug("MainWindow.__init_window_components: Composants de fenêtre initialisés.")
@@ -878,7 +889,8 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
             pane (int) : Le panneau de la barre de statut où le message doit être affiché (par défaut, le premier panneau).
         """
         if hasattr(self, 'status_bar') and self.status_bar:
-            self.status_bar.SetStatusText(message, pane)
+            # self.status_bar.SetStatusText(message, pane)
+            self.status_bar.set_status_text(message, pane)
 
     def saveSettings(self):
         """
@@ -1073,7 +1085,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         self.settings.set("view", "toolbarperspective", perspective)
 
     # def showToolBar(self, value) -> None:
-    def showToolBar(self, show=True) -> None:
+    def showToolBar(self, show: bool | int = True) -> None:
         """
         Affiche ou cache la barre d'outils en fonction de la valeur fournie.
 
@@ -1109,7 +1121,7 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         # log.debug(f"MainWindow.showToolBar: Affichage de la barre d'outils: {value}")
         log.debug(f"MainWindow.showToolBar: Affichage de la barre d'outils: {show}")
         # Dans Tkinter, cela impliquerait de créer/détruire ou de pack/pack_forget un Frame contenant les boutons.
-        # TODO : s'aider de gui.Mainwindow.showtoolbar
+        # TODO : s'aider de gui.Mainwindow.showtoolbar et toolbartk:
         # if value:
         #     if not hasattr(self, 'toolbar_frame'):
         #         self.toolbar_frame = tk.Frame(self, bd=1, relief=tk.RAISED)
@@ -1147,6 +1159,9 @@ class MainWindow(tk.Frame):  # Hérite de tk.Frame
         else:
             if self.toolbar_frame:
                 self.toolbar_frame.pack_forget()  # Cache la barre d'outils
+        # Example Usage (in your main application window):
+        # self.toolbar = ToolBar(self, self.settings, relief=tk.RAISED, bd=2)
+        # self.toolbar.pack(side=tk.TOP, fill=tk.X)
 
     def onCloseToolBar(self, event) -> None:
         """
@@ -1419,17 +1434,18 @@ if __name__ == "__main__":
     # Configurez le logging pour voir les messages de débogage
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+    # Créez la fenêtre racine (root)
+    root = tk.Tk()
+    root.title(f"{meta.name} (Root Window)")
+    root.geometry("800x600")
+
     # # Créez des instances factices pour les dépendances
     # mock_iocontroller = MockIOController()
     mock_iocontroller = iocontrollertk.IOController(root, taskFile, "messageCallback", Settings)
     # mock_taskfile = MockIOController()  # Utilisation de MockIOController comme mock pour TaskFile
     mock_taskfile = mock_iocontroller  # Utilisation de MockIOController comme mock pour TaskFile
-    mock_settings = MockSettings()
-
-    # Créez la fenêtre racine (root)
-    root = tk.Tk()
-    root.title(f"{meta.name} (Root Window)")
-    root.geometry("800x600")
+    # mock_settings = MockSettings()
+    mock_settings = Settings()
 
     # Créez et packez l'instance de MainWindow dans la fenêtre racine
     app = MainWindow(root, mock_iocontroller, mock_taskfile, mock_settings)
