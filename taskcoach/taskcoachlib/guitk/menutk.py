@@ -318,16 +318,19 @@ class Menu(tk.Menu, uicommandcontainertk.UICommandContainerMixin):
             # Attention à ne pas mettre addToMenu 2 fois, sinon duplication de la liste des commandes !
             # uiCommand.addToMenu(menu=self, window=self._window)
             # peut-être faire comme dans la version wxPython
-            cmd = uiCommand.addToMenu(menu=self, window=self._window)  # TODO : Est-ce que cela fonctionne ?
+            cmd = uiCommand.addToMenu(menu=self, window=self._window)  # TODO : Est-ce que cela fonctionne ? Pas pour 'Save selected task as template'
 
-            # Le reste de votre logique pour les accélérateurs et observateurs est correcte
-            self._accels.extend(getattr(uiCommand, 'accelerators', lambda: [])())
+            # Le reste de la logique pour les accélérateurs et observateurs est correcte
+            # self._accels.extend(uiCommand.accelerators())
+            self._accels.extend(getattr(uiCommand, 'accelerators', lambda: [])())  # au cas où c'est vide !
+            log.debug(f"Menu.appendUICommand : Le conteneur self={self.__class__.__name__} a les accelerateurs {self._accels}.")
 
             if isinstance(uiCommand, patterns.Observer):
                 self._observers.append(uiCommand)
 
         except Exception as e:
-            log.error(f"Échec de l'ajout de UICommand '{uiCommand.menuText}' : {e}", exc_info=True)
+            log.error(f"Menu.appendUICommand : Échec de l'ajout de UICommand '{uiCommand.menuText}' : {e}", exc_info=True)
+            # Échec de l'ajout de UICommand 'Save selected task as &template' : 'IOController' object has no attribute 'curselection'
 
         # Ajout des accélérateurs :
         #  Les accélérateurs définis dans la UICommand sont ajoutés
@@ -354,14 +357,14 @@ class Menu(tk.Menu, uicommandcontainertk.UICommandContainerMixin):
             subMenu (Menu) : Le sous-menu à ajouter.
             bitmap (str | None) : (optionnel) Un bitmap optionnel pour l'icône du sous-menu.
         """
-        # TODO : Ajoute les lignes avec icon pour leur intégration dans le sous-menu
-        # icon = None
-        # if bitmap:
-        #     icon = artprovidertk.getIcon(bitmap,(16, 16))
+        # TODO : Ajouter les lignes avec icon pour leur intégration dans le sous-menu
+        icon = None
+        if bitmap:
+            icon = artprovidertk.getIcon(bitmap, (16, 16))
         # # self._menu.add_cascade(label=text, menu=subMenu.tk_menu)
-        # log.debug(f"appendMenu : Ajout du sous-menu {text} à la liste des menus de {self.__class__.__name__} et la méthode add_cascade.")
-        self.add_cascade(label=text, menu=subMenu)
-        # self.add_cascade(label=text, menu=subMenu, bitmap=icon)
+        log.debug(f"appendMenu : Ajout du sous-menu {text} à la liste des menus de {self.__class__.__name__} et la méthode add_cascade avec l'icône {icon}.")
+        # self.add_cascade(label=text, menu=subMenu)
+        self.add_cascade(label=text, menu=subMenu, bitmap=icon)
         # self.add_cascade(label=text, menu=subMenu, bitmap=icon, accelerator=subMenu.accelerators())
         log.debug(f"appendMenu : Sous-menu {text} ajouté.")
         self._accels.extend(subMenu.accelerators())
@@ -1227,7 +1230,8 @@ class ActionMenu(Menu):
             _("&Toggle category"),
             ToggleCategoryMenu(
                 # parent, categories=categories, viewer=viewerContainer
-                parent, parent_window, categories=categories, viewer=viewerContainer
+                # parent, parent_window, categories=categories, viewer=viewerContainer
+                parent=parent, parent_window=parent_window, categories=categories, viewer=viewerContainer
             ),
             # "folder_blue_arrow_icon"
         )
@@ -1365,7 +1369,7 @@ class ToggleCategoryMenu(DynamicMenu):
         self.viewer = viewer
         # super().__init__(parent)
         super().__init__(parent, parent_window)
-        log.info("Toggle Catégorie initialisé.")
+        log.info("Menu Toggle Catégorie initialisé.")
 
     def registerForMenuUpdate(self):
         for eventType in (self.categories.addItemEventType(),
@@ -1521,7 +1525,9 @@ class TaskPopupMenu(Menu):
             None)
         # log.debug("TaskPopupMenu : Ajout du menu : Toggle Categorie")
         self.appendMenu(_("&Toggle category"),
-                        ToggleCategoryMenu(parent=parent, categories=categories,
+                        ToggleCategoryMenu(parent=parent,
+                                           parent_window=parent_window,
+                                           categories=categories,
                                            viewer=taskViewer),
                         # "folder_blue_arrow_icon"
                         )
@@ -1654,7 +1660,9 @@ class NotePopupMenu(Menu):
             None)
         # log.debug("NotePopupMenu : Ajout du menu : Toggle Categorie")
         self.appendMenu(_("&Toggle category"),
-                        ToggleCategoryMenu(parent, categories=categories,
+                        ToggleCategoryMenu(parent,
+                                           parent_window,
+                                           categories=categories,
                                            viewer=noteViewer),
                         # "folder_blue_arrow_icon"
                         )
@@ -1698,7 +1706,7 @@ class ColumnPopupMenu(ColumnPopupMenuMixin, Menu):
         super().__init__(window)
         # super().__init__(window, parent_window)
         log.debug("ColumnPopupMenu : Appel de CallAfter.")
-        window.after(self.appendUICommands, *self.getUICommands())
+        window.after(0, self.appendUICommands, *self.getUICommands())
         log.debug("ColumnPopupMenu : CallAfter passé avec succès. Menu Popup Colonne terminé !")
 
     def appendUICommands(self, *args, **kwargs):
