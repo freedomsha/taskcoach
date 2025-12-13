@@ -294,10 +294,6 @@ class CalendarConfigDialog(sized_controls.SizedDialog):
             )
         # Crée un contrôle ColourSelect pour permettre à l'utilisateur de choisir une couleur.
         self._highlight = csel.ColourSelect(
-            pane, size=(100, 20)
-        )  # pylint: disable=W0201
-        label.SetSizerProps(valign="center")
-        self._highlight.SetColour(color)
             pane, size=(100, 20)  # Définit la taille du contrôle.
         )  # pylint: disable=W0201 # Affectation dans __init__ est ok.
         label.SetSizerProps(valign="center")  # Ré-aligne le label après la création du contrôle.
