@@ -1441,7 +1441,7 @@ if __name__ == "__main__":
 
     # # Créez des instances factices pour les dépendances
     # mock_iocontroller = MockIOController()
-    mock_iocontroller = iocontrollertk.IOController(root, taskFile, "messageCallback", Settings)
+    mock_iocontroller = iocontrollertk.IOController(root, MainWindow.taskFile, "messageCallback", Settings)
     # mock_taskfile = MockIOController()  # Utilisation de MockIOController comme mock pour TaskFile
     mock_taskfile = mock_iocontroller  # Utilisation de MockIOController comme mock pour TaskFile
     # mock_settings = MockSettings()
