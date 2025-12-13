@@ -83,7 +83,7 @@ from taskcoachlib.guitk.uicommand import base_uicommandtk
 from taskcoachlib.guitk.uicommand import mixin_uicommandtk
 from taskcoachlib.guitk.uicommand import settings_uicommandtk
 # from taskcoachlib.guitk.artprovidertk import ArtProvider
-from taskcoachlib.guitk.artprovidertk import ArtProvider
+from taskcoachlib.guitk.artprovidertk import getIcon
 # from taskcoachlib.guitk.tkdialog import FileDialog  # Assumes this exists
 # from taskcoachlib.application.tkapplication import TkinterApplication
 from taskcoachlib.widgetstk import dialogtk, searchctrltk
@@ -157,10 +157,25 @@ class ViewerCommand(base_uicommandtk.UICommand):
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialise la commande avec une visionneuse fournie.
+
+        Args :
+            viewer (Viewer) : La visionneuse pour laquelle la commande est exécutée.
+        """
         self.viewer = kwargs.pop("viewer", None)
         super().__init__(*args, **kwargs)
 
     def __eq__(self, other):
+        """
+        Compare cette commande avec une autre pour vérifier si elles sont égales. Deux commandes sont égales si elles partagent la même section de paramètres de la visionneuse.
+
+        Args :
+            other (ViewerCommand) : La commande avec laquelle comparer.
+
+        Returns :
+            (bool) : True si les commandes sont égales, False sinon.
+        """
         return (
                 super().__eq__(other)
                 and self.viewer.settingsSection() == other.viewer.settingsSection()
@@ -340,7 +355,8 @@ class FileSaveSelectedTaskAsTemplate(
         super().__init__(
             menuText=_("Save selected task as &template"),
             helpText=_("Save the selected task as a task template"),
-            bitmap="saveselection",
+            # bitmap="saveselection",  # n'existe pas pour tkinter !
+            bitmap="",
             *args,
             **kwargs,
         )
@@ -1307,7 +1323,8 @@ class EditPasteAsSubItem(mixin_uicommandtk.NeedsSelectedCompositeMixin, ViewerCo
         super().__init__(
             menuText=_("P&aste as subitem\tShift+Ctrl+V"),
             helpText=help.editPasteAsSubitem,
-            bitmap="pasteintotask",
+            # bitmap="pasteintotask",  # problème de bitmap
+            bitmap="",
             *args,
             **kwargs,
         )
@@ -5852,6 +5869,7 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
         """Ajoute la case à cocher à la barre d'outils.
 
         Ajoute un contrôle de case à cocher à la barre d’outils."""
+        # TODO : a remplacer !
         # # pylint: disable=W0201
         # self.checkboxCtrl = wx.CheckBox(toolbar, label=self.menuText)
         # self.checkboxCtrl.Bind(wx.EVT_CHECKBOX, self.onCheck)
