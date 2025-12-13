@@ -15,45 +15,76 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-# Le fichier windowdimensionstracker.py utilise de nombreuses fonctionnalités spécifiques à wxPython qui nécessitent une adaptation soignée pour tkinter.
+# Le fichier windowdimensionstracker.py utilise de nombreuses fonctionnalités
+# spécifiques à wxPython qui nécessitent une adaptation soignée pour tkinter.
 #
-# Je vais créer une version de windowdimensionstracker.py pour tkinter et taskcoachlib/operating_system.py pour simuler les fonctions nécessaires.
+# Je vais créer une version de windowdimensionstracker.py pour tkinter
+# et taskcoachlib/operating_system.py pour simuler les fonctions nécessaires.
 #
 # Aperçu de la conversion
 #
-# L'idée principale est de remplacer les mécanismes de wxPython par leurs équivalents dans tkinter :
+# L'idée principale est de remplacer les mécanismes de wxPython
+# par leurs équivalents dans tkinter :
 #
-#     Gestion des événements (wx.EVT_...) : Remplacé par la méthode bind() de tkinter (<Configure>, <Unmap>, etc.).
+#     Gestion des événements (wx.EVT_...) : Remplacé par la méthode bind() de tkinter
+#                                           (<Configure>, <Unmap>, etc.).
 #
-#     Gestion de la taille et de la position : Utilisation des méthodes geometry(), winfo_x(), winfo_y(), winfo_width(), winfo_height() et state() de la fenêtre Tkinter.
+#     Gestion de la taille et de la position : Utilisation des méthodes geometry(),
+#                                              winfo_x(), winfo_y(), winfo_width(),
+#                                              winfo_height() et state() de la fenêtre Tkinter.
 #
-#     État de la fenêtre : La gestion de la maximisation (IsMaximized, Maximize) et de l'icônisation (IsIconized, Iconize) sera faite avec la méthode state() de tkinter ('zoomed' pour maximisé, 'iconic' pour icônisé/minimisé).
+#     État de la fenêtre : La gestion de la maximisation (IsMaximized, Maximize)
+#                          et de l'icônisation (IsIconized, Iconize) sera faite
+#                          avec la méthode state() de tkinter ('zoomed' pour maximisé,
+#                          'iconic' pour icônisé/minimisé).
 #
-#     operating_system.py : Nous allons créer une version simplifiée de ce module en Python standard, car tkinter est moins dépendant de la plateforme que wxPython. Cependant, nous allons conserver la structure pour le support de isMac() et isGTK().
+#     operating_system.py : Nous allons créer une version simplifiée
+#                           de ce module en Python standard, car
+#                           tkinter est moins dépendant de la plateforme que wxPython.
+#                           Cependant, nous allons conserver la structure
+#                           pour le support de isMac() et isGTK().
 #
-# Voici les fichiers convertis. J'ai divisé le travail en deux fichiers : le nouveau windowdimensionstracker_tk.py et une simulation de operating_system.py pour que l'importation fonctionne.
+# Voici les fichiers convertis. J'ai divisé le travail en deux fichiers :
+# le nouveau windowdimensionstracker_tk.py et une simulation de operating_system.py
+# pour que l'importation fonctionne.
 
 # Instructions d'implémentation
 #
 #     Enregistrez les fichiers :
 #
-#         Enregistrez le contenu du premier bloc de code dans un fichier nommé windowdimensionstracker_tk.py.
+#         Enregistrez le contenu du premier bloc de code dans un fichier
+#         nommé windowdimensionstracker_tk.py.
 #
-#         Créez un dossier taskcoachlib et enregistrez le contenu du deuxième bloc de code dans taskcoachlib/operating_system.py.
+#         Créez un dossier taskcoachlib et enregistrez le contenu du
+#         deuxième bloc de code dans taskcoachlib/operating_system.py.
 #
 #     Utilisation dans votre application Tkinter :
 #
-#         Dans votre code principal (où vous créez la fenêtre Tkinter root), assurez-vous de disposer d'un objet settings qui implémente les méthodes get() et getvalue() / setvalue() comme simulé dans l'exemple MockSettings.
+#         Dans votre code principal (où vous créez la fenêtre Tkinter root),
+#         assurez-vous de disposer d'un objet settings qui implémente
+#         les méthodes get() et getvalue()/setvalue() comme simulé dans l'exemple MockSettings.
 #
 #         Initialisez le tracker avec votre fenêtre principale et votre objet settings :
 
 # Points importants de la conversion :
 #
-#     Maximisation/Icônisation : Tkinter utilise window.state('zoomed') pour la maximisation (principalement sur Windows) et window.state('iconic') pour la minimisation. L'événement <Configure> nous permet de suivre ces changements.
+#     Maximisation/Icônisation : Tkinter utilise window.state('zoomed')
+#                                pour la maximisation (principalement sur Windows)
+#                                et window.state('iconic') pour la minimisation.
+#                                TODO : L'événement <Configure> nous permet de suivre ces changements.
 #
-#     Position/Taille : Les méthodes winfo_rootx(), winfo_rooty(), winfo_width(), winfo_height() et geometry() de Tkinter remplacent les méthodes wx.GetPosition() et wx.GetSize().
+#     Position/Taille : Les méthodes winfo_rootx(), winfo_rooty(),
+#                       winfo_width(), winfo_height() et geometry() de Tkinter
+#                       remplacent les méthodes wx.GetPosition() et wx.GetSize().
 #
-#     save_position() : J'ai ajouté l'appel explicite à tracker.save_position() dans l'exemple on_closing. C'est crucial car, contrairement à wxPython où les événements de taille/mouvement étaient distincts, l'événement <Configure> de Tkinter pourrait ne pas être le tout dernier événement avant la fermeture. Le fait de l'appeler explicitement garantit que les données sont enregistrées.
+#     save_position() : J'ai ajouté l'appel explicite à tracker.save_position()
+#                       dans l'exemple on_closing. C'est crucial car,
+#                       contrairement à wxPython où les événements de
+#                       taille/mouvement étaient distincts,
+#                       l'événement <Configure> de Tkinter pourrait ne
+#                       pas être le tout dernier événement avant la fermeture.
+#                       Le fait de l'appeler explicitement garantit que les données sont enregistrées.
+import logging
 import tkinter as tk
 import sys
 # Importation simulée du module operating_system
@@ -71,6 +102,8 @@ from taskcoachlib import operating_system
 #         def isGTK(): return False # Simplification pour cet exemple
 #     operating_system = MockOS()
 
+log = logging.getLogger(__name__)
+
 
 class _Tracker(object):
     """ Méthodes utilitaires pour définir et obtenir des valeurs depuis/vers
@@ -85,26 +118,29 @@ class _Tracker(object):
         """ Stocke la valeur du paramètre dans les paramètres. """
         # Ceci est une simulation de la fonction setvalue de Taskcoach.
         # TODO : Vous devez adapter l'objet 'settings' pour qu'il gère réellement le stockage.
-        if not hasattr(self.__settings, '_data'):
-            self.__settings._data = {}
-        if self.__section not in self.__settings._data:
-            self.__settings._data[self.__section] = {}
-        self.__settings._data[self.__section][setting] = value
-        # print(f"SET: [{self.__section}] {setting} = {value}")
+        # if not hasattr(self.__settings, '_data'):
+        #     self.__settings._data = {}
+        # if self.__section not in self.__settings._data:
+        #     self.__settings._data[self.__section] = {}
+        # self.__settings._data[self.__section][setting] = value
+        self.__settings.setvalue(self.__section, setting, value)
+
+        log.debug(f"_Tracker.set_setting : SET: [{self.__section}] {setting} = {value}")
 
     def get_setting(self, setting):
         """ Obtient la valeur du paramètre depuis les paramètres et la retourne. """
         # TODO : Ceci est une simulation de la fonction getvalue de Taskcoach.
-        try:
-            return self.__settings._data[self.__section][setting]
-        except (AttributeError, KeyError):
-            # Retourne des valeurs par défaut si non trouvées
-            if setting == "size": return 800, 600
-            if setting == "position": return 50, 50
-            if setting == "maximized": return False
-            if setting == "iconized": return False
-            if setting == "hidewheniconized": return False
-            return None # Valeur par défaut si le paramètre est inconnu
+        # try:
+        #     return self.__settings._data[self.__section][setting]
+        # except (AttributeError, KeyError):
+        #     # Retourne des valeurs par défaut si non trouvées
+        #     if setting == "size": return 800, 600
+        #     if setting == "position": return 50, 50
+        #     if setting == "maximized": return False
+        #     if setting == "iconized": return False
+        #     if setting == "hidewheniconized": return False
+        #     return None  # Valeur par défaut si le paramètre est inconnu
+        return self.__settings.getvalue(self.__section, setting)
 
 
 class WindowSizeAndPositionTracker(_Tracker):
@@ -157,13 +193,11 @@ class WindowSizeAndPositionTracker(_Tracker):
             # Nous utilisons event.widget pour s'assurer que l'événement vient de la fenêtre elle-même
             pass
 
-
     def on_iconify(self, event) -> None:
         """ Gère la minimisation de la fenêtre (événement <Unmap>). """
         if self._window.state() == 'iconic':
             self.set_setting("iconized", True)
             self.set_setting("maximized", False)
-
 
     def __set_dimensions(self) -> None:
         """ Définit la position et la taille de la fenêtre en fonction des paramètres. """
@@ -285,7 +319,8 @@ if __name__ == '__main__':
         # Initialisation du tracker
         tracker = WindowDimensionsTracker(root, settings)
 
-        tk.Label(root, text="Redimensionnez, déplacez, maximisez et minimisez la fenêtre.\nFermez pour voir les paramètres sauvegardés dans la console.").pack(pady=20, padx=20)
+        tk.Label(root, text="Redimensionnez, déplacez, maximisez et minimisez la fenêtre.\n"
+                            "Fermez pour voir les paramètres sauvegardés dans la console.").pack(pady=20, padx=20)
 
         def on_closing():
             # Sauvegarde la position finale avant de quitter
