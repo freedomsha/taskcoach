@@ -174,9 +174,12 @@ class NeedsDeletedItemsMixin(object):
 # complètement différente dans Tkinter, en utilisant des menus de type 'Menu'.
 # C'est le cas !
 # TODO : remplacer les fonction wx par des version tk !
-# Le mixin wxPython que vous montrez est conçu pour être ajouté à un objet (probablement un contrôleur d'événement) qui gère un bouton de barre d'outils. Il calcule ensuite où afficher un menu contextuel (juste en dessous de la barre d'outils) lorsque la commande est exécutée.
+# Le mixin wxPython que vous montrez est conçu pour être ajouté à un objet (probablement un contrôleur d'événement)
+# qui gère un bouton de barre d'outils.
+# Il calcule ensuite où afficher un menu contextuel (juste en dessous de la barre d'outils) lorsque la commande est exécutée.
 #
-# En tkinter, l'approche est un peu différente et, à mon avis, plus directe. Nous allons créer un mixin qui sera mélangé directement avec le widget tkinter lui-même (comme un tk.Button ou tk.Menubutton).
+# En tkinter, l'approche est un peu différente et, à mon avis, plus directe.
+# Nous allons créer un mixin qui sera mélangé directement avec le widget tkinter lui-même (comme un tk.Button ou tk.Menubutton).
 # Résumé des changements :
 #
 #     Héritage direct : Le mixin est utilisé directement par la classe du bouton (MyToolbarButton(tk.Button, PopupButtonMixin)), ce qui rend le self beaucoup plus simple. self est le bouton lui-même.
@@ -219,7 +222,8 @@ class PopupButtonMixin(object):
         if not self.__menu:
             # Le menu n'existe pas encore, on le crée en appelant
             # la méthode que la classe enfant DOIT implémenter.
-            self.__menu = self.create_popup_menu()
+            # self.__menu = self.create_popup_menu()
+            self.__menu = self.createPopupMenu()
             if not self.__menu:
                 # Si create_popup_menu ne retourne rien, on arrête.
                 print("Erreur : create_popup_menu() n'a pas retourné de menu.")
@@ -294,13 +298,13 @@ class PopupButtonMixin(object):
     def createPopupMenu(self):
         raise NotImplementedError  # pragma: no cover
 
-    def create_popup_menu(self):
-        """
-        Méthode abstraite (non implémentée) à surcharger.
-
-        Cette méthode DOIT être implémentée par la classe qui utilise
-        ce mixin. Elle doit construire et retourner un objet tk.Menu.
-        """
-        raise NotImplementedError(
-            "La classe héritière doit implémenter create_popup_menu()"
-        )
+    # def create_popup_menu(self):
+    #     """
+    #     Méthode abstraite (non implémentée) à surcharger.
+    #
+    #     Cette méthode DOIT être implémentée par la classe qui utilise
+    #     ce mixin. Elle doit construire et retourner un objet tk.Menu.
+    #     """
+    #     raise NotImplementedError(
+    #         "La classe héritière doit implémenter create_popup_menu()"
+    #     )

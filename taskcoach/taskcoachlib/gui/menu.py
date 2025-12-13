@@ -144,6 +144,7 @@ class Menu(uicommandcontainer.UICommandContainerMixin, wx.Menu):  # Crée des pr
         # Un menuItem représente un élément dans un menu.
         # print(
         #     f"tclib.gui.menu.py Menu.DestroyItem essaie de retirer: menuItem = {menuItem} de self: {self} avec id: {id}")
+        menuItem_id = menuItem.GetId()
         if menuItem.GetSubMenu():
             menuItem.GetSubMenu().clearMenu()
         # self._window.Unbind(wx.EVT_MENU, id=menuItem.get_id())
@@ -155,7 +156,8 @@ class Menu(uicommandcontainer.UICommandContainerMixin, wx.Menu):  # Crée des pr
         # print(f" destruction de: menuItem = {menuItem} de self: {self} avec id: {id}")
         super().DestroyItem(menuItem)
         # nouvelle ligne conseillée par chatGPT
-        IdProvider.put(menuItem.GetId())  # Libérer l'identifiant. Incorrect call arguments option. Parameter 'id_' unfilled
+        # IdProvider.put(menuItem.GetId())  # Libérer l'identifiant. Incorrect call arguments option. Parameter 'id_' unfilled
+        IdProvider.put(menuItem_id)  # Libérer l'identifiant. Incorrect call arguments option. Parameter 'id_' unfilled
         log.info(f"Menu.DestroyItem : {menuItem} supprimé de {self.__class__.__name__} !")
 
     def clearMenu(self):
