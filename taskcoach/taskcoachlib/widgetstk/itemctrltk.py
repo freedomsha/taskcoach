@@ -139,8 +139,14 @@
 #     notetk.py : Vous utilisiez un ttk.Treeview basique. Nous l'avons remplacé par votre treectrltk.TreeListCtrl personnalisé, qui est ce que les classes de base (comme SortableViewerWithColumns) attendent.
 #
 #     itemctrltk.py : Nous avons implémenté les méthodes showSortColumn et showSortOrder (attendues par basetk.py) dans le mixin _CtrlWithSortableColumnsMixin. Ces méthodes gèrent maintenant l'affichage des flèches de tri dans les en-têtes du Treeview.
-import tkinter as tk
-from tkinter import ttk, Menu, PhotoImage
+"""
+Compatibilité tkinter pour TreeListCtrl + mixin de colonnes.
+Ce module fournit une implémentation sûre qui évite l'erreur:
+'TreeListCtrl' object has no attribute 'tk'
+"""
+from typing import Sequence, Optional, Callable, Any  # types utilitaires
+import tkinter as tk  # module tkinter principal
+from tkinter import ttk, Menu, PhotoImage  # widgets ttk modernes
 import logging
 from taskcoachlib.guitk import artprovidertk
 from taskcoachlib.widgetstk import draganddroptk
@@ -188,6 +194,7 @@ class _CtrlWithItemsMixin:
     # Solution : Retirer les Arguments de Callback dans _CtrlWithItemsMixin
     # def __init__(self, *args, **kwargs):
     def __init__(self, master, *args, **kwargs):  # master est le premier argument positionnel
+        """Initialise le mixin."""
         # Ce mixin est le point où super() atteint finalement object.
         # self est l'instance de VirtualListCtrl (le widget).
         # master, *args, **kwargs sont les arguments passés par VirtualListCtrl.
@@ -321,8 +328,8 @@ class _CtrlWithItemsMixin:
         if self._entry:
             self._entry.destroy()
             self._entry = None
-        self._editing_item = None
-        self._editing_column = None
+            self._editing_item = None
+            self._editing_column = None
 
     def item_being_edited(self):
         """Équivalent de TreeTextCtrl.item() — retourne l’item en cours d’édition."""
@@ -336,11 +343,23 @@ class _CtrlWithPopupMenuMixin(_CtrlWithItemsMixin):
     Ajoute la gestion des menus contextuels.
     """
     def __init__(self, master, *args, **kwargs):
+        """Initialise le mixin."""
+        log.debug(f"_CtrlWithPopupMenuMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
         super().__init__(master, *args, **kwargs)  # <-- Doit propager à _CtrlWithItemsMixin
 
     def _attachPopupMenu(self, widget, handler):
         """Lie un gestionnaire d'événements pour le menu contextuel."""
-        widget.bind("<Button-3>", handler)  # Clic droit
+        # widget.bind("<Button-3>", handler)  # Clic droit  TODO : ne fonctionne pas ici, le mettre dans treelistctrl ?
+        if hasattr(self, "handler"):
+            if hasattr(self, "widget"):
+                log.debug(f"_CtrlWithPopupMenuMixin._attachPopupMenu : Le bind sur widget={widget} avec handler={handler} ne fonctionne pas pour self={self}.")
+            else:
+                log.debug(f"_CtrlWithPopupMenuMixin._attachPopupMenu : self={self}, Pas de widget, handler={handler} !")
+        else:
+            if hasattr(self, "widget"):
+                log.debug(f"_CtrlWithPopupMenuMixin._attachPopupMenu : self={self}, widget={widget}, pas de handler !")
+            else:
+                log.debug(f"_CtrlWithPopupMenuMixin._attachPopupMenu : self={self.__class__.__name__} n'a ni widget ni handler !")
 
 
 class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
@@ -352,12 +371,15 @@ class _CtrlWithItemPopupMenuMixin(_CtrlWithPopupMenuMixin):
 
     # def __init__(self, *args, **kwargs):
     def __init__(self, master, *args, **kwargs):  # <-- C'est correct, il propage tout à _CtrlWithItemsMixin
+        """Initialise le mixin."""
         log.debug("_CtrlWithItemPopupMenuMixin.__init__ : Initialisation du menu contextuel sur les éléments.")
         self.__popupMenu = kwargs.pop("itemPopupMenu", None)
+        log.debug(f"_CtrlWithItemPopupMenuMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
         # super().__init__(*args, **kwargs)
         super().__init__(master, *args, **kwargs)
         if self.__popupMenu:
             self._attachPopupMenu(self, self.onItemPopupMenu)
+            # self._attachPopupMenu(self, master, self.onItemPopupMenu)  # ?
         log.debug("_CtrlWithItemPopupMenuMixin initialisé !")
 
     def onItemPopupMenu(self, event):
@@ -376,14 +398,17 @@ class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
     """
     Menu contextuel pour les en-têtes de colonnes du Treeview.
 
-    Gère les menus contextuels pour les en-têtes de colonne .
+    Gère les menus contextuels pour les en-têtes de colonne.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, master, *args, **kwargs):
+        """Initialise le mixin."""
         log.debug("_CtrlWithColumnPopupMenuMixin.__init__ : Initialisation du menu contextuel sur les en-têtes de colonnes.")
         self.__popupMenu = kwargs.pop("columnPopupMenu", None)
-        super().__init__(*args, **kwargs)
+        log.debug(f"_CtrlWithColumnPopupMenuMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
+        super().__init__(master,*args, **kwargs)
         if self.__popupMenu:
+            # TODO: A revoir avec les nouveaux fichiers (s'il existe heading_widget)
             self._attachPopupMenu(self.heading_widget, self.onColumnPopupMenu)
         log.debug("_CtrlWithColumnPopupMenuMixin initialisé !")
 
@@ -411,14 +436,15 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):  # <--- Erreur MRO potentie
     Permet le glisser-déposer de fichiers et d'URLs.
     Utilise draganddroptk.py pour la gestion du drag-and-drop.
     """
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, master, *args, **kwargs):
+        """Initialise le mixin."""
         log.debug("_CtrlWithDropTargetMixin.__init__ : Initialisation pour le glisser-déposer.")
         self.__onDropURLCallback = kwargs.pop("onDropURL", None)
         self.__onDropFilesCallback = kwargs.pop("onDropFiles", None)
         self.__onDropMailCallback = kwargs.pop("onDropMail", None)
         # Propager le reste
-        super().__init__(*args, **kwargs)
+        log.debug(f"_CtrlWithDropTargetMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
+        super().__init__(master, *args, **kwargs)
 
         # Initialise le gestionnaire de glisser-déposer de draganddrop.py
         if self.__onDropFilesCallback or self.__onDropURLCallback or self.__onDropMailCallback:
@@ -468,6 +494,7 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):  # <--- Erreur MRO potentie
     def GetMainWindow(self):
         """Retourne la fenêtre principale."""
         # return self.winfo_toplevel()
+        return self.__master.winfo_toplevel()
         # TODO : A revoir !
         # try:
         # Tenter l'appel normal
@@ -487,6 +514,7 @@ class _CtrlWithDropTargetMixin(_CtrlWithItemsMixin):  # <--- Erreur MRO potentie
             return self.__master
 
     def OnDrop(self, drop_item, dragged_items, part):
+        """Gère le drop d'éléments dans l'arborescence."""
         print(f"Éléments glissés: {dragged_items} sur {drop_item} à la position: {part}")
         # # Exemple de déplacement simple
         # for item in dragged_items:
@@ -511,22 +539,33 @@ class CtrlWithToolTipMixin(_CtrlWithItemsMixin):  # Retirer l'héritage de toolt
     Ajoute des info-bulles personnalisées à chaque élément du Treeview.
 
     Ajoute des info-bulles à chaque élément.
-    Utilise tooltiptk.py pour afficher les info-bulles .
+    Utilise tooltiptk.py pour afficher les info-bulles.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, master, *args, **kwargs):
+        """Initialise le mixin et l'info-bulle."""
         log.debug("CtrlWithToolTipMixin.__init__ : Initialisation des info-bulles.")
         # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")
         # L'objet `self` (VirtualListCtrl) est un widget Tkinter (Frame/Treeview).
         # # L'initialisation de l'objet ToolTip se fait en interne.
+        log.debug(f"CtrlWithToolTipMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
         # super().__init__(*args, **kwargs)  # <-- PROBLÈME
+        super().__init__(master, *args, **kwargs)  # <-- PROBLÈME
         # Appel explicite au parent mixin
-        _CtrlWithItemsMixin.__init__(self, *args, **kwargs)
+        # _CtrlWithItemsMixin.__init__(self, *args, **kwargs)  # revenir à super().__init__ ?
         # Le ToolTip est initialisé en lui passant le widget `self` (VirtualListCtrl)
         # Il faut s'assurer que self est correctement initialisé avant cet appel.
-        self.item_tooltip = tooltiptk.ToolTip(self, text="Default")  # `self` est maintenant le widget
+        # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")  # `self` est maintenant le widget
         # (Note : L'argument pour ToolTip doit être self (le widget),
         # ce qui est correct car VirtualListCtrl a déjà appelé ttk.Treeview.__init__.)
+        # Ligne 527 : L'initialisation prématurée est la cause de l'erreur.
+        # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")
+
+        # CORRECTION : Initialisation retardée.
+        # self.item_tooltip = None
+        # self._tooltip = None
+        # self._tooltip = tooltiptk.SimpleToolTip(self)  # TODO : Pas encore créé !
+        self._tooltip = tooltiptk.ToolTip(self)  # TODO : en attendant !
 
         # L'erreur `_w` vient de tooltiptk.ToolTip.__init__ -> self._set_bindings() -> self.widget.bind()
         # Dans tooltiptk.ToolTip, `self.widget` fait référence au widget parent passé au constructeur.
@@ -534,24 +573,65 @@ class CtrlWithToolTipMixin(_CtrlWithItemsMixin):  # Retirer l'héritage de toolt
         # self.bind("<Motion>", self.on_motion_update_tooltip)
         log.debug("CtrlWithToolTipMixin initialisé !")
 
+    def _post_init_tooltip(self):
+        """ Initialise l'info-bulle après que le widget Tkinter (Treeview) est prêt. """
+        # if self.item_tooltip is None:
+        # if self._tooltip is None:
+        if not hasattr(self, "_tooltip"):
+            from taskcoachlib.widgetstk import tooltiptk
+            # 'self' est maintenant un objet Treeview/TreeListCtrl entièrement initialisé.
+            # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")
+            self._tooltip = tooltiptk.ToolTip(self, text="Default")
+
     def on_motion_update_tooltip(self, event):
         """Met à jour l'info-bulle en fonction de l'élément survolé."""
         item = self.identify_row(event.y)
-        if self._itemIsOk(item):
-            domainObject = self._objectBelongingTo(item)
-            if domainObject:
-                # # Le code d'origine utilise getItemTooltipData qui doit être implémenté
-                # # dans la classe dérivée.
-                # tooltip_text = self.getItemTooltipData(domainObject)
-                # La classe principale (Viewer) implémente getItemTooltipData
-                tooltip_text = self.__adapter.getItemTooltipData(domainObject) # Supposons que l'adapter est le viewer
-                if tooltip_text:
-                    self.item_tooltip.text = tooltip_text
-                    self.item_tooltip.show_tooltip_now()
-                else:
-                    self.item_tooltip.hide_tooltip()
-            else:
-                self.item_tooltip.hide_tooltip()
+        # if self._itemIsOk(item):
+        #     domainObject = self._objectBelongingTo(item)
+        #     if domainObject:
+        #         # # Le code d'origine utilise getItemTooltipData qui doit être implémenté
+        #         # # dans la classe dérivée.
+        #         # tooltip_text = self.getItemTooltipData(domainObject)
+        #         # La classe principale (Viewer) implémente getItemTooltipData
+        #         tooltip_text = self.__adapter.getItemTooltipData(domainObject)  # Supposons que l'adapter est le viewer
+        #         if tooltip_text:
+        #             self.item_tooltip.text = tooltip_text
+        #             self.item_tooltip.show_tooltip_now()
+        #         else:
+        #             self.item_tooltip.hide_tooltip()
+        #     else:
+        #         self.item_tooltip.hide_tooltip()
+        # remplacer l’appel direct à __adapter par un appel sûr :
+        if not self._itemIsOk(item):
+            return
+        domainObject = self._objectBelongingTo(item)
+        if not domainObject:
+            # if self.item_tooltip: self.item_tooltip.hide_tooltip()
+            if self._tooltip:
+                self._tooltip.hide_tooltip()
+            return
+        # résolution robuste du "provider" de tooltip
+        provider = getattr(self, '_tooltip_provider', None) or getattr(self, 'getItemTooltipData', None)
+        tooltip_text = None
+        if callable(provider):
+            # provider peut être la méthode getItemTooltipData(domainObject)
+            try:
+                tooltip_text = provider(domainObject)
+            except TypeError:
+                # provider pourrait être un adaptateur ; essaye getItemTooltipData dessus
+                if hasattr(provider, 'getItemTooltipData'):
+                    tooltip_text = provider.getItemTooltipData(domainObject)
+        if tooltip_text:
+            # self.item_tooltip.text = tooltip_text
+            self._tooltip.text = tooltip_text
+            # self.item_tooltip.show_tooltip_now()
+            self._tooltip.show_tooltip_now()
+        else:
+            # self.item_tooltip.hide_tooltip()
+            self._tooltip.hide_tooltip()
+        # Et expose une méthode publique pour que le viewer
+        # appelle tree._tooltip_provider = adapter après initialisation
+        # (ou mieux, tree.set_tooltip_provider(adapter)).
 
 # NOTE : Il n'est pas nécessaire de lier "<Motion>" ici car `tooltiptk.ToolTip` le fait déjà
 # MAIS, pour la compatibilité avec le code original qui surcharge la gestion de la souris,
@@ -585,122 +665,194 @@ class CtrlWithItemsMixin(_CtrlWithItemPopupMenuMixin, _CtrlWithDropTargetMixin):
     #     super().__init__(*args, **kwargs)
     # pass
     def __init__(self, master, *args, **kwargs):
-        # L'ordre d'appel des super() doit respecter le MRO pour passer 'master'
-        # L'ordre MRO va appeler :
-        # 1. _CtrlWithItemPopupMenuMixin.__init__ (retire itemPopupMenu de kwargs)
-        # 2. _CtrlWithDropTargetMixin.__init__ (appelle super(), ne fait rien avec itemPopupMenu)
-        # 3. etc., jusqu'à ttk.Treeview, qui ne devrait PLUS voir itemPopupMenu.
-
-        # Consommer les arguments spécifiques AUX ITEMS qui ne sont pas consommés par les parents
-        # Ceci est le mixin principal qui doit retirer les arguments de callback.
-        _selectCommand = kwargs.pop("selectCommand", None)
-        _editCommand = kwargs.pop("editCommand", None)
-        # Le problème doit être que `itemPopupMenu` est passé aux mixins de la chaîne
-        # `_CtrlWithDropTargetMixin` (dans le MRO).
-
-        # RETIRONS itemPopupMenu DANS CtrlWithItemsMixin POUR GÉRER LE MRO
-        # super().__init__(master, *args, **kwargs)
-        # # # Stocker l'adapter pour le tooltip
-        # # __adapter est initialisé dans le viewer lui-même
-        # # self.__adapter = master
-        # Le MRO va appeler les parents. Assurons-nous que itemPopupMenu est retiré
-        # avant que super() n'atteigne ttk.Treeview via l'autre mixin.
-
-        # Méthode : Appeler explicitement les parents dans l'ordre pour Tkinter (car MRO est capricieux)
-        # Consommer les arguments spécifiques aux autres mixins pour ne pas les propager
-        # (même si _CtrlWithItemPopupMenuMixin et CtrlWithColumnsMixin le font,
-        # cette redondance est nécessaire dans l'approche d'initialisation explicite).
-        # 1. Argument pour le parent mixin (géré dans _CtrlWithItemPopupMenuMixin)
-        _itemPopupMenu = kwargs.pop("itemPopupMenu", None)  # Retirer ici pour la clarté.
-
-        # 2. Arguments POUR LE MIXIN COLONNE (mais propagés via cette chaîne, donc on les retire)
-        # Ceci est nécessaire car CtrlWithItemsMixin appelle super() qui atteint ttk.Treeview via l'autre mixin.
-        _columnPopupMenu = kwargs.pop("columnPopupMenu", None)
-        _columns = kwargs.pop("columns", [])  # S'il y a des colonnes ici, on les retire aussi.
-
-        # # Initialiser les parents sans super() pour Tkinter.
-        # Appels explicites au lieu de super()
-        _CtrlWithItemPopupMenuMixin.__init__(self, master, itemPopupMenu=_itemPopupMenu, *args, **kwargs)
-        _CtrlWithDropTargetMixin.__init__(self, master, *args, **kwargs)
-        # # Propagation à la chaîne d'héritage (qui inclut _CtrlWithItemPopupMenuMixin)
-        # # Propager les arguments RESTANTS (master, *args, **kwargs nettoyés)
-        # # à la chaîne d'héritage (qui atteindra _CtrlWithItemPopupMenuMixin)
-        # super().__init__(master, itemPopupMenu=_itemPopupMenu, *args, **kwargs)  # <-- PROBLÈME
-
-        # Les arguments retirés (_columnPopupMenu, _columns) peuvent être stockés ici
-        # ou gérés par la classe appelante (VirtualListCtrl).
-        # Stocker les arguments pour la classe concrète si nécessaire
-        self.__selectCommand = _selectCommand
-        self.__editCommand = _editCommand
-        self.__columnPopupMenu = _columnPopupMenu
-        self.__columns = _columns  # Stocker si besoin
-
-        # NOTE: CtrlWithItemsMixin est censé n'avoir QUE les args relatifs aux items/menu item/drag.
-
-        # L'objet `self` DOIT être initialisé comme un widget Tk avant d'appeler d'autres constructeurs qui ne sont pas des mixins.
-        # Puisque VirtualListCtrl gère l'initialisation de ttk.Treeview (dans listctrltk.py)
-        # nous devons nous assurer que les arguments sont filtrés EN AMONT de l'appel.
-        pass  # Laissez le super() faire son travail. La solution est dans listctrltk.py.
+        """Initialise le mixin."""
+        # # L'ordre d'appel des super() doit respecter le MRO pour passer 'master'
+        # # L'ordre MRO va appeler :
+        # # 1. _CtrlWithItemPopupMenuMixin.__init__ (retire itemPopupMenu de kwargs)
+        # # 2. _CtrlWithDropTargetMixin.__init__ (appelle super(), ne fait rien avec itemPopupMenu)
+        # # 3. etc., jusqu'à ttk.Treeview, qui ne devrait PLUS voir itemPopupMenu.
+        #
+        # # Consommer les arguments spécifiques AUX ITEMS qui ne sont pas consommés par les parents
+        # # Ceci est le mixin principal qui doit retirer les arguments de callback.
+        # _selectCommand = kwargs.pop("selectCommand", None)
+        # _editCommand = kwargs.pop("editCommand", None)
+        # # Le problème doit être que `itemPopupMenu` est passé aux mixins de la chaîne
+        # # `_CtrlWithDropTargetMixin` (dans le MRO).
+        #
+        # # RETIRONS itemPopupMenu DANS CtrlWithItemsMixin POUR GÉRER LE MRO
+        # # super().__init__(master, *args, **kwargs)
+        # # # # Stocker l'adapter pour le tooltip
+        # # # __adapter est initialisé dans le viewer lui-même
+        # # # self.__adapter = master
+        # # Le MRO va appeler les parents. Assurons-nous que itemPopupMenu est retiré
+        # # avant que super() n'atteigne ttk.Treeview via l'autre mixin.
+        #
+        # # Méthode : Appeler explicitement les parents dans l'ordre pour Tkinter (car MRO est capricieux)
+        # # Consommer les arguments spécifiques aux autres mixins pour ne pas les propager
+        # # (même si _CtrlWithItemPopupMenuMixin et CtrlWithColumnsMixin le font,
+        # # cette redondance est nécessaire dans l'approche d'initialisation explicite).
+        # # 1. Argument pour le parent mixin (géré dans _CtrlWithItemPopupMenuMixin)
+        # _itemPopupMenu = kwargs.pop("itemPopupMenu", None)  # Retirer ici pour la clarté.
+        #
+        # # 2. Arguments POUR LE MIXIN COLONNE (mais propagés via cette chaîne, donc on les retire)
+        # # Ceci est nécessaire car CtrlWithItemsMixin appelle super() qui atteint ttk.Treeview via l'autre mixin.
+        # _columnPopupMenu = kwargs.pop("columnPopupMenu", None)
+        # _columns = kwargs.pop("columns", [])  # S'il y a des colonnes ici, on les retire aussi.
+        #
+        # # # Initialiser les parents sans super() pour Tkinter.
+        # # Appels explicites au lieu de super()
+        # _CtrlWithItemPopupMenuMixin.__init__(self, master, itemPopupMenu=_itemPopupMenu, *args, **kwargs)
+        # _CtrlWithDropTargetMixin.__init__(self, master, *args, **kwargs)
+        # # # Propagation à la chaîne d'héritage (qui inclut _CtrlWithItemPopupMenuMixin)
+        # # # Propager les arguments RESTANTS (master, *args, **kwargs nettoyés)
+        # # # à la chaîne d'héritage (qui atteindra _CtrlWithItemPopupMenuMixin)
+        # # super().__init__(master, itemPopupMenu=_itemPopupMenu, *args, **kwargs)  # <-- PROBLÈME
+        #
+        # # Les arguments retirés (_columnPopupMenu, _columns) peuvent être stockés ici
+        # # ou gérés par la classe appelante (VirtualListCtrl).
+        # # Stocker les arguments pour la classe concrète si nécessaire
+        # self.__selectCommand = _selectCommand
+        # self.__editCommand = _editCommand
+        # self.__columnPopupMenu = _columnPopupMenu
+        # self.__columns = _columns  # Stocker si besoin
+        #
+        # # NOTE: CtrlWithItemsMixin est censé n'avoir QUE les args relatifs aux items/menu item/drag.
+        #
+        # # L'objet `self` DOIT être initialisé comme un widget Tk avant d'appeler d'autres constructeurs qui ne sont pas des mixins.
+        # # Puisque VirtualListCtrl gère l'initialisation de ttk.Treeview (dans listctrltk.py)
+        # # nous devons nous assurer que les arguments sont filtrés EN AMONT de l'appel.
+        # pass  # Laissez le super() faire son travail. La solution est dans listctrltk.py.
+        log.debug(f"CtrlWithItemsMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
+        super().__init__(master, *args, **kwargs)
 
 
 # Description : Cette classe définit les propriétés d'une colonne.
 # Version Tkinter : La version Tkinter reste similaire,
 # mais sans les références spécifiques à wxPython comme wx.LIST_FORMAT_LEFT.
-class Column:
+class Column(object):
     """
     Définit les propriétés d'une colonne pour le ttk.Treeview.
     """
-    def __init__(self, name, header, *eventTypes, width=100, **kwargs):
+    # def __init__(self, name, header, *eventTypes, width=100, **kwargs):
+    # def __init__(self, name, header, *eventTypes, **kwargs):
+    def __init__(self, name: str, header: str, *eventTypes, width: int = 100, is_shown: bool = True, **kwargs):
         self._name = name
         self._header = header
         self.width = width
+        # ou :
+        # self.width = kwargs.pop("width", 100)
         self.__eventTypes = eventTypes
         self.__sortCallback = kwargs.pop("sortCallback", None)
         self.__renderCallback = kwargs.pop(
             "renderCallback", self.defaultRenderer
         )
+        # self.__resizeCallback = kwargs.pop("resizeCallback", None)
+        # self.__alignment = kwargs.pop("alignment", wx.LIST_FORMAT_LEFT)
         self.__hasImages = "imageIndicesCallback" in kwargs
         self.__imageIndicesCallback = (
                 kwargs.pop("imageIndicesCallback", self.defaultImageIndices)
                 or self.defaultImageIndices
         )
+        # # NB: because the header image is needed for sorting a fixed header
+        # # image cannot be combined with a sortable column
+        self.__headerImageIndex = kwargs.pop("headerImageIndex", -1)
+        # self.__editCallback = kwargs.get("editCallback", None)
+        # self.__editControlClass = kwargs.get("editControl", None)
+        # self.__parse = kwargs.get("parse", lambda value: value)  # utilisé dans parse()
+        # self.__settings = kwargs.get(
+        #     "settings", None
+        # )  # FIXME: Column shouldn't need to know about settings
+        self._is_shown = is_shown  # Ajout de l'attribut is_shown
+        # # La colonne ne devrait pas avoir besoin de connaître les paramètres.
 
-    def name(self):
+    # def name(self):
+    def name(self) -> str:
         """Retourne le nom interne de la colonne."""
-        log.debug(f"name() renvoie {self._name}")
+        log.debug(f"Column.name() renvoie le nom interne {self._name} de la colonne.")
         return self._name
 
-    def header(self):
+    # def header(self):
+    def header(self) -> str:
         """Retourne le texte de l'en-tête de la colonne."""
+        log.debug(f"Column.header() renvoie le texte {self._header} en-tête de la colonne.")
         return self._header
 
-    def eventTypes(self):
+    # def eventTypes(self):
+    def eventTypes(self) -> list:
         return self.__eventTypes
 
-    def setWidth(self, width):
+    # def setWidth(self, width):
+    def setWidth(self, width: int):
         """Définit la largeur de la colonne."""
         self.width = width
 
-    def defaultRenderer(self, *args, **kwargs):  # pylint: disable=W0613
+    # def defaultRenderer(self, *args, **kwargs):  # pylint: disable=W0613
+    def defaultRenderer(self, *args, **kwargs) -> str:  # pylint: disable=W0613
+        """Retourne une représentation par défaut de la valeur."""
         return str(args[0])
 
-    def is_shown(self):
-        # Par défaut, une colonne est affichée.
-        return True
-
     def add_is_shown_to_column(self):
+        """Ajoute la méthode is_shown à la classe Column si elle n'existe pas."""
         if not hasattr(Column, 'is_shown'):
             Column.is_shown = self.is_shown()
+            # ça affecte la valeur retournée, pas la méthode.
+            # Il faut affecter la fonction et non appeler la méthode.
+            # Column.is_shown = lambda self: True
+            # def _default_is_shown(self): return True
+            # Column.is_shown = _default_is_shown
+            # (ou définir la méthode comme fonction normale).
+            # Tu as déjà is_shown par défaut dans Column,
+            # donc add_is_shown_to_column peut être supprimée ou simplifiée.
 
-    def defaultImageIndices(self, *args, **kwargs):  # pylint: disable=W0613
+    # def defaultImageIndices(self, *args, **kwargs):  # pylint: disable=W0613
+    def defaultImageIndices(self, *args, **kwargs) -> dict:  # pylint: disable=W0613
+        """Retourne un dictionnaire d'indices d'images par défaut."""
         # return {wx.TreeItemIcon_Normal: -1}
         return {}
 
-    def imageIndices(self, *args, **kwargs):
-        return self.__imageIndicesCallback(**kwargs)
+    # def imageIndices(self, *args, **kwargs):
+    def imageIndices(self, *args, **kwargs) -> dict:
+        """Retourne un dictionnaire d'indices d'images."""
+        return self.__imageIndicesCallback(*args, **kwargs)
 
-    def hasImages(self):
+    # def hasImages(self):
+    def hasImages(self) -> bool:
+        """Indique si la colonne contient des images."""
         return self.__hasImages
+
+    # def is_shown(self):
+    def is_shown(self) -> bool:
+        """Indique si la colonne est visible."""
+        # Par défaut, une colonne est affichée.
+        # return True
+        return self._is_shown
+
+    def isEditable(self):
+        return self.__editControlClass is not None and self.__editCallback is not None
+
+    def onEndEdit(self, item, newValue):
+        self.__editCallback(item, newValue)
+
+    def editControl(self, parent, item, columnIndex, domainObject):
+        value = self.value(domainObject)
+        kwargs = dict(settings=self.__settings) if self.__settings else dict()
+        # FIXME: Column shouldn't need to know about settings
+        # # La colonne ne devrait pas avoir besoin de connaître les paramètres.
+        # # pylint: disable=W0142
+        # return self.__editControlClass(parent, wx.ID_ANY, item, columnIndex,
+        #                                parent, value, **kwargs)
+        return self.__editControlClass(parent, item, columnIndex,
+                                       parent, value, **kwargs)
+
+    def parse(self, value):
+        return self.__parse(value)
+
+    def value(self, domainObject):
+        return getattr(domainObject, self.name())()
+
+    def __eq__(self, other):
+        return self.name() == other.name()
+
 
 # Description : Classe de base pour les contrôles avec des colonnes.
 # Elle gère l'insertion et la suppression des colonnes .
@@ -710,7 +862,7 @@ class Column:
 #
 #     Nous utilisons maintenant self['displaycolumns'] pour contrôler la visibilité, ce qui est l'option correcte pour un ttk.Treeview existant.
 #
-#     La méthode _set_columns configure toujours les heading et column pour toutes les colonnes (self.__allColumns) lors de l'initialisation du mixin, mais elle ne modifie plus la définition (columns), seulement la visibilité (displaycolumns).
+#     La méthode _set_columns configure toujours les heading et column pour toutes les colonnes (self._all_columns) lors de l'initialisation du mixin, mais elle ne modifie plus la définition (columns), seulement la visibilité (displaycolumns).
 #
 #     La méthode showColumn met simplement à jour la liste __visible_columns et réassigne self['displaycolumns'].
 class _BaseCtrlWithColumnsMixin:
@@ -718,40 +870,133 @@ class _BaseCtrlWithColumnsMixin:
 
     Notez que cette classe et ses sous-classes ne prennent pas en charge
     l'ajout ou la suppression de colonnes après le paramètre initial des colonnes.
+
+    Mixin qui gère la définition des colonnes et la propriété 'displaycolumns'
+    de façon robuste : si le widget tkinter n'est pas encore initialisé
+    (pas d'attribut 'tk'), les colonnes sont mises en attente et appliquées
+    plus tard via _apply_pending_columns().
     """
-    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, columns: Optional[Sequence[str]] = None,
+    #              displaycolumns: Optional[Sequence[str]] = None, **kwargs):
+    def __init__(self, master, *args, columns: Optional[Sequence[str]] = None,
+                 displaycolumns: Optional[Sequence[str]] = None, **kwargs):
+        """Initialise les structures internes de colonnes sans toucher au widget.
+
+        Arguments:
+        - columns: séquence de noms de colonnes (tous les noms possibles)
+        - displaycolumns: sous-séquence de colonnes visibles initialement
+        """
         log.debug("_BaseCtrlWithColumnsMixin.__init__ : initialisation de tous les contrôles avec des colonnes.")
+        # stocke les arguments reçus pour éventuellement les appliquer plus tard
+        self._pending_columns_args = {}  # crée le dict pour garder les options à appliquer
+        # sauvegarde la liste complète de colonnes demandées (ou vide)
         # Extrait et stocke les colonnes
         # 'columns' est nécessaire pour _set_columns,
         # mais il a déjà été "popped" par CtrlWithColumnsMixin (ligne 587)
         # Assurons-nous que l'argument est bien 'columns'
-        # self.__allColumns = kwargs.pop("columns")
+        # self._all_columns = kwargs.pop("columns")
         # Utilise .pop() avec une valeur par défaut (None).
         # Si 'columns' n'est pas là (parce que _CtrlWithHideableColumnsMixin l'a pris),
-        # self.__allColumns sera None, et nous ne ferons rien.
-        self.__allColumns = kwargs.pop("columns", None)
+        # self._all_columns sera None, et nous ne ferons rien.
+        # self._all_columns = kwargs.pop("columns", None)
+        self._all_columns = list(columns) if columns is not None else []  # copie sûre
+        self._visible_columns = list(displaycolumns) if displaycolumns is not None else [col.name() for col in self._all_columns if col.is_shown()]
         # # super().__init__(*args, **kwargs)
         # # Nous devons nous assurer que tous les mixins dans la chaîne d'héritage
         # # de CtrlWithColumnsMixin appellent super().__init__()
         # # sans arguments supplémentaires s'ils n'héritent pas d'un widget.
         # super().__init__()  # <-- PROBLÈME
         # NE PAS appeler super().__init__()
-        self.__indexMap = []
+        # self.__indexMap = []
         # CORRECTION 2 : Ne tente de configurer les colonnes que si elles ont été fournies
         # à ce mixin (ce qui n'est pas le cas si HideableMixin est actif).
-        if self.__allColumns is not None:
-            self._set_columns()
+        # if self._all_columns is not None:
+        #     self._set_columns()
+        # calcule quelles colonnes seront visibles par défaut
+        # if displaycolumns is not None:
+        #     # si displaycolumns fourni, on l'utilise directement
+        #     self._visible_columns = list(displaycolumns)  # stocke la liste visible
+        # else:
+        #     # sinon, on cache la première colonne (habituel 'tree' affichée différemment)
+        #     self._visible_columns = list(self._all_columns)  # par défaut toutes visibles
+        # marque que les colonnes n'ont pas encore été appliquées au widget
+        self._columns_applied = False  # indicateur d'application
+        # prépare les arguments à appliquer quand le widget sera prêt
+        self._pending_columns_args['displaycolumns'] = tuple(self._visible_columns)  # prépare tuple
+
+        # essaye immédiatement d'appliquer si le widget est déjà initialisé
+        try:
+            # test de présence de 'tk' pour savoir si c'est un widget tkinter complet
+            if hasattr(self, 'tk') and getattr(self, 'tk') is not None:
+                # si présent, applique tout de suite
+                self._apply_pending_columns()  # applique les colonnes
+        except Exception:
+            # si une erreur survient, on laisse en attente sans interrompre l'init
+            self._columns_applied = False  # s'assure que l'attribut reste cohérent
+
         log.debug("_BaseCtrlWithColumnsMixin initialisé !")
 
     def _set_columns(self):
         """Configure les colonnes initiales."""
-        for column in self.__allColumns:
+        for column in self._all_columns:
             self.heading(column.name(), text=column.header())
             self.column(column.name(), width=column.width, minwidth=20)
 
-    def _allColumns(self):
+    # def _allColumns(self):
+    def _all_columns(self) -> Sequence[str]:
         """Retourne toutes les colonnes."""
-        return self.__allColumns
+        return self._all_columns
+
+    def _set_columns_now(self):
+        """
+        Méthode qui effectue réellement la configuration des colonnes sur le widget.
+        Doit être appelée uniquement quand le widget tkinter est prêt (attribut 'tk').
+        """
+        # seulement appliquer si pas déjà appliqué et si _pending_columns_args existe
+        if hasattr(self, "_columns_applied") and self._columns_applied:
+            # si déjà appliqué, ne rien faire
+            return
+        # récupère la valeur pour displaycolumns
+        if hasattr(self, "_pending_columns_args"):
+            displaycols = self._pending_columns_args.get('displaycolumns', ())
+            # si l'objet supporte configure (widget classique), on l'utilise
+            if hasattr(self, 'configure'):
+                # applique la configuration 'displaycolumns' sur l'instance widget
+                try:
+                    self.configure(displaycolumns=displaycols)  # configure le widget ttk.Treeview
+                except Exception:
+                    # si configure échoue (par ex. options non reconnues), on ignore silencieusement
+                    pass
+            else:
+                # si configure non disponible, on tente l'indexation dictionnaire (autre API)
+                try:
+                    self['displaycolumns'] = displaycols  # alternative, peut lever erreur
+                except Exception:
+                    # si encore échoue, on ne fait rien
+                    pass
+            # marque comme appliqué
+            self._columns_applied = True  # met à True pour éviter double-application
+
+    def _apply_pending_columns(self):
+        """
+        Si des colonnes sont en attente et que le widget est prêt, applique-les.
+        Cette méthode est sûre à appeler plusieurs fois.
+        """
+        # vérifie que l'objet est un widget tkinter prêt
+        if not (hasattr(self, 'tk') and getattr(self, 'tk') is not None):
+            # si pas prêt, on ne fait rien
+            return
+        # appelle la méthode qui applique la configuration maintenant
+        self._set_columns_now()  # effectue l'application réelle
+
+    def get_all_columns(self) -> Sequence[str]:
+        """Retourne la liste complète des colonnes connues."""
+        return list(self._all_columns)  # renvoie une copie pour sécurité
+
+    def get_visible_columns(self) -> Sequence[str]:
+        """Retourne la liste des colonnes actuellement visibles (celle préparée)."""
+        return list(self._visible_columns)  # renvoie une copie pour sécurité
 
 
 class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
@@ -759,51 +1004,98 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
     Gère le masquage et l'affichage des colonnes pour un Treeview Tkinter.
 
     Gère l'affichage et le masquage des colonnes.
+
+    Mixin gérant l'affichage/masquage des colonnes pour un ttk.Treeview.
+
+    Important :
+    - Utilise des attributs « protégés » (un seul underscore) pour que
+      d'autres mixins / la classe principale puissent y accéder.
+    - Ne pas utiliser de double underscore (name-mangling) ici.
     """
     # Utiliser displaycolumns
     #
     # Le mixin _CtrlWithHideableColumnsMixin ne devrait pas toucher à la définition des colonnes (columns).
     # Son rôle est de contrôler quelles colonnes, parmi celles qui sont définies, sont visibles.
     # C'est précisément ce que fait l'option displaycolumns du ttk.Treeview.
-    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
+    def __init__(self, master, *args, columns: Optional[Sequence[str]] = None, displaycolumns: Optional[Sequence[str]] = None, **kwargs):
+        """Initialise le mixin et configure les colonnes."""
+        log.debug("_CtrlWithHideableColumnsMixin.__init__ : initialisation.")
+        # Extrait la liste d'objets Column passée via kwargs
         # Extrait les colonnes AVANT d'appeler super()
-        # self.__allColumns = kwargs.pop("columns")
-        columns = kwargs.pop("columns")
-        super().__init__(*args, **kwargs)
-        # AJOUTER CETTE LIGNE : Stocke la liste complète des colonnes
-        self.__allColumns = columns  # <--- CORRECTION AJOUTÉE
-        # # self.__visible_columns = [col.name() for col in self.__allColumns]
-        # self.__visible_columns = [col.name() for col in columns]
-        self.__visible_columns = [col.name() for col in self.__allColumns if col.is_shown()] if self.__allColumns else None  # Utilise __allColumns ici
-        # self._set_columns()  # Appelle la méthode corrigée qui utilise displaycolumns
+        # self._all_columns = kwargs.pop("columns")
+        # columns = kwargs.pop("columns")  # consomme l'argument 'columns'
+        log.debug(f"_CtrlWithHideableColumnsMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
+        # super().__init__(*args, **kwargs)  # initialise la logique de base des colonnes
+        super().__init__(master, *args, columns=columns, displaycolumns=displaycolumns, **kwargs)
+        # # AJOUTER CETTE LIGNE : Stocke la liste complète des colonnes
+        # # Stocke toutes les colonnes dans un attribut accessible (_all_columns)
+        # self._all_columns = columns  # <--- CORRECTION AJOUTÉE. copie de sécurité de la liste d'objets Column
+        # # Calcule la liste des colonnes visibles par défaut (noms internes)
+        # # Utilise la méthode is_shown() des objets Column, si elle existe.
+        # # # self.__visible_columns = [col.name() for col in self.__allColumns]
+        # # self.__visible_columns = [col.name() for col in columns]
+        # self._visible_columns = [col.name() for col in self._all_columns if col.is_shown() ] if self._all_columns else None  # Utilise _all_columns ici
+        # # self._visible_columns = [col.name() for col in self._all_columns if getattr(col, "is_shown", lambda: True)()]  # noms visibles
+        # # self._set_columns()  # Appelle la méthode corrigée qui utilise displaycolumns
+        # # Définit un état local indiquant que les colonnes n'ont pas encore été appliquées au widget
+        # self._columns_initialized = False  # indicateur simple d'initialisation
+        log.debug("_CtrlWithHideableColumnsMixin initialisé !")
 
-    def _set_columns(self):
-        # VERSION ACTUELLE (cause le crash)
-        # self['columns'] = self.__visible_columns
+    # def _set_columns(self):
+    #     """Configure les en-têtes et les propriétés de toutes les colonnes (mais ne change que displaycolumns)."""
+    #     # VERSION ACTUELLE (cause le crash)
+    #     # self['columns'] = self.__visible_columns
+    #
+    #     # # VERSION CORRIGÉE : Manipule les colonnes visibles
+    #     # self['displaycolumns'] = self._visible_columns
+    #     # # TODO : AttributeError: 'TreeListCtrl' object has no attribute 'tk'
+    #     # Assigne la liste des colonnes visibles à l'option 'displaycolumns' du Treeview
+    #     # self.configure(displaycolumns=self._visible_columns)  # applique la visibilité
+    #     # self.configure(displaycolumns=self.get_visible_columns())  # applique la visibilité
+    #     self.configure(displaycolumns=self._visible_columns)  # applique la visibilité
+    #     # Le reste de la méthode (configuration heading/column) est correct,
+    #     # car il configure les propriétés des colonnes déjà définies.
+    #     # Configure les propriétés d'en-tête (texte et largeur) pour TOUTES les colonnes
+    #     for col in self._all_columns:  # parcourt les objets Column. Utilise _all_columns pour configurer TOUTES les colonnes
+    #         self.heading(col.name(), text=col.header())  # définit le texte d'en-tête
+    #         self.column(col.name(), width=col.width, minwidth=20)  # définit la largeur minimale
+    #     # Marque comme initialisé pour éviter doubles applications
+    #     self._columns_initialized = True  # évite ré-applications inutiles
 
-        # VERSION CORRIGÉE : Manipule les colonnes visibles
-        self['displaycolumns'] = self.__visible_columns
-        # Le reste de la méthode (configuration heading/column) est correct,
-        # car il configure les propriétés des colonnes déjà définies.
-        for col in self.__allColumns:  # Utilise __allColumns pour configurer TOUTES les colonnes
-            self.heading(col.name(), text=col.header())
-            self.column(col.name(), width=col.width, minwidth=20)
-
+    # j’utilise self.configure(...) au lieu d’indexation self['displaycolumns']
+    # pour plus de robustesse ; si le widget n’est pas prêt,
+    # j’écris en attente dans _pending_columns_args.
+    # (_BaseCtrlWithColumnsMixin gère _apply_pending_columns).
     def showColumn(self, column_name, show=True):
-        if show and column_name not in self.__visible_columns:
-            self.__visible_columns.append(column_name)
-            # Correction: Trie en fonction de l'ordre dans __allColumns
-            self.__visible_columns.sort(key=lambda x: [c.name() for c in self.__allColumns].index(x))
-        elif not show and column_name in self.__visible_columns:
-            self.__visible_columns.remove(column_name)
+        """Affiche ou cache une colonne identifiée par son nom interne."""
+        # Si on veut montrer et que la colonne n'est pas déjà visible
+        if show and column_name not in self._visible_columns:
+            self._visible_columns.append(column_name)  # ajoute à la liste visible
+            # Correction: Trie en fonction de l'ordre dans _all_columns
+            # Trie la liste visible selon l'ordre défini par _all_columns
+            # self._visible_columns.sort(key=lambda x: [c.name() for c in self._all_columns].index(x))
+            order = [c.name() for c in self._all_columns]  # ordre maître
+            self._visible_columns.sort(key=order.index)  # trie selon l'ordre maître
+        # Si on veut cacher et que la colonne est visible
+        elif not show and column_name in self._visible_columns:
+            self._visible_columns.remove(column_name)  # supprime de la liste visible
 
-        # VERSION ACTUELLE (incorrecte)
-        # self['columns'] = self.__visible_columns
-        # VERSION CORRIGÉE : Met à jour les colonnes visibles
-        self['displaycolumns'] = self.__visible_columns
-        # Pas besoin d'appeler _set_columns() ici, car les colonnes sont déjà définies.
-        # On change juste leur visibilité.
-        # self._set_columns() # <--- SUPPRIME CET APPEL
+        # # VERSION ACTUELLE (incorrecte)
+        # # self['columns'] = self.__visible_columns
+        # # VERSION CORRIGÉE : Met à jour les colonnes visibles
+        # self['displaycolumns'] = self._visible_columns
+        # # Pas besoin d'appeler _set_columns() ici, car les colonnes sont déjà définies.
+        # # On change juste leur visibilité.
+        # # self._set_columns() # <--- SUPPRIME CET APPEL
+        # Applique immédiatement la nouvelle visibilité au Treeview
+        # (si le widget est prêt, configure() va fonctionner)
+        try:
+            self.configure(displaycolumns=self._visible_columns)  # met à jour l'UI
+        except Exception:
+            # Si le widget n'est pas encore prêt, on laisse l'état en mémoire :
+            # _apply_pending_columns() (défini dans _BaseCtrlWithColumnsMixin) l'appliquera plus tard.
+            self._pending_columns_args['displaycolumns'] = tuple(self._visible_columns)  # mise en attente sûre
 
 
 # Implémenter showSortColumn dans itemctrltk.py
@@ -815,10 +1107,16 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
     """
     Ajoute le tri des colonnes en cliquant sur l'en-tête.
     """
-    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
+    def __init__(self, master, *args, columns: Optional[Sequence[str]] = None,
+                 displaycolumns: Optional[Sequence[str]] = None, **kwargs):
+        """Initialise le mixin et configure le tri."""
+        log.debug("_CtrlWithSortableColumnsMixin.__init__ : initialisation du tri des colonnes.")
         # --- MODIFICATION : Appel explicite au __init__ du parent direct ---
+        log.debug(f"_CtrlWithSortableColumnsMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
         # super().__init__(*args, **kwargs) # Remplacé par l'appel ci-dessous
-        _BaseCtrlWithColumnsMixin.__init__(self, *args, **kwargs)
+        super().__init__(master, *args, columns=columns, displaycolumns=displaycolumns, **kwargs)
+        # _BaseCtrlWithColumnsMixin.__init__(self, *args, **kwargs)
         # --- Fin MODIFICATION ---
         self.sort_column = None
         self.sort_reverse = False
@@ -838,7 +1136,7 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
             # Vérifier si les icônes ont été chargées (getIcon retourne None si échec)
             if self._sort_arrow_up is None:
                 log.error("Erreur: Impossible de charger 'arrow_up_icon16x16' depuis artprovidertk.")
-                self._sort_arrow_up = PhotoImage() # Fallback : image vide pour éviter crash
+                self._sort_arrow_up = PhotoImage()  # Fallback : image vide pour éviter crash
             if self._sort_arrow_down is None:
                 log.error("Erreur: Impossible de charger 'arrow_down_icon16x16' depuis artprovidertk.")
                 self._sort_arrow_down = PhotoImage() # Fallback : image vide
@@ -867,6 +1165,7 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
         # Le code wx original utilisait self["columns"] qui sont des chaînes.
         # Si vous aviez une boucle séparée pour initialiser l'en-tête qui accédait aux objets colonne,
         # la correction doit être appliquée là.
+        log.debug("_CtrlWithSortableColumnsMixin initialisé !")
 
     def sort_by(self, col_name):
         """Trie les éléments du Treeview par colonne (logique ET UI)."""
@@ -904,37 +1203,56 @@ class _CtrlWithSortableColumnsMixin(_BaseCtrlWithColumnsMixin):
     #     self.sort_by(column)
 
     # (REMPLACER l'ancienne méthode showSortColumn (ligne 558))
+    # Tu as deux endroits qui gèrent les colonnes :
+    #
+    # Dans itemctrltk._CtrlWithSortableColumnsMixin,
+    # tu as une implémentation de showSortColumn / showSortOrder
+    # pour un widget type TaskTree.
+    #
+    # Dans treectrltk.TreeListCtrl,
+    # tu as sort_by et showColumn, mais pas showSortColumn dans ce fichier.
+    #
+    # Vérifier que showSortColumn reçoit un nom valide:
+    #
+    # Tu peux implémenter une version minimale de showSortColumn
+    # dans TreeListCtrl qui ne fait que vérifier les noms, puis appeller sort_by.
     def showSortColumn(self, column=None):
         """(UI) Affiche l'indicateur de tri sur la colonne actuelle."""
         # 'column' peut être un objet Column (de basetk) ou None (de sortBy)
 
         # 1. Déterminer le nom de la colonne
-        col_name = None
-        if column:  # Appelé par basetk.initColumn
+        # col_name = None
+        # if column:  # Appelé par basetk.initColumn
+        if column is not None:
             col_name = column.name()
             self.sort_column = col_name  # Mémoriser
-        elif self.sort_column:  # Appelé par basetk.sortBy
+        # elif self.sort_column:  # Appelé par basetk.sortBy
+        else:
             col_name = self.sort_column
 
         if not col_name:
             return  # Pas de colonne à trier
 
-        # 2. Nettoyer les autres colonnes
-        for col_id in self["columns"]:
-            if col_id != col_name:
-                self.heading(col_id, image='')
+        # # 2. Nettoyer les autres colonnes
+        # for col_id in self["columns"]:
+        #     if col_id != col_name:
+        #         self.heading(col_id, image='')
+        if col_name not in self['columns']:
+            print(f"[ERREUR] showSortColumn appelé avec un nom de colonne inconnu: {col_name}")
+            return
 
-        # 3. Définir la flèche actuelle
+            # 3. Définir la flèche actuelle
         img = self._sort_arrow_down if self.sort_reverse else self._sort_arrow_up
+        # img = "sort_arrow_down" if self.sort_reverse else "sort_arrow_up"
         self.heading(col_name, image=img)
 
-    # (NOUVELLE MÉTHODE : pour corriger la prochaine erreur)
-    def showSortOrder(self, imageIndex=None):
-        """(UI) Met à jour l'image de la flèche de tri (appelé par basetk)."""
-        # imageIndex n'est pas pertinent pour Tkinter, on utilise self.sort_reverse
-        if self.sort_column:
-            img = self._sort_arrow_down if self.sort_reverse else self._sort_arrow_up
-            self.heading(self.sort_column, image=img)
+    # # (NOUVELLE MÉTHODE : pour corriger la prochaine erreur)
+    # def showSortOrder(self, imageIndex=None):
+    #     """(UI) Met à jour l'image de la flèche de tri (appelé par basetk)."""
+    #     # imageIndex n'est pas pertinent pour Tkinter, on utilise self.sort_reverse
+    #     if self.sort_column:
+    #         img = self._sort_arrow_down if self.sort_reverse else self._sort_arrow_up
+    #         self.heading(self.sort_column, image=img)
 
 
 # Description : Ce mixin gère le redimensionnement automatique des colonnes.
@@ -950,10 +1268,13 @@ class _CtrlWithAutoResizedColumnsMixin(autowidthtk.AutoColumnWidthMixin):
     """
     # def __init__(self, *args, **kwargs):
     def __init__(self, master, *args, **kwargs):
+        """Initialise le mixin."""
         log.debug("_CtrlWithAutoResizedColumnsMixin.__init__ : initialisation.")
+        log.debug(f"_CtrlWithAutoResizedColumnsMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
         # super().__init__(*args, **kwargs)
         super().__init__(master, *args, **kwargs)
-        self.bind('<Configure>', self.on_resize)  # <-- Bind event to the Treeview
+        # self.bind('<Configure>', self.on_resize)  # <-- Bind event to the Treeview
+        # TODO : le bind de autowidth.AutoColumnWidthMixin ne fonctionne pas non plus !
         self.resize_column = None  # Laissez la classe dérivée définir quelle colonne redimensionner
         log.debug("_CtrlWithAutoResizedColumnsMixin initialisé !")
 
@@ -984,33 +1305,48 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
     """
     # def __init__(self, *args, **kwargs):
     def __init__(self, master, *args, **kwargs):
-        # super().__init__(*args, **kwargs)
-        # Filtrer les arguments spécifiques aux mixins avant de les passer à super()
-        # Cela empêche que ces arguments arrivent jusqu'à ttk.Treeview
-
-        # Extraire et traiter les arguments des mixins
-        # 1. Consommer les arguments spécifiques aux colonnes
-        columns = kwargs.pop("columns", [])
+        # def __init__(self, master, *args, columns: Optional[Sequence[str]] = None,
+        #              displaycolumns: Optional[Sequence[str]] = None,
+        #              itemPopupMenu: Any = None, columnPopupMenu: Any = None,
+        #              selectCommand: Callable = None, editCommand: Callable = None,
+        #              **kwargs):
+        """Initialise le mixin."""
+        log.debug(f"CtrlWithColumnsMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
+        # super().__init__(master, *args, **kwargs)
+        # super().__init__(master, *args, columns=columns,
+        #                  displaycolumns=displaycolumns,
+        #                  itemPopupMenu=itemPopupMenu,
+        #                  columnPopupMenu=columnPopupMenu,
+        #                  selectCommand=selectCommand,
+        #                  editCommand=editCommand, **kwargs)
+        # # Filtrer les arguments spécifiques aux mixins avant de les passer à super()
+        # # Cela empêche que ces arguments arrivent jusqu'à ttk.Treeview
+        #
+        # # Extraire et traiter les arguments des mixins
+        # # 1. Consommer les arguments spécifiques aux colonnes
+        # columns = kwargs.pop("columns", [])
         columnPopupMenu = kwargs.pop("columnPopupMenu", None)
+        #
+        # # 2. CORRECTION : Consommer les arguments spécifiques aux items (pour éviter la propagation à Tkinter via cette chaîne)
+        # kwargs.pop("selectCommand", None)
+        # kwargs.pop("editCommand", None)
+        #
+        # # 3. Propagation des arguments restants (master, *args, **kwargs nettoyés)
+        # # # Passer les arguments filtrés à la chaîne d'héritage
+        super().__init__(master, *args, **kwargs)
+        # # # super().__init__(columns=columns, columnPopupMenu=columnPopupMenu, *args, **kwargs)
+        # # super().__init__(master, columns=columns, columnPopupMenu=columnPopupMenu, *args, **kwargs)  # <-- PROBLÈME
+        # # Appels explicites au lieu de super()
+        # _CtrlWithAutoResizedColumnsMixin.__init__(self, master, *args, **kwargs)
+        # _CtrlWithHideableColumnsMixin.__init__(self, master, columns=columns, *args, **kwargs)
+        # _CtrlWithSortableColumnsMixin.__init__(self, master, columns=columns, *args, **kwargs)
+        # _CtrlWithColumnPopupMenuMixin.__init__(self, master, columnPopupMenu=columnPopupMenu, *args, **kwargs)
 
-        # 2. CORRECTION : Consommer les arguments spécifiques aux items (pour éviter la propagation à Tkinter via cette chaîne)
-        kwargs.pop("selectCommand", None)
-        kwargs.pop("editCommand", None)
-
-        # 3. Propagation des arguments restants (master, *args, **kwargs nettoyés)
-        # # Passer les arguments filtrés à la chaîne d'héritage
-        # # super().__init__(columns=columns, columnPopupMenu=columnPopupMenu, *args, **kwargs)
-        # super().__init__(master, columns=columns, columnPopupMenu=columnPopupMenu, *args, **kwargs)  # <-- PROBLÈME
-        # Appels explicites au lieu de super()
-        _CtrlWithAutoResizedColumnsMixin.__init__(self, master, *args, **kwargs)
-        _CtrlWithHideableColumnsMixin.__init__(self, master, columns=columns, *args, **kwargs)
-        _CtrlWithSortableColumnsMixin.__init__(self, master, columns=columns, *args, **kwargs)
-        _CtrlWithColumnPopupMenuMixin.__init__(self, master, columnPopupMenu=columnPopupMenu, *args, **kwargs)
 
 # --- Classes principales combinées pour le Treeview ---
 # TaskList est normalement dans domain.task.tasklist
 # class TaskList(CtrlWithItemsMixin, CtrlWithColumnsMixin, ttk.Treeview):
-class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, ttk.Treeview):
+class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, CtrlWithToolTipMixin, ttk.Treeview):
     """
     Le Treeview principal de l'application, combinant toutes les fonctionnalités.
 
@@ -1030,8 +1366,10 @@ class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, ttk.Treeview):
         # Initialiser les mixins avec leurs arguments spécifiques
         # CtrlWithItemsMixin.__init__(self, itemPopupMenu=itemPopupMenu)
         CtrlWithItemsMixin.__init__(self, master, itemPopupMenu=itemPopupMenu)
+        log.debug(f"TaskTree : {len(columns)} colonnes ({columns}) avant CtrWithColumnsMixin.")
         # CtrlWithColumnsMixin.__init__(self, columns=columns, columnPopupMenu=columnPopupMenu)
         CtrlWithColumnsMixin.__init__(self, master, columns=columns, columnPopupMenu=columnPopupMenu)
+        log.debug(f"TaskTree : {len(columns)} colonnes ({columns}) après CtrWithColumnsMixin.")
 
         # Liez la colonne redimensionnable à l'événement de configuration
         self.bind('<Configure>', self.on_resize)
