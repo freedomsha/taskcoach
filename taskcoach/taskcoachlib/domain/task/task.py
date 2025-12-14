@@ -38,12 +38,38 @@ Dépendances :
 - taskcoachlib.domain.attribute.icon
 - pubsub.pub
 - _weakrefset.WeakSet
-- wx
+- wx et tkinter
 """
+# Objectif
+#
+# Éviter tout import wx ou toute utilisation d’objets wx quand on exécute TaskCoach en mode Tkinter.
+#
+# Garder la compatibilité avec la version wxPython pour ceux qui la lancent avec --gui wx.
+
+# Résultat final
+#
+# Tu obtiens :
+#
+# un seul fichier task.py utilisable dans les deux environnements ;
+#
+# aucun import wx en mode Tkinter ;
+#
+# couleurs, polices et icônes fonctionnelles avec Tkinter.
 
 import logging
 import weakref
-import wx
+
+from taskcoachlib.config.arguments import get_gui
+
+GUI_NAME = get_gui()
+
+if GUI_NAME == "wx":
+    import wx  # On garde la compatibilité wx
+    tk = None
+elif GUI_NAME == "tk":
+    import tkinter as tk
+    # On définit un faux wx pour éviter les erreurs NameError
+    wx = None  # Permet d’éviter les NameError si une référence subsiste
 from taskcoachlib import patterns
 # from taskcoachlib.domain import date, categorizable, base
 from taskcoachlib.domain import date, categorizable, note, attachment, base
@@ -292,9 +318,11 @@ class Task(
         # log.debug(f"Object.__setstate__() - subject après set: {self.__subject.get()}")
         # tclib.gui.uicommand.base_uicommand:
         # An error occurred: 'Task' object has no attribute '_Task__subject'
-        if hasattr(self, 'subject'):
-            log.debug(f"Task.__setstate__() - subject après set: {self.subject}")
-        else:
+
+        # if hasattr(self, 'subject'):
+        #     log.debug(f"Task.__setstate__() - subject après set: {self.subject}")
+        # else:
+        if not hasattr(self, 'subject'):
             log.debug("Task.__setstate__() - subject non défini.")
 
     def __getstate__(self):
@@ -1104,9 +1132,39 @@ class Task(
 
     @classmethod
     def fgColorForStatus(class_, taskStatus):
-        return wx.Colour(
-            *eval(class_.settings.get("fgcolor", "%stasks" % taskStatus))
-        )  # pylint: disable=E1101
+        # def fgColorForStatus(cls, taskStatus):
+        """
+        Retourne la couleur de texte associée à un statut de tâche.
+
+        Si le GUI est wx, renvoie un objet wx.Colour.
+        Si le GUI est tk, renvoie une chaîne hexadécimale (ex: "#RRGGBB").
+        """
+        from taskcoachlib.config.arguments import get_gui
+        gui = get_gui()
+
+        # Récupération du paramètre de couleur depuis la configuration
+        color_setting = class_.settings.get("fgcolor", f"{taskStatus}tasks")
+
+        try:
+            rgb_tuple = tuple(map(int, eval(color_setting)))  # Ex: "(255, 0, 0)"
+        except Exception:
+            rgb_tuple = (0, 0, 0)  # noir par défaut
+
+        if GUI_NAME == "wx" and wx:
+            # return wx.Colour(
+            #     *eval(class_.settings.get("fgcolor", "%stasks" % taskStatus))
+            # )  # pylint: disable=E110
+            return wx.Colour(*rgb_tuple)# 1
+        # elif GUI_NAME =="tk" or get_gui() == "tk":
+        #     # Version Tkinter : retourne une couleur hexadécimale ou tuple RGB
+        #     color_setting = class_.settings.get("fgcolor", "%stasks" % taskStatus)
+        #     try:
+        #         return tuple(map(int, eval(color_setting)))  # Ex: (255, 0, 0)
+        #     except Exception:
+        #         return "#000000"
+        else:
+            # Convertit (r, g, b) en code couleur Tkinter "#RRGGBB"
+            return f"#{rgb_tuple[0]:02x}{rgb_tuple[1]:02x}{rgb_tuple[2]:02x}"
 
     def appearanceChangedEvent(self, event):
         self.__computeRecursiveForegroundColor()
@@ -1157,15 +1215,34 @@ class Task(
         return None if color == wx.WHITE else color
 
     @classmethod
-    def bgColorForStatus(class_, taskStatus):
-        """Retourne la couleur associée à un état de tâche."""
+    def bgColorForStatus(class_, taskStatus):  # class_ -> cls
+        """Retourne la couleur d'arrière-plan associée à un état-statut de tâche.
+
+        Si le GUI est wx, renvoie un objet wx.Colour.
+        Si le GUI est tk, renvoie une chaîne hexadécimale (ex: "#RRGGBB").
+        """
         # print(f"Task.bgColorForStatus : taskStatus={taskStatus} pour class_={class_}, subject={class_}")
-        # Vérifie s'il s'agit d'un entier alors le transforme en taskStatus:
-        if isinstance(taskStatus, int):
-            taskStatus = mod_status.from_int(taskStatus)
-        return wx.Colour(
-            *eval(class_.settings.get("bgcolor", "%stasks" % taskStatus))
-        )  # pylint: disable=E1101
+        from taskcoachlib.config.arguments import get_gui
+        gui = get_gui()
+
+        color_setting = class_.settings.get("bgcolor", f"{taskStatus}tasks")
+
+        try:
+            rgb_tuple = tuple(map(int, eval(color_setting)))  # Ex: "(240, 240, 240)"
+        except Exception:
+            rgb_tuple = (255, 255, 255)  # blanc par défaut
+
+        # # Vérifie s'il s'agit d'un entier alors le transforme en taskStatus:
+        # if isinstance(taskStatus, int):
+        #     taskStatus = mod_status.from_int(taskStatus)
+        # return wx.Colour(
+        #     *eval(class_.settings.get("bgcolor", "%stasks" % taskStatus))
+        # )  # pylint: disable=E1101
+
+        if gui == "wx" and wx:
+            return wx.Colour(*rgb_tuple)
+        else:
+            return f"#{rgb_tuple[0]:02x}{rgb_tuple[1]:02x}{rgb_tuple[2]:02x}"
 
         # color_setting = class_.settings.get("bgcolor", "%stasks" % taskStatus)
         #
@@ -1195,9 +1272,34 @@ class Task(
 
     @classmethod
     def fontForStatus(class_, taskStatus):
-        nativeInfoString = class_.settings.get("font", "%stasks" % taskStatus)  # pylint: disable=E1101
-        # return wx.FontFromNativeInfoString(nativeInfoString) if nativeInfoString else None
-        return wx.Font(nativeInfoString) if nativeInfoString else None
+        """
+        Retourne la police associée au statut d'une tâche.
+
+        - Sous wx : wx.Font
+        - Sous tk : tuple compatible Tkinter ("Arial", 10, "bold" ou "italic")
+        """
+        from taskcoachlib.config.arguments import get_gui
+        gui = get_gui()
+
+        # nativeInfoString = class_.settings.get("font", "%stasks" % taskStatus)  # pylint: disable=E1101
+        native_info = class_.settings.get("font", f"{taskStatus}tasks")
+
+        # # return wx.FontFromNativeInfoString(nativeInfoString) if nativeInfoString else None
+        # return wx.Font(nativeInfoString) if nativeInfoString else None
+        if gui == "wx" and wx:
+            return wx.Font(native_info) if native_info else None
+        else:  # gui == "tk" and tk:
+            # Exemple : "Arial,10,bold" dans le fichier INI ou config
+            try:
+                if native_info:
+                    parts = [p.strip() for p in native_info.split(",")]
+                    family = parts[0] if len(parts) > 0 else "Arial"
+                    size = int(parts[1]) if len(parts) > 1 else 10
+                    style = parts[2] if len(parts) > 2 else "normal"
+                    return (family, size, style)
+            except Exception:
+                pass
+            return ("Arial", 10, "normal")
 
     # Icon
 
@@ -1238,13 +1340,29 @@ class Task(
         return self.iconForStatus(self.status(), selected)
 
     def iconForStatus(self, taskStatus, selected=False):
-        iconName = self.settings.get(
-            "icon", "%stasks" % taskStatus
-        )  # pylint: disable=E1101
-        iconName = self.pluralOrSingularIcon(iconName)
+        """
+            Retourne le nom ou la référence de l'icône selon le GUI choisi.
+            """
+        from taskcoachlib.config.arguments import get_gui
+        gui = get_gui()
+
+        # iconName = self.settings.get(
+        #     "icon", "%stasks" % taskStatus
+        # )  # pylint: disable=E1101
+        icon_name = self.settings.get("icon", f"{taskStatus}tasks")
+
+        # iconName = self.pluralOrSingularIcon(iconName)
+        iconName = self.pluralOrSingularIcon(icon_name)
+
         if selected and iconName.startswith("folder"):
             iconName = getImageOpen(iconName)
-        return iconName
+
+        # return iconName
+        if gui == "wx":
+            return iconName  # Nom d'icône wx (clé interne)
+        else:
+            # Pour Tkinter, on renvoie un chemin ou un identifiant compatible PhotoImage
+            return f"icons/{iconName}.png"  # TODO : a revoir si getIcon !
 
     @patterns.eventSource
     def recomputeAppearance(self, recursive=False, event=None):
