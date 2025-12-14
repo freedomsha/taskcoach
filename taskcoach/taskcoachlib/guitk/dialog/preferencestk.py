@@ -176,7 +176,7 @@ class MockTask:
         ]
 
 
-# Simulation des widgets pour EditorPage.ok()
+# Simulation des widgets pour EditorPage.ok() TODO : A changer !
 class MockWidgets:
     class MultiLineTextCtrl:
         CheckSpelling = False
@@ -1308,7 +1308,7 @@ class TaskDatesPage(PreferencesPage):
         self._addBooleanSetting(
             "behavior",
             "markparentcompletedwhenallchildrencompleted",
-            _("Mark parent task completed when all get_domain_children are completed"),
+            _("Mark parent task completed when all children are completed"),
         )
 
         # 2. Nombre d'heures "due soon" (Entier)
@@ -1622,7 +1622,7 @@ class SavePage(PreferencesPage):
                 "from a Todo.txt file with the same name as the task file,\n"
                 "but with extension .txt"
             )
-                     % meta.name,
+                      % meta.name,
         )
 
         # 7. Exportation automatique
@@ -1637,7 +1637,7 @@ class SavePage(PreferencesPage):
                 "to a Todo.txt file with the same name as the task file,\n"
                 "but with extension .txt"
             )
-                     % meta.name,
+                      % meta.name,
         )
 
         # Ajuster la mise en page
