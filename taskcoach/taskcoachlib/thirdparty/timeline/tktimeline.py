@@ -191,7 +191,6 @@ class HotMap:
         return self.children[node]
 
     def find_node_at_position(self, x: int, y: int, parent: Optional[Any] = None) -> Optional[Any]:
-        """Trouve le nœud sur lequel l'utilisateur a cliqué, récursivement."""
         """Trouve le nœud sur lequel l'utilisateur a cliqué, récursivement.
 
         Récupère le nœud à la position donnée.
