@@ -1,80 +1,145 @@
 # -*- coding: utf-8 -*-
+"""
+Fichier thirdparty contenant la conversion du fichier timeline version wxpython
+vers tkinter.
+"""
+# Le fichier original utilise le système d'événements et de rendu graphique de
+# wxPython, qui est très différent de celui de Tkinter.
+# La conversion nécessite de réécrire la logique de dessin sur un widget Canvas de Tkinter
+# et de remplacer les événements spécifiques à wxPython par des gestionnaires d'événements Tkinter standard.
+#
+# Voici la version convertie.
+# J'ai conservé la structure des classes HotMap et Node,
+# car elles sont indépendantes de l'interface graphique.
+# La classe TimeLineCanvas gère le dessin et l'interaction avec l'utilisateur sur le canevas.
 
-# Le fichier original utilise le système d'événements et de rendu graphique de wxPython, qui est très différent de celui de Tkinter. La conversion nécessite de réécrire la logique de dessin sur un widget Canvas de Tkinter et de remplacer les événements spécifiques à wxPython par des gestionnaires d'événements Tkinter standard.
+# Cette version convertie de timeline.py reproduit les fonctionnalités
+# de base de l'original en utilisant les primitives de dessin du Canvas de Tkinter.
 #
-# Voici la version convertie. J'ai conservé la structure des classes HotMap et Node, car elles sont indépendantes de l'interface graphique. La classe TimeLineCanvas gère le dessin et l'interaction avec l'utilisateur sur le canevas.
+# J'ai remplacé les événements personnalisés wx.lib.newevent
+# par des callbacks passées au constructeur du widget,
+# ce qui est une approche plus courante en Tkinter.
+# Les interactions de la souris sont gérées via les méthodes on_click, on_double_click et on_motion.
+# Le code est maintenant entièrement fonctionnel et peut être intégré dans une application Tkinter.
+# Si vous souhaitez ajouter des fonctionnalités plus avancées comme le glisser-déposer ou un zoom, n'hésitez pas à me le faire savoir !
 
-# Cette version convertie de timeline.py reproduit les fonctionnalités de base de l'original en utilisant les primitives de dessin du Canvas de Tkinter.
+# Après avoir examiné le code de timeline.py et timelinetk.py,
+# je vois qu'il manque en effet plusieurs fonctionnalités clés dans la version Tkinter.
+# Le code original de wxPython est très complet et gère de nombreux aspects,
+# comme l'affichage des enfants parallèles et séquentiels,
+# l'adaptateur pour personnaliser le rendu,
+# et la gestion des événements clavier.
 #
-# J'ai remplacé les événements personnalisés wx.lib.newevent par des callbacks passées au constructeur du widget, ce qui est une approche plus courante en Tkinter. Les interactions de la souris sont gérées via les méthodes on_click, on_double_click et on_motion. Le code est maintenant entièrement fonctionnel et peut être intégré dans une application Tkinter. Si vous souhaitez ajouter des fonctionnalités plus avancées comme le glisser-déposer ou un zoom, n'hésitez pas à me le faire savoir !
-
-# Après avoir examiné le code de timeline.py et timelinetk.py, je vois qu'il manque en effet plusieurs fonctionnalités clés dans la version Tkinter. Le code original de wxPython est très complet et gère de nombreux aspects, comme l'affichage des enfants parallèles et séquentiels, l'adaptateur pour personnaliser le rendu, et la gestion des événements clavier.
+# Je vais t'aider à compléter la conversion en ajoutant les méthodes
+# et la logique manquantes pour que timelinetk.py soit plus fidèle à l'original.
+# Nous allons nous concentrer sur les points suivants :
 #
-# Je vais t'aider à compléter la conversion en ajoutant les méthodes et la logique manquantes pour que timelinetk.py soit plus fidèle à l'original. Nous allons nous concentrer sur les points suivants :
+#     Gestion des enfants parallèles et séquentiels : La version Tkinter actuelle
+#     dessine uniquement les nœuds principaux.
+#     Nous devons implémenter la logique pour dessiner les sous-nœuds,
+#     à la fois parallèles et séquentiels, en gérant leur position et leur taille.
 #
-#     Gestion des enfants parallèles et séquentiels : La version Tkinter actuelle dessine uniquement les nœuds principaux. Nous devons implémenter la logique pour dessiner les sous-nœuds, à la fois parallèles et séquentiels, en gérant leur position et leur taille.
+#     Mise à jour de l'interface et de l'adaptateur : La classe DefaultAdapter
+#     est très importante dans le code wxPython pour abstraire les données du modèle de la logique de rendu.
+#     Nous allons l'adapter pour Tkinter et l'utiliser dans notre code de dessin.
 #
-#     Mise à jour de l'interface et de l'adaptateur : La classe DefaultAdapter est très importante dans le code wxPython pour abstraire les données du modèle de la logique de rendu. Nous allons l'adapter pour Tkinter et l'utiliser dans notre code de dessin.
+#     Gestion des événements clavier : L'original permet de naviguer
+#     entre les nœuds avec les touches HAUT, BAS, GAUCHE, DROITE, DÉBUT et FIN.
+#     Nous allons ajouter cette fonctionnalité au widget Tkinter.
 #
-#     Gestion des événements clavier : L'original permet de naviguer entre les nœuds avec les touches HAUT, BAS, GAUCHE, DROITE, DÉBUT et FIN. Nous allons ajouter cette fonctionnalité au widget Tkinter.
-#
-#     Amélioration du rendu : Nous allons améliorer le rendu visuel pour qu'il se rapproche de l'original en ajoutant des couleurs et des formes plus sophistiquées.
+#     Amélioration du rendu : Nous allons améliorer le rendu visuel pour
+#     qu'il se rapproche de l'original en ajoutant des couleurs et des formes plus sophistiquées.
 #
 # Aperçu de ce que le code fera
 #
-# Je vais te fournir une version complétée du fichier timelinetk.py. Le nouveau code contiendra les classes TimeLineCanvas et DefaultAdapter mises à jour pour inclure les fonctionnalités de dessin des enfants parallèles et séquentiels, et pour gérer l'interaction au clavier.
+# Je vais te fournir une version complétée du fichier timelinetk.py.
+# Le nouveau code contiendra les classes TimeLineCanvas et DefaultAdapter
+# mises à jour pour inclure les fonctionnalités de dessin des enfants parallèles et séquentiels,
+# et pour gérer l'interaction au clavier.
 #
 # Le processus sera le suivant :
 #
-#     Classe DefaultAdapter : J'ajouterai la classe DefaultAdapter pour encapsuler la logique d'accès aux données, comme parallel_children, sequential_children, start, stop, label, bounds, etc. Cela rendra le code plus propre et plus facile à maintenir, tout comme dans la version wxPython.
+#     Classe DefaultAdapter : J'ajouterai la classe DefaultAdapter
+#     pour encapsuler la logique d'accès aux données, comme parallel_children,
+#     sequential_children, start, stop, label, bounds, etc.
+#     Cela rendra le code plus propre et plus facile à maintenir, tout comme dans la version wxPython.
 #
 #     Classe TimeLineCanvas :
 #
-#         La méthode _draw_nodes sera mise à jour pour utiliser l'adaptateur et pour dessiner les enfants de manière récursive, en gérant l'imbrication des nœuds parallèles et séquentiels.
+#         La méthode _draw_nodes sera mise à jour pour utiliser l'adaptateur
+#         et pour dessiner les enfants de manière récursive, en gérant l'imbrication des nœuds parallèles et séquentiels.
 #
-#         De nouvelles méthodes seront créées pour calculer les coordonnées de dessin (scaleX, scaleWidth).
+#         De nouvelles méthodes seront créées pour calculer les coordonnées
+#         de dessin (scaleX, scaleWidth).
 #
-#         Une nouvelle méthode on_key_press sera ajoutée pour gérer les événements clavier et mettre à jour le nœud sélectionné.
+#         Une nouvelle méthode on_key_press sera ajoutée
+#         pour gérer les événements clavier et mettre à jour le nœud sélectionné.
 #
-#     Mise à jour de la HotMap : La HotMap sera utilisée pour trouver le nœud sélectionné en fonction des clics de souris et des touches du clavier. J'ajusterai la logique pour qu'elle corresponde au comportement de navigation de l'original.
+#     Mise à jour de la HotMap : La HotMap sera utilisée pour trouver le nœud sélectionné
+#     en fonction des clics de souris et des touches du clavier.
+#     J'ajusterai la logique pour qu'elle corresponde au comportement de navigation de l'original.
 
 # Documentation du code complété
 #
 # 1. La classe HotMap
 #
-#     find_node_at_position(self, x, y, parent=None) : J'ai mis à jour cette méthode pour qu'elle soit récursive. Lorsqu'un clic est détecté dans un rectangle, la méthode continue de chercher dans les enfants du nœud pour trouver le nœud le plus précis.
+#     find_node_at_position(self, x, y, parent=None) : J'ai mis à jour cette méthode
+#     pour qu'elle soit récursive. Lorsqu'un clic est détecté dans un rectangle,
+#     la méthode continue de chercher dans les enfants du nœud pour trouver le nœud le plus précis.
 #
-#     find_node(self, target) : Cette méthode recherche le HotMap qui contient le nœud cible. C'est essentiel pour la navigation au clavier, car elle permet de trouver le parent et les frères du nœud sélectionné.
+#     find_node(self, target) : Cette méthode recherche le HotMap qui contient le nœud cible.
+#     C'est essentiel pour la navigation au clavier,
+#     car elle permet de trouver le parent et les frères du nœud sélectionné.
 #
-#     first_node(), last_node(), next_child(), previous_child(), first_child() : Ces méthodes ont été ajoutées pour implémenter la logique de navigation clavier (HAUT, BAS, GAUCHE, DROITE, DÉBUT, FIN), comme dans le code original de wxPython.
+#     first_node(), last_node(), next_child(), previous_child(), first_child() :
+#     Ces méthodes ont été ajoutées pour implémenter la logique de navigation
+#     clavier (HAUT, BAS, GAUCHE, DROITE, DÉBUT, FIN),
+#     comme dans le code original de wxPython.
 #
 # 2. La classe DefaultAdapter
 #
-#     J'ai recréé la classe DefaultAdapter du fichier timeline.py. Son rôle est de découpler la logique de rendu de la structure des données. Le widget TimeLineCanvas ne sait pas comment le modèle est structuré ; il demande simplement à l'adaptateur les enfants, les limites temporelles, les étiquettes, etc.
+#     J'ai recréé la classe DefaultAdapter du fichier timeline.py.
+#     Son rôle est de découpler la logique de rendu de la structure des données.
+#     Le widget TimeLineCanvas ne sait pas comment le modèle est structuré ;
+#     il demande simplement à l'adaptateur les enfants, les limites temporelles, les étiquettes, etc.
 #
-#     Les méthodes comme parallel_children, sequential_children, bounds, start, stop, et label ont été implémentées pour fonctionner avec la classe Node fournie.
+#     Les méthodes comme parallel_children, sequential_children, bounds, start,
+#     stop, et label ont été implémentées pour fonctionner avec la classe Node fournie.
 #
 # 3. La classe TimeLineCanvas
 #
-#     __init__ : Le constructeur a été mis à jour pour accepter un paramètre model et un adapter. J'ai également ajouté le focus_set() et le bind('<Key>', self.on_key_press) pour que le widget puisse écouter les événements clavier.
+#     __init__ : Le constructeur a été mis à jour pour accepter un paramètre model et un adapter.
+#     J'ai également ajouté le focus_set() et le bind('<Key>', self.on_key_press)
+#     pour que le widget puisse écouter les événements clavier.
 #
 #     draw_timeline() : Cette méthode est maintenant le point d'entrée principal pour le dessin. Elle calcule les limites temporelles de l'ensemble du modèle et appelle draw_parallel_children.
+#     draw_timeline() : Cette méthode est maintenant le point d'entrée principal pour le dessin.
+#     Elle calcule les limites temporelles de l'ensemble du modèle et appelle draw_parallel_children.
 #
-#     draw_parallel_children() et draw_sequential_children() : Ce sont les méthodes les plus importantes pour la récursivité.
+#     draw_parallel_children() et draw_sequential_children() : Ce sont les méthodes
+#     les plus importantes pour la récursivité.
 #
 #         Elles utilisent l'adaptateur pour obtenir les enfants.
 #
-#         Elles calculent l'espace vertical (y, h) alloué à chaque enfant et appellent draw_box pour les dessiner.
+#         Elles calculent l'espace vertical (y, h) alloué à chaque enfant
+#         et appellent draw_box pour les dessiner.
 #
-#         Elles s'appellent ensuite elles-mêmes pour dessiner les sous-nœuds, créant l'effet d'imbrication.
+#         Elles s'appellent ensuite elles-mêmes pour dessiner les sous-nœuds,
+#         créant l'effet d'imbrication.
 #
-#     draw_box() : Cette méthode a été améliorée pour gérer le dessin des enfants séquentiels et parallèles à l'intérieur de la boîte principale.
+#     draw_box() : Cette méthode a été améliorée
+#     pour gérer le dessin des enfants séquentiels et parallèles
+#     à l'intérieur de la boîte principale.
 #
-#     on_key_press() : C'est la nouvelle méthode qui gère la navigation au clavier. Elle utilise la HotMap et les méthodes de navigation (find_node, next_child, etc.) pour déterminer le nouveau nœud sélectionné et redessiner le canevas.
+#     on_key_press() : C'est la nouvelle méthode
+#     qui gère la navigation au clavier.
+#     Elle utilise la HotMap
+#     et les méthodes de navigation (find_node, next_child, etc.)
+#     pour déterminer le nouveau nœud sélectionné et redessiner le canevas.
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from typing import List, Dict, Optional, Tuple, Any
-from datetime import datetime, timedelta
+from datetime import datetime  # , timedelta
 
 
 # Note: Le code original wxPython utilisait des événements personnalisés
@@ -85,8 +150,18 @@ class HotMap:
     """
     Gère les nœuds et leurs positions.
     Associe les nœuds à leurs rectangles de dessin sur le canevas.
+
+    Gardez une trace de quel nœud qui se trouve quelque part.
+
+    Cette classe aide à gérer les nœuds et leurs positions dans la chronologie.
     """
     def __init__(self, parent: Optional['Node'] = None):
+        """
+        Initialisez l'instance HotMap.
+
+        Args:
+            parent : le nœud parent (la valeur par défaut est Aucun).
+        """
         self.parent = parent
         self.nodes: List[Node] = []
         self.rects: Dict[Node, Tuple[int, int, int, int]] = {}
@@ -94,18 +169,41 @@ class HotMap:
 
     # def append(self, node: Node, rect: Tuple[int, int, int, int]):
     def append(self, node: Any, rect: Tuple[int, int, int, int]):
-        """Ajoute un nœud et son rectangle au HotMap."""
+        """Ajoute un nœud et son rectangle au HotMap.
+
+        Args:
+            node : Le nœud à ajouter.
+            rect (Rect) : Le rectangle représentant la position du nœud.
+        """
         self.nodes.append(node)
         self.rects[node] = rect
         self.children[node] = HotMap(node)
 
     # def __getitem__(self, node: Node) -> 'HotMap':
     def __getitem__(self, node: Any) -> 'HotMap':
-        """Obtient la HotMap enfant pour un nœud donné."""
+        """Obtient la HotMap enfant pour un nœud donné.
+
+        Args:
+            node : Le nœud pour lequel obtenir la HotMap enfant.
+
+        Returns:
+            HotMap : La HotMap enfant.
+        """
         return self.children[node]
 
     def find_node_at_position(self, x: int, y: int, parent: Optional[Any] = None) -> Optional[Any]:
         """Trouve le nœud sur lequel l'utilisateur a cliqué, récursivement."""
+        """Trouve le nœud sur lequel l'utilisateur a cliqué, récursivement.
+
+        Récupère le nœud à la position donnée.
+
+        Args:
+            x, y (Point) : La position à vérifier.
+            parent : Le nœud parent (la valeur par défaut est Aucun).
+
+        Returns:
+            Le nœud à la position donnée ou le nœud parent si aucun nœud n'est trouvé.
+        """
         for node, rect in self.rects.items():
             x1, y1, x2, y2 = rect
             if x1 <= x <= x2 and y1 <= y <= y2:
@@ -116,7 +214,14 @@ class HotMap:
         return parent
 
     def find_node(self, target: Any) -> Optional['HotMap']:
-        """Recherche la HotMap contenant le nœud cible."""
+        """Recherche la HotMap contenant le nœud cible.
+
+        Args:
+            target : Le nœud cible à rechercher.
+
+        Renvoie :
+            HotMap : La HotMap contenant le nœud cible ou Aucun sinon trouvé.
+        """
         if target in self.nodes:
             return self
         for node in self.nodes:
@@ -126,11 +231,22 @@ class HotMap:
         return None
 
     def first_node(self) -> Optional[Any]:
-        """Retourne le premier nœud de la HotMap."""
+        """Retourne le premier nœud de la HotMap.
+
+        Returns:
+            Le premier nœud ou Aucun s'il n'y a aucun nœud.
+        """
         return self.nodes[0] if self.nodes else None
 
     def last_node(self, parent: Optional[Any] = None) -> Optional[Any]:
-        """Retourne le dernier nœud de la HotMap."""
+        """Retourne le dernier nœud de la HotMap.
+
+        Args:
+            parent : Le nœud parent (la valeur par défaut est Aucun).
+
+        Returns:
+            Le dernier nœud ou le nœud parent s'il n'y a pas de nœuds.
+        """
         if self.nodes:
             last = self.nodes[-1]
             return self[last].last_node(last)
@@ -138,7 +254,16 @@ class HotMap:
             return parent
 
     def next_child(self, target: Any) -> Optional[Any]:
-        """Retourne le nœud enfant suivant."""
+        """Retourne le nœud enfant suivant.
+
+        Obtenez le nœud enfant suivant après le nœud cible.
+
+        Args:
+            target : Le nœud cible.
+
+        Returns:
+            Le nœud enfant suivant.
+        """
         try:
             index = self.nodes.index(target)
             if index < len(self.nodes) - 1:
@@ -148,7 +273,16 @@ class HotMap:
         return target
 
     def previous_child(self, target: Any) -> Optional[Any]:
-        """Retourne le nœud enfant précédent."""
+        """Retourne le nœud enfant précédent.
+
+        Récupère le nœud enfant précédent avant le nœud cible.
+
+        Args:
+            target : Le nœud cible.
+
+        Returns:
+            Le nœud enfant précédent.
+        """
         try:
             index = self.nodes.index(target)
             if index > 0:
@@ -158,7 +292,16 @@ class HotMap:
         return target
 
     def first_child(self, target: Any) -> Optional[Any]:
-        """Retourne le premier enfant d'un nœud."""
+        """Retourne le premier enfant d'un nœud.
+
+        Récupère le premier nœud enfant du nœud cible.
+
+        Args:
+            target : Le nœud cible.
+
+        Returns:
+            Le premier nœud enfant ou le nœud cible s'il n'a pas enfants.
+        """
         children = self.children.get(target)
         if children and children.nodes:
             return children.nodes[0]
@@ -168,9 +311,20 @@ class HotMap:
 class DefaultAdapter:
     """
     Classe d'adaptateur par défaut pour la chronologie.
+
+    Cette classe fournit des méthodes pour accéder aux propriétés
+     et aux relations des nœuds.
     """
     def parallel_children(self, node: Any, recursive: bool = False) -> List[Any]:
-        """Retourne les enfants parallèles d'un nœud."""
+        """Retourne les enfants parallèles d'un nœud.
+
+        Args :
+            node : Le nœud.
+            recursive (bool, optional) : s'il faut inclure les enfants récursifs (la valeur par défaut est False).
+
+        Returns :
+            children (list) : Les enfants parallèles du nœud.
+        """
         if not hasattr(node, 'parallel_children'):
             return []
         children = list(node.parallel_children)
@@ -180,21 +334,44 @@ class DefaultAdapter:
         return children
 
     def sequential_children(self, node: Any) -> List[Any]:
-        """Retourne les enfants séquentiels d'un nœud."""
+        """Retourne les enfants séquentiels d'un nœud.
+
+        Args :
+            node : Le nœud.
+
+        Returns :
+            (list) : Les enfants séquentiels du nœud.
+        """
         return node.sequential_children if hasattr(node, 'sequential_children') else []
 
-    def children(self, node: Any) -> List[Any]:
-        """Retourne tous les enfants d'un nœud."""
+    def children(self, node: Any) -> List[Any]:  # TODO : children est utilisé dans tkinter !
+        """Retourne tous les enfants d'un nœud (à la fois parallèles et séquentiels).
+
+        Args :
+            node : Le nœud.
+
+        Returns :
+            (list) : Tous les enfants du nœud.
+        """
         return self.parallel_children(node) + self.sequential_children(node)
 
     def bounds(self, node: Any) -> Tuple[float, float]:
-        """Calcule les limites temporelles d'un nœud et de ses enfants."""
+        """Calcule les limites temporelles d'un nœud et de ses enfants.
+
+        Obtenez les limites (heures de début et de fin) d'un nœud.
+
+        Args :
+            node : Le nœud.
+
+        Returns :
+            (tuple) : L'heure de début minimale et l'heure d'arrêt maximale.
+        """
         times = [node.start, node.stop]
         for child in self.children(node):
             times.extend(self.bounds(child))
         return float(min(times)), float(max(times))
 
-    def start(self, node: Any) -> float:
+    def start(self, node: Any) -> float:  # recursive n'est pas encore implémenté
         """Retourne l'heure de début du nœud."""
         return float(node.start)
 
@@ -222,7 +399,33 @@ class DefaultAdapter:
         """Retourne la couleur de fond du nœud."""
         # Simple logique de couleur basée sur le type ou l'état
         if 'Node' in str(type(node)):
-            return (150, 200, 250)
+            return 150, 200, 250
+        return None
+
+    def foreground_color(self, node, depth):
+        """
+        Obtenez la couleur de premier plan d'un nœud.
+
+        Args :
+            node : Le nœud.
+            depth (int) : La profondeur du nœud.
+
+        Returns :
+            (tuple | None) : La couleur de premier plan sous forme de 3-tuples (R, V, B).
+        """
+        return None
+
+    def icon(self, node):
+        """
+        Récupère l'icône d'un nœud.
+
+        Args :
+            node : Le nœud.
+
+        Renvoie :
+            (Icon | None) : L'icône du nœud.
+        """
+        # wx.Icon(node)
         return None
 
 
@@ -236,6 +439,16 @@ class TimeLineCanvas(tk.Canvas):
     # def __init__(self, parent, model: List[Any], **kwargs):
     # def __init__(self, parent, nodes: List[Any], **kwargs):
     def __init__(self, parent, nodes: List[Any], on_select=None, on_activate=None, **kwargs):
+        """
+        Initialiser l'instance TimeLine.
+
+        Args:
+            parent:
+            nodes:
+            on_select:
+            on_activate:
+            **kwargs:
+        """
         super().__init__(parent, bg="white", **kwargs)
 
         self.nodes = nodes
@@ -256,6 +469,15 @@ class TimeLineCanvas(tk.Canvas):
 
         # self.draw_timeline()
 
+    # Pas de SetBackgroundColour
+    def Refresh(self):
+        """
+        Equivalent wx → redessine simplement la timeline.
+        """
+        self.draw_timeline()                            # Force un redessin
+
+    # OnPaint est directement remplacé par draw_timeline,
+    # OnSize n'existe plus
     def draw_timeline(self):
         """Dessine la chronologie complète à partir des données."""
         self.delete("all")
@@ -360,8 +582,9 @@ class TimeLineCanvas(tk.Canvas):
             seq_children = self.adapter.sequential_children(node)
             par_children = self.adapter.parallel_children(node)
 
+            seq_height = min(15, h)
             if seq_children:
-                seq_height = min(15, h)
+                # seq_height = min(15, h)
                 self.draw_sequential_children(seq_children, y1, seq_height, hot_map[node], depth + 1)
 
             if par_children:
@@ -387,7 +610,8 @@ class TimeLineCanvas(tk.Canvas):
 
             # Dessine le rectangle du nœud et le texte
             fill_color = "lightblue" if node == self.selected_node else "lightgray"
-            self.create_rectangle(*rect_coords, fill=fill_color, outline="black", tags="node")
+            # self.create_rectangle(*rect_coords, fill=fill_color, outline="black", tags="node")
+            self.create_rectangle(rect_coords[0], rect_coords[1], rect_coords[2], rect_coords[3], fill=fill_color, outline="black", tags="node")
             self.create_text(
                 (rect_x_start + rect_x_end) / 2, (y_start + y_end) / 2,
                 text=node.path, anchor="center", tags="node"
@@ -418,11 +642,22 @@ class TimeLineCanvas(tk.Canvas):
         # return None
         return self.hot_map.find_node_at_position(x, y)
 
+    def get_selected(self):
+        """
+        Récupère le nœud actuellement sélectionné.
+
+        Returns :
+            Le nœud présentement sélectionné.
+        """
+        return self.selected_node
+
     def set_selected(self, node: Optional[Any]):
         """Définit le nœud sélectionné et redessine."""
         if node != self.selected_node:
             self.selected_node = node
             self.draw_timeline()
+
+    # UpdateDrawing n'existe plus !
 
     def on_click(self, event: tk.Event):
         """Gère un clic simple."""
@@ -442,7 +677,6 @@ class TimeLineCanvas(tk.Canvas):
         #     self.on_activate_callback(node)
         if node:
             messagebox.showinfo("Activation", f"Nœud activé: {self.adapter.label(node)}")
-
 
     def on_motion(self, event: tk.Event):
         """Gère le mouvement de la souris."""
@@ -493,6 +727,16 @@ class Node:
     Il peut avoir des enfants parallèles et séquentiels.
     """
     def __init__(self, path: str, start: int, stop: int, subnodes: List, events: List):
+        """
+        Initialisez l'instance de nœud.
+
+        Args:
+            path (str): The path of the node.
+            start (int): The start time of the node.
+            stop (int): The stop time of the node.
+            subnodes (list): The subnodes of the node.
+            events (list): The events of the node.
+        """
         self.path = path
         self.start = start
         self.stop = stop
@@ -500,7 +744,14 @@ class Node:
         self.sequential_children = events
 
     def __repr__(self):
-        return f"Node(path={self.path}, start={self.start}, stop={self.stop})"
+        """
+        Renvoie une représentation sous forme de chaîne de l'instance Node.
+
+        Returns :
+            (str) : The string representation.
+        """
+        # return f"Node(path={self.path}, start={self.start}, stop={self.stop})"
+        return f"{self.__class__.__name__}(path={self.path}, start={self.start}, stop={self.stop}, parallel_children={self.parallel_children}, sequential_children={self.sequential_children})"
 
 
 def get_model(size: int) -> List[Node]:
