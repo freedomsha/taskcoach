@@ -24,8 +24,10 @@ utilisés dans le projet `taskcoachlib`.
 
 **Classes principales**
 
-* `TestCase` : Classe de base pour les tests unitaires. Elle hérite de `unittest.TestCase` et
-  fournit des fonctionnalités supplémentaires utiles pour les tests liés à l'interface graphique (GUI)
+* `TestCase` : Classe de base pour les tests unitaires.
+  Elle hérite de `unittest.TestCase` et
+  fournit des fonctionnalités supplémentaires utiles
+  pour les tests liés à l'interface graphique (GUI)
   utilisant la bibliothèque `wx`.
     * Fournit une instance unique de l'application wx (`wx.App`) accessible via la variable `app`.
     * Implémente la méthode `tearDown` pour effectuer des actions de nettoyage après chaque test,
@@ -80,13 +82,21 @@ _PLATFORM_MAP = {
 
 
 def skipOnPlatform(*platforms):
-    """ Décorateur pour les tests unitaires qui doivent être ignorés sur des plates-formes spécifiques.
+    """
+    Décorateur pour ignorer l'exécution d'une méthode de test sur les plates-formes spécifiées.
 
-    Args :
-        *platforms (str) : Une liste de noms de plateformes à ignorer.
+    Ce décorateur vérifie la plate-forme sur laquelle le test est exécuté et ignore l'exécution
+    de la méthode de test si la plate-forme actuelle correspond à l'une des
+    plates-formes spécifiées.
 
-    Returns :
-        (function) : Une fonction wrapper qui saute le test si la plateforme courante est dans la liste fournie.
+    Args:
+        *platforms: Un ou plusieurs identifiants de plateforme (sous forme de chaînes) pour lesquels le test
+            doit être ignoré. Chaque identifiant doit correspondre à une clé du dictionnaire
+            _PLATFORM_MAP.
+
+    Returns:
+        Callable: Fonction qui ignore le test ou exécute la méthode de test d'origine
+        , en fonction de la plateforme actuelle.
     """
     def wrapper(func):
         if platform.system() in [_PLATFORM_MAP[name] for name in platforms]:
@@ -97,14 +107,52 @@ def skipOnPlatform(*platforms):
 
 
 def is_gui_available():
+    """
+    Vérifie si une interface utilisateur graphique (GUI) est disponible.
+
+    Cette fonction détermine si une interface utilisateur graphique est disponible pour
+    une utilisation en vérifiant les variables d'environnement "DISPLAY" et "CI". Il renvoie
+    True si « DISPLAY » est défini (indiquant la disponibilité d'un environnement GUI)
+    et « CI » n'est pas défini (indiquant que le code ne s'exécute pas dans un environnement d'intégration continue).
+
+    Returns:
+        bool: True if a GUI is available, False otherwise.
+    """
     return os.environ.get("DISPLAY") is not None and not os.environ.get("CI")
 
 
 def skipIfNotGui(reason="Requires GUI environment"):
+    """
+    Décorateur pour ignorer un test si un environnement GUI n'est pas disponible.
+
+    Cette fonction encapsule un scénario de test avec une condition, garantissant que le test est
+    exécuté uniquement lorsqu'un environnement d'interface utilisateur graphique (GUI) est accessible.
+
+    Args:
+        reason (str): Raison pour laquelle le test est ignoré si un environnement GUI
+            n'est pas disponible. La valeur par défaut est « Nécessite un environnement GUI ».
+
+    Returns:
+        function: La fonction de scénario de test modifiée qui sera ignorée si l'environnement GUI
+        n'est pas disponible.
+    """
     return unittest.skipUnless(is_gui_available(), reason)
 
 
 class TestCase(unittest.TestCase):
+    """
+    Encapsule la configuration et le démontage des scénarios de test, fournit des méthodes utilitaires pour les assertions
+    et gère les enregistrements d'événements à des fins de test.
+
+    Cette classe hérite de `unittest.TestCase` et est conçue pour faciliter les tests unitaires
+    pour les applications nécessitant la configuration du framework wxPython.
+    et logique événementielle. Il inclut des méthodes d'assertion personnalisées et
+    gère les observateurs d'événements à l'aide des modèles Éditeur-Abonné.
+
+    Attributes:
+        app (wx.App): An instance of `wx.App`, which is required for initializing
+            wxPython objects that depend on an application context.
+    """
     # Some non-UI stuff also needs the app to be constructed (like
     # wx.BLACK et al)
     app = wx.App(0)
@@ -139,6 +187,17 @@ class TestCase(unittest.TestCase):
 
 
 class TestCaseFrame(wx.Frame):
+    """
+    Représente un cadre personnalisé pour un scénario de test.
+
+    Cette classe étend la classe wx.Frame pour fournir un cadre spécialisé à des fins de scénario de test
+    . Il comprend des fonctionnalités permettant de gérer les perspectives de la barre d'outils
+    et d'ajouter des info-bulles. Le cadre peut être personnalisé davantage
+    et étendu selon les besoins.
+
+    Attributes:
+        toolbarPerspective (str): Stores the perspective of the toolbar.
+    """
     def __init__(self):
         super().__init__(None, wx.ID_ANY, "Frame")
         self.toolbarPerspective = ""
@@ -151,6 +210,19 @@ class TestCaseFrame(wx.Frame):
 
 
 class wxTestCase(TestCase):
+    """
+    Représente un scénario de test pour wxPython, héritant de TestCase. Cette classe est spécialisée dans
+    la création d'un cadre de test pour les applications GUI construites avec wxPython, garantissant une configuration et un démontage corrects
+    des composants de l'interface graphique.
+
+    Le but de cette classe est de fournir un environnement contrôlé pour les tests GUI, où
+    les objets GDI et autres ressources graphiques sont correctement gérés. pendant le cycle de vie du test.
+    Ceci est particulièrement important pour éviter les fuites de ressources sur les systèmes Windows, où les objets GDI
+    ont une limite d'allocation stricte.
+
+    Attributes:
+        frame (TestCaseFrame): A frame used for testing GUI components.
+    """
     # pylint: disable=W0404
     frame = TestCaseFrame()
     from taskcoachlib import gui
@@ -162,4 +234,14 @@ class wxTestCase(TestCase):
 
 
 def main():
+    """
+    Exécute les tests unitaires définis dans le programme.
+
+    Cette fonction exploite le framework unittest pour découvrir et exécuter tous les tests
+    définis dans le module actuel ou les modules importés. Il sert de point d'entrée
+    pour l'exécution des tests, garantissant que les résultats de la suite de tests sont
+    formatés et affichés de manière cohérente. L'exécution de cette fonction
+    est essentielle pour valider l'exactitude du code et gérer les problèmes potentiels
+    identifiés par les tests unitaires.
+    """
     unittest.main()
