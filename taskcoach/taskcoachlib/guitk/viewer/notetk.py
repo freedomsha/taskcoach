@@ -579,7 +579,29 @@ class BaseNoteViewer(mixintk.AttachmentDropTargetMixin,  # pylint: disable=W0223
         """
         Retourne la sélection actuelle. Simulation.
         """
-        return [self.taskFile.notes()[0]]
+        # return [self.taskFile.notes()[0]]
+        # CORRECTION : On ne peut pas utiliser [0] sur self.taskFile.notes()
+        # car c'est un 'NoteContainer', pas une liste.
+        # A la place, nous utilisons self.presentation() qui renvoie le NoteSorter,
+        # qui lui est itérable (se comporte comme une liste).
+
+        try:
+            # self.presentation() est surchargée par la classe Noteviewer
+            # et renvoie le NoteSorter.
+            presentation_data = self.presentation()
+
+            # statusMessages() a besoin d'une liste (pour len()),
+            # donc nous simulons en renvoyant le premier élément dans une liste.
+            if presentation_data and len(presentation_data) > 0:
+                return [presentation_data[0]]
+
+        except Exception as e:
+            # Si self.presentation() échoue ou est vide pendant l'initialisation
+            # pass
+            log.error("BaseNoteViewer.curselection Failed to retrieve note selection: %s", str(e))
+
+        # Toujours renvoyer une liste vide si rien n'est sélectionné ou trouvé
+        return []
 
     def presentation(self) -> List[domain.note]:
         """
