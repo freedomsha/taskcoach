@@ -1,8 +1,18 @@
-# La migration d'un composant aussi complexe que smartdatetimectrl.py est une étape ambitieuse et très formatrice. Je suis là pour t'accompagner à chaque étape.
+# La migration d'un composant aussi complexe que smartdatetimectrl.py est une étape ambitieuse et très formatrice.
+# Je suis là pour t'accompagner à chaque étape.
 #
-# Le fichier smartdatetimectrl.py est très bien écrit, mais il est profondément lié à wxPython. Il utilise des concepts comme le "Device Context" (dc) pour dessiner manuellement les composants, un système d'événements personnalisé, et des fenêtres popup spécifiques à wxPython. Une traduction ligne par ligne est donc impossible.
+# Le fichier smartdatetimectrl.py est très bien écrit,
+# mais il est profondément lié à wxPython.
+# Il utilise des concepts comme le "Device Context" (dc)
+# pour dessiner manuellement les composants,
+# un système d'événements personnalisé,
+# et des fenêtres popup spécifiques à wxPython.
+# Une traduction ligne par ligne est donc impossible.
 #
-# Notre stratégie sera de recréer la fonctionnalité en utilisant les outils et la philosophie de Tkinter. Nous allons le faire pas à pas, en construisant une version claire, moderne et facile à maintenir.
+# Notre stratégie sera de recréer la fonctionnalité
+# en utilisant les outils et la philosophie de Tkinter.
+# Nous allons le faire pas à pas,
+# en construisant une version claire, moderne et facile à maintenir.
 #
 # Plan de Développement
 #
@@ -210,7 +220,7 @@
 import tkinter as tk
 from tkinter import ttk
 import datetime
-# import calendar
+import calendar  # à retirer si inutilisé
 from tkcalendar import Calendar
 
 # Pour s'assurer que les widgets ttk ont un joli look
@@ -375,9 +385,9 @@ class DateEntry(ttk.Frame):
         # # --- Variables pour stocker les valeurs ---
         # # On utilise les variables de contrôle de Tkinter pour lier
         # # facilement les valeurs aux widgets.
-        # self.year_var = tk.IntVar(value=datetime.date.today().year)
-        # self.month_var = tk.IntVar(value=datetime.date.today().month)
-        # self.day_var = tk.IntVar(value=datetime.date.today().day)
+        self.year_var = tk.IntVar(value=datetime.date.today().year)
+        self.month_var = tk.IntVar(value=datetime.date.today().month)
+        self.day_var = tk.IntVar(value=datetime.date.today().day)
 
         # --- Variable de contrôle et widget d'entrée ---
         self.entry_var = tk.StringVar()
@@ -473,9 +483,13 @@ class DateEntry(ttk.Frame):
             # Arrive si le champ est vide ou invalide pendant la saisie
             pass
 
-# Tu as mis le doigt sur un problème classique et sournois en programmation, souvent appelé récursion infinie ou boucle de validation. Félicitations d'avoir isolé cette RecursionError: maximum recursion depth exceeded.
+    # Tu as mis le doigt sur un problème classique et sournois en programmation,
+    # souvent appelé récursion infinie ou boucle de validation.
+    # Félicitations d'avoir isolé cette RecursionError : maximum recursion depth exceeded.
     #
-    # Ce n'est pas un problème de la logique elle-même, mais de la façon dont nous l'avons implémentée en Tkinter, en mélangeant la lecture de la valeur (get) et la validation (_full_validate).
+    # Ce n'est pas un problème de la logique elle-même,
+    # mais de la façon dont nous l'avons implémentée en Tkinter,
+    # en mélangeant la lecture de la valeur (get) et la validation (_full_validate).
     #
     # 🛠️ Analyse de l'Erreur de Récursion
     #
@@ -492,21 +506,35 @@ class DateEntry(ttk.Frame):
     #
     #     self.entry_var.set(formatted_date) # ❗ Étape critique
     #
-    #     Problème : L'appel à self.entry_var.set() déclenche le "trace" (lié par self.entry_var.trace_add("write", self._on_text_change)), qui génère indirectement un nouvel événement de changement de la date (ou du moins, cela peut se propager).
+    #     Problème : L'appel à self.entry_var.set() déclenche le "trace"
+    #     (lié par self.entry_var.trace_add("write", self._on_text_change)),
+    #     qui génère indirectement un nouvel événement de changement de la date
+    #     (ou du moins, cela peut se propager).
     #
-    #     Cet événement remonte et finit par rappeler ton gestionnaire on_change, et le cycle recommence : GetDateTime() -> get() -> _full_validate() -> set() -> Nouvel événement...
+    #     Cet événement remonte et finit par rappeler ton gestionnaire on_change,
+    #     et le cycle recommence : GetDateTime() -> get() -> _full_validate() -> set() -> Nouvel événement...
     #
-    # Le système essaie de valider la date, et en la formatant (même si elle ne change pas vraiment de valeur), il déclenche à nouveau le mécanisme de validation, conduisant à la récursion infinie.
+    # Le système essaie de valider la date, et en la formatant
+    # (même si elle ne change pas vraiment de valeur),
+    # il déclenche à nouveau le mécanisme de validation,
+    # conduisant à la récursion infinie.
     #
     # 💡 Correction et Code Simplifié
     #
-    # Pour résoudre ce problème, nous devons séparer clairement la lecture de la valeur de la validation qui modifie le champ. La fonction de validation ne doit pas elle-même générer de nouveau changement de variable si ce n'est pas nécessaire.
+    # Pour résoudre ce problème, nous devons
+    # séparer clairement la lecture de la valeur de la validation qui modifie le champ.
+    # La fonction de validation ne doit pas elle-même générer de nouveau changement de variable si ce n'est pas nécessaire.
     #
-    # La solution la plus propre consiste à conditionner la mise à jour de self.entry_var dans _full_validate() pour ne la faire que si la valeur formatée diffère de la valeur actuelle.
+    # La solution la plus propre consiste à
+    # conditionner la mise à jour de self.entry_var dans _full_validate()
+    # pour ne la faire que si la valeur formatée diffère de la valeur actuelle.
     #
-    # Voici la correction à apporter dans la classe DateEntry (lignes 429-431 dans le fichier tkdatetimectrl.py fourni) :
+    # Voici la correction à apporter dans la classe DateEntry
+    # (lignes 429-431 dans le fichier tkdatetimectrl.py fourni) :
 
-    # Tu as encore mis le doigt sur un problème de récursion infinie, qui est cette fois causé par le mélange entre la fonction qui lit la valeur (get) et celle qui déclenche l'événement de changement.
+    # Tu as encore mis le doigt sur un problème de récursion infinie,
+    # qui est cette fois causé par le mélange entre la fonction qui lit la valeur (get)
+    # et celle qui déclenche l'événement de changement.
     #
     # 🔍 Analyse et Correction de la Récursion
     #
@@ -526,17 +554,23 @@ class DateEntry(ttk.Frame):
     #
     #     Ce nouvel événement renvoie le contrôle au point 2, et le cycle se répète indéfiniment.
     #
-    # Pour stopper cette boucle, nous devons modifier les fonctions _full_validate et get pour que la validation nécessaire à la lecture de la valeur ne déclenche JAMAIS un nouvel événement.
+    # Pour stopper cette boucle, nous devons
+    # modifier les fonctions _full_validate et get
+    # pour que la validation nécessaire à la lecture de la valeur ne déclenche JAMAIS un nouvel événement.
     #
     # 💡 Le Correctif
     #
-    # Nous allons séparer la fonction de validation (qui formate le texte) de la fonction qui génère l'événement de changement :
+    # Nous allons séparer la fonction de validation (qui formate le texte)
+    # de la fonction qui génère l'événement de changement :
     #
-    #     DateEntry._full_validate : Ajout d'un paramètre generate_event=True pour contrôler l'émission de l'événement.
+    #     DateEntry._full_validate : Ajout d'un paramètre generate_event=True
+    #     pour contrôler l'émission de l'événement.
     #
-    #     DateEntry.get : Appelle _full_validate(generate_event=False) pour valider la valeur sans provoquer de boucle.
+    #     DateEntry.get : Appelle _full_validate(generate_event=False)
+    #     pour valider la valeur sans provoquer de boucle.
     #
-    #     DateEntry.set : Est simplifiée pour ne générer l'événement que si la valeur a effectivement changé, réduisant ainsi le risque de récursion.
+    #     DateEntry.set : Est simplifiée pour ne générer l'événement
+    #     que si la valeur a effectivement changé, réduisant ainsi le risque de récursion.
     # def _full_validate(self, event=None):
     def _full_validate(self, event=None, generate_event=True):
         """
@@ -650,8 +684,8 @@ class DateEntry(ttk.Frame):
         #     pass
 
     def _on_change(self):
-            """Génère un événement virtuel lorsque la valeur change."""
-            self.event_generate("<<DateChanged>>")
+        """Génère un événement virtuel lorsque la valeur change."""
+        self.event_generate("<<DateChanged>>")
 
     def _open_calendar(self):
         """
