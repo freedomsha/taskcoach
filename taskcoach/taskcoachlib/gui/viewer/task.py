@@ -1872,6 +1872,11 @@ class TaskViewer(
             self.widget.SetItemText(treeItem, editedTask.subject(recursive=True))
 
     def _createColumns(self):
+        """
+        Crée les colonnes du visualiseur. (createWidget de TaskViewer et CheckableTaskViewer).
+        Returns:
+
+        """
         # log.debug("taskViewer._createColumns : ")
         kwargs = dict(resizeCallback=self.onResizeColumn)
         # pylint: disable=E1101,W0142
@@ -2232,6 +2237,12 @@ class TaskViewer(
         return columns
 
     def createColumnUICommands(self):
+        """
+        Crée les commandes de l'interface utilisateur pour gérer les colonnes.
+        (overwrite de la méthode de gui.viewer.base.ViewerWithColumns.createColumnUICommands).
+        Raises :
+            NotImplementedError : Si non implémenté dans une sous-classe.
+        """
         commands = [
             uicommand.ToggleAutoColumnResizing(viewer=self, settings=self.settings),
             None,
@@ -2434,6 +2445,7 @@ class TaskViewer(
         return commands
 
     def createModeToolBarUICommands(self):
+        """Crée des commandes UI pour la barre d'outils (modes)."""
         treeOrListUICommand = uicommand.TaskViewerTreeOrListChoice(
             viewer=self, settings=self.settings
         )  # pylint: disable=W0201
@@ -2633,7 +2645,8 @@ class TaskViewer(
     def getItemParent(self, item):
         return super().getItemParent(item) if self.isTreeViewer() else None
 
-    def children(self, item=None):
+    def children(self, item=None):  # TODO : le mot children est utilisé dans tkinter pour les fenêtre !
+        """Retourne les enfants d'un élément selon le mode arbre/liste."""
         return super().children(item) if (self.isTreeViewer() or item is None) else []
 
 
