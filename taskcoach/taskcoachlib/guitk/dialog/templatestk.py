@@ -184,13 +184,34 @@ class TimeExpressionEntry(ttk.Entry):
     """
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
+        self.__defaultColor = self["bg"] or self["background"]  # Couleur de fond initiale
+        # self.__invalidColor = wx.Colour(255, 128, 128)  # Couleur rouge clair pour les erreurs
+        self.__invalidColor = "#fff0f0"
+
+        # Ajoutez ces lignes de débogage
+        log.warning(f"DEBUG - Type de self._onTextChanged: {type(self._onTextChanged)}")
+        log.warning(f"DEBUG - Est-ce que self._onTextChanged est callable ? {callable(self._onTextChanged)}")
+        # Fin des lignes de débogage
+
+        # Lie l'événement de modification du texte à la méthode _onTextChanged.
         self.bind("<KeyRelease>", self._onTextChanged)
         self.is_valid = True
 
     @staticmethod
     def isValid(value: str) -> bool:
         """Simuler la validation, retourne toujours True pour la démo."""
-        return True
+        # return True
+        if value:
+            try:
+                # Tente d'analyser la chaîne comme une expression temporelle
+                # (nécessite l'importation de nlTimeExpression)
+                res = nlTimeExpression.parseString(value)
+            except Exception as e:
+                # Enregistre l'exception si l'analyse échoue
+                logging.exception(f"Exception: {e}", exc_info=True)
+                return False  # pylint: disable=W0702 L'expression est invalide
+            return "calculatedTime" in res  # Vérifie si le résultat contient un temps calculé
+        return True  # Une chaîne vide est toujours valide.
 
     def _onTextChanged(self, event):
         value = self.get()
@@ -198,6 +219,12 @@ class TimeExpressionEntry(ttk.Entry):
         # La couleur de fond n'est pas facilement modifiable pour ttk.Entry
         # mais on peut le faire pour un widget tk.Entry.
         # Pour cet exemple, nous allons ignorer le changement de couleur.
+        self.configure(
+            fieldbackground=self.__defaultColor  # Couleur par défaut si valide
+                # if self.isValid(self.GetValue())  # Vérifie la validité de la valeur actuelle
+                if self.is_valid  # Vérifie la validité de la valeur actuelle
+                else self.__invalidColor  # Couleur d'erreur si invalide
+        )
         self.event_generate("<<TimeExpressionChanged>>")
 
 
@@ -207,7 +234,7 @@ class TemplatesDialog(tk.Toplevel):
     Remplace TemplatesDialog de wx.
     Elle simule les fonctionnalités de la TemplatesDialog originale en wxPython
     """
-    def __init__(self, parent: tk.Tk, settings: Dict[str, Any] = None):
+    def __init__(self, parent: tk.Tk, settings: Dict[str, Any] = None, *args, **kwargs):
         """
         Initialise la boîte de dialogue des modèles.
 
@@ -215,7 +242,7 @@ class TemplatesDialog(tk.Toplevel):
             parent : La fenêtre parente (généralement la fenêtre principale de l'application Tkinter).
             settings : L'objet TemplateList à gérer.
         """
-        super().__init__(parent)
+        super().__init__(parent, *args, **kwargs)
         self.title(_("Task Templates"))
         self.transient(parent)  # Définir comme fenêtre transitoire
         # self.grab_set()
