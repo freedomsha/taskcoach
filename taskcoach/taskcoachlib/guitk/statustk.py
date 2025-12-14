@@ -67,7 +67,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import tkinter as tk
 import tkinter.ttk as ttk  # Pour un style plus moderne (facultatif)
-from pubsub import pub # Si pubsub est toujours utilisé
+from pubsub import pub  # Si pubsub est toujours utilisé
 
 
 class StatusBar(tk.Frame):
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     # code de test
     class ViewerTest:
         def statusMessages(self):
-            return "status 1","status 2"
+            return "status 1", "status 2"
     root = tk.Tk()
     viewer = ViewerTest()
     status_bar = StatusBar(root,viewer)
