@@ -936,7 +936,16 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
             else:
                 self.selectCommand(event)
 
-    def __on_double_click(self, event):
+    def on_left_click(self, event):
+        """Gère le clic gauche de la souris."""
+        item_id = self.identify_row(event.y)
+        if item_id:
+            self.selection_set(item_id)
+            if self.selectCommand:
+                self.selectCommand(self.getItemWithId(item_id))
+
+    # def __on_double_click(self, event):
+    def on_double_click(self, event):
         """ Gère l'événement de double-clic pour l'édition de label. """
         item_id = self.identify_row(event.y)
         # if item_id:
