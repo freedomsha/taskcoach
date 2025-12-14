@@ -172,7 +172,7 @@ class SafeWriteFile(object):
             self.__tempFilename = self._getTemporaryFileName(
                 os.path.dirname(filename)
             )
-            self.__fd = open(self.__tempFilename, "wb")  # texte ou binaire ?
+            self.__fd = open(self.__tempFilename, "wb+")  # texte ou binaire ?
             # self.__fd = open(file=self.__tempFilename, mode="wb", encoding="utf-8")
         # self.__fd = filename
         log.info("Initialisation de SafeWriteFile avec un nom de fichier."
@@ -844,20 +844,20 @@ class TaskFile(patterns.Observer):
                 log.exception(f"TaskFile.close : Le fichier {self.filename()}.delta n'existe pas : {e}.")
                 changes = {}
             del changes[self.__monitor.guid()]
-            log.debug(f"TaskFile.close : Essaie d'écrire les changements {changes} dans le fichier {self.filename()}.delta en mode wb.")
+            log.debug(f"TaskFile.close : Essaie d'écrire les changements {changes} dans le fichier {self.filename()}.delta en mode wb+.")
             # xml.ChangesXMLWriter(open(self.filename() + ".delta", "wb")).write(
             #     changes
             # )
             # xml.ChangesXMLWriter(open(self.filename() + ".delta", "w")).write(
             #     changes
             # )
-            with open(self.filename() + ".delta", "wb") as f:
+            with open(self.filename() + ".delta", "wb+") as f:
                 writer = xml.ChangesXMLWriter(f)
                 writer.write(changes)
         log.info("TaskFile.close règle filename sur ''")
         self.setFilename("")
         self.__guid = generate()
-        self.clear()
+        self.clear(False)
         self.__monitor.reset()
         self.markClean()
         self.__changedOnDisk = False
@@ -922,7 +922,7 @@ class TaskFile(patterns.Observer):
             Le descripteur de fichier à lire.
         """
         # return file(self.__filename, 'r')
-        log.info(f"TaskFile._openForRead : Ouvre {self.__filename} en mode lecture binaire !")
+        log.info(f"TaskFile._openForRead : Ouvre {self.__filename} en mode lecture texte (r)!")
         return open(self.__filename, "r")
 
     def load(self, filename=None):
@@ -960,7 +960,7 @@ class TaskFile(patterns.Observer):
             if self.exists():
                 # fd = self._openForRead()
                 with self._openForRead() as fd:
-                    log.info(f"TaskFile.load : fd={fd} ouvert en mode lecture binaire !")
+                    log.info(f"TaskFile.load : fd={fd} ouvert en mode lecture texte(r) !")
                     try:
                         tasks, categories, notes, syncMLConfig, changes, guid = (
                             self._read(fd)
