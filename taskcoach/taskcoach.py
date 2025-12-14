@@ -37,6 +37,9 @@ taskcoach.py est le point d'entrée principal. Il :
 import logging
 # Créer un enregistreur de niveau module
 log = logging.getLogger(__name__)
+# --- Ajout pour supprimer les logs DEBUG de Pillow (PIL) ---
+logging.getLogger('PIL').setLevel(logging.WARNING)
+# --------------------------------------------------------
 # Il reste à utiliser cet enregistreur pour effectuer toute journalisation nécessaire.
 # Les messages enregistrés vers l’enregistreur d’images au niveau du module
 # seront transmis aux gestionnaires d’enregistreurs dans les modules de niveau supérieur,
@@ -201,11 +204,19 @@ def start():
     # print(f"taskcoach.py: options:{vars(options)} args:{args}")
     log.info("Arguments analys\u00e9s : options=%s, args=%s", vars(options), args)
 
-    # Lancement de l'initialisation de l'application :
-    app = application.Application(
-        options, args
-    )  # définition de la variable app comme application avec options et args
-    # app = application.Application(tcargs)
+    # Définir le GUI global (pour tous les modules)
+    from taskcoachlib.config.arguments import set_gui
+    set_gui(options.gui_name)
+
+    # if options.gui_name == "wx":
+    # # Lancement de l'initialisation de l'application version wxPython:
+    # app = application.Application(
+    #     options, args
+    # )  # définition de la variable app comme application avec options et args
+    # # app = application.Application(tcargs)
+    # if options.gui_name == "tk":
+    # # Lancement de l'initialisation de l'application version tkinter:
+    app = application.TkinterApplication(options, args)
     # print("taskcoach.py: options.profile:", options.profile)  # is False !
     log.debug("Option --profile active : %s", options.profile)
     # Lancement de l'application :
@@ -213,10 +224,16 @@ def start():
         # if options["profile"]:
         import cProfile
 
-        log.info("Mode profilage activ\u00e9, d\u00e9marrage avec cProfile")
+        log.info("Mode profilage activ\u00e9, d\u00e9marrage avec cProfile.")
+        # Lance app.start() et imprime les résultats de profil
+        # (les statistiques qui décrivent combien de fois et pendant combien de temps
+        # les diverses parties du programme sont exécutées.)
+        # runctx fournit les cartographies globales et locales pour app.start().
+        # Le résultat semble être enregistré dans la fichier taskcoach.profile !
         cProfile.runctx("app.start()", globals(), locals(), filename=".profile")
     else:
         log.info("Lancement de l'application avec Application.start()")
+        # Point de lancement pour la boucle principale de Tkinter.
         app.start()
 
 
