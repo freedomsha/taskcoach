@@ -19,7 +19,7 @@
       <excludeFolder url="file://$MODULE_DIR$/taskcoach/tests-py2" />
       <excludePattern pattern="*.bak" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.13 (task-coach-git)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
