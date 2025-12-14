@@ -134,10 +134,12 @@ from taskcoachlib.guitk.viewer.mixintk import SortableViewerForTasksMixin, Attac
 from taskcoachlib.config import settings
 # Imports pour les widgets non encore convertis (à adapter progressivement)
 from taskcoachlib.thirdparty.tkScheduler.tkSchedulerConstants import SCHEDULER_TODAY
-from taskcoachlib.thirdparty.tkScheduler.tkDrawer import tkBaseDrawer  # N'a pas encore été converti
-from taskcoachlib.thirdparty import tkdatetimectrl as sdtc  # N'a pas encore été converti
-from taskcoachlib.widgetstk.calendarconfigtk import CalendarConfigDialog  # N'a pas encore été converti
+from taskcoachlib.thirdparty.tkScheduler.tkDrawer import tkBaseDrawer
+from taskcoachlib.thirdparty import tkdatetimectrl as sdtc
+from taskcoachlib.widgetstk.calendarconfigtk import CalendarConfigDialog
 from taskcoachlib.widgetstk.hcalendarconfigtk import HierarchicalCalendarConfigDialog
+# from taskcoachlib.widgetstk.squaremap import SquareMap  # TODO à convertir
+from taskcoachlib.widgetstk.timelinetk import TimelineTk
 # except ImportError:
 #     # Fallback si les modules ne sont pas disponibles
 #     wxSCHEDULER_TODAY = None
@@ -349,8 +351,8 @@ class TaskViewerStatusMessages(object):
                 ),
             )
         except Exception as e:
-            log.error(f"Erreur lors de la génération des messages de statut: {e}")
-            return ("", "")
+            log.error(f"TaskViewerStatusMessages.__call__ : Erreur lors de la génération des messages de statut: {e}")
+            return "", ""
 
 
 # ============================================================================
@@ -507,7 +509,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):
 
     def __init__(self, *args, **kwargs):
         """Initialise le visualiseur avec des options supplémentaires pour rafraîchir les tâches."""
-        log.debug(f"BaseTaskTreeViewer : Création du Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.")
+        log.debug(f"BaseTaskTreeViewer.__init__ : Création du Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.")
         super().__init__(*args, **kwargs)
 
         # Initialisation des rafraîchisseurs
@@ -518,7 +520,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):
                 )
                 self.minuteRefresher = refreshertk.MinuteRefresher(self)
             except Exception as e:
-                log.warning(f"Impossible d'initialiser les rafraîchisseurs: {e}")
+                log.warning(f"BaseTaskTreeViewer.__init__ : Impossible d'initialiser les rafraîchisseurs: {e}!")
                 self.secondRefresher = self.minuteRefresher = None
         else:
             self.secondRefresher = self.minuteRefresher = None
@@ -536,13 +538,13 @@ class BaseTaskTreeViewer(BaseTaskViewer):
                     self.secondRefresher.removeInstance()
                 del self.secondRefresher
             except Exception as e:
-                log.warning(f"Erreur lors de l'arrêt du secondRefresher: {e}")
+                log.warning(f"BaseTaskTreeViewer.detach : Erreur lors de l'arrêt du secondRefresher: {e}")
         if hasattr(self, "minuteRefresher") and self.minuteRefresher:
             try:
                 self.minuteRefresher.stopClock()
                 del self.minuteRefresher
             except Exception as e:
-                log.warning(f"Erreur lors de l'arrêt du minuteRefresher: {e}")
+                log.warning(f"BaseTaskTreeViewer.detach : Erreur lors de l'arrêt du minuteRefresher: {e}")
 
     def newItemDialog(self, *args, **kwargs):
         """
@@ -588,7 +590,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):
                     items_are_new=items_are_new,
                 )
             except (AttributeError, ImportError) as e:
-                log.warning(f"EffortEditor non disponible: {e}")
+                log.warning(f"BaseTaskTreeViewer.editItemDialog : EffortEditor non disponible: {e}")
                 messagebox.showwarning(
                     _("Non disponible"),
                     _("L'éditeur d'effort n'est pas encore disponible.")
@@ -603,7 +605,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):
             # return dialog.editor.TaskEditor
             return TaskEditor
         except AttributeError:
-            log.warning("TaskEditor non disponible")
+            log.warning("BaseTaskTreeViewer.itemEditorClass : TaskEditor non disponible")
             return None
 
     def newItemCommandClass(self):
@@ -668,15 +670,16 @@ class BaseTaskTreeViewer(BaseTaskViewer):
             shadow=self.settings.getboolean("feature", "syncml"),
         )
 
-    def createTaskPopupMenu(self):
+    def createTaskPopupMenu(self):  # TODO ajouter parent ! ou parent_window ?
         """
         Crée et retourne le TaskPopupMenu/menu contextuel pour les tâches.
         """
         # from taskcoachlib.gui.menu import TaskPopupMenu
         log.debug(f"BaseTaskTreeViewer.createTaskPopupMenu : Création du menu contextuel.")
         try:
-            task_popup_menu = taskcoachlib.guitk.menu.TaskPopupMenu(
-                self.parent,
+            task_popup_menu = taskcoachlib.guitk.menutk.TaskPopupMenu(
+                self,  # self.parent ?
+                self.parent,  # TODO : A revoir avec parent et parent_window !
                 self.settings,
                 self.presentation(),
                 self.taskFile.efforts(),
@@ -685,7 +688,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):
             )
             return task_popup_menu
         except Exception as e:
-            log.error(f"Erreur lors de la création du menu contextuel: {e}")
+            log.error(f"BaseTaskTreeViewer.createTaskPopupMenu : Erreur lors de la création du menu contextuel: {e}")
             return None
 
     def createCreationToolBarUICommands(self):
@@ -913,17 +916,23 @@ class TimelineViewer(BaseTaskTreeViewer):
                     self.onAttributeChanged_Deprecated, eventType
                 )
 
-    def createWidget(self):
+    # def createWidget(self):
+    def createWidget(self, parent):
         self.rootNode = TimelineRootNode(self.presentation())
         itemPopupMenu = self.createTaskPopupMenu()
         self._popupMenus.append(itemPopupMenu)
-        # return widgets.Timeline( # À adapter car widgets.Timeline n'a pas été converti
-        #     self,
-        #     self.rootNode,
-        #     self.onSelect,
-        #     self.onEdit,
-        #     itemPopupMenu,
-        # )
+        self.timeline_widget = widgetstk.timelinetk.TimelineTk(  # À adapter car widgets.Timeline a été converti
+            self,
+            # parent,
+            self.rootNode,
+            self.onSelect,
+            self.onEdit,
+            itemPopupMenu,
+        )
+        # # Place le widget de chronologie dans la fenêtre
+        # timeline_widget.GetCanvas().pack(padx=10, pady=10, expand=True, fill="both")
+        return self.timeline_widget
+        # return self.widget
         return None
 
     def onEdit(self, item):
@@ -932,8 +941,10 @@ class TimelineViewer(BaseTaskTreeViewer):
 
     def curselection(self):
         # Override curselection
-        # return self.widget.curselection() # À adapter
-        return None
+        # return self.widget.curselection()  # À adapter
+        return self.timeline_widget.curselection()
+        # TODO : Pourquoi self.widget est NoneType  ?
+        # return None
 
     def bounds(self, item):
         times = [self.start(item), self.stop(item)]
@@ -1077,10 +1088,11 @@ class SquareTaskViewer(BaseTaskTreeViewer):
     def curselectionIsInstanceOf(self, class_):
         return class_ == task.Task
 
-    def createWidget(self):
+    # def createWidget(self):
+    def createWidget(self, parent):
         itemPopupMenu = self.createTaskPopupMenu()
         self._popupMenus.append(itemPopupMenu)
-        # return widgets.SquareMap( # À adapter car widgets.SquareMap n'a pas été converti
+        # return widgetstk.SquareMap(  # TODO À adapter car widgets.SquareMap n'a pas été converti puisqu'il utilise un module squaremap de wxpython !
         #     self,
         #     SquareMapRootNode(self.presentation()),
         #     self.onSelect,
@@ -1149,8 +1161,8 @@ class SquareTaskViewer(BaseTaskTreeViewer):
 
     def curselection(self):
         # Override curselection
-        # return self.widget.curselection() # À adapter
-        return None
+        return self.widget.curselection()  # À adapter
+        # return None
 
     def nrOfVisibleTasks(self):
         return len(
@@ -1443,9 +1455,12 @@ class HierarchicalCalendarViewer(
         """Désactivé pour ce visualiseur (trop coûteux en performance)."""
         pass
 
-    def createWidget(self):
-        """Crée le widget du calendrier hiérarchique."""
-        log.debug("HierarchicalCalendarViewer.createWidget : Création du widget")
+    # def createWidget(self):
+    def createWidget(self, parent):
+        """Crée le widget du calendrier hiérarchique.
+
+        widget à packer !"""
+        log.debug("HierarchicalCalendarViewer.createWidget : Création du widget.")
 
         # Création du menu contextuel
         itemPopupMenu = self.createTaskPopupMenu()
@@ -1458,6 +1473,7 @@ class HierarchicalCalendarViewer(
 
             widget = hcalendartk.HierarchicalCalendar(
                 self,
+                parent,  # ou self.parent ?
                 self.presentation(),
                 self.onSelect,
                 self.onEdit,
@@ -1474,7 +1490,7 @@ class HierarchicalCalendarViewer(
 
             # Fallback sur un widget de substitution
             widget = ttk.Frame(self)
-
+            widget.pack(expand=True, pady=20)  # TODO à revoir
             # Création d'un calendrier basique avec tkcalendar si disponible
             try:
                 from tkcalendar import Calendar
@@ -1740,11 +1756,14 @@ class CalendarViewer(
         #     self.widget.SetWeekStartSunday()
         pass
 
-    def createWidget(self):
+    # def createWidget(self):
+    def createWidget(self, parent):
         """
         Crée le widget principal (vue calendrier) avec son menu contextuel.
         Applique aussi un style de dessin personnalisé (gradient) si activé.
         :return: instance de Calendar (widgets.Calendar)
+
+        TODO utiliser pack !?  c'est fait dans factorytk !
         """
         log.info("CalendarViewer.createWidget : Crée le widget principal avec son menu contextuel.")
         itemPopupMenu = self.createTaskPopupMenu()
@@ -1755,6 +1774,7 @@ class CalendarViewer(
         # self.calendar_widget = tk.Label(self, text="Calendrier Tkinter à implémenter")
         widget = widgetstk.calendarwidgettk.Calendar(  # Est-il bien configuré ?
             self,
+            parent,  # ou self.parent ?
             self.presentation(),
             self.iconName,
             self.onSelect,
@@ -2033,9 +2053,10 @@ class Taskviewer(
         log.debug(f"Taskviewer.__init__ : La vue principale des tâches est initialisé !")
 
     # Méthodes à ajouter pour corriger l'erreur de classe abstraite
-    def bitmap(self):
-        """Retourne le bitmap de la classe (à implémenter si nécessaire)."""
-        return None  # Ou une valeur pertinente
+    # Sauf que bitmap() est dans basetk.Viewer !
+    # def bitmap(self):
+    #     """Retourne le bitmap de la classe (à implémenter si nécessaire)."""
+    #     return None  # Ou une valeur pertinente
 
     def isShowingAttachments(self):
         """Détermine si le visualiseur affiche les pièces jointes."""
@@ -2093,15 +2114,62 @@ class Taskviewer(
         except Exception as e:
             log.debug(f"Impossible d'afficher l'info-bulle d'activation: {e}")
 
+    # Le problème exact :
+    #
+    #     Viewer.__init__ (dans basetk.py) essaie de créer la présentation (self.__presentation = ...).
+    #
+    #     Pour créer cette présentation, il appelle self.createFilter.
+    #
+    #     createFilter (dans mixintk.py) a besoin de savoir si on est en mode arbre, donc il appelle self.isTreeViewer().
+    #
+    #     isTreeViewer (dans tasktk.py) contient une ligne de log : log.debug(f"... {self.presentation().treeMode()}.").
+    #
+    #     Ce log essaie d'exécuter self.presentation().
+    #
+    #     self.presentation() (dans basetk.py) essaie de retourner self.__presentation.
+    #
+    #     CRASH : self.__presentation n'existe pas encore, car nous sommes précisément à l'étape 1 (sa création).
+    #
+    # La solution : Il faut modifier le fichier tasktk.py pour supprimer l'appel prématuré à presentation() dans le log, et gérer le fait que la présentation n'est pas encore disponible lors de l'initialisation.
     def isTreeViewer(self):
         """
         Détermine si le visualiseur est en mode arborescence en lisant les paramètres.
+        Utilise la présentation si elle existe, sinon (pendant l'init) utilise les settings.
         """
         # return self.isTreeMode()
         try:
+            # On tente de récupérer le mode depuis la présentation active
+            log.debug(f"Taskviewer.isTreeViewer : essaie de renvoyer {self.presentation().treeMode()}.")
             return self.presentation().treeMode()
-        except AttributeError:
-            return self.settings.getboolean(self.settingsSection(), "treemode")
+            # return self.presentation.treeMode()  # ?
+        except AttributeError as e:
+            # Si self.presentation() échoue (car self.__presentation n'existe pas encore
+            # lors de l'initialisation dans Viewer.__init__), on se replie sur les paramètres.
+            # Note : On évite absolument de logger self.presentation() ici pour ne pas recréer l'erreur.
+
+            log.debug(f"Taskviewer.isTreeViewer : N'a pas trouvé de treeMode dans {self}.presentation.")
+            log.debug("Taskviewer.isTreeViewer : Présentation non prête, lecture depuis les settings.")
+            # return self.settings.getboolean(self.settingsSection(), "treemode")
+            self_settings = self.settings.getboolean(self.settingsSection(), "treemode")
+            log.debug(f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !")
+            return self_settings
+            # treeMode_found = self.settings.getboolean(self.settingsSection(), "treemode")
+            # log.debug(f"Taskviewer.isTreeViewer : renvoie treeMode_found {treeMode_found}.")
+            # return treeMode_found
+        # Pourquoi cela corrige le problème ?
+        #
+        #     Suppression du f-string fatal : J'ai retiré la ligne
+        #     log.debug(f"... {self.presentation().treeMode()}.") qui se trouvait avant le try.
+        #     C'est elle qui provoquait le crash immédiat en forçant
+        #     l'accès à une variable non initialisée.
+        #
+        #     Gestion de l'initialisation : Lors du démarrage (__init__),
+        #     le bloc try va échouer (AttributeError).
+        #     Le code passera alors dans le bloc except,
+        #     qui ira chercher la valeur treemode directement
+        #     dans les fichiers de configuration (self.settings),
+        #     ce qui est la procédure correcte
+        #     tant que l'interface n'est pas totalement chargée.
 
     def showColumn(self, column, show=True, *args, **kwargs):
         """Affiche ou masque une colonne et gère le rafraîchissement."""
@@ -2119,7 +2187,8 @@ class Taskviewer(
         """Vérifie si la sélection actuelle est une instance de la classe spécifiée."""
         return class_ == task.Task
 
-    def createWidget(self):
+    # def createWidget(self):
+    def createWidget(self, parent):
         # def _create_widgets(self):
         """
         Crée le widget de l'arborescence des tâches et configure les colonnes et les événements.
@@ -2144,12 +2213,21 @@ class Taskviewer(
         itemPopupMenu = self.createTaskPopupMenu()
         columnPopupMenu = self.createColumnPopupMenu()
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
+        # ... (votre code existant pour préparer les kwargs) ...
+        kwargs = self.widgetCreationKeywordArguments()
+
+        # IMPORTANT : Assurez-vous que l'option problématique est retirée soit ici,
+        # soit dans treectrltk.py (comme suggéré dans la correction 1, ce qui est plus propre).
+        # Si vous n'avez pas encore modifié treectrltk.py, ajoutez la ligne suivante ici :
+        # kwargs.pop('resizeableColumn', None)
 
         # Création du widget principal (TreeListCtrl pour Tkinter)
         try:
             widget = treectrltk.TreeListCtrl(
                 self,
-                self.columns(),
+                parent,  # ou self.parent ?
+                # self.columns(),
+                self.visibleColumns(),
                 self.onSelect,
                 uicommand.Edit(viewer=self),
                 uicommand.TaskDragAndDrop(taskList=self.presentation(), viewer=self),
@@ -2157,12 +2235,13 @@ class Taskviewer(
                 columnPopupMenu,
                 resizeableColumn=1 if self.hasOrderingColumn() else 0,
                 validateDrag=self.validateDrag,
-                **self.widgetCreationKeywordArguments()
+                # **self.widgetCreationKeywordArguments()
+                **kwargs
             )
 
             # Configuration du widget
             if self.hasOrderingColumn():
-                widget.SetMainColumn(1)  # SetMainColumn est une fonction d'hypertreelist !
+                widget.SetMainColumn(1)  # TODO : SetMainColumn est une fonction d'hypertreelist !
                 # SetMainColumn(self, column)
                 # Définit la colonne principale HyperTreeList (c’est-à-dire la position du CustomTreeCtrl sous-jacent.[ #]
                 # Paramètres :
@@ -2185,21 +2264,25 @@ class Taskviewer(
             widget.pack(fill="both", expand=True)
             # self.tree.pack(fill="both", expand=True)
 
-            self.columns = self.createColumns()
+            # self.columns = self.createColumns()
+            columns = self.createColumns()
 
             # self.tree["columns"] = [c.value for c in self.columns]
-            # widget["columns"] = [c.value for c in self.columns]
-            widget["columns"] = [c.name for c in self.columns]
+            widget["columns"] = [c.value for c in columns]
+            # widget["columns"] = [c.name() for c in columns]
             # self.tree.heading("#0", text=_("Sujet"))
             widget.heading("#0", text=_("Sujet"))
             # self.tree.column("#0", width=300)
             widget.column("#0", width=300)
 
-            for col in self.columns:
+            # for col in self._columns:
+            for col in columns:
                 # self.tree.heading(col.value, text=col.menuText, command=lambda c=col.value: self._on_column_click(c))
                 widget.heading(col.value, text=col.menuText, command=lambda c=col.value: self._on_column_click(c))
+                # widget.heading(col.name, text=col.header, command=lambda c=col.name: self._on_column_click(c))
                 # self.tree.column(col.value, width=150)
                 widget.column(col.value, width=150)
+                # widget.column(col.name, width=150)
 
             self._populate_tree()
 
@@ -2219,6 +2302,14 @@ class Taskviewer(
             # self.tree.bind("<ButtonRelease-1>", self.on_drop)
             widget.bind("<ButtonRelease-1>", self.on_drop)
 
+        # --- CORRECTION 2 : Assigner le widget à self.tree ---
+        # C'est la référence que les méthodes Taskviewer s'attendent à trouver.
+        # TODO : à remodifier pour retrouver self.widget !
+        self.tree = widget
+
+        # La classe Viewer dans basetk.py s'attend à ce que l'objet soit retourné ou
+        # stocké dans self.widget.
+        self.widget = widget
         log.debug("Taskviewer.createWidget : Le widget de l'arborescence des tâches est sensé être affiché !")
         log.debug("Taskviewer.createWidget : Widget créé.")
         return widget
@@ -2308,7 +2399,10 @@ class Taskviewer(
         print(f"Éléments sélectionnés : {selected_items}")
 
     def _createColumns(self):
-        """Crée les colonnes du visualiseur."""
+        """
+        Crée les colonnes du visualiseur.
+        (createWidget de TaskViewer et CheckableTaskViewer).
+        """
         kwargs = dict(resizeCallback=self.onResizeColumn)
         columns = []
 
@@ -2374,7 +2468,7 @@ class Taskviewer(
         except Exception as e:
             log.error(f"Erreur lors de la création des colonnes: {e}", exc_info=True)
 
-        log.debug(f"TaskViewer._createColumns : {len(columns)} colonnes créées.")
+        log.debug(f"TaskViewer._createColumns : {len(columns)} colonnes créées : {columns}.")
         return columns
 
     # def createColumns(self) -> List[uicommand.UICommand]:
@@ -2893,10 +2987,28 @@ class Taskviewer(
         ]
         return commands
 
+    # L'erreur AttributeError: 'NoneType' object has no attribute 'lower' se produit dans configparser.py lorsqu'il essaie de lire une option de configuration.
+    #
+    # Voici la chaîne de causalité :
+    #
+    #     uicommand.TaskViewerTreeOrListChoice est instancié.
+    #
+    #     Il hérite (via uicommandtk) de SettingsUICommand (dans settings_uicommandtk.py).
+    #
+    #     Le constructeur __init__ de SettingsUICommand tente de créer une tk.BooleanVar en lisant la valeur actuelle du paramètre : self.settings.getboolean(self.section, self.setting).
+    #
+    #     self.setting est None parce qu'il n'a pas été passé lors de l'instanciation.
+    #
+    #     configparser reçoit None comme nom d'option et plante en essayant de faire .lower() dessus.
     def createModeToolBarUICommands(self):
         """Crée des commandes UI pour la barre d'outils (modes)."""
+        # Il faut explicitement indiquer quel paramètre (setting)
+        # cette commande doit contrôler. Dans le cas du choix "Arbre ou Liste",
+        # le paramètre est "treemode".
         treeOrListUICommand = uicommand.TaskViewerTreeOrListChoice(
-            viewer=self, settings=self.settings
+            viewer=self,
+            settings=self.settings,
+            setting="treemode"  # AJOUT IMPORTANT : Cela permettra à SettingsUICommand de savoir qu'il doit lire la valeur treemode dans le fichier de configuration, évitant ainsi le NoneType.
         )
         return super().createModeToolBarUICommands() + (treeOrListUICommand,)
 
@@ -3184,16 +3296,19 @@ class Taskviewer(
             self.tree.delete(item)
         messagebox.showinfo("Action", _("Tâches sélectionnées supprimées."))
 
-    def curselection(self) -> List[Any]:
-        """Retourne la liste des tâches sélectionnées (simulation)."""
-        # Ceci est une simulation, dans un vrai projet, il faudrait lier les items aux objets de domaine
-        # return [domain.task(self.tree.item(item, "text"), None, 0) for item in self.tree.selection()]
-        return [domain.task.Task(self.tree.item(item, "text"), None, 0) for item in self.tree.selection()]
+    # curselection est sensé être dans Viewer !
+    # def curselection(self) -> List[Any]:
+    #     """Retourne la liste des tâches sélectionnées (simulation)."""
+    #     # Ceci est une simulation, dans un vrai projet,
+    #     # il faudrait lier les items aux objets de domaine
+    #     # return [domain.task(self.tree.item(item, "text"), None, 0) for item in self.tree.selection()]
+    #     return [domain.task.Task(self.tree.item(item, "text"), None, 0) for item in self.tree.selection()]
 
-    def presentation(self) -> List[Any]:
-        """Retourne la liste complète des tâches (simulation)."""
-        # Ceci est une simulation, dans un vrai projet, il faudrait retourner la liste des objets de domaine
-        return self.taskFile.tasks()
+    # def presentation(self) -> List[Any]:
+    #     """Retourne la liste complète des tâches (simulation)."""
+    #     # Ceci est une simulation, dans un vrai projet, il faudrait retourner la liste des objets de domaine
+    #     return self.taskFile.tasks()
+    #     # Presentation doit être dans basetk.Viewer !
 
     def domainObjectsToView(self):
         """Retourne les objets du domaine que cette visionneuse doit afficher."""
@@ -3358,23 +3473,24 @@ class TaskStatsViewer(BaseTaskViewer):  # pylint: disable=W0223
     defaultTitle = _("Task statistics")
     defaultBitmap = "charts_icon"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         kwargs.setdefault("settingsSection", "taskstatsviewer")
-        super().__init__(*args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
         pub.subscribe(
             self.onPieChartAngleChanged,
             "settings.%s.piechartangle" % self.settingsSection(),
             )
 
-    def createWidget(self):
+    def createWidget(self, parent):
         # TODO: Implémenter un diagramme circulaire avec Tkinter (Canvas ou une librairie externe)
+
         # Pour l'instant, on utilise un simple Label pour placeholder
-        widget = tk.Label(self, text="Diagramme circulaire Tkinter à implémenter")
-        # widget = wx.lib.agw.piectrl.PieCtrl(self) # A remplacer
+        widget = tk.Label(self, text="Diagramme circulaire Tkinter à implémenter")  # TODO : à remplacer par la suite !
+        # widget = wx.lib.agw.piectrl.PieCtrl(self)  # A remplacer
         # widget.SetShowEdges(False) # A remplacer
         # widget.SetHeight(20) # A remplacer
         self.initLegend(widget)
-        # for dummy in task.Task.possibleStatuses(): # A remplacer
+        # for dummy in task.Task.possibleStatuses():  # A remplacer
         #     widget._series.append(
         #         wx.lib.agw.piectrl.PiePart(1)
         #     )  # pylint: disable=W0212
