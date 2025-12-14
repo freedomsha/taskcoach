@@ -20,7 +20,9 @@ import configparser
 import logging
 import os
 import sys
-import wx
+import tkinter as tk  # TODO : mettre les condition pour le choix entre tkinter et wx
+from tkinter import messagebox
+# import wx
 import shutil
 
 # from taskcoachlib.thirdparty.pubsub import pub
@@ -31,6 +33,11 @@ from taskcoachlib import meta, patterns, operating_system
 from taskcoachlib.i18n import _
 # from taskcoachlib.workarounds import ExceptionAsUnicode  # unused import
 from . import defaults
+# from ..application import Application
+# from taskcoachlib.application.application import Application
+# ImportError: cannot import name 'Application' from partially initialized module
+# 'taskcoachlib.application' (most likely due to a circular import)
+# (/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/application/__init__.py)
 
 log = logging.getLogger(__name__)
 
@@ -181,13 +188,14 @@ class Settings(CachingConfigParser):
     y compris la gestion des valeurs par défaut et la migration des fichiers de configuration.
     """
 
-    def __init__(self, load=True, iniFile=None, *args, **kwargs):
+    def __init__(self, load=True, iniFile=None, gui_used="tk", *args, **kwargs):
         """
         Initialisez l'objet Paramètres.
 
         Args :
             load (bool, optional) : s'il faut charger les paramètres à partir du fichier. La valeur par défaut est True.
             iniFile (str, optional) : le chemin d'accès au fichier .ini. La valeur par défaut est Aucun.
+            guiused (str) : Nom du GUI utilisé.
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
         """
@@ -197,7 +205,7 @@ class Settings(CachingConfigParser):
         log.debug(f"  iniFile (reçu par Settings): {iniFile}")
         log.debug(f"  *args (reçus par Settings): {args}")
         log.debug(f"  **kwargs (reçus par Settings): {kwargs}")
-        log.debug("Settings : Initialisation MRO:", Settings.__mro__)
+        # log.debug("Settings : Initialisation MRO:", Settings.__mro__)
         # Soupir, ConfigParser.SafeConfigParser est une classe à l'ancienne, donc nous
         # devons appeler explicitement la superclasse __init__ :
         CachingConfigParser.__init__(self, *args, **kwargs)
@@ -206,6 +214,13 @@ class Settings(CachingConfigParser):
         self.__loadAndSave = load
         self.__iniFileSpecifiedOnCommandLine = iniFile
         self.migrateConfigurationFiles()
+        self.gui_used = gui_used
+        if self.gui_used == "wx":
+            # import wx  # TODO : Trouver le moyen d'implémenter wx sans wx.App ou créer un autre fichier wxsettings.
+            self.wx = None  # wx quand ce sera corrigé !
+            self.MessageboxUsed = self.wx.MessageBox
+        elif self.gui_used == "tk":
+            self.MessageboxUsed = messagebox.showerror
         # Ensure errorMessage is initialized
         errorMessage = None
         if load:
@@ -232,6 +247,7 @@ class Settings(CachingConfigParser):
             self.onSettingsFileLocationChanged,
             "settings.file.saveinifileinprogramdir",
         )  # Envoie un message de notification à onSettingsFileLocationChanged
+        log.info("Settings.__init__ terminé avec succès !")
 
     def onSettingsFileLocationChanged(self, value):
         """
@@ -395,7 +411,7 @@ class Settings(CachingConfigParser):
         # Profilage: Utiliser un profileur pour identifier les goulots d'étranglement
         # et optimiser les parties les plus lentes du code.
         if not section or not option:
-            raise ValueError("Section et option doivent être des chaînes non vides.")
+            raise ValueError("Settings.getDefault : Section et option doivent être des chaînes non vides.")
 
         defaultSectionKey = section.strip("0123456789")  # Suppression des chiffres non pertinents
         # try:
@@ -622,7 +638,16 @@ class Settings(CachingConfigParser):
         Returns :
             bool : La valeur booléenne.
         """
-        return self.getEvaluatedValue(section, option, self.evalBoolean)
+        # return self.getEvaluatedValue(section, option, self.evalBoolean)
+        try:
+            return self.getEvaluatedValue(section, option, self.evalBoolean)
+        except ValueError:
+            # Si la conversion en booléen échoue, renvoyez une valeur par défaut.
+            # L'erreur `ValueError: invalid literal for Boolean value: '(22, 22)'`
+            # indique que le paramètre "view", "toolbar" n'est pas une valeur booléenne.
+            # Nous renvoyons True par défaut pour que l'application puisse continuer.
+            log.warning(f"Settings.getboolean : La valeur pour [{section}] {option} n'est pas un booléen valide. Utilisation de la valeur par défaut True.")
+            return True
 
     def gettext(self, section, option):
         # def gettext(self, section, option) -> str:
@@ -661,8 +686,12 @@ class Settings(CachingConfigParser):
                 f"invalid literal for Boolean value: '{stringValue}'"
             )
 
+    # if Application._options.gui_name == "wx":
+    # def getEvaluatedValue(
+    #     self, section, option, evaluate=eval, showerror=wx.MessageBox
+    # ):
     def getEvaluatedValue(
-        self, section, option, evaluate=eval, showerror=wx.MessageBox
+        self, section, option, evaluate=eval,
     ):
         # def getEvaluatedValue(
         #         self, section: str, option: str, evaluate=eval, showerror=wx.MessageBox
@@ -687,7 +716,7 @@ class Settings(CachingConfigParser):
                 [
                     # _("Error while reading the %s-%s setting from %s.ini.")
                     # % (section, option, meta.filename),
-                    _(f"Error while reading the {section}-{option} setting from {meta.filename}.ini."),
+                    _(f"Error while reading the {section}.{option} setting from {meta.filename}.ini."),
                     # _("The value is: %s") % stringValue,
                     _(f"The value is: {stringValue}"),
                     # _("The error is: %s") % exceptionMessage,
@@ -701,17 +730,26 @@ class Settings(CachingConfigParser):
                     ),
                 ]
             )
-            showerror(
-                message, caption=_("Settings error"), style=wx.ICON_ERROR
-            )
+            if self.gui_used == "wx" and self.wx:
+                self.wx.MessageBox(
+                    message, caption=_("Settings error"), style=self.wx.ICON_ERROR
+                )
+            elif self.gui_used == "tk":
+                messagebox.showerror(
+                    _("Settings error"), message
+                )
+            log.error(message)
             defaultValue = self.getDefault(section, option)
             self.set(
                 section, option, defaultValue, new=True
             )  # Ignore current value
             return evaluate(defaultValue)
 
+    # def save(
+    #     self, showerror=wx.MessageBox, file=open
+    # ):  # pylint: disable=W0622
     def save(
-        self, showerror=wx.MessageBox, file=open
+        self, file=open
     ):  # pylint: disable=W0622
         """
         Enregistrez les paramètres dans un fichier.
@@ -727,11 +765,14 @@ class Settings(CachingConfigParser):
         #     "%s-%s @ %s"
         #     % (wx.VERSION_STRING, wx.PlatformInfo[2], wx.PlatformInfo[1]),
         # )
-        self.set(
-            "version",
-            "wxpython",
-            f"{wx.VERSION_STRING}-{wx.PlatformInfo[2]} @ {wx.PlatformInfo[1]}",
-        )
+        if self.gui_used == "wx" and self.wx:
+            self.set(
+                "version",
+                "wxpython",
+                f"{self.wx.VERSION_STRING}-{self.wx.PlatformInfo[2]} @ {self.wx.PlatformInfo[1]}",
+            )
+        elif self.gui_used == "tk":
+            self.set("version", "tkinter", f"{tk.TkVersion}")
         self.set("version", "pythonfrozen", str(hasattr(sys, "frozen")))
         self.set("version", "current", meta.data.version)
         if not self.__loadAndSave:
@@ -747,13 +788,83 @@ class Settings(CachingConfigParser):
                 os.remove(self.filename())
             os.rename(self.filename() + ".tmp", self.filename())
         except Exception as message:  # pylint: disable=W0703
-            showerror(
-                # _("Error while saving %s.ini:\n%s\n")
-                # % (meta.filename, message),
-                _(f"Error while saving {meta.filename}.ini:\n{message}\n"),
-                caption=_("Save error"),
-                style=wx.ICON_ERROR,
-            )
+            if self.gui_used == "wx" and self.wx:
+                self.wx.MessageBox(
+                    # _("Error while saving %s.ini:\n%s\n")
+                    # % (meta.filename, message),
+                    _(f"Error while saving {meta.filename}.ini:\n{message}\n"),
+                    caption=_("Save error"),
+                    style=self.wx.ICON_ERROR,
+                )
+            elif self.gui_used == "tk":
+                messagebox.showerror(
+                    _("Save error"),
+                    _(f"Error while saving {meta.filename}.ini:\n{message}\n")
+                )
+
+    # if Application._options.gui_name == "tk":
+    #     def getEvaluatedValue(
+    #         self, section, option, evaluate=eval, showerror=messagebox.showerror
+    #     ):
+    #         """
+    #         Obtenez une valeur à partir des paramètres et évaluez-la.
+    #
+    #         Args :
+    #             section (str) : Le nom de la section.
+    #             option (str) : Le nom de l'option.
+    #             evaluate (fonction, optional) : La fonction pour évaluer la valeur. La valeur par défaut est eval.
+    #             showerror (fonction, optional) : la fonction pour afficher les erreurs. La valeur par défaut est wx.MessageBox.
+    #
+    #         Returns :
+    #             La valeur évaluée.
+    #         """
+    #         stringValue = self.get(section, option)
+    #         try:
+    #             return evaluate(stringValue)
+    #         except Exception as exceptionMessage:
+    #             message = "\n".join(
+    #                 [
+    #                     f"Error while reading the {section}-{option} setting from {meta.filename}.ini.",
+    #                     f"The value is: {stringValue}",
+    #                     f"The error is: {exceptionMessage}",
+    #                     f"{meta.name} will use the default value for the setting and should proceed normally."
+    #                 ]
+    #             )
+    #             showerror(message, "Settings error")
+    #             defaultValue = self.getDefault(section, option)
+    #             self.set(section, option, defaultValue, new=True)  # Ignore current value
+    #             return evaluate(defaultValue)
+    #
+    #     def save(
+    #         self, showerror=messagebox.showerror, file=open
+    #     ):  # pylint: disable=W0622
+    #         """
+    #         Enregistrez les paramètres dans un fichier.
+    #
+    #         Args :
+    #             showerror (fonction, optional) : La fonction pour afficher les erreurs. La valeur par défaut est le fichier wx.MessageBox.
+    #             file (fonction, optional) : La fonction pour ouvrir les fichiers. Par défaut, open.
+    #         """
+    #         self.set("version", "python", sys.version)
+    #         self.set("version", "tkinter", f"{tk.TkVersion}")
+    #         self.set("version", "pythonfrozen", str(hasattr(sys, "frozen")))
+    #         self.set("version", "current", meta.data.version)
+    #
+    #         if not self.__loadAndSave:
+    #             return
+    #
+    #         try:
+    #             path = self.path()
+    #             if not os.path.exists(path):
+    #                 os.mkdir(path)
+    #             tmpFile = file(self.filename() + ".tmp", "w")
+    #             self.write(tmpFile)
+    #             tmpFile.close()
+    #             if os.path.exists(self.filename()):
+    #                 os.remove(self.filename())
+    #             os.rename(self.filename() + ".tmp", self.filename())
+    #         except Exception as message:
+    #             showerror(f"Error while saving {meta.filename}.ini:\n{message}\n", "Save error")
 
     def filename(self, forceProgramDir=False):
         # def filename(self, forceProgramDir: bool = False) -> str:
