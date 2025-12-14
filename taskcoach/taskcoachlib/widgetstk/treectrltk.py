@@ -954,7 +954,9 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
             self.editCommand(self.getItemWithId(item_id))
 
     def __on_right_click_item(self, event):
-        """ Affiche le menu contextuel de l'élément. """
+        # def on_right_click(self, event):
+        """Gère le clic droit pour le menu contextuel.
+        Affiche le menu contextuel de l'élément. """
         item_id = self.identify_row(event.y)
         if item_id:
             self.selection_set(item_id)
