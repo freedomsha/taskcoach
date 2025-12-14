@@ -25,6 +25,7 @@ L'attribut _window est essentiel car il représente la fenêtre Tkinter
 
 import logging
 import tkinter as tk
+from tkinter import ttk
 # from tkinter import Menu
 
 # Assurez-vous que taskcoachlib.gui.newid existe et est compatible avec Tkinter
@@ -66,6 +67,7 @@ class UICommandContainerMixin(object):
         if not hasattr(self, "_window") or self._window is None:
             log.warning("UICommandContainerMixin.appendUICommands : l'attribut _window est manquant ou None.")
             return
+            self._window = self.MainMenu
 
         if not uiCommands:
             log.warning("Aucune UICommand n’a été fournie à appendUICommands.")
@@ -79,6 +81,12 @@ class UICommandContainerMixin(object):
                 self.add_separator()
                 log.debug("UICommandContainerMixin.appendUICommands : ajoute un séparateur !")
                 # self.add_separator()
+            # elif isinstance(uiCommand, (str, str)):  # TODO : A convertir ?
+            #     label = wx.MenuItem(self, text=uiCommand)
+            #     # must append item before disable to insure
+            #     # that internal object exists
+            #     self.AppendItem(label)
+            #     label.Enable(False)
             elif isinstance(uiCommand, tuple):
                 # tuple : Crée un sous-menu et y ajoute les commandes UI.
                 menuTitle, menuUICommands = uiCommand[0], uiCommand[1:]
@@ -123,11 +131,13 @@ class UICommandContainerMixin(object):
         raise NotImplementedError("La méthode 'appendUICommand' doit être implémentée par la classe qui utilise ce mixin.")
 
     def add_separator(self):
+        # def appendSeparator(self):
         """
-        Ajoute un séparateur.
+        Ajoute un séparateur à la barre d'outils.
         Cette méthode doit être implémentée par la classe qui utilise ce mixin.
         """
-        self.add_separator()
+        # self.add_separator()
+        ttk.Separator(self, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=2)
         # raise NotImplementedError("La méthode 'AppendSeparator' doit être implémentée par la classe qui utilise ce mixin.")
 
     # def add_cascade(self, label, menu):
