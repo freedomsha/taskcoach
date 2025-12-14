@@ -112,7 +112,6 @@ vers tkinter.
 #     J'ai également ajouté le focus_set() et le bind('<Key>', self.on_key_press)
 #     pour que le widget puisse écouter les événements clavier.
 #
-#     draw_timeline() : Cette méthode est maintenant le point d'entrée principal pour le dessin. Elle calcule les limites temporelles de l'ensemble du modèle et appelle draw_parallel_children.
 #     draw_timeline() : Cette méthode est maintenant le point d'entrée principal pour le dessin.
 #     Elle calcule les limites temporelles de l'ensemble du modèle et appelle draw_parallel_children.
 #
