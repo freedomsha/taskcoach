@@ -102,7 +102,11 @@ class ToolTipMixin(object):
     def __init__(self, *args, **kwargs):
         # def __init__(self, parent, id=wx.ID_ANY,  *args, **kwargs):
         log.debug(f"ToolTipMixin.__init__ : avant super args={args}, kwargs={kwargs}")
-        super().__init__(*args, **kwargs)
+        try:
+            super().__init__(*args, **kwargs)
+        except Exception as e:
+            log.error("La méthode super pose problème", exc_info=True)
+            log.debug(f"Plante après ça !")
         self.__enabled = kwargs.pop("tooltipsEnabled", True)
         # super().__init__(parent, id, *args, **kwargs)
 
@@ -121,74 +125,77 @@ class ToolTipMixin(object):
         self.Bind(wx.EVT_TIMER, self.__OnTimer, id=self.__timer.GetId())
         log.debug(f"ToolTipMixin initialisé !")
 
-    # Cette méthode ne passe pas le test TreeCtrlTest ! :
-    def GetMainWindow(self):
-        """
-        Retourne la fenêtre principale associée à ce widget.
+    # # Cette méthode ne passe pas le test TreeCtrlTest ! :
+    # def GetMainWindow(self):
+    #     """
+    #     Retourne la fenêtre principale associée à ce widget.
+    #
+    #     Doit être implémenté dans les classes qui utilisent ce mixin.
+    #     Si cette méthode n'est pas redéfinie, une exception est levée.
+    #
+    #     Returns :
+    #         (wx.Window) : La fenêtre principale associée.
+    #
+    #     Raises :
+    #         NotImplementedError : Si la méthode n'est pas implémentée dans
+    #                               la classe finale.
+    #     """
+    #     # raise NotImplementedError(
+    #     #     "GetMainWindow doit être implémenté dans une sous-classe qui utilise ToolTipMixin."
+    #     # )
+    #     # Utiliser un mécanisme basé sur wx.GetTopLevelParent comme solution de secours
+    #     #
+    #     # Si ToolTipMixin est toujours utilisé dans des widgets wxPython,
+    #     # ajouter une implémentation par défaut basée sur wx.GetTopLevelParent.
+    #     # Cela couvre les cas où GetMainWindow n'est pas explicitement défini dans une sous-classe.
+    #     # """
+    #     # Retourne la fenêtre principale associée à ce widget en utilisant
+    #     # `wx.GetTopLevelParent`.
+    #     #
+    #     # Cette méthode peut être redéfinie dans les sous-classes si nécessaire.
+    #     #
+    #     # Returns :
+    #     #     wx.Window : La fenêtre principale du widget.
+    #     # """
+    #     if isinstance(self, wx.Window):
+    #         return wx.GetTopLevelParent(self)
+    #     return None
 
-        Doit être implémenté dans les classes qui utilisent ce mixin.
-        Si cette méthode n'est pas redéfinie, une exception est levée.
+    # def Bind(self, event, handler, *args, **kwargs):
+    #     """
+    #     Lie un événement à un gestionnaire si la méthode est disponible.
+    #
+    #     Args :
+    #         event : Type d'événement à lier.
+    #         handler : Gestionnaire à exécuter lorsque l'événement est déclenché.
+    #     """
+    #     log.debug("ToolTipMixin.Bind : Essaie de lier un événement {event} avec un gestionnaire {handler} si disponible.")
+    #     if hasattr(super(), "Bind"):
+    #         return super().Bind(event, handler, *args, **kwargs)
+    #     raise NotImplementedError(
+    #         "Bind est indisponible dans cette classe. "
+    #         "Assurez-vous que ToolTipMixin est utilisé avec une classe wxPython."
+    #     )
 
-        Returns :
-            (wx.Window) : La fenêtre principale associée.
-
-        Raises :
-            NotImplementedError : Si la méthode n'est pas implémentée dans
-                                  la classe finale.
-        """
-        # raise NotImplementedError(
-        #     "GetMainWindow doit être implémenté dans une sous-classe qui utilise ToolTipMixin."
-        # )
-        # Utiliser un mécanisme basé sur wx.GetTopLevelParent comme solution de secours
-        #
-        # Si ToolTipMixin est toujours utilisé dans des widgets wxPython,
-        # ajouter une implémentation par défaut basée sur wx.GetTopLevelParent.
-        # Cela couvre les cas où GetMainWindow n'est pas explicitement défini dans une sous-classe.
-        # """
-        # Retourne la fenêtre principale associée à ce widget en utilisant
-        # `wx.GetTopLevelParent`.
-        #
-        # Cette méthode peut être redéfinie dans les sous-classes si nécessaire.
-        #
-        # Returns :
-        #     wx.Window : La fenêtre principale du widget.
-        # """
-        if isinstance(self, wx.Window):
-            return wx.GetTopLevelParent(self)
-        return None
-
-    def Bind(self, event, handler, *args, **kwargs):
-        """
-        Lie un événement à un gestionnaire si la méthode est disponible.
-
-        Args :
-            event : Type d'événement à lier.
-            handler : Gestionnaire à exécuter lorsque l'événement est déclenché.
-        """
-        if hasattr(super(), "Bind"):
-            return super().Bind(event, handler, *args, **kwargs)
-        raise NotImplementedError(
-            "Bind est indisponible dans cette classe. "
-            "Assurez-vous que ToolTipMixin est utilisé avec une classe wxPython."
-        )
-
-    def ClientToScreenXY(self, x, y):
-        """
-        Convertit les coordonnées du client en coordonnées de l'écran.
-
-        Args :
-            x (int) : Coordonnée X dans le référentiel local du client.
-            y (int) : Coordonnée Y dans le référentiel local du client.
-
-        Returns :
-            tuple : Coordonnées X et Y dans le référentiel de l'écran.
-        """
-        if hasattr(super(), "ClientToScreenXY"):
-            return super().ClientToScreenXY(x, y)
-        raise NotImplementedError(
-            "ClientToScreenXY est indisponible. Cette méthode nécessite "
-            "un widget wxPython valide."
-        )
+    # def ClientToScreenXY(self, x, y):
+    #     """
+    #     Convertit les coordonnées du client en coordonnées de l'écran.
+    #
+    #     Args :
+    #         x (int) : Coordonnée X dans le référentiel local du client.
+    #         y (int) : Coordonnée Y dans le référentiel local du client.
+    #
+    #     Returns :
+    #         tuple : Coordonnées X et Y dans le référentiel de l'écran.
+    #     """
+    #     if hasattr(super(), "ClientToScreenXY"):
+    #         return super().ClientToScreenXY(x, y)
+    #     elif hasattr(super(), "ClientToScreen"):
+    #         return super().ClientToScreen(x, y)
+    #     raise NotImplementedError(
+    #         "ClientToScreenXY est indisponible. Cette méthode nécessite "
+    #         "un widget wxPython valide."
+    #     )
 
     def SetToolTipsEnabled(self, enabled):
         """
@@ -324,7 +331,7 @@ if operating_system.isWindows():
             style = wx.FRAME_NO_TASKBAR | wx.FRAME_FLOAT_ON_PARENT | wx.NO_BORDER
             super().__init__(parent, wx.ID_ANY, "Tooltip", style=style)
 
-        def Show(self, x, y, w, h):  # pylint: disable=W0221 Window:def Show(self, show=True):
+        def Show(self, x, y, w, h, show):  # pylint: disable=W0221 Window:def Show(self, show=True):
             """
             Affiche l'info-bulle à la position spécifiée avec la taille donnée.
 
@@ -333,10 +340,14 @@ if operating_system.isWindows():
                 y (int) : Position Y de l'info-bulle.
                 w (int) : Largeur de l'info-bulle.
                 h (int) : Hauteur de l'info-bulle.
+                show (bool) :
             """
             # self.SetDimensions(x, y, w, h)
             self.SetSize(x, y, w, h)  # Inverser les 2 lignes ? non ?
-            super().Show()
+            try:
+                super().Show(show=show)
+            except Exception:
+                pass
 
 elif operating_system.isMac():
 
@@ -355,7 +366,10 @@ elif operating_system.isMac():
                 self.__maxHeight = max(self.__maxHeight, y + height)
 
             self.MoveXY(self.__maxWidth, self.__maxHeight)
-            super().Show()
+            try:
+                super().Show()
+            except Exception:
+                pass
 
         def Show(self, x, y, width, height):  # pylint: disable=W0221
             # self.SetDimensions(x, y, width, height)
@@ -367,10 +381,13 @@ elif operating_system.isMac():
 else:
 
     class ToolTipBase(wx.PopupWindow):
-        def Show(self, x, y, width, height):  # pylint: disable=E1003,W0221
+        def Show(self, x, y, width, height, show):  # pylint: disable=E1003,W0221
             # self.SetDimensions(x, y, width, height)
             self.SetSize(x, y, width, height)
-            super().Show()
+            try:
+                super().Show(show=show)  # méthode wx ! n'a pas d'équivalent sur tkinter.
+            except Exception:
+                pass
 
 
 class SimpleToolTip(ToolTipBase):
