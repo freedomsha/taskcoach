@@ -1079,7 +1079,9 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
 
     def clear_selection(self):
         """ Désélectionne tous les éléments. """
-        self.selection_remove(self.selection())
+        # self.selection_remove(self.selection())
+        for item in self.selection():
+            self.selection_remove(item)
 
     # def select(self, selection):
     #     """ Sélectionne les éléments de la liste 'selection'. """
