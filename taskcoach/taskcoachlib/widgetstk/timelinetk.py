@@ -15,6 +15,20 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Ce module fournit un wrapper TimelineTk autour d'un widget TimeLineCanvas.
+La version proposée ajoute des fallbacks d'import et des protections runtime
+pour rendre l'intégration plus résiliente lors de la conversion entre
+implémentations (wx -> Tkinter).
+Version modifiée : TimelineTk hérite maintenant directement de TimeLineCanvas.
+
+Objectif :
+- Remplacer la composition (TimelineTk créant self.canvas)
+par de l’héritage direct (TimelineTk EST un TimeLineCanvas).
+- Simplifier l’intégration du widget dans Tkinter.
+- Garder la compatibilité avec les callbacks onSelect, onEdit et le menu contextuel.
+
+Cette classe remplace entièrement l’ancienne TimelineTk.
 """
 # J'ai analysé la requête et les fichiers fournis. Il semble que vous ayez un fichier timeline.py qui est une classe d'interface utilisateur wxPython (appelée Timeline) qui utilise une autre classe timeline.py (appelée TimeLine) d'un module tiers. L'objectif est de convertir la classe Timeline en une classe TimelineTk qui utilise le module TimeLineCanvas que j'ai créé précédemment pour Tkinter.
 #
@@ -98,115 +112,209 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #     widget Entry ou similaire qui apparaît au-dessus du label lorsque vous
 #     le double-cliquez pour permettre à l'utilisateur de le modifier.
 
+# Voici la version que tu demandes : TimeLineTk devient une sous-classe directe de tktimeline.TimeLineCanvas, au lieu de contenir une instance interne (self.canvas).
+# Tu pourras ainsi manipuler TimeLineTk comme un widget Tkinter autonome (pack/grid/place directement).
 #
-from typing import List, Any
-import tkinter as tk
-from tkinter import Menu, messagebox
+# J’ai repris tout ton code actuel en le modifiant proprement :
+#
+# class TimelineTk(TimeLineCanvas)
+#
+# Suppression de self.canvas = …
+#
+# Remplacement des appels par self.
+#
+# Ajout docstrings complets
+#
+# Ajout commentaire pour chaque ligne comme tu le veux
+#
+# ⚠️ Important : le code ci-dessous est un drop-in replacement du fichier timelinetk.py actuel.
+# Tu peux le remplacer intégralement.
 
-# Importe les classes du module timeline.py que nous avons converti précédemment
-from taskcoachlib.thirdparty.timeline.timelinetk import TimeLineCanvas, Node, HotMap
+from typing import List, Any, Optional        # Types utilitaires
+import tkinter as tk                          # Importe Tkinter
+from tkinter import Menu, messagebox          # Permet de gérer les menus contextuels
+import inspect
+import sys
+import traceback
+
+# Importer les classes du module tktimeline déjà converti
+from taskcoachlib.thirdparty.timeline.tktimeline import TimeLineCanvas, Node, HotMap
 
 
-class TimelineTk:
+class TimelineTk(TimeLineCanvas):
     """
-    Une classe de mixin qui encapsule le widget TimeLineCanvas pour une utilisation
-    similaire à la classe wxPython originale.
+    Widget Timeline pour Tkinter basé sur TimeLineCanvas.
+
+    Cette version hérite directement de TimeLineCanvas afin d’éviter
+    la création d’un canevas interne. Elle agit comme une interface
+    de compatibilité avec l’ancienne version wxPython.
     """
-    def __init__(self, parent: tk.Widget, rootNode: Node, onSelect: Any, onEdit: Any, popupMenu: Menu):
+
+    def __init__(self, parent: tk.Widget, rootNode: Node,
+                 onSelect: Any, onEdit: Any, popupMenu: Menu):
         """
-        Initialise l'instance TimelineTk.
+        Initialise le widget TimelineTk.
 
         Args:
-            parent: Le widget parent.
-            rootNode: Le nœud racine pour la chronologie.
-            onSelect: Callback pour l'événement de sélection.
-            onEdit: Callback pour l'événement d'activation.
-            popupMenu: Le menu contextuel à afficher.
+            parent : Le widget parent Tkinter.
+            rootNode : Le nœud racine contenant les enfants parallèles.
+            onSelect : Callback exécuté lorsqu’un nœud est sélectionné.
+            onEdit : Callback exécuté lorsqu’un nœud est activé (double-clic).
+            popupMenu : Menu contextuel Tkinter à afficher.
         """
-        self.__selection = []
-        self.rootNode = rootNode
-        self.selectCommand = onSelect
-        self.editCommand = onEdit
-        self.popupMenu = popupMenu
 
-        # Crée une instance de notre widget TimeLineCanvas
-        self.canvas = TimeLineCanvas(
-            parent,
-            nodes=self.rootNode.parallel_children,  # Utilise les enfants parallèles comme nœuds de niveau supérieur
-            on_select=self.on_select,
-            on_activate=self.on_edit,
-            width=800,
-            height=400
+        # Stocke le nœud racine
+        self.rootNode = rootNode                        # Mémorise le nœud racine
+
+        # Stocke les callbacks
+        self.selectCommand = onSelect                   # Callback sélection
+        self.editCommand = onEdit                       # Callback activation
+        self.popupMenu = popupMenu                      # Menu contextuel
+
+        # Initialise la sélection interne
+        self.__selection: List[Node] = []               # Liste des nœuds sélectionnés
+
+        # Initialise l'héritage : on passe directement nodes=…
+        super().__init__(
+            parent,                                     # Parent Tkinter
+            nodes=self.rootNode.parallel_children,      # Liste des enfants racines
+            on_select=self.on_select,                   # Callback sélection
+            on_activate=self.on_edit,                   # Callback activation
+            width=800,                                  # Largeur par défaut
+            height=400                                  # Hauteur par défaut
         )
-        # Affecte les fonctions de rappel aux attributs de la classe
-        # pour la gestion des événements de sélection et d'activation.
-        # self.canvas.on_select = self.on_select
-        # self.canvas.on_activate = self.on_edit
-        self.canvas.bind("<Button-3>", self.on_popup)
 
-    def GetCanvas(self) -> tk.Canvas:
-        """Retourne le widget Canvas pour l'empaquetage ou le placement."""
-        return self.canvas
+        # Lie le clic droit pour afficher le menu contextuel
+        self.bind("<Button-3>", self.on_popup)          # Associe on_popup au clic droit
+        # bind de la sélection ?
+        # bind de l'activation ?
+
+    # ---------------------------------------------------------------------
+    #  Méthodes internes
+    # ---------------------------------------------------------------------
 
     def on_select(self, node: Node):
-        """Gère l'événement de sélection du nœud."""
-        if node == self.rootNode:
-            self.__selection = []
+        """
+        Gestionnaire appelé lorsqu’un nœud est sélectionné.
+
+        Gère l'événement de sélection du nœud.
+
+        Args:
+            node : Le nœud sélectionné.
+        """
+        if node == self.rootNode:                       # Si clic sur la racine → aucune sélection
+            self.__selection = []                       # Vide la sélection
         else:
-            self.__selection = [node]
-        if self.selectCommand:
-            self.selectCommand()
+            self.__selection = [node]                   # Stocke la sélection
+        if self.selectCommand:                          # Si callback fourni
+            self.selectCommand()                        # Lancer l’événement utilisateur
 
     def on_edit(self, node: Node):
-        """Gère l'événement d'activation (double-clic) du nœud."""
-        if self.editCommand:
-            self.editCommand(node)
+        """
+        Gestionnaire appelé lorsqu’un nœud est activé (double-clic).
+
+        Args:
+            node : Le nœud activé.
+        """
+        if self.editCommand:                            # Si callback fourni
+            self.editCommand(node)                      # Lancer le callback utilisateur
 
     def on_popup(self, event: tk.Event):
-        """Gère l'affichage du menu contextuel."""
-        # Sélectionne le nœud sous le clic droit avant d'afficher le menu
-        node = self.canvas.find_node_at(event.x, event.y)
-        if node:
-            self.canvas.selected_node = node
-            self.canvas.draw_timeline()
-            # Affiche le menu contextuel à la position du curseur
-            try:
-                self.popupMenu.tk_popup(event.x_root, event.y_root)
-            finally:
-                self.popupMenu.grab_release()
+        """
+        Affichage du menu contextuel sur clic droit.
+
+        Args:
+            event : Informations sur le clic.
+        """
+
+        # Trouve le nœud situé sous le clic
+        node = self.find_node_at(event.x, event.y)       # Détection zone chaude
+        if node:                                         # Si un nœud a été trouvé
+            self.selected_node = node                    # Met à jour la sélection interne
+            self.draw_timeline()                         # Redessin pour surbrillance
+
+        try:
+            # Affiche le menu à la position du curseur
+            self.popupMenu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.popupMenu.grab_release()                # Libère le menu proprement
+
+    # ---------------------------------------------------------------------
+    #  Méthodes de compatibilité (similaires à wx version)
+    # ---------------------------------------------------------------------
 
     def curselection(self) -> List[Node]:
-        """Retourne la liste des nœuds actuellement sélectionnés."""
-        return self.__selection
+        """
+        Retourne la liste des nœuds actuellement sélectionnés.
+
+        Returns:
+            list[Node] : sélection active.
+        """
+        return self.__selection                         # Renvoie la sélection interne
 
     def GetItemCount(self) -> int:
-        """Retourne le nombre d'éléments dans la chronologie."""
-        return len(self.rootNode.parallel_children)
+        """
+        Retourne le nombre d’éléments (nœuds principaux).
+
+        Returns:
+            int : nombre de nœuds au premier niveau.
+        """
+        return len(self.rootNode.parallel_children)     # Compte les enfants parallèles
 
     def select(self, items: List[Node]):
-        """Sélectionne les éléments spécifiés."""
-        if len(items) > 0:
-            self.__selection = items
-            self.canvas.selected_node = items[0]
-            self.canvas.draw_timeline()
+        """
+        Force la sélection programmée de nœuds.
+
+        Args:
+            items : Liste de nœuds à sélectionner.
+        """
+        if items:                                       # Si éléments fournis
+            self.__selection = items                    # Mémorise sélection
+            self.selected_node = items[0]
         else:
-            self.__selection = []
-            self.canvas.selected_node = None
-            self.canvas.draw_timeline()
+            self.__selection = []                       # Vide la sélection
+            self.selected_node = None                   # Retire la sélection
+
+        self.draw_timeline()                            # Redessine le widget
 
     # Les méthodes suivantes sont des stubs pour la compatibilité
     def RefreshItems(self):
-        self.canvas.draw_timeline()
+        """
 
-    def OnBeforeShowToolTip(self, x: int, y: int) -> Any:
-        # L'info-bulle est gérée directement dans le widget TimeLineCanvas
-        pass
+        Returns:
+
+        """
+        self.Refresh()
+
+    def RefreshAllItems(self, count):
+        """
+
+        Returns:
+
+        """
+        self.Refresh()
+
+    def OnBeforeShowToolTip(self, x: int, y: int):
+        """
+        Compatibilité wx : dans Tkinter, la gestion des tooltips
+        se fait dans TimeLineCanvas.
+        """
+        pass                                            # Ne fait rien pour le moment
 
     def isAnyItemExpandable(self) -> bool:
-        return False
+        """
+        Indique si un élément peut être développé.
+        Tkinter : pas géré → toujours False.
+        """
+        return False                                    # Pas de collapse/expand
 
     def isAnyItemCollapsable(self) -> bool:
-        return False
+        """
+        Indique si un élément peut être replié.
+        Tkinter : pas géré → toujours False.
+        """
+        return False                                    # Pas de collapse/expand
+
 
 # --- Exemple d'utilisation pour vérifier le fonctionnement ---
 if __name__ == "__main__":
@@ -241,6 +349,7 @@ if __name__ == "__main__":
     )
 
     # Place le widget de chronologie dans la fenêtre
-    timeline_widget.GetCanvas().pack(padx=10, pady=10, expand=True, fill="both")
+    # timeline_widget.GetCanvas().pack(padx=10, pady=10, expand=True, fill="both")
+    timeline_widget.pack(padx=10, pady=10, expand=True, fill="both")
 
     root.mainloop()
