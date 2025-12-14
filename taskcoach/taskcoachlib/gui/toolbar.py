@@ -391,7 +391,9 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         """
         Retourne la perspective actuelle de la barre d'outils sous forme de chaîne de caractères.
 
-        La perspective est une chaîne de caractères qui représente les commandes actuellement affichées sur la barre d'outils, dans l'ordre dans lequel elles apparaissent.
+        La perspective est une chaîne de caractères qui représente
+        les commandes actuellement affichées sur la barre d'outils,
+        dans l'ordre dans lequel elles apparaissent.
         """
         names = list()
         for uiCommand in self.__visibleUICommands:
@@ -506,6 +508,13 @@ class MainToolBar(ToolBar):
         """
         super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_SIZE, self._OnSize)
+        self._is_resizing = False
+        # Dernière taille initialisé avec la taille actuelle de la barre d'outils.
+        # Cela nous servira de point de référence pour déterminer si un changement "véritable" s'est produit.
+        # Permet de s'assurer qu'un nouvel événement de taille n'est planifié
+        # que si la taille de la barre d'outils a effectivement changé,
+        # plutôt que d'être déclenché par une cascade d'événements à partir d'un seul changement de taille.
+        self._last_size = self.GetSize()
 
     def _OnSize(self, event):
         """
@@ -517,13 +526,39 @@ class MainToolBar(ToolBar):
             event (wx.SizeEvent) : L'événement de redimensionnement.
         """
         event.Skip()
-        # On Windows XP, the sizes are off by 1 pixel. I fear that this value depends
-        # on the user's config so let's take some margin.
-        if abs(event.GetSize()[0] - self.GetParent().GetClientSize()[0]) >= 10:
-            # A surveiller : Ces appels à wx.CallAfter sont parfois asynchrones et silencieux en cas d'échec.
+        current_size = self.GetSize()
+        if self._is_resizing:
+            return
+        # # On Windows XP, the sizes are off by 1 pixel. I fear that this value depends
+        # # on the user's config so let's take some margin.
+        # if abs(event.GetSize()[0] - self.GetParent().GetClientSize()[0]) >= 10:
+        # Comparer la taille actuelle avec la dernière taille enregistrée :
+        if current_size != self._last_size:
+            # Mise à jour vers la nouvelle taille pour éviter les appels suivants si la taille reste la même.
+            self._last_size = current_size
+            # # A surveiller : Ces appels à wx.CallAfter sont parfois asynchrones et silencieux en cas d'échec.
+            # self._is_resizing = True
             log.debug("MainToolBar._OnSize : appel wx.CallAfter()")
+            # CallAfter ne sera exécuté que si la taille a effectivement changé.
             wx.CallAfter(self.GetParent().SendSizeEvent)
             log.debug("MainToolBar._OnSize : L'appel wx.CallAfter(GetParent.SendSizeEvent) est passé.")
+        #     self._is_resizing = False
+        # # Voici une ventilation du problème :
+        # #
+        # # Lorsqu’un événement de taille se produit, la méthode _OnSize est déclenchée.
+        # # Le code vérifie si la largeur de la barre d’outils est significativement
+        # # différente de la largeur du client de sa fenêtre parente (une différence de 10 pixels ou plus).
+        # #
+        # # Si la condition est remplie, wx. CallAfter est utilisé pour planifier un nouveau SendSizeEvent pour la fenêtre parente.
+        # #
+        # # À son tour, ce SendSizeEvent déclenchera probablement à nouveau la méthode _OnSize, car la taille de la fenêtre a changé.
+        # #
+        # # Cela crée une boucle récursive : un événement size appelle _OnSize, qui planifie ensuite un autre événement size, et ainsi de suite.
+        # #
+        # # Le commentaire dans le code lui-même suggère que ce comportement était une solution de contournement
+        # # pour un problème spécifique sous Windows XP, où les tailles étaient décalées d’un pixel.
+        # # Cependant, dans votre environnement actuel, il semble que la méthode s’appelle elle-même à plusieurs reprises,
+        # # ce qui conduit à la « boucle infinie » que vous observez.
 
     def Realize(self):
         """wx.lib.agw.aui.auibar.AuiToolBar.Realize Réalise la barre d'outils.
@@ -540,5 +575,7 @@ class MainToolBar(ToolBar):
         # w, h = self.GetParent().GetClientSizeTuple()
         w, h = self.GetParent().GetClientSize()
         wx.CallAfter(self.SetMinSize, (w, -1))
+        # Après les appels mise à jour pour nous assurer que notre suivi de taille est correct dès le départ.
+        self._last_size = self.GetSize()
         # log.debug("MainToolBar.Realize : L'appel wx.CallAfter(SetMinSize) est passé.")
         log.debug("MainToolBar.Realize : Les appels wx.CallAfter(SendSizeEvent & SetMinSize) sont passé avec succès.")
