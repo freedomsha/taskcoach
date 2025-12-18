@@ -1405,14 +1405,14 @@ class ToggleCategoryMenu(DynamicMenu):
                                                  viewer=self.viewer)
             log.debug(f"ToggleCategoryMenu.addMenuItemsForCategories : Ajout du sous-menu : {uiCommand} dans {menuToAdd} fenêtre {self._window}")
             uiCommand.addToMenu(menuToAdd, self._window)
-        categoriesWithChildren = [category for category in categories if category.get_domain_children()]
+        categoriesWithChildren = [category for category in categories if category.children()]
         if categoriesWithChildren:
             menuToAdd.AppendSeparator()
             for category in categoriesWithChildren:
                 # log.debug("ToggleCategoryMenu.addMenuItemsForCategories : est-ce là l'erreur!")
                 subMenu = Menu(self._window)
                 # log.debug(f"subMenu={subMenu}")
-                self.addMenuItemsForCategories(category.get_domain_children(), subMenu)
+                self.addMenuItemsForCategories(category.children(), subMenu)
                 # log.debug(f"ToggleCategoryMenu.addMenuItemsForCategories : Ajout du sous-menu : {self.subMenuLabel(category)}{subMenu} dans {menuToAdd}")
                 menuToAdd.AppendSubMenu(subMenu, self.subMenuLabel(category))
 
@@ -1465,7 +1465,7 @@ class StartEffortForTaskMenu(DynamicMenu):
         uiCommand = uicommand.EffortStartForTask(task=task, taskList=self.tasks)
         log.debug(f"StartEffortForTaskMenu.addMenuItemForTask Ajoute le menu {uiCommand} à {menuItem} fenêtre {self._window}")
         uiCommand.addToMenu(menuItem, self._window)
-        trackableChildren = [child for child in task.get_domain_children() if
+        trackableChildren = [child for child in task.children() if
                              child in self.tasks and not child.completed()]
         if trackableChildren:
             trackableChildren.sort(key=lambda child: child.subject())

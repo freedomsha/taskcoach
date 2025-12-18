@@ -1175,9 +1175,9 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
         # au lieu de tkinter.Misc.get_domain_children !
         print("TreeListCtrl._addObjectRecursively : self.__adapter est de type ", type(self.__adapter))
         # for child_object in self.__adapter.get_domain_children(parent_object):  # 'dict' object is not callable !
-        # for child_object in self.__adapter.children(parent_object):  # 'dict' object is not callable !
-        # LIGNE CORRIGÉE : Utiliser la méthode renommée 'get_domain_children' pour récupérer les objets de domaine.
-        for child_object in self.__adapter.get_domain_children(parent_object):
+        for child_object in self.__adapter.children(parent_object):  # 'dict' object is not callable !
+            # LIGNE CORRIGÉE : Utiliser la méthode renommée 'get_domain_children' pour récupérer les objets de domaine.
+            # for child_object in self.__adapter.get_domain_children(parent_object):
             # child_item = self.AppendItem(parent_item, '',
             # child_item = self.Append(parent_item, "",
             # AppendItem est utilisé dans wx !
@@ -1209,7 +1209,7 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
                 # si l'élément a des enfants dans le modèle de données.
                 # L'appel à children(child_object) dans le modèle de données détermine
                 # si un "+" doit être affiché.
-                if self.__adapter.get_domain_children(child_object): # Utiliser le nouveau nom ici aussi
+                if self.__adapter.children(child_object):  # Utiliser le nouveau nom ici aussi
                     self.insert(child_item, tk.END, text='')
 
     def _refreshObjectMinimally(self, item, domain_object):
@@ -1325,9 +1325,10 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
         Returns :
             (bool) : True si la colonne contient des images, sinon False.
         """
-        return self.visibleColumns()[column].hasImages()
+        # return self.visibleColumns()[column].hasImages()
+        return self._visible_columns()[column].hasImages()
 
-    def visibleColumns(self):
+    def _visible_columns(self):
         # def visibleColumns(self) -> list:
         """
         Retourne la liste des colonnes visibles.
@@ -1335,7 +1336,7 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
         Returns :
             Liste des colonnes actuellement visibles.
         """
-        return self.__visible_columns
+        return self._visible_columns
 
 
 # --- Nouvelle classe : CheckTreeCtrl ---

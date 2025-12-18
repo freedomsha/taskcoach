@@ -1029,7 +1029,7 @@ class TaskEntry(tk.Frame):
             self._comboTreeBox["values"] = (*self._comboTreeBox["values"], label)
 
             # Appel récursif pour les enfants
-            for child in task.get_domain_children():
+            for child in task.children():
                 self._addTaskRecursively(child, parentPrefix + "  • ")
 
     def onTaskSelected(self, event):

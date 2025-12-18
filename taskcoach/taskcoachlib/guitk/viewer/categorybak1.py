@@ -132,7 +132,7 @@ class BaseCategoryviewer(ttk.Frame):
     def _add_category_to_tree(self, tree_widget: ttk.Treeview, parent_item: str, category_obj: domain.category):
         """Ajoute une catégorie et ses enfants au Treeview."""
         item_id = tree_widget.insert(parent_item, "end", text=category_obj.getName())
-        for child in category_obj.get_domain_children():
+        for child in category_obj.children():
             self._add_category_to_tree(tree_widget, item_id, child)
 
     def get_delete_command_class(self) -> command.DeleteCategoryCommand:

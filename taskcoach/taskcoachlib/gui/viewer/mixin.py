@@ -65,8 +65,8 @@ class SearchableViewerMixin(object):
         return True
 
     def createFilter(self, presentation):
-        presentation = super().createFilter(presentation)
-        return base.SearchFilter(presentation, **self.searchOptions())
+        representation = super().createFilter(presentation)
+        return base.SearchFilter(representation, **self.searchOptions())
 
     def searchOptions(self):
         (

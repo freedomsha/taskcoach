@@ -238,8 +238,8 @@ class TaskReportGenerator(object):
                     if line.strip():
                         bf.write(f"{indent}  {line.strip()}\n")
 
-                if note.get_domain_children():
-                    render_notes_recursive(note.get_domain_children(), level + 1)
+                if note.children():
+                    render_notes_recursive(note.children(), level + 1)
 
         if item.notes():
             render_notes_recursive(item.notes())
@@ -267,9 +267,9 @@ class TaskReportGenerator(object):
         for t in tasks_to_process:
             # L'indentation est gérée dans _render_column_item
             flattened.append(t)
-            if t.get_domain_children():
+            if t.children():
                 # Appel récursif pour les enfants
-                flattened.extend(self._get_flattened_tasks(t.get_domain_children(), level + 1))
+                flattened.extend(self._get_flattened_tasks(t.children(), level + 1))
         return flattened
 
     def _render_column_item(self, column, item, tree_mode, indent):
@@ -405,7 +405,7 @@ if __name__ == '__main__':
                 self._completion_date = datetime.now()
 
             if parent:
-                parent.get_domain_children().append(self)
+                parent.children().append(self)
 
         def subject(self): return self._subject
         def children(self): return self._children

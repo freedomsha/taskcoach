@@ -506,7 +506,7 @@ class HierarchicalCalendar(CalendarCanvas, tooltiptk.ToolTip):
         items = list()
         for task in self.__taskList:
             items.append(task)
-            items.extend(task.get_domain_children(recursive=True))
+            items.extend(task.children(recursive=True))
         self.select(items)
 
     # Configuration
@@ -589,7 +589,7 @@ class HierarchicalCalendar(CalendarCanvas, tooltiptk.ToolTip):
 
     def GetChildren(self, task):
         """Retourne les enfants d'une tâche."""
-        return self.__adapter.get_domain_children(task)
+        return self.__adapter.children(task)
 
     def GetStart(self, task):
         """Retourne la date de début d'une tâche."""

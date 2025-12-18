@@ -165,12 +165,12 @@ class FilterableViewerMixin(object):
         commands = [uicommand.ToggleCategoryFilter(
             category=eachCategory) for eachCategory in categories]
         categoriesWithChildren = [eachCategory for eachCategory
-                                  in categories if eachCategory.get_domain_children()]
+                                  in categories if eachCategory.children()]
         if categoriesWithChildren:
             commands.append(None)
             for eachCategory in categoriesWithChildren:
                 subCommands = [_("%s (subcategories)") % eachCategory.subject()]
-                subCommands.extend(self.createToggleCategoryFilterCommands(eachCategory.get_domain_children()))
+                subCommands.extend(self.createToggleCategoryFilterCommands(eachCategory.children()))
                 commands.append(tuple(subCommands))
         return commands
 
@@ -278,12 +278,14 @@ class SortableViewerMixin(object):
         self.presentation().sortBy(sortKey)
         self.settings.set(self.settingsSection(), "sortby", str(self.presentation().sortKeys()))
 
-    def isSortedBy(self, sortKey):
+    def isSortedBy(self, sortKey) -> bool:
         presentation_obj = self.presentation()
-        log.debug(f"SortableViewerMixin.sortBy : Type de presentation_obj: {type(presentation_obj)}")  # Attendu: NoteSorter
-        log.debug(f"presentation_obj: {presentation_obj}")
+        # log.debug(f"SortableViewerMixin.isSortBy : Type de presentation_ob: {type(presentation_obj)}")  # Attendu: NoteSorter
+        log.debug(f"SortableViewerMixin.isSortBy : self.presentation(): {presentation_obj} pour self={self.__class__.__name__}.")
         sortKeys = self.presentation().sortKeys()
-        return sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
+        # return sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
+        result_isSortBy = sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
+        return result_isSortBy
 
     def sortKey(self):
         return eval(self.settings.get(self.settingsSection(), "sortby"))

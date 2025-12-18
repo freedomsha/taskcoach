@@ -631,9 +631,9 @@ class Publisher(object, metaclass=singleton.Singleton):
         Args :
             event (event) : L'événement dont il faut informer les observateurs.
         """
-        log.debug(f"Publisher.notifyObservers : lancé par {self.__class__.__name__} pour informer les observateurs de l'événement {event}.")
         if not event.sources():
             return
+        log.debug(f"Publisher.notifyObservers : lancé par {self.__class__.__name__} pour informer les observateurs de l'événement {event} avec sources {event.sources()}.")
         # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
         observers = dict()  # {observer: set([(type, source), ...])}  liste set ou dict ? TODO !
         types = event.types()
@@ -1157,7 +1157,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         # AJOUTER LA VÉRIFICATION :
         observable = self.observable()
         if hasattr(observable, 'thaw'):
-            observable.thaw()
+            observable.thaw()  # Boucle entre ici et domain.base.filter.Filter.thaw()
 
         # if not self._frozen:
         if not self.__freezeCount:

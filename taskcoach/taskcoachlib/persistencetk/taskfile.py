@@ -22,7 +22,12 @@ de la synchronisation, et de la sécurité des écritures.
 
 Donc c'est un fichier critique à bien logger :
 tout plantage ici impacte la sauvegarde, le chargement, les notifs, etc.
-"""
+
+Remarques :
+- Ce fichier est une version ciblée pour Tkinter : onFileChanged utilise
+  self.__parent.after_idle(...). L'objet parent doit donc être la racine Tk
+  (ou un widget) passé à TaskFile lors de l'initialisation.
+- L'en
 # Le fichier taskfile.py que vous avez fourni gère le modèle de données et la persistance de l'application, et ne contient pas directement d'éléments d'interface utilisateur de wxPython. La conversion de wxPython à tkinter affectera principalement les fichiers qui gèrent l'interface graphique (GUI) elle-même.
 #
 # Cependant, il y a une ligne dans votre fichier qui utilise wx:
@@ -36,6 +41,7 @@ tout plantage ici impacte la sauvegarde, le chargement, les notifs, etc.
 # J'ai remplacé l'import wx par tkinter. Dans la méthode onFileChanged, j'ai commenté la ligne wx.CallAfter et ajouté une explication sur la manière de la remplacer par tkinter.Tk.after. La méthode after de tkinter est l'équivalent direct de wx.CallAfter, car elle permet de planifier l'exécution d'une fonction dans la boucle d'événements principale de tkinter de manière sécurisée pour le threading.
 #
 # Pour que cette partie fonctionne, vous devrez vous assurer que la fenêtre principale (le "root" de Tkinter) est accessible depuis cet objet, soit en la passant lors de l'initialisation, soit en utilisant une variable globale. Pour le moment, j'ai laissé un commentaire pour vous guider. J'ai aussi légèrement modifié la méthode write dans la classe SafeWriteFile pour m'assurer que le contenu est encodé correctement si le fichier est ouvert en mode binaire ('wb').
+"""
 
 import lockfile
 import logging
@@ -142,6 +148,13 @@ class TaskCoachFilesystemPollerNotifier(FilesystemPollerNotifier):
 class SafeWriteFile(object):
     # class SafeWriteFile(metaclass=open):  # Pourquoi pas ?
     """
+    Safe write helper that writes to a temporary file (on the same directory)
+    and atomically replaces the target file with os.replace. Works in text
+    mode with UTF-8 encoding. Provides context manager support.
+    If the path is detected as a cloud-synced folder, we fall back to writing
+    directly to the target file (best-effort; cloud folders cannot guarantee
+    atomic renames).
+
     Une classe pour écrire des fichiers en toute sécurité,
     en utilisant des fichiers temporaires pour éviter la perte de données.
     """
@@ -160,25 +173,38 @@ class SafeWriteFile(object):
         # vous devrez encoder explicitement la chaîne XML en bytes
         # avant de l'écrire (par exemple, tree.write(self.__fd, encoding="utf-8")
         # suivi d'un appel à .encode('utf-8') si tree.write attend un flux binaire).
-        log.info("Initialisation de SafeWriteFile avec un nom de fichier.")
+        # log.info("Initialisation de SafeWriteFile avec un nom de fichier.")
         self.__filename = filename
+        self.__tempFilename = None
+        self.__fd = None
+        self.__cloud = self._isCloud()
+        log.info("SafeWriteFile: initialisation pour filename=%s (cloud=%s)", filename, self.__cloud)
         if self._isCloud():
             # Ideally we should create a temporary file on the same filesystem (so that
             # os.rename works) but outside the Dropbox folder...
-            self.__fd = open(self.__filename, "wb")  # texte ou binaire ?
+            # self.__fd = open(self.__filename, "wb")  # texte ou binaire ?
             # self.__fd = open(self.__filename, "w")
+            self.__fd = open(self.__filename, "w", encoding="utf-8")
             # self.__tempFilename = ?
         else:
-            self.__tempFilename = self._getTemporaryFileName(
-                os.path.dirname(filename)
-            )
-            self.__fd = open(self.__tempFilename, "wb+")  # texte ou binaire ?
+            # self.__tempFilename = self._getTemporaryFileName(
+            #     os.path.dirname(filename)
+            # )
+            # Create a named temporary file in same directory; keep the name and open it.
+            dirn = os.path.dirname(filename) or "."
+            # NamedTemporaryFile with delete=False returns a file that we can close and reopen.
+            with tempfile.NamedTemporaryFile(dir=dirn, delete=False, mode="w", encoding="utf-8") as tf:
+                self.__tempFilename = tf.name
+            # Open the temp file for writing (text mode UTF-8)
+            # self.__fd = open(self.__tempFilename, "wb+")  # texte ou binaire ?
+            self.__fd = open(self.__tempFilename, "w", encoding="utf-8")
             # self.__fd = open(file=self.__tempFilename, mode="wb", encoding="utf-8")
         # self.__fd = filename
-        log.info("Initialisation de SafeWriteFile avec un nom de fichier."
-                 f"self.__filename={self.__filename}"
-                 f"self.__fd={self.__fd}"
-                 f"self.__tempFilename={self.__tempFilename}")
+        # log.info("Initialisation de SafeWriteFile avec un nom de fichier."
+        #          f"self.__filename={self.__filename}"
+        #          f"self.__fd={self.__fd}"
+        #          f"self.__tempFilename={self.__tempFilename}")
+        log.info("SafeWriteFile: temp=%s fd=%r", self.__tempFilename, self.__fd)
 
     def write(self, bf):
         """
@@ -188,33 +214,105 @@ class SafeWriteFile(object):
             bf (str) : Les données à écrire.
         """
         log.info(f"SafeWriteFile.write essaie d'écrire {bf} dans {self.__fd}.")
-        if isinstance(bf, str):
-            # Le mode d'ouverture 'wb' est binaire, donc nous devons encoder la chaîne
-            # self.__fd.write(bf)  # comment transformer bf(bytes) en string ? Non, ici, init est en bytes !!!
-            self.__fd.write(bf.encode('utf-8'))
-        else:
-            # self.__fd.write(str(bf))
-            self.__fd.write(str(bf).encode('utf-8'))
+        # if isinstance(bf, str):
+        #     # Le mode d'ouverture 'wb' est binaire, donc nous devons encoder la chaîne
+        #     # self.__fd.write(bf)  # comment transformer bf(bytes) en string ? Non, ici, init est en bytes !!!
+        #     self.__fd.write(bf.encode('utf-8'))
+        # else:
+        #     # self.__fd.write(str(bf))
+        #     self.__fd.write(str(bf).encode('utf-8'))
+        if not isinstance(bf, str):
+            bf = str(bf)
+        self.__fd.write(bf)
+
+    def flush_and_sync(self):
+        # Nouvelle méthode pour forcer l'écriture sur le disque
+        """
+        Force l'écriture des données en mémoire tampon sur le disque.
+
+        Returns :
+
+        """
+        try:
+            self.__fd.flush()
+            os.fsync(self.__fd.fileno())
+        except Exception:
+            # If fsync not applicable (e.g., Windows text mode sometimes), ignore but keep flush
+            try:
+                self.__fd.flush()
+            except Exception:
+                pass
 
     def close(self):
         """
         Fermez le fichier et renommez le fichier temporaire en toute sécurité si nécessaire.
         """
         log.info("SafeWriteFile.close essaie de Fermer le fichier et renommer le fichier temporaire en toute sécurité si nécessaire.")
-        # if isinstance(self.__fd, TextIOWrapper):
-        self.__fd.close()
-        if not self._isCloud():
-            if os.path.exists(self.__filename):
+        # # if isinstance(self.__fd, TextIOWrapper):
+        # self.__fd.close()
+        if not self.__fd:
+            return
+        try:
+            self.flush_and_sync()
+        finally:
+            try:
+                self.__fd.close()
+            except Exception:
+                pass
+        # if not self._isCloud():
+        if not self.__cloud and self.__tempFilename:
+            # Use os.replace for atomic replacement where supported
+            # if os.path.exists(self.__filename):
+            try:
                 log.info(f"SafeWriteFile.close retire {self.__filename}.")
-                os.remove(self.__filename)
-            if self.__filename is not None:
-                if os.path.exists(self.__filename):
-                    log.info(f"SafeWriteFile.close utilise __moveFileOutOfTheWay sur {self.__filename} avant de le renommer.")
-                    # WTF ?
-                    self.__moveFileOutOfTheWay(self.__filename)
-                log.info(f"SafeWriteFile.close renomme {self.__tempFilename} en {self.__filename}.")
-                os.rename(self.__tempFilename, self.__filename)
+                # os.remove(self.__filename)
+                os.replace(self.__tempFilename, self.__filename)
+            # if self.__filename is not None:
+            #     if os.path.exists(self.__filename):
+            #         log.info(f"SafeWriteFile.close utilise __moveFileOutOfTheWay sur {self.__filename} avant de le renommer.")
+            #         # WTF ?
+            #         self.__moveFileOutOfTheWay(self.__filename)
+            #     log.info(f"SafeWriteFile.close renomme {self.__tempFilename} en {self.__filename}.")
+            #     os.rename(self.__tempFilename, self.__filename)
+            except Exception as e:
+                # Try fallback rename if replace fails
+                log.exception("SafeWriteFile.close: os.replace failed, trying os.rename: %s", e)
+                try:
+                    os.rename(self.__tempFilename, self.__filename)
+                except Exception:
+                    log.exception("SafeWriteFile.close: os.rename fallback failed; removing temp file.")
+                    try:
+                        if os.path.exists(self.__tempFilename):
+                            os.remove(self.__tempFilename)
+                    except Exception:
+                        pass
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            # On exception, ensure temp file removed to avoid littering
+            try:
+                if self.__fd:
+                    try:
+                        self.__fd.close()
+                    except Exception:
+                        pass
+                if self.__tempFilename and os.path.exists(self.__tempFilename):
+                    os.remove(self.__tempFilename)
+            except Exception:
+                log.exception("SafeWriteFile.__exit__: erreur lors du nettoyage après exception")
+            return False  # propagate exception
+        else:
+            try:
+                self.close()
+            except Exception:
+                log.exception("SafeWriteFile.__exit__: erreur lors de la fermeture")
+                raise
+            return False
+
+    # méthodes obsolètes, à supprimer plus tard :
     def __moveFileOutOfTheWay(self, filename):
         """
         Déplacez un fichier existant en le renommant
@@ -332,6 +430,8 @@ class TaskFile(patterns.Observer):
         ]:
             self.__monitor.monitorClass(domainClass)
         super().__init__(*args, **kwargs)
+
+        # Register observers...
         # Register for tasks, categories, efforts and notes being changed so we
         # can monitor when the task file needs saving (i.e. is 'dirty'):
         for container in self.tasks(), self.categories(), self.notes():
@@ -716,7 +816,6 @@ class TaskFile(patterns.Observer):
             (bool) : True si le fichier de tâche doit être enregistré, False sinon.
         """
         log.debug("Vérification de l'état 'dirty' : %s", self.__needSave)
-
         return self.__needSave
 
     def markDirty(self, force=False):
@@ -726,12 +825,11 @@ class TaskFile(patterns.Observer):
         Args :
             force (bool) : (optional) S'il faut forcer le marquage comme sale. La valeur par défaut est False.
         """
-
         if force or not self.__needSave:
             self.__needSave = True
             pub.sendMessage("taskfile.dirty", taskFile=self)
-            log.debug("Modification détectée, état 'dirty' mis à jour à True")
-            log.debug(f"Le fichier {self} est marqué comme modifié")
+            log.debug("TaskFile.markDirty : Modification détectée, état 'dirty' mis à jour à True")
+            log.debug(f"TaskFile.markDirty : Le fichier {self} est marqué comme modifié")
 
     def markClean(self):
         """
@@ -746,17 +844,27 @@ class TaskFile(patterns.Observer):
         """
         Gérer les modifications de fichiers.
 
+        Gère les modifications de fichier détectées par le notificateur.
         Appelé quand l'état de la tâche est changé.
+
+        NOTE: self.__parent doit être un widget Tk possédant after_idle (typiquement root).
         """
         if not self.__saving:
             # import wx  # Not really clean but we're in another thread...
             self.__changedOnDisk = True
-            log.debug("TaskFile.onFileChanged : Appelle CallAfter.")
-            # wx.CallAfter(pub.sendMessage, "taskfile.changed", taskFile=self)
-            # self.__parent.after_idle(self.__fileChanged)
-            # self.__parent.after_idle(self.notifyFileChange)
-            # self.__parent.after_idle(self.changes)
-            self.__parent.after_idle(lambda: pub.sendMessage("taskfile.changed", taskFile=self))
+            log.debug("TaskFile.onFileChanged : Appelle CallAfter programmé via parent.after_idle.")
+            # # wx.CallAfter(pub.sendMessage, "taskfile.changed", taskFile=self)
+            # # self.__parent.after_idle(self.__fileChanged)
+            # # self.__parent.after_idle(self.notifyFileChange)
+            # # self.__parent.after_idle(self.changes)
+            # self.__parent.after_idle(lambda: pub.sendMessage("taskfile.changed", taskFile=self))
+            try:
+                # schedule the pub send in the Tkinter main thread
+                self.__parent.after_idle(lambda: pub.sendMessage("taskfile.changed", taskFile=self))
+            except Exception:
+                # If parent is not available or after_idle fails, fall back to direct call (risky for UI thread)
+                log.exception("TaskFile.onFileChanged : after_idle failed, envoi direct de l'événement")
+                pub.sendMessage("taskfile.changed", taskFile=self)
             # log.debug("TaskFile.onFileChanged : CallAfter passé avec succès.")
             # TODO: Remplacer l'appel wx.CallAfter par l'équivalent tkinter.
             # Il est nécessaire d'avoir une référence à la fenêtre principale Tkinter
@@ -803,7 +911,7 @@ class TaskFile(patterns.Observer):
             # # else:
             # _send_message_in_main_thread()
 
-            log.debug("TaskFile.onFileChanged : Appel à pub.sendMessage passé avec succès.")
+            log.debug("TaskFile.onFileChanged : Appel à pub.sendMessage passé avec succès, événement envoyé/prévu.")
 
     @patterns.eventSource
     def clear(self, regenerate=True, event=None):
@@ -814,7 +922,7 @@ class TaskFile(patterns.Observer):
             regenerate (bool, optional) : s'il faut régénérer la configuration GUID et SyncML. La valeur par défaut est True.
             event (Event, optional) : L'événement. La valeur par défaut est Aucun.
         """
-        log.info(f"taskFile.clear : Effacement du contenu du fichier de tâches {self}(clear)")
+        log.info(f"taskFile.clear : Effacement du contenu du fichier de tâches {self}(clear).")
 
         pub.sendMessage("taskfile.aboutToClear", taskFile=self)
         try:
@@ -837,12 +945,14 @@ class TaskFile(patterns.Observer):
             # changes = xml.ChangesXMLReader(self.filename() + ".delta").read()
             try:
                 log.debug(f"TaskFile.close : Essaie de lire le fichier {self.filename()}.delta en mode r et d'enregistrer les changements précédents.")
-                with open(self.filename() + ".delta", "r") as f:
+                # with open(self.filename() + ".delta", "r") as f:
+                with open(self.filename() + ".delta", "r", encoding="utf-8") as f:
                     changes = xml.ChangesXMLReader(f).read()
                     log.debug(f"TaskFile.close : lit changes = {changes}")
             except FileNotFoundError as e:
                 log.exception(f"TaskFile.close : Le fichier {self.filename()}.delta n'existe pas : {e}.")
                 changes = {}
+            # remove own monitor's changes
             del changes[self.__monitor.guid()]
             log.debug(f"TaskFile.close : Essaie d'écrire les changements {changes} dans le fichier {self.filename()}.delta en mode wb+.")
             # xml.ChangesXMLWriter(open(self.filename() + ".delta", "wb")).write(
@@ -851,7 +961,8 @@ class TaskFile(patterns.Observer):
             # xml.ChangesXMLWriter(open(self.filename() + ".delta", "w")).write(
             #     changes
             # )
-            with open(self.filename() + ".delta", "wb+") as f:
+            # with open(self.filename() + ".delta", "wb+") as f:
+            with open(self.filename() + ".delta", "w+", encoding="utf-8") as f:
                 writer = xml.ChangesXMLWriter(f)
                 writer.write(changes)
         log.info("TaskFile.close règle filename sur ''")
@@ -923,7 +1034,8 @@ class TaskFile(patterns.Observer):
         """
         # return file(self.__filename, 'r')
         log.info(f"TaskFile._openForRead : Ouvre {self.__filename} en mode lecture texte (r)!")
-        return open(self.__filename, "r")
+        # return open(self.__filename, "r")
+        return open(self.__filename, "r", encoding="utf-8")
 
     def load(self, filename=None):
         """
@@ -970,7 +1082,7 @@ class TaskFile(patterns.Observer):
                     except Exception:
                         log.exception("TaskFile.load : Erreur lors de la lecture du fichier principal '%s'", self.filename())
                         raise
-                    fd.close()
+                    # fd.close()  # déjà fait par le with
             else:
                 tasks = []
                 categories = []
@@ -1012,6 +1124,7 @@ class TaskFile(patterns.Observer):
 
             if os.path.exists(self.filename()):
                 # We need to reset the changes on disk because we're up to date.
+                # Réécrit les changements sur disque (texte UTF-8)
                 log.debug("TaskFile.load : Réécrit les changements dans {self.filename()}.delta en mode wb.")
                 # xml.ChangesXMLWriter(
                 #     open(self.filename() + ".delta", "wb")
@@ -1020,9 +1133,10 @@ class TaskFile(patterns.Observer):
                 # #     open(self.filename() + ".delta", "w")
                 # # ).write(self.__changes)  # écriture en bytes ? plutôt str, non ?
                 with open(self.filename() + ".delta", "wb") as f:
+                    # with open(self.filename() + ".delta", "w", encoding="utf-8") as f:
                     writer = xml.ChangesXMLWriter(f)
                     writer.write(self.__changes)
-                    f.close()
+                    # f.close()  # déjà fait par le with
         except Exception as e:
             log.info("TaskFile.load règle filename sur ''")
             self.setFilename("")
@@ -1125,7 +1239,7 @@ class TaskFile(patterns.Observer):
                         self.syncMLConfig(),
                         self.guid(),
                         )
-                    fd.close()
+                    # fd.close()  # déjà fait par le with
             self.markClean()
             log.info("TaskFile.save : Fichier sauvegardé avec succès : %s", self.__filename)
         except IOError as e:
@@ -1140,7 +1254,7 @@ class TaskFile(patterns.Observer):
             self.__notifier.saved()
             try:
                 pub.sendMessage("taskfile.justSaved", taskFile=self)
-            except:
+            except Exception:
                 pass
 
     def mergeDiskChanges(self):
@@ -1170,7 +1284,7 @@ class TaskFile(patterns.Observer):
                         except Exception:
                             log.exception("TaskFile.mergeDiskChanges : Erreur lors de la lecture du fichier principal pour la fusion des changements '%s'", self.__filename)
                             raise
-                        fd.close()
+                        # fd.close()  # déjà fait par le with
                     self.__changes = allChanges
 
                     if self.__saving:
@@ -1203,10 +1317,11 @@ class TaskFile(patterns.Observer):
             #     xml.ChangesXMLWriter(fd).write(self.changes())
             # finally:
             #     fd.close()
+            # write .delta (text UTF-8) using SafeWriteFile for atomicity
             with self._openForWrite(".delta") as fd:
                 writer = xml.ChangesXMLWriter(fd)
                 writer.write(self.changes())
-                fd.close()
+                # fd.close()  # déjà fait par le with
 
             self.__changedOnDisk = False
         finally:

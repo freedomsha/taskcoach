@@ -69,7 +69,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
     # pour arrêter le thread en définissant self.cancelled sur True,
     # puis en appelant self.join() pour attendre que le thread se termine.
     # Cependant, le problème semble survenir lorsque self.join() est appelé.
-    #  pour résoudre ce problème :
+    # pour résoudre ce problème :
     #
     #     Utilisez un verrou pour éviter que stop() soit appelé pendant que le thread est déjà en cours d'arrêt.
     #     Vous pouvez utiliser un verrou pour empêcher que plusieurs appels à stop() ne se produisent simultanément.
@@ -100,6 +100,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
         # self.setDaemon(True)  # This method is deprecated, setDaemon() is deprecated, set the daemon attribute instead
         self.daemon = True  # du coup, j'ajoute ceci.
         self.start()
+        log.debug("FilesystemPollerNotifier.__init__ terminé !")
 
     def setFilename(self, filename):
         """
@@ -125,15 +126,17 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
         Cette méthode vérifie périodiquement si le fichier associé a été modifié.
         Si une modification est détectée, la méthode `onFileChanged` est appelée.
         """
-        log.info("FilesystemPollerNotifier.run vérifie si le fichier a été modifié.")
+        log.info("FilesystemPollerNotifier.run vérifie périodiquement si le fichier a été modifié.")
         try:
             while not self.cancelled:
                 self.lock.acquire()
                 with self.lock:  # sans try:
                     # try:
                     if self._filename and os.path.exists(self._filename):
+                        log.info(f"Fichier : {self._filename}")
                         stamp = os.stat(self._filename).st_mtime
                         if stamp > self.stamp:
+                            log.info("modifié.")
                             self.stamp = stamp
                             self.onFileChanged()
                     # finally:
@@ -142,6 +145,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
                 self.evt.wait(10)
                 log.info("FilesystemPollerNotifier.run() terminé")
         except TypeError:
+            log.error("FileSystemPollerNotifier.run terminé avec une erreur de type", exc_info=True)
             pass
 
     def stop(self):

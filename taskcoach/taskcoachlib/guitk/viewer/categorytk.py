@@ -243,7 +243,7 @@ class BaseCategoryViewer(
             # adapter= ,
             columns=self._columns,  # Les colonnes
             # selectCommand=self.onSelect,  # Enlever ça, les commandes utilisent bind !
-            checkCommand=self.onCheck,
+            # checkCommand=self.onCheck,  # unknown option "-checkCommand"
             # editCommand=self.onEdit,
             # editCommand=uicommand.Edit(viewer=self),
             dragAndDropCommand=uicommand.CategoryDragAndDrop(
@@ -299,7 +299,7 @@ class BaseCategoryViewer(
         #     parent=self.parent, parent_window=self, settings=self.settings, taskFile=self.taskFile, categoryViewer=self, localOnly=localOnly
         # )
 
-    def _createColumns(self):
+    def createColumns(self):
         """
         Crée et retourne les colonnes pour l'affichage des catégories.
         Returns :
@@ -485,7 +485,7 @@ class BaseCategoryViewer(
             # car ils doivent utiliser des boutons radio au lieu de cases à cocher, ou vice versa:
             items = event.sources()
             for item in items.copy():
-                items |= set(item.get_domain_children())
+                items |= set(item.children())
                 # self.widget.RefreshItems(*items)  # À adapter pour Tkinter
             pass  # Remplacer par l'équivalent Tkinter
             # pylint: disable=W0142

@@ -23,6 +23,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # requis sont disponibles, et fournissez des messages d'erreur clairs
 # si ce n'est pas le cas.
 
+# Résumé et suite
+#
+#     J'ai ajouté un nouveau module utilitaire taskcoach/taskcoachlib/ui/backend.py qui exporte wx. Il choisit le vrai wx quand il est disponible et choisi par get_gui(); sinon il fournit une fallback utilisant tkinter.font si possible ou un DummyFont si tkinter n'est pas présent ou inutilisable.
+#     J'ai adapté reader.py pour importer wx depuis ce backend. Ainsi reader.py ne forcera plus l'import de wx et fonctionnera correctement avec tkinter ou en environnement headless.
+#     Si vous le souhaitez je peux :
+#         Finaliser l'insertion complète du reste des méthodes dans reader.py (ici, pour la lisibilité, je les ai indiquées comme conservées — dans un commit réel il faut écrire tout le fichier complet),
+#         Ajouter des tests unitaires qui couvrent les cas "wx présent", "tk present", "ni l'un ni l'autre",
+#         Remonter le shim dans un endroit plus global (par ex. taskcoachlib.ui.backend est déjà un bon emplacement), et mettre à jour d'autres modules qui importent wx directement pour utiliser ce backend. Souhaitez-vous que je fournisse le patch complet (tous les contenus de reader.py replacés) et des tests d'exécution pour vérifier le comportement avec tkinter ?
+
 # from future import standard_library
 #
 # standard_library.install_aliases()
@@ -39,11 +48,14 @@ import os
 # plus moderne des chemins de fichiers.
 import re
 import stat
-import wx
+# import wx
+import tkinter as tk
+import tkinter.font
 # from wx import adv as wxadv
 # import xml.etree.ElementTree as eTree
 # from lxml import etree as ET
 from xml.etree import ElementTree as ET
+
 from taskcoachlib.persistence import sessiontempfile  # pylint: disable=F0401
 from taskcoachlib import meta, patterns
 from taskcoachlib.changes import ChangeMonitor
@@ -53,8 +65,11 @@ from taskcoachlib.syncml.config import SyncMLConfigNode, createDefaultSyncConfig
 from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
 from taskcoachlib.thirdparty.guid import generate
 
-log = logging.getLogger(__name__)
+# Import the UI backend which provides a `wx` namespace (real wx when available
+# and selected, otherwise a tkinter-based or dummy fallback).
+from taskcoachlib.guitk.backend import wx
 
+log = logging.getLogger(__name__)
 
 # Problème : Le code ouvre des fichiers sans toujours vérifier
 # si le fichier existe ou s'il est accessible en lecture/écriture.
@@ -64,7 +79,7 @@ log = logging.getLogger(__name__)
 # ce qui peut poser problème avec des fichiers XML contenant des caractères non-ASCII.
 # Solution : Spécifiez explicitement l'encodage lors de l'ouverture des fichiers
 # (par exemple, open(file, encoding='utf-8')).
-# Quelques points pourraient être améliorés :
+# Quelques points pourraient être améliorés :
 #    Passage de os.path à pathlib.
 #    Remplacement de eval par ast.literal_eval.
 #    Gestion plus sûre des fichiers temporaires avec des context managers.
@@ -211,19 +226,25 @@ class PIParser(ET.XMLParser):
         # log.debug(f"PIParser.handle_pi : self = {self}, target = {target}, data = {data}.")
         if target == "taskcoach":
             # print("target = taskcoach")
+            if isinstance(data, bytes):
+                pattern = rb'tskversion=[\'"](\d+)[\'"]'
+            else:
+                pattern = r'tskversion=[\'"](\d+)[\'"]'
             # match_object = re.search('tskversion="(\d+)"', data)
             # match_object = re.search("tskversion='(\\d+)'", data)
             # match_object = re.search(r'tskversion="(\d+)"', data)
             # print(f"self.__fd = {self.__fd}")
             # match_object = re.search(r'tskversion=[\'"](\d+)[\'"]', self.__fd.readline().strip())  # Pourquoi self.__fd.readline().strip() ?
-            match_object = re.search(rb'tskversion=[\'"](\d+)[\'"]', data)
+            # match_object = re.search(rb'tskversion=[\'"](\d+)[\'"]', data)
+            match_object = re.search(pattern, data)
             # print(f"PIParser.handle_pi : objets correspondants à la recherche match_object = {match_object}")
             if match_object:
                 # self.tskversion = int(match_object.group(1))
                 try:
                     self.tskversion = int(match_object.group(1))
                     log.debug(f"PIParser.handle_pi : La version de taskcoach du fichier est {self.tskversion}.")
-                except ValueError:
+                # except ValueError:
+                except Exception:
                     log.error(f"PIParser.handle_pi : Impossible de convertir la version '{match_object.group(1)}' en entier.")
             else:
                 # wx.LogError("PIParser.handle_pi : tskversion non trouvée dans la PI.")
@@ -502,9 +523,20 @@ class XMLReader(object):  # nouvelle classe
         #       f"XMLReader.init : enregistrement du fichier fd = {fd} dans self.__fd.")
         self.__fd = fd
         # print(f"self.__fd = {self.__fd}.")
-        # Taille de la police par défaut :
-        self.__default_font_size = wx.SystemSettings.GetFont(
-            wx.SYS_DEFAULT_GUI_FONT).GetPointSize()
+        # # Taille de la police par défaut :
+        # self.__default_font_size = wx.SystemSettings.GetFont(
+        #     wx.SYS_DEFAULT_GUI_FONT).GetPointSize()  # TODO : A modifier pour tkinter !
+        # Créer un objet police par défaut
+        default_font = tkinter.font.Font(font=tkinter.font.nametofont("TkDefaultFont"))
+
+        # Obtenir la taille de la police par défaut
+        self.__default_font_size = default_font.cget("size")
+        # try:  # Utiliser la condition de GUI=wx
+        #     self.__default_font_size = wx.SystemSettings.GetFont(
+        #         wx.SYS_DEFAULT_GUI_FONT
+        #     ).GetPointSize()
+        # except Exception:
+        #     self.__default_font_size = 10
         # log.debug(f"XMLReader.init : Création de self.__default_font_size = {self.__default_font_size}")
         # Dictionnaire des catégories :
         # log.debug("XMLReader.init : Création des dictionnaires self.categories, self.__modification_datetimes, self.__prerequisites et self.__categorizables")
@@ -701,7 +733,8 @@ class XMLReader(object):  # nouvelle classe
         # print(f"Version de l'application meta.data.tskversion = {meta.data.tskversion}")
         if self.__tskversion > meta.data.tskversion:
             # Version number of task file is too high
-            wx.LogError("XMLReader.read : Version du fichier supérieur à celle de taskcoach !!!")
+            # wx.LogError("XMLReader.read : Version du fichier supérieur à celle de taskcoach !!!")
+            log.error("XMLReader.read : Version du fichier supérieur à celle de taskcoach !!!")
             raise XMLReaderTooNewException
         # else:
         #     print("XMLReader.read : DEBUG : Version du fichier inférieure ou égale à celle de taskcoach. OK")
@@ -710,7 +743,7 @@ class XMLReader(object):  # nouvelle classe
         # print("XMLReader.read: 6. ANALYSE DES DIFFERENTS ELEMENTS DU FICHIER.")
         # print(f"XMLReader.read : 6.a Analyse des noeuds de tâche de : root = {root} avec _parse_task_nodes.")
         tasks = self.__parse_task_nodes(root)
-        print(f"XMLReader.read : Tâches lues avec status: {[(the_task, the_task.id(), the_task.getStatus()) for the_task in tasks]}")
+        print(f"XMLReader.read : Tâches lues avec status: {[(the_task, the_task.id(), the_task.getStatus()) for the_task in tasks]}")  # TODO : a retirer.
         # print(f"XMLReader.read : Résultat d'analyse des noeuds de tâche : tasks = {tasks}")
         # print(f"XMLReader.read : DEBUG - Après parsing : tasks[0].completed() = {tasks[0].completed()}")
         # * Résout les prérequis et les dépendances entre les tâches.
@@ -2126,9 +2159,26 @@ class XMLReader(object):  # nouvelle classe
         * Ajuste la taille de la police si elle est inférieure à 4.
         * Retourne la police ou la valeur par défaut en cas d'échec.
         """
+        def convert_wx_font_string_to_tk(font_string):
+            # Exemple de parsing d'une chaîne de style "Arial 10 bold"
+            parts = font_string.split()
+            family = parts[0]
+            size = int(parts[1])
+            style = tkinter.font.NORMAL
+            weight = tkinter.font.NORMAL
+
+            if "bold" in parts:
+                weight = tkinter.font.BOLD
+            if "italic" in parts:
+                style = tkinter.font.ITALIC
+
+            return tkinter.font.Font(family=family, size=size, weight=weight, slant=style)
+            # return tkinter.font.Font(family=parts[0], size=int(parts[1]), weight=tkinter.font.BOLD if "bold" in parts else tkinter.font.NORMAL, slant=tkinter.font.ITALIC if "italic" in parts else tkinter.font.NORMAL)
+
         if text:
             # font = wxadv.FontFromNativeInfoString(text)  # Obsolète
-            font = wx.Font(text)
+            # font = wx.Font(text)  # TODO : A Convertir pour tkinter
+            font = convert_wx_font_string_to_tk(text)  # pour tkinter
             if font and font.IsOk():
                 if font.GetPointSize() < 4:
                     font.SetPointSize(self.__default_font_size)

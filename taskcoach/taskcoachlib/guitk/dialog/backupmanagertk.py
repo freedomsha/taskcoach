@@ -147,9 +147,9 @@ class BackupManagerDialog(tk.Toplevel):
         # files_frame.pack(fill="both", expand=True)
         files_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
 
-        # self.__files_listbox = tk.Listbox(files_frame, selectmode="single")
-        # self.__files_listbox.pack(side="left", fill="both", expand=True)
-        # self.__files_listbox.bind("<<ListboxSelect>>", self._OnSelectFile)
+        self.__files_listbox = tk.Listbox(files_frame, selectmode="single")
+        self.__files_listbox.pack(side="left", fill="both", expand=True)
+        self.__files_listbox.bind("<<ListboxSelect>>", self._OnSelectFile)
         # Treeview pour les fichiers (pour avoir des colonnes comme dans l'original)
         self.__files = ttk.Treeview(files_frame, columns=("fullpath",), show="tree headings", selectmode="browse")
         self.__files.heading("#0", text=_("File"))

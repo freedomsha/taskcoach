@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib.syncml.tasksource import TaskSource
 from taskcoachlib.syncml.notesource import NoteSource
 from taskcoachlib.syncml.config import SyncMLConfigNode
-# from taskcoachlib.syncml.core import *  # deprecied method
+# from taskcoachlib.syncml.core import *  # deprecied method la méthode suivante ne foncitonne pas !
 from taskcoachlib.syncml.core import ManagementNode, DMTree, SyncSourceConfig, SyncClient, DMTClientConfig
 from taskcoachlib.i18n import _
 from taskcoachlib.meta import data

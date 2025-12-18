@@ -157,7 +157,7 @@ if __name__ == '__main__':
                 self._completion_date = datetime.now()
 
             if parent:
-                parent.get_domain_children().append(self)
+                parent.children().append(self)
 
         def subject(self): return self._subject
         def children(self): return self._children

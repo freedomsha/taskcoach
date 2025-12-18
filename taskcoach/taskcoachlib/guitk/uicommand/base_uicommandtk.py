@@ -433,14 +433,15 @@ class UICommand(object):
     def onCommandActivate(self, event=None):
         """ Active la commande. """
         log.info(f"onCommandActivate appelée pour {self.menuText}")
-        if self.enabled():
+        if self.enabled(event):
             try:
-                self.doCommand()
+                return self.doCommand(event)
             except Exception as e:
                 log.error(f"UICommand.onCommandActivate : Error executing command: {e}", exc_info=True)
                 messagebox.showerror("Error", f"UICommand.onCommandActivate : An error occurred: {e}")
         else:
             log.warning(f"Commande {self.menuText} désactivée, donc doCommand n'est pas appelée.")
+            return None
 
     def __call__(self, *args, **kwargs):
         self.onCommandActivate()

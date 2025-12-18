@@ -16,10 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 import re
 # import sre_constants # inutile avec re sous python 3
 from taskcoachlib import patterns
 from taskcoachlib.domain.base import object as domainobject
+
+log = logging.getLogger(__name__)
 
 
 class Filter(patterns.SetDecorator):
@@ -53,7 +56,7 @@ class Filter(patterns.SetDecorator):
         """
         Dégèle le filtre, réactivant le filtrage après un gel.
         """
-        super().thaw()
+        super().thaw()  # Boucle entre ici et patterns.observer.CollectionDecorator.thaw
         if not self.isFrozen():
             self.reset()
 
@@ -78,6 +81,7 @@ class Filter(patterns.SetDecorator):
         Return :
             Un booléen indiquant si le filtre fonctionne en mode arborescence.
         """
+        log.debug(f"Filter.treeMode : renvoie le mode d'arborescence actuel de {self.__class__.__name__}: {self.__treeMode}.")
         return self.__treeMode
 
     @patterns.eventSource
@@ -137,6 +141,7 @@ class Filter(patterns.SetDecorator):
             event : Un objet d'événement contenant des informations sur l'élément supprimé.
         """
         self.reset()
+        # self.reset(event)
 
 
 class SelectedItemsFilter(Filter):
