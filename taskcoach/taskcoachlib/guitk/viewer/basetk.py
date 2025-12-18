@@ -599,13 +599,32 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def updateSelection(self, sendViewerStatusEvent=True):
         """Met à jour la sélection actuelle."""
+        # ✅ FIX:  Utiliser self.widget.curselection() seulement si c'est un widget avec cette méthode
+        # Sinon, chercher le Treeview enfant
         # self.widget.curselection() dépendra du widget utilisé
         log.debug(f"Viewer.updateSelection : self.widget={self.widget}")
-        # newSelection = self.widget.curselection()  # A adapter en fonction du type de widget
-        if isinstance(self.widget, ttk.Treeview):
-            newSelection = self.widget.selection()  # A adapter en fonction du type de widget
-        else:
-            newSelection = self.widget.curselection()  # A adapter en fonction du type de widget
+        # # newSelection = self.widget.curselection()  # A adapter en fonction du type de widget
+        # if isinstance(self.widget, ttk.Treeview):
+        #     newSelection = self.widget.selection()  # A adapter en fonction du type de widget
+        # else:
+        #     newSelection = self.widget.curselection()  # A adapter en fonction du type de widget
+        try:
+            if hasattr(self.widget, 'curselection'):
+                # Pour les widgets qui supportent curselection (Treeview, Listbox, etc.)
+                newSelection = self.widget.curselection()
+            elif hasattr(self, '_Taskviewer__tree'):
+                # Pour Taskviewer:  utiliser le Treeview interne
+                newSelection = self._Taskviewer__tree.selection()
+            elif hasattr(self, '__tree'):
+                # Généralisé pour d'autres viewers
+                newSelection = self.__tree.selection()
+            else:
+                # Fallback:  pas de widget à sélectionner
+                newSelection = []
+        except AttributeError as e:
+            log.warning(f"updateSelection:  Impossible d'obtenir la sélection:  {e}")
+            newSelection = []
+
         if newSelection != self.__curselection:
             self.__curselection = newSelection
             if sendViewerStatusEvent:

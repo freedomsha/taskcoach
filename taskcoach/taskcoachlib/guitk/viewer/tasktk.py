@@ -3615,6 +3615,26 @@ class Taskviewer(
         selected_items = self.__tree.selection() if self.__tree else []
         return [item for item in selected_items]
 
+    # # Overide de Viewer.updateSelection pour Tkinter
+    # def updateSelection(self, sendViewerStatusEvent=True):
+    #     """Override pour utiliser le Treeview interne."""
+    #     log.debug("Taskviewer.updateSelection :  Mise à jour de la sélection.")
+    #
+    #     try:
+    #         if self.__tree is not None:
+    #             newSelection = list(self.__tree.selection())
+    #         else:
+    #             newSelection = []
+    #     except Exception as e:
+    #         log.error(f"Taskviewer.updateSelection :  Erreur:  {e}")
+    #         newSelection = []
+    #
+    #     if newSelection != self._Viewer__curselection:
+    #         self._Viewer__curselection = newSelection
+    #         if sendViewerStatusEvent:
+    #             self.sendViewerStatusEvent()
+
+
 # Points importants à noter et à adapter:
 #
 # CheckableTaskViewer :
