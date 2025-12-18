@@ -371,7 +371,7 @@ class BaseTaskViewer(
     basetk.TreeViewer,
 ):
     """
-    Visualiseur de base pour les tâches.
+    Visualiseur de base pour les visualiseurs de tâches.
 
     Cette classe gère la visualisation des tâches sous forme d'arborescence,
     et permet d'ajouter des filtres, des pièces jointes, et de rechercher
@@ -2057,7 +2057,7 @@ class Taskviewer(
         self.__settings = settings
         self.__parent = parent
         self.__tasks = []
-        self.__visible_columns = []
+        self.__visible_columns = []  # ✅ FIX: Attribut manquant
         self.__tree = None
         self.__tree_items = {}  # Mappe les IDs de tâches aux IDs d'éléments Treeview
 
@@ -2137,7 +2137,8 @@ class Taskviewer(
     def bitmap(self):
         """Retourne le bitmap de la classe/icône du visualiseur (à implémenter si nécessaire)."""
         # return None  # Ou une valeur pertinente
-        return "info"  # Icône par défaut
+        # return "info"  # Icône par défaut
+        return "taskviewer"
 
     def isShowingAttachments(self) -> bool:
         """Détermine si le visualiseur affiche les pièces jointes."""
@@ -2282,7 +2283,9 @@ class Taskviewer(
         # Votre code existant pour créer le Treeview est déjà l'équivalent
         # self.tree = ttk.Treeview(self)
         # self.tree.pack(side="top", fill="both", expand=True)
+
         # Créer un frame pour le Treeview
+        frame = ttk.Frame(self._widget_parent if hasattr(self, '_widget_parent') else self)
         # frame = ttk.Frame(self._widget_parent)
         frame = ttk.Frame(self.__parent)
         # frame = ttk.Frame(parent)
@@ -2426,6 +2429,9 @@ class Taskviewer(
 
         # Lier les événements
         self.__tree.bind("<Button-1>", self._on_tree_click)
+
+        # ✅ FIX:  Charger les tâches APRÈS la création du widget
+        self._refresh_tasks()
 
         log.debug("Taskviewer.createWidget : Le widget de l'arborescence des tâches est sensé être affiché !")
         log.debug("Taskviewer.createWidget : Widget créé.")
@@ -3499,9 +3505,22 @@ class Taskviewer(
         # return super().settingsSection()  # Call the superclass implementation
         return "taskviewer"
 
-    def refresh(self):
-        """Rafraîchit la vue, à implémenter correctement."""
-        self._populate_tree()
+    # def refresh(self):
+    def refresh(self, *args, **kwargs):
+        """Rafraîchit la vue, à implémenter correctement.
+        Override de refresh pour Tkinter - appelle _refresh_tasks."""
+        log.debug("Taskviewer.refresh :  Rafraîchissement de la vue des tâches.")
+        # self._populate_tree()
+        # self._refresh_tasks()
+        try:
+            self._refresh_tasks()
+        except Exception as e:
+            log.error(f"Taskviewer.refresh : Erreur:  {e}")
+
+    def refreshItems(self, *items):
+        """Rafraîchit les éléments spécifiés."""
+        # Pour Tkinter Treeview, c'est plus simple de tout rafraîchir
+        self.refresh()
 
     def is_visible(self) -> bool:
         """Détermine si le visualiseur est visible."""
