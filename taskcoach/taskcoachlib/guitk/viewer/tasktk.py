@@ -121,7 +121,8 @@ from taskcoachlib.guitk import dialog
 # from taskcoachlib.guitk.dialog import editor
 from taskcoachlib.guitk.uicommand import uicommandtk as uicommand
 from taskcoachlib.guitk.uicommand.base_uicommandtk import UICommand
-import taskcoachlib.guitk.menutk
+# import taskcoachlib.guitk.menutk
+from taskcoachlib.guitk import menutk
 from taskcoachlib.guitk.viewer import basetk
 from taskcoachlib.guitk.viewer import inplace_editortk
 from taskcoachlib.guitk.viewer import mixintk
@@ -681,14 +682,15 @@ class BaseTaskTreeViewer(BaseTaskViewer):
         # from taskcoachlib.gui.menu import TaskPopupMenu
         log.debug(f"BaseTaskTreeViewer.createTaskPopupMenu : Création du menu contextuel.")
         try:
-            task_popup_menu = taskcoachlib.guitk.menutk.TaskPopupMenu(
-                self,  # self.parent ?
+            task_popup_menu = menutk.TaskPopupMenu(
+                # self,  # self.parent ?
+                self.parent,
                 self.parent,  # TODO : A revoir avec parent et parent_window !
                 self.settings,
                 self.presentation(),
                 self.taskFile.efforts(),
                 self.taskFile.categories(),
-                self,
+                self  # self.taskFile.tags(),
             )
             return task_popup_menu
         except Exception as e:
@@ -3262,7 +3264,7 @@ class Taskviewer(
     def createColumnPopupMenu(self):
         """Crée le menu contextuel pour les colonnes."""
         try:
-            return taskcoachlib.guitk.menu.ColumnPopupMenu(self)
+            return menutk.ColumnPopupMenu(self)
         except Exception as e:
             log.warning(f"Impossible de créer le menu contextuel de colonnes: {e}")
             return None

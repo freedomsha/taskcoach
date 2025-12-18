@@ -49,9 +49,9 @@ class UICommandContainerMixin(object):
         :param parent_window: La fenêtre parente Tkinter (tk.Tk ou tk.Frame)
         """
         self._window = parent_window
-        log.debug(f"UICommandContainerMixin : La classe {self.__class__.__name__} initialise pour ajouter des commandes UI.")
-        if not isinstance(parent_window, (tk.Tk, tk.Frame)):
-            log.warning(f"{self.__class__.__name__} doit être de type tk.Tk ou tk.Frame !")
+        log.debug(f"UICommandContainerMixin : La classe {self.__class__.__name__} initialise pour ajouter des commandes UI dans self._window={self._window.__class__.__name__}.")
+        if not isinstance(parent_window, (tk.Tk, tk.Frame, tk.Menu)):
+            log.warning(f"{self.__class__.__name__} doit être de type tk.Tk ou tk.Frame ou tk.Menu!")
         self._tearoff = tearoff
 
     def appendUICommands(self, *uiCommands, **kwargs):
