@@ -197,6 +197,16 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
         """Returns a list of the UI commands currently displayed on the toolbar."""
         return self.__visibleUICommands[:]
 
+    def GetToolState(self, tool_id):
+        """ wx.lib.agw.aui.auibar.AuiToolBar.GetToolToggle indique si un outil est activé ou non.
+
+        Args :
+            toolId/tool_id (integer) : the toolbar item identifier.
+        """
+        # # Cela s'applique uniquement à un outil qui a été spécifié comme outil toggle(à bascule).
+        # # return self.GetToolToggled(toolId)
+        # return self.GetToolToggled(tool_id)  # TODO : Méthode wxpython à convertir
+        # # Returns whether a tool is toggled or not.
 
 # classe de base_uicommand.py ! : à transférer !
 # class UICommand:  # Base class, needs conversion

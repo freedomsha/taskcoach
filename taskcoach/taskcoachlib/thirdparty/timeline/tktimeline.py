@@ -164,7 +164,7 @@ class HotMap:
         self.parent = parent
         self.nodes: List[Node] = []
         self.rects: Dict[Node, Tuple[int, int, int, int]] = {}
-        self.children: Dict[Node, 'HotMap'] = {}
+        self.get_tree_children: Dict[Node, 'HotMap'] = {}
 
     # def append(self, node: Node, rect: Tuple[int, int, int, int]):
     def append(self, node: Any, rect: Tuple[int, int, int, int]):
@@ -176,7 +176,7 @@ class HotMap:
         """
         self.nodes.append(node)
         self.rects[node] = rect
-        self.children[node] = HotMap(node)
+        self.get_tree_children[node] = HotMap(node)
 
     # def __getitem__(self, node: Node) -> 'HotMap':
     def __getitem__(self, node: Any) -> 'HotMap':
@@ -300,9 +300,12 @@ class HotMap:
         Returns:
             Le premier nœud enfant ou le nœud cible s'il n'a pas enfants.
         """
-        children = self.children.get(target)
-        if children and children.nodes:
-            return children.nodes[0]
+        # children = self.children.get(target)
+        the_children = self.get_tree_children.get(target)
+        # if children and children.nodes:
+        if the_children and the_children.nodes:
+            # return children.nodes[0]
+            return the_children.nodes[0]
         return target
 
 
@@ -325,11 +328,11 @@ class DefaultAdapter:
         """
         if not hasattr(node, 'parallel_children'):
             return []
-        children = list(node.parallel_children)
+        the_children = list(node.parallel_children)
         if recursive:
             for child in node.parallel_children:
-                children.extend(self.parallel_children(child, True))
-        return children
+                the_children.extend(self.parallel_children(child, True))
+        return the_children
 
     def sequential_children(self, node: Any) -> List[Any]:
         """Retourne les enfants séquentiels d'un nœud.
@@ -342,7 +345,8 @@ class DefaultAdapter:
         """
         return node.sequential_children if hasattr(node, 'sequential_children') else []
 
-    def children(self, node: Any) -> List[Any]:  # TODO : children est utilisé dans tkinter !
+    # def children(self, node: Any) -> List[Any]:  # TODO : children est utilisé dans tkinter !
+    def get_tree_children(self, node: Any) -> List[Any]:  # TODO : children est utilisé dans tkinter !
         """Retourne tous les enfants d'un nœud (à la fois parallèles et séquentiels).
 
         Args :
@@ -365,7 +369,8 @@ class DefaultAdapter:
             (tuple) : L'heure de début minimale et l'heure d'arrêt maximale.
         """
         times = [node.start, node.stop]
-        for child in self.children(node):
+        # for child in self.children(node):
+        for child in self.get_tree_children(node):
             times.extend(self.bounds(child))
         return float(min(times)), float(max(times))
 
@@ -533,7 +538,7 @@ class TimeLineCanvas(tk.Canvas):
 
             self.draw_box(child, child_y, child_height, hot_map, depth=depth)
 
-            child_y += child_height + 1 # Ajouter un petit espacement
+            child_y += child_height + 1  # Ajouter un petit espacement
 
     def draw_sequential_children(self, nodes: List[Any], y: int, h: int, hot_map: HotMap, depth: int = 0):
         """Dessine les enfants séquentiels d'un nœud."""

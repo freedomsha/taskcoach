@@ -795,7 +795,8 @@ class RootNode(object):
         """
         return ""
 
-    def children(self, recursive=False) -> list:
+    # def children(self, recursive=False) -> list:
+    def get_tree_children(self, recursive=False) -> list:
         """
         Retourne les tâches enfants.
         """
@@ -866,13 +867,18 @@ class TimelineRootNode(RootNode):
     """
     Classe représentant la racine de l'arborescence dans une vue chronologique des tâches.
     """
-    def children(self, recursive=False):
-        children = super().children(recursive)
-        children.sort(key=lambda task_: task_.plannedStartDateTime())
-        return children
+    # def children(self, recursive=False):
+    def get_tree_children(self, recursive=False):
+        # children = super().children(recursive)
+        the_children = super().get_tree_children(recursive)
+        # children.sort(key=lambda task_: task_.plannedStartDateTime())
+        the_children.sort(key=lambda task_: task_.plannedStartDateTime())
+        # return children
+        return the_children
 
     def parallel_children(self, recursive=False):
-        return self.children(recursive)
+        # return self.children(recursive)
+        return self.get_tree_children(recursive)
 
     def sequential_children(self):
         return []
@@ -1011,13 +1017,17 @@ class TimelineViewer(BaseTaskTreeViewer):
 
     def parallel_children(self, item, recursive=False):
         try:
-            children = [
+            # children = [
+            the_children = [
                 child
-                for child in item.children(recursive=recursive)
+                # for child in item.children(recursive=recursive)
+                for child in item.get_tree_children(recursive=recursive)
                 if child in self.presentation()
             ]
-            children.sort(key=lambda task_: task_.plannedStartDateTime())
-            return children
+            # children.sort(key=lambda task_: task_.plannedStartDateTime())
+            the_children.sort(key=lambda task_: task_.plannedStartDateTime())
+            # return children
+            return the_children
         except AttributeError:
             return []
 
@@ -1096,6 +1106,7 @@ class TimelineViewer(BaseTaskTreeViewer):
 
     def curselection(self) -> List[Any]:
         return []
+
 
 class SquareTaskViewer(BaseTaskTreeViewer):
     """
@@ -1232,13 +1243,15 @@ class SquareTaskViewer(BaseTaskTreeViewer):
             max(getattr(task_, self.__orderBy)(recursive=True), self.__zero)
         )
 
-    def children_sum(self, children, parent):
+    # def children_sum(self, children, parent):
+    def children_sum(self, the_children, parent):
         children_sum = sum(
             (
                 max(
                     getattr(child, self.__orderBy)(recursive=True), self.__zero
                 )
-                for child in children
+                # for child in children
+                for child in the_children
                 if child in self.presentation()
             ),
             self.__zero,
@@ -1248,7 +1261,8 @@ class SquareTaskViewer(BaseTaskTreeViewer):
     def empty(self, task_):
         overall = self.overall(task_)
         if overall:
-            children_sum = self.children_sum(self.children(task_), task_)
+            # children_sum = self.children_sum(self.children(task_), task_)
+            children_sum = self.children_sum(self.get_tree_children(task_), task_)
             return max(
                 self.__transformTaskAttribute(self.__zero),
                 (overall - children_sum),
@@ -2287,7 +2301,7 @@ class Taskviewer(
         # self.tree.pack(side="top", fill="both", expand=True)
 
         # Créer un frame pour le Treeview
-        frame = ttk.Frame(self._widget_parent if hasattr(self, '_widget_parent') else self)
+        # frame = ttk.Frame(self._widget_parent if hasattr(self, '_widget_parent') else self)
         # frame = ttk.Frame(self._widget_parent)
         frame = ttk.Frame(self.__parent)
         # frame = ttk.Frame(parent)
@@ -2503,7 +2517,9 @@ class Taskviewer(
 
             # Ajouter les sous-tâches récursivement
             if hasattr(task, 'children'):
-                for subtask in task.children():
+                # if hasattr(task, 'the_children'):
+                # for subtask in task.children():
+                for subtask in task.get_tree_children():
                     self._add_task_to_tree(subtask, parent=item_id)
 
             log.debug(f"Taskviewer._add_task_to_tree : Tâche '{task_text}' ajoutée.")
@@ -3467,9 +3483,11 @@ class Taskviewer(
         """Retourne le parent d'un élément selon le mode arbre/liste."""
         return super().getItemParent(item) if self.isTreeViewer() else None
 
-    def children(self, item=None):
+    # def children(self, item=None):
+    def get_tree_children(self, item=None):
         """Retourne les enfants d'un élément selon le mode arbre/liste."""
-        return super().children(item) if (self.isTreeViewer() or item is None) else []
+        # return super().children(item) if (self.isTreeViewer() or item is None) else []
+        return super().get_tree_children(item) if (self.isTreeViewer() or item is None) else []
 
     # Anciennes méthodes pour tkinter
 
@@ -3492,8 +3510,10 @@ class Taskviewer(
         for task in tasks:
             item_id = self.tree.insert(parent_item, "end", text=task.subject,
                                        values=(str(task.dueDateTime), task.priority))
-            if task.children():
-                self._insert_tasks(task.children(), parent_item=item_id)
+            # if task.children():
+            if task.get_tree_children():
+                # self._insert_tasks(task.children(), parent_item=item_id)
+                self._insert_tasks(task.get_tree_children(), parent_item=item_id)
 
     # def settingsSection(self):
     @classmethod

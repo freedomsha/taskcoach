@@ -203,7 +203,7 @@ class FileOpen(IOCommand):
             self.iocontroller.open()
             log.info("FileOpen command executed!")
         except Exception as e:
-            log.exception(f"FileOpen.doCommand : Error: {e}", exc_info=True)
+            log.exception(f"FileOpen.doCommand : Erreur : {e}", exc_info=True)
 
 
 class RecentFileOpen(IOCommand):
@@ -3835,8 +3835,8 @@ Points clés:
     def updateToolState(self, paused):
         if not self.toolbar:
             return  # La barre d'outils est masquée
-        if paused != self.toolbar.GetToolState(self.id):
-            self.toolbar.ToggleTool(self.id, paused)
+        # if paused != self.toolbar.GetToolState(self.id):  # TODO : méthodes wxPython à convertir
+        #     self.toolbar.ToggleTool(self.id, paused)  # méthodes wxPython
 
     def updateToolBitmap(self, bitmapName):
         # TODO :
@@ -3861,7 +3861,15 @@ Points clés:
         menuText = self.getMenuText(paused)
         helpText = self.getHelpText(paused)
         for menuItem in self.menuItems:
-            menuItem.Check(paused)
+            # menuItem.Check(paused)  # TODO : Méthode wxPython à convertir
+            # Pour Tkinter, si c'est un menu avec des cases à cocher :
+            if hasattr(menuItem, 'variable'):
+                # Si c'est un Checkbutton menu
+                menuItem.variable.set(paused)
+            elif hasattr(menuItem, 'invoke'):
+                # Si c'est un menu item simple
+                if paused:
+                    menuItem.invoke()  # TypeError: Menu.invoke() missing 1 required positional argument: 'index'
             menuItem.SetItemLabel(menuText)
             menuItem.SetHelp(helpText)
 

@@ -85,6 +85,40 @@ Prenons FileOpen :
     - Le clic exécute FileOpen.doCommand() → cela appelle la méthode du contrôleur de fichiers.
 
 """
+# D'après les logs et le code source que vous avez fournis, l'erreur AttributeError: 'str' object has no attribute 'IsOk' est explicite : la méthode MakeDisabledBitmap s'attend à recevoir un objet de type wx.Bitmap, mais elle reçoit une chaîne de caractères (str).
+#
+# Cela se produit généralement lorsqu'une commande UICommand (ici EditToolBarPerspective) n'a pas encore chargé son icône ou utilise un identifiant texte au lieu d'un objet bitmap réel au moment de l'ajout à la barre d'outils.
+# Correction de MakeDisabledBitmap
+#
+# Le problème immédiat se situe dans la vérification de validité. Si bitmap est une chaîne, l'appel à .IsOk() échoue.
+# Sécurisation de AddLabelTool
+#
+# La méthode AddLabelTool appelle MakeDisabledBitmap. Si cette dernière renvoie None ou si l'entrée est incorrecte, cela peut faire planter super().AddTool.
+#
+# Pourquoi cette erreur arrive-t-elle maintenant ?
+#
+#     Initialisation de EditToolBarPerspective : Dans loadPerspective, vous instanciez cette commande. Il est possible que dans votre version de Task Coach, cette commande spécifique ne charge pas son icône immédiatement ou utilise une icône système qui n'est pas résolue en wx.Bitmap avant l'appel à appendToToolBar.
+#
+#     Cycle de vie : Le log montre que l'erreur survient lors de la création des composants de la fenêtre principale. Si les ressources (images) ne sont pas encore chargées dans le cache global au moment où la barre d'outils est "réalisée", uiCommand.bitmap() pourrait renvoyer un nom de fichier ou une chaîne vide.
+#
+# Prochaine étape suggérée
+#
+# Une fois ces modifications appliquées, le programme ne devrait plus planter. Cependant, le bouton de personnalisation pourrait apparaître sans icône.
+# Puisque l'erreur 'str' object has no attribute 'IsOk' survient dans la barre d'outils, cela signifie que la commande EditToolBarPerspective lui envoie son nom d'icône (une chaîne de caractères comme "edit") au lieu d'un objet image réel (wx.Bitmap).
+# L'erreur vient du fait que, contrairement aux autres commandes, EditToolBarPerspective semble être instanciée ou utilisée avant que son nom d'icône ("cogwheel_icon") ne soit converti en un véritable objet wx.Bitmap.
+#
+# En examinant le fonctionnement habituel de Task Coach, les UICommand stockent souvent le nom de l'icône (une str) et ne la transforment en wx.Bitmap que via une méthode bitmap().
+#
+# Voici pourquoi cette commande précise pose problème et comment la corriger :
+# 1. Pourquoi celle-ci et pas les autres ?
+#
+# Dans votre log, l'erreur survient ici : self.loadPerspective(window.getToolBarPerspective()) dans toolbar.py.
+#
+# La commande EditToolBarPerspective est un cas particulier : elle est souvent créée "à la volée" lors du chargement de la perspective de la barre d'outils. Si elle est créée sans passer par le mécanisme habituel qui convertit les noms en bitmaps (le artprovider), elle garde sa chaîne de caractères.
+# 2. La solution dans uicommand.py
+#
+# Il faut s'assurer que la méthode bitmap() de la classe de base (ou de la commande elle-même) appelle bien l'artprovider si elle détecte qu'elle possède une chaîne au lieu d'un objet.
+#
 
 # from future import standard_library
 
@@ -138,9 +172,18 @@ class _Toolbar(aui.auibar.AuiToolBar):
 
         long_help_string = kwargs.pop("longHelp", "")
         short_help_string = kwargs.pop("shortHelp", "")
-        bitmap2 = self.MakeDisabledBitmap(bitmap1)
+        # bitmap2 = self.MakeDisabledBitmap(bitmap1)
         # TypeError: _Toolbar.MakeDisabledBitmap() takes 1 positional argument but 2 were given
         # Attention ligne 63 déclaration de MakeDisabledBitmap. Ne pas mettre staticmethod.
+        # On vérifie bitmap1 avant de tenter de générer bitmap2
+        if bitmap1 and not isinstance(bitmap1, str):
+            bitmap2 = self.MakeDisabledBitmap(bitmap1)
+        else:
+            # Si bitmap1 est une chaîne ou invalide, on utilise NullBitmap
+            bitmap2 = wx.NullBitmap
+            if isinstance(bitmap1, str):
+                log.error(f"AddLabelTool: bitmap1 pour '{label}' est une chaîne de caractères : {bitmap1}")
+                bitmap1 = wx.NullBitmap
         # auibar..AuiToolBar.AddTool ajoute un outil à la barre d'outils. Il s'agit de la version complète de :meth:`AddTool` :
         super().AddTool(id, label, bitmap1, bitmap2, kind,
                         short_help_string, long_help_string, None, None)
@@ -182,6 +225,7 @@ class _Toolbar(aui.auibar.AuiToolBar):
         #          has been minimized into this toolbar.
         #          """
 
+    # def GetToolState(self, toolId):
     def GetToolState(self, tool_id):
         """ wx.lib.agw.aui.auibar.AuiToolBar.GetToolToggle indique si un outil est activé ou non.
         
@@ -189,6 +233,7 @@ class _Toolbar(aui.auibar.AuiToolBar):
             tool_id (integer) : the toolbar item identifier.
         """
         # Cela s'applique uniquement à un outil qui a été spécifié comme outil toggle(à bascule).
+        # return self.GetToolToggled(toolId)
         return self.GetToolToggled(tool_id)
 
     def SetToolBitmapSize(self, size):
@@ -263,10 +308,23 @@ class _Toolbar(aui.auibar.AuiToolBar):
         
         # bitmap (wx.Bitmap) – le nouveau bitmap désactivé pour l'élément de la barre d'outils.
         # Eviter que si bitmap.ConvertToImage() retourne un objet invalide, le retour plantera.
+        # Sécurité : vérifier si le bitmap est bien un objet wx.Bitmap
+        if isinstance(bitmap, str):
+            log.error("MakeDisabledBitmap a reçu une chaîne ('%s') au lieu d'un wx.Bitmap. Utilisation d'un bitmap nul.", bitmap)
+            return wx.NullBitmap
+            # return bitmap
+            # return artprovider.getBitmap(bitmap)
+
         if not bitmap or not bitmap.IsOk():
-            log.warning("Le bitmap fourni est invalide ou None dans MakeDisabledBitmap")
+            log.error("Le bitmap fourni est invalide ou None dans MakeDisabledBitmap")
+            return wx.NullBitmap  # Retourner un bitmap nul plutôt que None pour éviter des erreurs en aval
         else:
-            return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
+            # return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
+            try:
+                return bitmap.ConvertToImage().ConvertToGreyscale().ConvertToBitmap()
+            except Exception as e:
+                log.error("Erreur lors de la conversion du bitmap en niveaux de gris : %s", e)
+                return bitmap
 
 
 class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
@@ -380,7 +438,7 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         if operating_system.isMac():
             commands.append(None)  # Errr...
 
-        # log.debug("ToolBar.loadPerspective : Commandes filtrées : %s", [str(c) for c in commands])
+        log.debug("ToolBar.loadPerspective : Commandes filtrées : %s", [str(c) for c in commands])
         # Une fois les commandes créées par UICommands() et MainWindow.createToolBarUICommands()
         self.appendUICommands(*commands)
         self.Realize()  # Réalise la barre d'outils. Cette fonction doit être appelée après avoir ajouté des outils.
@@ -470,10 +528,23 @@ class ToolBar(uicommandcontainer.UICommandContainerMixin, _Toolbar):
         # Déboggage :
         # Ajoutez des débogage pour vérifier les paramètres
         log.debug(f"ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}")
+
+        # forcer la conversion de l'image juste avant l'ajout :
+        bmp = uiCommand.bitmap()
+        if isinstance(bmp, str):
+            # On force la conversion si on a encore une chaîne
+            from taskcoachlib.gui import artprovider
+            bmp = artprovider.getBitmap(bmp, self._size)
+
+        # Ensuite on utilise bmp au lieu de uiCommand.bitmap()
+        self.AddLabelTool(uiCommand.id(), uiCommand.menuText(),
+                          bmp, bmp, self.kind(uiCommand), shortHelp=uiCommand.shortHelp(), longHelp=uiCommand.longHelp())
+        # vous garantissez que AddLabelTool reçoit un objet wx.Bitmap (ou wx.NullBitmap), et jamais une str. L'appel à .IsOk() ne plantera donc plus.
+
         try:
             return uiCommand.appendToToolBar(self)
         except Exception as e:
-            log.error("ToolBar.appendUICommand : Erreur lors de l'ajout de la commande %s : %s", uiCommand, e)
+            log.error("ToolBar.appendUICommand : Erreur lors de l'ajout de la commande %s : %s", uiCommand, e, stack_info=True)
             raise
         # # Implémentation de la méthode appendUICommand
         # toolId = len(self.tools)  # Simule un ID unique pour l'outil

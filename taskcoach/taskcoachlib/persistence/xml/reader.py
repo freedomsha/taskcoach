@@ -38,9 +38,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import str
 # from builtins import range
 # from builtins import object
+import ast
 import base64
 import io  # as StringIO
 import logging
+import operator
 import os
 # Problème : Le code utilise os.path pour manipuler les chemins de fichiers,
 # mais il n'utilise pas pathlib, qui est plus moderne et plus sûr.
@@ -48,14 +50,16 @@ import os
 # plus moderne des chemins de fichiers.
 import re
 import stat
+import uuid
 # import wx
 import tkinter as tk
 import tkinter.font
 # from wx import adv as wxadv
 # import xml.etree.ElementTree as eTree
-# from lxml import etree as ET
-from xml.etree import ElementTree as ET
+from lxml import etree as ET
+# from xml.etree import ElementTree as ET
 
+from taskcoachlib.domain.task.task import GUI_NAME
 from taskcoachlib.persistence import sessiontempfile  # pylint: disable=F0401
 from taskcoachlib import meta, patterns
 from taskcoachlib.changes import ChangeMonitor
@@ -63,7 +67,7 @@ from taskcoachlib.domain import base, date, effort, task, category, categorizabl
 from taskcoachlib.i18n import translate
 from taskcoachlib.syncml.config import SyncMLConfigNode, createDefaultSyncConfig
 from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
-from taskcoachlib.thirdparty.guid import generate
+# from taskcoachlib.thirdparty.guid import generate
 
 # Import the UI backend which provides a `wx` namespace (real wx when available
 # and selected, otherwise a tkinter-based or dummy fallback).
@@ -84,6 +88,76 @@ log = logging.getLogger(__name__)
 #    Remplacement de eval par ast.literal_eval.
 #    Gestion plus sûre des fichiers temporaires avec des context managers.
 #    Gestion explicite de l’encodage lors de l’ouverture des fichiers (certains TODO le signalent).
+
+# TODO : safe_eval_date_expr ne devrait pas être ici !
+def safe_eval_date_expr(expr, context):
+    """Safely evaluate date expressions using AST parsing.
+
+    Only allows safe operations: attribute access, function calls on allowed
+    objects, arithmetic operations, and string operations.
+    """
+
+    # Allowed binary operators
+    allowed_operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.FloorDiv: operator.floordiv,
+        ast.Mod: operator.mod,
+    }
+
+    # Allowed unary operators
+    allowed_unary = {
+        ast.UAdd: operator.pos,
+        ast.USub: operator.neg,
+    }
+
+    def eval_node(node):
+        if isinstance(node, ast.Expression):
+            return eval_node(node.body)
+        elif isinstance(node, ast.Constant):
+            return node.value
+        elif isinstance(node, ast.Num):  # Python 3.7 compatibility
+            return node.n
+        elif isinstance(node, ast.Str):  # Python 3.7 compatibility
+            return node.s
+        elif isinstance(node, ast.Name):
+            name = node.id
+            if name in context:
+                return context[name]
+            raise ValueError(f"Name '{name}' not allowed in expression")
+        elif isinstance(node, ast.BinOp):
+            if type(node.op) not in allowed_operators:
+                raise ValueError(f"Operator {type(node.op).__name__} not allowed")
+            left = eval_node(node.left)
+            right = eval_node(node.right)
+            return allowed_operators[type(node.op)](left, right)
+        elif isinstance(node, ast.UnaryOp):
+            if type(node.op) not in allowed_unary:
+                raise ValueError(f"Unary operator {type(node.op).__name__} not allowed")
+            operand = eval_node(node.operand)
+            return allowed_unary[type(node.op)](operand)
+        elif isinstance(node, ast.Call):
+            func = eval_node(node.func)
+            args = [eval_node(arg) for arg in node.args]
+            kwargs = {kw.arg: eval_node(kw.value) for kw in node.keywords}
+            return func(*args, **kwargs)
+        elif isinstance(node, ast.Attribute):
+            value = eval_node(node.value)
+            return getattr(value, node.attr)
+        elif isinstance(node, ast.Tuple):
+            return tuple(eval_node(elt) for elt in node.elts)
+        elif isinstance(node, ast.List):
+            return [eval_node(elt) for elt in node.elts]
+        else:
+            raise ValueError(f"Node type {type(node).__name__} not allowed")
+
+    try:
+        tree = ast.parse(expr, mode='eval')
+        return eval_node(tree)
+    except (SyntaxError, ValueError) as e:
+        raise ValueError(f"Invalid expression '{expr}': {e}")
 
 
 def parseAndAdjustDateTime(string, *timeDefaults):
@@ -129,10 +203,15 @@ def parseAndAdjustDateTime(string, *timeDefaults):
         and dateTime is not None
         and dateTime.time() == date.Time(23, 59, 0, 0)
     ):
-        dateTime = date.DateTime(year=dateTime.year,
-                                 month=dateTime.month,
-                                 day=dateTime.day,
-                                 hour=23, minute=59, second=59, microsecond=999999)
+        dateTime = date.DateTime(
+            year=dateTime.year,
+            month=dateTime.month,
+            day=dateTime.day,
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=999999,
+        )
     # log.debug(f"reader.parseAndAdjustDateTime : dateTime ajusté = {dateTime}")
     return dateTime
 
@@ -524,17 +603,15 @@ class XMLReader(object):  # nouvelle classe
         self.__fd = fd
         # print(f"self.__fd = {self.__fd}.")
         # # Taille de la police par défaut :
-        # self.__default_font_size = wx.SystemSettings.GetFont(
-        #     wx.SYS_DEFAULT_GUI_FONT).GetPointSize()  # TODO : A modifier pour tkinter !
-        # Créer un objet police par défaut
-        default_font = tkinter.font.Font(font=tkinter.font.nametofont("TkDefaultFont"))
-
-        # Obtenir la taille de la police par défaut
-        self.__default_font_size = default_font.cget("size")
-        # try:  # Utiliser la condition de GUI=wx
-        #     self.__default_font_size = wx.SystemSettings.GetFont(
-        #         wx.SYS_DEFAULT_GUI_FONT
-        #     ).GetPointSize()
+        if GUI_NAME == "wx":
+            self.__default_font_size = wx.SystemSettings.GetFont(
+                wx.SYS_DEFAULT_GUI_FONT
+            ).GetPointSize()  # TODO : A modifier pour tkinter !
+        elif GUI_NAME == "tk":
+            # Créer un objet police par défaut
+            default_font = tkinter.font.Font(font=tkinter.font.nametofont("TkDefaultFont"))
+            # Obtenir la taille de la police par défaut
+            self.__default_font_size = default_font.cget("size")
         # except Exception:
         #     self.__default_font_size = 10
         # log.debug(f"XMLReader.init : Création de self.__default_font_size = {self.__default_font_size}")
@@ -548,6 +625,10 @@ class XMLReader(object):  # nouvelle classe
         self.__prerequisites = dict()
         # Dictionnaire des catégorisables :
         self.__categorizables = dict()
+        # Track all IDs and their locations for duplicate detection
+        # Maps ID -> list of (object_type, hierarchical_path) tuples
+        self.__id_registry = {}
+        self.__current_path = []  # Stack for tracking hierarchical location
         # log.debug(f"📂 XMLReader : Contenu de self.__categorizables AVANT traitement : {self.__categorizables}")
         # Version de fichier :
         self.__tskversion = None
@@ -562,6 +643,27 @@ class XMLReader(object):  # nouvelle classe
         """
         # log.debug(f"XMLReader.tskversion : est sensé renvoyer la version du fichier de tâches actuel en cours de lecture self.__tskversion = {self.__tskversion}")
         return self.__tskversion
+
+    def __register_id(self, obj_id, obj_type, subject):
+        """Register an object's ID for duplicate detection."""
+        if not obj_id:
+            return
+        path = " -> ".join(self.__current_path + [f"{obj_type}: {subject}"])
+        if obj_id not in self.__id_registry:
+            self.__id_registry[obj_id] = []
+        self.__id_registry[obj_id].append((obj_type, path))
+
+    def get_duplicate_ids(self):
+        """Return a dict of IDs that appear more than once.
+
+        Returns dict mapping ID -> list of (object_type, path) tuples
+        for IDs that have duplicates.
+        """
+        return {
+            obj_id: locations
+            for obj_id, locations in self.__id_registry.items()
+            if len(locations) > 1
+        }
 
     def read(self):
         """
@@ -645,7 +747,8 @@ class XMLReader(object):  # nouvelle classe
         #
         # # 2. Crée une instance de `PIParser` pour analyser les instructions de traitement (PI) spécifiques à Task Coach.
         # # print("XMLReader.read : 2.Création d'une instance de PIParser.")
-        parser = PIParser()
+        # parser = PIParser()
+        parser = ET.XMLParser()
         # 3. Analyse l'arbre XML du fichier à l'aide de `ET.parse` et de l'analyseur `PIParser`.
         # try:
         self.__fd.seek(0)  # Remet le curseur au début du fichier
@@ -689,20 +792,24 @@ class XMLReader(object):  # nouvelle classe
         # 4. Extrait la version du fichier de tâches à partir de l'instruction de traitement "taskcoach".
         # # Récupérer l'instruction de traitement à partir de `docinfo`
         # tskversion = 1  # Valeur par défaut
-        # pis = tree.getroot().xpath("//processing-instruction()")
+        # pis = tree.getroot().xpath("//processing-instruction()")   # AttributeError: 'xml.etree.ElementTree.Element' object has no attribute 'xpath'
+        pis = root.xpath("//processing-instruction()")   # AttributeError: 'xml.etree.ElementTree.Element' object has no attribute 'xpath'
+        # pis = tree.getroot().findall("//processing-instruction()")
         # print(f"pis = {pis}")
         # print(f"Valeur de tskversion avant affectation : {tskversion}")
-        # # for pi in pis:
-        # #     if pi.target == "taskcoach":
-        # #         # tskversion = int(pi.attrib.get("tskversion"))
-        # #         try:
-        # #             print(f"pi.attrib.get('tskversion') = {pi.attrib.get("tskversion")}")
-        # #             tskversion = int(pi.attrib.get("tskversion"))  # Utiliser "1" si absent
-        # #         except ValueError:
-        # #             print(
-        # #                 f"Erreur : tskversion invalide '{pi.attrib.get('tskversion')}', utilisation de la valeur par défaut 1.")
-        # #             tskversion = 1
-        # #         break   # Sortir après la première occurrence trouvée
+        for pi in pis:
+            # if pi.target == "taskcoach":
+            if pi == "taskcoach":
+                # tskversion = int(pi.attrib.get("tskversion"))
+                try:
+                    # print(f"pi.attrib.get('tskversion') = {pi.attrib.get("tskversion")}")
+                    tskversion = int(pi.attrib.get("tskversion", "1"))  # Utiliser "1" si absent
+                    log.info(f"pis récupère tskversion={tskversion}.")
+                except ValueError:
+                    log.error(
+                        f"Erreur : tskversion invalide '{pi.attrib.get('tskversion')}', utilisation de la valeur par défaut 1.")
+                    tskversion = 1
+                break   # Sortir après la première occurrence trouvée
         # if tree.docinfo.internalDTD:
         #     for pi in tree.docinfo.internalDTD.externalEntities():
         #         if pi.name == "taskcoach":
@@ -787,7 +894,10 @@ class XMLReader(object):  # nouvelle classe
         # print(f"XMLReader.read : Enregistre le traitement du noeud syncml root dans syncml_config = {syncml_config}")
 
         # for object, modification_datetime in list(self.__modification_datetimes.items()):
-        for the_object, modification_datetime in self.__modification_datetimes.items():
+        for (
+                the_object,
+                modification_datetime,
+        ) in self.__modification_datetimes.items():
             # print(f"XMLReader.read : Règle la modification de date {modification_datetime} de l'objet {the_object}.")
             the_object.setModificationDateTime(modification_datetime)
 
@@ -804,13 +914,13 @@ class XMLReader(object):  # nouvelle classe
             # changes = ChangesXMLReader(
             #     open(f"{self.__fd.name}.delta", "r")
             # ).read()
-            # with open(changesName, "r") as fromChangesName:
-            #     changes = ChangesXMLReader(fromChangesName).read()
-            try:
-                with open(changesName, 'rb') as delta_f:
-                    changes = ChangesXMLReader(delta_f).read()
-            except FileNotFoundError:
-                changes = {}
+            with open(changesName, "r") as fromChangesName:
+                changes = ChangesXMLReader(fromChangesName).read()
+            # try:
+            #     with open(changesName, 'rb') as delta_f:
+            #         changes = ChangesXMLReader(delta_f).read()
+            # except FileNotFoundError:
+            #     changes = {}
             # print(f"XMLReader.read : Informations de modification lues du fichier delta : changes = {changes}")
         # Sinon
         else:
@@ -866,8 +976,8 @@ class XMLReader(object):  # nouvelle classe
         self.__origFd = self.__fd  # pylint: disable=W0201
         # content = self.__fd.read()
         # Utilise __fd comme mémoire buffer :
-        # self.__fd = io.StringIO()
-        self.__fd = io.BytesIO()  # TODO : ?
+        self.__fd = io.StringIO()
+        # self.__fd = io.BytesIO()  # TODO : ?
         # Donne le nom d'origine à __fd mémoire buffer :
         self.__fd.name = self.__origFd.name
         # Enregistre chaque ligne du fichier d'origine dans lines :
@@ -875,8 +985,11 @@ class XMLReader(object):  # nouvelle classe
         # Pour chaque numéro de ligne index :
         for index in range(len(lines)):
             # Si la ligne finit par :
-            if lines[index].endswith(b"<TaskCoach-\n") or lines[index].endswith(
-                b"</TaskCoach-\n"
+            # if lines[index].endswith(b"<TaskCoach-\n") or lines[index].endswith(
+            #     b"</TaskCoach-\n"
+            # ):
+            if lines[index].endswith("<TaskCoach-\n") or lines[index].endswith(
+                "</TaskCoach-\n"
             ):
                 lines[index] = lines[index][:-1]  # Remove newline
                 lines[index + 1] = lines[index + 1][:-1]  # Remove newline
@@ -885,7 +998,8 @@ class XMLReader(object):  # nouvelle classe
         # else:
         #     content = content.replace("><spds><sources><TaskCoach-\n", "")
         # Ré-écrire le résultat dans __fd
-        self.__fd.write(b"".join(lines))
+        self.__fd.write("".join(lines))
+        # self.__fd.write(b"".join(lines))
         # Retourne la tête de lecture/écriture au début :
         self.__fd.seek(0)
         # lgo.debug(f"XMLReader.__fix_broken_lines : self.__fd après changement = {self.__fd.read()}")
@@ -961,7 +1075,9 @@ class XMLReader(object):  # nouvelle classe
                         deleted_task.setPrerequisites([])
                     continue
                 prerequisites = set()
-                for prerequisiteId in self.__prerequisites.get(each_task.id(), []):
+                for prerequisiteId in self.__prerequisites.get(
+                        each_task.id(), []
+                ):
                     try:
                         prerequisites.add(tasks_by_id[prerequisiteId])
                     except KeyError:
@@ -1075,10 +1191,10 @@ class XMLReader(object):  # nouvelle classe
             if isinstance(obj, note.NoteOwner):
                 # log.deug(
                 #     f"DEBUG: mapCategorizables ajoute les notes de {obj.id()} à la liste resultMap en les renvoyant dans mapCategorizables.")
-                for child in obj.notes():
+                for theNote in obj.notes():
                     # log.debug(
                     #     f"✅ Ajout de la note {child.id()} (de {obj.notes()}) à la liste des catégories categoryMap via mapCategorizables.")
-                    mapCategorizables(child, resultMap, categoryMap)
+                    mapCategorizables(theNote, resultMap, categoryMap)
             # if isinstance(obj, base.AttachmentOwner):
             if isinstance(obj, attachment.AttachmentOwner):
                 # log.debug(
@@ -1369,16 +1485,23 @@ class XMLReader(object):  # nouvelle classe
         'filtered' et 'exclusiveSubcategories'. Les tâches associées (categorizables)
         ne sont pas traitées ici mais seront associées plus tard dans __resolve_categories.
         """
+        # Récupérer le sujet de la catégorie depuis le nœud XML
+        subject = category_node.attrib.get("subject", "")
         # Récupérer l'ID de la catégorie depuis le nœud XML
         # print(f"📂 DEBUG - Début analyse de la catégorie {ET.tostring(category_node, pretty_print=True).decode()}")
         # print(f"XMLReader.__parse_category_node : récupère l'ID de la catégorie {category_node} depuis le nœud XML :")
-        # category_id = category_node.attrib.get("id")
+        category_id = category_node.attrib.get("id", "")
         # print(f"category_id = {category_id}")
+
+        self.__register_id(category_id, "Category", subject)
+        self.__current_path.append(f"Category: {subject}")
 
         # Récupère les attributs de base du nœud composite à l'aide de `__parse_base_composite_attributes`.
         # print(f"XMLReader.__parse_category_node : Récupère les attributs de base du nœud composite {category_node} à l'aide de `__parse_base_composite_attributes`.")
-        kwargs = self.__parse_base_composite_attributes(category_node,
-                                                        self.__parse_category_nodes)
+        kwargs = self.__parse_base_composite_attributes(
+            category_node,
+            self.__parse_category_nodes
+        )
         # print(f"kwargs = {kwargs}")
         if not kwargs:
             # wx.LogWarning(
@@ -1457,7 +1580,9 @@ class XMLReader(object):  # nouvelle classe
         # Stocke (même si c'est vide) la liste des identifiants catégorisables pour cette catégorie
         # print(
         #     f"DEBUG - Association catégories/tâches : self.__categorizables[{theCategory.id()}] = {self.__categorizables[theCategory.id()]}")
-        self.__categorizables.setdefault(theCategory.id(), list()).extend(categorizable_ids.split(" "))
+        self.__categorizables.setdefault(theCategory.id(), list()).extend(
+            categorizable_ids.split(" ")
+        )
         # self.__categorizables.setdefault(theCategory.id(), list()).extend(
         #     [id_ for id_ in categorizable_ids.split(" ") if id_]
         # )
@@ -1487,7 +1612,7 @@ class XMLReader(object):  # nouvelle classe
         #     print("⚠️ WARNING - La création de category.Category a échoué !")
         # else:
         #     print(f"✅ DEBUG - Catégorie créée avec succès : {theCategory}")
-
+        self.__current_path.pop()
         return self.__save_modification_datetime(theCategory)
 
     def __parse_category_nodes_from_task_nodes(self, root):
@@ -1506,7 +1631,9 @@ class XMLReader(object):  # nouvelle classe
 
         """
         task_nodes = root.findall(".//task")
-        category_mapping = self.__parse_category_nodes_within_task_nodes(task_nodes)
+        category_mapping = self.__parse_category_nodes_within_task_nodes(
+            task_nodes
+        )
         subject_category_mapping = {}
         # for task_id, categories in category_mapping.items():
         for task_id, categories in list(category_mapping.items()):
@@ -1516,7 +1643,9 @@ class XMLReader(object):  # nouvelle classe
                 else:
                     cat = category.Category(subject)
                     subject_category_mapping[subject] = cat
-                self.__categorizables.setdefault(cat.id(), list()).append(task_id)
+                self.__categorizables.setdefault(cat.id(), list()).append(
+                    task_id
+                )
         # return subject_category_mapping.values()
         # print(f"XMLReader.__parse_category_nodes_from_task_nodes : DEBUG - Catégories trouvées: {subject_category_mapping}")
         return list(subject_category_mapping.values())
@@ -1564,6 +1693,12 @@ class XMLReader(object):  # nouvelle classe
         """
 
         # log.debug(f"XMLReader.__parse_task_node : Analyse récursive du noeud tâche {task_node} pour  self.tskversion = {self.tskversion} :")
+        # Get subject early for path tracking
+        subject = task_node.attrib.get("subject", "")
+        obj_id = task_node.attrib.get("id", "")
+        self.__register_id(obj_id, "Task", subject)
+        self.__current_path.append(f"Task: {subject}")
+
         planned_start_datetime_attribute_name = (
             "startdate" if self.tskversion() <= 33 else "plannedstartdate"
         )
@@ -1684,6 +1819,7 @@ class XMLReader(object):  # nouvelle classe
         #     sub_task = self.__parse_task_node(sub_task_node)  # Crée la sous-tâche
         #     theTask.addChild(sub_task)  # L'ajoute à la tâche parente
         print(f"XMLReader.__parse_task_node : Retourne la tâche theTask = {theTask}{theTask.id} de status {theTask.status()}")
+        self.__current_path.pop()
         return theTask
 
     def __parse_recurrence(self, task_node):
@@ -1766,8 +1902,15 @@ class XMLReader(object):  # nouvelle classe
         * Parse les pièces jointes si la version du fichier de tâches est supérieure à 20.
         * Enregistre la date de modification de la note à l'aide de `__save_modification_datetime`.
         """
-        kwargs = self.__parse_base_composite_attributes(note_node,
-                                                        self.__parse_note_nodes)
+        subject = note_node.attrib.get("subject", "")
+        obj_id = note_node.attrib.get("id", "")
+        self.__register_id(obj_id, "Note", subject)
+        self.__current_path.append(f"Note: {subject}")
+
+        kwargs = self.__parse_base_composite_attributes(
+            note_node,
+            self.__parse_note_nodes
+        )
 
         if self.__tskversion > 20:
             kwargs["attachments"] = self.__parse_attachments(note_node)
@@ -1784,6 +1927,7 @@ class XMLReader(object):  # nouvelle classe
         # return self.__save_modification_datetime(
         #     note.Note(**kwargs)
         # )  # pylint: disable=W0142
+        self.__current_path.pop()
         return self.__save_modification_datetime(theNote)  # ✅ Retourne un vrai objet Note
 
     def __parse_base_attributes(self, node):
@@ -1827,15 +1971,17 @@ class XMLReader(object):  # nouvelle classe
 
         if self.__tskversion <= 20:
             attributes["attachments"] = (
-                self.__parse_attachments_before_version21(node))
+                self.__parse_attachments_before_version21(node)
+            )
         if self.__tskversion >= 22:
             attributes["status"] = int(node.attrib.get("status", "1"))
 
         log.debug(f"__parse_base_attributes : retourne attributes={attributes}")
         return attributes
 
-    def __parse_base_composite_attributes(self, node, parse_children,
-                                          *parse_children_args):
+    def __parse_base_composite_attributes(
+        self, node, parse_children, *parse_children_args
+    ):
         """ Identique à __parse_base_attributes, mais analyse également les enfants
         et les contextes étendus.
 
@@ -1866,7 +2012,9 @@ class XMLReader(object):  # nouvelle classe
         * Gère les erreurs d'entrée/sortie (IOError) pour les pièces jointes (par exemple, les pièces jointes de courriel).
         """
         # Construit le chemin vers le répertoire des pièces jointes en se basant sur le nom du fichier de tâches.
-        path, name = os.path.split(os.path.abspath(self.__fd.name))  # pylint: disable=E1103
+        path, name = os.path.split(
+            os.path.abspath(self.__fd.name)
+        )  # pylint: disable=E1103
         name = os.path.splitext(name)[0]
         # attdir = os.path.normpath(os.path.join(path, name + "_attachments"))
         attdir = os.path.normpath(os.path.join(path, f"{name}_attachments"))
@@ -1880,16 +2028,18 @@ class XMLReader(object):  # nouvelle classe
                 args = (node.text,)
                 kwargs = dict()
             else:
-                args = (os.path.join(attdir, node.find("data").text),
-                        node.attrib["type"])
+                args = (
+                    os.path.join(attdir, node.find("data").text),
+                    node.attrib["type"],
+                )
                 description = self.__parse_description(node)
-                kwargs = dict(subject=description,
-                              description=description)
+                kwargs = dict(subject=description, description=description)
             try:
                 # Crée des instances de `attachment.AttachmentFactory`.
                 # pylint: disable=W0142
-                attachments.append(attachment.AttachmentFactory(*args,
-                                                                **kwargs))
+                attachments.append(
+                    attachment.AttachmentFactory(*args, **kwargs)
+                )
                 # # Vérifie si 'location' est None avant de créer un attachement
                 # if location:
                 #     if location is not None:
@@ -1912,8 +2062,10 @@ class XMLReader(object):  # nouvelle classe
                 * Utilise `__parse_effort_node` pour parser chaque enregistrement individuel.
 
         """
-        return [self.__parse_effort_node(effort_node)
-                for effort_node in node.findall("effort")]
+        return [
+            self.__parse_effort_node(effort_node)
+            for effort_node in node.findall("effort")
+        ]
 
     def __parse_effort_node(self, node):
         """ Parse an effort record from the node.
@@ -1929,6 +2081,9 @@ class XMLReader(object):  # nouvelle classe
             kwargs["status"] = int(node.attrib.get("status", "1"))
         if self.__tskversion >= 29:
             kwargs["id"] = node.attrib["id"]
+            # Register effort ID for duplicate detection
+            start_str = node.attrib.get("start", "")
+            self.__register_id(kwargs["id"], "Effort", f"started {start_str}")
         start = node.attrib.get("start", "")
         stop = node.attrib.get("stop", "")
         description = self.__parse_description(node)
@@ -1936,8 +2091,13 @@ class XMLReader(object):  # nouvelle classe
         # task by the task itself. This way no events are sent for changing the
         # effort owner, which is good.
         # pylint: disable=W0142
-        return effort.Effort(task=None, start=date.parseDateTime(start),
-                             stop=date.parseDateTime(stop), description=description, **kwargs)
+        return effort.Effort(
+            task=None,
+            start=date.parseDateTime(start),
+            stop=date.parseDateTime(stop),
+            description=description,
+            **kwargs
+        )
 
     def __parse_syncml_node(self, nodes, guid):
         """ Parse the SyncML node from the nodes.
@@ -1993,10 +2153,11 @@ class XMLReader(object):  # nouvelle classe
         # pour la génération de GUID, comme uuid.
         # Si, justement, guid !
         guid = self.__parse_text(node).strip()
-        return guid if guid else generate()
-        # if node is not None and node.text:
-        #     return node.text
-        # return generate()
+        # return guid if guid else generate()
+        # # if node is not None and node.text:
+        # #     return node.text
+        # # return generate()
+        return guid if guid else str(uuid.uuid4())
 
     def __parse_attachments(self, node):
         """ Analyser les pièces jointes du nœud.
@@ -2027,7 +2188,11 @@ class XMLReader(object):  # nouvelle classe
         * Crée un fichier temporaire pour les données de pièces jointes incluses.
         * Définit les permissions du fichier temporaire sur lecture seule pour Windows.
         * Crée et retourne une instance de `attachment.AttachmentFactory`.
-        * Enregistre la date de modification de la pièce jointe à l'aide de `__save_modification_datetime`."""
+        * Enregistre la date de modification de la pièce jointe à l'aide de `__save_modification_datetime`.
+        """
+        subject = node.attrib.get("subject", "")
+        obj_id = node.attrib.get("id", "")
+        self.__register_id(obj_id, "Attachment", subject)
 
         # Création d'un dictionnaire d'attributs
         kwargs = self.__parse_base_attributes(node)
@@ -2039,8 +2204,9 @@ class XMLReader(object):  # nouvelle classe
         # Solution : Utilisez un gestionnaire de contexte (with) pour garantir
         # que le fichier temporaire soit supprimé après utilisation.
         if self.__tskversion <= 22:
-            path, name = os.path.split(os.path.abspath(
-                self.__fd.name))  # pylint: disable=E1103
+            path, name = os.path.split(
+                os.path.abspath(self.__fd.name)
+            )  # pylint: disable=E1103
             name, ext = os.path.splitext(name)
             # attdir = os.path.normpath(
             #     os.path.join(path, name + "_attachments")
@@ -2176,9 +2342,11 @@ class XMLReader(object):  # nouvelle classe
             # return tkinter.font.Font(family=parts[0], size=int(parts[1]), weight=tkinter.font.BOLD if "bold" in parts else tkinter.font.NORMAL, slant=tkinter.font.ITALIC if "italic" in parts else tkinter.font.NORMAL)
 
         if text:
-            # font = wxadv.FontFromNativeInfoString(text)  # Obsolète
-            # font = wx.Font(text)  # TODO : A Convertir pour tkinter
-            font = convert_wx_font_string_to_tk(text)  # pour tkinter
+            if GUI_NAME == "wx":
+                # font = wxadv.FontFromNativeInfoString(text)  # Obsolète
+                font = wx.Font(text)  # TODO : A Convertir pour tkinter
+            elif GUI_NAME == "tk":
+                font = convert_wx_font_string_to_tk(text)  # pour tkinter
             if font and font.IsOk():
                 if font.GetPointSize() < 4:
                     font.SetPointSize(self.__default_font_size)
@@ -2409,12 +2577,14 @@ class TemplateXMLReader(XMLReader):
             if template_name in task_node.attrib:
                 if self.tskversion() < 32:
                     value = TemplateXMLReader.convert_old_format(
-                        task_node.attrib[template_name])
+                        task_node.attrib[template_name]
+                    )
                 else:
                     value = task_node.attrib[template_name]
                 attrs[new_name] = value
                 task_node.attrib[new_name] = str(
-                    nlTimeExpression.parseString(value).calculatedTime)
+                    nlTimeExpression.parseString(value).calculatedTime
+                )
             elif new_name not in attrs:
                 attrs[new_name] = None
         if "subject" in task_node.attrib:
@@ -2454,6 +2624,7 @@ class TemplateXMLReader(XMLReader):
             return built_in_templates[expr]
         # Not a built in template:
         new_datetime = eval(expr, date.__dict__)
+        # new_datetime = safe_eval_date_expr(expr, date.__dict__)
         if isinstance(new_datetime, date.date.RealDate):
             new_datetime = date.DateTime(new_datetime.year, new_datetime.month,
                                          new_datetime.day)

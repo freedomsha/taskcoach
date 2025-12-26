@@ -347,6 +347,7 @@ class SimpleTreeItem:
         self.name = name
         self.parent = parent
         self.children: List['SimpleTreeItem'] = []
+        # self.get_tree_children: List['SimpleTreeItem'] = []
 
     def __repr__(self) -> str:
         """Retourne une représentation en chaîne de l'objet."""

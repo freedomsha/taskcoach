@@ -196,13 +196,13 @@ class tkScheduler(tkSchedulerCore, tk.Frame):
         """Indique si l'heure courante est affichée."""
         return self._showNow
 
-# Comment l'utiliser ?
+# # Comment l'utiliser ?
 # import tkinter as tk
 # from datetime import datetime, timedelta
 #
 # # Supposons que tous vos fichiers (tkScheduler.py, tkSchedule.py, etc.)
 # # se trouvent dans un dossier nommé "scheduler_lib"
-# from taskcoachlib.thirdparty.tkScheduler.tkScheduler import tkScheduler
+# # from taskcoachlib.thirdparty.tkScheduler.tkScheduler import tkScheduler
 # from taskcoachlib.thirdparty.tkScheduler.tkSchedule import tkSchedule
 # from taskcoachlib.thirdparty.tkScheduler.tkSchedulerConstants import SCHEDULER_WEEKLY, SCHEDULER_MONTHLY
 #

@@ -1154,7 +1154,7 @@ class Task(
             # return wx.Colour(
             #     *eval(class_.settings.get("fgcolor", "%stasks" % taskStatus))
             # )  # pylint: disable=E110
-            return wx.Colour(*rgb_tuple)# 1
+            return wx.Colour(*rgb_tuple)  # 1
         # elif GUI_NAME =="tk" or get_gui() == "tk":
         #     # Version Tkinter : retourne une couleur hexadécimale ou tuple RGB
         #     color_setting = class_.settings.get("fgcolor", "%stasks" % taskStatus)
@@ -1212,7 +1212,13 @@ class Task(
         """ Return the current color of task, based on its status (completed,
             overdue, duesoon, inactive, or active). """
         color = self.bgColorForStatus(self.status())
-        return None if color == wx.WHITE else color
+        # return None if color == wx.WHITE else color
+        if GUI_NAME == "wx" and color == wx.Colour(255, 255, 255):
+            return None
+        elif GUI_NAME == "tk" or get_gui() == "tk":
+            if color == "#ffffff":
+                return None
+        return color
 
     @classmethod
     def bgColorForStatus(class_, taskStatus):  # class_ -> cls
