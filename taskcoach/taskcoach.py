@@ -208,16 +208,16 @@ def start():
     from taskcoachlib.config.arguments import set_gui
     set_gui(options.gui_name)
 
-    # if options.gui_name == "wx":
-    # # Lancement de l'initialisation de l'application version wxPython:
-    # app = application.Application(
-    #     options, args
-    # )  # définition de la variable app comme application avec options et args
-    # # app = application.Application(tcargs)
-    # if options.gui_name == "tk":
-    # # Lancement de l'initialisation de l'application version tkinter:
-    app = application.TkinterApplication(options, args)
-    # print("taskcoach.py: options.profile:", options.profile)  # is False !
+    if options.gui_name == "wx":
+        # Lancement de l'initialisation de l'application version wxPython:
+        app = application.application.Application(
+            options, args
+        )  # définition de la variable app comme application avec options et args
+        # app = application.Application(tcargs)
+    if options.gui_name == "tk":
+        # Lancement de l'initialisation de l'application version tkinter:
+        app = application.tkapplication.TkinterApplication(options, args)
+        # print("taskcoach.py: options.profile:", options.profile)  # is False !
     log.debug("Option --profile active : %s", options.profile)
     # Lancement de l'application :
     if options.profile:

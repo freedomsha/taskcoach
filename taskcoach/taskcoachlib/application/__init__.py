@@ -16,7 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-try:
-    from .application import Application
-except ImportError:
+# gui_used ?
+from taskcoachlib.config.arguments import get_gui
+
+gui_name = get_gui()
+if gui_name == "wx":
     from taskcoachlib.application.application import Application
+# try:
+#     from .application import Application
+#
+# except ImportError:
+#     from taskcoachlib.application.application import Application, TkinterApplication
+if gui_name == "tk":
+    from taskcoachlib.application.tkapplication import TkinterApplication

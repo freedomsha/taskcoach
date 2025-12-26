@@ -15,5 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from taskcoachlib.domain.task.task import GUI_NAME
 
-from . import tctest as tctest
+if GUI_NAME == "wx":
+    from . import tctest as tctest
+elif GUI_NAME =="tk":
+    from . import tctktest as tctktest

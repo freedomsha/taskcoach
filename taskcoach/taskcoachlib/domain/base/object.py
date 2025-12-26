@@ -495,7 +495,7 @@ class SynchronizedObject(object):
     def modificationEventTypes(class_):
         pass
 
-
+# @functools.total_ordering
 class Object(SynchronizedObject):
     """
     Une classe de base pour les objets avec des attributs et des fonctionnalités communs.
@@ -705,6 +705,7 @@ class Object(SynchronizedObject):
         )
         # self.__id = kwargs.pop("id", None or str(uuid.uuid1()))  # ID unique
         self.__id = local_kwargs.pop("id", None or str(uuid.uuid1()))  # ID unique
+        # self.__id = local_kwargs.pop("id", str(uuid.uuid1()))  # ID unique, TODO : à essayer
 
         # Initialisation du parent
         # super().__init__(*args, **kwargs)  # Appelle le constructeur de la classe parente
@@ -760,11 +761,11 @@ class Object(SynchronizedObject):
         # extraits via les attributs "Attribute"
         state.update(
             dict(
-                subject=self.__subject.get(),  # Sujet de l'objet
-                description=self.__description.get(),  # Description
                 id=self.__id,  # Identifiant unique de l'objet
                 creationDateTime=self.__creationDateTime,  # Date de création
                 modificationDateTime=self.__modificationDateTime,  # Date de modification
+                subject=self.__subject.get(),  # Sujet de l'objet
+                description=self.__description.get(),  # Description
                 fgColor=self.__fgColor.get(),  # Couleur de premier plan
                 bgColor=self.__bgColor.get(),  # Couleur d'arrière-plan
                 font=self.__font.get(),  # Police utilisée
@@ -1117,7 +1118,9 @@ class Object(SynchronizedObject):
         Args :
             event : L'événement.
         """
-        event.addSource(self, self.ordering(), type=self.orderingChangedEventType())
+        event.addSource(
+            self, self.ordering(), type=self.orderingChangedEventType()
+        )
 
     @classmethod
     def orderingChangedEventType(class_):
@@ -1221,7 +1224,8 @@ class Object(SynchronizedObject):
 
         # Ajoute la description comme source et comme valeur pour ce type d'événement
         event.addSource(
-            new_description,               # source de l'événement
+            self,
+            # new_description,               # source de l'événement
             new_description,               # valeur associée à cette source
             type=self.descriptionChangedEventType()  # type d'événement
         )

@@ -88,6 +88,7 @@ import warnings
 from win32com.client import GetObject, Dispatch
 import pywintypes
 
+
 def signed_to_unsigned (signed):
   """Convert a (possibly signed) long to unsigned hex. Useful
   when converting a COM error code to the more conventional
@@ -97,6 +98,7 @@ def signed_to_unsigned (signed):
   """
   unsigned, = struct.unpack ("L", struct.pack ("l", signed))
   return unsigned
+
 
 class SelfDeprecatingDict (object):
   """Provides for graceful degradation of objects which

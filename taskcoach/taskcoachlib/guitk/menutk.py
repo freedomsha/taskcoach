@@ -1212,6 +1212,8 @@ class ActionMenu(Menu):
         tasks = taskFile.tasks()
         efforts = taskFile.efforts()
         categories = taskFile.categories()
+
+        self._check_var = tk.BooleanVar()
         # Generic actions, applicable to all/most domain objects:
         # log.debug("📌 [DEBUG] ActionMenu : Ajout d’un attachement :")
         self.appendUICommands(
@@ -1261,6 +1263,11 @@ class ActionMenu(Menu):
             uicommand.EffortStart(viewer=viewerContainer, taskList=tasks),
             uicommand.EffortStop(viewer=viewerContainer, effortList=efforts, taskList=tasks),
             uicommand.EditTrackedTasks(taskList=tasks, settings=settings))
+
+    def Check(self, checked):
+        """Méthode de compatibilité wxPython pour cocher/décocher le menu"""
+        if hasattr(self, '_check_var'):
+            self._check_var.set(checked)
 
 
 class TaskPriorityMenu(Menu):
@@ -1412,7 +1419,8 @@ class ToggleCategoryMenu(DynamicMenu):
                 # log.debug("ToggleCategoryMenu.addMenuItemsForCategories : est-ce là l'erreur!")
                 subMenu = Menu(self._window)
                 # log.debug(f"subMenu={subMenu}")
-                self.addMenuItemsForCategories(category.children(), subMenu)
+                # self.addMenuItemsForCategories(category.children(), subMenu)
+                self.addMenuItemsForCategories(category.get_tree_children(), subMenu)
                 # log.debug(f"ToggleCategoryMenu.addMenuItemsForCategories : Ajout du sous-menu : {self.subMenuLabel(category)}{subMenu} dans {menuToAdd}")
                 menuToAdd.AppendSubMenu(subMenu, self.subMenuLabel(category))
 
@@ -1557,6 +1565,57 @@ class TaskPopupMenu(Menu):
         log.info("TaskPopupMenu : Terminée - Menu Popup de Tâche créé.")
 
 
+# Recontextualisation du problème
+# L'erreur AttributeError: 'EffortPopupMenu' object has no attribute 'Check'
+# se produit lors du chargement du fichier XML dans taskfile.py.
+# Cela suggère que le problème n'est pas directement lié à l'affichage du menu contextuel,
+# mais plutôt à la manière dont l'état de certains éléments du menu contextuel
+# est restauré lors du chargement des données.
+# L'appel à menuItem.Check(paused) indique qu'on essaie de restaurer
+# l'état coché/décoché d'un élément de menu,
+# mais que la méthode Check n'existe pas dans l'implémentation Tkinter.
+# Analyse approfondie de menutk.py
+# En examinant menutk.py, on trouve la définition de EffortPopupMenu.
+# Cependant, cette classe n'implémente aucune logique spécifique
+# pour gérer l'état coché/décoché des éléments de menu.
+# De plus, elle n'hérite pas de UICheckCommand,
+# qui est la classe utilisée pour gérer l'état des éléments de menu cochés dans Task Coach.
+# Analyse approfondie de uicommandtk.py
+# Dans uicommandtk.py, on trouve la classe EffortStart 4 et EffortStop 4,
+# qui sont probablement les commandes associées aux actions de démarrage et d'arrêt des efforts.
+# Il est crucial de comprendre comment ces commandes sont liées au menu contextuel
+# et comment leur état est géré.
+# Identification de la source du problème
+# Le problème se situe probablement dans la manière dont EffortPopupMenu est construit
+# et dans la façon dont les commandes EffortStart et EffortStop sont ajoutées à ce menu.
+# Il est possible que le code essaie d'accéder à une méthode Check
+# qui n'existe pas sur les éléments de menu Tkinter.
+# Solutions possibles
+# Voici une approche plus détaillée pour résoudre le problème :
+#
+# Vérifier la construction de EffortPopupMenu :
+#
+# Assurez-vous que EffortPopupMenu est correctement instancié et que les commandes EffortStart et EffortStop sont correctement ajoutées au menu.
+# Vérifiez si des arguments incorrects sont passés aux éléments de menu lors de leur création.
+#
+# Adapter la gestion de l'état coché/décoché :
+#
+# Comme mentionné précédemment, Tkinter n'a pas de méthode Check intégrée pour les éléments de menu.
+# Vous devez utiliser des variables de contrôle (IntVar ou BooleanVar) associées aux éléments de menu pour gérer leur état coché/décoché.
+# Modifiez le code pour utiliser ces variables de contrôle et mettre à jour l'état des éléments de menu en conséquence.
+#
+# Vérifier la logique de sérialisation/désérialisation :
+#
+# Le traceback indique que l'erreur se produit lors du chargement du fichier XML. Vérifiez comment l'état des éléments de menu est sérialisé dans le fichier XML et comment il est désérialisé lors du chargement.
+# Assurez-vous que la logique de sérialisation/désérialisation est compatible avec l'approche Tkinter pour gérer l'état coché/décoché des éléments de menu.
+#
+# Utiliser les classes UICommand appropriées :
+#
+# Assurez-vous que les commandes EffortStart et EffortStop héritent de la classe UICheckCommand ou d'une classe similaire qui fournit la logique nécessaire pour gérer l'état coché/décoché des éléments de menu.
+# Si ce n'est pas le cas, vous devrez peut-être adapter ces classes pour qu'elles fonctionnent correctement avec Tkinter.
+#
+# Mise en œuvre
+# Voici une façon possible d'implémenter la gestion de l'état coché/décoché en utilisant des variables de contrôle Tkinter :
 class EffortPopupMenu(Menu):
     def __init__(self, parent, tasks, efforts, settings, effortViewer):
         # def __init__(self, parent, parent_window, tasks, efforts, settings, effortViewer):
@@ -1564,25 +1623,66 @@ class EffortPopupMenu(Menu):
         # log.debug("Affichage du menu contextuel pour les efforts.")
         # log.info("Initialisation du menu contextuel : %s", self.__class__.__name__)
 
-        super().__init__(parent)
+        # super().__init__(parent)
+        super().__init__(parent, tearoff=0)
         # super().__init__(parent, parent_mainwindow=parent_window)
-        self.appendUICommands(
-            uicommand.EditCut(viewer=effortViewer),
-            uicommand.EditCopy(viewer=effortViewer),
-            uicommand.EditPaste(),
-            None,
-            uicommand.Edit(viewer=effortViewer),
-            uicommand.Delete(viewer=effortViewer),
-            None,
-            uicommand.EffortNew(viewer=effortViewer, effortList=efforts,
-                                taskList=tasks, settings=settings),
-            uicommand.EffortStartForEffort(
-                viewer=effortViewer, taskList=tasks),
-            uicommand.EffortStop(
-                viewer=effortViewer, effortList=efforts, taskList=tasks),
-        )
+        self.tasks = tasks
+        self.efforts = efforts
+        self.settings = settings
+        self.effortViewer = effortViewer
+        self.effort_start_var = tk.BooleanVar()  # Variable de contrôle pour EffortStart
+        self.effort_stop_var = tk.BooleanVar()   # Variable de contrôle pour EffortStop
+        # self.appendUICommands(
+        #     uicommand.EditCut(viewer=effortViewer),
+        #     uicommand.EditCopy(viewer=effortViewer),
+        #     uicommand.EditPaste(),
+        #     None,
+        #     uicommand.Edit(viewer=effortViewer),
+        #     uicommand.Delete(viewer=effortViewer),
+        #     None,
+        #     uicommand.EffortNew(viewer=effortViewer, effortList=efforts,
+        #                         taskList=tasks, settings=settings),
+        #     uicommand.EffortStartForEffort(
+        #         viewer=effortViewer, taskList=tasks),
+        #     uicommand.EffortStop(
+        #         viewer=effortViewer, effortList=efforts, taskList=tasks),
+        # )
+        self.add_commands()
         log.info("EffortPopupMenu : Menu Popup Effort créé !")
 
+    def add_commands(self):
+        # Ajouter les commandes EffortStart et EffortStop
+        self.add_checkbutton(
+            label="Démarrer l'effort",
+            variable=self.effort_start_var,
+            command=self.on_effort_start
+        )
+        self.add_checkbutton(
+            label="Arrêter l'effort",
+            variable=self.effort_stop_var,
+            command=self.on_effort_stop
+        )
+
+    def on_effort_start(self):
+        # Logique pour démarrer l'effort
+        self.effort_start_var.set(True)
+        self.effort_stop_var.set(False)
+
+    def on_effort_stop(self):
+        # Logique pour arrêter l'effort
+        self.effort_start_var.set(False)
+        self.effort_stop_var.set(True)
+# Dans cet exemple :
+#
+# effort_start_var et effort_stop_var sont des variables de contrôle de type BooleanVar qui stockent l'état coché/décoché des éléments de menu.
+# add_checkbutton crée des éléments de menu avec des cases à cocher associées aux variables de contrôle.
+# on_effort_start et on_effort_stop sont appelées lorsque les éléments de menu sont cliqués. Elles mettent à jour l'état des variables de contrôle et effectuent les actions appropriées.
+#
+# Remarques importantes
+#
+# Vous devrez adapter cet exemple à votre code spécifique et à la logique de vos commandes EffortStart et EffortStop.
+# Assurez-vous que l'état des variables de contrôle est correctement restauré lors du chargement du fichier XML.
+# Testez minutieusement votre code pour vous assurer qu'il fonctionne correctement dans toutes les situations.
 
 class CategoryPopupMenu(Menu):
     """

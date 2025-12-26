@@ -40,4 +40,4 @@ from .taskbaricon import TaskBarIcon
 from . import viewer
 
 
-# __all__ = ["artprovider", "dialog", "icons", "idlecontroller", "iocontroller", "iphone", "mainwindow", "menu", "newid", "printer", "remindercontroller", "splash", "status", "toolbar", "uicommand", "viewer", "windowdimensionstracker", "wizard"]
+# __all__ = ["dialog", "icons", "idlecontroller", "init", "IOController", "iphone", "itemImages", "mainwindow", "menu", "newid", "printer", "remindercontroller", "splash", "status", "toolbar", "uicommand", "viewer", "windowdimensionstracker", "wizard"]

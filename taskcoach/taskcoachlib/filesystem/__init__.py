@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import platform
 
-from taskcoachlib.filesystem.fs_poller import *
+# from taskcoachlib.filesystem.fs_poller import *
+from taskcoachlib.filesystem.fs_poller import FilesystemPollerNotifier
 
 
 _system = platform.system()
@@ -30,4 +31,11 @@ elif _system == "Darwin":
     from .fs_darwin import *
 else:
     class FilesystemNotifier(FilesystemPollerNotifier):
+        """
+        Cette classe se base sur FilesystemPollerNotifier qui interroge le système de fichiers pour les modifications.
+
+        Cette classe étend la classe de base `NotifierBase` et utilise le threading pour vérifier périodiquement
+        si le fichier associé a été modifié. Si une modification est détectée, la méthode `onFileChanged`
+        est appelée.
+        """
         pass
