@@ -435,7 +435,8 @@ class UICommand(object):
         log.info(f"onCommandActivate appelée pour {self.menuText}")
         if self.enabled(event):
             try:
-                return self.doCommand(event)
+                # return self.doCommand(event)
+                return self.doCommand()
             except Exception as e:
                 log.error(f"UICommand.onCommandActivate : Error executing command: {e}", exc_info=True)
                 messagebox.showerror("Error", f"UICommand.onCommandActivate : An error occurred: {e}")

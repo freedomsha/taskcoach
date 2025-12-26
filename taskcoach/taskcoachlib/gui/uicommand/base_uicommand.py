@@ -58,7 +58,7 @@ class UICommand(object):
     """
 
     def __init__(self, menuText="", helpText="", bitmap="nobitmap",
-                 kind=wx.ITEM_NORMAL, id=None, bitmap2=None,
+                 bitmap2=None, kind=wx.ITEM_NORMAL, id=None,
                  *args, **kwargs):  # pylint: disable=W0622
         """
         Initialise la commande d'interface utilisateur.
@@ -88,6 +88,7 @@ class UICommand(object):
         # Le type d'élément (normal, checkable, etc., Par défaut à wx.ITEM_NORMAL) :
         self.kind = kind
         # L'identifiant de la commande. Si non spécifié, un identifiant unique sera généré.
+        # self.id = IdProvider.get()  # Obtient un identifiant unique
         self.id = IdProvider.get()  # Obtient un identifiant unique
         # self.id = wx.ID_ANY  # Obtient un identifiant unique
         # log.info(f"UICommand.__init__ : initialise {self} avec l'id {self.id}.")
@@ -305,13 +306,15 @@ class UICommand(object):
         #               longHelp = self.helpText)
         # C'est ici que `UICommand` appelle directement `toolbar.AddTool()`.
         # Les arguments `shortHelp` et `longHelp` sont explicitement passés.
-        toolbar.AddTool(toolId=self.id,
-                        label="",
-                        bitmap=bitmap,
-                        bmpDisabled=wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType !
-                        kind=self.kind,
-                        shortHelp=wx.MenuItem.GetLabelText(self.menuText),
-                        longHelp=self.helpText,
+        # toolbar.AddTool(tool_id=self.id,  # ne fonctionne pas !
+        log.debug("UICommand.appendToToolBar utilise le mot-clé toolId pour AddTool.")
+        toolbar.AddTool(self.id,
+                        "",
+                        bitmap,
+                        # bmpDisabled=wx.NullBitmap,  # crée un problème dans toolbar.py AddLabelTool, AddTool ne supporte pas les NoneType ! AuiToolBar.AddTool() got an unexpected keyword argument 'bmpDisabled'
+                        wx.MenuItem.GetLabelText(self.menuText),
+                        self.kind,
+                        self.helpText,
                         )
         self.bind(toolbar, self.id)
         # self.bind(self, toolbar, self.id)

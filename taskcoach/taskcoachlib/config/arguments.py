@@ -141,4 +141,4 @@ def set_gui(gui_name: str):
 
 def get_gui() -> str:
     """Renvoie le nom de l'interface graphique courante ('tk' ou 'wx')."""
-    return CURRENT_GUI or "wx"  # Valeur par défaut pour compatibilité
+    return CURRENT_GUI or "tk"  # Valeur par défaut pour compatibilité, la même que dans le add_argument par défaut.

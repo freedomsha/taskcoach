@@ -1244,10 +1244,15 @@ class TreeViewer(Viewer):
         parents = [parent for parent in parents if parent in self.presentation()]
         parent = parents[0] if parents else None
         # siblings = self.get_domain_children(parent)
-        siblings = self.children(parent)  # TypeError: 'dict' object is not callable
+        log.debug(f"TreeViewer.selectNextItemsAfterRemoval : parent={parent}, self={self.__class__.__name__}, self.__dict__={self.__dict__}, siblings={self.children}")
+        # siblings = self.children(parent)  # TypeError: 'dict' object is not callable
+        # sibling_list = self.children(parent)  # TypeError: 'dict' object is not callable
+        sibling_list = self.get_tree_children(parent)  # TypeError: 'dict' object is not callable
         newSelection = (
-            siblings[min(len(siblings) - 1, self.__selectionIndex)]
-            if siblings
+            # siblings[min(len(siblings) - 1, self.__selectionIndex)]
+            sibling_list[min(len(sibling_list) - 1, self.__selectionIndex)]
+            # if siblings
+            if sibling_list
             else parent
         )
         if newSelection:
@@ -1258,8 +1263,8 @@ class TreeViewer(Viewer):
         super().updateSelection(*args, **kwargs)
         curselection = self.curselection()
         if curselection:
-            # siblings = self.get_domain_children(self.getItemParent(curselection[0]))
-            siblings = self.children(self.getItemParent(curselection[0]))
+            siblings = self.get_tree_children(self.getItemParent(curselection[0]))
+            # siblings = self.children(self.getItemParent(curselection[0]))
             self.__selectionIndex = (
                 siblings.index(curselection[0]) if curselection[0] in siblings else 0
             )
@@ -1272,10 +1277,10 @@ class TreeViewer(Viewer):
             sortedItems = [item for item in self.presentation() if item in items]
             for item in sortedItems:
                 yield item
-                # children = self.get_domain_children(item)
-                children = self.children(item)
-                if children:
-                    for child in yieldItemsAndChildren(children):
+                the_children = self.get_tree_children(item)
+                # children = self.children(item)
+                if the_children:
+                    for child in yieldItemsAndChildren(the_children):
                         yield child
 
         for item in yieldItemsAndChildren(self.getRootItems()):
@@ -1294,13 +1299,14 @@ class TreeViewer(Viewer):
         return item.isExpanded(context=self.settingsSection())
 
     # def get_domain_children(self, parent=None):
-    def children(self, parent=None):
+    # def children(self, parent=None):
+    def get_tree_children(self, parent=None):
         """Retourne les enfants d'un élément donné."""
         if parent:
             # children = parent.get_domain_children()
-            children = parent.children()
-            if children:
-                return [child for child in self.presentation() if child in children]
+            the_children = parent.get_tree_children()
+            if the_children:
+                return [child for child in self.presentation() if child in the_children]
             else:
                 return []
         else:
