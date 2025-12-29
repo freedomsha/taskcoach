@@ -625,28 +625,28 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
     #         # self._mapObjectToNode(domain_object, node_id)
 
     def RefreshAllItems(self, count):
-        # # Effacer tous les éléments existants
-        # for item in self.get_children():
-        #     self.delete(item)
-        # # Insérer les nouveaux éléments
-        # for i in range(count):
-        #     # ANCIEN CODE
-        #     # item = self.__parent.getItemWithIndex(i)  # AttributeError: 'Frame' object has no attribute 'getItemWithIndex'
-        #     # # item = self.getItemWithIndex(i)  # AttributeError: 'Frame' object has no attribute 'getItemWithIndex'
-        #     # # Le problème est que self.__parent est un Frame au lieu d'être le viewer parent qui contient cette méthode.
-        #
-        #     # NOUVEAU CODE - Vérifier si la méthode existe
-        #     if hasattr(self.__parent, 'getItemWithIndex'):
-        #         item = self.__parent.getItemWithIndex(i)
-        #     else:
-        #         # # Fallback - utiliser directement la présentation
-        #         # if i < len(self.presentation()):  # AttributeError: 'VirtualListCtrl' object has no attribute 'presentation'
-        #         #     item = self.presentation()[i]
-        #         # else:
-        #         continue  # Ignorer cet index
-        #     values = [self.getItemText(item, j) for j in range(len(self['columns']))]
-        #     self.insert("", tk.END, values=values, tags=item)
-        self.populate()  # Utiliser la méthode populate pour rafraîchir tous les éléments
+        # Effacer tous les éléments existants
+        for item in self.get_children():
+            self.delete(item)
+        # Insérer les nouveaux éléments
+        for i in range(count):
+            # ANCIEN CODE
+            # item = self.__parent.getItemWithIndex(i)  # AttributeError: 'Frame' object has no attribute 'getItemWithIndex'
+            # # item = self.getItemWithIndex(i)  # AttributeError: 'Frame' object has no attribute 'getItemWithIndex'
+            # # Le problème est que self.__parent est un Frame au lieu d'être le viewer parent qui contient cette méthode.
+
+            # NOUVEAU CODE - Vérifier si la méthode existe
+            if hasattr(self.__parent, 'getItemWithIndex'):
+                item = self.__parent.getItemWithIndex(i)
+            else:
+                # # Fallback - utiliser directement la présentation
+                # if i < len(self.presentation()):  # AttributeError: 'VirtualListCtrl' object has no attribute 'presentation'
+                #     item = self.presentation()[i]
+                # else:
+                continue  # Ignorer cet index
+            values = [self.getItemText(item, j) for j in range(len(self['columns']))]
+            self.insert("", tk.END, values=values, tags=item)
+        # self.populate()  # Utiliser la méthode populate pour rafraîchir tous les éléments
 
     def RefreshItems(self, *items):
         for item in items:

@@ -337,7 +337,7 @@ log = logging.getLogger(__name__)
 #         self._callback = callback
 
 
-class SimpleTreeItem:
+class SimpleTreeItem:  # Voir itemctrltk.py pour une version plus complète
     """
     Classe pour représenter un élément dans l'arborescence.
     Remplace la structure de données complexe du treectrl.py original.
@@ -354,7 +354,7 @@ class SimpleTreeItem:
         return f"SimpleTreeItem(name='{self.name}')"
 
 
-class TreeCtrl(ttk.Treeview):
+class TreeCtrl(ttk.Treeview):  # Remplace HyperTreeList et CustomTreeCtrl de wxPython
     """
     Une version de TreeCtrl pour Tkinter avec glisser-déposer.
     """
@@ -418,20 +418,20 @@ class TreeCtrl(ttk.Treeview):
             print(f"Élément : {self.item(item_id)['text']}, Parent : {self.item(parent_id)['text'] if parent_id else 'Racine'}")
 
 
-class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixin, itemctrltk.CtrlWithToolTipMixin, ttk.Treeview):
-    # class TreeListCtrl(ttk.Treeview, itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixin, itemctrltk.CtrlWithToolTipMixin):
-    # class TreeListCtrl(
-    #     ttk.Treeview,
-    #     CtrlWithItemsMixin,
-    #     CtrlWithColumnsMixin,
-    #     TreeCtrlDragAndDropMixin
-    # ):
-    # class TreeListCtrl(
-    #     TreeCtrlDragAndDropMixin,
-    #     CtrlWithItemsMixin,
-    #     CtrlWithColumnsMixin,
-    #     ttk.Treeview
-    # ):
+# class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixin, itemctrltk.CtrlWithToolTipMixin, ttk.Treeview):
+#     # class TreeListCtrl(ttk.Treeview, itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixin, itemctrltk.CtrlWithToolTipMixin):
+#     # class TreeListCtrl(
+#     #     ttk.Treeview,
+#     #     CtrlWithItemsMixin,
+#     #     CtrlWithColumnsMixin,
+#     #     TreeCtrlDragAndDropMixin
+#     # ):
+class TreeListCtrl(
+    TreeCtrlDragAndDropMixin,
+    CtrlWithItemsMixin,
+    CtrlWithColumnsMixin,
+    TreeCtrl,  # ttk.Treeview
+):
     """
     Implémentation d'un TreeListCtrl pour Tkinter, équivalent à la version wxPython.
     Combine les fonctionnalités d'un Treeview de base avec les mixins pour
@@ -442,13 +442,13 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
     # def __init__(self, parent: tk.Widget, columns: List, selectCommand: Callable, editCommand: Callable,
     #              dragAndDropCommand: Callable, itemPopupMenu: Any = None, columnPopupMenu: Any = None,
     #              *args, **kwargs):
-    # def __init__(self, parent: tk.Widget, adapter: Any, columns: List,
-    #              selectCommand: Callable, editCommand: Callable,
-    #              dragAndDropCommand: Callable, itemPopupMenu: Any = None,
-    #              columnPopupMenu: Any = None, *args, **kwargs):
     def __init__(self, parent: tk.Widget, adapter: Any, columns: List,
+                 selectCommand: Callable, editCommand: Callable,
                  dragAndDropCommand: Callable, itemPopupMenu: Any = None,
                  columnPopupMenu: Any = None, *args, **kwargs):
+        # def __init__(self, parent: tk.Widget, adapter: Any, columns: List,
+        #              dragAndDropCommand: Callable, itemPopupMenu: Any = None,
+        #              columnPopupMenu: Any = None, *args, **kwargs):
         """
         Initialise le TreeListCtrl.
 
@@ -489,8 +489,8 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
         # # Appelez le constructeur de la classe parente
         # # Attention : Python 3.x recommande super().__init__(...)
         # # ttk.Treeview.__init__(self, parent, columns=[c._name for c in columns], show='tree headings', *args, **kwargs)
-        # # ttk.Treeview.__init__(self, parent, columns=column_names, show='tree headings',
-        # #                       displaycolumns=displaycolumns, *args, **kwargs)
+        ttk.Treeview.__init__(self, parent, columns=column_names, show='tree headings',
+                              displaycolumns=displaycolumns, *args, **kwargs)
         # super().__init__(parent, columns=column_names, show='tree headings',
         #                  displaycolumns=displaycolumns, *args, **kwargs)
 
@@ -501,18 +501,19 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
         # # CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
         # self._init_items_mixin(itemPopupMenu)
         # itemctrltk.CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
-        # CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu,
-        #                             selectCommand=selectCommand, editCommand=editCommand)
-        CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
+        CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu,
+                                    selectCommand=selectCommand, editCommand=editCommand)
+        # CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
         CtrlWithColumnsMixin.__init__(self, parent, columns=columns, columnPopupMenu=columnPopupMenu)
         # self._init_columns_mixin(columns, columnPopupMenu)
         # itemctrltk.CtrlWithColumnsMixin.__init__(self, parent, columns=columns, columnPopupMenu=columnPopupMenu)
         # # TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
         # self._init_drag_drop_mixin(dragAndDropCommand)
-        # TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
+        TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
+        # itemctrltk.CtrlWithToolTipMixin.__init__(self, parent)
 
-        # Initialisation de ttk.Treeview
-        ttk.Treeview.__init__(self, parent, columns=column_names, show='tree headings', displaycolumns=displaycolumns, *args, **kwargs)
+        # # Initialisation de ttk.Treeview  # Non, pas après les mixins
+        # ttk.Treeview.__init__(self, parent, columns=column_names, show='tree headings', displaycolumns=displaycolumns, *args, **kwargs)
 
         # Activation des fonctionnalités des mixins sur le Treeview
         # TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
@@ -711,6 +712,9 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
         """Associe les gestionnaires d'événements aux événements Tkinter."""
         self.bind("<Button-1>", self.on_left_click)
         self.bind("<Double-Button-1>", self.on_double_click)
+
+    # def getItemCount(self):  # TODO : A essayer
+    #     return len(self.adapter)
 
     def getItemWithIndex(self, rowIndex):
         """Récupère un élément à partir de son index."""
@@ -963,8 +967,8 @@ class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixi
             self.selection_set(item_id)
             if self.itemPopupMenu:
                 self.itemPopupMenu.post(event.x_root, event.y_root)
-            # # if self.onItemPopupMenu:
-            # #     self.onItemPopupMenu.post(event.x_root, event.y_root)
+            # if self.onItemPopupMenu:
+            #     self.onItemPopupMenu.post(event.x_root, event.y_root)
             # if self.__itemPopupMenu:
             #     self.__itemPopupMenu.post(event.x_root, event.y_root)
 
