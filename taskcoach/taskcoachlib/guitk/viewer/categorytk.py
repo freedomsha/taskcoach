@@ -242,10 +242,10 @@ class BaseCategoryViewer(
             # parent=self,
             # adapter= ,
             columns=self._columns,  # Les colonnes
-            # selectCommand=self.onSelect,  # Enlever ça, les commandes utilisent bind !
+            selectCommand=self.onSelect,  # Enlever ça, les commandes utilisent bind !
             # checkCommand=self.onCheck,  # unknown option "-checkCommand"
             # editCommand=self.onEdit,
-            # editCommand=uicommand.Edit(viewer=self),
+            editCommand=uicommand.Edit(viewer=self),
             dragAndDropCommand=uicommand.CategoryDragAndDrop(
                 viewer=self, categories=self.presentation()
             ),

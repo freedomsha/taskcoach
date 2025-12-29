@@ -37,8 +37,8 @@ class TaskListQueryMixin(object):
         Elle parcourt les tâches (en ignorant celles qui sont supprimées)
         et compte leur statut, puis retourne un dictionnaire avec ces totaux.
 
-        Returns:
-
+        Returns :
+            count (dict) : Un dictionnaire dont les clés sont les statuts possibles.
         """
         statuses = [eachTask.status() for eachTask in self if not eachTask.isDeleted()]
         count = dict()

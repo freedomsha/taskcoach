@@ -35,8 +35,22 @@ taskcoach.py est le point d'entrée principal. Il :
 # importer la bibliothèque pour enregistrer les événements
 # voir https://docs.python.org/fr/3.12/library/logging.html pour son implantation
 import logging
+import logging.handlers
 # Créer un enregistreur de niveau module
 log = logging.getLogger(__name__)
+
+
+def namer(name):
+    return name + ".txt"
+
+
+def rotator(source, dest):
+    with open(source, 'rb') as f_in:
+        with open(dest, 'wb') as f_out:
+            f_out.write(f_in.read())
+    os.remove(source)
+
+
 # --- Ajout pour supprimer les logs DEBUG de Pillow (PIL) ---
 logging.getLogger('PIL').setLevel(logging.WARNING)
 # --------------------------------------------------------
@@ -68,11 +82,17 @@ logging.getLogger('PIL').setLevel(logging.WARNING)
 #  config, domain, filesystem, gui, help, i18n, iphone, mailer, meta, notify, patterns,
 #  persistence, powermgt, speak, syncml, thirdparty, tools, widgets, workaround)
 
+rh = logging.handlers.RotatingFileHandler('taskcoach.log', maxBytes=1024000, backupCount=50)
+rh.rotator = rotator
+rh.namer = namer
+
 logging.basicConfig(
     level=logging.DEBUG,  # DEBUG, Tu peux passer à INFO ou WARNING en production
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     handlers=[
-        logging.FileHandler("taskcoach.log", mode='w', encoding='utf-8'),
+        # logging.FileHandler("taskcoach.log", mode='w', encoding='utf-8'),
+        # logging.handlers.RotatingFileHandler("taskcoach.log", mode='w', encoding='utf-8'),
+        rh,
         logging.StreamHandler()  # Affiche aussi dans la console
     ]
 )

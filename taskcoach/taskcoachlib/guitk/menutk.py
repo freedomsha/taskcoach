@@ -1549,7 +1549,7 @@ class TaskPopupMenu(Menu):
             None)
         # log.debug("TaskPopupMenu : Ajout du menu : Priorité")
         self.appendMenu(_("&Priority"),
-                        TaskPriorityMenu(parent, tasks, taskViewer),
+                        TaskPriorityMenu(parent, parent_window, tasks, taskViewer),
                         # "incpriority"
                         )
         # Les commandes de menu sont ici :

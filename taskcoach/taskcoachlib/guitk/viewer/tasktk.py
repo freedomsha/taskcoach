@@ -380,7 +380,7 @@ class BaseTaskViewer(
     """
     def __init__(self, *args, **kwargs):
         """Initialise le visualiseur et enregistre les observateurs nécessaires."""
-        log.debug(f"BaseTaskViewer : Création du Visualiseur de base pour les tâches.")
+        log.debug(f"BaseTaskViewer : Initialisation du Visualiseur de base pour les tâches. (création)")
         super().__init__(*args, **kwargs)
         self.statusMessages = TaskViewerStatusMessages(self)
         self.__registerForAppearanceChanges()
@@ -514,7 +514,7 @@ class BaseTaskTreeViewer(BaseTaskViewer):
 
     def __init__(self, *args, **kwargs):
         """Initialise le visualiseur avec des options supplémentaires pour rafraîchir les tâches."""
-        log.debug(f"BaseTaskTreeViewer.__init__ : Création du Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.")
+        log.debug(f"BaseTaskTreeViewer.__init__ : Initialisation du Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique. (création)")
         super().__init__(*args, **kwargs)
 
         # Initialisation des rafraîchisseurs
@@ -2021,7 +2021,7 @@ class CalendarViewer(
         pass
 
 
-    # ============================================================================
+# ============================================================================
 # Visualiseur principal des tâches
 # ============================================================================
 
@@ -2176,14 +2176,14 @@ class Taskviewer(
         """Détermine si le visualiseur affiche les tâches."""
         return True
 
-    def isTreeViewer(self) -> bool:
-        """
-        Détermine si le visualiseur est en mode arborescence.
-        (Votre méthode `isTreeMode` est déjà l'équivalent, renommons-la
-        pour correspondre à la méthode abstraite).
-        """
-        # return self.isTreeMode()
-        return True
+    # def isTreeViewer(self) -> bool:
+    #     """
+    #     Détermine si le visualiseur est en mode arborescence.
+    #     (Votre méthode `isTreeMode` est déjà l'équivalent, renommons-la
+    #     pour correspondre à la méthode abstraite).
+    #     """
+    #     # return self.isTreeMode()
+    #     return True
 
     def isViewerContainer(self) -> bool:
         """Indique si la classe est un conteneur de viewers."""
@@ -2519,7 +2519,7 @@ class Taskviewer(
             if hasattr(task, 'children'):
                 # if hasattr(task, 'the_children'):
                 # for subtask in task.children():
-                for subtask in task.get_tree_children():
+                for subtask in tasks.get_tree_children():
                     self._add_task_to_tree(subtask, parent=item_id)
 
             log.debug(f"Taskviewer._add_task_to_tree : Tâche '{task_text}' ajoutée.")
@@ -3484,7 +3484,7 @@ class Taskviewer(
         return super().getItemParent(item) if self.isTreeViewer() else None
 
     # def children(self, item=None):
-    def get_tree_children(self, item=None):
+    def get_tree_children(self, item=None):  # Méthode existante dans basetk.Viewer
         """Retourne les enfants d'un élément selon le mode arbre/liste."""
         # return super().children(item) if (self.isTreeViewer() or item is None) else []
         return super().get_tree_children(item) if (self.isTreeViewer() or item is None) else []

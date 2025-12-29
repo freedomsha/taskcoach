@@ -162,7 +162,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         log.debug(f"Viewer.__init__ : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
         ttk.Frame.__init__(self, parent)  # Initialisation de ttk.Frame
         # ttk.Frame.__init__(self, parent, *args, **kwargs)  # Initialisation de ttk.Frame
-        # TODO : init du Frame avant ou après l'Observer ?
+        # init du Frame avant ou après l'Observer ?  Après.
         patterns.Observer.__init__(self)  # initialisation de Observer
 
         self.parent = parent  # window or frame ?
@@ -1092,6 +1092,7 @@ class ListViewer(Viewer):
     """
     Classe de base pour les vues en liste.
 
+    Interface logique attendue par VirtualListCtrl.
     Hérite de Viewer.
 
     Cette classe est utilisée pour afficher des objets dans une vue en liste,
@@ -1118,6 +1119,13 @@ class ListViewer(Viewer):
         for item in self.presentation():
             yield item
 
+    def getItemCount(self):
+        """
+        Retourne le nombre total d’éléments à afficher.
+        """
+        # raise NotImplementedError
+        return len(self.presentation())
+
     def getItemWithIndex(self, index):
         """
         Récupère un élément spécifique dans la présentation en fonction de son index.
@@ -1129,6 +1137,27 @@ class ListViewer(Viewer):
             L'objet à l'index spécifié.
         """
         return self.presentation()[index]
+
+    def getItemText(self, domain_object, column_name):
+        """
+        Retourne le texte à afficher pour une cellule.
+        """
+        # raise NotImplementedError
+        return domain_object.get(column_name, "")
+
+    def getItemImage(self, domain_object, column_name=None):
+        """
+        (Optionnel) retourne une image Tkinter (PhotoImage).
+        """
+        return None
+
+    def getItemTooltipData(self, domain_object):
+        """
+        Retourne le texte de l’info-bulle.
+        """
+        # return None
+        return f"Tâche : {domain_object['task']}"
+    # Si une seule de ces méthodes manque → l’affichage est incomplet ou vide.
 
     def getIndexOfItem(self, item):
         """
@@ -1162,7 +1191,7 @@ class TreeViewer(Viewer):
     """
 
     def __init__(self, *args, **kwargs):
-        log.debug("TreeViewer : Initialisation.")
+        log.debug("TreeViewer : Initialisation du visualiseur en arborescence.")
         self.__selectionIndex = 0
         super().__init__(*args, **kwargs)
 

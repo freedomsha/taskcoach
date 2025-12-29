@@ -108,11 +108,11 @@ log = logging.getLogger(__name__)
 
 # Mise à jour des classes de base pour utiliser les versions tkinter (tk)
 class Effortviewer(
+    mixintk.FilterableViewerForCategorizablesMixin,  # CHANGED: mixin.FilterableViewerForCategorizablesMixin -> mixintk.FilterableViewerForCategorizablesMixin
+    mixintk.SortableViewerForEffortMixin,  # CHANGED: mixin.SortableViewerForEffortMixin -> mixintk.SortableViewerForEffortMixin
+    mixintk.SearchableViewerMixin,  # CHANGED: mixin.SearchableViewerMixin -> mixintk.SearchableViewerMixin
+    basetk.SortableViewerWithColumns,  # CHANGED: base.SortableViewerWithColumns -> basetk.SortableViewerWithColumns
     basetk.ListViewer,  # CHANGED: base.ListViewer -> basetk.ListViewer
-    mixintk.FilterableViewerForCategorizablesMixin, # CHANGED: mixin.FilterableViewerForCategorizablesMixin -> mixintk.FilterableViewerForCategorizablesMixin
-    mixintk.SortableViewerForEffortMixin, # CHANGED: mixin.SortableViewerForEffortMixin -> mixintk.SortableViewerForEffortMixin
-    mixintk.SearchableViewerMixin, # CHANGED: mixin.SearchableViewerMixin -> mixintk.SearchableViewerMixin
-    basetk.SortableViewerWithColumns, # CHANGED: base.SortableViewerWithColumns -> basetk.SortableViewerWithColumns
 ):
     defaultTitle = _("Effort")
     defaultBitmap = "clock_icon"
@@ -131,6 +131,7 @@ class Effortviewer(
             self, Effort.trackingChangedEventType()
         )
         self.aggregation = settings.get(self.settingsSection(), "aggregation")
+
         self.__initModeToolBarUICommands()
         self.registerObserver(
             self.onAttributeChanged_Deprecated,
@@ -160,14 +161,14 @@ class Effortviewer(
             if (
                     column.name()
                     in [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ]
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                    ]
                     and self.aggregation != "week"
             ):
                 continue
@@ -315,6 +316,7 @@ class Effortviewer(
 
     def createWidget(self, parent):  # CHANGEMENT: Ajout de 'parent'
         imageList = self.createImageList()  # Has side-effects
+        # Déclaration des colonnes :
         self._columns = self._createColumns()  # pylint: disable=W0201
         # itemPopupMenu = taskcoachlib.guitk.menu.EffortPopupMenu(self.parent, self.taskFile.tasks(),
         itemPopupMenu = taskcoachlib.guitk.menutk.EffortPopupMenu(  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
@@ -325,7 +327,7 @@ class Effortviewer(
             self,
         )
         # columnPopupMenu = taskcoachlib.guitk.menu.EffortViewerColumnPopupMenu(self)
-        columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(self) # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
+        columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(self)  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
         log.debug("Effortviewer.createWidget : création du tableau treeviewer")
         widget = widgetstk.listctrltk.VirtualListCtrl(  # CHANGED: widgets.VirtualListCtrl -> widgetstk.VirtualListCtrl
@@ -677,7 +679,35 @@ class Effortviewer(
     # Dans de nombreux cas, les viewers basés sur Treeview/Listbox dans Tk ne nécessitent pas cet objet d'état d'icône.
     def getItemImages(self, index, column=0):  # pylint: disable=W0613
         # return {wx.TreeItemIcon_Normal: -1} # Ancien code wx
-        return {'normal': -1} # Hypothèse de remplacement ou retour d'une valeur neutre
+        return {'normal': -1}  # Hypothèse de remplacement ou retour d'une valeur neutre
+
+    def getItemCount(self):
+        return len(self._items)
+
+    def getItemWithIndex(self, index):
+        return self._items[index]
+
+    # def getItemText(self, domain_object, column_name):  # Déclaré dans ViewerWithColumns
+    #     return domain_object.get(column_name, "")
+
+    def getItemTooltipData(self, item):
+        result = super().getItemTooltipData(item)
+        if isinstance(item, CompositeEffort) and len(item):
+            details = [_("Details:")]
+            for theEffort in item:
+                details.append(
+                    "%s (%s)"
+                    % (
+                        render.dateTimePeriod(
+                            theEffort.getStart(),
+                            theEffort.getStop(),
+                            humanReadable=True,
+                        ),
+                        self.__renderTimeSpent(theEffort),
+                    )
+                )
+            result.append((None, details))
+        return result
 
     def curselection(self):
         selection = super().curselection()
@@ -856,25 +886,6 @@ class Effortviewer(
             showSeconds=self.__show_seconds(),
             decimal=self.settings.getboolean("feature", "decimaltime"),
         )
-
-    def getItemTooltipData(self, item):
-        result = super().getItemTooltipData(item)
-        if isinstance(item, CompositeEffort) and len(item):
-            details = [_("Details:")]
-            for theEffort in item:
-                details.append(
-                    "%s (%s)"
-                    % (
-                        render.dateTimePeriod(
-                            theEffort.getStart(),
-                            theEffort.getStop(),
-                            humanReadable=True,
-                        ),
-                        self.__renderTimeSpent(theEffort),
-                    )
-                )
-            result.append((None, details))
-        return result
 
     @staticmethod
     def __renderRevenue(anEffort):

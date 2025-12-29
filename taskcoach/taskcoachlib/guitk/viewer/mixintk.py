@@ -122,7 +122,7 @@ class FilterableViewerMixin(object):
     Créer une visionneuse filtrable.
     """
     def __init__(self, *args, **kwargs):
-        log.debug("FilterableViewerMixin.__init__ : initialisation d'une visionneuse filtrable.")
+        log.debug("FilterableViewerMixin.__init__ : Initialisation d'une visionneuse filtrable.")
         self.__filterUICommands = None
         super().__init__(*args, **kwargs)
         log.debug("FilterableViewerMixin initialisé !")

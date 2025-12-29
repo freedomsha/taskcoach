@@ -3824,8 +3824,13 @@ Points clés:
         self.updateToolState(not paused)
         bitmapName = self.bitmap if paused else self.bitmap2
         menuText = self.getMenuText(paused)
+        log.debug(f"EffortStop.updateUI(): paused={paused}, bitmapName={bitmapName}, menuText={menuText}")
+        log.debug(f"Valeurs des menuItems de self={self.__class__.__name__} avant updateUI : {self.menuItems}")
+        # if (bitmapName != self.__currentBitmap) or bool(
+        #     [item for item in self.menuItems if item.GetItemLabel() != menuText]  # GetItemLabel() est une méthode wxpython !
+        # ):
         if (bitmapName != self.__currentBitmap) or bool(
-            [item for item in self.menuItems if item.GetItemLabel() != menuText]
+            [item for item in self.menuItems if item.cget("text") != menuText]  # GetItemLabel() est une méthode wxpython !
         ):
             self.__currentBitmap = bitmapName
             self.updateToolBitmap(bitmapName)
@@ -3868,11 +3873,21 @@ Points clés:
             if hasattr(menuItem, 'variable'):
                 # Si c'est un Checkbutton menu
                 menuItem.variable.set(paused)
-            elif hasattr(menuItem, 'invoke'):
+            # elif hasattr(menuItem, 'invoke'):
+            else:
                 # Si c'est un menu item simple
-                if paused:
-                    menuItem.invoke()  # TypeError: Menu.invoke() missing 1 required positional argument: 'index'
-            log.debug(f"Updating impossible pour menuItem : {menuItem} de type {menuItem.type} with menuText: {menuText} and helpText: {helpText}")
+                log.debug(f"Type de menuItem: {type(menuItem)}")  # Ajout pour débogage
+                log.debug(f"Attributs de menuItem: {dir(menuItem)}")  # Ajout pour débogage
+                # if paused:
+                #     log.debug(f"Cocher le menuItem : {menuItem} de type {menuItem.type}")
+                #     menuItem.invoke()  # TypeError: Menu.invoke() missing 1 required positional argument: 'index'
+                # Ajoutez ici la logique pour activer l'élément de menu si nécessaire
+                # pass # A REMPLACER AVEC LA LOGIQUE TKINTER POUR INVOQUER LE MENU
+                try:
+                    menuItem.config(label=menuText)
+                except Exception as e:
+                    log.warning(f"Impossible de mettre à jour le label du menu: {e}")
+            log.debug(f"Updating impossible pour menuItem : {menuItem} de type {type(menuItem)} with menuText: {menuText} and helpText: {helpText}")
             # # # menuItem.SetItemLabel(menuText)  # Attention : ActionMenu n'a pas cette méthode en wxPython
             # menuItem.config(label=menuText)  # Pour Tkinter
             # # fichier_menu.entryconfig(menuItem, label=menuText))  # Ne peut être changé directement sur un menuItem
