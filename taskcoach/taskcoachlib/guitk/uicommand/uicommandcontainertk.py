@@ -51,7 +51,8 @@ class UICommandContainerMixin(object):
         self._window = parent_window
         log.debug(f"UICommandContainerMixin : La classe {self.__class__.__name__} initialise pour ajouter des commandes UI dans self._window={self._window.__class__.__name__}.")
         if not isinstance(parent_window, (tk.Tk, tk.Frame, tk.Menu)):
-            log.warning(f"{self.__class__.__name__} doit être de type tk.Tk ou tk.Frame ou tk.Menu!")
+            log.warning(f"UICommandContainerMixin : parent_window={parent_window.__class__.__name__}(type={type(parent_window)}) doit être de type tk.Tk ou tk.Frame ou tk.Menu!")
+            # log.warning(f"{self.__class__.__name__}(type={type(self)}) doit être de type tk.Tk ou tk.Frame ou tk.Menu!")
         self._tearoff = tearoff
 
     def appendUICommands(self, *uiCommands, **kwargs):

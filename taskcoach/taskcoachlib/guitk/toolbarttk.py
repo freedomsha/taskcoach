@@ -180,7 +180,7 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
                 # button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2, pady=2)
 
                 self.tools.append(button)
-                log.warning(f"ToolBar.appendUICommand : Les UICommands de ToolBar sont {self.tools}.")
+                log.info(f"ToolBar.appendUICommand : Les UICommands de ToolBar sont {self.tools}.")
             except Exception as e:
                 log.error(f"ToolBar.appendUICommand : Error adding command {ui_command}: {e}")
                 raise

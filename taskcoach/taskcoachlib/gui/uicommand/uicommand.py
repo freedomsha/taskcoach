@@ -1767,10 +1767,10 @@ class RenameViewer(ViewerCommand):
         """
         activeViewer = self.viewer.activeViewer()
         viewerNameDialog = wx.TextEntryDialog(
-            self.mainWindow(),
-            _("New title for the viewer:"),
-            _("Rename viewer"),
-            activeViewer.title(),
+            self.mainWindow(),  # parent
+            _("New title for the viewer:"),  # message
+            _("Rename viewer"),   # caption
+            activeViewer.title(),  # default value
         )
         if viewerNameDialog.ShowModal() == wx.ID_OK:
             activeViewer.setTitle(viewerNameDialog.GetValue())

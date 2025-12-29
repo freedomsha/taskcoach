@@ -1739,17 +1739,29 @@ class RenameViewer(ViewerCommand):
         """
         Renomme la visionneuse active avec un nouveau nom.
         """
-        # TODO
-        # activeViewer = self.viewer.activeViewer()
+        # Fait : remplacer wx.TextEntryDialog par Tkinter
+        activeViewer = self.viewer.activeViewer()
         # viewerNameDialog = wx.TextEntryDialog(
-        #     self.mainWindow(),
-        #     _("New title for the viewer:"),
-        #     _("Rename viewer"),
-        #     activeViewer.title(),
+        #     self.mainWindow(),  # parent
+        #     _("New title for the viewer:"),  # message
+        #     _("Rename viewer"),  # caption
+        #     activeViewer.title(),  # default value
         # )
+        # Pour remplacer wx.TextEntryDialog() avec Tkinter,
+        # utilisez simpledialog.askstring() ou créez une fenêtre avec un widget Entry et un bouton pour valider l'entrée texte.
+        viewer_name_dialog = simpledialog.askstring(
+            _("Rename viewer"),  # caption
+            _("New title for the viewer:"),  # message
+            initialvalue=activeViewer.title(),  # default value
+            parent=self.mainWindow(),  # parent
+        )
         # if viewerNameDialog.ShowModal() == wx.ID_OK:
         #     activeViewer.setTitle(viewerNameDialog.GetValue())
+        if viewer_name_dialog is not None:
+            activeViewer.setTitle(viewer_name_dialog)
+        # # Nettoyage de la boîte de dialogue :
         # viewerNameDialog.Destroy()
+        viewer_name_dialog.destroy()
         pass
 
     def enabled(self, event=None):

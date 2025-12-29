@@ -258,6 +258,7 @@ class Viewer(ttk.Frame, patterns.Observer):
             )
 
     def onShowTooltipsChanged(self, value):
+        """Gère le changement de l'état des info-bulles."""
         self.widget.ToolTipsEnabled(value)  # A adapter si ToolTipMixin est utilisé
         # pass  # Enlever ? TODO
 
@@ -478,7 +479,9 @@ class Viewer(ttk.Frame, patterns.Observer):
     # @abstractmethod  # Laisser @abstractmethod si ABC est utilisé
     # def createWidget(self, *args):
     def createWidget(self, parent):  # CHANGEMENT: Ajout de 'parent'
-        """Crée le widget utilisé pour afficher les objets. (penser à gérer sa géométrie) À implémenter dans les sous-classes."""
+        """Crée le widget utilisé pour afficher les objets.
+        (penser à gérer sa géométrie)
+        À implémenter dans les sous-classes."""
         raise NotImplementedError
 
     def createImageList(self):
@@ -718,6 +721,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         self.after(0, self.endOfSelectAll)
 
     def endOfSelectAll(self):
+        """Termine la sélection de tous les éléments."""
         self.__curselection = self.presentation()
         self.__selectingAllItems = False
         self.onSelect()
@@ -1056,6 +1060,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         command.EditDescriptionCommand(items=[item], newValue=newValue).do()
 
     def getItemTooltipData(self, item):
+        """Retourne les données de l'info-bulle pour un élément."""
         lines = [line.rstrip("\r") for line in item.description().split("\n")]
         return [(None, lines)] if lines and lines != [""] else []
 
@@ -1078,8 +1083,8 @@ class CategorizableViewerMixin(object):
 
 class WithAttachmentsViewerMixin(object):
     """Mixin class for viewers with attachments."""
-
     def getItemTooltipData(self, item):
+        """Retourne les données de l'info-bulle pour un élément."""
         return [
             (
                 "paperclip_icon",
@@ -1301,8 +1306,13 @@ class TreeViewer(Viewer):
             self.__selectionIndex = 0
 
     def visibleItems(self):
-        """Itère sur les éléments visibles dans la présentation, y compris les enfants."""
+        """Itère sur les éléments visibles dans la présentation, y compris les enfants.
+
+        Yields :
+            Chaque élément visible et ses enfants.
+        """
         def yieldItemsAndChildren(items):
+            """Itère de manière récursive sur les éléments et leurs enfants."""
             sortedItems = [item for item in self.presentation() if item in items]
             for item in sortedItems:
                 yield item

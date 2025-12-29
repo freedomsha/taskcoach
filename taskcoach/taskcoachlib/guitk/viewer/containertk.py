@@ -186,7 +186,6 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         self.containerWidget = parent_widget  # Le widget conteneur (par exemple, une fenêtre Tk).
         self._settings = settings
         self.viewers = []
-        self._active_viewer = None  # Initialisation importante
         # # self.notebook = ttk.Notebook(containerWidget)  # Utilisation de ttk.Notebook. On utilise 'self' ici, car ViewerContainer est le parent du notebook.
         # # On utilise 'self' ici, car ViewerContainer est le parent du notebook.
         # self.notebook = ttk.Notebook(self)  # Utilisation de ttk.Notebook. On utilise 'self' ici, car ViewerContainer est le parent du notebook.
@@ -194,6 +193,7 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         self.paned_window = ttk.PanedWindow(parent_widget, orient=tk.HORIZONTAL)  # Ou VERTICAL selon votre disposition
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
+        self._active_viewer = None  # Initialisation importante
         self._notify_active_viewer = False  # A ajuster en fonction de l'utilisation
         self.__bind_event_handlers()
         # super().__init__(*args, **kwargs)
@@ -415,7 +415,8 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         #     return self.viewers[tab_index]
         # else:
         #     return None
-        return self._active_viewer
+        return root.focus_get()
+        # return self._active_viewer
 
     def __getattr__(self, attribute):
         """

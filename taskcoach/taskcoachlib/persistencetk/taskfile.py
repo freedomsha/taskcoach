@@ -1061,9 +1061,11 @@ class TaskFile(patterns.Observer):
             # changes = xml.ChangesXMLReader(self.filename() + ".delta").read()
             try:
                 log.debug(f"TaskFile.close : Essaie de lire le fichier {self.filename()}.delta en mode r et d'enregistrer les changements précédents.")
-                # with open(self.filename() + ".delta", "r") as f:
-                # with open(self.filename() + ".delta", "r", encoding="utf-8") as f:
-                with self.filename() + ".delta" as f:
+                # # with open(self.filename() + ".delta", "r") as f:
+                # # with open(self.filename() + ".delta", "r", encoding="utf-8") as f:
+                # # with self.filename() + ".delta" as f:
+                # with f"{self.filename()}.delta" as f:
+                with open(f"{self.filename()}.delta", "rb") as f:
                     changes = xml.ChangesXMLReader(f).read()
                     log.debug(f"TaskFile.close : lit changes = {changes}")
             except FileNotFoundError as e:

@@ -1572,7 +1572,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
         Returns :
             (str) : Le sujet de l'objet composite.
         """
-        log.debug(f"CompositeObject.subject : Obtenir le sujet de {self.id()}.")
+        # log.debug(f"CompositeObject.subject : Obtenir le sujet de {self.id()}.")
         subject = super().subject()
         # if recursive and self.parent():
         #     # subject = "%s -> %s" % (
@@ -1584,7 +1584,7 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
             parent = self.parent()
             if parent:
                 subject = f"{parent.subject(recursive=True)} -> {subject}"
-        log.debug(f"CompositeObject.subject : retourne le sujet de {self.__class__.__name__} : {subject}.")
+        log.debug(f"CompositeObject.subject : retourne le sujet de {self.__class__.__name__} id={self.id()} : {subject}.")
         # RecursionError: maximum recursion depth exceeded
         return subject
 
