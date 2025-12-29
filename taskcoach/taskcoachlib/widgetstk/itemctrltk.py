@@ -27,10 +27,10 @@
 #         _CtrlWithDropTargetMixin : J'ai utilisé le module tkinter.dnd et
 #         la classe FileTextDropTarget pour gérer les opérations de
 #         glisser-déposer de fichiers et de texte, en s'appuyant sur le code
-#         que vous aviez déjà pour draganddrop.py.
+#         que vous aviez déjà pour draganddroptk.py.
 #
 #         CtrlWithToolTipMixin : Le code réécrit utilise la classe ToolTip
-#         du module tooltip.py pour afficher les info-bulles.
+#         du module tooltiptk.py pour afficher les info-bulles.
 #
 #         _CtrlWithAutoResizedColumnsMixin : Cette fonctionnalité est gérée
 #         par la classe TaskList de votre fichier autowidth.py en
@@ -731,16 +731,30 @@ class CtrlWithItemsMixin(_CtrlWithItemPopupMenuMixin, _CtrlWithDropTargetMixin):
 # mais sans les références spécifiques à wxPython comme wx.LIST_FORMAT_LEFT.
 class Column(object):
     """
+    Décrit une colonne logique du ListViewer.
     Définit les propriétés d'une colonne pour le ttk.Treeview.
     """
     # def __init__(self, name, header, *eventTypes, width=100, **kwargs):
     # def __init__(self, name, header, *eventTypes, **kwargs):
     def __init__(self, name: str, header: str, *eventTypes, width: int = 100, is_shown: bool = True, **kwargs):
+        """
+        Initialise une colonne.
+
+        Args:
+            name: nom interne (clé logique)
+            header: texte affiché dans l’en-tête
+            *eventTypes: types d'événements associés à la colonne
+            width: largeur initiale
+            is_shown: colonne visible ou non
+            **kwargs: autres arguments optionnels
+        """
         self._name = name
         self._header = header
         self.width = width
         # ou :
         # self.width = kwargs.pop("width", 100)
+        self._is_shown = is_shown  # Ajout de l'attribut is_shown
+
         self.__eventTypes = eventTypes
         self.__sortCallback = kwargs.pop("sortCallback", None)
         self.__renderCallback = kwargs.pop(
@@ -762,7 +776,7 @@ class Column(object):
         # self.__settings = kwargs.get(
         #     "settings", None
         # )  # FIXME: Column shouldn't need to know about settings
-        self._is_shown = is_shown  # Ajout de l'attribut is_shown
+
         # # La colonne ne devrait pas avoir besoin de connaître les paramètres.
 
     # def name(self):
@@ -806,7 +820,8 @@ class Column(object):
 
     # def defaultImageIndices(self, *args, **kwargs):  # pylint: disable=W0613
     def defaultImageIndices(self, *args, **kwargs) -> dict:  # pylint: disable=W0613
-        """Retourne un dictionnaire d'indices d'images par défaut."""
+        """Retourne un dictionnaire d'indices d'images par défaut.
+        Tkinter n'en a pas, donc retourne un dictionnaire vide."""
         # return {wx.TreeItemIcon_Normal: -1}
         return {}
 
@@ -855,7 +870,7 @@ class Column(object):
 
 
 # Description : Classe de base pour les contrôles avec des colonnes.
-# Elle gère l'insertion et la suppression des colonnes .
+# Elle gère l'insertion et la suppression des colonnes.
 # Version Tkinter : La version Tkinter adapte la logique d'insertion
 # et de suppression des colonnes au ttk.Treeview.
 # Explication des changements :
@@ -1275,7 +1290,7 @@ class _CtrlWithAutoResizedColumnsMixin(autowidthtk.AutoColumnWidthMixin):
         super().__init__(master, *args, **kwargs)
         # self.bind('<Configure>', self.on_resize)  # <-- Bind event to the Treeview
         # TODO : le bind de autowidth.AutoColumnWidthMixin ne fonctionne pas non plus !
-        self.resize_column = None  # Laissez la classe dérivée définir quelle colonne redimensionner
+        # self.resize_column = None  # Laissez la classe dérivée définir quelle colonne redimensionner
         log.debug("_CtrlWithAutoResizedColumnsMixin initialisé !")
 
     def on_resize(self, event):
@@ -1294,7 +1309,7 @@ class _CtrlWithAutoResizedColumnsMixin(autowidthtk.AutoColumnWidthMixin):
                 self.column(self.resize_column, width=resize_width)
 
 
-class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
+class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,  #<- RETIRÉ car intégré dans Tk.treeviewer
                            _CtrlWithHideableColumnsMixin,
                            _CtrlWithSortableColumnsMixin,
                            _CtrlWithColumnPopupMenuMixin):
@@ -1311,7 +1326,7 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
         #              selectCommand: Callable = None, editCommand: Callable = None,
         #              **kwargs):
         """Initialise le mixin."""
-        log.debug(f"CtrlWithColumnsMixin.__init__ : méthode super avec master={master}, args={args} et kwargs={kwargs}.")
+        log.debug(f"CtrlWithColumnsMixin.__init__ : Initialisation avec master={master}, args={args} et kwargs={kwargs}.")
         # super().__init__(master, *args, **kwargs)
         # super().__init__(master, *args, columns=columns,
         #                  displaycolumns=displaycolumns,
@@ -1322,16 +1337,21 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
         # # Filtrer les arguments spécifiques aux mixins avant de les passer à super()
         # # Cela empêche que ces arguments arrivent jusqu'à ttk.Treeview
         #
-        # # Extraire et traiter les arguments des mixins
-        # # 1. Consommer les arguments spécifiques aux colonnes
+        # # # Extraire et traiter les arguments des mixins, !!! non, surtout pas ici !!!
+        # # # 1. Consommer les arguments spécifiques aux colonnes
+        # # On récupère les colonnes passées en argument
         # columns = kwargs.pop("columns", [])
-        columnPopupMenu = kwargs.pop("columnPopupMenu", None)
+        # self._columns = columns  # Stocke les colonnes pour un usage ultérieur
+        # columnPopupMenu = kwargs.pop("columnPopupMenu", None)
+        # self._columnPopupMenu = columnPopupMenu
         #
         # # 2. CORRECTION : Consommer les arguments spécifiques aux items (pour éviter la propagation à Tkinter via cette chaîne)
         # kwargs.pop("selectCommand", None)
         # kwargs.pop("editCommand", None)
         #
         # # 3. Propagation des arguments restants (master, *args, **kwargs nettoyés)
+        # log.debug(f"CtrlWithColumnsMixin.__init__ : appel de super() avec master={master}, args={args}, columns={columns}, columnPopupMenu={columnPopupMenu}, kwargs={kwargs}.")
+        log.debug(f"CtrlWithColumnsMixin.__init__ : appel de super() avec master={master}, args={args}, kwargs={kwargs}.")
         # # # Passer les arguments filtrés à la chaîne d'héritage
         super().__init__(master, *args, **kwargs)
         # # # super().__init__(columns=columns, columnPopupMenu=columnPopupMenu, *args, **kwargs)
@@ -1342,8 +1362,24 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
         # _CtrlWithSortableColumnsMixin.__init__(self, master, columns=columns, *args, **kwargs)
         # _CtrlWithColumnPopupMenuMixin.__init__(self, master, columnPopupMenu=columnPopupMenu, *args, **kwargs)
 
+    def showColumn(self, column, show=True):
+        super().showColumn(column, show)
+        # Afficher l'indicateur de tri si la colonne qui vient d'être rendue visible est en cours de tri.
+        if show and column == self._currentSortColumn():
+            self._showSortImage()
+
+    def _clearSortImage(self):
+        # Effacer l'image de tri si la colonne en question est visible.
+        if self.isColumnVisible(self._currentSortColumn()):
+            super()._clearSortImage()
+
+    def _showSortImage(self):
+        # Affichez uniquement l'image de tri si la colonne en question est visible.
+        if self.isColumnVisible(self._currentSortColumn()):
+            super()._showSortImage()
 
 # --- Classes principales combinées pour le Treeview ---
+# Utilisée uniquement dans le test.
 # TaskList est normalement dans domain.task.tasklist
 # class TaskList(CtrlWithItemsMixin, CtrlWithColumnsMixin, ttk.Treeview):
 class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, CtrlWithToolTipMixin, ttk.Treeview):
@@ -1361,7 +1397,7 @@ class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, CtrlWithToolTipMixin, t
 
         # super().__init__(master, columns=columns, **kwargs)
         # Initialiser ttk.Treeview avec seulement les arguments qu'il comprend
-        ttk.Treeview.__init__(self, master, columns=[c.name() for c in columns], show='headings', **kwargs)
+        ttk.Treeview.__init__(self, master, columns=[c.name() for c in columns], show='tree headings', **kwargs)
 
         # Initialiser les mixins avec leurs arguments spécifiques
         # CtrlWithItemsMixin.__init__(self, itemPopupMenu=itemPopupMenu)
@@ -1429,7 +1465,7 @@ class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, CtrlWithToolTipMixin, t
             part:
 
         Returns:
-
+            None
         """
         print(f"Éléments glissés: {dragged_items} sur {drop_item} à la position: {part}")
         # Exemple de déplacement simple
@@ -1448,6 +1484,15 @@ class TaskTree(CtrlWithItemsMixin, CtrlWithColumnsMixin, CtrlWithToolTipMixin, t
 # --- Exemple d'utilisation ---
 
 if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.DEBUG,  # DEBUG, Tu peux passer à INFO ou WARNING en production
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+        handlers=[
+            logging.FileHandler("taskcoach.log", mode='w', encoding='utf-8'),
+            logging.StreamHandler()  # Affiche aussi dans la console
+        ]
+    )
+
     root = tk.Tk()
     root.title("Exemple de TaskList (Tkinter)")
 

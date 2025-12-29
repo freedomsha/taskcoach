@@ -133,6 +133,15 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 # puis soustraire ce total de la largeur disponible pour trouver la largeur
 # de la colonne qui doit être redimensionnée automatiquement.
 """
+# Ce qui a été ajouté :
+#
+#     Logs de niveau DEBUG : Pour les calculs mathématiques et les passages fréquents (comme on_resize).
+#
+#     Logs de niveau INFO : Pour les actions importantes comme le changement de colonne cible ou le lancement d'un redimensionnement complet.
+#
+#     Gestion d'erreur sur self._font : Si _font n'est pas encore initialisé dans la classe qui utilise le mixin, le code ne plantera pas et logguera un avertissement.
+#
+#     Utilisation de self.ResizeColumnMinWidth : J'ai remplacé la valeur en dur 50 par l'attribut de l'instance dans on_resize.
 import logging
 import tkinter as tk
 from tkinter import ttk
@@ -141,7 +150,7 @@ log = logging.getLogger(__name__)
 
 
 # class AutoColumnWidthMixin(ttk.Treeview):
-class AutoColumnWidthMixin(object):  # TODO : A Essayer car mixin !
+class AutoColumnWidthMixin:  # TODO : A Essayer car mixin !
     """
     Initialise le mixin avec des paramètres spécifiques.
 
@@ -152,13 +161,18 @@ class AutoColumnWidthMixin(object):  # TODO : A Essayer car mixin !
                                          redimensionnable (par défaut : 50).
     """
     def __init__(self, master, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
-        # self.bind('<Configure>', self.on_resize)  # TODO : peut-être trop tôt puisque c'est appelé dans itemctrltk._CtrlWithAutoResizedColumnsMixin
-        self.__is_auto_resizing = False
-        # self.resize_column = 'task_name'
+        log.debug("Initialisation de AutoColumnWidthMixin.")
+        # super().__init__(master, *args, **kwargs)
+        # Extraction des paramètres spécifiques avant de passer le reste au parent
         self.resize_column = kwargs.pop("resizeableColumn", -1)
         self.ResizeColumnMinWidth = kwargs.pop("resizeableColumnMinWidth", 50)
+        log.debug(f"Attributs initialisés : resize_column={self.resize_column}, "
+                  f"ResizeColumnMinWidth={self.ResizeColumnMinWidth}")
         # self.set_columns()
+        super().__init__(master, *args, **kwargs)
+        # self.resize_column = 'task_name'
+        self.__is_auto_resizing = False
+        self.bind('<Configure>', self.on_resize)  # TODO : peut-être trop tôt puisque c'est appelé dans itemctrltk._CtrlWithAutoResizedColumnsMixin
 
     def SetResizeColumn(self, column):
         """
@@ -167,6 +181,7 @@ class AutoColumnWidthMixin(object):  # TODO : A Essayer car mixin !
         Args :
             column (int) : Index de la colonne.
         """
+        log.info(f"Changement de la colonne à redimensionner : {self.resize_column} -> {column}")
         self.resize_column = column
 
     # def set_columns(self):
@@ -185,24 +200,84 @@ class AutoColumnWidthMixin(object):  # TODO : A Essayer car mixin !
     #     self.insert('', 'end', values=('Convertir le fichier', '2025-09-01', 'Haute'))
     #     self.insert('', 'end', values=('Écrire la documentation', '2025-09-15', 'Moyenne'))
 
+    def _getRequiredColumnWidth(self, col):
+        log.debug(f"Calcul de la largeur requise pour la colonne : {col}")
+        # Mesurer la largeur du texte de l'en-tête (Header)
+        header_text = self.heading(col, 'text')
+        # Note : self._font doit être défini dans la classe parente ou l'instance
+        try:
+            header_width = self._font.measure(header_text) + 20  # + marge pour la flèche de tri
+        except AttributeError:
+            log.warning("Attribut '_font' non trouvé, utilisation d'une mesure par défaut.")
+            header_width = len(header_text) * 10 + 20
+
+        # Mesurer le contenu (si présent)
+        content_width = 0
+        for item in self.get_children():
+            cell_text = str(self.set(item, col))
+            try:
+                width = self._font.measure(cell_text)
+            except AttributeError:
+                width = len(cell_text) * 8
+            # content_width = max(content_width, self._font.measure(cell_text))
+            content_width = max(content_width, width)
+
+        # return max(header_width, content_width + 10)
+        required = max(header_width, content_width + 10)
+        log.debug(f"Largeur calculée pour la colonne '{col}': Header={header_width}, Contenu={content_width} -> Requis={required}")
+        return required
+
     def on_resize(self, event):
         """Ajuste la largeur de la colonne spécifiée en fonction de l'espace disponible."""
-        if self.winfo_width() > 1:  # Assurez-vous que le widget est visible
-            total_width = self.winfo_width()
+        current_width = self.winfo_width()
+        # if self.winfo_width() > 1:  # Assurez-vous que le widget est visible
+        if current_width > 1:
+            # total_width = self.winfo_width()
             fixed_width = 0
+            columns = self['columns']
 
             # Calculer la largeur totale des colonnes à largeur fixe
-            for col in self['columns']:
+            # for col in self['columns']:
+            for col in columns:
                 if col != self.resize_column:
                     fixed_width += self.column(col)['width']
 
             # Définir la largeur de la colonne redimensionnable
-            resize_width = total_width - fixed_width
+            # resize_width = total_width - fixed_width
+            resize_width = current_width - fixed_width
+
+            log.debug(f"AutoColumnWidthMixin.on_resize : Événement Resize : Total={current_width}px, Fixe={fixed_width}px, Restant={resize_width}px")
 
             # Assurez-vous que la largeur est positive et supérieure à un minimum
-            if resize_width > 50:
+            # if resize_width > 50:
+            if resize_width > self.ResizeColumnMinWidth:
+                log.debug(f"Ajustement de la colonne '{self.resize_column}' à {resize_width}px")
                 self.column(self.resize_column, width=resize_width)
+            else:
+                log.warning(f"AutoColumnWidthMixin.on_resize : Espace insuffisant pour '{self.resize_column}' ({resize_width}px < {self.ResizeColumnMinWidth}px)")
 
+    def resizeColumns(self):
+        log.info("AutoColumnWidthMixin : Lancement de resizeColumns (calcul global)")
+        self.update_idletasks()  # Force Tkinter à calculer les dimensions réelles
+        # On récupère les colonnes de données uniquement
+        columns = self['columns']
+        if not columns:
+            log.warning("Aucune colonne à redimensionner.")
+            return
+
+        total_width = self.winfo_width()
+        log.debug(f"Largeur actuelle du widget : {total_width}px")
+        # # Si le widget n'est pas encore affiché, winfo_width() renvoie 1
+        # if total_width <= 1:
+        #     self.update_idletasks()
+        #     total_width = self.winfo_width()
+
+        for col_id in columns:
+            # Forcer une largeur minimale si le contenu est vide
+            required_width = self._getRequiredColumnWidth(col_id)
+            final_width = max(required_width, 50)  # Sécurité : 50px min
+            log.debug(f"Application largeur : {col_id} -> {final_width}px")
+            self.column(col_id, width=final_width)
 
 # if __name__ == '__main__':
 #     from taskcoachlib.domain.task.tasklist import TaskList
