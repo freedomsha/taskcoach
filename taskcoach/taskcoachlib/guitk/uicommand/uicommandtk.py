@@ -3858,6 +3858,8 @@ Points clés:
         pass
 
     def updateMenuItems(self, paused):
+        log.debug("EffortStop.updateMenuItems(paused=%s)", paused)
+        log.debug(f"Valeurs des menuItems de self={self.__class__.__name__} avant update : {self.menuItems}")
         menuText = self.getMenuText(paused)
         helpText = self.getHelpText(paused)
         for menuItem in self.menuItems:
@@ -3870,8 +3872,16 @@ Points clés:
                 # Si c'est un menu item simple
                 if paused:
                     menuItem.invoke()  # TypeError: Menu.invoke() missing 1 required positional argument: 'index'
-            menuItem.SetItemLabel(menuText)
-            menuItem.SetHelp(helpText)
+            log.debug(f"Updating impossible pour menuItem : {menuItem} de type {menuItem.type} with menuText: {menuText} and helpText: {helpText}")
+            # # # menuItem.SetItemLabel(menuText)  # Attention : ActionMenu n'a pas cette méthode en wxPython
+            # menuItem.config(label=menuText)  # Pour Tkinter
+            # # fichier_menu.entryconfig(menuItem, label=menuText))  # Ne peut être changé directement sur un menuItem
+            # # menuItem["label"] = menuText  # Pour Tkinter
+            # # # AttributeError: 'ActionMenu' object has no attribute 'SetItemLabel'
+            # # menuItem.SetHelp(helpText)
+            # menuItem.config(help=helpText)
+            # menuItem["help"] = helpText  # Pour Tkinter
+        log.debug(f"Valeurs des menuItems après update : {self.menuItems}")
 
     def getMenuText(self, paused=None):  # pylint: disable=W0221
         if self.anyTrackedEfforts():

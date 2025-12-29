@@ -30,22 +30,23 @@ class SyncMLBasePage(SettingsPageBase):
         super().__init__(*args, **kwargs)
 
         self.iocontroller = iocontroller
-        self.config = iocontroller.syncMLConfig()
+        # self.config = iocontroller.syncMLConfig()
+        self.sync_config = iocontroller.syncMLConfig()
 
     def get(self, section, name):
         if section == 'access':
             if name in ['syncUrl']:
-                return str(self.config.children()[0]['spds']['syncml']['Conn'].get(name, ))
+                return str(self.sync_config.children()[0]['spds']['syncml']['Conn'].get(name, ))
             elif name in ['username']:
-                return str(self.config.children()[0]['spds']['syncml']['Auth'].get(name, ))
+                return str(self.sync_config.children()[0]['spds']['syncml']['Auth'].get(name, ))
 
         elif section == 'task':
-            for child in self.config.children()[0]['spds']['sources'].children():
+            for child in self.sync_config.children()[0]['spds']['sources'].children():
                 if child.name.endswith('Tasks'):
                     return child.get(name, )
 
         elif section == 'note':
-            for child in self.config.children()[0]['spds']['sources'].children():
+            for child in self.sync_config.children()[0]['spds']['sources'].children():
                 if child.name.endswith('Notes'):
                     return child.get(name, )
         return ''
@@ -53,18 +54,18 @@ class SyncMLBasePage(SettingsPageBase):
     def set(self, section, name, value):
         if section == 'access':
             if name in ['syncUrl']:
-                self.config.children()[0]['spds']['syncml']['Conn'].set(name, value)
+                self.sync_config.children()[0]['spds']['syncml']['Conn'].set(name, value)
             elif name in ['username']:
-                self.config.children()[0]['spds']['syncml']['Auth'].set(name, value)
+                self.sync_config.children()[0]['spds']['syncml']['Auth'].set(name, value)
 
         elif section == 'task':
-            for child in self.config.children()[0]['spds']['sources'].children():
+            for child in self.sync_config.children()[0]['spds']['sources'].children():
                 if child.name.endswith('Tasks'):
                     child.set(name, value)
                     break
 
         elif section == 'note':
-            for child in self.config.children()[0]['spds']['sources'].children():
+            for child in self.sync_config.children()[0]['spds']['sources'].children():
                 if child.name.endswith('Notes'):
                     child.set(name, value)
                     break
@@ -72,7 +73,7 @@ class SyncMLBasePage(SettingsPageBase):
     def ok(self):
         super().ok()
 
-        self.iocontroller.setSyncMLConfig(self.config)
+        self.iocontroller.setSyncMLConfig(self.sync_config)
 
 
 class SyncMLAccessPage(SyncMLBasePage):
