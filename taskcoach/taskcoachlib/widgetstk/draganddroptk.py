@@ -309,12 +309,64 @@
 # Exemple de conversion pour les éléments :
 # Les listes d'éléments peuvent être gérées avec des widgets comme Listbox ou Treeview de Tkinter.
 
+# Voici les améliorations principales :
+# Améliorations majeures
+# 1. Structure claire et modulaire
+#
+# FileUrlDropTarget : Stub pour compatibilité (nécessiterait tkinterdnd2 pour un vrai support)
+# TreeHelperMixin : Méthodes utilitaires pour Treeview
+# TreeCtrlDragAndDropMixin : Mixin principal complet pour le drag-and-drop
+
+# 2. Gestion correcte des données d'objet
+# dans GetItemPyData et SetItemPyData
+# Important : Ne JAMAIS stocker l'objet métier dans les tags !
+
+# 3. Validation complète du drop
+#
+# Empêche de dropper sur soi-même
+# Empêche de dropper un parent sur ses enfants
+# Empêche de dropper sur les descendants
+# Support callback personnalisé via validateDrag
+
+# 4. Gestion robuste des curseurs
+# Avec fallback multi-plateforme :
+# Dans _set_cursor_no_drop, curseurs différents par système d'exploitation.
+
+# 5. Méthodes de compatibilité wxPython
+# Pour faciliter la migration :
+# GetSelections(), UnselectAll(), SelectItem()
+# GetItemChildren(), GetItemParent(), GetItemPyData()
+#
+# 6. Documentation complète
+# Docstrings détaillées
+# Exemple d'utilisation fonctionnel inclus
+# Logging pour debugging
+#
+# Points clés pour l'utilisation dans treectrltk.py
+#
+# 1. L'ordre d'héritage est important :
+# class TreeListCtrl(TreeCtrlDragAndDropMixin, ttk.Treeview)
+# 2. Les bindings doivent être faits APRÈS l'init du widget
+# 3. OnDrop doit être implémentée
+
+# Ce que tkinterdnd2 sait faire
+# ✅ Drop depuis l’extérieur :
+# fichiers depuis le gestionnaire de fichiers
+# texte / URL depuis navigateur, éditeur, etc.
+# ❌ Il ne remplace PAS :
+# le drag interne du Treeview (ça reste géré par <ButtonPress> / <Motion> / <ButtonRelease>)
+
+# Important
+# TkinterDnD.Tk remplace tk.Tk
+# ne PAS mélanger avec tkinter.dnd (à supprimer définitivement)
 import tkinter as tk
 from tkinter import ttk
-from tkinter import dnd
-import re
-import urllib.parse
+# from tkinter import dnd
+from typing import List, Optional, Callable, Any
 import logging
+import re
+from tkinterdnd2 import DND_FILES, DND_TEXT, TkinterDnD
+import urllib.parse
 
 log = logging.getLogger(__name__)
 
@@ -324,20 +376,20 @@ log = logging.getLogger(__name__)
 # # converties en Tkinter sans des modules externes complexes et spécifiques à la plateforme.
 # # Cette conversion se concentre sur les fichiers et les URLs/texte.
 
-# --- Classe pour initier une opération de glisser-déposer (source) ---
-class DragSource:
-    """
-    Une classe simple pour initier une opération de glisser-déposer.
-    L'objet de données est stocké dans l'attribut `drag_data`.
-    """
-    def __init__(self, widget, drag_data):
-        self.widget = widget
-        self.drag_data = drag_data
-        self.widget.bind("<ButtonPress-1>", self.on_start_drag)
-
-    def on_start_drag(self, event):
-        dnd.dnd_start(self, event)
-        self.widget.config(cursor="hand1")
+# # --- Classe pour initier une opération de glisser-déposer (source) ---
+# class DragSource:
+#     """
+#     Une classe simple pour initier une opération de glisser-déposer.
+#     L'objet de données est stocké dans l'attribut `drag_data`.
+#     """
+#     def __init__(self, widget, drag_data):
+#         self.widget = widget
+#         self.drag_data = drag_data
+#         self.widget.bind("<ButtonPress-1>", self.on_start_drag)
+#
+#     def on_start_drag(self, event):
+#         dnd.dnd_start(self, event)
+#         self.widget.config(cursor="hand1")
 
 
 # # --- Classes de base ---
@@ -374,6 +426,80 @@ class DragSource:
 #     def dnd_commit(self, source, event):
 #         """Méthode appelée pour valider le drop. Doit être surchargée."""
 #         raise NotImplementedError("La méthode dnd_commit doit être implémentée.")
+
+# DROP EXTERNE VIA tkinterdnd2
+# Cette classe remplace tous les essais avec dnd_*
+class TkDnDDropTarget:
+    """
+    Gestionnaire de drop externe basé sur tkinterdnd2.
+
+    Gère :
+    - fichiers (DND_FILES)
+    - texte / URL (DND_TEXT)
+
+    Cette classe est volontairement simple et stable.
+    """
+
+    def __init__(self, widget: tk.Widget,
+                 on_files: Optional[Callable[[List[str]], None]] = None,
+                 on_text: Optional[Callable[[str], None]] = None):
+        """
+        Initialise le gestionnaire de drop externe.
+
+        Args:
+            widget (tk.Widget): widget Tkinter cible
+            on_files (callable): callback(list[str]) appelé avec une liste de chemins de fichiers
+            on_text (callable): callback(str) appelé avec une chaîne de texte ou une URL
+        """
+        self.widget = widget                  # widget cible
+        self.on_files = on_files              # callback fichiers
+        self.on_text = on_text                # callback texte / URL
+
+        # Enregistrement des types acceptés
+        widget.drop_target_register(DND_FILES, DND_TEXT)
+
+        # Liaison de l’événement de drop
+        widget.dnd_bind("<<Drop>>", self._on_drop)
+
+    def _on_drop(self, event):
+        """
+        Callback appelé lors d'un drop externe.
+        """
+        data = event.data                    # données brutes Tcl
+        if not data:
+            return
+
+        # Cas du dépôt de fichiers
+        # if event.action == 'copy' and data.startswith('{'):
+        #     files = self._parse_files(data)
+        #     if self.on_files:
+        #         self.on_files(files)
+        #     return
+        if data.startswith("{") and self.on_files:
+            filenames = self._parse_filenames(data)
+            self.on_files(filenames)
+            return
+
+        # Cas du dépôt de texte ou d'URL
+        if self.on_text:
+            self.on_text(data)
+
+    @staticmethod
+    def _parse_files(data: str) -> List[str]:
+        """
+        Convertit la chaîne Tcl de fchiers en liste Python de chemins.
+
+        Args:
+            data (str): données Tcl
+
+        Returns:
+            list[str] : Liste de chemins de fichiers
+        """
+        # Suppression des accolades Tcl
+        files = data.strip('{}')
+
+        # Séparation propre (chemins avec espaces)
+        return files.split('} {')
 
 
 # --- Classes de glisser-déposer génériques (équivalent à wx.FileDropTarget, wx.TextDropTarget) ---
@@ -489,13 +615,28 @@ class DragSource:
 #     def OnDropText(self, x, y, text):  # pylint: disable=W0613,W0221
 #         self.__onDropCallback(text)
 
-
+# CLASSES DE BASE POUR LE GLISSER-DÉPOSER DE FICHIERS/URLS
 class FileUrlDropTarget:
     """
-    Une classe de remplacement pour wx.DropTarget qui gère le lâcher de fichiers et de texte/URLs.
+    Gère le dépôt/lâcher de fichiers et d'URLs/texte.
+    Équivalent Tkinter de wx.DropTarget avec support fichiers et URLs.
+
+    Cette classe n'utilise PAS tkinter.dnd car il est trop basique.
+    Le glisser-déposer de fichiers externes nécessiterait tkinterdnd2.
+    Pour l'instant, on se concentre sur le drag-and-drop interne.
     """
 
-    def __init__(self, widget, on_drop_url_callback=None, on_drop_file_callback=None):
+    def __init__(self, widget: tk.Widget,
+                 on_drop_url_callback: Optional[Callable] = None,
+                 on_drop_file_callback: Optional[Callable] = None):
+        """
+        Initialise le gestionnaire de drop.
+
+        Args:
+            widget: Widget Tkinter cible
+            on_drop_url_callback: Callback pour URLs (x, y, url)
+            on_drop_file_callback: Callback pour fichiers (x, y, filenames)
+        """
         self.widget = widget
         # self.__onDropURLCallback = on_drop_url_callback
         self.on_drop_url_callback = on_drop_url_callback
@@ -510,6 +651,7 @@ class FileUrlDropTarget:
         self.widget.dnd_leave = self.dnd_leave
         self.widget.dnd_motion = self.dnd_motion
         self.widget.dnd_commit = self.dnd_commit
+        log.debug("FileUrlDropTarget initialisé (stub - pas de support externe)")
 
     # def __dnd_accept(self, source, event):
     #     """Callback pour le module dnd."""
@@ -611,49 +753,109 @@ class FileUrlDropTarget:
 #                 log.warning(f"Données dropées non gérées : {data}")
 
 
+# HELPER MIXIN POUR TREEVIEW
 # --- Classes pour le glisser-déposer d'arborescence (équivalent à TreeCtrlDragAndDropMixin) ---
 
 class TreeHelperMixin(ttk.Treeview):
-    """Fournit des méthodes utilitaires pour un Treeview."""
+    """
+    Fournit des méthodes utilitaires pour un Treeview.
+    Équivalent des méthodes helper de wx.TreeCtrl.
+    """
 
-    def GetItemChildren(self, item=None, recursively=False):
-        """Retourne les enfants d'un élément."""
-        if not item:
-            return self.get_children("")
-        children = self.get_children(item)
+    def GetItemChildren(self, item: Optional[str] = None,
+                        recursively: bool = False) -> List[str]:
+        """Retourne les enfants d'un élément.
+
+        Args:
+            item: ID de l'élément (None = racine)
+            recursively: Si True, inclut tous les descendants
+
+        Returns:
+            Liste des IDs d'enfants
+        """
+        # if not item:
+        #     return self.get_children("")
+        if item is None:
+            item = ""
+        # children = self.get_children(item)
+        children = list(self.get_children(item))
+
         if recursively:
-            all_children = list(children)
+            # all_children = list(children)
+            all_children = children
             for child in children:
                 all_children.extend(self.GetItemChildren(child, True))
             return all_children
+
         return children
 
-    def GetItemParent(self, item):
+    def GetItemParent(self, item: str) -> str:
         """Retourne le parent d'un élément."""
         return self.parent(item)
 
-    def GetItemPyData(self, item):
-        """Récupère les données Python associées à un élément."""
-        # return self.item(item, "tags")  # Utilisation des tags pour stocker les données
-        # Règle CRITIQUE
-        # 👉 L’objet métier ne doit PAS être stocké dans les tags
-        # ✔️ Utilise un dictionnaire interne :
-        self._item_to_object = getattr(self, '_item_to_object', {})
+    def GetItemPyData(self, item: str) -> Any:
+        """Récupère les données Python associées à un élément.
 
+        IMPORTANT: Ne PAS stocker l'objet métier dans les tags!
+        Utiliser un dictionnaire interne _item_to_object.
+        """
+        # # return self.item(item, "tags")  # Utilisation des tags pour stocker les données
+        # # Règle CRITIQUE
+        # # 👉 L’objet métier ne doit PAS être stocké dans les tags
+        # # ✔️ Utilise un dictionnaire interne :
+        # self._item_to_object = getattr(self, '_item_to_object', {})
+        if not hasattr(self, '_item_to_object'):
+            self._item_to_object = {}
+        return self._item_to_object.get(item)
+
+    def SetItemPyData(self, item: str, data: Any):
+        """
+        Associe des données Python à un élément.
+
+        Args:
+            item: ID de l'élément
+            data: Objet métier à associer
+        """
+        if not hasattr(self, '_item_to_object'):
+            self._item_to_object = {}
+        self._item_to_object[item] = data
+
+
+# MIXIN PRINCIPAL POUR DRAG-AND-DROP D'ARBORESCENCE
 
 class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     """
     Mixin pour permettre le glisser-déposer d'éléments dans un Treeview Tkinter.
-    """
-    # Propriétés de glissement
-    dragged_items = []
-    drag_data_type = ""
-    drop_target = None
-    drop_position = None
+    Équivalent de TreeCtrlDragAndDropMixin de wxPython.
 
-    def __init__(self, parent, *args, **kwargs):
+    Utilisation:
+        class MyTree(TreeCtrlDragAndDropMixin, ttk.Treeview):
+            def OnDrop(self, dropItem, dragItems, part, column):
+                # Implémenter la logique de drop
+                pass
+    """
+    # # Propriétés de glissement
+    # dragged_items = []
+    # drag_data_type = ""
+    # drop_target = None
+    # drop_position = None
+
+    def __init__(self, parent: tk.Widget, *args, **kwargs):
+        """
+        Initialise le mixin de drag-and-drop.
+
+        Args:
+            parent: Widget parent
+            **kwargs: Peut contenir 'validateDrag' (callback de validation)
+        """
+        log.debug("TreeCtrlDragAndDropMixin.__init__: Initialisation")
+
+        # Extraction du callback de validation
+        self._validateDragCallback = kwargs.pop('validateDrag', None)
+
         # super().__init__(*args, **kwargs)
         # TreeHelperMixin n'a pas d'__init__, donc pas besoin de l'appeler explicitement
+
         # self.bind("<ButtonPress-1>", self.on_start_drag)
         # # AttributeError: 'TreeCtrlDragAndDropMixin' object has no attribute 'bind'
         # # TODO : est-ce le bon endroit pour attacher les événements ?
@@ -671,8 +873,8 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         # if hasattr(parent, 'config'):
         #     parent.config(selectmode="extended")
         # Les bind sont mis en place dans TreeListCtrl._bind_events() !
-        # self.drop_handler = None
-        self.drag_data: list[str]
+        # # self.drop_handler = None
+        # self.drag_data: list[str]
 
         # # Ajout des méthodes dnd requises
         # self.dnd_enter = self.dnd_enter_callback
@@ -686,25 +888,89 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         # Notamment les méthodes dnd_enter, dnd_leave, dnd_commit,
         # dnd_enter_callback, dnd_leave_callback et dnd_end_callback.
 
+        # Variables d'état du drag-and-drop
+        self._dragItems = []
+        self._dragStartPos = None
+        self._dragColumn = -1
+        self.dragged_items = []
+        # # self.drop_handler = None
+        # self.drag_data: list[str]
+        self.drag_data = []
+        self.drop_target = None
+        self.drop_position = None
+
+        # Note: Les bindings sont faits dans TreeListCtrl._bind_events()
+        # pour éviter les conflits d'ordre d'initialisation
+
+        log.debug("TreeCtrlDragAndDropMixin initialisé")
+
+    # MÉTHODES PUBLIQUES À SURCHARGER
+    def OnDrop(self, drop_item: str, dragged_items: List[str],
+               part: int, column: int):
+        """
+        Cette méthode DOIT être surchargée dans la classe dérivée.
+
+        Args:
+            dropItem: Item sur lequel on drop (ou "" pour racine)
+            dragItems: Liste des items glissés
+            part: Position (-1=au-dessus, 0=sur, 1=en-dessous)
+            column: Index de la colonne
+        """
+        raise NotImplementedError(
+            "La méthode OnDrop doit être implémentée par la classe dérivée."
+        )
+
+    # GESTION DU DÉBUT DU DRAG
     def on_start_drag(self, event):
+        """
+        Appelé au début du glissement (ButtonPress-1).
+        Équivalent de OnBeginDrag de wxPython.
+        """
         item = self.identify_row(event.y)
-        if item:
-            self.dragged_items = list(self.selection()) if self.selection() else [item]
-            if not self.dragged_items or "" in self.dragged_items:  # Empêche de glisser l'élément racine
-                self.dragged_items = []
-                return
-            # dnd.dnd_start(self, event)
+        if not item:
+            self.dragged_items = []
+            return
 
-            # Stocke les données à glisser pour le module dnd
-            self.drag_data = self.dragged_items
-            # self.dnd_enter(None, event)
+        # if item:
+        #     self.dragged_items = list(self.selection()) if self.selection() else [item]
+        #     if not self.dragged_items or "" in self.dragged_items:  # Empêche de glisser l'élément racine
+        #         self.dragged_items = []
+        #         return
+        #     # dnd.dnd_start(self, event)
+        # Récupérer la sélection ou l'item cliqué
+        selections = self.selection()
+        self.dragged_items = list(selections) if selections else [item]
 
-            dnd.dnd_start(self, event)
+        # Ne pas permettre de glisser la racine
+        if "" in self.dragged_items:
+            self.dragged_items = []
+            return
 
+        # Identifier la colonne
+        self._dragColumn = self._get_column_index(event.x)
+        self._dragStartPos = (event.x, event.y)
+
+        # Stocke les données à glisser pour le module dnd
+        self.drag_data = self.dragged_items
+        self._dragItems = self.dragged_items[:]
+        # # self.dnd_enter(None, event)
+        #
+        # dnd.dnd_start(self, event)
+        log.debug(f"TreeCtrlDragAndDropMixin.on_start_drag: Début drag: {len(self.dragged_items)} items")
+
+    # GESTION DU MOUVEMENT
     def on_dragging(self, event):
+        """
+        Appelé pendant le glissement (B1-Motion).
+        Gère le curseur et la visualisation.
+        """
+        if not self.dragged_items:
+            return
+
         x, y = event.x, event.y
         self.drop_target = self.identify_row(y)
 
+        # Déterminer la position relative (above/on/below)
         # Logique pour déterminer la position (sur, au-dessus, en-dessous)
         if self.drop_target:
             item_bbox = self.bbox(self.drop_target)
@@ -719,49 +985,173 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
                     self.drop_position = "on"
 
             # Gère le curseur et la sélection
+            # Changer le curseur selon la validité du drop
             if self.is_valid_drop_target(self.drop_target):
-                # self.config(cursor="hand2")
-                self.config(cursor="hand1")
+                # # self.config(cursor="hand2")
+                # self.config(cursor="hand1")
+                self._set_cursor_dragging()
             else:
-                # self.config(cursor="no")
-                # self.config(cursor="no_drop")  # Correction ici
-                self.config(cursor="no_entry")  # Correction ici
+                # # self.config(cursor="no")
+                # # self.config(cursor="no_drop")  # Correction ici
+                # self.config(cursor="no_entry")  # Correction ici
+                self._set_cursor_no_drop()
         else:
             self.config(cursor="")
             self.drop_target = None
             self.drop_position = None
 
+    # GESTION DE LA FIN DU DRAG
     def on_end_drag(self, event):
+        """
+        Appelé à la fin du glissement (ButtonRelease-1).
+        Effectue le drop si valide.
+        """
         self.config(cursor="")
-        if self.drop_target and self.is_valid_drop_target(self.drop_target):
-            self.OnDrop(self.drop_target, self.dragged_items, self.drop_position)
+        if not self.dragged_items:
+            return
+
+        drop_target = self.drop_target if self.drop_target else ""
+
+        # if self.drop_target and self.is_valid_drop_target(self.drop_target):
+        #     self.OnDrop(self.drop_target, self.dragged_items, self.drop_position)
+        if self.is_valid_drop_target(drop_target):
+            # Convertir position string en int pour wxPython compatibility
+            part = self._position_to_int(self.drop_position)
+
+            # Appeler la méthode à surcharger
+            self.OnDrop(drop_target, self.dragged_items, part, self._dragColumn)
+
+        # Réinitialiser l'état
         self.dragged_items = []
         self.drop_target = None
         self.drop_position = None
+        self._dragItems = []
 
-    def OnDrop(self, drop_item, dragged_items, part):
+    # VALIDATION DU DROP
+    def is_valid_drop_target(self, drop_target: str) -> bool:
         """
-        Cette méthode DOIT être surchargée dans la classe dérivée.
-        """
-        raise NotImplementedError("La méthode OnDrop doit être implémentée par la classe dérivée.")
+        Vérifie si un drop est valide.
 
-    def is_valid_drop_target(self, drop_target):
+        Args:
+            dropTarget: Item cible ("" = racine OK)
+
+        Returns:
+            True si le drop est autorisé
+        """
+        # Si callback personnalisé fourni
         if not drop_target:
             return False
 
-        # Empêcher de glisser un parent sur un enfant
-        for dragged_item in self.dragged_items:
-            current_item = drop_target
-            while current_item:
-                if current_item == dragged_item:
-                    return False
-                current_item = self.parent(current_item)
+        # # Empêcher de glisser un parent sur un enfant
+        # for dragged_item in self.dragged_items:
+        #     current_item = drop_target
+        #     while current_item:
+        #         if current_item == dragged_item:
+        #             return False
+        #         current_item = self.parent(current_item)
+        #
+        # # Empêcher de glisser un élément sur lui-même ou sur un de ses enfants
+        # if drop_target in self.dragged_items or drop_target in self.GetItemChildren(self.dragged_items, recursively=True):
+        #     return False
+        #
+        # return True
 
-        # Empêcher de glisser un élément sur lui-même ou sur un de ses enfants
-        if drop_target in self.dragged_items or drop_target in self.GetItemChildren(self.dragged_items, recursively=True):
+        if self._validateDragCallback is not None:
+            drop_data = self.GetItemPyData(drop_target) if drop_target else None
+            drag_data_list = [
+                self.GetItemPyData(item) for item in self.dragged_items
+            ]
+
+            result = self._validateDragCallback(
+                drop_data, drag_data_list, self._dragColumn
+            )
+            if result is not None:
+                return result
+
+            # Validation par défaut
+        if not self.dragged_items:
             return False
 
-        return True
+            # Construire l'ensemble des cibles invalides
+        invalid_targets = set(self.dragged_items)
+
+        # Ajouter les parents des items glissés
+        for item in self.dragged_items:
+            parent = self.GetItemParent(item)
+            if parent:
+                invalid_targets.add(parent)
+
+        # Ajouter tous les descendants des items glissés
+        for item in self.dragged_items:
+            descendants = self.GetItemChildren(item, recursively=True)
+            invalid_targets.update(descendants)
+
+        # Le drop est valide si la cible n'est pas dans les invalides
+        return drop_target not in invalid_targets
+
+    # ========================================================================
+    # MÉTHODES UTILITAIRES PRIVÉES
+    # ========================================================================
+
+    def _get_column_index(self, x: int) -> int:
+        """Retourne l'index de la colonne à la position x."""
+        col_id = self.identify_column(x)
+        if col_id == '#0':
+            return 0
+
+        try:
+            # col_id est du type "#1", "#2", etc.
+            return int(col_id.replace('#', ''))
+        except (ValueError, AttributeError):
+            return 0
+
+    def _position_to_int(self, position: Optional[str]) -> int:
+        """
+        Convertit une position string en int pour compatibilité wxPython.
+
+        Returns:
+            -1 (above), 0 (on), 1 (below)
+        """
+        if position == "above":
+            return -1
+        elif position == "below":
+            return 1
+        else:
+            return 0
+
+    def _set_cursor_dragging(self):
+        """Change le curseur pour indiquer un drag autorisé."""
+        try:
+            self.config(cursor="hand1")
+        except tk.TclError:
+            self.config(cursor="hand2")
+
+    def _set_cursor_no_drop(self):
+        """Change le curseur pour indiquer un drop interdit."""
+        try:
+            self.config(cursor="notallowed")
+        except tk.TclError:
+            try:
+                self.config(cursor="pirate")
+            except tk.TclError:
+                self.config(cursor="circle")
+
+    # ========================================================================
+    # MÉTHODES DE COMPATIBILITÉ AVEC WXPYTHON
+    # ========================================================================
+
+    def GetSelections(self) -> tuple:
+        """Retourne les items sélectionnés (compatibilité wxPython)."""
+        return self.selection()
+
+    def UnselectAll(self):
+        """Désélectionne tous les items."""
+        for item in self.selection():
+            self.selection_remove(item)
+
+    def SelectItem(self, item: str):
+        """Sélectionne un item."""
+        self.selection_set(item)
 
     # --- Méthodes requises par le module tkinter.dnd ---
 
@@ -807,6 +1197,8 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
 # --- Exemple d'utilisation (pour démonstration) ---
 if __name__ == "__main__":
     # from tkinter import ttk
+    logging.basicConfig(level=logging.DEBUG)
+
     def on_drop_url(url):
         print(f"URL/Texte lâché : {url}")
 
@@ -852,20 +1244,57 @@ if __name__ == "__main__":
 
     # Exemple avec un Treeview
     class MyTree(TreeCtrlDragAndDropMixin, ttk.Treeview):
-        def OnDrop(self, drop_item, dragged_items, part):
-            print(f"Éléments glissés: {dragged_items} sur {drop_item} à la position: {part}")
+        """Arbre de test avec drag-and-drop."""
 
-            # Exemple de déplacement simple
+        def __init__(self, parent):
+            ttk.Treeview.__init__(self, parent, columns=('col1',), show='tree')
+            TreeCtrlDragAndDropMixin.__init__(self, parent)
+
+            # Binding des événements
+            self.bind("<ButtonPress-1>", self.on_start_drag)
+            self.bind("<B1-Motion>", self.on_dragging)
+            self.bind("<ButtonRelease-1>", self.on_end_drag)
+
+            # Peuplement
+            self._populate()
+
+        def _populate(self):
+            """Ajoute des éléments de test."""
+            p1 = self.insert("", "end", text="Projet A", open=True)
+            self.SetItemPyData(p1, {"name": "Projet A"})
+
+            t1 = self.insert(p1, "end", text="Tâche 1")
+            self.SetItemPyData(t1, {"name": "Tâche 1"})
+
+            t2 = self.insert(p1, "end", text="Tâche 2")
+            self.SetItemPyData(t2, {"name": "Tâche 2"})
+
+            p2 = self.insert("", "end", text="Projet B")
+            self.SetItemPyData(p2, {"name": "Projet B"})
+
+        def OnDrop(self, drop_item, dragged_items, part,column):
+            """Implémentation du drop."""
+            # print(f"Éléments glissés: {dragged_items} sur {drop_item} à la position: {part}")
+            print(f"\nDrop:")
+            print(f"  Items glissés: {[self.item(i, 'text') for i in dragged_items]}")
+            print(f"  Cible: {self.item(drop_item, 'text') if drop_item else 'Racine'}")
+            print(f"  Position: {['above', 'on', 'below'][part+1]}")
+
+            # Exemple de déplacement simple des items
             for item in dragged_items:
-                if part == "on":
+                # if part == "on":
+                if part == 0:  # Sur l'item
                     # Déplacer l'élément pour qu'il devienne un enfant
                     self.move(item, drop_item, "end")
                 else:
                     # Déplacer l'élément au-dessus ou en-dessous
+                    parent = self.parent(drop_item) if drop_item else ""
                     index = self.index(drop_item)
-                    if part == "below":
+                    # if part == "below":
+                    if part == 1:  # Below
                         index += 1
-                    self.move(item, self.parent(drop_item), index)
+                    # self.move(item, self.parent(drop_item), index)
+                    self.move(item, parent, index)
 
     # # root_item = tree.insert("", "end", text="Racine Cachée", tags=("root",))
     #
@@ -885,28 +1314,17 @@ if __name__ == "__main__":
     # # tree.pack(fill="both", expand=True)
     # tree.pack(expand=True, fill="both", padx=20, pady=20)
 
-    root = tk.Tk()
+    # root = tk.Tk()
+    root = TkinterDnD.Tk()  # Utilisation de TkinterDnD pour le support DnD étendu
+    # sans ça, <<Drop>> ne se déclenchera jamais.
     # top_level = tk.Toplevel()
     root.title("Exemple de File/URL Drop Target Tkinter")
     # top_level.title("Exemple de File/URL Drop Target")
-    # # root.geometry("400x300")
+    root.geometry("400x300")
     # top_level.geometry("400x300")
     #
-    # Exemple avec un Label
-    # # label = ttk.Label(root, text="Glissez-déposez des fichiers ou des URLs ici", relief="solid", padding=20)
-    # label = ttk.Label(top_level, text="Glissez-déposez des fichiers ou des URLs ici", relief="solid", padding=20)
-    label = ttk.Label(root, text="Déposez ici des fichiers ou des URLs/texte")
-    # label.pack(expand=True, fill="both", padx=20, pady=20)
-    label.pack(pady=20, padx=20)
-    #
-    # # Initialiser notre nouvelle classe pour le Label
-    # FileUrlDropTarget(label, on_drop_url, on_drop_files)
-    # Utilisation de la classe FileUrlDropTarget
-    drop_target = FileUrlDropTarget(
-        label,
-        on_drop_url_callback=on_drop_url,
-        on_drop_file_callback=on_drop_file
-    )
+
+
 
     # Exemple avec un Treeview
     tree = MyTree(root)
@@ -917,5 +1335,22 @@ if __name__ == "__main__":
     id2 = tree.insert("", "end", text="Tâche 2")
 
     tree.pack(expand=True, fill="both", padx=20, pady=20)
+
+    # Exemple avec un Label
+    # # label = ttk.Label(root, text="Glissez-déposez des fichiers ou des URLs ici", relief="solid", padding=20)
+    # label = ttk.Label(top_level, text="Glissez-déposez des fichiers ou des URLs ici", relief="solid", padding=20)
+    label = ttk.Label(root, text="Déposez ici des fichiers ou des URLs/texte",
+                      background="lightyellow")
+    # label.pack(expand=True, fill="both", padx=20, pady=20)
+    label.pack(fill=tk.X, pady=20, padx=20)
+    #
+    # # Initialiser notre nouvelle classe pour le Label
+    # FileUrlDropTarget(label, on_drop_url, on_drop_files)
+    # Utilisation de la classe FileUrlDropTarget
+    drop_target = FileUrlDropTarget(
+        label,
+        on_drop_url_callback=on_drop_url,
+        on_drop_file_callback=on_drop_file
+    )
 
     root.mainloop()
