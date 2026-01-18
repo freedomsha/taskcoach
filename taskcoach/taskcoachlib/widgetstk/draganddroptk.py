@@ -56,7 +56,7 @@
 # (l'objet qui est glissé) et la cible (l'objet sur lequel on lâche)
 # implémentent des méthodes spécifiques.
 #
-# Voici les corrections à apporter au fichier draganddrop.py pour résoudre ces problèmes.
+# Voici les corrections à apporter au fichier draganddroptk.py pour résoudre ces problèmes.
 #
 # 1. AttributeError: 'TaskCoachTree' object has no attribute 'dnd_enter' et dnd_end
 #
@@ -302,6 +302,12 @@
 # Pour un projet simple (drag-and-drop interne à l'application) : Implémente le drag-and-drop en utilisant directement les événements Tkinter (ButtonPress, Motion, ButtonRelease) et la manipulation des widgets.
 # Pour un projet plus complexe (drag-and-drop avec des applications externes, différents types de données) : Utilise tkinterdnd2 pour simplifier l'intégration de tkdnd. Voici un exemple d'installation : pip install tkinterdnd2
 # Si tu rencontres du code utilisant dnd_register : Vérifie si ce code est associé à une implémentation de tkdnd ou s'il s'agit d'une fonction définie localement dans le projet.
+
+# En Tkinter, le glisser-déposer peut être implémenté
+# en utilisant des bindings d'événements (<ButtonPress>, <B1-Motion>, <ButtonRelease>)
+# et des widgets comme Listbox, Canvas, ou Treeview.
+# Exemple de conversion pour les éléments :
+# Les listes d'éléments peuvent être gérées avec des widgets comme Listbox ou Treeview de Tkinter.
 
 import tkinter as tk
 from tkinter import ttk
@@ -607,7 +613,7 @@ class FileUrlDropTarget:
 
 # --- Classes pour le glisser-déposer d'arborescence (équivalent à TreeCtrlDragAndDropMixin) ---
 
-class TreeHelperMixin:
+class TreeHelperMixin(ttk.Treeview):
     """Fournit des méthodes utilitaires pour un Treeview."""
 
     def GetItemChildren(self, item=None, recursively=False):
@@ -628,26 +634,43 @@ class TreeHelperMixin:
 
     def GetItemPyData(self, item):
         """Récupère les données Python associées à un élément."""
-        return self.item(item, "tags")  # Utilisation des tags pour stocker les données
+        # return self.item(item, "tags")  # Utilisation des tags pour stocker les données
+        # Règle CRITIQUE
+        # 👉 L’objet métier ne doit PAS être stocké dans les tags
+        # ✔️ Utilise un dictionnaire interne :
+        self._item_to_object = getattr(self, '_item_to_object', {})
 
 
 class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     """
     Mixin pour permettre le glisser-déposer d'éléments dans un Treeview Tkinter.
     """
-
     # Propriétés de glissement
     dragged_items = []
     drag_data_type = ""
     drop_target = None
     drop_position = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.bind("<ButtonPress-1>", self.on_start_drag)
-        self.bind("<B1-Motion>", self.on_dragging)
-        self.bind("<ButtonRelease-1>", self.on_end_drag)
-        self.config(selectmode="extended")
+    def __init__(self, parent, *args, **kwargs):
+        # super().__init__(*args, **kwargs)
+        # TreeHelperMixin n'a pas d'__init__, donc pas besoin de l'appeler explicitement
+        # self.bind("<ButtonPress-1>", self.on_start_drag)
+        # # AttributeError: 'TreeCtrlDragAndDropMixin' object has no attribute 'bind'
+        # # TODO : est-ce le bon endroit pour attacher les événements ?
+        # self.bind("<B1-Motion>", self.on_dragging)
+        # self.bind("<ButtonRelease-1>", self.on_end_drag)
+        # # self.config(selectmode="extended")
+        # # # AttributeError: 'TreeListCtrl' object has no attribute 'tk'
+        # # Retarder l'appel à config en utilisant after
+        # # self.after(1, self.config(selectmode="extended"))
+        # # self.after(1, self._configure_selectmode)
+        # # self ne fait pas référence à un objet Tkinter
+        # # vous devez vous assurer que config est appelé sur un objet Tkinter valide.
+        # if not hasattr(parent, 'tk'):
+        #     raise TypeError("TreeCtrlDragAndDropMixin doit être utilisé avec un widget Tkinter valide.")
+        # if hasattr(parent, 'config'):
+        #     parent.config(selectmode="extended")
+        # Les bind sont mis en place dans TreeListCtrl._bind_events() !
         # self.drop_handler = None
         self.drag_data: list[str]
 
@@ -655,6 +678,13 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         # self.dnd_enter = self.dnd_enter_callback
         # self.dnd_leave = self.dnd_leave_callback
         # self.dnd_end = self.dnd_end_callback
+        # Le code utilise tkinter.dnd pour gérer le glisser-déposer.
+        # Cependant, ce module est assez basique
+        # et nécessite que la source et la cible implémentent des méthodes spécifiques.
+        # Assurez-vous que toutes les méthodes requises par tkinter.dnd
+        # sont correctement implémentées dans TreeCtrlDragAndDropMixin.
+        # Notamment les méthodes dnd_enter, dnd_leave, dnd_commit,
+        # dnd_enter_callback, dnd_leave_callback et dnd_end_callback.
 
     def on_start_drag(self, event):
         item = self.identify_row(event.y)
