@@ -143,7 +143,7 @@ class _CtrlWithPopupMenuMixin(_CtrlWithItemsMixin):
     @staticmethod
     def _attachPopupMenu(eventSource, eventTypes, eventHandler):
         """
-        Lie un gestionnaire d'événements pour afficher un menu contextuel.
+        Méthode utilitaire qui lie un gestionnaire d'événements pour afficher un menu contextuel.
 
         Args :
             eventSource : La source de l'événement.
@@ -520,6 +520,7 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
     """
 
     def showColumn(self, column, show=True):
+        # def showColumn(self, column_name: str, show: bool = True):
         """
         Affiche ou masque une colonne.
 
@@ -531,12 +532,22 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
         Args :
         column (Column) : La colonne à afficher ou masquer.
         show (bool) : Si `True`, affiche la colonne. Sinon, la masque.
-    """
+        """
+        # visible = list(self['displaycolumns'])
+
         columnIndex = self._getColumnIndex(column)
         if show and not self.isColumnVisible(column):
+            # if show and column_name not in visible:
             self._insertColumn(columnIndex, column)
+            # visible.append(column_name)
+            # visible.sort(key=lambda x: [c.name() for c in self._columns].index(x))
         elif not show and self.isColumnVisible(column):
+            # elif not show and column_name in visible:
             self._deleteColumn(columnIndex)
+            # visible.remove(column_name)
+
+        # self['displaycolumns'] = visible
+
 
     def isColumnVisible(self, column):
         return column in self._visibleColumns()
@@ -643,7 +654,11 @@ class CtrlWithColumnsMixin(_CtrlWithAutoResizedColumnsMixin,
     - Menu contextuel pour les colonnes.
     """
 
+    # GESTION DES COLONNES ET TRI
     def showColumn(self, column, show=True):
+        # def showColumn(self, column_name: str, show: bool = True):
+        """Affiche ou cache une colonne."""
+        # méthode dans _CtrlWithHideableColumnsMixin
         super().showColumn(column, show)
         # Afficher l'indicateur de tri si la colonne qui vient d'être rendue visible est en cours de tri.
         if show and column == self._currentSortColumn():
