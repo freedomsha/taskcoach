@@ -25,6 +25,18 @@ if operating_system.isWindows():
 elif operating_system.isMac():
     from .notifier_growl import GrowlNotifier
 
-from .notifier_universal import *
+# Todo : 
+# get selection ("wx" or "tk") if available
+try:
+    from taskcoachlib.config.arguments import get_gui  # may raise during early import
+except Exception:
+    def get_gui() -> Any:  # fallback if config not importable yet
+        return None
+# Si wx
+if get_gui() == "wx":
+    from .notifier_universal import *
+# Si tk
+elif get_gui() == "tk":
+    from .notifier_universaltk import *
 
 from .notifier import AbstractNotifier
