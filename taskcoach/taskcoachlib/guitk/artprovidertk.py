@@ -639,11 +639,11 @@ def iconBundle(iconTitle):
 
 
 # def getIcon(iconTitle):
-#     """Renvoie l'icône correspondant au titre donné, en utilisant un cache pour optimiser la gestion mémoire."""
 #     return IconProvider().getIcon(iconTitle)
 # Remplacer la ligne : return IconProvider().getIcon(iconTitle)
 # par un appel complet qui inclut la taille si nécessaire dans le wrapper principal
 def getIcon(iconTitle: str, desired_size: Optional[Tuple[int, int]] = None) -> Optional[ImageTk.PhotoImage]:
+    """Renvoie l'icône correspondant au titre donné, en utilisant un cache pour optimiser la gestion mémoire."""
     return IconProvider().getIcon(iconTitle, desired_size or (16, 16))
 
 
