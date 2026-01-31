@@ -159,112 +159,6 @@ from taskcoachlib.tools import tkhelper as tkhelper
 
 log = logging.getLogger(__name__)
 
-
-# # --- Simulation des dépendances manquantes ---
-# # Comme icons.catalog et wxhelper ne sont pas fournis, nous les simulons.
-#
-# class MockImage:
-#     """Classe simulée pour représenter une image."""
-#     def __init__(self, width, height, alpha=False):
-#         self.width = width
-#         self.height = height
-#         self.alpha = alpha
-#         self.data = bytearray([0] * (width * height * 4)) # RGBA
-#         self.image = Image.new('RGBA', (width, height))
-#
-#     def GetBitmap(self):
-#         """Simule la conversion en bitmap de wxPython."""
-#         return ImageTk.PhotoImage(self.image)
-#
-#     def ConvertToImage(self):
-#         """Simule la conversion en image de wxPython."""
-#         return self.image
-#
-#     def HasAlpha(self):
-#         return self.alpha
-#
-#     def GetAlpha(self):
-#         if self.alpha:
-#             return self.image.getchannel('A').tobytes()
-#         return None
-#
-#     def putalpha(self, alpha_data):
-#         self.image.putalpha(Image.frombytes('L', (self.width, self.height), alpha_data))
-#
-#     def paste(self, img, box=None, mask=None):
-#         self.image.paste(img, box, mask)
-#
-#     def resize(self, size, resample=Image.BICUBIC):
-#         self.image = self.image.resize(size, resample)
-#         self.width, self.height = size
-#         return self.image
-#
-#
-# class MockIconsCatalog:
-#     """Catalogue d'icônes simulé."""
-#     def __init__(self):
-#         self.catalog = {}
-#         # Ajouter quelques icônes factices pour les tests
-#         self.add_mock_icon("default16x16", 16, 16)
-#         self.add_mock_icon("default32x32", 32, 32)
-#         self.add_mock_icon("default48x48", 48, 48)
-#
-#     def add_mock_icon(self, name, width, height):
-#         # Créer une image PIL simple pour la simulation
-#         img = Image.new('RGBA', (width, height), color = 'red')
-#         # Simuler un objet qui a une méthode GetBitmap
-#         self.catalog[f"{name}{width}x{height}"] = MockImage(width, height)
-#         self.catalog[f"{name}{width}x%s" % height].image = img # Assigner l'image PIL
-#
-#     def __contains__(self, key):
-#         return key in self.catalog
-#
-#     def __getitem__(self, key):
-#         return self.catalog[key]
-#
-# icons = MockIconsCatalog()  # Instancier le catalogue simulé
-#
-#
-# class MockWxHelper:
-#     """Classe utilitaire wxhelper simulée."""
-#     @staticmethod
-#     def getAlphaDataFromImage(image_pil):
-#         """Simule la récupération des données alpha d'une image PIL."""
-#         if image_pil.mode == 'RGBA':
-#             return image_pil.getchannel('A').tobytes()
-#         return bytes([255] * (image_pil.width * image_pil.height)) # Pas d'alpha, donc opaque
-#
-#     @staticmethod
-#     def clearAlphaDataOfImage(image_pil, alpha_value):
-#         """Simule la suppression ou la modification des données alpha d'une image PIL."""
-#         if image_pil.mode == 'RGBA':
-#             alpha_channel = Image.new('L', image_pil.size, alpha_value)
-#             image_pil.putalpha(alpha_channel)
-#         elif image_pil.mode == 'RGB':
-#             # Si l'image est RGB, la convertir en RGBA avec l'alpha spécifié
-#             new_image = Image.new('RGBA', image_pil.size)
-#             new_image.paste(image_pil)
-#             alpha_channel = Image.new('L', image_pil.size, alpha_value)
-#             new_image.putalpha(alpha_channel)
-#             return new_image # Retourner la nouvelle image RGBA
-#         return image_pil # Retourner l'image originale si pas de modification
-#
-#     @staticmethod
-#     def setAlphaDataToImage(image_pil, alpha_data):
-#         """Simule la définition des données alpha d'une image PIL."""
-#         if image_pil.mode == 'RGBA':
-#             image_pil.putalpha(Image.frombytes('L', image_pil.size, bytes(alpha_data)))
-#         else:
-#             # Si l'image n'est pas RGBA, la convertir d'abord
-#             new_image = image_pil.convert('RGBA')
-#             new_image.putalpha(Image.frombytes('L', new_image.size, bytes(alpha_data)))
-#             return new_image
-#         return image_pil
-#
-# wxhelper = MockWxHelper() # Instancier l'utilitaire simulé
-#
-# # --- Fin de la simulation des dépendances manquantes ---
-
 # Constantes basées sur wxPython pour la compatibilité
 ART_TOOLBAR = "ART_TOOLBAR"
 ART_MENU = "ART_MENU"
@@ -277,18 +171,19 @@ _DEFAULT_SIZE = (16, 16)
 
 class ArtProviderTk(object):
     """
-    Simule la classe wx.ArtProvider pour Tkinter.
+    Fournisseur d'art pour tkinter, gérant la création et la superposition d'images.
+
     Fournit des bitmaps et des icônes à partir du module icons.py.
     """
-    _icon_cache = {}  # Dictionnaire pour stocker les icônes mises en cache
+    # _icon_cache = {}  # Dictionnaire pour stocker les icônes mises en cache
 
-    # def __init__(self):
-    #     # Le cache pour les icônes déjà créées afin d'éviter la recréation
-    #     self._icon_cache = {}
+    def __init__(self):
+        # Le cache pour les icônes déjà créées afin d'éviter la recréation
+        self._icon_cache = {}
 
-    # def GetBitmap(self, art_id: str, art_client: str = ART_TOOLBAR, desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
     @staticmethod
-    def GetBitmap(art_id: str, art_client: str = ART_TOOLBAR, desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
+    def GetBitmap(art_id: str, art_client: str = ART_TOOLBAR,
+                  desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
         """
         Retourne un objet PhotoImage pour un ID d'icône donné.
         S'il n'existe pas dans le cache, il le crée et l'ajoute.
@@ -308,17 +203,20 @@ class ArtProviderTk(object):
 
         # Clé de cache unique pour chaque combinaison d'ID et de taille
         cache_key = (art_id, desired_size)
-
         # if cache_key in self._icon_cache:
         #     return self._icon_cache[cache_key]
-        if cache_key in ArtProviderTk._icon_cache:
-            return ArtProviderTk._icon_cache[cache_key]
+        # if cache_key in ArtProviderTk._icon_cache:
+        if cache_key in _icon_cache:
+            # return ArtProviderTk._icon_cache[cache_key]
+            return _icon_cache[cache_key]
 
         try:
-            # Cherche l'icône dans le catalogue
-            if art_id in icons_tk.catalog:
+            # Cherche l'icône directement dans le catalogue
+            # if art_id in icons_tk.catalog:
+            if icon_id in icons_tk.catalog:
                 # icon_embedded = icons_tk.catalog[art_id]
                 icon_embedded = icons_tk.catalog[icon_id]
+
                 # Récupère l'image PIL à partir de l'objet PyEmbeddedImageTk
                 image_pil = icon_embedded.GetImage()   # On appelle la méthode GetImage de l'instance
 
@@ -329,18 +227,19 @@ class ArtProviderTk(object):
                 # Crée l'objet PhotoImage de Tkinter à partir de l'image PIL
                 photo_image = ImageTk.PhotoImage(image_pil)
                 # self._icon_cache[cache_key] = photo_image
-                ArtProviderTk._icon_cache[cache_key] = photo_image
+                # ArtProviderTk._icon_cache[cache_key] = photo_image
+                _icon_cache[cache_key] = photo_image
                 return photo_image
             else:
                 # log.error(f"Icône non trouvé dans le catalogue : {art_id}", stack_info=True)
                 log.error(f"Icône non trouvé dans le catalogue : {icon_id}", stack_info=True)
-                # return None
-                return ""
+                return None
+                # return ""
         except Exception as e:
             # log.exception(f"Erreur lors du chargement de l'icône {art_id}: {e}")
             log.exception(f"Erreur lors du chargement de l'icône {icon_id}: {e}")
-            # return None  # Retourne None en cas d'erreur
-            return ""  # Retourne "" en cas d'erreur
+            return None  # Retourne None en cas d'erreur
+            # return ""  # Retourne "" en cas d'erreur
 
     # def GetIcon(self, art_id: str, art_client: str = ART_TOOLBAR, desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
     #     """
@@ -350,8 +249,8 @@ class ArtProviderTk(object):
 
     @staticmethod
     # def GetIcon(art_id, desired_size=_DEFAULT_SIZE, **kwargs):
-    def GetIcon(art_id: str, art_client: str = ART_TOOLBAR, desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
-
+    def GetIcon(art_id: str, art_client: str = ART_TOOLBAR,
+                desired_size: Optional[tuple] = None) -> Union[tk.PhotoImage, None]:
         """
         Récupère une icône basée sur son identifiant (art_id).
 
@@ -402,9 +301,8 @@ class ArtProviderTk(object):
             bitmap = ArtProviderTk.GetBitmap(art_id, art_client, desired_size)
             return bitmap
         except Exception as e:
-            # print(f"Erreur lors du chargement de l'icône '{art_id}': {e}")
             # Gérer les erreurs de chargement ou de conversion
-            log.error(f"Erreur lors de la récupération de l'icône {art_id}: {e}")
+            log.error(f"ArtProvider.GetIcon : Erreur lors de la récupération de l'icône {art_id}: {e}")
             return None
 
 
@@ -413,43 +311,130 @@ art_provider_tk = ArtProviderTk()
 
 
 class ArtProvider:  # Plus de wx.ArtProvider, c'est une classe utilitaire maintenant
-    """Fournisseur d'art pour tkinter, gérant la création et la superposition d'images."""
+    """Fournisseur d'art pour tkinter, gérant la création et la superposition d'images.
 
-    def CreateBitmap(self, artId, artClient, size):
+    Cette classe permet de charger des icônes simples ou composées
+    (icône principale + icône overlay) en utilisant PIL pour les
+    manipulations d'image, puis en retournant une PhotoImage utilisable
+    par tkinter."""
+    # def CreateBitmap(self, artId, artClient, size):
+    def CreateBitmap(self, artId, size=(16, 16)):
+        """
+        Crée une icône tkinter.PhotoImage à partir d'un identifiant d'art.
+
+        Si l'identifiant contient '+', une image overlay est superposée
+        dans le coin inférieur droit de l'image principale.
+
+        Args:
+            artId (str): Identifiant de l'icône (ex: "icon" ou "icon+overlay")
+            size (tuple): Taille finale de l'icône (largeur, hauteur)
+
+        Returns:
+            ImageTk.PhotoImage ou None
+        """
+        # Extraction de la largeur et de la hauteur demandées
         w, h = size
-        if "+" in artId:
-            main_id, overlay_id = artId.split("+")
 
-            # Charger l'image principale
-            main_image_pil = self._CreateBitmap(main_id, artClient, size)
-            if not main_image_pil:
+        # Cas d'une icône composée (ex: "main+overlay")
+        if "+" in artId:
+            # Séparation des deux identifiants
+            main_id, overlay_id = artId.split("+")
+            log.debug(
+                "ArtProvider.CreateBitmap : essaie de créer "
+                f"{main_id}+{overlay_id} de taille ({w}, {h})."
+            )
+
+            # Chargement de l'icône principale (PhotoImage tkinter)
+            # main_image_pil = self._CreateBitmap(main_id, artClient, size)
+            # main_image_pil = self._CreateBitmap(main_id, size)
+            main_photoicon = IconProvider().getIcon(main_id, size)
+
+            # Vérification que l'image principale existe
+            if not main_photoicon:
+                log.error("L'image principale est vide.")
                 return None  # Retourne None si l'image principale n'est pas trouvée
 
-            # Charger et redimensionner l'image de superposition
-            overlay_image_pil = self._CreateBitmap(overlay_id, artClient, (w // 2, h // 2))
-            if not overlay_image_pil:
+            # # # 1. Convertir l'image principale (PhotoImage) en image PIL
+            # main_image_pil = ImageTk.getimage(main_photoicon)
+            #
+            # # Forcer le mode RGBA pour permettre la transparence
+            # if main_image_pil.mode != "RGBA":
+            #     main_image_pil = main_image_pil.convert("RGBA")
+
+            # Conversion immédiate en PIL.Image
+            main_image_pil = ImageTk.getimage(main_photoicon).convert("RGBA")
+
+            # Charger l'image de superposition overlay (PhotoImage tkinter)
+            # overlay_image_pil = self._CreateBitmap(overlay_id, artClient, (w // 2, h // 2))
+            # overlay_image_pil = self._CreateBitmap(overlay_id, (w // 2, h // 2))
+            overlay_photoicon = IconProvider().getIcon(overlay_id, size)
+
+            # Si l'overlay n'existe pas, on retourne l'image principale seule
+            if not overlay_photoicon:
+                log.error("L'image overlay non trouvée, retour de l'image principale.")
                 return ImageTk.PhotoImage(main_image_pil)  # Retourne l'image principale seule si l'overlay n'est pas trouvé
 
-            # Assurez-vous que les images sont en mode RGBA pour la superposition
-            if main_image_pil.mode != 'RGBA':
-                main_image_pil = main_image_pil.convert('RGBA')
-            if overlay_image_pil.mode != 'RGBA':
-                overlay_image_pil = overlay_image_pil.convert('RGBA')
+            # # # 3. Convertir l'overlay (PhotoImage) en image PIL
+            # # overlay_image_pil = ImageTk.getimage(overlay_image)
+            # overlay_image_pil = ImageTk.getimage(overlay_photoicon)
+            #
+            # # Forcer le mode RGBA
+            # if overlay_image_pil.mode != "RGBA":
+            #     overlay_pil = overlay_image_pil.convert("RGBA")
+            # Conversion de l'overlay en PIL.Image
+            overlay_image_pil = ImageTk.getimage(overlay_photoicon).convert("RGBA")
 
-            # Superposer l'image de superposition sur l'image principale
+            # Redimensionner l'image de superposition (moitié de la taille)
+            overlay_image_pil = overlay_image_pil.resize(
+                (w // 2, h // 2),  # Nouvelle taille
+                Image.LANCZOS      # Filtre de haute qualité
+            )
+
+            # # 5. Assure-toi que les deux images ont le même mode (par exemple, "RGBA")
+            # if main_image_pil.mode != overlay_image_pil.mode:
+            #     overlay_image_pil = overlay_image_pil.convert(main_image_pil.mode)
+            # #     # Assurez-vous que les images sont en mode RGBA pour la superposition
+            # # if main_image_pil.mode != 'RGBA':
+            # #     main_image_pil = main_image_pil.convert('RGBA')
+            # # if overlay_image_pil.mode != 'RGBA':
+            # #     overlay_image_pil = overlay_image_pil.convert('RGBA')
+
             # Calculer la position pour le coin inférieur droit
             x_offset = w - overlay_image_pil.width
             y_offset = h - overlay_image_pil.height
-            main_image_pil.paste(overlay_image_pil, (x_offset, y_offset), overlay_image_pil)
 
-            # Convertir l'image PIL en PhotoImage de tkinter
+            # Superposer l'image de superposition sur l'image principale
+            # main_image_pil.paste(overlay_image_pil, (x_offset, y_offset), overlay_image_pil)
+            # Superposition avec gestion de la transparence
+            main_image_pil.paste(
+                overlay_image_pil,                # Image à coller
+                (x_offset, y_offset),        # Position
+                overlay_image_pil                 # Masque alpha
+            )
+
+            # Convertir finale de l'image PIL en PhotoImage de tkinter
+            # return ImageTk.PhotoImage(main_photoicon)
             return ImageTk.PhotoImage(main_image_pil)
-        else:
-            # Charger une image simple
-            image_pil = self._CreateBitmap(artId, artClient, size)
-            if image_pil:
-                return ImageTk.PhotoImage(image_pil)
-            return None  # Retourne None si l'image n'est pas trouvée
+        # Cas d'une icône simple
+        elif artId:
+            # Charger une image simple directement depuis l'IconProvider
+            # image_pil = self._CreateBitmap(artId, artClient, size)
+            # image_pil = self._CreateBitmap(artId, size)
+            # Chargement direct depuis l'IconProvider
+            photo = IconProvider().getIcon(artId, size)
+
+            # # Si l'icône existe, on la retourne telle quelle
+            # if photo:
+            #     return photo
+            if not photo:
+                return None  # Icône absente
+
+                # Conversion propre en PIL puis retour en PhotoImage
+            pil_image = ImageTk.getimage(photo).convert("RGBA")
+            return ImageTk.PhotoImage(pil_image)
+
+        # Aucun artId valide
+        return None  # Retourne None si l'image n'est pas trouvée
 
     # def _CreateBitmap(self, artId, artClient, size) -> Image.Image:
     #     """Charge une image PIL à partir du catalogue simulé."""
@@ -464,7 +449,8 @@ class ArtProvider:  # Plus de wx.ArtProvider, c'est une classe utilitaire mainte
     #         # Retourne une image PIL vide ou une image par défaut
     #         return Image.new('RGBA', size, (0, 0, 0, 0))  # Image transparente vide
 
-    def _CreateBitmap(self, artId: str, artClient: str, size: Tuple[int, int]) -> Optional[Image.Image]:
+    # def _CreateBitmap(self, artId: str, artClient: str, size: Tuple[int, int]) -> Optional[Image.Image]:
+    def _CreateBitmap(self, artId: str, size: Tuple[int, int]) -> Optional[Image.Image]:
         # ... code précédent ...
 
         # 1. Tenter d'obtenir l'objet PyEmbeddedImageTk (mock)
@@ -641,6 +627,9 @@ class IconProvider(object, metaclass=patterns.Singleton):
         le titre du style wxPython (ex: 'arrow_down_icon') à la clé du catalogue
         icons.py (ex: 'arrow_down16x16').
         """
+        if "+" in iconTitle:
+            return ArtProvider().CreateBitmap(iconTitle, desired_size)
+
         # Formater la taille en suffixe pour le catalogue (ex: '16x16')
         size_suffix = f"{desired_size[0]}x{desired_size[1]}"
 
