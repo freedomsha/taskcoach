@@ -173,6 +173,7 @@ class ArtProvider(wx.ArtProvider):
             return self._CreateBitmap(artId, artClient, size)
 
     def _CreateBitmap(self, artId, artClient, size) -> wx.Bitmap:
+        """"""
         # print("DEBUG: _CreateBitmap called")
         if not artId:
             # return wx.EmptyBitmap(*size)
