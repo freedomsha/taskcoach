@@ -49,9 +49,163 @@ Explication des classes :
 #     Activation des commandes (enabled) : J'ai mis à jour les signatures des méthodes
 #     enabled pour qu'elles ne prennent pas d'argument event, conformément à l'approche de Tkinter.
 
+# 21/01/2026 :
+# Je vais procéder par sections, en identifiant les points forts, les améliorations nécessaires et les "TODO" encore présents.
+# Analyse Générale de uicommandtk.py
+# Le fichier uicommandtk.py 1 est l'équivalent Tkinter de uicommand.py et contient la majorité des commandes spécifiques à l'application Task Coach. Il est structuré avec des classes de base comme IOCommand, TaskListCommand, ViewerCommand, etc., qui sont ensuite spécialisées pour des actions concrètes (ouvrir un fichier, sauvegarder, éditer, etc.) 2, 3, 4, 5.
+# Les changements majeurs déjà effectués et qui vont dans le bon sens sont :
+#
+# Remplacement des imports wx par tkinter et tkinter.messagebox 6.
+# Retrait des paramètres event dans les méthodes doCommand pour s'adapter à la gestion des événements Tkinter 6.
+# Utilisation de tkinter.messagebox pour les dialogues simples 6.
+# Mise à jour des signatures de enabled pour ne pas prendre d'argument event 6.
+#
+# Cependant, il reste des points importants à adresser pour garantir la complétude et la robustesse du fichier.
+# Points à Vérifier et Compléter
+# 1. Gestion des Événements (doCommand et enabled)
+#
+#
+# Cohérence du paramètre event: Vous avez mentionné avoir retiré event des doCommand 6. Cependant, certaines implémentations de doCommand dans uicommandtk.py conservent event=None 7, 8, ce qui est une bonne pratique pour la compatibilité tout en indiquant qu'il est optionnel. Néanmoins, quelques doCommand (comme FileOpen, FileMerge, FileClose, etc.) ne prennent pas event en paramètre 9, 10, 11. Il serait plus cohérent de les uniformiser pour toujours accepter event=None, comme dans base_uicommandtk.py 12. Cela n'affectera pas leur fonctionnement mais rendra le code plus uniforme.
+# Action proposée: Parcourir toutes les méthodes doCommand dans uicommandtk.py et s'assurer qu'elles acceptent event=None si l'événement n'est pas utilisé, ou event si l'événement est pertinent (ce qui est rare pour doCommand dans Tkinter).
+#
+#
+# Méthodes enabled: Plusieurs méthodes enabled sont encore avec un pass ou contiennent des logiques spécifiques à wxPython qui nécessitent une conversion ou une suppression 13, 14, 15, 16, 17, 18.
+#
+# EditUndo.enabled() 13, EditRedo.enabled() 14, EditCut.enabled() 15, EditPaste.enabled() 16, Delete.enabled() 18 sont des exemples où la logique wx.Window.FindFocus() et isinstance(windowWithFocus, wx.TextCtrl) doit être remplacée par l'équivalent Tkinter. L'implémentation partielle dans SelectAll (self.mainWindow().focus_get() et window_with_focus.tag_add("sel", "1.0", "end")) est un bon début 19.
+# La méthode windowIsTextCtrl 20, 18 est essentielle pour ces vérifications et doit être entièrement convertie pour Tkinter.
+#
+# Action proposée:
+#
+# Réviser toutes les méthodes enabled pour s'assurer que la logique est adaptée à Tkinter.
+# Implémenter correctement windowIsTextCtrl en utilisant isinstance(the_window, tk.Text) ou d'autres widgets de saisie de texte Tkinter (ex: tk.Entry).
+# Assurer que self.mainWindow().focus_get() est utilisé pour obtenir le widget qui a le focus.
+#
+#
+#
+# 2. Intégration des Mixins (mixin_uicommandtk.py)
+# Les mixins définis dans mixin_uicommandtk.py sont conçus pour être hérités par les commandes.
+#
+# PopupButtonMixin: Ce mixin est utilisé dans EffortStartButton 21 et TaskNewFromTemplateButton 22. Le code wxPython avait une implémentation PopupMenu qui est désormais gérée par tk.Menu.post(x,y) dans le mixin 23. Cependant, la méthode menuXY() dans mixin_uicommandtk.py contient encore des références à wx.ScreenToClient() 24.
+#
+# Action proposée: Compléter menuXY(), menuX(), menuY() dans mixin_uicommandtk.py pour qu'elles utilisent uniquement les méthodes Tkinter (winfo_rootx, winfo_rooty, winfo_height, etc.) pour calculer la position du menu contextuel.
+#
+#
+#
+# 3. Gestion des Paramètres (settings_uicommandtk.py)
+# Les classes UICheckCommand et UIRadioCommand dans settings_uicommandtk.py sont bien adaptées avec l'utilisation de tk.BooleanVar et tk.StringVar et la méthode trace_add pour la synchronisation bidirectionnelle 25, 26. C'est une excellente approche.
+#
+#
+# _isMenuItemChecked: La méthode _isMenuItemChecked de UICheckCommand 27 et UIRadioCommand devrait être utilisée de manière cohérente dans les doCommand des commandes dérivées (ex: ToggleCategoryFilter.doCommand() 28 et ViewColumn.doCommand() 29). Vous utilisez self._variable.get() directement dans ToggleCategoryFilter, ce qui est correct, mais _isMenuItemChecked fournit une encapsulation supplémentaire qui peut être utile.
+#
+#
+# Gestion des erreurs dans settings_uicommandtk.py: Les blocs try...except ajoutés autour des modifications de paramètres (self.settings.setboolean, self.settings.set) sont une très bonne pratique 27, 30, 31.
+# Action proposée: S'assurer que toutes les commandes héritant de UICheckCommand ou UIRadioCommand utilisent la variable Tkinter ou la méthode _isMenuItemChecked pour obtenir l'état.
+#
+#
+# 4. Intégration des Commandes dans les Conteneurs (uicommandcontainertk.py)
+# Le fichier uicommandcontainertk.py est crucial pour l'ajout des commandes aux menus et barres d'outils.
+#
+#
+# appendUICommand et add_h_separator: Ces méthodes sont définies comme NotImplementedError dans le mixin 32. Elles doivent être implémentées dans les classes concrètes de menu et de barre d'outils (qui utiliseront ce mixin). Le code fourni pour add_h_separator dans le mixin 32 est un bon exemple d'implémentation directe si le conteneur est un tk.Menu ou un autre widget.
+#
+#
+# appendSubMenuWithUICommands: Cette méthode utilise menutk.Menu, ce qui implique que menutk.py doit être correctement implémenté pour créer des sous-menus Tkinter 33.
+# Action proposée:
+#
+# Vérifier que les classes réelles des menus et barres d'outils (ex: MenuBarTk, ToolBarTk) implémentent appendUICommand et add_h_separator correctement.
+# S'assurer que menutk.Menu est fonctionnel.
+#
+#
+#
+# 5. Commandes Spécifiques avec des "TODO" ou Logiques wxPython Résiduelles
+# Plusieurs classes dans uicommandtk.py ont encore des commentaires TODO ou des implémentations simplifiées (avec pass) qui nécessitent une attention particulière :
+#
+# FilePurgeDeletedItems: La confirmation de l'utilisateur utilise messagebox.askyesno 34, ce qui est correct pour Tkinter. L'implémentation semble complète.
+# Commandes d'impression (PrintPageSetup, PrintPreview, Print): Celles-ci sont actuellement simulées avec messagebox.info 35, 36, 37.
+#
+# Action proposée: Il faudra développer des dialogues Tkinter personnalisés pour PrintPageSetup (comme l'exemple que j'ai mis dans les commentaires de votre fichier 35) et intégrer des solutions d'impression propres à Tkinter ou au système d'exploitation pour PrintPreview et Print. C'est un travail conséquent.
+#
+#
+# Commandes d'exportation (FileExportAsHTML, FileExportAsCSV, FileExportAsICalendar, FileExportAsTodoTxt): Les méthodes doCommand appellent self.getExportDialogClass()().ShowModal(). Cela signifie que les dialogues d'exportation (ExportAsHTMLDialog, ExportAsCSVDialog, etc.) doivent exister et être implémentés en Tkinter 37, 38, 39, 40.
+#
+# Action proposée: S'assurer que dialog.exporttk.ExportAs...Dialog sont des classes Tkinter fonctionnelles avec une méthode showModal() ou équivalente.
+#
+#
+# Commandes d'importation (FileImportCSV, FileImportTodoTxt): Elles ont des blocs TODO contenant du code wxPython 41, 42.
+#
+# Action proposée: Remplacer wx.FileSelector, wx.MessageBox, et CSVImportWizard par des équivalents Tkinter (tkinter.filedialog.askopenfilename, tkinter.messagebox, et une implémentation Tkinter pour le wizard d'import CSV).
+#
+#
+# FileManageBackups: Contient un bloc TODO avec du code wxPython 43.
+#
+# Action proposée: Adapter dialog.BackupManagerDialog pour Tkinter.
+#
+#
+# FileQuit et FileExit: FileQuit utilise TkinterApplication.getInstance().quitApplication() 44, ce qui est la bonne approche pour terminer une application Tkinter gérée par un singleton. FileExit fait la même chose 45.
+# Commandes Edit (EditUndo, EditRedo, EditCut, EditPaste, Delete): Les méthodes doCommand de ces classes contiennent encore du code wxPython (wx.Window.FindFocus(), isinstance(windowWithFocus, wx.TextCtrl), windowWithFocus.Undo(), etc.) 46, 47, 15, 48, 49.
+#
+# Action proposée: Convertir toute cette logique pour utiliser des équivalents Tkinter. Par exemple, pour les contrôles de texte, la gestion de l'undo/redo/cut/paste peut se faire via des méthodes spécifiques à tk.Text ou en interagissant avec le presse-papier de Tkinter. tk.Text a des méthodes edit_undo(), edit_redo(), cut(), copy(), paste() 19, 20.
+#
+#
+# EditTrackedTasks: Appelle dialog.editor.TaskEditor().Show(show) 49.
+#
+# Action proposée: S'assurer que dialog.editor.TaskEditor est une boîte de dialogue Tkinter fonctionnelle.
+#
+#
+# TaskNew et TaskTemplateNew: Le cœur de la logique (doCommand) pour créer une tâche et afficher un éditeur est bien géré avec dialog.editor.TaskEditor().Show() 50, 51.
+#
+# Action proposée: S'assurer que dialog.editor.TaskEditor est une boîte de dialogue Tkinter pleinement fonctionnelle.
+#
+#
+# NewSubItem: Utilise self.viewer.newSubItemDialog(bitmap=self.bitmap).Show(show) 52.
+#
+# Action proposée: S'assurer que newSubItemDialog de la visionneuse retourne un dialogue Tkinter.
+#
+#
+# ToggleCategory: La logique event.IsChecked() est remplacée par self._variable.get() 28, ce qui est correct. _variable vient de settings_uicommandtk.UICheckCommand.
+# Mail: Utilise sendMail qui est une fonction utilitaire 53. showerror est messagebox.showerror 53. Semble correctement adapté.
+# AddNote et OpenAllNotes: Appellent dialog.editor.NoteEditor().Show() 54, 55.
+#
+# Action proposée: S'assurer que dialog.editor.NoteEditor est un dialogue Tkinter fonctionnel.
+#
+#
+# EffortNew: Appelle dialog.editor.EffortEditor().Show() 56.
+#
+# Action proposée: S'assurer que dialog.editor.EffortEditor est un dialogue Tkinter fonctionnel.
+#
+#
+# HideCurrentColumn: Contient beaucoup de logique wxPython liée à la position de la souris et aux TreeListCtrl 57, 58, 59.
+#
+# Action proposée: Une réécriture complète est nécessaire ici pour adapter la détection de colonne au système de widget Tkinter utilisé pour afficher les colonnes (probablement ttk.Treeview).
+#
+#
+#
+# 6. Vérification des Héritages
+# L'héritage des classes mixin (mixin_uicommandtk) et des classes de base Tkinter (settings_uicommandtk, base_uicommandtk) semble correct et bien utilisé dans uicommandtk.py. Il est essentiel que l'ordre des mixins soit correct (souvent les mixins avant les classes concrètes pour la résolution des méthodes via MRO). La structure actuelle class Name(Mixin1, Mixin2, BaseClass) est standard.
+# 7. Gestion des Icônes
+#
+# base_uicommandtk.py utilise artprovidertk.getIcon(bitmapName, bitmapSize) 60. Assurez-vous que le module artprovidertk (ainsi que IconProvider, art_provider_tk, ArtProviderTk qui sont importés) est robuste et gère correctement le chargement et la mise en cache des PhotoImage Tkinter. Le try...except autour de l'appel à getIcon est une bonne pratique 61.
+# Certaines commandes comme FileSaveSelectedTaskAsTemplate ont bitmap="" avec le commentaire # n'existe pas pour tkinter ! 8. Or, Tkinter peut gérer des icônes.
+#
+# Action proposée: Si une icône équivalente existe, l'ajouter. Sinon, s'assurer que l'absence d'icône est bien gérée (le code de appendToToolBar dans base_uicommandtk.py gère cela en affichant du texte si the_bitmap est None 62).
+#
+#
+#
+# 8. logging et messagebox
+# L'utilisation de logging (log.debug, log.info, log.error) est bien présente et essentielle pour le débogage 63. L'intégration de messagebox.showerror pour les erreurs utilisateur est également une bonne chose 64, 30, 53.
+# En Résumé et Prochaines Étapes
+# Le fichier uicommandtk.py est déjà bien avancé dans sa conversion vers Tkinter, avec de nombreuses classes adaptées. Cependant, pour qu'il soit "complet" et que vous n'ayez plus à y revenir, les points suivants sont cruciaux :
+#
+# Conversion Complète des enabled() et doCommand(): C'est le plus gros morceau. Toutes les références à wx.Window.FindFocus(), wx.TextCtrl, hypertreelist.EditCtrl, event.IsChecked() et autres éléments spécifiques à wxPython doivent être remplacées par leurs équivalents Tkinter. Pour tk.Text et tk.Entry, cela inclura probablement l'utilisation de selection_present(), selection_get(), edit_undo(), edit_redo(), clipboard_get(), etc.
+# Implémentation des Dialogues Tkinter: Tous les dialogues qui étaient en wxPython (PageSetupDialog, PrintPreviewFrame, BackupManagerDialog, CSVImportWizard, ExportAs...Dialog, TaskEditor, NoteEditor, EffortEditor, etc.) doivent avoir leurs versions Tkinter fonctionnelles dans les modules dialogtk respectifs.
+# Gestion de l'Impression: Les fonctionnalités d'impression (PrintPageSetup, PrintPreview, Print) nécessitent une implémentation plus complexe en Tkinter, soit via des dialogues personnalisés, soit en interagissant avec les capacités d'impression du système d'exploitation.
+# HideCurrentColumn: La logique de détection de colonne basée sur la souris doit être entièrement réécrite pour ttk.Treeview ou le widget de tableau utilisé.
+# PopupButtonMixin: Finaliser les méthodes de positionnement (menuX, menuY, menuXY) dans mixin_uicommandtk.py.
+# Méthodes Abstraites des Mixins: Confirmer que les classes qui utilisent UICommandContainerMixin implémentent bien appendUICommand et add_h_separator.
 import logging
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from abc import abstractclassmethod
+from tkinter import messagebox, simpledialog, ttk
 import re
 import operator
 import threading
@@ -69,9 +223,10 @@ from taskcoachlib import (
     render,
     operating_system,
 )
+# from taskcoachlib.application import TkinterApplication
 from taskcoachlib.domain import base, task, note, category, attachment, effort, date
 from taskcoachlib.guitk import dialog, printertk
-from taskcoachlib.guitk.dialog import templatestk, editor
+from taskcoachlib.guitk.dialog import templatestk, editor, preferencestk, syncpreferences
 from taskcoachlib.guitk.cvsimporttk import CSVImportWizard
 from taskcoachlib.i18n import _
 from taskcoachlib.mailer import sendMail
@@ -168,7 +323,8 @@ class ViewerCommand(base_uicommandtk.UICommand):
 
     def __eq__(self, other):
         """
-        Compare cette commande avec une autre pour vérifier si elles sont égales. Deux commandes sont égales si elles partagent la même section de paramètres de la visionneuse.
+        Compare cette commande avec une autre pour vérifier si elles sont égales.
+        Deux commandes sont égales si elles partagent la même section de paramètres de la visionneuse.
 
         Args :
             other (ViewerCommand) : La commande avec laquelle comparer.
@@ -182,6 +338,7 @@ class ViewerCommand(base_uicommandtk.UICommand):
         )
 
 
+# Début des commandes de menu
 # --- Commands for File Menu ---
 
 class FileOpen(IOCommand):
@@ -197,7 +354,7 @@ class FileOpen(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         log.info("FileOpen.doCommand called")
         try:
             self.iocontroller.open()
@@ -220,7 +377,7 @@ class RecentFileOpen(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         self.iocontroller.open(self.__filename)
 
 
@@ -237,7 +394,7 @@ class FileMerge(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         self.iocontroller.merge()
 
 
@@ -254,7 +411,7 @@ class FileClose(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         # La logique de fermeture des éditeurs doit être gérée par MainWindow
         # et le contrôleur IO
         self.mainWindow().closeEditors()
@@ -274,7 +431,7 @@ class FileSave(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         self.iocontroller.save()
 
     def enabled(self):
@@ -294,7 +451,7 @@ class FileMergeDiskChanges(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         self.iocontroller.mergeDiskChanges()
 
     def enabled(self):
@@ -314,7 +471,7 @@ class FileSaveAs(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         self.iocontroller.saveAs()
 
 
@@ -356,7 +513,7 @@ class FileSaveSelectedTaskAsTemplate(
             menuText=_("Save selected task as &template"),
             helpText=_("Save the selected task as a task template"),
             # bitmap="saveselection",  # n'existe pas pour tkinter !
-            bitmap="",
+            bitmap="",  # TODO : ajouter une icône appropriée si disponible
             *args,
             **kwargs,
         )
@@ -766,7 +923,43 @@ class FileManageBackups(IOCommand, settings_uicommandtk.SettingsCommand):
         #             self.iocontroller.open(dlg.restoredFilename())
         #         except IOError as e:
         #             log.error(f"Erreur lors de l'ouverture de {dlg.restoredFilename()}: {e}")
-        pass
+        """
+        Ouvre le gestionnaire de sauvegardes et restaure un fichier si demandé.
+        """
+        # On instancie le dialogue (qui doit être converti en Tkinter Toplevel/Dialog)
+        # On utilise le 'with' si votre classe BackupManagerDialog supporte le protocole context manager
+        dlg = dialog.BackupManagerDialog(
+            self.mainWindow(),
+            self.settings,
+            self.iocontroller.filename()
+        )
+
+        # En Tkinter, on utilise généralement une méthode personnalisée show() ou
+        # on attend la fermeture si c'est un dialogue modal.
+        # Si vous avez implémenté une méthode showModal() retournant le résultat :
+        if dlg.showModal() == "OK":  # Adapté selon votre implémentation (ex: tk.OK ou "OK")
+            restored_filename = dlg.restoredFilename()
+            if restored_filename:
+                try:
+                    self.iocontroller.open(restored_filename)
+                except IOError as e:
+                    log.error(_("Erreur lors de l'ouverture de %s: %s") % (restored_filename, e))
+                    messagebox.showerror(_("Error"), _("Failed to open restored backup: %s") % e)
+
+        dlg.destroy()  # Important pour libérer les ressources Tkinter
+        # Points clés de la conversion :
+        #
+        #     Uniformisation de la signature : J'ai conservé event=None pour rester cohérent avec les autres commandes du fichier.
+        #
+        #     Gestion du Dialogue : Contrairement à wxPython où ShowModal() est natif, en Tkinter, vous devez vous assurer que votre classe BackupManagerDialog (dans dialogtk) gère elle-même l'attente (via wait_window) et retourne une valeur de succès.
+        #
+        #     Destruction explicite : Il est de bonne pratique d'appeler dlg.destroy() en Tkinter pour s'assurer que les widgets sont bien supprimés de la mémoire après usage.
+        #
+        #     Retour d'erreur utilisateur : J'ai ajouté un messagebox.showerror pour informer l'utilisateur en cas d'échec de l'ouverture du fichier restauré, ce qui est plus ergonomique qu'un simple log en arrière-plan.
+        #
+        #     I18n : Les messages d'erreur utilisent la fonction de traduction _() pour rester localisables.
+        #
+        # Note : Assurez-vous que l'import from tkinter import messagebox est bien présent en haut de votre fichier uicommandtk.py.
 
 
 class FileExportAsHTML(FileExportCommand):
@@ -836,6 +1029,11 @@ class FileExportAsICalendar(FileExportCommand):
         return self.iocontroller.exportAsICalendar
 
     def enabled(self, event=None):
+        """ Indique si la commande est activable """
+        main_window = self.mainWindow()
+        if main_window is None:
+            # On désactive la commande plutôt que de planter
+            return False
         return any(self.exportableViewer(viewer) for viewer in self.mainWindow().viewer)
 
     @staticmethod
@@ -870,6 +1068,11 @@ class FileExportAsTodoTxt(FileExportCommand):
         return self.iocontroller.exportAsTodoTxt
 
     def enabled(self, event=None):
+        """ Indique si la commande est activable """
+        main_window = self.mainWindow()
+        if main_window is None:
+            # On désactive la commande plutôt que de planter
+            return False
         return any(self.exportableViewer(viewer) for viewer in self.mainWindow().viewer)
 
     @staticmethod
@@ -1033,9 +1236,12 @@ class FileExit(IOCommand):
             **kwargs,
         )
 
-    def doCommand(self):
+    def doCommand(self, event=None):
         log.info(f"FileExit.doCommand appelée pour {self.menuText}.")
-        self.app.quitApplication()
+        from taskcoachlib.application import TkinterApplication
+        # self.app.quitApplication()
+        self.mainWindow().quitApplication()
+        TkinterApplication.getInstance().quitApplication()
 
 
 # --- Commands for Edit Menu ---
@@ -1073,13 +1279,28 @@ class EditUndo(base_uicommandtk.UICommand):
 
     def doCommand(self, event=None):
         """Exécute la commande d'annulation en utilisant l'historique des commandes."""
-        # TODO
         # windowWithFocus = wx.Window.FindFocus()
         # if isinstance(windowWithFocus, wx.TextCtrl):
         #     windowWithFocus.Undo()
         # else:
         #     patterns.CommandHistory().undo()
-        pass
+        # Récupère le widget qui a le focus dans l'application Tkinter
+        # window_with_focus = self.mainWindow().focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        # Vérifie si le widget avec le focus est un contrôle de texte (Entry, Text, etc.)
+        if self.windowIsTextCtrl(window_with_focus):
+            try:
+                # Dans Tkinter, les widgets Text ont une méthode native edit_undo()
+                # si l'option 'undo=True' est activée.
+                window_with_focus.edit_undo()
+            except tk.TclError:
+                # Si l'historique d'annulation du widget est vide ou non supporté
+                pass
+        else:
+            # Sinon, on utilise l'historique global des commandes de Task Coach
+            patterns.CommandHistory().undo()
 
     def onUpdateUI(self, event=None):
         """Met à jour le texte du menu avec la dernière action utilisateur."""
@@ -1087,15 +1308,65 @@ class EditUndo(base_uicommandtk.UICommand):
         super().onUpdateUI(event)
 
     def enabled(self, event=None):
+        # Explications techniques de la conversion :
+        #
+        #     Récupération du Focus : wx.Window.FindFocus() est remplacé par self.mainWindow().focus_get().
+        #
+        #     Identification du Widget : La condition isinstance(windowWithFocus, wx.TextCtrl) est remplacée par l'appel à la méthode utilitaire self.windowIsTextCtrl(window_with_focus) qui doit être implémentée pour vérifier si le widget est de type tk.Text ou tk.Entry.
+        #
+        #     Action d'Annulation locale :
+        #
+        #         En Tkinter, pour un widget tk.Text, on utilise edit_undo().
+        #
+        #         Notez que pour que cela fonctionne, le widget doit avoir été créé avec l'attribut undo=True.
+        #
+        #         Le bloc try...except tk.TclError est essentiel car Tkinter lève une erreur si la pile d'annulation est vide.
+        #
+        #     Action d'Annulation globale : Si aucun champ de texte n'est actif, on retombe sur patterns.CommandHistory().undo(), qui gère l'annulation des actions sur les tâches et les données de l'application.
+        #
+        # Conseil pour windowIsTextCtrl : Assurez-vous que votre méthode windowIsTextCtrl dans la classe de base ressemble à ceci pour couvrir les widgets Tkinter standards
         """Vérifie si l'annulation est disponible."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     return windowWithFocus.CanUndo()
-        # else:
-        #     # TODO: hasHistory is a list !? a bool was better ?
-        #     return patterns.CommandHistory().hasHistory() and super().enabled(event)
-        pass
+        """ Indique si la commande est activable """
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        # if main_window is None:
+        #     # On désactive la commande plutôt que de planter
+        #     return False
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     return windowWithFocus.CanUndo()
+        # # else:
+        # #     # hasHistory is a list !? a bool was better ?
+        # #     # La liste est maintenant comparée avec une list vide qui donne le booléen voulu.
+        # #     return patterns.CommandHistory().hasHistory() and super().enabled(event)
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = main_window.focus_get()
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+        if not window_with_focus:
+            return False
+        if self.windowIsTextCtrl(window_with_focus):
+            # Pour un tk.Text, on peut vérifier la pile d'undo. Pour tk.Entry,
+            # il n'y a pas de méthode native "CanUndo". On se base sur l'historique global.
+            # Supposons que tk.Text avec undo=True a une méthode pour vérifier l'état
+            # S'il existe une méthode spécifique, par exemple window_with_focus.edit_can_undo():
+            # return window_with_focus.edit_can_undo()
+            # Sinon, ou pour tk.Entry, on se base sur l'historique global de l'application
+            return patterns.CommandHistory().hasHistory()  # HasHistory devrait être une méthode qui retourne un bool
+        else:
+            return patterns.CommandHistory().hasHistory()  # HasHistory devrait être une méthode qui retourne un bool
+
+    @staticmethod
+    def windowIsTextCtrl(the_window) -> bool:
+        """
+        Vérifie si la fenêtre actuelle est un contrôle de texte.
+        """
+        # return isinstance(window, wx.TextCtrl) or isinstance(
+        #     window, hypertreelist.EditCtrl
+        # )
+        # hypertreelist.EditCtrl n'existe pas dans Tkinter, donc on adapte la vérification
+        # return isinstance(the_window, tk.Text)
+        # Pour être plus complète et inclure d'autres widgets de saisie de texte courants dans Tkinter.
+        # Inclure tk.Entry et ttk.Entry pour une couverture plus large
+        return isinstance(the_window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
 class EditRedo(base_uicommandtk.UICommand):
@@ -1132,13 +1403,28 @@ class EditRedo(base_uicommandtk.UICommand):
 
     def doCommand(self, event=None):
         """Exécute la commande de rétablissement en utilisant l'historique des commandes."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     windowWithFocus.Redo()
-        # else:
-        #     patterns.CommandHistory().redo()
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     windowWithFocus.Redo()
+        # # else:
+        # #     patterns.CommandHistory().redo()
+        # # Récupère le widget qui a le focus dans l'application Tkinter
+        # window_with_focus = self.mainWindow().focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        # Vérifie si le widget avec le focus est un contrôle de texte (Entry, Text, etc.)
+        if self.windowIsTextCtrl(window_with_focus):
+            try:
+                # Dans Tkinter, les widgets Text ont une méthode native edit_redo()
+                # si l'option 'redo=True' est activée. TODO : utiliser l'option redo dasn taskcoach
+                window_with_focus.edit_redo()
+            except tk.TclError:
+                # Si l'historique d'annulation du widget est vide ou non supporté
+                pass
+        else:
+            # Sinon, on utilise l'historique global des commandes de Task Coach
+            patterns.CommandHistory().redo()
 
     def onUpdateUI(self, event=None):
         """Met à jour le texte du menu avec la prochaine action à rétablir."""
@@ -1147,14 +1433,43 @@ class EditRedo(base_uicommandtk.UICommand):
 
     def enabled(self, event=None):
         """Vérifie si le rétablissement est disponible."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     return windowWithFocus.CanRedo()
-        # else:
-        #     # Todo: hasFuture is a List ! not a bool !
-        #     return patterns.CommandHistory().hasFuture() and super().enabled(event)
-        pass
+        """ Indique si la commande est activable """
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        # if main_window is None:
+        #     # On désactive la commande plutôt que de planter
+        #     return False
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     return windowWithFocus.CanRedo()
+        # # else:
+        # #     # hasFuture is a List ! not a bool !
+        # #     # La liste est maintenant comparée avec une list vide qui donne le booléen voulu.
+        # #     return patterns.CommandHistory().hasFuture() and super().enabled(event)
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = main_window.focus_get()
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+        if not window_with_focus:  # 👉 Ne jamais supposer que focus_get() est fiable
+            return False
+        if self.windowIsTextCtrl(window_with_focus):
+            # De même que pour Undo, si tk.Text a une méthode edit_can_redo():
+            # return window_with_focus.edit_can_redo()
+            # Sinon, ou pour tk.Entry, on se base sur l'historique global
+            return patterns.CommandHistory().hasFuture()  # HasFuture devrait être une méthode qui retourne un bool
+        else:
+            return patterns.CommandHistory().hasFuture()  # HasFuture devrait être une méthode qui retourne un bool
+
+    def windowIsTextCtrl(self, the_window) -> bool:
+        """
+        Vérifie si la fenêtre actuelle est un contrôle de texte.
+        """
+        # return isinstance(window, wx.TextCtrl) or isinstance(
+        #     window, hypertreelist.EditCtrl
+        # )
+        # hypertreelist.EditCtrl n'existe pas dans Tkinter, donc on adapte la vérification
+        # return isinstance(the_window, tk.Text)
+        # Pour être plus complète et inclure d'autres widgets de saisie de texte courants dans Tkinter.
+        # Inclure tk.Entry et ttk.Entry pour une couverture plus large
+        return isinstance(the_window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
 class EditCut(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
@@ -1178,32 +1493,124 @@ class EditCut(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
             helpText=help.editCut,
             bitmap="cut",
             # id=wx.ID_CUT,
+            # id=tk.
             *args,
             **kwargs,
         )
         # print("tclib.gui.uicommand.uicommand.EditCut command initialized")  # Débogage
 
     def doCommand(self, event=None):
+        # Comme pour EditUndo, la logique consiste à vérifier
+        # si le focus est sur un champ de saisie de texte
+        # (pour utiliser les fonctions natives de Tkinter)
+        # ou sur la visionneuse principale (pour couper des objets comme des tâches).
         """Exécute la commande de découpage."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     windowWithFocus.Cut()
-        # else:
-        #     cutCommand = self.viewer.cutItemCommand()
-        #     cutCommand.do()
-        pass
+
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     windowWithFocus.Cut()
+        # # else:
+        # #     cutCommand = self.viewer.cutItemCommand()
+        # #     cutCommand.do()
+        # # Récupère le widget qui a le focus
+        # main = self.mainWindow()
+        # if not main:
+        #     return True  # autoriser pendant l'initialisation
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = main.focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if not window_with_focus:
+            # return True
+            return False
+
+        # Si le focus est sur un champ de texte (Entry, Text, etc.)
+        if self.windowIsTextCtrl(window_with_focus):
+            try:
+                # Génère l'événement virtuel standard de Tkinter pour couper
+                # Cela gère automatiquement le presse-papier système.
+                window_with_focus.event_generate("<<Cut>>")
+            except Exception as e:
+                log.error(f"Erreur lors de l'exécution de Cut sur le widget : {e}")
+        else:
+            # Sinon, on utilise la logique métier de Task Coach pour couper des items (tâches, etc.)
+            cut_command = self.viewer.cutItemCommand()
+            if cut_command:
+                cut_command.do()
+        # Pourquoi utiliser event_generate("<<Cut>>") ?
+        #
+        #     Standard Tkinter : Contrairement à wxPython qui a une méthode .Cut(), Tkinter utilise des événements virtuels (<<Cut>>, <<Copy>>, <<Paste>>) qui sont reconnus par tous les widgets de saisie standards.
+        #
+        #     Presse-papier : Cet événement gère nativement l'interaction avec le presse-papier du système d'exploitation (Windows, macOS ou Linux).
+        #
+        #     Sécurité : Si aucune sélection n'est présente dans le widget, l'événement ne fera simplement rien, ce qui évite de gérer des erreurs complexes.
+        #
+        # Note sur enabled :
+        #
+        # Votre implémentation de enabled
+        # que vous avez fournie dans la question est déjà très bonne pour Tkinter.
+        # L'utilisation de try...except tk.TclError avec "sel.first" est la méthode standard
+        # et recommandée pour vérifier si du texte est sélectionné dans un widget tk.Text ou tk.Entry.
 
     def enabled(self, event=None):
         """Vérifie si le découpage est disponible."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     # Todo: CanCut can be None ! a bool would be better !?
-        #     return windowWithFocus.CanCut()
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     # Todo: CanCut can be None ! a bool would be better !?
+        # #     return windowWithFocus.CanCut()
+        # # else:
+        # #     return super().enabled(event)
+        # # if self.mainWindow() is not None:
+        # # window_with_focus = self.mainWindow().focus_get()  # AttributeError: 'NoneType' object has no attribute 'focus_get'
+        # # garde : si pas de fenêtre principale encore créée, ne pas lever d'AttributeError
+        # mw = self.mainWindow()
+        # if mw is None:
+        #     # Pendant l'initialisation des menus la fenêtre peut être None.
+        #     # Retourner True évite d'interrompre la construction de l'UI.
+        #     # return True
+        #     return False
+        #
+        # # try:
+        # #     window_with_focus = mw.focus_get()
+        # # except Exception:
+        # #     # Ne pas bloquer l'initialisation si focus_get échoue pour une raison quelconque.
+        # #     return True
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = mw.focus_get()  # KeyError: '#!mainmenu'
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if not window_with_focus:
+            return False
         # else:
-        #     return super().enabled(event)
-        pass
+        #     # window_with_focus = self.winfo_toplevel().focus_get()  # AttributeError: 'EditCut' object has no attribute 'winfo_toplevel'
+        #     window_with_focus = self.Tk.focus_get()  # AttributeError: 'EditCut' object has no attribute 'tk'
+        if self.windowIsTextCtrl(window_with_focus):
+            # Pour un widget de texte, vérifier s'il y a une sélection
+            try:
+                # Tente de récupérer la sélection. Si cela échoue, il n'y a pas de sélection.
+                selected_text = window_with_focus.get("sel.first", "sel.last")
+                return bool(selected_text)
+            except tk.TclError:  # 'sel.first' not recognized
+                return False
+                # return True  # TODO : évite de bloquer l'UI si erreur
+        else:
+            # La logique pour les autres éléments doit être déterminée par NeedSelectionMixin
+            return super().enabled(event)
+
+    def windowIsTextCtrl(self, the_window) -> bool:
+        """
+        Vérifie si la fenêtre actuelle est un contrôle de texte.
+        """
+        # return isinstance(window, wx.TextCtrl) or isinstance(
+        #     window, hypertreelist.EditCtrl
+        # )
+        # hypertreelist.EditCtrl n'existe pas dans Tkinter, donc on adapte la vérification
+        # return isinstance(the_window, tk.Text)
+        # Pour être plus complète et inclure d'autres widgets de saisie de texte courants dans Tkinter.
+        # Inclure tk.Entry et ttk.Entry pour une couverture plus large
+        return isinstance(the_window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
 class EditCopy(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
@@ -1232,28 +1639,97 @@ class EditCopy(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
         # print("tclib.gui.uicommand.uicommand.EditCopy command initialized")  # Débogage
 
     def doCommand(self, event=None):
+        # Comme pour EditCut
         """Exécute la commande de copie."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     windowWithFocus.Copy()
-        # else:
-        #     copyCommand = command.CopyCommand(
-        #         self.viewer.presentation(), self.viewer.curselection()
-        #     )
-        #     copyCommand.do()
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     windowWithFocus.Copy()
+        # # else:
+        # #     copyCommand = command.CopyCommand(
+        # #         self.viewer.presentation(), self.viewer.curselection()
+        # #     )
+        # #     copyCommand.do()
+        # main = self.mainWindow()
+        # if not main:
+        #     # Fenêtre pas encore prête → on désactive la commande
+        #     return False
+        # # Récupère le widget qui a le focus
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = main.focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if not window_with_focus:
+            return False
+
+        # Si le focus est sur un champ de texte (Entry, Text, etc.)
+        if self.windowIsTextCtrl(window_with_focus):
+            try:
+                # Génère l'événement virtuel standard de Tkinter pour couper
+                # Cela gère automatiquement le presse-papier système.
+                window_with_focus.event_generate("<<Copy>>")
+            except Exception as e:
+                log.error(f"Erreur lors de l'exécution de Cut sur le widget : {e}")
+        else:
+            # Sinon, on utilise la logique métier de Task Coach pour copier des items (tâches, etc.)
+            copy_command = command.CopyCommand(
+                self.viewer.presentation(), self.viewer.curselection()
+            )
+            if copy_command:
+                copy_command.do()
 
     def enabled(self, event=None):
         """Vérifie si la copie est disponible."""
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     # Todo: CanCut can be None ! a bool would be better !?
-        #     return windowWithFocus.CanCopy()
-        # else:
-        #     return super().enabled(event)
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     # Todo: CanCopy can be None ! a bool would be better !?
+        # #     return windowWithFocus.CanCopy()
+        # # else:
+        # #     return super().enabled(event)
+        # # window_with_focus = self.mainWindow().focus_get()
+        # # garde : si pas de fenêtre principale encore créée, ne pas lever d'AttributeError
+        # mw = self.mainWindow()
+        # if mw is None:
+        #     # Pendant l'initialisation des menus la fenêtre peut être None.
+        #     # Retourner True évite d'interrompre la construction de l'UI.
+        #     # return True
+        #     return False
+        #
+        # # try:
+        # #     window_with_focus = mw.focus_get()
+        # # except Exception:
+        # #     # Ne pas bloquer l'initialisation si focus_get échoue pour une raison quelconque.
+        # #     return True
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = mw.focus_get()  # KeyError: '#!mainmenu'
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if not window_with_focus:
+            return False
+        if self.windowIsTextCtrl(window_with_focus):
+            # Pour un widget de texte, vérifier s'il y a une sélection
+            try:
+                selected_text = window_with_focus.get("sel.first", "sel.last")
+                return bool(selected_text)
+            except tk.TclError:
+                return False
+        else:
+            # La logique pour les autres éléments doit être déterminée par NeedSelectionMixin
+            return super().enabled(event)
+
+    def windowIsTextCtrl(self, the_window) -> bool:
+        """
+        Vérifie si la fenêtre actuelle est un contrôle de texte.
+        """
+        # return isinstance(window, wx.TextCtrl) or isinstance(
+        #     window, hypertreelist.EditCtrl
+        # )
+        # hypertreelist.EditCtrl n'existe pas dans Tkinter, donc on adapte la vérification
+        # return isinstance(the_window, tk.Text)
+        # Pour être plus complète et inclure d'autres widgets de saisie de texte courants dans Tkinter.
+        # Inclure tk.Entry et ttk.Entry pour une couverture plus large
+        return isinstance(the_window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
 class EditPaste(base_uicommandtk.UICommand):
@@ -1283,24 +1759,88 @@ class EditPaste(base_uicommandtk.UICommand):
         # print("tclib.gui.uicommand.uicommand.EditPaste command initialized")  # Débogage
 
     def doCommand(self, event=None):
+        # Comme pour EditCopy
         """Exécute la commande de collage."""
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     windowWithFocus.Paste()
-        # else:
-        #     pasteCommand = command.PasteCommand()
-        #     pasteCommand.do()
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     windowWithFocus.Paste()
+        # # else:
+        # #     pasteCommand = command.PasteCommand()
+        # #     pasteCommand.do()
+        # main = self.mainWindow()
+        # if not main:
+        #     # Fenêtre pas encore prête → on désactive la commande
+        #     return False
+        # # Récupère le widget qui a le focus
+        # # window_with_focus = self.mainWindow().focus_get()
+        # window_with_focus = main.focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if not window_with_focus:
+            return False
+
+        # Si le focus est sur un champ de texte (Entry, Text, etc.)
+        if self.windowIsTextCtrl(window_with_focus):
+            try:
+                # Génère l'événement virtuel standard de Tkinter pour couper
+                # Cela gère automatiquement le presse-papier système.
+                window_with_focus.event_generate("<<Paste>>")
+            except Exception as e:
+                log.error(f"Erreur lors de l'exécution de Cut sur le widget : {e}")
+        else:
+            # Sinon, on utilise la logique métier de Task Coach pour copier des items (tâches, etc.)
+            copy_command = command.PasteCommand()
+            if copy_command:
+                copy_command.do()
 
     def enabled(self, event=None):
         """Vérifie si le collage est disponible."""
-        # windowWithFocus = wx.Window.FindFocus()
-        # if isinstance(windowWithFocus, wx.TextCtrl):
-        #     # Todo: CanPaste can be None ! a bool would be better !?
-        #     return windowWithFocus.CanPaste()
-        # else:
-        #     return command.Clipboard() and super().enabled(event)
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if isinstance(windowWithFocus, wx.TextCtrl):
+        # #     # Todo: CanPaste can be None ! a bool would be better !?
+        # #     return windowWithFocus.CanPaste()
+        # # else:
+        # #     return command.Clipboard() and super().enabled(event)
+        # # window_with_focus = self.mainWindow().focus_get()
+        # # garde : si pas de fenêtre principale encore créée, ne pas lever d'AttributeError
+        # mw = self.mainWindow()
+        # if mw is None:
+        #     # Pendant l'initialisation des menus la fenêtre peut être None.
+        #     # Retourner True évite d'interrompre la construction de l'UI.
+        #     return True
+        #
+        # try:
+        #     window_with_focus = mw.focus_get()
+        # except Exception:
+        #     # Ne pas bloquer l'initialisation si focus_get échoue pour une raison quelconque.
+        #     return True
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if self.windowIsTextCtrl(window_with_focus):
+            # Vérifier si le presse-papier contient du texte
+            try:
+                clipboard_content = window_with_focus.clipboard_get()
+                return bool(clipboard_content)
+            except tk.TclError: # Le presse-papier est vide ou ne contient pas de texte
+                return False
+        else:
+            # Vérifier si le presse-papier de l'application contient des éléments de l'application
+            return command.Clipboard() and super().enabled(event)
+
+    def windowIsTextCtrl(self, the_window) -> bool:
+        """
+        Vérifie si la fenêtre actuelle est un contrôle de texte.
+        """
+        # return isinstance(window, wx.TextCtrl) or isinstance(
+        #     window, hypertreelist.EditCtrl
+        # )
+        # hypertreelist.EditCtrl n'existe pas dans Tkinter, donc on adapte la vérification
+        # return isinstance(the_window, tk.Text)
+        # Pour être plus complète et inclure d'autres widgets de saisie de texte courants dans Tkinter.
+        # Inclure tk.Entry et ttk.Entry pour une couverture plus large
+        return isinstance(the_window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
 class EditPasteAsSubItem(mixin_uicommandtk.NeedsSelectedCompositeMixin, ViewerCommand):
@@ -1400,10 +1940,20 @@ class EditPreferences(settings_uicommandtk.SettingsCommand):
             event (wx.Event) : L'événement déclencheur.
             show (bool) : Indique si la boîte de dialogue doit être affichée.
         """
-        editor = dialog.preferences.Preferences(
-            parent=self.mainWindow(), title=_("Preferences"), settings=self.settings
+        main = self.mainWindow()
+        if not main:
+            # Fenêtre pas encore prête → on désactive la commande
+            return False
+
+        # editor = dialog.preferences.Preferences(
+        #     parent=self.mainWindow(), title=_("Preferences"), settings=self.settings
+        # )  # TODO : vérifier si c'est bien mainWindow() !
+        editor = dialog.preferencestk.PreferencesPage(
+            parent=main, settings=self.settings, title=_("Preferences"),
         )  # TODO : vérifier si c'est bien mainWindow() !
-        editor.Show(show=show)
+        # editor.Show(show=show)
+        if show:
+            editor.withdraw()
 
 
 class EditSyncPreferences(IOCommand):
@@ -1441,7 +1991,10 @@ class EditSyncPreferences(IOCommand):
             iocontroller=self.iocontroller,
             title=_("SyncML preferences"),
         )
-        editor.Show(show=show)
+        # editor.Show(show=show)  # Méthode Show est une méthode wxpython. Adaptée ici à Tkinter
+        if show:
+            # self.wait_window(editor)  # Affiche le dialogue modal  # TODO : remplacer self !
+            editor.withdraw()
 
 
 class EditToolBarPerspective(settings_uicommandtk.SettingsCommand):
@@ -1481,9 +2034,14 @@ class EditToolBarPerspective(settings_uicommandtk.SettingsCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        self.__editorClass(
+        # self.__editorClass(
+        #     self.__toolbar, self.settings, self.mainWindow(), _("Customize toolbar")
+        # ).ShowModal()
+        editor = self.__editorClass(
             self.__toolbar, self.settings, self.mainWindow(), _("Customize toolbar")
-        ).ShowModal()
+        )
+        # editor.Show(show=True)
+        editor.withdraw()
 
 
 class SelectAll(mixin_uicommandtk.NeedsItemsMixin, ViewerCommand):
@@ -1500,6 +2058,7 @@ class SelectAll(mixin_uicommandtk.NeedsItemsMixin, ViewerCommand):
             helpText=help.editSelectAll,
             bitmap="selectall",
             # id=wx.ID_SELECTALL,
+            id="<Control-a>",  # Tkinter shortcut à essayer TODO
             *args,
             **kwargs,
         )
@@ -1509,25 +2068,37 @@ class SelectAll(mixin_uicommandtk.NeedsItemsMixin, ViewerCommand):
         """
         Exécute la commande pour sélectionner tous les éléments visibles dans la visionneuse.
         """
-        # windowWithFocus = wx.Window.FindFocus()
-        # if self.windowIsTextCtrl(windowWithFocus):
-        #     windowWithFocus.SetSelection(-1, -1)  # Sélectionne tout le texte
-        # else:
-        #     self.viewer.select_all()
+        # # windowWithFocus = wx.Window.FindFocus()
+        # window_with_focus = self.mainWindow().focus_get()
+        # # if self.windowIsTextCtrl(windowWithFocus):
+        # #     windowWithFocus.SetSelection(-1, -1)  # Sélectionne tout le texte
+        # # else:
+        # #     self.viewer.select_all()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if self.windowIsTextCtrl(window_with_focus):
+            window_with_focus.tag_add("sel", "1.0", "end")  # Sélectionne tout le texte
+        else:
+            self.viewer.select_all()
         pass
 
     @staticmethod
-    def windowIsTextCtrl(window) -> bool:
+    def windowIsTextCtrl(the_window) -> bool:
         """
         Vérifie si la fenêtre actuelle est un contrôle de texte.
         """
         # return isinstance(window, wx.TextCtrl) or isinstance(
         #     window, hypertreelist.EditCtrl
         # )
-        pass
+        # hypertreelist.EditCtrl n'existe pas dans Tkinter, donc on adapte la vérification
+        # return isinstance(the_window, tk.Text)
+        # Pour être plus complète et inclure d'autres widgets de saisie de texte courants dans Tkinter.
+        # Inclure tk.Entry et ttk.Entry pour une couverture plus large
+        return isinstance(the_window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
-class ClearSelection(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):  # TODO : mettre ViewerCommand en premier ?
+class ClearSelection(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):  # Mettre ViewerCommand en premier ?  Non, car NeedsSelectionMixin a besoin de viewer
     """
     Action pour désélectionner tous les éléments dans une visionneuse.
     """
@@ -1605,7 +2176,8 @@ class ResetCategoryFilter(
         self.categories.resetAllFilteredCategories()
 
 
-class ToggleCategoryFilter(base_uicommandtk.UICommand):
+# class ToggleCategoryFilter(base_uicommandtk.UICommand):
+class ToggleCategoryFilter(settings_uicommandtk.UICheckCommand):
     """
     Action pour activer ou désactiver le filtrage sur une catégorie spécifique.
     """
@@ -1630,6 +2202,8 @@ class ToggleCategoryFilter(base_uicommandtk.UICommand):
             menuText="&" + subject.replace("&", "&&"),
             helpText=_("Show/hide items belonging to %s") % subject,
             # kind=kind,
+            kind="checkbutton",
+            is_checked=False,  # ou True
             *args,
             **kwargs,
         )
@@ -1639,7 +2213,17 @@ class ToggleCategoryFilter(base_uicommandtk.UICommand):
         """
         Exécute la commande pour activer ou désactiver le filtrage sur la catégorie spécifiée.
         """
-        self.category.setFiltered(event.IsChecked())
+        # self.category.setFiltered(event.IsChecked())
+        # 1. On récupère l'état actuel de la case à cocher via la variable Tkinter
+        # On privilégie la variable interne qui est la source de vérité en Tkinte
+        # state = self._variable.get()  # _isMenuItemChecked est cette méthode get()
+        # # Utiliser _isMenuItemChecked pour récupérer l'état de la variable Tkinter
+        state = self._isMenuItemChecked(event)  # Passer event=None si _isMenuItemChecked ne l'utilise pas
+        # 2. On applique cet état au modèle de données (la catégorie)
+        self.category.setFiltered(state)
+        # self.category.setFiltered(self._variable.get())
+        # Log de débogage optionnel
+        # log.debug(f"Category {self.category} filtered: {state}")
 
 
 # --- Commands for View Menu ---
@@ -1677,7 +2261,8 @@ class ViewViewer(settings_uicommandtk.SettingsCommand, ViewerCommand):
 
     def increaseViewerCount(self):
         """
-        Augmente le compteur de la classe visionneuses ouvertes, ouvre et enregistre la valeur dans les paramètres.
+        Augmente le compteur de la classe visionneuses ouvertes,
+        ouvre et enregistre la valeur dans les paramètres.
         """
         setting = self.viewerClass.__name__.lower() + "count"
         viewerCount = self.settings.getint("view", setting)
@@ -1699,11 +2284,11 @@ class ViewEffortViewerForSelectedTask(
             *args : Arguments supplémentaires.
             **kwargs : Arguments nommés supplémentaires, y compris 'taskFile'.
         """
-        from taskcoachlib.gui import viewer
+        from taskcoachlib.guitk.viewer import efforttk
 
-        self.viewerClass = viewer.EffortViewerForSelectedTasks
+        self.viewerClass = efforttk.EffortViewerForSelectedTasks
         self.taskFile = kwargs.pop("taskFile")
-        kwargs["bitmap"] = viewer.EffortViewer.defaultBitmap
+        kwargs["bitmap"] = efforttk.Effortviewer.defaultBitmap
         super().__init__(*args, **kwargs)
 
     def doCommand(self, event=None):
@@ -1761,7 +2346,7 @@ class RenameViewer(ViewerCommand):
             activeViewer.setTitle(viewer_name_dialog)
         # # Nettoyage de la boîte de dialogue :
         # viewerNameDialog.Destroy()
-        viewer_name_dialog.destroy()
+        viewer_name_dialog.destroy()  # Retirer si problème
         pass
 
     def enabled(self, event=None):
@@ -1834,7 +2419,8 @@ class HideCurrentColumn(ViewerCommand):
 
     def enabled(self, event=None) -> bool:
         """
-        Vérifie si la commande peut être exécutée, en déterminant la colonne actuelle basée sur la position de la souris.
+        Vérifie si la commande peut être exécutée,
+        en déterminant la colonne actuelle basée sur la position de la souris.
 
         Args :
             event : L'événement pour lequel la disponibilité de la commande est vérifiée.
@@ -1846,6 +2432,7 @@ class HideCurrentColumn(ViewerCommand):
         # # information to determine the current column, so we have to find
         # # the column ourselves. We use the current mouse position to do so.
         # widget = (
+        widget = self.viewer.get_widget()
         #     self.viewer.getWidget()
         # )  # Must use method to make sure viewer dispatch works!
         # # Utilise une méthode pour garantir que la vue est bien dispatchée.
@@ -1861,7 +2448,74 @@ class HideCurrentColumn(ViewerCommand):
         # if columnIndex == -1:
         #     columnIndex = 0
         # return self.viewer.isHideableColumn(columnIndex)
-        pass
+
+        # Pour convertir HideCurrentColumn.enabled pour Tkinter,
+        # le défi principal est de remplacer la logique de positionnement de la souris et le HitTest de wxPython.
+        #
+        # En Tkinter (en supposant que votre viewer utilise un ttk.Treeview),
+        # on utilise winfo_pointerxy pour la souris
+        # et identify_column pour trouver l'index de la colonne.
+        widget = self.viewer.getWidget()
+
+        # Récupère la position absolue de la souris sur l'écran
+        pointer_x, pointer_y = widget.winfo_pointerxy()
+
+        # Convertit la position écran en position relative au widget (équivalent ScreenToClient)
+        x = pointer_x - widget.winfo_rootx()
+        y = pointer_y - widget.winfo_rooty()
+
+        # Identifie la colonne sous la souris.
+        # identify_column renvoie une chaîne du type '#1', '#2', etc.
+        column_id = widget.identify_column(x)
+
+        if not column_id:
+            return False
+
+        # Méthode à retirer peut-être pour garder la forme '#N'
+        try:
+            # On extrait le numéro et on convertit en index 0-based
+            # '#1' -> 0, '#2' -> 1, etc.
+            column_index = int(column_id.replace('#', '')) - 1
+        except (ValueError, IndexError):
+            column_index = 0
+
+        # On s'assure que l'index n'est pas négatif (cas de la colonne fantôme ou erreur)
+        if column_index < 0:
+            column_index = 0
+
+        return self.viewer.isHideableColumn(column_index)
+        # Points clés de la conversion :
+        #
+        #     Coordonnées de la souris :
+        #
+        #         wx.GetMousePosition() devient widget.winfo_pointerxy().
+        #
+        #         La conversion en coordonnées relatives se fait
+        #         en soustrayant winfo_rootx() et winfo_rooty().
+        #
+        #     HitTest vs Identify :
+        #
+        #         Le HitTest de wx est remplacé par widget.identify_column(x).
+        #
+        #         Attention : identify_column renvoie l'identifiant visuel
+        #         (ex: #1 pour la première colonne affichée).
+        #         Si vos colonnes peuvent être déplacées par l'utilisateur,
+        #         assurez-vous que self.viewer.isHideableColumn attend bien l'index visuel
+        #         et non l'index logique du modèle.
+        #
+        #     Gestion de l'index -1 :
+        #
+        #         Dans la version wx, vous aviez un correctif pour le -1.
+        #         Ici, le try...except et la vérification if not column_id gèrent les cas
+        #         où la souris n'est pas au-dessus d'une colonne valide.
+        #
+        #     doCommand :
+        #
+        #         Pour que doCommand fonctionne avec votre event.GetEventObject().columnIndex,
+        #         assurez-vous que le menu contextuel que vous ouvrez
+        #         stocke bien l'index calculé au moment du clic droit
+        #         (souvent via une variable temporaire dans le widget
+        #         au moment de l'événement <Button-3>).
 
 
 class ViewColumn(ViewerCommand, settings_uicommandtk.UICheckCommand):
@@ -2191,13 +2845,67 @@ class ViewerHideTasks(ViewerCommand, settings_uicommandtk.UICheckCommand):
         Args :
             event : L'événement déclencheur.
         """
-        # if wx.GetKeyState(wx.WXK_SHIFT):
-        #     self.viewer.showOnlyTaskStatus(self.__taskStatus)
-        # else:
-        #     self.viewer.hideTaskStatus(
-        #         self.__taskStatus, self._isMenuItemChecked(event)
-        #     )
-        pass
+        # # if wx.GetKeyState(wx.WXK_SHIFT):
+        # #     self.viewer.showOnlyTaskStatus(self.__taskStatus)
+        # # else:
+        # #     self.viewer.hideTaskStatus(
+        # #         self.__taskStatus, self._isMenuItemChecked(event)
+        # #     )
+        # # La logique de gestion de SHIFT doit être adaptée à Tkinter si nécessaire.
+        # # Pour l'instant, on se concentre sur l'état de la case à cocher.
+        # self.viewer.hideTaskStatus(
+        #     self.__taskStatus, self._isMenuItemChecked(event)
+        # )
+        # Pour convertir ViewerHideTasks.doCommand vers Tkinter, la difficulté réside dans le remplacement de wx.GetKeyState.
+        #
+        # En Tkinter, on ne peut pas interroger l'état du clavier de manière "globale" aussi facilement qu'avec wxPython au milieu d'une fonction, sauf si l'événement (event) est passé et contient les "state masks". Cependant, pour les commandes de menu, l'événement est souvent absent ou incomplet.
+        #
+        # Voici la conversion la plus robuste pour Tkinter :
+        # En Tkinter, on vérifie si la touche Shift est pressée
+        # via le masque d'état de l'événement
+        # ou en interrogeant directement le système si l'événement est None.
+
+        shift_pressed = False
+        if event and hasattr(event, 'state'):
+            # 0x0001 est généralement le masque pour Shift dans Tkinter
+            shift_pressed = bool(event.state & 0x0001)
+        else:
+            # Alternative si l'événement ne porte pas l'état :
+            # On vérifie directement auprès du widget root (méthode spécifique à certains environnements)
+            # Sinon, on considère Shift comme non pressé par défaut.
+            try:
+                # Cette approche fonctionne si vous avez accès au widget via le viewer
+                # On utilise bindtags ou une astuce de focus, mais le plus simple
+                # est souvent de passer l'état via la variable de contrôle.
+                pass
+            except:
+                pass
+
+        if shift_pressed:
+            self.viewer.showOnlyTaskStatus(self.__taskStatus)
+        else:
+            # On utilise la variable liée au menu (tk.BooleanVar) pour l'état coché
+            is_checked = self._isMenuItemChecked(event)
+            self.viewer.hideTaskStatus(self.__taskStatus, is_checked)
+        # Points importants pour la conversion :
+        #
+        #     Détection de la touche Shift :
+        #
+        #         Si doCommand est appelé par un raccourci clavier ou un clic
+        #         (événement <Button>), event.state contiendra l'information. 0x0001 correspond au bit de la touche Shift.
+        #
+        #         Si c'est appelé depuis un menu standard Tkinter (command=...),
+        #         l'objet event n'est pas transmis.
+        #         Dans ce cas, la détection du "Shift + Clic sur menu" est très complexe en Tkinter pur sans bidouillages bas niveau.
+        #         La plupart des applications Tkinter évitent ce comportement (Shift+Clic sur menu)
+        #         car il n'est pas standard pour les menus natifs.
+        #
+        #     L'état "Checked" :
+        #
+        #         Comme pour vos commandes précédentes, j'utilise self._isMenuItemChecked(event).
+        #         Assurez-vous que cette méthode pointe bien vers le .get() de votre tk.BooleanVar.
+        #
+        #     Alternative simplifiée : Si vous n'avez pas besoin du support de la touche Shift pour l'action de masquage (qui est un comportement très spécifique à wx), vous pourriez simplifier la commande pour ne garder que la logique else. Si le support de Shift est crucial, la méthode la plus fiable est de s'assurer que l'appelant de doCommand passe bien un événement Tkinter valide.
 
 
 class ViewerHideCompositeTasks(ViewerCommand, settings_uicommandtk.UICheckCommand):
@@ -2271,6 +2979,10 @@ class Edit(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
             *args,
             **kwargs,
         )
+        # La conversion de la classe Edit pour Tkinter nécessite de
+        # remplacer la logique de recherche récursive du parent (le while windowWithFocus)
+        # et de s'adapter au fonctionnement des éditeurs de cellules
+        # (souvent des widgets temporaires comme Entry) dans un environnement ttk.Treeview.
 
     def doCommand(self, event=None, show: bool = True):  # pylint: disable=W0221
         """
@@ -2280,43 +2992,89 @@ class Edit(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
             event : L'événement déclencheur.
             show (bool) : Indique si l'éditeur doit être affiché.
         """
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # editCtrl = self.findEditCtrl(windowWithFocus)
-        # if editCtrl:
-        #     # editCtrl.AcceptChanges()
-        #     editCtrl.AcceptsFocus()  # A vérifier !
-        #     if editCtrl:
-        #         editCtrl.Finish()  # Est-ce encore nécessaire ?
-        #     return
-        # try:
-        #     columnName = event.columnName
-        # except AttributeError:
-        #     columnName = ""
-        # editor = self.viewer.editItemDialog(
-        #     self.viewer.curselection(), self.bitmap, columnName
-        # )
-        # editor.Show(show)
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # editCtrl = self.findEditCtrl(windowWithFocus)
+        # # if editCtrl:
+        # #     # editCtrl.AcceptChanges()
+        # #     editCtrl.AcceptsFocus()  # A vérifier !
+        # #     if editCtrl:
+        # #         editCtrl.Finish()  # Est-ce encore nécessaire ?
+        # #     return
+        # # try:
+        # #     columnName = event.columnName
+        # # except AttributeError:
+        # #     columnName = ""
+        # # editor = self.viewer.editItemDialog(
+        # #     self.viewer.curselection(), self.bitmap, columnName
+        # # )
+        # # editor.Show(show)
+        # window_with_focus = self.mainWindow().focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        edit_ctrl = self.findEditCtrl(window_with_focus)
+
+        if edit_ctrl:
+            # En Tkinter, pour valider une édition en cours (ex: Inline editing),
+            # on génère généralement un événement Return ou on appelle une méthode de fin.
+            if hasattr(edit_ctrl, 'finish'):
+                edit_ctrl.finish()
+            elif hasattr(edit_ctrl, 'accept_changes'):
+                edit_ctrl.accept_changes()
+            return
+
+        # Gestion du nom de la colonne si l'événement provient d'un clic sur entête
+        column_name = getattr(event, 'columnName', "")
+
+        # Ouverture du dialogue d'édition standard de Task Coach
+        editor = self.viewer.editItemDialog(
+            self.viewer.curselection(), self.bitmap, column_name
+        )
+
+        if editor:
+            if show:
+                # En Tkinter, on utilise souvent une méthode personnalisée ou wait_window
+                if hasattr(editor, 'show'):
+                    editor.show()
+                else:
+                    editor.deiconify() # Si c'est un Toplevel
+            else:
+                editor.withdraw()
 
     def enabled(self, event=None) -> bool:
         """
-        Vérifie si la commande est activée, c'est-à-dire s'il y a un élément sélectionné ou un champ en cours d'édition.
+        Vérifie si la commande est activée, c'est-à-dire s'il y a un élément
+        sélectionné ou un champ en cours d'édition.
 
         Args :
             event : L'événement déclencheur.
         """
-        # windowWithFocus = wx.Window.FindFocus()
-        # if self.findEditCtrl(windowWithFocus):
-        #     return True
-        # elif operating_system.isMac() and isinstance(windowWithFocus, wx.TextCtrl):
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        # if main_window is None:
+        #     # On désactive la commande plutôt que de planter
         #     return False
-        # else:
-        #     return super().enabled(event)
-        pass
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if self.findEditCtrl(windowWithFocus):
+        # #     return True
+        # # elif operating_system.isMac() and isinstance(windowWithFocus, wx.TextCtrl):
+        # #     return False
+        # # else:
+        # #     return super().enabled(event)
+        # window_with_focus = self.mainWindow().focus_get()
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if self.findEditCtrl(window_with_focus):
+            return True
+
+        # Note: La distinction spécifique à macOS pour wx.TextCtrl est rarement
+        # nécessaire en Tkinter pur, mais on peut la simuler si besoin.
+        if operating_system.isMac() and self.windowIsTextCtrl(window_with_focus):
+            return False
+
+        return super().enabled(event)
 
     # @staticmethod
-    def findEditCtrl(self, windowWithFocus):
+    def findEditCtrl(self, window_with_focus):
         """
         Trouve le contrôle d'édition actif si disponible.
 
@@ -2326,14 +3084,51 @@ class Edit(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
         Returns :
             Le contrôle d'édition si trouvé, sinon None.
         """
-        # TODO
         # while windowWithFocus:
         #     # if isinstance(windowWithFocus, thirdparty.hypertreelist.EditCtrl):
         #     if isinstance(windowWithFocus, hypertreelist.EditCtrl):
         #         break
         #     windowWithFocus = windowWithFocus.GetParent()
         # return windowWithFocus
-        pass
+        curr = window_with_focus
+        while curr:
+            # On vérifie si le widget a une signature d'éditeur de cellule
+            # (Adaptez 'CellEditor' selon le nom de votre classe d'édition inline Tkinter)
+            if hasattr(curr, 'is_editing') and curr.is_editing():
+                return curr
+
+            # Remplace GetParent() de wx par winfo_parent() de Tkinter
+            parent_name = curr.winfo_parent()
+            if not parent_name:
+                break
+            curr = curr.nametowidget(parent_name)
+        return None
+    # Changements majeurs effectués :
+    #
+    #     Recherche du Parent (findEditCtrl) :
+    #
+    #         En Tkinter, winfo_parent() renvoie le chemin sous forme de chaîne
+    #         (ex: ".frame.button").
+    #         Il faut utiliser nametowidget()
+    #         pour récupérer l'objet Python correspondant
+    #         afin de continuer la remontée de l'arbre.
+    #
+    #     Gestion de l'événement :
+    #
+    #         Utilisation de getattr(event, 'columnName', "")
+    #         qui est plus propre que le bloc try/except pour Tkinter.
+    #
+    #     Validation de l'édition (Finish) :
+    #
+    #         Les widgets d'édition en ligne (inline editing)
+    #         dans les Treeviews Tkinter n'ont pas de classe standard comme hypertreelist.EditCtrl.
+    #         J'ai utilisé une vérification hasattr pour finish ou accept_changes,
+    #         ce qui est plus flexible.
+    #
+    #     Affichage du dialogue :
+    #
+    #         Remplacement de editor.Show(show) par une logique compatible
+    #         avec les Toplevel de Tkinter (deiconify ou show).
 
 
 class EditTrackedTasks(TaskListCommand, settings_uicommandtk.SettingsCommand):
@@ -2424,34 +3219,106 @@ class Delete(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if self.windowIsTextCtrl(windowWithFocus):
-        #     # Simulate Delete key press
-        #     fromIndex, toIndex = windowWithFocus.GetSelection()
-        #     if fromIndex == toIndex:
-        #         pos = windowWithFocus.GetInsertionPoint()
-        #         fromIndex, toIndex = pos, pos + 1
-        #     windowWithFocus.Remove(fromIndex, toIndex)
-        # else:
-        #     deleteCommand = self.viewer.deleteItemCommand()
-        #     deleteCommand.do()
-        pass
+        # # L'approche pour Tkinter est légèrement différente
+        # # car la gestion de la sélection et de l'effacement dépend du type de widget
+        # # (une Entry n'utilise pas tout à fait les mêmes index qu'un widget Text).
+        # # TODO
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if self.windowIsTextCtrl(windowWithFocus):
+        # #     # Simulate Delete key press
+        # #     fromIndex, toIndex = windowWithFocus.GetSelection()
+        # #     if fromIndex == toIndex:
+        # #         pos = windowWithFocus.GetInsertionPoint()
+        # #         fromIndex, toIndex = pos, pos + 1
+        # #     windowWithFocus.Remove(fromIndex, toIndex)
+        # # else:
+        # #     deleteCommand = self.viewer.deleteItemCommand()
+        # #     deleteCommand.do()
+        # window_with_focus = self.mainWindow().focus_get()
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if self.windowIsTextCtrl(window_with_focus):
+            try:
+                # 1. Vérifier s'il y a une sélection de texte
+                if window_with_focus.tag_ranges("sel"):  # Pour widget tk.Text
+                    window_with_focus.delete("sel.first", "sel.last")
+                elif window_with_focus.selection_present():  # Pour widget tk.Entry
+                    window_with_focus.delete(tk.SEL_FIRST, tk.SEL_LAST)
+                else:
+                    # 2. Si pas de sélection, on simule la touche "Suppr" (delete forward)
+                    if isinstance(window_with_focus, tk.Text):
+                        window_with_focus.delete("insert")
+                    else:
+                        # Pour Entry/ttk.Entry
+                        insert_pos = window_with_focus.index(tk.INSERT)
+                        window_with_focus.delete(insert_pos)
+            except tk.TclError:
+                # Cas où le widget ne supporte pas la sélection ou est vide
+                pass
+        else:
+            # Sinon, on utilise la commande métier pour supprimer les objets (tâches, etc.)
+            delete_command = self.viewer.deleteItemCommand()
+            if delete_command:
+                delete_command.do()
+        # Explications des changements :
+        #
+        #     Distinction Text vs Entry :
+        #
+        #         Dans wxPython, wx.TextCtrl est unifié.
+        #
+        #         Dans Tkinter, un widget tk.Text (multi-ligne) et un tk.Entry (mono-ligne) gèrent la sélection différemment. J'ai ajouté des vérifications pour les deux.
+        #
+        #     Gestion de la sélection (GetSelection -> tag_ranges / selection_present) :
+        #
+        #         Pour tk.Text, on vérifie si le tag "sel" existe.
+        #
+        #         Pour tk.Entry, on utilise la méthode selection_present().
+        #
+        #     Suppression du caractère suivant (Simuler la touche "Suppr") :
+        #
+        #         Si aucune sélection n'est active, on supprime le caractère situé juste après le curseur d'insertion (tk.INSERT ou "insert"). C'est l'équivalent du pos, pos + 1 dans votre code wx original.
+        #
+        #     Sécurité : Le bloc try...except tk.TclError évite que l'application ne plante si l'index est invalide (par exemple si le curseur est à la toute fin du texte).
 
     def enabled(self, event=None) -> bool:
         """
-        Vérifie si la commande est activée, c'est-à-dire si des éléments ou du texte peuvent être supprimés.
+        Vérifie si la commande est activée,
+        c'est-à-dire si des éléments ou du texte peuvent être supprimés.
 
         Args :
             event : L'événement déclencheur.
         """
-        # TODO
-        # windowWithFocus = wx.Window.FindFocus()
-        # if self.windowIsTextCtrl(windowWithFocus):
-        #     return True
-        # else:
-        #     return super().enabled(event)
-        pass
+        main_window = self.mainWindow()  # Récupère la fenêtre principale
+        # if main_window is None:
+        #     # On désactive la commande plutôt que de planter
+        #     return False
+        # # windowWithFocus = wx.Window.FindFocus()
+        # # if self.windowIsTextCtrl(windowWithFocus):
+        # #     return True
+        # # else:
+        # #     return super().enabled(event)
+        # window_with_focus = self.mainWindow().focus_get()
+        window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
+
+        if self.windowIsTextCtrl(window_with_focus):
+            # Pour un widget de texte, la suppression est généralement possible s'il y a une sélection
+            # ou si le curseur n'est pas à la fin/début du texte pour une suppression simple.
+            try:
+                selected_text = window_with_focus.get("sel.first", "sel.last")
+                if selected_text:
+                    return True
+                    # Si pas de sélection, on peut potentiellement supprimer un caractère
+                # Il faudrait une logique plus fine pour déterminer si delete est possible (curseur pas à la fin)
+                # Pour l'instant, on se contente de la sélection pour simplifier.
+                # Ou si on veut permettre la suppression d'un caractère sans sélection :
+                # return window_with_focus.index(tk.INSERT) != window_with_focus.index(tk.END)
+                return False  # Par défaut, si pas de sélection, on désactive.
+            except tk.TclError:
+                return False
+        else:
+            # Logique basée sur la sélection de la vue, héritée de NeedsSelectionMixin
+            return super().enabled(event)
 
     @staticmethod
     def windowIsTextCtrl(window) -> bool:
@@ -2464,11 +3331,11 @@ class Delete(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
         Returns :
             (bool) : True si la fenêtre est un contrôle de texte, sinon False.
         """
-        # TODO
         # return isinstance(window, wx.TextCtrl) or isinstance(
         #     window, hypertreelist.EditCtrl
         # )
-        pass
+        # Utiliser les types Tkinter appropriés
+        return isinstance(window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
 
 
 # --- Commands for Task Menu ---
@@ -2478,7 +3345,6 @@ class TaskNew(TaskListCommand, settings_uicommandtk.SettingsCommand):
     """
     Commande pour créer une nouvelle tâche.
     """
-    # TODO : A CONVERTIR POUR TKINTER
     def __init__(self, *args, **kwargs):
         # Dictionnaire de mots-clés à utiliser pour la création de la tâche :
         self.taskKeywords = kwargs.pop("taskKeywords", dict())
@@ -2496,7 +3362,7 @@ class TaskNew(TaskListCommand, settings_uicommandtk.SettingsCommand):
         #     **kwargs,
         # )
 
-    def doCommand(self):
+    def doCommand(self,event=None, show: bool = True):
         # Cette partie est complexe car elle dépend de la structure de l'application
         # et des dialogues. Nous allons simuler la création de la commande
         # et l'affichage d'un dialogue.
@@ -2660,7 +3526,7 @@ class TaskTemplateNew(TaskNew):
         # On assume que persistence.TemplateXMLReader a été converti pour Tkinter
         return persistence.TemplateXMLReader(open(self.__filename, "r", newline=None)).read()
 
-    def doCommand(self):
+    def doCommand(self, event=None, show: bool = True):
         # Le modèle de tâche est lu à chaque fois car c'est le
         # TemplateXMLReader qui évalue les valeurs dynamiques (Now()
         # doit être évalué lors de la création de la tâche par exemple).
@@ -2669,7 +3535,6 @@ class TaskTemplateNew(TaskNew):
         # est à adapter pour Tkinter.
         log.info(f"Creating new task from template: {self.__filename}")
         # Créer et exécuter la commande...
-        # TODO
         kwargs = templateTask.__getcopystate__()  # pylint: disable=E1103
         kwargs["categories"] = self.categoriesForTheNewTask()
         # Création d'une nouvelle tâche :
@@ -2692,11 +3557,12 @@ class TaskTemplateNew(TaskNew):
 
 
 # class TaskNewFromTemplateButton(
-#     mixin_uicommand.PopupButtonMixin,
+#     mixin_uicommandtk.PopupButtonMixin,
 #     TaskListCommand,
-#     settings_uicommand.SettingsCommand,
+#     settings_uicommandtk.SettingsCommand,
 # ):
-# --- PopupButtonMixin a été omis car il utilise des fonctionnalités wxPython qui n'ont pas d'équivalent direct dans Tkinter ---
+# --- PopupButtonMixin a été converti car il utilisait des fonctionnalités
+# wxPython qui n'ont pas d'équivalent direct dans Tkinter ---
 class TaskNewFromTemplateButton(
     TaskListCommand,
     settings_uicommandtk.SettingsCommand,
@@ -2704,13 +3570,16 @@ class TaskNewFromTemplateButton(
     """
     Commande d'interface utilisateur pour créer une nouvelle tâche à partir d'un modèle.
 
-    Cette classe combine les fonctionnalités de `mixin_uicommand.PopupButtonMixin`,
-    `TaskListCommand` et `settings_uicommand.SettingsCommand` pour fournir une
+    Cette classe combine les fonctionnalités de `mixin_uicommandtk.PopupButtonMixin`,
+    `TaskListCommand` et `settings_uicommandtk.SettingsCommand` pour fournir une
     commande de bouton contextuel qui ouvre un menu de modèles de tâches.
 
     Lorsqu'un modèle de tâche est sélectionné, une nouvelle tâche est créée en
     utilisant le modèle comme base.
     """
+    # Important
+    # Après avoir effectué cette modification, il est crucial de tester la fonctionnalité de création de tâches à partir de modèles pour s'assurer qu'elle fonctionne toujours correctement. Si vous rencontrez d'autres problèmes, n'hésitez pas à me le faire savoir.
+    # De plus, si PopupButtonMixin est toujours nécessaire pour d'autres boutons, assurez-vous qu'il est correctement adapté à Tkinter et qu'il ne reçoit pas d'arguments inattendus.
     def createPopupMenu(self):
         """
         Crée le menu contextuel pour la commande.
@@ -2719,11 +3588,11 @@ class TaskNewFromTemplateButton(
         tâche à partir de différents modèles de tâches.
 
         Returns :
-            (wx.Menu) : Le menu contextuel créé.
+            (tk.Menu) : Le menu contextuel créé.
         """
-        from taskcoachlib.gui import menu
+        from taskcoachlib.guitk import menutk
 
-        return menu.TaskTemplateMenu(self.mainWindow(), self.taskList, self.settings)
+        return menutk.TaskTemplateMenu(self, self.mainWindow(), self.taskList, self.settings)  # manque le parent
 
     def getMenuText(self):
         """
@@ -3115,7 +3984,7 @@ class DragAndDropCommand(ViewerCommand):
     Les classes filles doivent implémenter la logique de déplacement des éléments.
     """
     def onCommandActivate(
-        self, dropItem, dragItems, part, column
+            self, dropItem, dragItems, part, column
     ):  # pylint: disable=W0221
         """Méthode appelée lors de l'activation de la commande de glisser-déposer.
 
@@ -3132,7 +4001,7 @@ class DragAndDropCommand(ViewerCommand):
             dropItem,
             dragItems,
             part,
-            column=None if column == -1 else self.viewer.visibleColumns()[column],
+            column=None if column == -1 else self.viewer.visibleColumns()[column]
         )
 
     def doCommand(self, dropItem, dragItems, part, column):  # pylint: disable=W0221
@@ -3188,10 +4057,10 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
         éléments. Si c'est le cas, une commande de tri est déclenchée pour
         s'assurer que l'ordre de la vue est cohérent avec l'ordre des tâches.
         """
-        command = super().doCommand(
+        the_command = super().doCommand(
             dropItem, dragItems, part, column
         )  # command à renommer !
-        if command is not None and command.isOrdering():
+        if the_command is not None and the_command.isOrdering():
             sortCommand = ViewerSortByCommand(viewer=self.viewer, value="ordering")
             sortCommand.doCommand(None)
 
@@ -3254,11 +4123,17 @@ class ToggleCategory(mixin_uicommandtk.NeedsSelectedCategorizableMixin, ViewerCo
             menuText="&" + subject.replace("&", "&&"),
             helpText=_("Toggle %s") % subject,
             # kind=kind,
+            kind="checkbutton",
+            is_checked=False,
             *args,
             **kwargs,
         )
 
     def doCommand(self, event=None):
+        # state = self._variable.get()
+        state = self._isMenuItemChecked(event)  # Utiliser la méthode encapsulée
+        # if state is None:
+        #     return
         check = command.ToggleCategoryCommand(
             category=self.category, items=self.viewer.curselection()
         )
@@ -3655,9 +4530,10 @@ class EffortStartForTask(TaskListCommand):
         return not self.task.isBeingTracked() and not self.task.completed()
 
 
-# class EffortStartButton(mixin_uicommand.PopupButtonMixin, TaskListCommand):
-# --- PopupButtonMixin a été omis car il utilise des fonctionnalités wxPython qui n'ont pas d'équivalent direct dans Tkinter ---
-class EffortStartButton(TaskListCommand):
+class EffortStartButton(mixin_uicommandtk.PopupButtonMixin, TaskListCommand):
+    # --- PopupButtonMixin a été converti car il utilisait des fonctionnalités
+    # wxPython qui n'ont pas d'équivalent direct dans Tkinter ---
+    # class EffortStartButton(TaskListCommand):
     """
     Bouton de la barre d'outils pour démarrer le suivi des efforts.
 
@@ -3817,7 +4693,7 @@ Points clés:
         est désactivée."""
         return self.anyTrackedEfforts() or self.anyStoppedEfforts()
 
-    def onUpdateUI(self, event):
+    def onUpdateUI(self, event=None):
         super().onUpdateUI(event)
         self.updateUI()
 
@@ -3850,10 +4726,27 @@ Points clés:
             self.updateMenuItems(paused)
 
     def updateToolState(self, paused):
+        """
+        Met à jour l'état visuel (enfoncé ou non) de l'outil dans la barre d'outils.
+        """
         if not self.toolbar:
             return  # La barre d'outils est masquée
-        # if paused != self.toolbar.GetToolState(self.id):  # TODO : méthodes wxPython à convertir
+        # if paused != self.toolbar.GetToolState(self.id):  # Méthodes wxPython à convertir
         #     self.toolbar.ToggleTool(self.id, paused)  # méthodes wxPython
+        # En Tkinter, pour un bouton 'Toggle', on change généralement le relief
+        # ou on utilise un Checkbutton de type bouton.
+        # Si c'est un bouton standard, on simule l'état 'enfoncé' :
+        tool_widget = self.toolbar.getToolWidget(self.id)
+        # tool_widget = self.toolbar.GetToolState(self.id)
+        if tool_widget:
+            new_relief = "sunken" if paused else "raised"
+            if tool_widget.cget("relief") != new_relief:
+                tool_widget.config(relief=new_relief)
+        # Note sur getToolWidget(self.id) : Cette conversion suppose
+        # que votre objet self.toolbar possède une méthode
+        # pour retrouver le widget correspondant à un identifiant.
+        # Si ce n'est pas le cas, vous devrez peut-être stocker une référence au bouton
+        # lors de sa création dans la barre d'outils.
 
     def updateToolBitmap(self, bitmapName):
         # TODO :
@@ -3872,7 +4765,42 @@ Points clés:
         # if disable:
         #     self.toolbar.EnableTool(self.id, False)
         # self.toolbar.Realize()
-        pass
+        """
+        Met à jour l'icône de l'outil dans la barre d'outils.
+        """
+        if not self.toolbar:
+            return  # La barre d'outils est masquée
+
+        # # 1. Récupérer la nouvelle image depuis votre gestionnaire de ressources
+        # # (supposons une méthode get_image_by_name ou similaire dans votre app)
+        # # from . import icons  # ou votre module de gestion d'icônes
+        # # new_image = icons.get_image(bitmapName)
+        # new_image = getIcon(bitmapName)
+
+        # On récupère le widget via la nouvelle méthode qui parcourt la liste
+        tool_widget = self.toolbar.getToolWidget(self.id)
+        if tool_widget:
+            # En Tkinter, on peut changer l'image même si le bouton est désactivé (state='disabled')
+            # Contrairement à wxGTK, il n'y a pas besoin de réactiver/désactiver.
+
+            # Note importante : il faut garder une référence à l'image pour éviter
+            # que le Garbage Collector ne la supprime.
+            # Importation de votre gestionnaire d'icônes Tkinter
+            new_image = getIcon(bitmapName)
+
+            # Mise à jour standard Tkinter
+            tool_widget.image = new_image  # Référence pour le GC
+            tool_widget.config(image=new_image)
+
+            # 'Realize()' n'est pas nécessaire en Tkinter,
+            # la mise à jour est immédiate après .config()
+        # Pourquoi c'est mieux pour vous :
+        #
+        #     Structure inchangée : self.tools reste une list(), ce qui évite de casser les boucles for tool in self.tools que vous avez peut-être ailleurs dans le code.
+        #
+        #     Transparence : L'ajout de l'attribut ui_command_id directement sur le widget bouton est une pratique courante en Tkinter pour lier des données métier à des objets graphiques sans créer de structures de données complexes.
+        #
+        #     Compatibilité : Les méthodes GetToolState et ToggleTool dans toolbarttk.ToolBar simulent le comportement de wxWidgets tout en travaillant sur votre liste de widgets Tkinter existante.
 
     def updateMenuItems(self, paused):
         log.debug("EffortStop.updateMenuItems(paused=%s)", paused)
@@ -4478,7 +5406,8 @@ class DialogCommand(base_uicommandtk.UICommand):
         # for event in wx.EVT_CLOSE, wx.EVT_BUTTON:
         #     self.dialog.Bind(event, self.onClose)
         # (lie les événements de fermeture et de bouton à la méthode onClose)
-        self.dialog.Show()
+        # self.dialog.Show()
+        self.dialog.withdraw()
 
     def onClose(self, event=None):
         """
@@ -5026,10 +5955,14 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
         pour détecter les touches Escape et Ctrl+Flèche Bas et effectuer les actions appropriées.
     - `doCommand (self, event)` : Cette méthode n'est pas utilisée dans cette classe.
     """
+    # La conversion de la classe Search pour Tkinter nécessite de
+    # remplacer les mécanismes de liaison d'événements (Bind) par bind
+    # et de s'adapter à la manière dont Tkinter gère le focus et les touches modificatrices.
     def __init__(self, *args, **kwargs):
         self.searchControl = None
         self.__bound = False
         super().__init__(*args, helpText=_("Search"), **kwargs)
+        # On s'assure que le viewer supporte la recherche
         assert self.viewer.isSearchable()
 
     def onFind(
@@ -5063,6 +5996,8 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
             regularExpression,
         ) = self.viewer.getSearchFilter()
         # pylint: disable=W0201
+        # Initialisation du widget de recherche (doit être converti en widget Tkinter)
+        # Note : widgets.SearchCtrl doit être une classe ttk.Frame personnalisée
         self.searchControl = widgetstk.searchctrltk.SearchCtrl(
             toolbar,
             # style=wx.TE_PROCESS_ENTER,
@@ -5074,78 +6009,121 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
             value=searchString,
         )
         # toolbar.AddControl(self.searchControl)  # code wx à remplacer !
-        # toolbar.insert(self.searchControl)  # TODO : A remplacer !?
+        # toolbar.add(self.searchControl)  # Use add method for Tkinter
+        # toolbar.insert(self.searchControl)  # A remplacer !?
+        # Intégration dans la barre d'outils (utilisation de pack comme dans toolbarttk.py)
         self.searchControl.pack(side=tk.LEFT, padx=2, pady=2)  # Use pack method
         self.bindKeyDownInViewer()
         self.bindKeyDownInSearchCtrl()
+        return self.searchControl
 
     def bindKeyDownInViewer(self):
-        """ Lie l'événement `wx.EVT_KEY_DOWN` à la méthode `onViewerKeyDown`
+        """ Lie l'événement `CCtrl+F` à la méthode `onViewerKeyDown`
         pour détecter la combinaison de touches Ctrl+F.
 
-        Bind wx.EVT_KEY_DOWN to self.onViewerKeyDown so we can catch
-        Ctrl-F."""
-        # TODO
+        Lie Ctrl+F dans le viewer pour donner le focus à la recherche.
+        """
         widget = self.viewer.getWidget()
-        try:
-            window = widget.GetMainWindow()
-        except AttributeError:
-            window = widget
+        # try:
+        #     window = widget.GetMainWindow()
+        # except AttributeError:
+        #     window = widget
         # window.Bind(wx.EVT_KEY_DOWN, self.onViewerKeyDown)
+        # En Tkinter, on lie souvent à l'événement virtuel ou à la combinaison directe
+        # <Control-f> gère le "Cmd" sur Mac et "Ctrl" sur Windows/Linux automatiquement dans la plupart des configs
+        widget.bind("<Control-f>", self.onViewerKeyDown)
+        widget.bind("<Control-F>", self.onViewerKeyDown)
 
     def bindKeyDownInSearchCtrl(self):
-        """ Lie l'événement `wx.EVT_KEY_DOWN` au contrôle de recherche
+        """ Lie l'événement `Alt+Down` au contrôle de recherche
         pour détecter les touches Escape et Ctrl+Flèche Bas.
 
-        Bind wx.EVT_KEY_DOWN to self.onSearchCtrlKeyDown so we can catch
-        the Escape key and drop down the menu on Ctrl-Down."""
-        # TODO
-        # self.searchControl.getTextCtrl().Bind(wx.EVT_KEY_DOWN, self.onSearchCtrlKeyDown)
-        pass
+        Lie les touches Escape et Alt+Down dans le contrôle de recherche."""
+        # On accède à l'Entry interne du SearchCtrl
+        entry = self.searchControl.getTextCtrl()
+        entry.bind("<Escape>", self.onSearchCtrlKeyDown)
+        entry.bind("<Alt-Down>", self.onSearchCtrlKeyDown)
 
     def unbind(self, window, id_):
         """Détache les liaisons d'événements du contrôle de recherche."""
         self.__bound = False
-        # super().unbind(window, id_)
+        # super().unbind n'est souvent pas nécessaire en Tkinter si le widget est détruit,
+        # mais on suit la structure existante.
+        widget = self.viewer.getWidget()
+        widget.unbind("<Control-f>")
+        widget.unbind("<Control-F>")
 
     def onViewerKeyDown(self, event=None):
         """Gère l'événement `wx.EVT_KEY_DOWN` sur la vue pour
         détecter la combinaison de touches Ctrl+F et déplacer le focus vers le contrôle de recherche.
 
-        On Ctrl-F, move focus to the search control."""
-        if event.KeyCode == ord("F") and event.CmdDown() and not event.AltDown():
-            self.searchControl.SetFocus()
-        else:
-            event.Skip()
+        Sur Ctrl-F, déplace le focus vers le contrôle de recherche."""
+        # if event.KeyCode == ord("F") and event.CmdDown() and not event.AltDown():
+        #     self.searchControl.SetFocus()
+        # else:
+        #     event.Skip()
+        if self.searchControl:
+            self.searchControl.setFocus()
+        return "break"  # Empêche la propagation de l'événement dans Tkinter
 
     def onSearchCtrlKeyDown(self, event=None):
         """Gère l'événement `wx.EVT_KEY_DOWN` sur le contrôle de recherche
         pour détecter les touches Escape et Ctrl+Flèche Bas et effectuer les actions appropriées.
 
-        On Escape, move focus to the viewer, on Ctrl-Down popup the
-        menu."""
-        # TODO
-        # if event.KeyCode == wx.WXK_ESCAPE:
-        #     self.viewer.SetFocus()
-        # elif event.KeyCode == wx.WXK_DOWN and event.AltDown():
-        #     self.searchControl.PopupMenu()
-        # else:
-        #     event.Skip()
-        pass
+        Gère Escape (focus au viewer) et Alt-Down (menu)."""
+        if event.keysym == "Escape":
+            self.viewer.getWidget().focus_set()
+            return "break"
+        elif event.keysym == "Down" and (event.state & 0x0008): # 0x0008 est souvent Alt
+            if hasattr(self.searchControl, 'showMenu'):
+                self.searchControl.showMenu()
+            return "break"
 
     def doCommand(self, event=None):
         """
         Cette méthode n'est pas utilisée dans cette classe.
+        Non utilisé, la recherche est pilotée par les événements du SearchCtrl.
         """
         pass  # non utilisé
+    # Points clés de la conversion Tkinter :
+    #
+    #     Gestion des événements (bind) :
+    #
+    #         wx.EVT_KEY_DOWN est remplacé par des séquences spécifiques comme <Control-f> ou <Escape>.
+    #
+    #         Le retour "break" à la fin des gestionnaires d'événements est l'équivalent Tkinter pour empêcher l'événement de se propager aux autres liaisons (similaire à ne pas appeler event.Skip() en wx).
+    #
+    #     Focus :
+    #
+    #         SetFocus() devient focus_set() (ou une méthode setFocus personnalisée dans votre SearchCtrl).
+    #
+    #     Touches Modificatrices :
+    #
+    #         Au lieu de event.CmdDown(), on utilise les séquences de bind de Tkinter (ex: <Control-f>) qui sont plus explicites. Pour Alt, on vérifie event.state ou on utilise le bind <Alt-Down>.
+    #
+    #     Structure du Widget :
+    #
+    #         La méthode appendToToolBar utilise pack(side=tk.LEFT) pour rester cohérente avec la gestion des outils dans votre toolbarttk.py.
+    #
+    #     Recherche de la fenêtre :
+    #
+    #         Tkinter n'a pas besoin de GetMainWindow(). On lie directement l'événement au widget de la vue (self.viewer.getWidget()).
 
 
 class ToolbarChoiceCommandMixin(object):
     """
     Mixin pour ajouter un contrôle de choix à une barre d'outils.
 
-    Ce mixin fournit des fonctionnalités pour ajouter un contrôle de choix à une barre d'outils
+    Ce mixin fournit des fonctionnalités pour ajouter un contrôle de choix
+    (combobox / option menu) dans la barre d'outils
     et gérer les événements liés aux sélections.
+
+    Les classes qui utilisent ce mixin doivent fournir soit :
+     - choiceLabels : liste des labels à afficher (optionnel)
+     - choiceData   : liste des valeurs « métiers » correspondantes aux labels (optionnel)
+     - default_choice : label par défaut (optionnel)
+    Ou bien surcharger getChoices()/getChoiceData()/getDefaultChoice().
+    et doivent implémenter onChoiceChanged(value) ou doChoice(value) si besoin.
 
     **Attribut :**
     - `currentChoice` : L'indice de l'option actuellement sélectionnée.
@@ -5161,69 +6139,346 @@ class ToolbarChoiceCommandMixin(object):
     - `setChoice (choice)` : Définit l'option sélectionnée programmatiquement.
     - `enable (enable=True)` : Active ou désactive le contrôle de choix.
     """
+
     def __init__(self, *args, **kwargs):
+        self._var = None
+        self._widget = None
+        self._choices = None
         self.currentChoice = None
         self.choiceCtrl = None
         super().__init__(*args, **kwargs)
 
     def appendToToolBar(self, toolbar):
-        """Ajoutez notre contrôle de choix à la barre d’outils.
+        """Ajoutez le contrôle de choix à la barre d’outils.
 
-        Ajoute le contrôle de choix à la barre d'outils spécifiée."""
-        log.info("ToobarChoice.appendToToolBar ajoute le contrôle de choix (à remplir).")
-        # TODO
-        # # pylint: disable=W0201
-        # self.choiceCtrl = wx.Choice(toolbar, choices=self.choiceLabels)
-        # self.choiceCtrl =
-        # self.currentChoice = self.choiceCtrl.Selection
-        # self.currentChoice =
-        # self.choiceCtrl.Bind(wx.EVT_CHOICE, self.onChoice)
+        Ajoute le contrôle de choix (ttk.Combobox) à la barre d'outils spécifiée.
 
-        # toolbar.AddControl(self.choiceCtrl)
-        pass
+        Crée et ajoute le contrôle de choix à la toolbar (conteneur tk.Frame).
+        Retourne systématiquement le widget créé (obligatoire pour ToolBar.appendUICommand).
+        """
+        log.debug("ToolbarChoiceCommandMixin.appendToToolBar : création du contrôle de choix pour %r", getattr(self, "menuText", self))
+
+        # Création de la Combobox avec les libellés définis dans la classe dérivée
+        # choices = list(self.getChoices())
+        choices = self.getChoices()
+        # choices = self.choiceLabels  # TODO : à essayer
+        choice_data = self.getChoiceData()
+        default_label = self.getDefaultChoice()
+        # Variable liée au contrôle
+        self._var = tk.StringVar(value=default_label)
+
+        # # self.choiceCtrl = wx.Choice(toolbar, choices=self.choiceLabels)
+        # # self.choiceCtrl = None  # TODO : Créer le contrôle de choix approprié
+        # self.choiceCtrl = ttk.Combobox(
+        #     toolbar,
+        #     values=self.choiceLabels,  # Liste des options définies dans la classe dérivée
+        #     state="readonly",  # Pour imiter le wx.Choice pour empêcher la saisie de texte libre
+        # )
+        # # Initialisation de la sélection
+        # self.currentChoice = 0
+        # self.choiceCtrl.current(self.currentChoice)
+        #
+        # # Liaison de l'événement de sélection (équivalent de EVT_CHOICE)
+        # self.choiceCtrl.bind("<<ComboboxSelected>>", self.onChoice)
+        #
+        # # Ajout à la barre d'outils (en utilisant pack comme établi précédemment)
+        # self.choiceCtrl.pack(side=tk.LEFT, padx=5, pady=2)
+        # Utiliser ttk.Combobox en lecture seule si on a des choix
+        if choices:
+            # largeur adaptative minimale
+            width = max(8, max((len(str(c)) for c in choices), default=8))
+            # combo = ttk.Combobox(toolbar, textvariable=self._var,
+            #                      values=choices, state="readonly",
+            #                      width=max(8, max((len(str(c)) for c in choices), default=8)))
+            combo = ttk.Combobox(
+                toolbar,
+                textvariable=self._var,
+                values=choices,
+                state="readonly",
+                width=width,
+            )
+            # Bind selection event
+            combo.bind("<<ComboboxSelected>>", self._on_combobox_selected)
+            # accessibilité clavier : Enter déclenche aussi le handler
+            combo.bind("<Return>", self._on_combobox_selected)
+            combo.pack(side="left", padx=2, pady=2)
+            widget = combo
+        else:
+            # fallback simple si pas d'option : bouton déroulant vide via OptionMenu si combobox non disponible
+            opt = tk.OptionMenu(toolbar, self._var, "")
+            opt.pack(side="left", padx=2, pady=2)
+            widget = opt
+
+        # stocker la référence pour accès ultérieur (onUpdateUI, ToolBar detection heuristique, etc.) attendues par le reste du code
+        self._widget = widget
+        try:
+            # certaines classes utilisent self._kwargs['button']
+            self._kwargs['button'] = widget
+        except Exception:
+            # si self._kwargs n'existe pas ou n'accepte pas d'écriture, ignorer silencieusement
+            # Certaines instances n'ont pas _kwargs au moment de l'appel
+            pass
+
+        # initialiser currentChoice si data présent
+        # Mémoriser la liste des labels pour retrouver l'index plus tard
+        self._choices = choices
+
+        # si un réglage existe (ex: boolean stored), permettre setChoice() d'utiliser l'information
+        # currentChoice index utile pour setChoice()
+        try:
+            # # garder une trace du choix courant index
+            # if choices and default_label in choices:
+            #     self.currentChoice = choices.index(default_label)
+            # else:
+            #     self.currentChoice = 0
+            self.currentChoice = choices.index(default_label) if default_label in choices else 0
+        except Exception:
+            self.currentChoice = 0
+
+        log.debug("ToolbarChoiceCommandMixin.appendToToolBar : contrôle de choix créé %r", widget)
+        # return self.choiceCtrl
+        return widget
 
     def unbind(self, window, id_):
-        """Détache les liaisons d'événements du contrôle de choix."""
-        log.info("ToobarChoice.unbind détache les liaisons d'événements du contrôle de choix. (à remplir)")
-        # TODO
+        """Détache les liaisons d'événements du contrôle de choix.
+
+        détacher handlers; si widget détruit ailleurs il faut être tolérant.
+        """
+        # log.info("ToobarChoice.unbind détache les liaisons d'événements du contrôle de choix. (à remplir)")
+        # # TODO
         # if self.choiceCtrl is not None:
-        #     self.choiceCtrl.Unbind(wx.EVT_CHOICE)
+        #     # if self.choiceCtrl:
+        #     # self.choiceCtrl.Unbind(wx.EVT_CHOICE)
+        #     self.choiceCtrl.unbind("<<ComboboxSelected>>")
         #     self.choiceCtrl = None
-        # super().unbind(window, id_)
-        pass
+        # # super().unbind(window, id_)
+        # # Note: En Tkinter, super().unbind nécessite souvent l'identifiant
+        # if hasattr(super(), 'unbind'):
+        #     super().unbind(window, id_)
+        if self._widget is None:
+            return
+        try:
+            self._widget.unbind("<<ComboboxSelected>>")
+            self._widget.unbind("<Return>")
+        except Exception:
+            pass
+            # ne détruisons pas le widget ici systématiquement (ToolBar gère la destruction),
+            # mais permettre la destruction si demandé explicitement
+        try:
+            self._widget.destroy()
+        except Exception:
+            pass
+        self._widget = None
 
     def onChoice(self, event=None):
         """ Gère l'événement de sélection d'une option dans le contrôle de choix.
 
         L'utilisateur a sélectionné un choix dans le contrôle de choix."""
-        choiceIndex = event.GetInt()
+        # Récupère l'index de l'élément sélectionné
+        choiceIndex = self.choiceCtrl.current()
         if choiceIndex == self.currentChoice:
             return
         self.currentChoice = choiceIndex
-        self.doChoice(self.choiceData[choiceIndex])
+        # Appelle la méthode métier avec les données associées à l'index
+        self.doChoice(self.choiceData[choiceIndex])  # Données associées à l'option sélectionnée.
+
+    def _on_combobox_selected(self, event=None):
+        value_label = self._var.get()
+        # retrouver index
+        index = None
+        # if self._choices:
+        if getattr(self, "_choices", None):
+            try:
+                index = self._choices.index(value_label)
+            except ValueError:
+                index = None
+
+                # déterminer la donnée métier (si fournie)
+        choice_data = None
+        data_list = self.getChoiceData()
+        choice_data = None
+        if data_list is not None and index is not None and index < len(data_list):
+            choice_data = data_list[index]
+        else:
+            choice_data = value_label
+
+        # Priorité aux handlers : méthode explicite onChoiceChanged(value)
+        # Appeler le handler le plus spécifique disponible
+        if hasattr(self, "onChoiceChanged") and callable(self.onChoiceChanged):
+            try:
+                # self.onChoiceChanged(value)
+                self.onChoiceChanged(choice_data)
+            except TypeError:
+                # accept both signatures onChoiceChanged(value) or onChoiceChanged()
+                # supporter les signatures onChoiceChanged() ou onChoiceChanged(value)
+                self.onChoiceChanged()
+            return
+
+        if hasattr(self, "doChoice") and callable(self.doChoice):
+            try:
+                self.doChoice(choice_data)
+            except TypeError:
+                self.doChoice()
+            return
+
+        # fallback générique : doCommand / onCommandActivate si rien d'autre
+        # elif hasattr(self, "doCommand") and callable(self.doCommand):
+        if hasattr(self, "doCommand") and callable(self.doCommand):
+            try:
+                # self.doCommand(value)
+                self.doCommand(choice_data)
+            except TypeError:
+                self.doCommand()
+            return
+
+        # elif hasattr(self, "onCommandActivate") and callable(self.onCommandActivate):
+        if hasattr(self, "onCommandActivate") and callable(self.onCommandActivate):
+            self.onCommandActivate()
 
     def doChoice(self, choice):
-        """Méthode abstraite à implémenter dans les classes dérivées pour gérer
-        l'action à effectuer en fonction de l'option sélectionnée."""
+        """Méthode abstraite par défaut à implémenter dans les classes dérivées
+        pour gérer l'action à effectuer en fonction de l'option sélectionnée."""
         raise NotImplementedError  # pragma: no cover
 
     def doCommand(self, event=None):
         """Cette méthode n'est pas utilisée."""
         pass  # Non utilisée
 
+    def getChoices(self):
+        """
+        Retourne la liste de labels à afficher.
+
+        Returns:
+            La liste de labels à afficher
+        """
+        # # retourne la liste de labels à afficher
+        # if hasattr(self, "choiceLabels"):
+        #     return list(self.choiceLabels)
+        # # fallback : chercher attribut 'choices' sinon liste vide
+        # return getattr(self, "choices", []) or []
+        return list(getattr(self, "choiceLabels", []) or [])
+
+    def getChoiceData(self):
+        """
+        Retourne les données métiers si définies (mappage parallèle à getChoices).
+
+        Returns:
+            Les données métiers si définies (mappage parallèle à getChoices)
+        """
+        # retourne les données métiers si définies (mappage parallèle à getChoices)
+        return getattr(self, "choiceData", None)
+
+    def getDefaultChoice(self):
+        """
+        Retourne la valeur par défaut.
+
+        Returns:
+            valeur par défaut : default_choice ou premier label
+        """
+        # valeur par défaut : default_choice ou premier label
+        if hasattr(self, "default_choice"):
+            return self.default_choice
+        choices = self.getChoices()
+        return choices[0] if choices else ""
+
     def setChoice(self, choice):
-        """Définit l'option sélectionnée programmatiquement.
+        """Définir l'option sélectionnée programmatiquement.
 
-        Définit par le programme le choix actuel dans le contrôle de choix."""
-        if self.choiceCtrl is not None:
-            index = self.choiceData.index(choice)
-            self.choiceCtrl.Selection = index
-            self.currentChoice = index
+        Définit par le programme le choix actuel dans le contrôle de choix.
 
-    def enable(self, enable=True):
+        Args:
+            choice : 'choice' peut être : un index, un label, ou une valeur de choiceData.
+        """
+        # if self.choiceCtrl is not None:
+        #     try:
+        #         index = self.choiceData.index(choice)
+        #         # self.choiceCtrl.Selection = index
+        #         self.choiceCtrl.current(index)
+        #         self.currentChoice = index
+        #     except ValueError:
+        #         # Le choix n'est pas dans la liste de données
+        #         pass
+
+        # if not self._widget or not self._choices:
+        if not getattr(self, "_widget", None) or not getattr(self, "_choices", None):
+            return
+        # si index
+        if isinstance(choice, int):
+            # idx = choice if 0 <= choice < len(self._choices) else None
+            # if idx is not None:
+            if 0 <= choice < len(self._choices):
+                # label = self._choices[idx]
+                label = self._choices[choice]
+                self._var.set(label)
+                # self.currentChoice = idx
+                self.currentChoice = choice
+                return
+        # si valeur métier dans choiceData
+        data = self.getChoiceData()
+        if data is not None:
+            try:
+                idx = list(data).index(choice)
+                label = self._choices[idx]
+                self._var.set(label)
+                self.currentChoice = idx
+                return
+            except ValueError:
+                pass
+        # si label
+        try:
+            idx = self._choices.index(choice)
+            self._var.set(self._choices[idx])
+            self.currentChoice = idx
+        except ValueError:
+            # valeur non trouvée : no-op
+            return
+
+    def enable(self, enabled=True):
         """Active ou désactive le contrôle de choix."""
-        if self.choiceCtrl is not None:
-            self.choiceCtrl.Enable(enable)
+        # if self.choiceCtrl is not None:
+        #     # self.choiceCtrl.Enable(enabled)
+        #     state = "readonly" if enabled else "disabled"  # ou tk.DISABLED
+        #     self.choiceCtrl.config(state=state)
+        # if self._widget is None:
+        if not getattr(self, "_widget", None):
+            return
+        state = "readonly" if enabled else "disabled"
+        try:
+            self._widget.config(state=state)
+        except Exception:
+            try:
+                # # OptionMenu n'utilise pas state de la même façon
+                # # OptionMenu ne supporte pas toujours state
+                # if enabled:
+                #     self._widget.config(state="normal")
+                # else:
+                #     self._widget.config(state="disabled")
+                self._widget.config(state="normal" if enabled else "disabled")
+            except Exception:
+                pass
+                # Points clés de la conversion pour Tkinter :
+    #
+    #     Widget Utilisé : Le wx.Choice est remplacé par ttk.Combobox.
+    #     L'option state="readonly" est cruciale pour que l'utilisateur ne puisse choisir
+    #     que parmi les options proposées, sans pouvoir taper du texte.
+    #
+    #     L'Événement : L'événement wx.EVT_CHOICE devient l'événement virtuel Tkinter <<ComboboxSelected>>.
+    #
+    #     Gestion de l'Index :
+    #
+    #         En wx, on utilise Selection.
+    #
+    #         En Tkinter, on utilise la méthode .current() : appelée sans argument,
+    #         elle retourne l'index ; avec un argument entier, elle définit la sélection.
+    #
+    #     L'État (Enable/Disable) :
+    #
+    #         Pour désactiver un ttk.Combobox, on passe l'état à tk.DISABLED.
+    #
+    #         Pour le réactiver, on le repasse à "readonly" (et non simplement tk.NORMAL)
+    #         pour conserver la protection contre l'écriture manuelle.
+    #
+    #     Intégration ToolBar : La méthode appendToToolBar utilise pack(side=tk.LEFT) pour s'aligner avec les boutons et les séparateurs définis dans votre fichier toolbarttk.py.
 
 
 class EffortViewerAggregationChoice(
@@ -5723,15 +6978,20 @@ class ToggleAutoColumnResizing(settings_uicommandtk.UICheckCommand, ViewerComman
             helpText=_(
                 "When checked, automatically resize columns to fill" " available space"
             ),
+            kind="checkbutton",
+            is_checked=False,
             *args,
             **kwargs,
         )
-        # wx.CallAfter(self.updateWidget)
+        # wx.CallAfter(self.updateWidget)  # Méthode wxPython !
         # self.updateWidget.after()  # Méthode tkinter !
 
     def updateWidget(self):
         """Met à jour l'état du redimensionnement automatique dans le widget de la vue."""
-        self.viewer.getWidget().ToggleAutoResizing(self.isSettingChecked())
+        # self.viewer.getWidget().ToggleAutoResizing(self.isSettingChecked())
+        widget = self.viewer.getWidget()
+        if hasattr(widget, "ToggleAutoResizing"):
+            widget.ToggleAutoResizing(self.isSettingChecked())
 
     def isSettingChecked(self):
         """Vérifie si le redimensionnement automatique est actuellement activé."""
@@ -5741,10 +7001,22 @@ class ToggleAutoColumnResizing(settings_uicommandtk.UICheckCommand, ViewerComman
 
     def doCommand(self, event=None):
         """Enregistre l'état du redimensionnement automatique dans les paramètres de l'application et met à jour le widget."""
-        self.settings.set(
-            self.viewer.settingsSection(),
-            "columnautoresizing",
-            str(self._isMenuItemChecked(event)),
+        state = self._variable.get()
+        # self.settings.set(
+        #     self.viewer.settingsSection(),
+        #     "columnautoresizing",
+        #     str(self._isMenuItemChecked(event)),
+        # )
+        # if state:
+        #     self.settings.setboolean(
+        #         self.viewer.settingsSection(), "columnautoresizing", True
+        #     )
+        # else:
+        #     self.settings.setboolean(
+        #         self.viewer.settingsSection(), "columnautoresizing", False
+        #     )
+        self.settings.setboolean(
+            self.viewer.settingsSection(), "columnautoresizing", state
         )
         self.updateWidget()
 
@@ -5789,8 +7061,19 @@ class ViewerPieChartAngle(ViewerCommand, settings_uicommandtk.SettingsCommand):
         #     value=self.getCurrentAngle(),
         #     size=(120, -1),
         # )
+        self.sliderCtrl = ttk.Scale(
+            toolbar,
+            from_=0,
+            to=90,
+            orient="horizontal",
+        )
+        self.sliderCtrl.set(self.getCurrentAngle())
         # self.sliderCtrl.Bind(wx.EVT_SLIDER, self.onSlider)
+        self.sliderCtrl.bind("<ButtonRelease-1>", self.onSlider)  # TODO : Adapter pour Tkinter
         # toolbar.AddControl(self.sliderCtrl)
+        # toolbar.AddWidget(self.sliderCtrl)  # TODO : Adapter pour Tkinter
+        self.setCurrentAngle()
+        self.sliderCtrl.pack(side="left")  # TODO : Adapter pour Tkinter
         pass
 
     def unbind(self, window, itemId):
@@ -5821,7 +7104,8 @@ class ViewerPieChartAngle(ViewerCommand, settings_uicommandtk.SettingsCommand):
             self.settings.setint(
                 self.viewer.settingsSection(),
                 "piechartangle",
-                self.sliderCtrl.GetValue(),
+                # self.sliderCtrl.GetValue(),
+                int(self.sliderCtrl.get()),  # TODO : Adapter pour Tkinter
             )
 
 
@@ -5917,15 +7201,32 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
         # TODO : a remplacer !
         # # pylint: disable=W0201
         # self.checkboxCtrl = wx.CheckBox(toolbar, label=self.menuText)
+        # self.checkboxCtrl = ttk.Checkbutton(toolbar, text=self.menuText)
+        self.checkboxCtrl = ttk.Checkbutton(
+            toolbar,
+            text=self.menuText,
+            variable=self._variable,  # Lier à la tk.BooleanVar du UICheckCommand
+            # command=self.doCommand  # Exécute doCommand quand le bouton est cliqué
+            command=self.onCheck
+        )
         # self.checkboxCtrl.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        # self.checkboxCtrl.bind("<ButtonRelease-1>", self.onCheck)  # A Adapter pour Tkinter
         # toolbar.AddControl(self.checkboxCtrl)
+        # self.checkboxCtrl.pack(side="left")  # A Adapter pour Tkinter
+        self.checkboxCtrl.pack(side=tk.LEFT, padx=2, pady=2)
+        # S'assurer que l'état initial du checkbox est correct
+        self._variable.set(self.isSettingChecked())
+        # self.tools.append(self.checkboxCtrl)  # TODO : Si vous voulez les suivre dans une liste
 
     def unbind(self, window, itemId):
         """Détache les liaisons d'événements de la case à cocher."""
         # if self.checkboxCtrl is not None:
-        #     self.checkboxCtrl.Unbind(wx.EVT_CHECKBOX)
-        #     self.checkboxCtrl = None
-        # super().unbind(window, itemId)
+        #     # self.checkboxCtrl.Unbind(wx.EVT_CHECKBOX)
+        #     self.checkboxCtrl.unbind("<ButtonRelease-1>")  # A Adapter pour Tkinter
+        if self.checkboxCtrl:
+            self.checkboxCtrl.destroy()  # Supprime le widget de l'interface
+            self.checkboxCtrl = None
+        super().unbind(window, itemId)
 
     def isSettingChecked(self):
         """Vérifie si l'arrondi au supérieur est activé."""
@@ -5987,6 +7288,7 @@ class ConsolidateEffortsPerTask(settings_uicommandtk.UICheckCommand, ViewerComma
             **kwargs,
         )
 
+    # TODO
     def appendToToolBar(self, toolbar):
         """Ajoute la case à cocher à la barre d'outils.
 
