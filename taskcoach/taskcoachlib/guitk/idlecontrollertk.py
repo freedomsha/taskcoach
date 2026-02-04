@@ -44,7 +44,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib.command import NewEffortCommand, EditEffortStopDateTimeCommand
 from taskcoachlib.domain import effort, date
 from taskcoachlib.i18n import _
-from taskcoachlib.notify import NotificationFrameBase, NotificationCenter
+# from taskcoachlib.notify import NotificationFrameBase, NotificationCenter  # En cours de conversion
+from taskcoachlib.notify import notifier_universaltk
 from taskcoachlib.patterns import Observer
 from taskcoachlib.powermgt import idletk
 from pubsub import pub
