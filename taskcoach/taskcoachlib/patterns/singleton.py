@@ -32,14 +32,17 @@ class Singleton(type):
         x(arg1, arg2, ...) se traduit grossièrement par type(x).__call__(x, arg1, ...).
         La classe object elle-même ne fournit pas cette méthode.
 
-        :param *args: Liste d'arguments de longueur variable.
-        :param **kwargs: Arguments de mots clés arbitraires.
-        :return:
+        Args :
+            *args: Liste d'arguments de longueur variable.
+            **kwargs: Arguments de mots clés arbitraires.
+
+        Returns :
+
         """
         if not class_.hasInstance():
             # pylint: disable=W0201
             class_.instance = super().__call__(*args, **kwargs)
-        # log.debug(f"Singleton.__call__ : retourne la classe instanciée {class_.instance.__class__.__name__}")
+        # log.debug(f"Singleton.__call__ : retourne la classe instanciée {class_.instance.__class__.__name__}")  # !!! Crée une boucle !!!
         return class_.instance
 
     def deleteInstance(class_):
