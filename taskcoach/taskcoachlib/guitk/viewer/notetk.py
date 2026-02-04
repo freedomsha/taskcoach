@@ -317,7 +317,7 @@ class BaseNoteViewer(mixintk.AttachmentDropTargetMixin,  # pylint: disable=W0223
         self._populate_tree()
 
         # # 3. Placement du widget dans le BaseNoteViewer Frame (self)
-        # widget.pack(side="top", fill="both", expand=True)  # Place le widget dans le BaseNoteViewer Frame
+        widget.pack(side="top", fill="both", expand=True)  # Place le widget dans le BaseNoteViewer Frame
 
         # # Configuration de la Treeview (équivalent à la fin de createWidget de note.py)
         # if self.hasOrderingColumn():
