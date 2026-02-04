@@ -126,7 +126,7 @@ class AutoColumnWidthMixin(object):
         self.__is_auto_resizing = False
         self.ResizeColumn = kwargs.pop("resizeableColumn", -1)
         self.ResizeColumnMinWidth = kwargs.pop("resizeableColumnMinWidth", 50)
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # TODO : Rendre le mixin non-coopératif
         log.debug("AutoColumnWidthMixin initialisé !")
 
     def SetResizeColumn(self, column):
