@@ -124,9 +124,13 @@ class _AutoWidthTree(autowidth.AutoColumnWidthMixin, ttk.Treeview):
         # super().__init__(*args, **kwargs)
         # Treeview de base pour simuler HyperTreeList
         super().__init__(parent, *args, columns=("Command",), show="tree", **kwargs)
-        self.column("#0", width=0, stretch=tk.NO) # Masquer la première colonne de l'arbre
-        self.column("Command", anchor="w", width=250)
+        self.column("#0", width=0, stretch=tk.NO)  # Masquer la première colonne de l'arbre
+        self.column("Command", anchor="w", width=250)  # ne pas mettre stretch=tk.NO, sinon l’auto-width sera bloqué
         self.heading("Command", text="Command")
+
+        # Activer l’auto-ajustement des colonnes
+        self.SetResizeColumn("Command")
+        self.bind("<Configure>", self._on_autowidth_resize)
 
     def GetRootItem(self):
         # Simuler la racine pour Treeview (qui est la chaîne vide)
@@ -144,8 +148,9 @@ class _AutoWidthTree(autowidth.AutoColumnWidthMixin, ttk.Treeview):
         # Stocker les données associées à l'item
         self.set(item, 'data', data)
 
-    def GetItemPyData(self, item): # Pour la compatibilité avec l'ancien code (commenté)
-        return self.GetItemData(item)
+    def GetItemPyData(self, item):  # Pour la compatibilité avec l'ancien code (commenté)
+        # return self.GetItemData(item)
+        return self._item_to_object[item]
 
     def SetItemPyData(self, item, data): # Pour la compatibilité avec l'ancien code (commenté)
         self.SetItemData(item, data)
