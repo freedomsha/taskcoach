@@ -169,7 +169,7 @@ class _SpinCtrl(EscapeKeyMixin, KillFocusAcceptsEditsMixin, ttk.Spinbox): # Remp
     def __init__(self, parent, item, column, owner, value, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.item = item
-        self.column = column
+        self.the_column = column
         self.owner = owner
         self.value = value
         self.bind("<FocusOut>", lambda event: self.stop_editing())
@@ -235,7 +235,7 @@ class BudgetCtrl(EscapeKeyMixin, KillFocusAcceptsEditsMixin, ttk.Frame): # Rempl
     def __init__(self, parent, item, column, owner, value):
         super().__init__(parent)
         self.item = item
-        self.column = column
+        self.the_column = column
         self.owner = owner
         hours, minutes, seconds = value.hoursMinutesSeconds()
         # Can't inherit from TimeDeltaCtrl because we need to override GetValue,
@@ -261,12 +261,12 @@ class BudgetCtrl(EscapeKeyMixin, KillFocusAcceptsEditsMixin, ttk.Frame): # Rempl
         pass  # À adapter selon les besoins
 
 
-class AmountCtrl(EscapeKeyMixin, KillFocusAcceptsEditsMixin, ttk.Frame): # Remplacement de hypertreelist.EditCtrl et Panel
+class AmountCtrl(EscapeKeyMixin, KillFocusAcceptsEditsMixin, ttk.Frame):  # Remplacement de hypertreelist.EditCtrl et Panel
     """Masked inline text control for editing amounts (floats >= 0)."""
     def __init__(self, parent, item, column, owner, value):
         super().__init__(parent)
         self.item = item
-        self.column = column
+        self.the_column = column
         self.owner = owner
         self.__float_ctrl = widgets.masked.AmountCtrl(self, value) #Adapter widgets.masked.AmountCtrl
         self.__float_ctrl.bind("<Key>", self.on_key_down)
@@ -297,7 +297,7 @@ class DateTimeCtrl(KillFocusAcceptsEditsMixin, ttk.Frame): # Remplacement de hyp
             start = kwargs.pop("startDateTime", date.Now())
         super().__init__(parent)
         self.item = item
-        self.column = column
+        self.the_column = column
         self.owner = owner
         settings = kwargs["settings"]
         starthour = settings.getint("view", "efforthourstart")
