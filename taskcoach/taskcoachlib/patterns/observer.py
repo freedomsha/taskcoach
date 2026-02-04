@@ -636,6 +636,7 @@ class Publisher(object, metaclass=singleton.Singleton):
         log.debug(f"Publisher.notifyObservers : lancé par {self.__class__.__name__} pour informer les observateurs de l'événement {event} avec sources {event.sources()}.")
         # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
         observers = dict()  # {observer: set([(type, source), ...])}  liste set ou dict ? TODO !
+        # observers = set()
         types = event.types()
         # Inclure les observateurs non inscrits pour une source d'événement spécifique :
         sources = event.sources() | {None}
@@ -646,8 +647,11 @@ class Publisher(object, metaclass=singleton.Singleton):
         log.debug(f"Publisher.notifyObservers : pour chaque sources {sources} de chaque types {types} récupère {eventTypesAndSources}.")
         for eventTypeAndSource in eventTypesAndSources:
             for observer in self.__observers.get(eventTypeAndSource, set()):
+                # for observer in self.__observers.get(eventTypeAndSource, dict()):
                 observers.setdefault(observer, set()).add(eventTypeAndSource)
-        for observer, eventTypesAndSources in observers.items():
+                # observers.setdefault(observer, []).append(eventTypeAndSource)
+        for observer, eventTypesAndSources in observers.items():  # AttributeError: 'set' object has no attribute 'items'
+            # for observer, eventTypesAndSources in observers.:
             subEvent = event.subEvent(*eventTypesAndSources)
             if subEvent.types():
                 observer(subEvent)
@@ -785,6 +789,8 @@ class Decorator(Observer):
 
 
 class ObservableCollection(object):
+    """
+    Classe mixin de base pour les collections observables."""
     # def __hash__(self) -> int:
     def __hash__(self):
         """Rendre les ObservableCollections appropriées comme clés dans les dictionnaires."""
