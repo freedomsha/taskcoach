@@ -915,6 +915,7 @@ class FileExportAsICalendar(FileExportCommand):
         return self.iocontroller.exportAsICalendar
 
     def enabled(self, event):
+        """ Indique si la commande est activable """
         return any(self.exportableViewer(viewer) for viewer in self.mainWindow().viewer)
 
     @staticmethod
@@ -950,6 +951,7 @@ class FileExportAsTodoTxt(FileExportCommand):
         return self.iocontroller.exportAsTodoTxt
 
     def enabled(self, event):
+        """ Indique si la commande est activable """
         return any(self.exportableViewer(viewer) for viewer in self.mainWindow().viewer)
 
     @staticmethod
