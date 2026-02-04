@@ -135,13 +135,15 @@ class addViewers:
     # def __init__(self, viewer_container: Any, task_file: Any, settings: settings):
     def __init__(self, viewer_container: Any, task_file: Any, settings):
         log.debug(f"addViewers.__init__ : Ajoute des visualiseurs dans le viewer_container={viewer_container} avec task_file={task_file} et settings={settings}.")
-        self.__viewer_container = viewer_container
+        self.__viewer_container = viewer_container  # Conteneur de visualiseurs
         self.__task_file = task_file
         self.__settings = settings
         self.floating = False  # Start viewers floating? Not when restoring layout
         self.__viewer_init_args = (viewer_container.containerWidget, task_file,
-                                   settings)
+                                   settings)  # si container est mainwindow pour wx, containerWidget est Tk
         self.__add_all_viewers()
+        # self.__viewer_container.__add_all_viewers()
+
         log.debug("addViewers.__init__ : Tout les visualiseurs sont ajoutés !")
 
     # def __call__(self):
@@ -160,9 +162,9 @@ class addViewers:
 
         # self._add_viewer(category.Categoryviewer)
         self._add_viewer(tasktk.Taskviewer)  # 24/11/2025 échoue, passe le 03/12
-        self._add_viewer(tasktk.TaskStatsViewer)  # 03/12/2025
+        # self._add_viewer(tasktk.TaskStatsViewer)  # 03/12/2025
         # self._add_viewer(tasktk.SquareTaskViewer)  # 03/12/2025 il faut trouver une alternative au module squaremap(wxpython)
-        self._add_viewer(tasktk.TimelineViewer)
+        # self._add_viewer(tasktk.TimelineViewer)
         # self._add_viewer(task.CalendarViewer)
         # self._add_viewer(task.HierarchicalCalendarViewer)
         # try:
@@ -171,9 +173,9 @@ class addViewers:
         #     pass
         # else:
         #     self._add_viewer(task.TaskInterdepsViewer)
-        self._add_viewer(efforttk.Effortviewer)
+        # self._add_viewer(efforttk.Effortviewer)
         # self._add_viewer(effort.EffortViewerForSelectedTasks)
-        self._add_viewer(categorytk.Categoryviewer)
+        # self._add_viewer(categorytk.Categoryviewer)
         # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
         #
         # # viewer_classes: List[Type[Viewer]] = [task.Taskviewer, category.Categoryviewer, effort.Effortviewer, note.Noteviewer]
@@ -280,8 +282,9 @@ class addViewers:
 
         # # Ajout du visualiseur au conteneur
         # # self.__viewer_container.addViewer(viewer)
-        # # self.__viewer_container.addViewer(viewer_instance)
-        self.__viewer_container.addViewer(viewer_instance, floating=self.floating)
+        self.__viewer_container.addViewer(viewer_instance)
+        # self.__viewer_container.addViewer(viewer_instance, floating=self.floating)
+        # self.__viewer_container.pack(fill="both", expand=True, padx=10, pady=5)
 
         # Sauf qu'il faut instancier le visualiseur avec le nom du parent.
         # Remplacez l'instanciation ici
