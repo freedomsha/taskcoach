@@ -126,7 +126,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
         Cette méthode vérifie périodiquement si le fichier associé a été modifié.
         Si une modification est détectée, la méthode `onFileChanged` est appelée.
         """
-        log.info("FilesystemPollerNotifier.run vérifie périodiquement si le fichier a été modifié.")
+        # log.info("FilesystemPollerNotifier.run vérifie périodiquement si le fichier a été modifié.")
         try:
             while not self.cancelled:
                 self.lock.acquire()
@@ -143,7 +143,7 @@ class FilesystemPollerNotifier(base.NotifierBase, threading.Thread):
                     self.lock.release()
 
                 self.evt.wait(10)
-                log.info("FilesystemPollerNotifier.run() terminé")
+                # log.info("FilesystemPollerNotifier.run() terminé")
         except TypeError:
             log.error("FileSystemPollerNotifier.run terminé avec une erreur de type", exc_info=True)
             pass
