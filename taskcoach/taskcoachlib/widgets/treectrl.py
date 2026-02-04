@@ -189,10 +189,15 @@ class TreeListCtrl(itemctrl.CtrlWithItemsMixin, itemctrl.CtrlWithColumnsMixin,
                  dragAndDropCommand, itemPopupMenu=None, columnPopupMenu=None,
                  *args, **kwargs):
         log.debug("TreeListCtrl.__init__ : initialisation du contrôle de liste en arbre.")
+        # Fenêtre principale pour la gestion du focus avec AuiManager
         self.__adapter = parent
+        # Liste des objets actuellement sélectionnés
         self.__selection = []
+        # Information sur le double-clic de l'utilisateur
         self.__user_double_clicked = False
+        # Liste des colonnes qui peuvent contenir des images
         self.__columns_with_images = []
+        # Police par défaut
         self.__default_font = wx.NORMAL_FONT
         # ajout d'attribut :
         self._editCtrl = None  # Initialise explicitement ici
