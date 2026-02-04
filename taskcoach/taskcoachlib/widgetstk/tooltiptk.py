@@ -1,3 +1,20 @@
+"""
+Task Coach - Your friendly task manager
+Copyright (C) 2004-2016 Task Coach developers <developers@taskcoach.org>
+
+Task Coach is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Task Coach is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 # Malheureusement, je ne peux pas convertir directement le fichier tooltip.py de wxPython à Tkinter.
 # C'est une tâche complexe qui demande une connaissance approfondie des deux frameworks, et une simple conversion ligne par ligne n'est pas possible en raison de leurs architectures et de leurs systèmes de gestion d'événements fondamentalement différents.
 #
@@ -88,11 +105,75 @@
 # et les variations de systèmes d'exploitation de la même manière.
 # N'hésite pas si tu as d'autres questions !
 
+# Fonctionnalités de base :
+#
+# Affichage et masquage : Le code actuel gère bien l'affichage et le masquage
+#                         des info-bulles à l'aide de tkinter.Toplevel
+#                         et des événements <Enter> et <Leave>.
+#                         La temporisation avec .after() est également un bon point.
+# Positionnement : Le positionnement de l'info-bulle avec wm_geometry est fonctionnel.
+# Personnalisation : L'utilisation de tk.Label permet de personnaliser
+#                    l'apparence de l'info-bulle (couleur de fond, bordure, etc.).
+# Gestion de la destruction : La destruction correcte de l'info-bulle avec destroy() est assurée.
+#
+# Compléments et Améliorations :
+#
+# Gestion du texte multiligne :
+# Le code utilise textwrap pour gérer le texte multiligne.
+# Il est important de s'assurer que la largeur du texte est correctement calculée
+# pour éviter les problèmes d'affichage.
+#
+# Compatibilité avec différents widgets :
+# Le code doit être compatible avec différents types de widgets Tkinter
+# (boutons, labels, entrées, etc.).
+# Il faut s'assurer que la méthode _show_tooltip fonctionne correctement
+# quel que soit le widget survolé.
+#
+# Délai d'affichage et de masquage :
+# Il serait utile de pouvoir configurer les délais d'affichage et de masquage de l'info-bulle.
+# Cela permettrait d'éviter les apparitions/disparitions intempestives.
+#
+# Positionnement avancé :
+# Dans certains cas, il peut être nécessaire de positionner l'info-bulle
+# par rapport au curseur de la souris plutôt qu'au widget lui-même.
+# Cela peut améliorer l'ergonomie dans certaines situations.
+#
+# Thèmes et styles :
+# Si votre application utilise des thèmes Tkinter,
+# il serait bon d'intégrer la gestion des thèmes dans le code de l'info-bulle
+# pour assurer une apparence cohérente.
+#
+# Gestion des erreurs :
+# Ajouter une gestion des erreurs pour éviter que des problèmes
+# lors de l'affichage de l'info-bulle ne fassent planter l'application.
+#
+# Vérification de l'existence de _tooltip :
+# Dans la méthode _hide_tooltip, il serait plus sûr de vérifier
+# si l'attribut _tooltip existe avant de le détruire et de le supprimer.
+# Cela éviterait des erreurs si l'info-bulle a déjà été détruite.
+
+# Intégration avec les autres fichiers:
+#
+# hcalendartk.py : La classe HierarchicalCalendar hérite déjà de tooltiptk.ToolTip.
+#                  Il faudra adapter l'initialisation de l'info-bulle
+#                  pour passer le widget et le texte appropriés.
+# itemctrltk.py : Le mixin CtrlWithToolTipMixin devra être adapté
+#                 pour utiliser la nouvelle classe ToolTip Tkinter.
+# basetk.py : Ce fichier étant en cours de construction,
+#             il faudra veiller à intégrer correctement la classe ToolTip lors de sa conception.
+#
+# Conseils supplémentaires:
+#
+# N'hésite pas à tester l'exemple d'utilisation fourni pour t'assurer que l'info-bulle s'affiche correctement.
+# Adapte les paramètres wraplength et delay en fonction de tes besoins.
+# Pense à gérer les thèmes Tkinter si ton application en utilise.
 # Fichier : widgetstk/tooltip.py
 
 import tkinter as tk
 from tkinter import Toplevel, Label
 import textwrap
+
+from taskcoachlib.widgets import SimpleToolTip
 
 
 class ToolTip:
@@ -103,19 +184,22 @@ class ToolTip:
     qui apparaît lorsque la souris reste sur un widget pendant un court instant.
     """
 
-    def __init__(self, widget, text="ToolTip", delay=500, **kwargs):
+    def __init__(self, widget, text="ToolTip", wraplength=250, delay=500, **kwargs):
         # def __init__(self, widget, delay=500):
         """
         Initialise l'info-bulle.
 
-        Args:
-            widget (tk.Widget): Le widget sur lequel l'info-bulle doit apparaître.
-            text (str): Le texte à afficher dans l'info-bulle.
-            delay (int): Le délai en millisecondes avant d'afficher l'info-bulle.
+        Args :
+            widget (tk.Widget) : Le widget sur lequel l'info-bulle doit apparaître.
+            text (str) : Le texte à afficher dans l'info-bulle.
+            wraplength (int) : La longueur maximale d'une ligne de texte (en pixels).
+            delay (int) : Le délai en millisecondes avant d'afficher l'info-bulle.
         """
         self.widget = widget
         self.text = text  # = None
+        self.wraplength = wraplength
         self.delay = delay
+        self.timer = None
         self.tooltip_window = None
         self.after_id = None
         self.__enabled = kwargs.pop("tooltipsEnabled", True)
@@ -158,7 +242,14 @@ class ToolTip:
         """
         if self.tooltip_window or not self.text:
             return
+        if self.timer:
+            self.widget.after_cancel(self.timer)
+        self.timer = self.widget.after(self.delay, self._create_tooltip)
 
+    def _create_tooltip(self):
+        """
+        Crée la fenêtre de l'info-bulle.
+        """
         # Crée la fenêtre de l'info-bulle
         self.tooltip_window = Toplevel(self.widget)
         self.tooltip_window.wm_overrideredirect(True)  # Masque la barre de titre et les bordures
@@ -183,9 +274,18 @@ class ToolTip:
         """
         Masque la fenêtre de l'info-bulle.
         """
+        # if self.tooltip_window:
+        #     self.tooltip_window.destroy()
+        #     self.tooltip_window = None
+        if self.timer:
+            self.widget.after_cancel(self.timer)
+            self.timer = None
         if self.tooltip_window:
             self.tooltip_window.destroy()
             self.tooltip_window = None
+
+
+ToolTipMixin = SimpleToolTip = ToolTip  # Alias pour compatibilité avec le code existant
 
 
 # Exemple d'utilisation
