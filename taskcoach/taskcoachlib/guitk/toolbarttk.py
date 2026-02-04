@@ -48,18 +48,24 @@ from taskcoachlib.guitk.uicommand import uicommandcontainertk
 log = logging.getLogger(__name__)
 
 
-class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
+# class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
+class ToolBar(ttk.LabelFrame, uicommandcontainertk.UICommandContainerMixin):
     """A class that represents a customizable toolbar in the Task Coach UI."""
+    # La classe ToolBar hérite de ttk.LabelFrame et de uicommandcontainertk.UICommandContainerMixin.
+    # Elle reçoit un parent et un window (qui est le contrôleur) lors de son initialisation.
+    # Elle appelle loadPerspective pour charger la configuration de la barre d'outils.
+    # Dans loadPerspective, la méthode appendUICommands est appelée pour ajouter les commandes à la barre d'outils.
 
     # def __init__(self, window, settings, size=(32, 32), **kwargs):
     # CHANGEMENT : La signature accepte 'parent' (pour le widget) et 'window' (pour la logique)
     def __init__(self, parent, window, settings, size=(32, 32), **kwargs):
         # super().__init__(window, **kwargs)
         # CHANGEMENT : On passe 'parent' au constructeur de ttk.Frame
-        super().__init__(parent, **kwargs)
+        super().__init__(parent, text="ToolBar", **kwargs)
         # log.debug(f"Initializing ToolBar in parent window: {type(window).__name__}, size: {size}")
-        log.debug(f"Initializing ToolBar in parent widget: {type(parent).__name__}, controller window: {type(window).__name__}, size: {size}")
-        self._window = window  # On garde 'window' pour la logique
+        log.debug(f"ToolBar initialise dans le parent widget: {parent}{type(parent).__name__}, controller window: {type(window).__name__}, avec des icones de taille: {size}")
+        self.parent = parent
+        self.__window = window  # On garde 'window' pour la logique
         self.__settings = settings
         self.__visibleUICommands = []
         self.__cache = None
@@ -69,7 +75,7 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
         self.tools = []  # Use a list to store the tools
         # self.load_perspective(window.getToolBarPerspective())
         # Cet appel fonctionne maintenant car self.__window est le Viewer
-        self.loadPerspective(self._window.getToolBarPerspective())
+        self.loadPerspective(self.__window.getToolBarPerspective())  # Appeler la méthode sur le contrôleur
         self.configure(relief="raised", borderwidth=1)  # Add border for visual appearance
         # La "bonne pratique" est la suivante :
         # si tu stockes une variable (window) dans une variable d'instance (self.__window),
@@ -81,9 +87,21 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
         # C'est plus propre et plus facile à maintenir si jamais on doit réorganiser le code.
 
     def loadPerspective(self, perspective, customizable=True, cache=True):
-        log.debug(f"ToolBar.load_perspective: Loading toolbar perspective: {perspective}")
+        """
+        Charge une perspective de la barre d'outils à partir d'une chaîne de caractères.
+
+        Args :
+            perspective : Perspective de la barre d'outils sous forme de chaîne de caractères.
+            customizable : Valeur booléenne indiquant si la barre d'outils est personnalisable.
+            cache : Valeur booléenne indiquant si la mise en cache des commandes UI est activée.
+
+        Returns :
+            None
+        """
+        log.debug(f"ToolBar.load_perspective: Commence la toolbar avec la liste de perspective: {perspective}")
         self.clear()
         commands = self._filterCommands(perspective, cache=cache)
+        log.debug(f"ToolBar.load_perspective: La liste des commandes filtrées sont: {commands}")
         self.__visibleUICommands = commands[:]
 
         if customizable:
@@ -99,8 +117,9 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
             # self.__customizeId = uiCommand.id
             # if operating_system.isMac():
             #     commands.append(None)  # Errr...
-        self.add_separator()
+        # self.add_separator()
         self.appendUICommands(*commands)
+        log.debug(f"ToolBar.loadPerspective : Fin de la configuration de la barre d'outils:{self} qui devrait contenir les commandes: {self.__visibleUICommands}.")
 
     # def perspective(self) -> str:
     def perspective(self):
@@ -130,7 +149,7 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
             perspective (str) : La perspective à enregistrer.
         """
         self.loadPerspective(perspective)
-        self._window.saveToolBarPerspective(perspective)
+        self.__window.saveToolBarPerspective(perspective)
 
     def _filterCommands(self, perspective, cache=True):  # Identique à la version wx.
         commands = []
@@ -157,7 +176,7 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
         self.clear()
         self.__visibleUICommands = self.__cache = None
 
-    # def appendUICommands(self, *commands):  # Méthode de appendUICommands !
+    # def appendUICommands(self, *commands):  # Méthode de appendUICommands ! Contenu dans UICommandContainerMixin
     #     """Appends multiple UI commands to the toolbar."""
     #     for command in commands:
     #         self.appendUICommand(command)
@@ -167,46 +186,109 @@ class ToolBar(ttk.Frame, uicommandcontainertk.UICommandContainerMixin):
         if ui_command is None:
             # Separator
             ttk.Separator(self, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=2)
-        elif isinstance(ui_command, int):
+            # ttk.Separator(self, orient=tk.HORIZONTAL).pack(side=tk.LEFT, padx=2)
+            return
+        # elif isinstance(ui_command, int):
+        if isinstance(ui_command, int):
             # Spacer (using an empty label with weight)
             spacer = ttk.Label(self, text="")  # TODO : obtenir les images !
             spacer.pack(side=tk.LEFT, expand=True, fill=tk.X)  # Expand and fill
-        else:
-            # UICommand (create a button)
-            try:
-                # Adapt appendToToolBar to create ttk.Button
-                button = ui_command.appendToToolBar(self)  # Pass the toolbar instance
-                # button = ttk.Button()
-                # button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2, pady=2)
+            return
+        # else:
+        # UICommand (create a button)
+        try:
+            before_children = list(self.winfo_children())
+            # # Adapt appendToToolBar to create ttk.Button
+            # button = ui_command.appendToToolBar(self)  # Pass the toolbar instance
+            # # button = ttk.Button()
+            # # button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2, pady=2)
+            #
+            # # On stocke l'ID dans le widget Tkinter lui-même pour le retrouver plus tard
+            # button.ui_command_id = ui_command.id
+            widget = ui_command.appendToToolBar(self)  # peut renvoyer None
 
-                self.tools.append(button)
-                log.info(f"ToolBar.appendUICommand : Les UICommands de ToolBar sont {self.tools}.")
-            except Exception as e:
-                log.error(f"ToolBar.appendUICommand : Error adding command {ui_command}: {e}")
-                raise
-        # if button:
+            if widget is None:
+                # Tentative de détection du widget créé (dernier nouvel enfant)
+                after_children = list(self.winfo_children())
+                new_children = [w for w in after_children if w not in before_children]
+                if new_children:
+                    widget = new_children[-1]
+                    log.warning("ToolBar.appendUICommand : détecte un nouveau widget créé par appendToToolBar.")
+                elif hasattr(ui_command, "_widget"):
+                    widget = getattr(ui_command, "_widget")
+                    log.warning("ToolBar.appendUICommand : récupère ui_command._widget.")
+                else:
+                    log.error("ToolBar.appendUICommand : appendToToolBar a renvoyé None et aucun widget détecté pour %r", ui_command)
+                    return
+
+                    # Ne pas écrire directement sur l'objet widget (sécurisé):
+            try:
+                widget.ui_command_id = ui_command.id
+            except Exception:
+                # Widget ne permet pas nouveaux attributs -> garder le mapping séparé
+                if not hasattr(self, "_tool_by_id"):
+                    self._tool_by_id = {}
+                self._tool_by_id[ui_command.id] = widget
+                log.debug("ToolBar.appendUICommand : appendToToolBar(%r) returned %r", ui_command, widget)
+
+            # self.tools.append(button)
+            self.tools.append(widget)
+            log.info(f"ToolBar.appendUICommand : Les UICommands de ToolBar sont {self.tools}.")
+        except Exception as e:
+            log.error(f"ToolBar.appendUICommand : Error adding command {ui_command}: {e}")
+            raise
+        # if button:  # TODO : gérer le bouton ?
         #     return button
 
     def uiCommands(self, cache=True):  # Identique à la version wx
         """Returns a list of UI commands to display on the toolbar."""
         if self.__cache is None or not cache:
-            self.__cache = self._window.createToolBarUICommands()  # needs to be converted
+            self.__cache = self.__window.createToolBarUICommands()  # needs to be converted
         return self.__cache
 
     def visibleUICommands(self):  # Identique à v. wx
         """Returns a list of the UI commands currently displayed on the toolbar."""
         return self.__visibleUICommands[:]
 
+    def add_separator(self):
+        # def appendSeparator(self):
+        """
+        Ajoute un séparateur à la barre d'outils.
+        Cette méthode doit être implémentée par la classe qui utilise ce mixin.
+        """
+        # self.add_separator()
+        # ttk.Separator(self, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=2)
+        # ttk.Separator(self, orient=tk.HORIZONTAL).pack(side=tk.BOTTOM, padx=2)  # Ne fonctionne pas directement ici !
+        ttk.Separator(self, orient=tk.HORIZONTAL).pack(side=tk.TOP, fill=tk.X, pady=2)
+        # raise NotImplementedError("La méthode 'AppendSeparator' doit être implémentée par la classe qui utilise ce mixin.")
+        # raise NotImplementedError("La méthode 'Add_h_Separator' doit être implémentée par la classe qui utilise ce mixin.")
+
+    def getToolWidget(self, tool_id):
+        """Retrouve le widget dans la liste self.tools par son ID."""
+        for tool in self.tools:
+            # On vérifie si c'est un widget (pas un séparateur) et s'il a le bon ID
+            if hasattr(tool, 'ui_command_id') and tool.ui_command_id == tool_id:
+                return tool
+        return None
+
     def GetToolState(self, tool_id):
-        """ wx.lib.agw.aui.auibar.AuiToolBar.GetToolToggle indique si un outil est activé ou non.
+        """
+        Vérifie si l'outil est enfoncé.
+        GetToolWidget indique si un outil est activé ou non.
 
         Args :
             toolId/tool_id (integer) : the toolbar item identifier.
         """
-        # # Cela s'applique uniquement à un outil qui a été spécifié comme outil toggle(à bascule).
-        # # return self.GetToolToggled(toolId)
-        # return self.GetToolToggled(tool_id)  # TODO : Méthode wxpython à convertir
-        # # Returns whether a tool is toggled or not.
+        widget = self.getToolWidget(tool_id)
+        if widget:
+            return widget.cget("relief") == "sunken"
+        return False
+
+    def ToggleTool(self, tool_id, toggle):
+        """Change le relief du widget trouvé dans la liste."""
+        widget = self.getToolWidget(tool_id)
+        if widget:
+            widget.config(relief="sunken" if toggle else "raised")
 
 # classe de base_uicommand.py ! : à transférer !
 # class UICommand:  # Base class, needs conversion
