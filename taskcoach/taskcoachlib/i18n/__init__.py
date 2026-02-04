@@ -24,10 +24,17 @@ import locale
 import tempfile
 from importlib.machinery import SourceFileLoader as Load_Source
 import os
-import wx
 from gettext import *
 from taskcoachlib import patterns, operating_system
+from taskcoachlib.config.arguments import get_gui
+if get_gui() == "wx":
+    import wx
+elif get_gui() == "tk":
+    import tkinter as tk
 from . import po2dict  # XXXFIXME get rid of this later
+
+# Languges typically written right-to-left
+_RTL_LANGUAGE_PREFIXES = {"ar", "he", "fa", "ur", "ps", "sd", "ug", "yi"}
 
 
 class Translator(metaclass=patterns.Singleton):
@@ -91,26 +98,36 @@ class Translator(metaclass=patterns.Singleton):
         """ Try to set the locale, trying possibly multiple localeStrings. """
         # Essayez de définir les paramètres régionaux, en essayant éventuellement plusieurs localeStrings.
         if not operating_system.isGTK():
-            locale.setlocale(locale.LC_ALL, "")
-        # Set the wxPython locale:
-        for localeString in self._localeStrings(language):
-            languageInfo = wx.Locale.FindLanguageInfo(localeString)
-            if languageInfo:
-                self.__locale = wx.Locale(languageInfo.Language)  # pylint: disable=W0201
-                # Add the wxWidgets message catalog. This is really only for
-                # py2exe'ified versions, but it doesn't seem to hurt on other
-                # platforms...
-                # localedir = os.path.join(wx.StandardPaths_Get().GetResourcesDir(), 'locale')
-                localedir = os.path.join(wx.StandardPaths.Get().GetResourcesDir(), "locale")
-                self.__locale.AddCatalogLookupPathPrefix(localedir)
-                self.__locale.AddCatalog("wxstd")
-                break
-        if operating_system.isGTK():
             try:
                 locale.setlocale(locale.LC_ALL, "")
             except locale.Error:
-                # Mmmh. wx will display a message box later, so don't do anything.
+                # ignore if the system locale can't be set
                 pass
+
+        # If we're running under wx, try to set up a wx.Locale similar to before
+        if get_gui() == "wx":
+            # Set the wxPython locale:
+            for localeString in self._localeStrings(language):
+                languageInfo = wx.Locale.FindLanguageInfo(localeString)
+                if languageInfo:
+                    self.__locale = wx.Locale(languageInfo.Language)  # pylint: disable=W0201
+                    # Add the wxWidgets message catalog. This is really only for
+                    # py2exe'ified versions, but it doesn't seem to hurt on other
+                    # platforms...
+                    # localedir = os.path.join(wx.StandardPaths_Get().GetResourcesDir(), 'locale')
+                    localedir = os.path.join(wx.StandardPaths.Get().GetResourcesDir(), "locale")
+                    self.__locale.AddCatalogLookupPathPrefix(localedir)
+                    self.__locale.AddCatalog("wxstd")
+                    break
+        else:
+            # For non-wx toolkits (e.g. tkinter) we don't have a wx.Locale.
+            # Ensure locale LC_TIME is reasonable for date widgets etc.
+            if operating_system.isGTK():
+                try:
+                    locale.setlocale(locale.LC_ALL, "")
+                except locale.Error:
+                    # Mmmh. wx will display a message box later, so don't do anything.
+                    pass
         self._fixBrokenLocales()
 
     # @staticmethod
@@ -166,14 +183,32 @@ class Translator(metaclass=patterns.Singleton):
         except (AttributeError, KeyError):
             return string
 
+def _is_rtl_language_code(lang_code: str) -> bool:
+    """Return True if the language code (e.g. 'ar', 'he', 'fa') is RTL."""
+    if not lang_code:
+        return False
+    # Extract the prefix before any underscore, e.g. 'ar' from 'ar_SA'
+    prefix = lang_code.split("_")[0].split("-")[0].lower()
+    return prefix in _RTL_LANGUAGE_PREFIXES
 
 def currentLanguageIsRightToLeft():
-    return wx.GetApp().GetLayoutDirection() == wx.Layout_RightToLeft
+    # return wx.GetApp().GetLayoutDirection() == wx.Layout_RightToLeft
+    if get_gui() == "wx":
+        try:
+            return wx.GetApp().GetLayoutDirection() == wx.Layout_RightToLeft
+        except Exception:
+            # If there's no runnning wx app or method fails, fall back to locale check
+            pass
+    elif get_gui() == "tk":
+        return None  # return tk.
+    # Fallback for tkinter or if wx not available: check locale language
+    lang = locale.getdefaultlocale()[0] or locale.getlocale()[0]
+    return _is_rtl_language_code(lang)
 
 
 def translate(string):
     # print('translate est évité pour les tests')
-    return str(string)  # Ligne pour continuer les tests. À retirer après.
+
     # return Translator().translate(string)
     # Parameter 'language' unfilled
     # TypeError: Translator.translate() missing 1 required positional argument: 'string'
@@ -181,6 +216,17 @@ def translate(string):
     # return Translator(language=language).translate(string)
     # solution de starofrainnight:
     # return Translator(locale.getdefaultlocale()[0]).translate(string)
+    try:
+        language = locale.getdefaultlocale()[0]
+        if not language:
+            language = locale.getlocale()[0]
+        return Translator(language).translate(string)
+    except Exception:
+        # In case anything goes wrong (tests, missing modules...), return a safe string
+        try:
+            return str(string)
+        except Exception:
+            return string
 
 
 _ = translate  # This prevents a warning from pygettext.py
@@ -190,3 +236,5 @@ _ = translate  # This prevents a warning from pygettext.py
 # #__builtin__.__dict__['_'] = _
 
 builtins.__dict__["_"] = _
+
+
