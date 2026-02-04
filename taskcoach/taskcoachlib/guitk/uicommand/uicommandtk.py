@@ -112,7 +112,7 @@ Explication des classes :
 # appendSubMenuWithUICommands: Cette méthode utilise menutk.Menu, ce qui implique que menutk.py doit être correctement implémenté pour créer des sous-menus Tkinter 33.
 # Action proposée:
 #
-# Vérifier que les classes réelles des menus et barres d'outils (ex: MenuBarTk, ToolBarTk) implémentent appendUICommand et add_h_separator correctement.
+# Vérifier que les classes réelles des menus et barres d'outils (ex: MenuBarTk, ToolBarTk) implémentent appendUICommand et add_separator correctement.
 # S'assurer que menutk.Menu est fonctionnel.
 #
 #
@@ -1706,7 +1706,8 @@ class EditCopy(mixin_uicommandtk.NeedsSelectionMixin, ViewerCommand):
         window_with_focus = self._safe_focus_get(main_window)  # Focus sécurisé
 
         if not window_with_focus:
-            return False
+            # return False
+            return True
         if self.windowIsTextCtrl(window_with_focus):
             # Pour un widget de texte, vérifier s'il y a une sélection
             try:
