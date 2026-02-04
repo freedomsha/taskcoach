@@ -220,12 +220,12 @@ class BaseCategoryViewer(
         Returns :
             widget (ttk.Treeview) : (treectrltk.CheckTreeCtrl) Le widget CheckTreeCtrl utilisé pour afficher les catégories.
         """
-        log.debug(f"BaseCategoryViewer.createWidget : Utilisation dans self={self.__class__.__name__} avec parent={parent}.")
+        log.debug(f"BaseCategoryViewer.createWidget : Création du widget BaseCategoryViewer dans self={self.__class__.__name__} avec parent={parent}.")
         # imageList = self.createImageList()  # À adapter pour Tkinter
         self._columns = self.createColumns()
         log.debug(f"BaseCategoryViewer.createWidget : colonnes créées ={self._columns}.")
         itemPopupMenu = self.createCategoryPopupMenu()
-        columnPopupMenu = taskcoachlib.guitk.menutk.ColumnPopupMenu(self)
+        columnPopupMenu = taskcoachlib.guitk.menutk.ColumnPopupMenu(self, parent)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
 
         # # Création du Treeview avec des colonnes
@@ -234,8 +234,8 @@ class BaseCategoryViewer(
         # Création du TreeListCtrl
         # widget = widgetstk.treectrltk.CheckTreeCtrl(
         widget = widgetstk.treectrltk.TreeListCtrl(  # Sauf que ce n'est pas un TreeListCtrl qu'il faut !? Si !
-            # self,  # self ou parent ?
-            parent,
+            self,  # self ou parent ?
+            # parent,
             # self,  # adapter ?
             parent,
             # self.adapter, # passer l'adapter ici'
@@ -500,7 +500,8 @@ class BaseCategoryViewer(
             final : Indique si c'est la sélection finale.
         """
         # categoryToFilter = self.widget.GetItemPyData(event.GetItem()) # À adapter pour Tkinter
-        # categoryToFilter.setFiltered(event.GetItem().IsChecked()) # À adapter pour Tkinter
+        categoryToFilter = self.widget._item_to_object[event.GetItem()]  # TODO Reste à convertir event.GetItem() en item Tkinter
+        categoryToFilter.setFiltered(event.GetItem().IsChecked())  # À adapter pour Tkinter
         self.sendViewerStatusEvent()  # Notify status observers like the status bar
 
     def getIsItemChecked(self, item):
