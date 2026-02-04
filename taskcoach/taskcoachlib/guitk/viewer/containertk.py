@@ -152,13 +152,17 @@ log = logging.getLogger(__name__)
 
 
 # class ViewerContainer:
-class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
-    # class ViewerContainer():
+# class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
+# class ViewerContainer(ttk.LabelFrame):
+class ViewerContainer(ttk.PanedWindow):
     """
     ViewerContainer est un conteneur de visionneuses. Il utilise un Panedwindow Tkinter
     pour afficher les visionneuses. Le ViewerContainer sait lequel de ses visualiseurs
     est actif et distribue les appels de méthode au visualiseur actif.
     Il hérite maintenant de ttk.Frame pour être un widget Tkinter à part entière.
+
+    Cette classe délègue explicitement certaines méthodes attendues
+    par les UICommand vers la visionneuse actuellement active.
     """
     # def __init__(self, containerWidget, settings, *args, **kwargs):
     def __init__(self, parent_widget, settings, *args, **kwargs):
@@ -177,21 +181,25 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         log.debug("ViwerContainer.__init__ : Initialisation du conteneur de visionneuses.")
         # super().__init__(containerWidget)
         # super().__init__(parent_widget)
-        super().__init__(parent_widget, *args, **kwargs)
+        # super().__init__(parent_widget, *args, text="ViewerContainer", **kwargs)  # text ne fonctionne pas dans PanedWindow
+        super().__init__(parent_widget, *args, **kwargs)  # text ne fonctionne pas dans PanedWindow
         # TODO : copier factorytk Mock
         self.viewer_count = 0  # copie de factorytk.MockViewerContainer
         self._label = ttk.Label(self, text="Conteneur de visualisateurs...")
-        self._label.pack(pady=20)
+        # self._label.pack(pady=20)
+        self._label.grid(row=1, column=0, padx=10, pady=10)
         # self.containerWidget = containerWidget  # Le widget conteneur (par exemple, une fenêtre Tk).
-        self.containerWidget = parent_widget  # Le widget conteneur (par exemple, une fenêtre Tk).
+        self.containerWidget = parent_widget  # Le widget conteneur (par exemple, une fenêtre Tk, toplevel, ou ici MainWindow).
         self._settings = settings
-        self.viewers = []
+        self.viewers = []  # Liste des visionneuses
         # # self.notebook = ttk.Notebook(containerWidget)  # Utilisation de ttk.Notebook. On utilise 'self' ici, car ViewerContainer est le parent du notebook.
         # # On utilise 'self' ici, car ViewerContainer est le parent du notebook.
         # self.notebook = ttk.Notebook(self)  # Utilisation de ttk.Notebook. On utilise 'self' ici, car ViewerContainer est le parent du notebook.
         # self.notebook.pack(expand=True, fill="both")  # Assurez-vous que le Notebook prend toute la place
-        self.paned_window = ttk.PanedWindow(parent_widget, orient=tk.HORIZONTAL)  # Ou VERTICAL selon votre disposition
-        self.paned_window.pack(fill=tk.BOTH, expand=True)
+        # self.paned_window = ttk.PanedWindow(parent_widget, orient=tk.HORIZONTAL)  # Ou VERTICAL selon votre disposition
+        # self.paned_window = ttk.PanedWindow(self.containerWidget, orient=tk.HORIZONTAL)
+        # self.paned_window.containerWidget = self
+        # self.paned_window.pack(fill=tk.BOTH, expand=True)
 
         self._active_viewer = None  # Initialisation importante
         self._notify_active_viewer = False  # A ajuster en fonction de l'utilisation
@@ -222,6 +230,23 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
     def isViewerContainer(self):
         """Indique s'il s'agit d'un conteneur de visionneuse."""
         return True
+
+    def isTreeViewer(self):
+        """
+        Indique si le viewer/la visionneuse actif est un TreeViewer/une visionneuse arborescente.
+
+        Retourne False si aucune visionneuse active n'est disponible.
+        """
+        # viewer = self.activeViewer
+        # # Si aucune visionneuse n'est active, on ne bloque pas le menu
+        # if not self.activeViewer:
+        #     return False  # Aucun viewer → pas un TreeViewer
+
+        # Délégation vers la visionneuse active
+        # return hasattr(viewer, "isTreeViewer") and viewer.isTreeViewer()
+        # return hasattr(self.activeViewer, "isTreeViewer") and self.activeViewer.isTreeViewer()
+        viewer = self.activeViewer()
+        return hasattr(viewer, "isTreeViewer") and viewer.isTreeViewer()
 
     def __bind_event_handlers(self):
         """Inscrit les gestionnaires d'événements pour la fermeture et le changement d'onglet."""
@@ -275,6 +300,7 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
     # Modifiez la signature de la méthode addViewer
     # def addViewer(self, viewer_class, *args, **kwargs):
     def addViewer(self, viewer, *args, **kwargs):
+        # def _add_viewer(self, viewer, *args, **kwargs):
         """
         Crée et ajoute un visualiseur (viewer) au conteneur.
         """
@@ -289,12 +315,18 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         # Ajoute le viewer à la liste des viewers.
         self.viewers.append(viewer)
         # Ajoute le viewer au bandeau de viewers
-        self.paned_window.add(viewer)  # viewer doit être un widget Tkinter
+        # self.paned_window.add(viewer)  # viewer doit être un widget Tkinter
 
         # Placez le visualiseur à l'intérieur du nouveau cadre
-        viewer.pack(expand=True, fill="both")
+        # viewer.pack(expand=True, fill="both")
         # viewer.pack(fill="both", expand=True, padx=10, pady=5)  # copie de factorytk.MockViewerContainer
         # viewer.grid(row=0, column=0)  # A essayer !
+        viewer.grid(row=self.viewer_count+1, column=0, padx=10, pady=5)
+        # if isinstance(viewer, ViewerContainer):
+        #     # viewer.pack(fill="both", expand=True, padx=10, pady=5)
+        #     viewer.grid(row=self.viewer_count+1, column=0, padx=10, pady=5)
+        # else:
+        #     viewer.grid(row=self.viewer_count+1, column=0, padx=10, pady=5)
 
         # Ajoutez le nouveau cadre (qui contient le visualiseur) comme onglet
         # self.notebook.add(viewer_frame, text=viewer.title())
@@ -316,6 +348,7 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
             if v == viewer:
                 # self.notebook.forget(i)
                 self.viewers.pop(i)
+                viewer.grid_forget()  # Important pour libérer les ressources
                 break
 
     def selectViewer(self, viewer):
@@ -323,19 +356,22 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         for i, (v, frame) in enumerate(self.viewers):
             if v == viewer:
                 # self.notebook.select(i)
+                viewer.select()
                 break
 
     def get_active_viewer(self):
         """Retourne le visualiseur actif."""
-        # try:
-        #     # tab_id = self.notebook.select()
-        #     if tab_id:
-        #         frame = self.notebook.nametowidget(tab_id)
-        #         viewer = frame.winfo_children()[0]
-        #         return viewer
-        # except tk.TclError:
-        #     return None
-        return None
+        # # try:
+        # #     # tab_id = self.notebook.select()
+        # #     if tab_id:
+        # #         frame = self.notebook.nametowidget(tab_id)
+        # #         viewer = frame.winfo_children()[0]
+        # #         return viewer
+        # # except tk.TclError:
+        # #     return None
+        # return None
+        self._active_viewer = self.focus_get()
+        return self._active_viewer
 
     def onPageChanged(self, event):
         """Gestionnaire de l'événement de changement de page.
@@ -372,7 +408,7 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         # #     self.activateViewer(self.viewers[0])  # Activer un autre viewer si possible
         # self.removeViewer(viewer)
         if viewer in self.viewers:
-            self.paned_window.remove(viewer)
+            # self.paned_window.remove(viewer)
             self.viewers.remove(viewer)
             viewer.destroy()  # Important pour libérer les ressources
 
@@ -415,25 +451,28 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         #     return self.viewers[tab_index]
         # else:
         #     return None
-        return root.focus_get()
+        # return self.viewer.focus_get()
+        return self.focus_get()
+        # return self._active_viewer
         # return self._active_viewer
 
     def __getattr__(self, attribute):
         """
         Transfère les attributs inconnus au visualiseur actif.
         """
-        # viewer = self.activeViewer()
-        # if viewer is None:
-        #     raise AttributeError(f"'ViewerContainer' object has no attribute '{attribute}'")
-        # return getattr(viewer, attribute)
-        if self._active_viewer:
-            try:
-                return getattr(self._active_viewer, attribute)
-            except AttributeError:
-                log.error(f"La visionneuse active n'a pas l'attribut : {attribute}")
-                raise
-        else:
-            raise AttributeError("Aucune visionneuse active.")
+        viewer = self.activeViewer()
+        if viewer is None:
+            raise AttributeError(f"'ViewerContainer' object has no attribute '{attribute}'")
+        return getattr(viewer, attribute)
+        # if self._active_viewer:
+        #     try:
+        #         return getattr(self._active_viewer, attribute)
+        #     except AttributeError:
+        #         log.error(f"La visionneuse active n'a pas l'attribut : {attribute}")
+        #         raise
+        # else:
+        #     # raise AttributeError("Aucune visionneuse active.")
+        #     log.error("Aucune visionneuse active.")
 
     def onStatusChanged(self, viewer):
         if self.activeViewer() == viewer:
@@ -456,8 +495,8 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         if not self.activeViewer():
             return
 
-        window = tk.Tk().focus_displayof()  # équivalent de wx.Window.FindFocus()
-        if operating_system.isMacOsXTiger_OrOlder() and window is None:
+        window_focused = tk.Tk().focus_displayof()  # équivalent de wx.Window.FindFocus()
+        if operating_system.isMacOsXTiger_OrOlder() and window_focused is None:
             # Si SearchCtrl a le focus sur Mac OS X Tiger,
             # tk.Tk().focus_displayof() renvoie None.
             # Si nous continuions, le focus serait immédiatement placé sur le visualiseur actif,
@@ -465,7 +504,7 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
             return
 
             # Trouver si le visualiseur actif est un parent de la fenêtre de focus
-        parent = window
+        parent = window_focused
         while parent:
             if parent == self.activeViewer():
                 return
@@ -475,7 +514,7 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
                 parent = None
 
                 # Si le visualiseur actif n'a pas le focus, le définir
-        self.containerWidget.after(0, self.activeViewer().focus_set) # Utilisation de after pour éviter les problèmes de focus
+        self.containerWidget.after(0, self.activeViewer().focus_set)  # Utilisation de after pour éviter les problèmes de focus
 
     def onPageChanged(self, event=None):
         """Gestionnaire de l'événement de changement de page."""
@@ -485,6 +524,63 @@ class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
         self.sendViewerStatusEvent()
 
     #  Ajouter d'autres méthodes pour gérer les événements, la configuration, etc.
+    def curselection(self):
+        """
+        Retourne la sélection courante du viewer actif/de la visionneuse active.
+
+        Retourne une liste vide si non supporté.
+        """
+        # # viewer = self.activeViewer
+        # # # ou viewer = self._active_viewer
+        # # if hasattr(viewer, "curselection"):
+        # #     return viewer.curselection()
+        # # Aucun viewer actif → aucune sélection
+        # if not self.activeViewer:
+        #     return []
+        #
+        # # Si la visionneuse ne supporte pas la sélection, on renvoie vide
+        # if not hasattr(self.activeViewer, "curselection"):
+        #     return []
+
+        # Délégation vers le viewer actif
+        # return self.activeViewer.curselection()
+        viewer = self.activeViewer()
+        if hasattr(viewer, "curselection"):
+            return viewer.curselection()
+        return []
+        return ()
+
+    def isAnyItemExpandable(self):
+        """
+        Indique si au moins un élément peut être étendu dans la visionneuse active.
+        """
+        # if not self.activeViewer:
+        #     return False
+        #
+        # if not hasattr(self.activeViewer, "isAnyItemExpandable"):
+        #     return False
+        #
+        # return self.activeViewer.isAnyItemExpandable()
+        viewer = self.activeViewer()
+        if hasattr(viewer, "isAnyItemExpandable"):
+            return viewer.isAnyItemExpandable()
+        return False
+
+    def isAnyItemCollapsable(self):
+        """
+        Indique si au moins un élément peut être replié dans la visionneuse active.
+        """
+        # if not self.activeViewer:
+        #     return False
+        #
+        # if not hasattr(self.activeViewer, "isAnyItemCollapsable"):
+        #     return False
+        #
+        # return self.activeViewer.isAnyItemCollapsable()
+        viewer = self.activeViewer()
+        if hasattr(viewer, "isAnyItemCollapsable"):
+            return viewer.isAnyItemCollapsable()
+        return False
 
 
 # # # Exemple d'utilisation (à adapter à ton application)
@@ -567,5 +663,6 @@ if __name__ == '__main__':
 
     container.addViewer(viewer1)
     container.addViewer(viewer2)
-    container.pack(fill=tk.BOTH, expand=True)  # Afficher le ViewerContainer
+    # container.pack(fill=tk.BOTH, expand=True)  # Afficher le ViewerContainer
+    container.grid(row=0, column=0, sticky="nsew")  # Utiliser grid pour afficher le ViewerContainer
     root.mainloop()
