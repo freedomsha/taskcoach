@@ -135,7 +135,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         del self.__history[:]
         del self.__future[:]
 
-    def hasHistory(self):
+    def hasHistory(self) -> bool:
         """
         Vérifiez s'il y a des commandes exécutées dans l'historique.
 
@@ -143,7 +143,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
             list : La liste des commandes exécutées.
         """
         # renvoie une liste, un bool ne serait pas mieux ?
-        return self.__history
+        return self.__history != []
 
     def getHistory(self):
         """
@@ -161,7 +161,7 @@ class CommandHistory(object, metaclass=patterns.Singleton):
         Renvoie :
             list : La liste des commandes qui peuvent être rétablies.
         """
-        return self.__future
+        return self.__future != []
 
     def getFuture(self):
         # def getFuture(self) -> list:
