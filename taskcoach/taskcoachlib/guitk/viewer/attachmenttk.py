@@ -102,13 +102,14 @@ class Attachmentviewer(mixintk.AttachmentDropTargetMixin,  # pylint: disable=W02
         """Vérifie si la sélection courante est une instance de la classe spécifiée."""
         return class_ == attachment.Attachment
 
-    def createWidget(self):
+    # def createWidget(self):
+    def createWidget(self, parent):
         """Crée et retourne le widget utilisé pour afficher les pièces jointes."""
         # imageList = self.createImageList() # A adapter
-        itemPopupMenu = taskcoachlib.guitk.menu.AttachmentPopupMenu(
+        itemPopupMenu = taskcoachlib.guitk.menutk.AttachmentPopupMenu(
             self.parent, self.settings, self.taskFile, self  # presentation() n'existe plus, remplacer par self.taskFile
         )
-        columnPopupMenu = taskcoachlib.guitk.menu.ColumnPopupMenu(self)
+        columnPopupMenu = taskcoachlib.guitk.menutk.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
         self._columns = self._createColumns()
 
