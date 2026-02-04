@@ -1838,6 +1838,7 @@ class TaskViewer(
             **self.widgetCreationKeywordArguments()
         )
         log.debug("TaskViewer.createWidget: ?")
+        # SetMainColumn is a HypertreeList function!
         if self.hasOrderingColumn():
             widget.SetMainColumn(1)  # SetMainColumn est une fonction d'hypertreelist !
         widget.AssignImageList(imageList)  # pylint: disable=E1101
