@@ -19,6 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+import logging
 
 # from builtins import zip
 # from builtins import str
@@ -37,6 +38,8 @@ from wx.lib.agw.hyperlink import HyperLinkCtrl
 from wx.adv import BitmapComboBox
 import wx
 import calendar
+
+log = logging.getLogger(__name__)
 
 
 class FontColorSyncer(object):
@@ -1028,6 +1031,7 @@ class Preferences(widgets.NotebookDialog):
             self.CentreOnParent()
 
     def addPages(self):
+        """Ajoute les pages au Notebook, en respectant l'ordre défini."""
         self._interior.SetMinSize((950, 550))
         for page_name in self.allPageNames:
             if self.__should_create_page(page_name):
@@ -1045,5 +1049,6 @@ class Preferences(widgets.NotebookDialog):
             return True
 
     def createPage(self, pageName):
+        """Crée une nouvelle instance de page à partir de son nom."""
         return self.pages[pageName](parent=self._interior,
                                     settings=self.settings)
