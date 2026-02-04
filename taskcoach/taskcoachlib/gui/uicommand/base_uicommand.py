@@ -482,7 +482,7 @@ class UICommand(object):
         #  les icônes des menus n'apparaîtront pas.
         #  L'exception FileNotFoundError levée ici pourrait indiquer un tel problème.
         #  Vérifiez les logs pour voir si cette erreur se produit.
-        log.debug(f"UICommand.__getBitmap() appelé avec self=(self.uniqueName={self.uniqueName()} bitmapName={bitmapName}, bitmapType={bitmapType} et bitmapSize={bitmapSize}")
+        log.debug(f"UICommand.__getBitmap() appelé avec self={self}, self.uniqueName={self.uniqueName()} bitmapName={bitmapName}, bitmapType={bitmapType} et bitmapSize={bitmapSize}")
         try:
             return wx.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
             # return artprovider.ArtProvider.GetBitmap(bitmapName, bitmapType, bitmapSize)
