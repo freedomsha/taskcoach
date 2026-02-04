@@ -553,6 +553,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.onSelect()
 
     def clear_selection(self):
+        """Clear the current selection."""
         self.__curselection = []
         self.widget.clear_selection()
 
