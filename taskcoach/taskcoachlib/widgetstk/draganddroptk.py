@@ -916,6 +916,8 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
             part: Position (-1=au-dessus, 0=sur, 1=en-dessous)
             column: Index de la colonne
         """
+        # chaque classe qui hérite de TreeCtrlDragAndDropMixin
+        # doit fournir sa propre implémentation de OnDrop.
         raise NotImplementedError(
             "La méthode OnDrop doit être implémentée par la classe dérivée."
         )
