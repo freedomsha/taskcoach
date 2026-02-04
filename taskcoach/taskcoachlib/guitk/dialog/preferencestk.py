@@ -17,23 +17,42 @@ Licence Publique Générale GNU pour plus de détails.
 Vous auriez dû recevoir une copie de la Licence Publique Générale GNU
 avec ce programme. Si ce n'est pas le cas, consultez <http://www.gnu.org/licenses/>.
 """
-# Le fichier preferences.py original crée un dialogue de préférences avec plusieurs pages pour différents réglages. Pour cette conversion, je vais utiliser tkinter et tkinter.ttk pour reproduire le dialogue de style "cahier" (Notebook). Étant donné que le code source des pages individuelles n'est pas disponible, je vais créer des classes factices pour représenter ces pages de paramètres (WindowBehaviorPage, TaskDatesPage, etc.), ce qui rendra l'exemple fonctionnel et illustrera la structure.
+# Le fichier preferences.py original crée un dialogue de préférences avec plusieurs pages pour différents réglages.
+# Pour cette conversion, je vais utiliser tkinter et tkinter.ttk
+# pour reproduire le dialogue de style "cahier" (Notebook).
+# Étant donné que le code source des pages individuelles n'est pas disponible,
+# je vais créer des classes factices pour représenter ces pages de paramètres
+# (WindowBehaviorPage, TaskDatesPage, etc.),
+# ce qui rendra l'exemple fonctionnel et illustrera la structure.
 
-# Cette version en Tkinter reproduit la structure et la logique du fichier preferences.py original. Elle utilise le widget ttk.Notebook pour gérer les différentes pages de préférences. Pour les besoins de la démonstration, j'ai inclus des classes factices pour simuler les pages de réglages et les fonctions de détection du système d'exploitation.
+# Cette version en Tkinter reproduit la structure et la logique du fichier preferences.py original.
+# Elle utilise le widget ttk.Notebook pour gérer les différentes pages de préférences.
+# Pour les besoins de la démonstration,
+# j'ai inclus des classes factices pour simuler les pages de réglages
+# et les fonctions de détection du système d'exploitation.
 
-# Le fichier d'origine dans wxPython utilisait un dialogue de type "cahier" (wx.lib.agw.aui.AuiNotebook). Pour Tkinter, nous utiliserons le widget ttk.Notebook qui remplit exactement la même fonction.
+# Le fichier d'origine dans wxPython utilisait un dialogue de type "cahier"
+# (wx.lib.agw.aui.AuiNotebook).
+# Pour Tkinter, nous utiliserons le widget ttk.Notebook qui remplit exactement la même fonction.
 #
-# Comme le contenu des pages de préférences individuelles (WindowBehaviorPage, TaskDatesPage, etc.) n'est pas fourni, j'ai créé des classes marquantes (PlaceholderPage) qui respectent l'interface requise (héritent de ttk.Frame, ont un attribut pageTitle et des méthodes applySettings pour la sauvegarde).
+# Comme le contenu des pages de préférences individuelles (WindowBehaviorPage, TaskDatesPage, etc.) n'est pas fourni,
+# j'ai créé des classes marquantes (PlaceholderPage) qui respectent l'interface requise
+# (héritent de ttk.Frame, ont un attribut pageTitle et des méthodes applySettings pour la sauvegarde).
 #
-# Voici le fichier preferencestk.py complet et fonctionnel, intégrant artprovidertk et la logique conditionnelle d'affichage des pages (pour iphone, os_darwin, os_linux).
+# Voici le fichier preferencestk.py complet et fonctionnel,
+# intégrant artprovidertk et la logique conditionnelle d'affichage des pages
+# (pour iphone, os_darwin, os_linux).
 #
 # Fichier preferencestk.py
 #
-# Ce fichier définit le dialogue principal des préférences (PreferencesDialog) en utilisant tkinter.Toplevel et ttk.Notebook pour gérer les différentes pages.
+# Ce fichier définit le dialogue principal des préférences (PreferencesDialog)
+# en utilisant tkinter.Toplevel et ttk.Notebook pour gérer les différentes pages.
 
 # Explication de la Conversion
 #
-#     Marqueurs (Placeholder Pages): J'ai défini une classe de base PreferencesPage qui hérite de ttk.Frame. Toutes les pages de préférences (comme WindowBehaviorPage, TaskDatesPage, etc.) en héritent. Elles incluent les méthodes loadSettings() et applySettings() que vous devrez implémenter avec le code spécifique de chaque page.
+#     Marqueurs (Placeholder Pages) : J'ai défini une classe de base PreferencesPage qui hérite de ttk.Frame.
+#     Toutes les pages de préférences (comme WindowBehaviorPage, TaskDatesPage, etc.) en héritent.
+#     Elles incluent les méthodes loadSettings() et applySettings() que vous devrez implémenter avec le code spécifique de chaque page.
 #
 #     PreferencesDialog Structure:
 #
@@ -41,11 +60,17 @@ avec ce programme. Si ce n'est pas le cas, consultez <http://www.gnu.org/license
 #
 #         Le widget principal est ttk.Notebook (self.notebook), utilisé pour contenir les différentes pages.
 #
-#         La logique de détermination de la page à créer (__should_create_page) a été conservée, utilisant operating_system.isMac() et operating_system.isGTK(), et vérifiant le paramètre "iphone" via l'objet settings.
+#         La logique de détermination de la page à créer (__should_create_page) a été conservée,
+#         utilisant operating_system.isMac() et operating_system.isGTK(),
+#         et vérifiant le paramètre "iphone" via l'objet settings.
 #
-#     Gestion de l'icône: La ligne self.iconphoto(False, icon) est utilisée pour définir l'icône de la fenêtre Toplevel en utilisant le PhotoImage retourné par artprovider.ArtProvider.GetIcon('wrench_icon').
+#     Gestion de l'icône: La ligne self.iconphoto(False, icon) est utilisée
+#     pour définir l'icône de la fenêtre Toplevel en utilisant le PhotoImage
+#     retourné par artprovider.ArtProvider.GetIcon('wrench_icon').
 #
-#     Boutons OK/Annuler: Les méthodes onOk et onCancel gèrent la fermeture du dialogue. onOk appelle applySettings() sur chaque page avant de fermer, et onCancel ferme directement en ignorant les changements.
+#     Boutons OK/Annuler: Les méthodes onOk et onCancel gèrent la fermeture du dialogue.
+#     onOk appelle applySettings() sur chaque page avant de fermer,
+#     et onCancel ferme directement en ignorant les changements.
 #
 #     Modalité: L'utilisation de self.transient(parent), self.grab_set(), et self.wait_window(self) à la fin de __init__ garantit que le dialogue des préférences est modal, bloquant l'interaction avec la fenêtre parente jusqu'à ce qu'il soit fermé.
 #
@@ -118,73 +143,79 @@ from tkinter import colorchooser, font as tkFont  # Ajout de colorchooser et tkF
 # from taskcoachlib import meta
 # from taskcoachlib import meta, widgets, notify, operating_system, render
 # Importations demandées
-from taskcoachlib import meta, notify, patterns, command, render, operating_system, speak
+from taskcoachlib import meta, notify, patterns, command, render, operating_system, speak, widgetstk
 from taskcoachlib.domain import date, task
 from taskcoachlib.guitk import artprovidertk as artprovider
 from taskcoachlib.guitk.artprovidertk import IconProvider
 from taskcoachlib.i18n import _
+from taskcoachlib.meta import data
 from taskcoachlib.widgetstk.textctrltk import MultiLineTextCtrl
 from pubsub import pub
 import webbrowser  # Ajout pour les liens hypertextes
 import calendar  # Importation nécessaire pour FeaturesPage.applySettings
 import sys  # Pour simuler le système d'exploitation
 from typing import Dict, Any, Tuple, List, Optional, Union  # Pour les annotations de type
+try:
+    import tkfontchooser
+except ImportError:
+    print("tkfontchooser n'est pas installé. Utilisation d'un sélecteur de police simplifié.")
+    tkfontchooser = None
 
 log = logging.getLogger(__name__)
 
 
-# Simulation de classes et de modules externes pour l'exemple
-class MockOperatingSystem:
-    def isMac(self):
-        return sys.platform == 'darwin'
+# # Simulation de classes et de modules externes pour l'exemple
+# class MockOperatingSystem:
+#     def isMac(self):
+#         return sys.platform == 'darwin'
+#
+#     def isGTK(self):
+#         return sys.platform.startswith('linux')
+#
+#
+# operating_system = MockOperatingSystem()
+#
+#
+# class MockSettings:
+#     def getboolean(self, section, name):
+#         # Mocking settings for demonstration purposes
+#         if section == "feature" and name == "iphone":
+#             return True
+#         return False
+#
+#
+# # Simulation de l'objet de statut de tâche
+# class MockTaskStatus:
+#     """Simule l'objet de statut de tâche avec un label et un label au pluriel."""
+#     def __init__(self, name, label, plural_label):
+#         self.name = name
+#         self.label = label
+#         self.pluralLabel = plural_label
+#
+#     def __str__(self):
+#         return self.name
+#
+#
+# class MockTask:
+#     """Simule la classe task.Task pour obtenir les statuts possibles."""
+#     @staticmethod
+#     def possibleStatuses():
+#         return [
+#             MockTaskStatus("uncompleted", _("Uncompleted"), _("Uncompleted tasks")),
+#             MockTaskStatus("completed", _("Completed"), _("Completed tasks")),
+#             MockTaskStatus("overdue", _("Overdue"), _("Overdue tasks")),
+#         ]
+#
+#
+# # Simulation des widgets pour EditorPage.ok() TODO : A changer !
+# class MockWidgets:
+#     class MultiLineTextCtrl:
+#         CheckSpelling = False
 
-    def isGTK(self):
-        return sys.platform.startswith('linux')
 
-
-operating_system = MockOperatingSystem()
-
-
-class MockSettings:
-    def getboolean(self, section, name):
-        # Mocking settings for demonstration purposes
-        if section == "feature" and name == "iphone":
-            return True
-        return False
-
-
-# Simulation de l'objet de statut de tâche
-class MockTaskStatus:
-    """Simule l'objet de statut de tâche avec un label et un label au pluriel."""
-    def __init__(self, name, label, plural_label):
-        self.name = name
-        self.label = label
-        self.pluralLabel = plural_label
-
-    def __str__(self):
-        return self.name
-
-
-class MockTask:
-    """Simule la classe task.Task pour obtenir les statuts possibles."""
-    @staticmethod
-    def possibleStatuses():
-        return [
-            MockTaskStatus("uncompleted", _("Uncompleted"), _("Uncompleted tasks")),
-            MockTaskStatus("completed", _("Completed"), _("Completed tasks")),
-            MockTaskStatus("overdue", _("Overdue"), _("Overdue tasks")),
-        ]
-
-
-# Simulation des widgets pour EditorPage.ok() TODO : A changer !
-class MockWidgets:
-    class MultiLineTextCtrl:
-        CheckSpelling = False
-
-
-# Remplacement du task module par la simulation pour cet exemple
-widgets = MockWidgets()
-task.Task = MockTask
+# # Remplacement du task module par la simulation pour cet exemple
+# widgets = MockWidgets()
+# task.Task = MockTask
 
 
 # --- Classes de base et utilitaires (Marqueurs) ---
@@ -324,6 +355,7 @@ class SettingsPageBase(ttk.Frame):
 
 
 # Classe de base pour toutes les pages de préférences
+# Remplace SettingsPageBase de la version wxpython
 class PreferencesPage(ttk.Frame):
     """
     Classe de base pour une page individuelle dans le dialogue de préférences.
@@ -886,56 +918,91 @@ class PreferencesPage(ttk.Frame):
         # Initialiser l'aperçu avec la couleur actuelle
         update_preview(current_color_hex)
 
-    def _addFontSetting(self, section, option, column_index: int, row_index: int):
+    # def _addFontSetting(self, section, option, column_index: int, row_index: int):
+    def _addFontSetting(self, section, option, label_text, column_index: int, row_index: int):
         """Ajoute un sélecteur de police dans une cellule spécifique."""
 
         current_font_str = self.settings.get(section, option, "TkDefaultFont")
+        print(f"Current font string for {section}.{option}: {current_font_str}")
         font_var = tk.StringVar(value=current_font_str)
         self.controls[(section, option)] = font_var
 
-        frame = ttk.Frame(self)
-        frame.grid(row=row_index, column=column_index, sticky="ew", padx=5, pady=2)
-        frame.columnconfigure(0, weight=1) # Permet à l'aperçu de s'étendre
+        # Le cadre contiendra l'aperçu (Label) et le bouton (Button)
+        font_frame = ttk.Frame(self)
+        print(f"Adding font setting '{label_text}' at row {row_index}, column {column_index}")
+        font_frame.grid(row=row_index, column=column_index or 5, sticky="ew", padx=5, pady=2)
+        font_frame.columnconfigure(0, weight=1)  # Permet à l'aperçu de s'étendre
 
         # 1. Aperçu de la police (Label)
-        font_preview = ttk.Label(frame, text=_("Example"), anchor="w", padding=(5, 2))
+        font_preview = ttk.Label(font_frame, text=_("Example"), anchor="w", padding=(5, 2))
         font_preview.grid(row=0, column=0, sticky="ew")
 
         # 2. Bouton de sélection
-        button = ttk.Button(frame, text=_("Choose..."), width=10)
+        button = ttk.Button(font_frame, text=_("Choose..."), width=10)
         button.grid(row=0, column=1, padx=(5, 0))
 
-        def font_str_to_tuple(font_str: str) -> Tuple[str, int, str]:
-            """Convertit la chaîne de police de Task Coach (ex: 'Arial,bold') en tuple Tkinter."""
+        def font_str_to_tuple(font_str: str) -> Tuple[str, int, str, str]:
+            """Convertit la chaîne de police de Task Coach (ex: 'Arial,bold')
+            en tuple Tkinter."""
             parts = font_str.split(',')
             family = parts[0]
             size = 10  # Taille par défaut car Task Coach ne stocke pas la taille
             style = " ".join(parts[1:]) if len(parts) > 1 else ""
-            return (family, size, style)
+            weight = "normal"
+            slant = "roman"
+            if "bold" in style:
+                weight = "bold"
+            if "italic" in style:
+                slant = "italic"
+            # return family, size, style
+            return family, size, weight, slant
 
-        def font_tuple_to_str(font_tuple: Tuple[str, int, str]) -> str:
+        def font_tuple_to_str(font_tuple: Tuple[str, int, str, str]) -> str:
             """Convertit le tuple de police Tkinter en chaîne Task Coach (ex: 'Arial,bold')."""
-            family, _, style = font_tuple
+            # family, _, style = font_tuple
+            family, size, weight, slant = font_tuple
             # Nettoyer et former la chaîne de Task Coach
-            style_parts = style.split()
+            # style_parts = style.split()
+            style_parts = []
+            if weight == "bold":
+                style_parts.append("bold")
+            else:
+                style_parts.append("normal")
+            if slant == "italic":
+                style_parts.append("italic")
+            else:
+                style_parts.append("roman")
             style_str = "," + ",".join(style_parts) if style_parts else ""
-            return family + style_str
+            style_str = ""
+            # if style_parts:
+            #     style_str = "," + ",".join(style_parts)
+            print(f"Converted font tuple {font_tuple} to string: {family + style_str}")
+            # return family + style_str
+            return family + "," + str(size) + style_str
 
         def update_preview(font_str: str):
-            """Met à jour le label d'aperçu et la variable Tkinter."""
+            """Met à jour le label d'aperçu et la variable Tkinter.
+            (Attention, ne prends pas en compte Bold et Italic)
+            """
             try:
                 # La méthode font.nametofont() permet de manipuler les polices nommées comme 'TkDefaultFont'
                 # Mais il est plus sûr d'utiliser tkFont.Font pour appliquer directement
                 font_tuple = font_str_to_tuple(font_str)
-                # Créer une police temporaire pour l'aperçu
-                temp_font = tkFont.Font(family=font_tuple[0], size=font_tuple[1], weight=font_tuple[2], slant=font_tuple[2])
+                print(f"Font tuple: {font_tuple}")  # Ajout : Vérification du tuple créé
+                # # Créer une police temporaire pour l'aperçu
+                # temp_font = tkFont.Font(family=font_tuple[0], size=font_tuple[1], weight=font_tuple[2], slant=font_tuple[2])
+                temp_font = tkFont.Font(family=font_tuple[0], size=font_tuple[1], weight=font_tuple[2], slant=font_tuple[3])
                 font_preview.config(font=temp_font)
+                # Correction: Utiliser weight et slant séparément
+                # font_preview.config(font=(font_tuple[0], font_tuple[1], font_tuple[2], font_tuple[3]))
+                # font_var.set(font_str)
                 font_var.set(font_str)
+                print(f"Font preview updated with: {font_str}")  # Ajout : Vérification de la valeur de font_str
             except Exception as e:
                 print(f"Erreur lors de la mise à jour de la police: {e}")
 
         def open_font_chooser():
-            """Simule l'ouverture d'un sélecteur de police (Tkinter n'a pas de sélecteur intégré)."""
+            """Ouverture d'un sélecteur de police (Tkinter n'a pas de sélecteur intégré)."""
             # Pour l'exemple, nous allons simuler un changement de police simple
             # En environnement réel, il faudrait utiliser une librairie externe ou une boîte de dialogue personnalisée.
 
@@ -946,17 +1013,29 @@ class PreferencesPage(ttk.Frame):
 
             # Pour la démo : Afficher un aperçu de la police actuelle dans le bouton pour l'instant
             current_font_tuple = font_str_to_tuple(font_var.get())
-            new_style = "bold" if "bold" not in current_font_tuple[2] else ""
+            initial = {'family': current_font_tuple[0], 'size': current_font_tuple[1], 'weight': current_font_tuple[2], 'slant': current_font_tuple[3]}
+            # new_style = "bold" if "bold" not in current_font_tuple[2] else "normal"
             new_font_str = current_font_tuple[0]
-            if new_style:
-                new_font_str += "," + new_style
+            if tkfontchooser:
+                # Utiliser show pour ouvrir le sélecteur de police
+                result = tkfontchooser.askfont(self, "Abcd" , _("Choose Font"), **initial)
 
-            # Simple simulation de bascule de style :
-            if new_font_str != font_var.get():
-                update_preview(new_font_str)
+                if result:
+                    print(f"tkfontchooser result: {result}")  # Ajout : Vérification du résultat
+                    new_font_str = font_tuple_to_str((result['family'], result['size'], result['weight'], result['slant']))
+                    update_preview(new_font_str)
             else:
-                # Retour à la police de base pour la démo
-                update_preview("TkDefaultFont")
+                # Simulation simple : bascule entre normal et bold pour la démoprint("tkfontchooser n'est pas disponible.")
+                print("tkfontchooser n'est pas disponible.")
+                # if new_style:
+                #     new_font_str += "," + new_style
+
+                # # Simple simulation de bascule de style :
+                # if new_font_str != font_var.get():
+                #     update_preview(new_font_str)
+                # else:
+                #     # Retour à la police de base pour la démo
+                #     update_preview("TkDefaultFont")
 
         button.config(command=open_font_chooser)
         update_preview(current_font_str)
@@ -1004,22 +1083,21 @@ class PreferencesPage(ttk.Frame):
         # Il prendra l'espace de sa colonne, sans cadre supplémentaire
         combobox.grid(row=row_index, column=column_index, sticky="ew", padx=5, pady=2)
 
-
     # --- Méthodes spécifiques à TaskAppearancePage pour le layout ---
 
     def _addAppearanceHeader(self):
         """Ajoute les en-têtes de colonnes (simulant addAppearanceHeader de wx)."""
 
         headers = [
-            "", # Colonne 0 (Label)
-            _("Text color"), # Colonne 1 (fgcolor)
-            "", # Colonne 2 (Vide)
-            _("Background color"), # Colonne 3 (bgcolor)
-            "", # Colonne 4 (Vide)
-            _("Font"), # Colonne 5 (font)
-            "", # Colonne 6 (Vide)
-            _("Icon"), # Colonne 7 (icon)
-            "", # Colonne 8 (HelpText)
+            "",  # Colonne 0 (Label)
+            _("Text color"),  # Colonne 1 (fgcolor)
+            "",  # Colonne 2 (Vide)
+            _("Background color"),  # Colonne 3 (bgcolor)
+            "",  # Colonne 4 (Vide)
+            _("Font"),  # Colonne 5 (font)
+            "",  # Colonne 6 (Vide)
+            _("Icon"),  # Colonne 7 (icon)
+            "",  # Colonne 8 (HelpText)
         ]
 
         for col, header in enumerate(headers):
@@ -1031,7 +1109,9 @@ class PreferencesPage(ttk.Frame):
 
         self.current_row += 1
 
-    def _addAppearanceSetting(self, fgcolor_key, fgcolor_setting, bgcolor_key, bgcolor_setting, font_key, font_setting, icon_key, icon_setting, label_text):
+    def _addAppearanceSetting(self, fgcolor_key, fgcolor_setting, bgcolor_key,
+                              bgcolor_setting, font_key, font_setting,
+                              icon_key, icon_setting, label_text):
         """Ajoute une ligne complète de paramètres d'apparence pour un statut de tâche."""
 
         row_idx = self.current_row
@@ -1049,7 +1129,7 @@ class PreferencesPage(ttk.Frame):
         # Colonne 4 laissée vide
 
         # 5-6. Police (font)
-        self._addFontSetting("appearance", font_setting, 5, row_idx)
+        self._addFontSetting("appearance", font_setting, "Font", 5, row_idx)
         # Colonne 6 laissée vide
 
         # 7. Icône (icon)
@@ -1727,7 +1807,7 @@ class LanguagePage(PreferencesPage):
         # Ajout du choix par défaut
         choices = [("", _("Let the system determine the language"))]
         # Dans l'original, il y a une logique complexe pour déterminer 'enabled',
-        # allLanguages = dict(list(data.languages.values()))
+        allLanguages = dict(list(data.languages.values()))
         # for code, label in languages:
         #     if code == "en_US":
         #         label = "English (US)"
@@ -2087,10 +2167,13 @@ class EditorPage(PreferencesPage):
                 "editor", "maccheckspelling", _("Check spelling in editors"))
 
         # Police pour le champ de description
+        # log.debug(f"EditorPage : Current row before adding font setting: {self.current_row}")
+        print(f"EditorPage : Current row before adding font setting: {self.current_row}")
         self._addFontSetting(
             "editor",
             "descriptionfont",
             _("Font to use in the description field of edit dialogs"),
+            5,
             self.current_row,
         )
         # Note: L'appel fit() est remplacé par l'utilisation de `growableColumn=1` et Tkinter par défaut.
@@ -2137,7 +2220,7 @@ class OSXPage(PreferencesPage):
 class LinuxPage(PreferencesPage):
     pageName = "os_linux"
     pageTitle = _("Linux Specific")
-    pageIcon = "linux_icon" # Utilisation d'une icône factice
+    pageIcon = "linux_icon"  # Utilisation d'une icône factice
 
     def __init__(self, parent, settings, *args, **kwargs):
         # Colonnes=3
@@ -2200,8 +2283,17 @@ class PreferencesDialog(tk.Toplevel):
     """
     # Noms de page dans l'ordre de preferences.py
     allPageNames = [
-        "window", "task", "reminder", "save", "language", "appearance",
-        "features", "iphone", "editor", "os_darwin", "os_linux",
+        "window",
+        "save",
+        "language",
+        "task",
+        "reminder",
+        "appearance",
+        "features",
+        "iphone",
+        "editor",
+        "os_darwin",
+        "os_linux",
     ]
     # Correspondance des noms de page aux classes de page
     pages = dict(
@@ -2263,7 +2355,8 @@ class PreferencesDialog(tk.Toplevel):
         # icon = artprovider.getIcon('wrench_icon')
         # icon = artprovider.ArtProviderTk.GetIcon('wrench_icon')
         # icon = artprovider.ArtProviderTk.GetIcon('wrench_icon', desired_size=(16, 16))  # Spécifie la taille 16x16
-        icon = artprovider.ArtProviderTk.GetIcon('Wrench', desired_size=(16, 16))  # Spécifie la taille 16x16
+        # icon = artprovider.ArtProviderTk.GetIcon('Wrench', desired_size=(16, 16))  # Spécifie la taille 16x16
+        icon = artprovider.getIcon('wrench_icon', desired_size=(16, 16))  # Spécifie la taille 16x16
         # ou
         # icon = artprovider.IconProvider.getIcon('wrench_icon')
         # icon = artprovider.IconProvider.getIcon(self, 'wrench_icon')
@@ -2315,10 +2408,11 @@ class PreferencesDialog(tk.Toplevel):
 
         # Rendre la boîte de dialogue modale et lui donner le focus
         self.grab_set()
-        self.wait_window(self) # Attend que la fenêtre soit détruite
+        self.wait_window(self)  # Attend que la fenêtre soit détruite
 
     def addPages(self):
         """Ajoute les pages au Notebook, en respectant l'ordre défini."""
+
         for page_name in self.allPageNames:
             # if self.__should_create_page(page_name):
             #     page = self.createPage(page_name)
@@ -2337,7 +2431,7 @@ class PreferencesDialog(tk.Toplevel):
 
             page = self.createPage(page_name)
             if page:
-                self.notebook.add(page, text=page.pageTitle)
+                self.notebook.add(page, text=page.pageTitle)  # TODO : Reste à ajouter un icone
                 self.pageInstances.append(page)
 
     def __should_create_page(self, page_name):
@@ -2373,8 +2467,9 @@ class PreferencesDialog(tk.Toplevel):
         # Publie un événement de changement de paramètre (si pub est fonctionnel)
         if self.settings and pub:
             # pub.publish("setting_changed", setting_name="all")
+            pub.sendMessage("settings_changed", settings=self.settings)
             # La publication est laissée en commentaire car 'pub' n'est pas instancié ici
-            pass
+            # pass
 
         self.destroy()
         self.parent.focus_set()  # Redonne le focus à la fenêtre parente
