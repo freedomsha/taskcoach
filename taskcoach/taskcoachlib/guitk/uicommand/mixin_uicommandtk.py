@@ -20,26 +20,130 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Vous devez spécifier les classes de mixin avant les autres classes.
 """
+# Analyse et Compléments potentiels :
+#
+#
+# En-tête et Licence : L'en-tête du fichier est correct et inclut les informations de copyright et la licence GPL.
+#
+#
+# Imports : Les imports de modules logging, tkinter et des modules de domaine (task, note, category, effort, attachment) sont corrects 2.
+#
+#
+# Classes Mixin existantes :
+#
+# NeedsSelectionMixin 2 : Gère l'état activé/désactivé des commandes nécessitant une sélection.
+# NeedsSelectedCategorizableMixin 2 : Pour les commandes nécessitant un élément catégorisé sélectionné (tâche ou note).
+# NeedsOneSelectedItemMixin 3 : Pour les commandes nécessitant exactement un élément sélectionné.
+# NeedsSelectedCompositeMixin 3 : Pour les commandes nécessitant un élément composite sélectionné (tâche, note ou catégorie).
+# NeedsOneSelectedCompositeItemMixin 3 : Combinaison des mixins NeedsOneSelectedItemMixin et NeedsSelectedCompositeMixin.
+# NeedsAttachmentViewerMixin 4 : Pour les commandes nécessitant une visionneuse de pièces jointes.
+# NeedsSelectedTasksMixin 4 : Pour les commandes nécessitant une ou plusieurs tâches sélectionnées.
+# NeedsSelectedNoteOwnersMixin 4 : Pour les commandes nécessitant un propriétaire de note sélectionné (tâche, catégorie ou pièce jointe).
+# NeedsSelectedNoteOwnersMixinWithNotes 5 : Pour les commandes nécessitant un propriétaire de note sélectionné avec des notes.
+# NeedsSelectedAttachmentOwnersMixin 5 : Pour les commandes nécessitant un propriétaire de pièce jointe sélectionné (tâche, catégorie ou note).
+# NeedsOneSelectedTaskMixin 6 : Combinaison des mixins NeedsSelectedTasksMixin et NeedsOneSelectedItemMixin.
+# NeedsSelectionWithAttachmentsMixin 6 : Pour les commandes nécessitant un élément sélectionné avec des pièces jointes.
+# NeedsSelectedEffortMixin 7 : Pour les commandes nécessitant un effort sélectionné.
+# NeedsSelectedAttachmentsMixin 7 : Pour les commandes nécessitant une pièce jointe sélectionnée.
+# NeedsAtLeastOneTaskMixin 7 : Pour les commandes nécessitant au moins une tâche.
+# NeedsAtLeastOneCategoryMixin 8 : Pour les commandes nécessitant au moins une catégorie.
+# NeedsItemsMixin 8 : Pour les commandes nécessitant au moins un élément dans la visionneuse.
+# NeedsTreeViewerMixin 8 : Pour les commandes nécessitant une visionneuse d'arborescence.
+# NeedsDeletedItemsMixin 9 : Pour les commandes nécessitant des éléments supprimés.
+# PopupButtonMixin 10 : Pour l'implémentation de menu contextuel.
+#
+#
+#
+# Remarques Importantes
+#
+# L'argument event est rendu optionnel pour la compatibilité Tkinter 2.
+# La classe PopupButtonMixin a été adaptée pour Tkinter 11. L'implémentation utilise tk.Menu pour les menus contextuels et calcule la position du menu en fonction de la position du widget 11 10. La méthode createPopupMenu doit être implémentée par la classe qui utilise ce mixin 12.
+#
+#
+#
+# Vérification et Améliorations Potentielles :
+#
+# Gestion des erreurs : Dans PopupButtonMixin, la gestion des erreurs tk.TclError lors de l'affichage du menu est bien présente 13 14.
+# Méthodes Abstraites : La méthode createPopupMenu est définie comme NotImplementedError, ce qui force les classes héritantes à l'implémenter 15 16. C'est une bonne pratique.
+#
+# Complétude :
+# Le fichier semble couvrir un large éventail de cas d'utilisation pour les commandes d'interface utilisateur dans TaskCoach. Les mixins fournissent des fonctionnalités pour gérer la sélection, le type d'élément sélectionné, la présence de pièces jointes, etc.
+# Avant de considérer ce fichier comme "définitif", je vous recommande de :
+#
+# Tester chaque mixin dans le contexte de votre application TaskCoach migrée vers Tkinter.
+# Vérifier si d'autres mixins wxPython dans votre code source n'ont pas été transposés ici.
+# Documenter chaque mixin avec des exemples d'utilisation pour faciliter la maintenance future.
 
 # from builtins import object
 import logging
 from taskcoachlib.domain import task, note, category, effort, attachment
 import tkinter as tk  # Remplacer 'wx' par 'tkinter'
+from tkinter import ttk
 
 log = logging.getLogger(__name__)
 
 
+class ViewerRequiredMixin:
+    """
+    Mixin assurant que la visionneuse fournie est compatible.
+
+    Ne lève jamais d'exception bloquante pour l'interface.
+    """
+
+    def _assert_viewer_api(self, *methods):
+        """
+        Vérifie que la visionneuse expose les méthodes attendues.
+
+        Log un warning si ce n'est pas le cas.
+        """
+        viewer = getattr(self, "viewer", None)
+
+        # Aucun viewer → on désactive la commande
+        if viewer is None:
+            log.debug("UICommand sans viewer : commande désactivée.")
+            return False
+
+        for method in methods:
+            if not hasattr(viewer, method):
+                log.warning(
+                    "UICommand '%s' : méthode manquante '%s' sur %s",
+                    self.__class__.__name__,
+                    method,
+                    type(viewer).__name__,
+                )
+                return False
+
+        return True
+
+
 # Quels sont ces types de classes ? Mixin
 # class NeedsSelectionMixin:
-class NeedsSelectionMixin(object):
+# class NeedsSelectionMixin(object):
+class NeedsSelectionMixin(ViewerRequiredMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un élément sélectionné. """
     def enabled(self, event=None):  # L'argument `event` est rendu optionnel pour la compatibilité Tkinter
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselection"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and self.viewer.curselection()
 
 
 class NeedsSelectedCategorizableMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un catégorisable sélectionné. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselectionIsInstanceOf"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             (self.viewer.curselectionIsInstanceOf(task.Task) or
              self.viewer.curselectionIsInstanceOf(note.Note))
@@ -48,6 +152,14 @@ class NeedsSelectedCategorizableMixin(NeedsSelectionMixin):
 class NeedsOneSelectedItemMixin(object):
     """ Classe Mixin pour les commandes d’interface utilisateur qui nécessitent exactement un élément sélectionné. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselection"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             len(self.viewer.curselection()) == 1
 
@@ -56,6 +168,14 @@ class NeedsSelectedCompositeMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un élément composite
         sélectionné. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselectionIsInstanceOf"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             (self.viewer.curselectionIsInstanceOf(task.Task) or
              self.viewer.curselectionIsInstanceOf(note.Note) or
@@ -71,6 +191,14 @@ class NeedsOneSelectedCompositeItemMixin(NeedsOneSelectedItemMixin,
 class NeedsAttachmentViewerMixin(object):
     """ Classe Mixin pour les commandes d'interface utilisateur nécessitant une visionneuse affichant les pièces jointes. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("isShowingAttachments"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             self.viewer.isShowingAttachments()
 
@@ -78,6 +206,14 @@ class NeedsAttachmentViewerMixin(object):
 class NeedsSelectedTasksMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur nécessitant une ou plusieurs tâches sélectionnées. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselectionIsInstanceOf"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             self.viewer.curselectionIsInstanceOf(task.Task)
 
@@ -85,6 +221,14 @@ class NeedsSelectedTasksMixin(NeedsSelectionMixin):
 class NeedsSelectedNoteOwnersMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un propriétaire de note sélectionné. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselectionIsInstanceOf"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             (self.viewer.curselectionIsInstanceOf(task.Task) or
              self.viewer.curselectionIsInstanceOf(category.Category) or
@@ -96,6 +240,14 @@ class NeedsSelectedNoteOwnersMixinWithNotes(NeedsSelectedNoteOwnersMixin):
         avec des notes. """
     def enabled(self, event=None):
         # pylint: disable=E1101
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselection"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             any([item.notes() for item in self.viewer.curselection()])
 
@@ -103,6 +255,14 @@ class NeedsSelectedNoteOwnersMixinWithNotes(NeedsSelectedNoteOwnersMixin):
 class NeedsSelectedAttachmentOwnersMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un propriétaire de pièce jointe sélectionné. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselectionIsInstanceOf"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             (self.viewer.curselectionIsInstanceOf(task.Task) or
              self.viewer.curselectionIsInstanceOf(category.Category) or
@@ -119,6 +279,14 @@ class NeedsSelectionWithAttachmentsMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un élément sélectionné avec
         une ou plusieurs pièces jointes. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselection"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             any(item.attachments() for item in self.viewer.curselection() if not isinstance(item, effort.Effort))
 
@@ -126,6 +294,14 @@ class NeedsSelectionWithAttachmentsMixin(NeedsSelectionMixin):
 class NeedsSelectedEffortMixin(NeedsSelectionMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un effort sélectionné. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("curselectionIsInstanceOf"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             self.viewer.curselectionIsInstanceOf(effort.Effort)
 
@@ -149,22 +325,51 @@ class NeedsAtLeastOneCategoryMixin(object):
         return len(self.categories) > 0
 
 
-class NeedsItemsMixin(object):
+# class NeedsItemsMixin(object):
+class NeedsItemsMixin(ViewerRequiredMixin):
     """ Classe Mixin pour les commandes d'interface utilisateur qui nécessitent au moins un élément dans leur visionneuse. """
     def enabled(self, event=None):  # pylint: disable=W0613
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("size"):
+            return False
+
+        # Comportement normal
         return self.viewer.size()
 
 
-class NeedsTreeViewerMixin(object):
-    """ Classe Mixin pour les commandes d'interface utilisateur nécessitant une visionneuse d'arborescence. """
+# class NeedsTreeViewerMixin(object):
+class NeedsTreeViewerMixin(ViewerRequiredMixin):
+    """ Classe Mixin pour les commandes d'interface utilisateur
+    nécessitant une visionneuse d'arborescence.
+    """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("isTreeViewer"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
             self.viewer.isTreeViewer()
 
 
-class NeedsDeletedItemsMixin(object):
+# class NeedsDeletedItemsMixin(object):
+class NeedsDeletedItemsMixin(ViewerRequiredMixin):
     """ Classe Mixin pour les commandes d’interface utilisateur qui nécessitent la présence d’éléments supprimés. """
     def enabled(self, event=None):
+        """
+        Indique si la commande est activable.
+        """
+        # Vérification douce de l'API attendue
+        if not self._assert_viewer_api("hasDeletedItems"):
+            return False
+
+        # Comportement normal
         return super().enabled(event) and \
                self.iocontroller.hasDeletedItems()
 
@@ -256,7 +461,8 @@ class PopupButtonMixin(object):
         except AttributeError:
             self.__menu = self.createPopupMenu()  # pylint: disable=W0201
             args = [self.__menu]
-        if self.toolbar:
+        # if self.toolbar:
+        if self.winfo_ismapped():
             args.append(self.menuXY())
 
         # if not self.__menu:
@@ -279,11 +485,13 @@ class PopupButtonMixin(object):
 
     def menuXY(self):
         """ Emplacement pour afficher le menu. """
-        log.warning("PopupButtonMixin.menuXY : retourne une fonction wx.ScreenToClient() !")
-        return self.mainWindow().ScreenToClient((self.menuX(), self.menuY()))  # ScreenToClient est une méthode wx !
+        log.warning("PopupButtonMixin.menuXY : retourne une fonction anciennement wx.ScreenToClient() !")
+        # return self.mainWindow().ScreenToClient((self.menuX(), self.menuY()))  # ScreenToClient est une méthode wx !
+        return self.menuX(), self.menuY()
 
     def menuX(self):
-        buttonWidth = self.toolbar.GetToolSize()[0]
+        # buttonWidth = self.toolbar.GetToolSize()[0]
+        buttonWidth = self.winfo_width()
         # mouseX = wx.GetMousePosition()[0]
         mouseX = self.winfo_rootx()
         return mouseX - 0.5 * buttonWidth
@@ -308,3 +516,30 @@ class PopupButtonMixin(object):
     #     raise NotImplementedError(
     #         "La classe héritière doit implémenter create_popup_menu()"
     #     )
+
+
+class TkUtilsMixin:
+    """Fournit des méthodes utilitaires Tkinter pour les classes de commandes."""
+    # Si toutes vos classes (comme ViewerCommand, IOCommand, etc.)
+    # finissent par hériter d'une classe mère commune appelée UICommand (ou UICommandTk),
+    # c'est là qu'il faut les placer.
+    # En les déclarant en @staticmethod,
+    # vous pouvez même les appeler sans instance si besoin via UICommand.windowIsTextCtrl(w).
+
+    def windowIsTextCtrl(self, window):
+        """Vérifie si le widget est un champ de saisie de texte."""
+        return isinstance(window, (tk.Text, tk.Entry, ttk.Entry, tk.Spinbox))
+
+    def findEditCtrl(self, window_with_focus):
+        """Remonte l'arbre des widgets pour trouver un éditeur actif."""
+        curr = window_with_focus
+        while curr:
+            # Vérifie si c'est un widget d'édition (selon votre implémentation)
+            if hasattr(curr, 'is_editing') and curr.is_editing():
+                return curr
+
+            parent_name = curr.winfo_parent()
+            if not parent_name:
+                break
+            curr = curr.nametowidget(parent_name)
+        return None
