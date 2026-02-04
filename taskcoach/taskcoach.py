@@ -115,7 +115,9 @@ os.environ["XLIB_SKIP_ARGB_VISUALS"] = "1"
 #     from mx import DateTime  # Essayer d'importer la Class DateTime,
 # except ImportError:
 #     pass  # si erreur ne rien faire
-
+log.info("****************************************************************")
+log.info("*               D\u00e9marrage de Task Coach                          *")
+log.info("****************************************************************")
 
 if not hasattr(sys, "frozen"):
     # ces vérifications sont seulement nécessaires dans un environnement non-frozen,
