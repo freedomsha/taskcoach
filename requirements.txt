@@ -1,3 +1,4 @@
+tkinterdnd2
 tkcalendar
 wxPython>=4.2.1
 Twisted>=24.3.0
