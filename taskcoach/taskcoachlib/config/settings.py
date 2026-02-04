@@ -709,41 +709,44 @@ class Settings(CachingConfigParser):
             La valeur évaluée.
         """
         stringValue = self.get(section, option)
-        try:
-            return evaluate(stringValue)
-        except Exception as exceptionMessage:  # pylint: disable=W0703
-            message = "\n".join(
-                [
-                    # _("Error while reading the %s-%s setting from %s.ini.")
-                    # % (section, option, meta.filename),
-                    _(f"Error while reading the {section}.{option} setting from {meta.filename}.ini."),
-                    # _("The value is: %s") % stringValue,
-                    _(f"The value is: {stringValue}"),
-                    # _("The error is: %s") % exceptionMessage,
-                    _(f"The error is: {exceptionMessage}"),
-                    # _(
-                    #     "%s will use the default value for the setting and should proceed normally."
-                    # )
-                    # % meta.name,
-                    _(
-                        f"{meta.name} will use the default value for the setting and should proceed normally."
-                    ),
-                ]
-            )
-            if self.gui_used == "wx" and self.wx:
-                self.wx.MessageBox(
-                    message, caption=_("Settings error"), style=self.wx.ICON_ERROR
+        if stringValue:
+            try:
+                return evaluate(stringValue)
+            except Exception as exceptionMessage:  # pylint: disable=W0703
+                message = "\n".join(
+                    [
+                        # _("Error while reading the %s-%s setting from %s.ini.")
+                        # % (section, option, meta.filename),
+                        _(f"Error while reading the {section}.{option} setting from {meta.filename}.ini."),
+                        # _("The value is: %s") % stringValue,
+                        _(f"The value is: {stringValue}"),
+                        # _("The error is: %s") % exceptionMessage,
+                        _(f"The error is: {exceptionMessage}"),
+                        # _(
+                        #     "%s will use the default value for the setting and should proceed normally."
+                        # )
+                        # % meta.name,
+                        _(
+                            f"{meta.name} will use the default value for the setting and should proceed normally."
+                        ),
+                    ]
                 )
-            elif self.gui_used == "tk":
-                messagebox.showerror(
-                    _("Settings error"), message
-                )
-            log.error(message)
-            defaultValue = self.getDefault(section, option)
-            self.set(
-                section, option, defaultValue, new=True
-            )  # Ignore current value
+                if self.gui_used == "wx" and self.wx:
+                    self.wx.MessageBox(
+                        message, caption=_("Settings error"), style=self.wx.ICON_ERROR
+                    )
+                elif self.gui_used == "tk":
+                    messagebox.showerror(
+                        _("Settings error"), message
+                    )
+                log.error(message)
+                defaultValue = self.getDefault(section, option)
+                self.set(
+                    section, option, defaultValue, new=True
+                )  # Ignore current value
             return evaluate(defaultValue)
+        else:
+            return None
 
     # def save(
     #     self, showerror=wx.MessageBox, file=open
