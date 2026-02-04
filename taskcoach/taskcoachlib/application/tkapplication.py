@@ -32,6 +32,8 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import Menu
 import threading
+# from tkinterdnd2 import TkinterDnD
+from tkinterdnd2 import *
 import re
 import locale
 import calendar
@@ -125,7 +127,8 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         self.initialized = True
 
         # Créer la fenêtre racine (root)
-        self.root = tk.Tk()
+        # self.root = tk.Tk()
+        self.root = TkinterDnD.Tk()  # Pour le drag and drop
         self.root.title(meta.name)
         self.root.geometry("800x600")
         # self.root.protocol("WM_DELETE_WINDOW", self.on_end_session)  # Mis dans init !
@@ -361,7 +364,8 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         # app = self.mainwindow = guitk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings)
         self.mainwindow = guitk.mainwindowtk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings)
         # app.pack(fill=tk.BOTH, expand=True)
-        self.mainwindow.pack(fill=tk.BOTH, expand=True)
+        # self.mainwindow.pack(fill=tk.BOTH, expand=True)
+        self.mainwindow.grid(row=0, column=0, sticky="news")
         # mainwindow est déjà instancié dans start mais
 
         # Liez les événements de la fenêtre racine à l'instance de MainWindow
@@ -579,7 +583,7 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
     @staticmethod
     def getInstance():
         """Retourne l'instance unique de TkinterApplication."""
-        log.debug(f"TkinterApplication.getInstance : retourne {TkinterApplication.instance}")
+        # log.debug(f"TkinterApplication.getInstance : retourne {TkinterApplication.instance}")
         # if TkinterApplication.instance is None:
         #    TkinterApplication()  # Crée l'instance si elle n'existe pas
         return TkinterApplication.instance
