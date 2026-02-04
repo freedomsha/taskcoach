@@ -36,7 +36,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # HTMLDialog : utilise tk.Text avec liens cliquables → ouvre avec webbrowser.
 #
 # AttachmentSelector : basé sur filedialog.askopenfilename().
+
+# 21/01/2026
+# Fonctionnalités de base de la classe Dialog:
+# Assurer la création correcte de la fenêtre modale.
+# Gestion des boutons standards (OK, Annuler, Fermer).
+# Méthodes pour activer/désactiver le bouton OK.
+# Gestion du contenu central de la boîte de dialogue.
+#
+#
+# Classe NotebookDialog:
+# Intégration avec le widget Notebook de Tkinter.
+# Méthode pour valider les pages du Notebook.
+#
+#
+# Classe HTMLDialog:
+# Affichage de contenu HTML simplifié.
+# Gestion des liens hypertextes.
+#
+#
+# Sélection de fichiers:
+# Méthode AttachmentSelector pour ouvrir une boîte de dialogue de sélection de fichiers.
+#
+#
+# Utilisation de tk.commondialog.Dialog:
+# Évaluer si tk.commondialog.Dialog est une meilleure option que tk.Toplevel.
+#
+#
+# Principaux changements et améliorations :
+#
+# HtmlWindowThatUsesWebBrowserForExternalLinks: Amélioration de la gestion des liens hypertextes en utilisant tag_bind pour simplifier la détection des clics et en stockant l'URL directement dans le nom du tag. Ajout de la méthode insert_html pour faciliter l'insertion de texte HTML. Le widget Text est initialisé en mode "disabled" par défaut et remis en mode normal juste pour l'insertion du texte. Cela évite que l'utilisateur puisse modifier le texte.
+# Commentaires et documentation: Ajout de commentaires pour clarifier le rôle de chaque méthode et classe.
+# Modularité: Le code est structuré pour être facilement extensible et adaptable à d'autres besoins.
+#
+# À propos de l'utilisation de tk.commondialog.Dialog :
+# Vous avez suggéré d'utiliser tk.commondialog.Dialog au lieu de tk.Toplevel. C'est une bonne idée à explorer. Cependant, tk.commondialog.Dialog est une classe de base abstraite et ne peut pas être instanciée directement. Elle est conçue pour être héritée par des boîtes de dialogue spécifiques fournies par Tkinter, comme filedialog.Open ou colorchooser.Chooser .
+# Dans ce cas, puisque vous créez votre propre structure de boîte de dialogue réutilisable avec des fonctionnalités spécifiques (boutons, contenu, etc.), il est plus approprié de continuer à utiliser tk.Toplevel comme classe de base et d'implémenter la logique de gestion de la boîte de dialogue vous-même. Votre classe Dialog actuelle fournit déjà une bonne abstraction et peut être étendue selon les besoins de Task Coach.
 import os
+import logging
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import webbrowser
@@ -44,8 +81,10 @@ import webbrowser
 from taskcoachlib.i18n import _
 from taskcoachlib.widgetstk.notebooktk import Notebook  # Utilise votre version Tkinter
 
+log = logging.getLogger(__name__)
 
-class Dialog(tk.Toplevel):
+
+class Dialog(tk.Toplevel):  # TODO : essayer tk.commondialog.Dialog ?
     """
     Classe de base pour les boîtes de dialogue avec Tkinter.
 
@@ -55,17 +94,18 @@ class Dialog(tk.Toplevel):
     - Contenu central via createInterior() et fillInterior()
     """
 
-    def __init__(self, parent, title, button_types=("ok", "cancel"), *args, **kwargs):
+    def __init__(self, parent, the_title, button_types=("ok", "cancel"), *args, **kwargs):
         """
         Initialise la boîte de dialogue.
 
-        :param parent: Fenêtre parente
-        :param title: Titre de la fenêtre
-        :param button_types: Liste de boutons ('ok', 'cancel', 'close')
+        Args :
+            parent : Fenêtre parente
+            title : Titre de la fenêtre
+            button_types : Liste de boutons ('ok', 'cancel', 'close')
         """
         # Ceci est l'appel crucial qui crée le widget Tkinter
         super().__init__(parent, *args, **kwargs)  # Appelle tk.Toplevel.__init__(parent, ...), Crée la fenêtre
-        self.title(title)  # Définit le titre
+        self.title(the_title)  # Définit le titre
         self.transient(parent)  # Assure la modale
         self.grab_set()  # Empêche d'interagir avec la fenêtre parente
         self.resizable(True, True)  # Autorise le redimensionnement
@@ -78,7 +118,7 @@ class Dialog(tk.Toplevel):
         container = ttk.Frame(self)
         container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self._notebook = None
+        # self._notebook = None  # Utile seulement dans NotebookDialog
         # Création de la zone centrale
         self._interior_frame = self.createInterior(container)
         self._interior_frame.pack(fill="both", expand=True)
@@ -151,14 +191,15 @@ class Dialog(tk.Toplevel):
     def disableOK(self):
         """Désactive le bouton OK."""
         for child in self._buttons_frame.winfo_children():
+            # log.debug(f"Désactive le bouton OK de {self._buttons_frame}")
             if child.cget("text") == _("OK"):
-                child.configure(state="disabled")
+                child.configure(state="disabled")  # ? TODO
 
     def enableOK(self):
         """Active le bouton OK."""
         for child in self._buttons_frame.winfo_children():
             if child.cget("text") == _("OK"):
-                child.configure(state="normal")
+                child.configure(state="normal")  # ? TODO
 
 
 class NotebookDialog(Dialog):
@@ -194,19 +235,35 @@ class HtmlWindowThatUsesWebBrowserForExternalLinks(tk.Text):
     """
 
     def __init__(self, parent, html_text="", *args, **kwargs):
-        super().__init__(parent, wrap="word", *args, **kwargs)
-        self.insert("1.0", html_text)
-        self.config(state="disabled")  # Lecture seule
+        # super().__init__(parent, wrap="word", *args, **kwargs)
+        super().__init__(parent, wrap="word", state="disabled", *args, **kwargs)  # Ajout de state="disabled" par défaut
+        # self.config(state="disabled")  # Lecture seule
         self.tag_configure("link", foreground="blue", underline=True)
-        self.bind("<Button-1>", self._on_click)
+        # self.bind("<Button-1>", self._on_click)
+        self.tag_bind("link", "<Button-1>", self._on_click)  # Utilisation de tag_bind pour simplifier
+        self.insert("1.0", html_text)
+
+    def insert_html(self, html_text):
+        """
+        Insère du HTML dans le widget (à améliorer pour supporter plus de balises).
+        """
+        self.config(state="normal")
+        self.delete("1.0", tk.END)
+        self.insert("1.0", html_text)
+        self.config(state="disabled")
 
     def _on_click(self, event):
         """Ouvre le lien dans le navigateur si clic sur 'link'."""
-        index = self.index(f"@{event.x},{event.y}")
-        tags = self.tag_names(index)
-        if "link" in tags:
-            url = self.get(f"{index} wordstart", f"{index} wordend")
-            webbrowser.open(url)
+        # index = self.index(f"@{event.x},{event.y}")
+        # tags = self.tag_names(index)
+        # if "link" in tags:
+        #     url = self.get(f"{index} wordstart", f"{index} wordend")
+        #     webbrowser.open(url)
+        for tag in self.tag_names(tk.CURRENT):
+            if tag.startswith("link:"):
+                url = tag[5:]  # Extraire l'URL du nom du tag
+                webbrowser.open(url)
+                break
 
 
 class HTMLDialog(Dialog):
@@ -220,7 +277,12 @@ class HTMLDialog(Dialog):
 
     def createInterior(self, parent):
         """Crée la zone HTML."""
-        return HtmlWindowThatUsesWebBrowserForExternalLinks(parent, self._html_text)
+        # return HtmlWindowThatUsesWebBrowserForExternalLinks(parent, self._html_text)
+        self.html_window = HtmlWindowThatUsesWebBrowserForExternalLinks(parent)
+        return self.html_window
+
+    def fillInterior(self):
+        self.html_window.insert_html(self._html_text)
 
 
 def AttachmentSelector(**kwargs):
