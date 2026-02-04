@@ -90,6 +90,7 @@
 # J'ai essayé de rechercher des informations spécifiques dans les fichiers que vous avez fournis, mais je n'ai pas trouvé de résultats pertinents concernant la conversion vers Tkinter.
 
 import logging
+from typing import Any, Callable, Dict, List, Optional, Set, Type
 import tkinter as tk
 # import tkinter.ttk as ttk
 from tkinter import ttk, PhotoImage
@@ -206,7 +207,8 @@ class Viewer(ttk.Frame, patterns.Observer):
         log.debug(f"Viewer.__init__ : crée le widget {self} avec parent={parent}.")
         self.widget = self.createWidget(parent)  # Crée le widget pour afficher les objets.(Taskviewer,...)
 
-        self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        # self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        self.widget.grid(row=2, column=2, sticky="news")
         # !!! self.widget est aussi créé dans initLayout ! ?
         # Appeler initLayout MAINTENANT pour créer la structure.
         self.initLayout()
@@ -415,7 +417,8 @@ class Viewer(ttk.Frame, patterns.Observer):
         log.debug(f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}.")
         # 1. Créer le sizer principal, enfant de 'self'
         self._sizer = tk.Frame(self)  # Utilisation de Frame pour le sizer
-        self._sizer.pack(side="top", fill="both", expand=True)  # Gérez votre layout avec pack, grid ou place
+        # self._sizer.pack(side="top", fill="both", expand=True)  # Gérez votre layout avec pack, grid ou place
+        self._sizer.grid(row=0, column=0, sticky="news")  # Utilisation de grid pour le layout
 
         # 2. Créer la barre d'outils, enfant de 'self._sizer'
         # self.toolbar = toolbarttk.ToolBar(self._sizer, self.settings, (16, 16))
@@ -432,7 +435,8 @@ class Viewer(ttk.Frame, patterns.Observer):
         # Utilisation de pack() pour la disposition verticale
         # self.toolbar.pack(in_=self._sizer, fill=tk.X, expand=False)  # Remplissage horizontal, pas d'expansion verticale
         # # self.toolbar.pack(fill=tk.X, expand=False, pady=5)
-        self.toolbar.pack(fill=tk.X, expand=False, side=tk.TOP)
+        # self.toolbar.pack(fill=tk.X, expand=False, side=tk.TOP)
+        self.toolbar.grid(row=0, column=0, sticky="new")  # Positionnement en haut
 
         # 3. Créer le widget principal, enfant de 'self._sizer'
         #    On passe self._sizer comme parent à la méthode createWidget
@@ -442,7 +446,8 @@ class Viewer(ttk.Frame, patterns.Observer):
         # 4. Packer le widget principal à l'intérieur de 'self._sizer'
         # # self._sizer.Add(self.widget, proportion=1, flag=wx.EXPAND)
         # self.widget.pack(in_=self._sizer, fill=tk.BOTH, expand=True)  # Remplissage horizontal et vertical, expansion
-        self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        # self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
+        self.widget.grid(row=0, column=2, sticky="new")
         # if hasattr(self.widget, "GetCanvas"):
         #     self.widget.GetCanvas().pack(padx=10, pady=10, expand=True, fill="both")
         # else:
@@ -531,6 +536,7 @@ class Viewer(ttk.Frame, patterns.Observer):
                 # Gérer les cas où l'icône n'est pas trouvée (pour ne pas casser l'index)
                 log.warning(f"Image {image_name} non trouvée dans ArtProvider.")
         # return images
+        log.debug(f"Viewer.createImageList : Liste d'image créée : {imageList}")
         return imageList
 
     def getWidget(self):
@@ -542,11 +548,14 @@ class Viewer(ttk.Frame, patterns.Observer):
             self.widget.focus_set(*args, **kwargs)
 
     def createSorter(self, collection):
-        """Crée un trieur pour organiser la présentation."""
+        """Crée un trieur pour organiser la présentation.
+
+        Cette méthode peut être remplacée pour décorer la présentation avec un trieur."""
         return collection
 
     def createFilter(self, collection):
-        """Crée un filtre pour organiser la présentation."""
+        """Crée un filtre pour organiser la présentation.
+        Cette méthode peut être remplacée pour décorer la présentation avec un trieur."""
         return collection
 
     def onAttributeChanged(self, newValue, sender):
@@ -716,6 +725,10 @@ class Viewer(ttk.Frame, patterns.Observer):
         # if hasattr(self.widget, 'select_all'):
         #     self.widget.select_all()
         self.widget.select_all()  # A adapter en fonction du widget
+        #
+        # Non Direct : tree.selection_add(tree.get_children()) (Seulement pour les éléments de niveau 1)
+        # Pour tous les niveaux, cela nécessite de parcourir récursivement l'arbre et d'utiliser tree.selection_add(all_item_ids).
+
         # On utilise after() pour simuler CallAfter() de wxPython
         # tk.callAfter(self.endOfSelectAll)
         self.after(0, self.endOfSelectAll)
@@ -955,10 +968,13 @@ class Viewer(ttk.Frame, patterns.Observer):
         # cutCommand.bind(self, ID_CUT)  # ? cela ou le suivant ?
         # self.bind("<cutCommand>", ID_CUT?)
         # self.bind("<cutCommand>", cutCommand)  # _tkinter.TclError: bad event type or keysym "cutCommand"
+        self.bind("<Control-x>", lambda event: cutCommand.doCommand())
         # copyCommand.Bind(self, wx.ID_COPY)
         # self.bind("<copyCommand>", ID_COPY?)
+        self.bind("<Control-c>", lambda event: copyCommand.doCommand())
         # pasteCommand.Bind(self, wx.ID_PASTE)
         # self.bind("<pasteCommand>", ID_PASTE?)
+        self.bind("<Control-v>", lambda event: pasteCommand.doCommand())
 
         return cutCommand, copyCommand, pasteCommand
 
@@ -976,6 +992,8 @@ class Viewer(ttk.Frame, patterns.Observer):
 
         # editCommand.bind(self, wx.ID_EDIT)
         # self.deleteUICommand.bind(self, wx.ID_DELETE)
+        self.bind("<Return>", lambda event: editCommand.doCommand())
+        self.bind("<Control-Delete>", lambda event: self.deleteUICommand.doCommand())
 
         return editCommand, self.deleteUICommand
 
@@ -1212,6 +1230,7 @@ class TreeViewer(Viewer):
         self.widget.bind("<<TreeviewClose>>", self.onItemCollapsed)
         #  "<<TreeviewSelect>>" : la sélection à été modifiée.
         # self.widget.bind("<<TreeviewSelect>>", self.select)  # TODO : à essayer !
+        self.widget.bind("<<TreeviewSelect>>", self.onSelect)  # TODO : à essayer !
         log.debug("TreeViewer : Initialisé !")
 
     def onItemExpanded(self, event):
@@ -1246,12 +1265,12 @@ class TreeViewer(Viewer):
 
     def isAnyItemExpandable(self):
         """Vérifie si un élément est expansible."""
-        return self.widget.isAnyItemExpandable()  # TODO : Adapter pour Tkinter
+        return self.widget.isAnyItemExpandable()  # TODO : Normalement Adapté pour Tkinter
         # return False
 
     def isAnyItemCollapsable(self):
         """Vérifie si un élément est collapsable."""
-        return self.widget.isAnyItemCollapsable()  # TODO : Adapter pour Tkinter
+        return self.widget.isAnyItemCollapsable()  # TODO : Normalement Adapté pour Tkinter
         # return False
 
     def isTreeViewer(self):
@@ -1405,9 +1424,9 @@ class ViewerWithColumns(Viewer):
             # for column in self.columns:
             self.initColumn(column)
         if self.hasOrderingColumn():
-            # self.widget.SetResizeColumn(1)  # TODO : A adapter pour Tkinter
+            self.widget.SetResizeColumn(1)  # TODO : Normalement adapté pour Tkinter
             # de AutoColumnWidthMixin ! Le resize est automatique dans tkinter !
-            # self.widget.SetMainColumn(1)  # TODO : A adapter pour Tkinter
+            self.widget.SetMainColumn(1)  # TODO : Normalement adapté pour Tkinter
             pass
 
     def initColumn(self, column):
@@ -1443,9 +1462,9 @@ class ViewerWithColumns(Viewer):
         # Remplace les commentaires # A adapter pour Tkinter
         # par le code Tkinter pour afficher ou masquer les colonnes.
         if column.name() == "ordering":
-            # self.widget.SetResizeColumn(1 if show else 0)  # TODO : A adapter pour Tkinter
+            self.widget.SetResizeColumn(1 if show else 0)  # TODO : Normalement adapté pour Tkinter
             # de AutoColumnWidthMixin ! Le resize est automatique dans tkinter !
-            # self.widget.SetMainColumn(1 if show else 0) # TODO : A adapter pour Tkinter
+            self.widget.SetMainColumn(1 if show else 0) # TODO : Normalement adapté pour Tkinter
             # SetMainColumn vient de hypertreelist !
             # Sets the HyperTreeList main column (i.e. the position of the underlying CustomTreeCtrl.
             pass  # A adapter !
@@ -1460,7 +1479,7 @@ class ViewerWithColumns(Viewer):
         else:
             self.__visibleColumns.remove(column)
             self.__stopObserving(column.eventTypes())
-            self.widget.showColumn(column, show)  # TODO : Adapter pour Tkinter
+            self.widget.showColumn(column, show)  # TODO : Normalement adapter pour Tkinter
         self.settings.set(
             self.settingsSection(),
             "columns",
@@ -1524,14 +1543,18 @@ class ViewerWithColumns(Viewer):
         """
         return column in self.__visibleColumns
 
-    def visibleColumns(self):
+    # def visibleColumns(self):
+    def visibleColumns(self) -> List[str]:
         """
         Retourne la liste des colonnes visibles.
 
         Returns :
             Liste des colonnes actuellement visibles.
         """
-        return self.__visibleColumns
+        # return self.__visibleColumns
+        # Retourne une liste des colonnes visibles du widget.
+        # La colonne Subject reste toujours visible.
+        return [itemctrltk.Column("subject", _("Subject"))]  # TODO : la classe Column est normalement adaptée maintenant !
 
     def hideableColumns(self):
         """
@@ -1853,8 +1876,8 @@ class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
         super().initColumn(column)
         if self.isSortedBy(column.name()):
             log.debug(f"SortableViewerWithColumns.initColumns : sur self.widget={self.widget}.")
-            # self.widget.showSortColumn(column)  # TODO : A adapter pour Tkinter
-            # Acruellement 02/12/2025 showSortColumn Ne fonctionne pas !
+            # self.widget.showSortColumn(column)  # TODO : Normalement adapté pour Tkinter
+            # Actuellement 02/12/2025 showSortColumn Ne fonctionne pas !
             pass
         self.showSortOrder()
 
@@ -1888,7 +1911,7 @@ class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
         for column in self.columns():
             if self.isSortedBy(column.name()):
                 log.debug(f"SortableViewerWithColumns.showSortColumn : sur self.widget={self.widget}.")
-                # self.widget.showSortColumn(column)  # TODO : A adapter pour Tkinter
+                self.widget.showSortColumn(column)  # TODO : Normalement adapté pour Tkinter
                 break
 
     def showSortOrder(self):
@@ -2091,7 +2114,7 @@ if __name__ == '__main__':
         def getRootItems(self):
             return []
 
-            # Ajoute les viewers au Notebook
+    # Ajoute les viewers au Notebook
     list_viewer = ajouter_viewer(MonListViewer, "List Viewer Démo")
     tree_viewer = ajouter_viewer(MonTreeViewer, "Tree Viewer Démo")
 
