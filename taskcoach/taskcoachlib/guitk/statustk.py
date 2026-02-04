@@ -138,7 +138,7 @@ if __name__ == '__main__':
             return "status 1", "status 2"
     root = tk.Tk()
     viewer = ViewerTest()
-    status_bar = StatusBar(root,viewer)
+    status_bar = StatusBar(root, viewer)
     status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
     root.mainloop()
