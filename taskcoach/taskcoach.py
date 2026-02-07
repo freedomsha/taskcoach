@@ -36,6 +36,7 @@ taskcoach.py est le point d'entrée principal. Il :
 # voir https://docs.python.org/fr/3.12/library/logging.html pour son implantation
 import logging
 import logging.handlers
+
 # Créer un enregistreur de niveau module
 log = logging.getLogger(__name__)
 
@@ -45,14 +46,14 @@ def namer(name):
 
 
 def rotator(source, dest):
-    with open(source, 'rb') as f_in:
-        with open(dest, 'wb') as f_out:
+    with open(source, "rb") as f_in:
+        with open(dest, "wb") as f_out:
             f_out.write(f_in.read())
     os.remove(source)
 
 
 # --- Ajout pour supprimer les logs DEBUG de Pillow (PIL) ---
-logging.getLogger('PIL').setLevel(logging.WARNING)
+logging.getLogger("PIL").setLevel(logging.WARNING)
 # --------------------------------------------------------
 # Il reste à utiliser cet enregistreur pour effectuer toute journalisation nécessaire.
 # Les messages enregistrés vers l’enregistreur d’images au niveau du module
@@ -82,19 +83,21 @@ logging.getLogger('PIL').setLevel(logging.WARNING)
 #  config, domain, filesystem, gui, help, i18n, iphone, mailer, meta, notify, patterns,
 #  persistence, powermgt, speak, syncml, thirdparty, tools, widgets, workaround)
 
-rh = logging.handlers.RotatingFileHandler('taskcoach.log', maxBytes=1024000, backupCount=50)
+rh = logging.handlers.RotatingFileHandler(
+    "taskcoach.log", maxBytes=1024000, backupCount=50
+)
 rh.rotator = rotator
 rh.namer = namer
 
 logging.basicConfig(
     level=logging.DEBUG,  # DEBUG, Tu peux passer à INFO ou WARNING en production
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         # logging.FileHandler("taskcoach.log", mode='w', encoding='utf-8'),
         # logging.handlers.RotatingFileHandler("taskcoach.log", mode='w', encoding='utf-8'),
         rh,
-        logging.StreamHandler()  # Affiche aussi dans la console
-    ]
+        logging.StreamHandler(),  # Affiche aussi dans la console
+    ],
 )
 
 
@@ -116,7 +119,9 @@ os.environ["XLIB_SKIP_ARGB_VISUALS"] = "1"
 # except ImportError:
 #     pass  # si erreur ne rien faire
 log.info("****************************************************************")
-log.info("*               D\u00e9marrage de Task Coach                          *")
+log.info(
+    "*               D\u00e9marrage de Task Coach                          *"
+)
 log.info("****************************************************************")
 
 if not hasattr(sys, "frozen"):
@@ -145,6 +150,7 @@ if not hasattr(sys, "frozen"):
 
     try:
         import taskcoachlib  # pylint: disable=W0611
+
         # d'apres https://diveintopython3.net/porting-code-to-python-3-with-2to3.html
     except ImportError:
         # On Ubuntu 12.04, taskcoachlib is installed in /usr/share/pyshared,
@@ -161,7 +167,9 @@ if not hasattr(sys, "frozen"):
             import taskcoachlib  # pylint: disable=W0611  # noqa: F401
         except ImportError:
             # si erreur écrire une erreur dans le log et sortir
-            log.error("Impossible d'importer 'taskcoachlib' m\u00eame apr\u00e8s avoir modifi\u00e9 sys.path")
+            log.error(
+                "Impossible d'importer 'taskcoachlib' m\u00eame apr\u00e8s avoir modifi\u00e9 sys.path"
+            )
             sys.stderr.write(
                 """ERROR: cannot import the library 'taskcoachlib'.
                 Please see https://answers.launchpad.net/taskcoach/+faq/1063
@@ -170,7 +178,9 @@ if not hasattr(sys, "frozen"):
                 Voir l'adresse pour plus d'information et de possibles résolution.
                 """
             )
-            sys.exit(1)  # quitte le programme suite à une erreur autre que syntaxe
+            sys.exit(
+                1
+            )  # quitte le programme suite à une erreur autre que syntaxe
 else:
     log.debug("Environnement frozen détecté (exécutable)")
 
@@ -182,10 +192,21 @@ def start():
     et démarre-lance la boucle principale. Il gère également le profilage si l'option --profile
     est spécifiée.
     """
+    # Correctif pour wxPython 4+ (Phoenix)
+    # L'erreur "assert traits failed" survient car la configuration tente d'accéder
+    # aux chemins système (wx.StandardPaths) avant que l'application wx ne soit créée.
+    try:
+        import wx
+
+        if wx.GetApp() is None:
+            _dummy_app = wx.App(False)
+    except ImportError:
+        pass
 
     # pylint: disable=W0404
     from taskcoachlib import application
     from taskcoachlib import config
+
     # from taskcoachlib.config import arguments
     # import des bibliothèques configurations-options et de l'application
 
@@ -224,12 +245,16 @@ def start():
     # options = vars(options)
     # print(vars(options), args)
     # print(f"taskcoach.py: options:{vars(options)} args:{args}")
-    log.info("Arguments analys\u00e9s : options=%s, args=%s", vars(options), args)
+    log.info(
+        "Arguments analys\u00e9s : options=%s, args=%s", vars(options), args
+    )
 
     # Définir le GUI global (pour tous les modules)
     from taskcoachlib.config.arguments import set_gui
+
     set_gui(options.gui_name)
 
+    app = None
     if options.gui_name == "wx":
         # Lancement de l'initialisation de l'application version wxPython:
         app = application.application.Application(
@@ -252,7 +277,9 @@ def start():
         # les diverses parties du programme sont exécutées.)
         # runctx fournit les cartographies globales et locales pour app.start().
         # Le résultat semble être enregistré dans la fichier taskcoach.profile !
-        cProfile.runctx("app.start()", globals(), locals(), filename=".profile")
+        cProfile.runctx(
+            "app.start()", globals(), locals(), filename=".profile"
+        )
     else:
         log.info("Lancement de l'application avec Application.start()")
         # Point de lancement pour la boucle principale de Tkinter.
@@ -260,5 +287,7 @@ def start():
 
 
 if __name__ == "__main__":
-    log.info("Lancement du programme Task Coach via taskcoach.py et les arguments d'ArgumentParser.")
+    log.info(
+        "Lancement du programme Task Coach via taskcoach.py et les arguments d'ArgumentParser."
+    )
     start()
