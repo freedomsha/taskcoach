@@ -35,6 +35,7 @@ import re
 import operator
 
 from functools import reduce
+
 # from .taskcoachlib.thirdparty.agw import hypertreelist
 from wx.lib.agw import hypertreelist
 
@@ -55,7 +56,15 @@ from taskcoachlib import (
     render,
     operating_system,
 )  # pylint: disable=W0622
-from taskcoachlib.domain import base, task, note, category, attachment, effort, date
+from taskcoachlib.domain import (
+    base,
+    task,
+    note,
+    category,
+    attachment,
+    effort,
+    date,
+)
 from taskcoachlib.gui import dialog, printer
 
 # import taskcoachlib.gui.dialog
@@ -95,6 +104,7 @@ class IOCommand(base_uicommand.UICommand):  # pylint: disable=W0223
         Args :
             iocontroller (IOController) : Contrôleur I/O chargé de gérer les fichiers.
         """
+        # Extract the iocontroller from kwargs and initialize the base class
         # log.debug(f"tclib.gui.uicommand.uicommand.IOCommand Initializing IOCommand with {args} and {kwargs} et y retire iocontroller.")  # Débogage
         self.iocontroller = kwargs.pop("iocontroller", None)
         super().__init__(*args, **kwargs)
@@ -168,6 +178,7 @@ class AttachmentsCommand(base_uicommand.UICommand):  # pylint: disable=W0223
     """
     Commande pour gérer les fichiers joints. Utilisée pour interagir avec une liste de fichiers joints.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande avec une liste de fichiers joints fournis.
@@ -243,7 +254,9 @@ class FileOpen(IOCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        log.info("FileOpen.doCommand() appelé. Ouvre self.iocontroller.open()")  # Débogage
+        log.info(
+            "FileOpen.doCommand() appelé. Ouvre self.iocontroller.open()"
+        )  # Débogage
         # self.iocontroller.open()
         try:
             self.iocontroller.open()
@@ -282,7 +295,9 @@ class RecentFileOpen(IOCommand):
 
     def doCommand(self, event):
         """Ouvre le fichier récent sélectionné."""
-        log.debug(f"RecentFileOpen.doCommand : Appelé et appelle self.iocontroller.open({self.__filename})")
+        log.debug(
+            f"RecentFileOpen.doCommand : Appelé et appelle self.iocontroller.open({self.__filename})"
+        )
         self.iocontroller.open(self.__filename)
 
 
@@ -302,7 +317,8 @@ class FileMerge(IOCommand):
         super().__init__(
             menuText=_("&Merge..."),
             helpText=_("Merge tasks from another file with the current file"),
-            bitmap="merge",
+            # bitmap="merge",
+            bitmap="mergedisk",
             *args,
             **kwargs,
         )
@@ -528,7 +544,9 @@ class FileImportTemplate(IOCommand):
         self.iocontroller.importTemplate()
 
 
-class FileEditTemplates(settings_uicommand.SettingsCommand, base_uicommand.UICommand):
+class FileEditTemplates(
+    settings_uicommand.SettingsCommand, base_uicommand.UICommand
+):
     """
     Commande pour éditer les modèles existants.
 
@@ -596,15 +614,13 @@ class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
         """
         if (
             wx.MessageBox(
-                _(
-                    """Purging deleted items is undoable.
+                _("""Purging deleted items is undoable.
                     If you're planning on enabling
                     the SyncML feature again with the
                     same server you used previously,
                     these items will probably come back.
                     
-                    Do you still want to purge?"""
-                ),
+                    Do you still want to purge?"""),
                 _("Warning"),
                 wx.YES_NO,
             )
@@ -613,7 +629,9 @@ class FilePurgeDeletedItems(mixin_uicommand.NeedsDeletedItemsMixin, IOCommand):
             self.iocontroller.purgeDeletedItems()
 
 
-class PrintPageSetup(settings_uicommand.SettingsCommand, base_uicommand.UICommand):
+class PrintPageSetup(
+    settings_uicommand.SettingsCommand, base_uicommand.UICommand
+):
     """
     Commande pour changer les paramètres de la page. Les paramètres de la page sont sauvegardés dans les réglages de l'application.
 
@@ -694,7 +712,16 @@ class PrintPreview(ViewerCommand, settings_uicommand.SettingsCommand):
             self.viewer, self.settings, twoPrintouts=True
         )
         printerSettings = printer.PrinterSettings(self.settings)
-        preview = wx.PrintPreview(printout, printout2, printerSettings.printData)
+        preview = wx.PrintPreview(
+            printout, printout2, printerSettings.printData
+        )
+        if not preview.IsOk():
+            wx.MessageBox(
+                _("There was a problem creating the print preview."),
+                _("Print Preview Error"),
+                wx.OK | wx.ICON_ERROR,
+            )
+            return
         previewFrame = wx.PreviewFrame(
             preview, self.mainWindow(), _("Print preview"), size=(750, 700)
         )
@@ -751,7 +778,9 @@ class Print(ViewerCommand, settings_uicommand.SettingsCommand):
         # réinitialiser la propriété ToPage à la valeur MaxPage si nécessaire :
         # Si l'utilisateur sélectionne l'option de sélection, ajuste les pages à imprimer:
         if wxPrinter.PrintDialogData.Selection:
-            wxPrinter.PrintDialogData.ToPage = wxPrinter.PrintDialogData.MaxPage
+            wxPrinter.PrintDialogData.ToPage = (
+                wxPrinter.PrintDialogData.MaxPage
+            )
         wxPrinter.Print(self.mainWindow(), printout, prompt=False)
 
 
@@ -821,7 +850,10 @@ class FileManageBackups(IOCommand, settings_uicommand.SettingsCommand):
                 try:
                     self.iocontroller.open(dlg.restoredFilename())
                 except IOError as e:
-                    log.error(f"Erreur lors de l'ouverture de {dlg.restoredFilename()}: {e}")
+                    log.error(
+                        f"Erreur lors de l'ouverture de {dlg.restoredFilename()}: {e}"
+                    )
+
     # F-strings: Pour formater des chaînes, privilégiez les f-strings (introduites en Python 3.6) qui offrent une syntaxe plus concise et lisible :
     #     Python
     #
@@ -851,7 +883,9 @@ class FileManageBackups(IOCommand, settings_uicommand.SettingsCommand):
 class FileExportAsHTML(FileExportCommand):
     """
     Action pour exporter le contenu d'une visionneuse au format HTML.
-    """
+
+    Uses a non-modal dialog to allow users to change selections while
+    the export dialog is open."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -870,23 +904,48 @@ class FileExportAsHTML(FileExportCommand):
     def exportFunction(self):
         return self.iocontroller.exportAsHTML
 
+    def enabled(self, event):
+        return True
+
 
 class FileExportAsCSV(FileExportCommand):
     """
     Action pour exporter le contenu d'une visionneuse au format CSV.
-    """
+
+    Uses a non-modal dialog to allow users to change selections while
+    the export dialog is open."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Export as &CSV..."),
             helpText=_(
-                "Export items from a viewer in Comma Separated Values " "(CSV) format"
+                "Export items from a viewer in Comma Separated Values "
+                "(CSV) format"
             ),
             bitmap="exportascsv",
             *args,
             **kwargs,
         )
+        self._exportDialog = None
         # print("tclib.gui.uicommand.uicommand.FileExportAsCSV command initialized")  # Débogage
+
+    def doCommand(self, event):
+        """Show non-modal export dialog."""
+        if self._exportDialog:
+            self._exportDialog.Raise()
+            return
+        self._exportDialog = self.getExportDialogClass()(
+            self.mainWindow(),
+            settings=self.settings,
+            exportCallback=self.exportFunction(),
+        )
+        self._exportDialog.Show()
+        self._exportDialog.Bind(wx.EVT_WINDOW_DESTROY, self._onDialogDestroyed)
+
+    def _onDialogDestroyed(self, event):
+        """Clear dialog reference when destroyed."""
+        self._exportDialog = None
+        event.Skip()
 
     @staticmethod
     def getExportDialogClass():
@@ -895,11 +954,16 @@ class FileExportAsCSV(FileExportCommand):
     def exportFunction(self):
         return self.iocontroller.exportAsCSV
 
+    def enabled(self, event):
+        return True
+
 
 class FileExportAsICalendar(FileExportCommand):
     """
     Action pour exporter le contenu d'une visionneuse au format iCalendar.
-    """
+
+    Uses a non-modal dialog to allow users to change selections while
+    the export dialog is open."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -909,14 +973,40 @@ class FileExportAsICalendar(FileExportCommand):
             *args,
             **kwargs,
         )
+        self._exportDialog = None
         # print("tclib.gui.uicommand.uicommand.FileExportAsICalendar command initialized")  # Débogage
+
+    def doCommand(self, event):
+        """Show non-modal export dialog."""
+        # If dialog already open, just raise it
+        if self._exportDialog:
+            self._exportDialog.Raise()
+            return
+
+        self._exportDialog = self.getExportDialogClass()(
+            self.mainWindow(),
+            settings=self.settings,
+            exportCallback=self.exportFunction(),
+        )
+        # Use Show() for non-modal dialog
+        self._exportDialog.Show()
+        # Clear reference when dialog is destroyed
+        self._exportDialog.Bind(wx.EVT_WINDOW_DESTROY, self._onDialogDestroyed)
+
+    def _onDialogDestroyed(self, event):
+        """Clear dialog reference when destroyed."""
+        self._exportDialog = None
+        event.Skip()
 
     def exportFunction(self):
         return self.iocontroller.exportAsICalendar
 
     def enabled(self, event):
-        """ Indique si la commande est activable """
-        return any(self.exportableViewer(viewer) for viewer in self.mainWindow().viewer)
+        """Indique si la commande est activable"""
+        return any(
+            self.exportableViewer(viewer)
+            for viewer in self.mainWindow().viewer
+        )
 
     @staticmethod
     def getExportDialogClass():
@@ -926,33 +1016,59 @@ class FileExportAsICalendar(FileExportCommand):
     def exportableViewer(aViewer) -> bool:
         """Vérifie si la visionneuse peut être exportée au format iCalendar."""
         return aViewer.isShowingTasks() or (
-            aViewer.isShowingEffort() and not aViewer.isShowingAggregatedEffort()
+            aViewer.isShowingEffort()
+            and not aViewer.isShowingAggregatedEffort()
         )
 
 
 class FileExportAsTodoTxt(FileExportCommand):
     """
     Action pour exporter le contenu d'une visionneuse au format Todo.txt.
-    """
+
+    Uses a non-modal dialog to allow users to change selections while
+    the export dialog is open."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Export as &Todo.txt..."),
             helpText=_(
-                "Export items from a viewer in Todo.txt format " "(see todotxt.com)"
+                "Export items from a viewer in Todo.txt format "
+                "(see todotxt.com)"
             ),
             bitmap="exportascsv",
             *args,
             **kwargs,
         )
+        self._exportDialog = None
         # print("tclib.gui.uicommand.uicommand.FileExportAsTodoTxt command initialized")  # Débogage
+
+    def doCommand(self, event):
+        """Show non-modal export dialog."""
+        if self._exportDialog:
+            self._exportDialog.Raise()
+            return
+        self._exportDialog = self.getExportDialogClass()(
+            self.mainWindow(),
+            settings=self.settings,
+            exportCallback=self.exportFunction(),
+        )
+        self._exportDialog.Show()
+        self._exportDialog.Bind(wx.EVT_WINDOW_DESTROY, self._onDialogDestroyed)
+
+    def _onDialogDestroyed(self, event):
+        """Clear dialog reference when destroyed."""
+        self._exportDialog = None
+        event.Skip()
 
     def exportFunction(self):
         return self.iocontroller.exportAsTodoTxt
 
     def enabled(self, event):
-        """ Indique si la commande est activable """
-        return any(self.exportableViewer(viewer) for viewer in self.mainWindow().viewer)
+        """Indique si la commande est activable"""
+        return any(
+            self.exportableViewer(viewer)
+            for viewer in self.mainWindow().viewer
+        )
 
     @staticmethod
     def getExportDialogClass():
@@ -975,7 +1091,9 @@ class FileImportCSV(IOCommand):
         """
         super().__init__(
             menuText=_("&Import CSV..."),
-            helpText=_("Import tasks from a Comma Separated Values (CSV) file"),
+            helpText=_(
+                "Import tasks from a Comma Separated Values (CSV) file"
+            ),
             bitmap="exportascsv",
             *args,
             **kwargs,
@@ -998,7 +1116,9 @@ class FileImportCSV(IOCommand):
                         _("Import CSV"),
                     )
                     continue
-                wizard = CSVImportWizard(filename, None, wx.ID_ANY, _("Import CSV"))
+                wizard = CSVImportWizard(
+                    filename, None, wx.ID_ANY, _("Import CSV")
+                )
                 if wizard.RunWizard():
                     self.iocontroller.importCSV(**wizard.GetOptions())
                     break
@@ -1083,9 +1203,13 @@ class FileQuit(base_uicommand.UICommand):
         """
         Exécute la commande pour quitter l'application. Ferme la fenêtre principale de l'application.
         """
-        log.debug(f"FileQuit.doCommand : Essaie de forcer à fermer {self.mainWindow()}.")
+        log.debug(
+            f"FileQuit.doCommand : Essaie de forcer à fermer {self.mainWindow()}."
+        )
         self.mainWindow().Close(force=True)
-        log.debug("FileQuit.doCommand : self.mainWindow={self.mainWindow()} est fermé.")
+        log.debug(
+            "FileQuit.doCommand : self.mainWindow={self.mainWindow()} est fermé."
+        )
 
 
 class EditUndo(base_uicommand.UICommand):
@@ -1116,7 +1240,8 @@ class EditUndo(base_uicommand.UICommand):
 
     @staticmethod
     def getUndoMenuText():
-        """Retourne le texte du menu pour la commande d'annulation, en incluant la description de la dernière action utilisateur."""
+        """Retourne le texte du menu pour la commande d'annulation,
+        en incluant la description de la dernière action utilisateur."""
         return "%s\tCtrl+Z" % patterns.CommandHistory().undostr(_("&Undo"))
 
     def doCommand(self, event):
@@ -1139,7 +1264,9 @@ class EditUndo(base_uicommand.UICommand):
             return windowWithFocus.CanUndo()
         else:
             # TODO: hasHistory is a list !? a bool was better ?
-            return patterns.CommandHistory().hasHistory() and super().enabled(event)
+            return patterns.CommandHistory().hasHistory() and super().enabled(
+                event
+            )
 
 
 class EditRedo(base_uicommand.UICommand):
@@ -1194,7 +1321,9 @@ class EditRedo(base_uicommand.UICommand):
             return windowWithFocus.CanRedo()
         else:
             # Todo: hasFuture is a List ! not a bool !
-            return patterns.CommandHistory().hasFuture() and super().enabled(event)
+            return patterns.CommandHistory().hasFuture() and super().enabled(
+                event
+            )
 
 
 class EditCut(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
@@ -1330,10 +1459,26 @@ class EditPaste(base_uicommand.UICommand):
             # Todo: CanPaste can be None ! a bool would be better !?
             return windowWithFocus.CanPaste()
         else:
-            return command.Clipboard() and super().enabled(event)
+            # return command.Clipboard() and super().enabled(event)
+            clipboard = command.Clipboard()
+            if not clipboard:
+                return False
+            if not super().enabled(event):
+                return False
+            # Check if clipboard contents are compatible with viewer
+            if self.viewer and hasattr(self.viewer, "getSupportedPasteTypes"):
+                supportedTypes = self.viewer.getSupportedPasteTypes()
+                if supportedTypes:
+                    items = clipboard.peek()
+                    for item in items:
+                        if not isinstance(item, supportedTypes):
+                            return False
+            return True
 
 
-class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerCommand):
+class EditPasteAsSubItem(
+    mixin_uicommand.NeedsSelectedCompositeMixin, ViewerCommand
+):
     """
     Action pour coller les éléments du presse-papier dans le fichier de tâches actuel,
     en tant que sous-élément de l'élément actuellement sélectionné.
@@ -1341,6 +1486,14 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
     Attributs :
         viewer (Viewer) : La visionneuse utilisée pour coller les éléments en tant que sous-éléments.
     """
+
+    shortcut = "\tShift+Ctrl+V"
+    defaultMenuText = _("P&aste as subitem") + shortcut
+    labels = {
+        task.Task: _("P&aste as subtask"),
+        note.Note: _("P&aste as subnote"),
+        category.Category: _("P&aste as subcategory"),
+    }
 
     def __init__(self, *args, **kwargs):
         """
@@ -1359,12 +1512,54 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
         )
         # print("tclib.gui.uicommand.uicommand.EditPasteAsSubItem command initialized")  # Débogage
 
+    def onUpdateUI(self, event):
+        super().onUpdateUI(event)
+        self.updateMenuText(self.__menuText())
+
+    def __menuText(self):
+        for class_ in self.labels:
+            if self.viewer.curselectionIsInstanceOf(class_):
+                return self.labels[class_] + self.shortcut
+        return self.defaultMenuText
+
     def doCommand(self, event):
         """
         Exécute la commande de collage en tant que sous-élément.
         """
-        pasteCommand = command.PasteAsSubItemCommand(items=self.viewer.curselection())
-        pasteCommand.do()
+        # pasteCommand = command.PasteAsSubItemCommand(
+        #     items=self.viewer.curselection()
+        # )
+        # pasteCommand.do()
+        # Use viewer's pasteAsSubItemCommand if available
+        viewer = self.viewer
+        # If no viewer set, try to find one from the focused window hierarchy
+        if viewer is None:
+            windowWithFocus = wx.Window.FindFocus()
+            viewer = self._findViewerFromFocus(windowWithFocus)
+        if viewer is not None and hasattr(viewer, "pasteAsSubItemCommand"):
+            parents = viewer.curselection()
+            pasteCommand = viewer.pasteAsSubItemCommand()
+        else:
+            parents = self.viewer.curselection() if self.viewer else []
+            pasteCommand = command.PasteAsSubItemCommand(items=parents)
+        if pasteCommand:
+            pasteCommand.do()
+            # Expand parent items so the pasted subitems are visible
+            if viewer is not None and hasattr(viewer, "settingsSection"):
+                for parent in parents:
+                    parent.expand(True, context=viewer.settingsSection())
+
+    def _findViewerFromFocus(self, window):
+        """Walk up the window hierarchy to find a viewer with pasteAsSubItemCommand.
+
+        This is needed when paste-as-subitem is triggered from menus that don't
+        have a viewer reference, but the focused window is inside a viewer.
+        """
+        while window is not None:
+            if hasattr(window, "pasteAsSubItemCommand"):
+                return window
+            window = window.GetParent()
+        return None
 
     def enabled(self, event) -> bool:
         """
@@ -1379,11 +1574,12 @@ class EditPasteAsSubItem(mixin_uicommand.NeedsSelectedCompositeMixin, ViewerComm
         ) or self.__targetIsTaskAndPastedIsEffort(targetClass, pastedClasses)
 
     @classmethod
-    def __targetIsTaskAndPastedIsEffort(cls, targetClass, pastedClasses) -> bool:
+    def __targetIsTaskAndPastedIsEffort(
+        cls, targetClass, pastedClasses
+    ) -> bool:
         """Vérifie si la classe cible est une tâche et les éléments collés sont tous des efforts."""
         if targetClass != task.Task:
             return False
-
         return cls.__targetAndPastedAreEqual(effort.Effort, pastedClasses)
 
     @staticmethod
@@ -1430,7 +1626,10 @@ class EditPreferences(settings_uicommand.SettingsCommand):
             show (bool) : Indique si la boîte de dialogue doit être affichée.
         """
         editor = dialog.preferences.Preferences(
-            parent=self.mainWindow(), title=_("Preferences"), settings=self.settings
+            parent=self.mainWindow(),
+            title=_("Preferences"),
+            settings=self.settings,
+            taskFile=self.mainWindow().taskFile,
         )
         editor.Show(show=show)
 
@@ -1511,7 +1710,10 @@ class EditToolBarPerspective(settings_uicommand.SettingsCommand):
             event (wx.Event) : L'événement déclencheur.
         """
         self.__editorClass(
-            self.__toolbar, self.settings, self.mainWindow(), _("Customize toolbar")
+            self.__toolbar,
+            self.settings,
+            self.mainWindow(),
+            _("Customize toolbar"),
         ).ShowModal()
 
 
@@ -1700,7 +1902,9 @@ class ViewViewer(settings_uicommand.SettingsCommand, ViewerCommand):
         """
         from taskcoachlib.gui import viewer
 
-        viewer.addOneViewer(self.viewer, self.taskFile, self.settings, self.viewerClass)
+        viewer.addOneViewer(
+            self.viewer, self.taskFile, self.settings, self.viewerClass
+        )
         self.increaseViewerCount()
 
     def increaseViewerCount(self):
@@ -1740,7 +1944,9 @@ class ViewEffortViewerForSelectedTask(
         """
         from taskcoachlib.gui import viewer
 
-        viewer.addOneViewer(self.viewer, self.taskFile, self.settings, self.viewerClass)
+        viewer.addOneViewer(
+            self.viewer, self.taskFile, self.settings, self.viewerClass
+        )
 
 
 class RenameViewer(ViewerCommand):
@@ -1771,7 +1977,7 @@ class RenameViewer(ViewerCommand):
         viewerNameDialog = wx.TextEntryDialog(
             self.mainWindow(),  # parent
             _("New title for the viewer:"),  # message
-            _("Rename viewer"),   # caption
+            _("Rename viewer"),  # caption
             activeViewer.title(),  # default value
         )
         if viewerNameDialog.ShowModal() == wx.ID_OK:
@@ -1900,7 +2106,9 @@ class ViewColumn(ViewerCommand, settings_uicommand.UICheckCommand):
         Args :
             event (wx.Event) : L'événement déclencheur.
         """
-        self.viewer.showColumnByName(self.setting, self._isMenuItemChecked(event))
+        self.viewer.showColumnByName(
+            self.setting, self._isMenuItemChecked(event)
+        )
 
 
 class ViewColumns(ViewerCommand, settings_uicommand.UICheckCommand):
@@ -1948,6 +2156,7 @@ class ViewExpandAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
             **kwargs : Arguments nommés supplémentaires.
         """
         super().__init__(
+            bitmap="tree_expand_all",
             menuText=_("&Expand all items\tShift+Ctrl+E"),
             helpText=help.viewExpandAll,
             *args,
@@ -1981,6 +2190,7 @@ class ViewCollapseAll(mixin_uicommand.NeedsTreeViewerMixin, ViewerCommand):
             **kwargs : Arguments nommés supplémentaires.
         """
         super().__init__(
+            bitmap="tree_collapse_all",
             menuText=_("&Collapse all items\tShift+Ctrl+C"),
             helpText=help.viewCollapseAll,
             *args,
@@ -2064,7 +2274,9 @@ class ViewerSortOrderCommand(ViewerCommand, settings_uicommand.UICheckCommand):
         self.viewer.setSortOrderAscending(self._isMenuItemChecked(event))
 
 
-class ViewerSortCaseSensitive(ViewerCommand, settings_uicommand.UICheckCommand):
+class ViewerSortCaseSensitive(
+    ViewerCommand, settings_uicommand.UICheckCommand
+):
     """
     Action pour définir si le tri est sensible à la casse.
 
@@ -2103,7 +2315,9 @@ class ViewerSortCaseSensitive(ViewerCommand, settings_uicommand.UICheckCommand):
         self.viewer.setSortCaseSensitive(self._isMenuItemChecked(event))
 
 
-class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckCommand):
+class ViewerSortByTaskStatusFirst(
+    ViewerCommand, settings_uicommand.UICheckCommand
+):
     """
     Action pour trier les tâches par statut (actif/inactif/terminé) en priorité.
 
@@ -2115,7 +2329,9 @@ class ViewerSortByTaskStatusFirst(ViewerCommand, settings_uicommand.UICheckComma
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Sort by status &first"),
-            helpText=_("Sort tasks by status (active/inactive/completed) " "first"),
+            helpText=_(
+                "Sort tasks by status (active/inactive/completed) " "first"
+            ),
             *args,
             **kwargs,
         )
@@ -2194,7 +2410,9 @@ class ViewerHideTasks(ViewerCommand, settings_uicommand.UICheckCommand):
             )
 
 
-class ViewerHideCompositeTasks(ViewerCommand, settings_uicommand.UICheckCommand):
+class ViewerHideCompositeTasks(
+    ViewerCommand, settings_uicommand.UICheckCommand
+):
     """
     Action pour masquer les tâches composites (ayant des sous-tâches).
 
@@ -2286,10 +2504,19 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             columnName = event.columnName
         except AttributeError:
             columnName = ""
-        editor = self.viewer.editItemDialog(
-            self.viewer.curselection(), self.bitmap, columnName
-        )
-        editor.Show(show)
+        # Use forceUpdate=True to ensure we get the current selection,
+        # not a stale cached value (important for fast double-click)
+        items = self.viewer.curselection(forceUpdate=True)
+        # editor = self.viewer.editItemDialog(
+        #     self.viewer.curselection(), self.bitmap, columnName
+        # )
+        editor = self.viewer.editItemDialog(items, self.bitmap, columnName)
+        if len(items) > 1:
+            # Use modal dialog for multi-item editing to prevent selection
+            # changes while editing
+            editor.ShowModal()
+        else:
+            editor.Show(show)
 
     def enabled(self, event) -> bool:
         """
@@ -2301,7 +2528,9 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         windowWithFocus = wx.Window.FindFocus()
         if self.findEditCtrl(windowWithFocus):
             return True
-        elif operating_system.isMac() and isinstance(windowWithFocus, wx.TextCtrl):
+        elif operating_system.isMac() and isinstance(
+            windowWithFocus, wx.TextCtrl
+        ):
             return False
         else:
             return super().enabled(event)
@@ -2422,8 +2651,132 @@ class Delete(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
                 fromIndex, toIndex = pos, pos + 1
             windowWithFocus.Remove(fromIndex, toIndex)
         else:
+            # Check if we're deleting categories that have assigned objects
+            selectedItems = self.viewer.curselection()
+            if selectedItems and isinstance(
+                selectedItems[0], category.Category
+            ):
+                assignedObjects = self._getAssignedObjectsForCategories(
+                    selectedItems
+                )
+                if assignedObjects:
+                    self._showCategoryInUseDialog(assignedObjects)
+                    return
             deleteCommand = self.viewer.deleteItemCommand()
             deleteCommand.do()
+
+    def _getAssignedObjectsForCategories(self, categories):
+        """Collect all objects assigned to the given categories and their subcategories."""
+        allAssigned = {}
+        for cat in categories:
+            # Get all children of this category (including nested subcategories)
+            allCategories = [cat] + list(cat.children(recursive=True))
+            for c in allCategories:
+                categorizables = c.categorizables()
+                if categorizables:
+                    allAssigned[c] = list(categorizables)
+        return allAssigned
+
+    def _findNoteOwner(self, targetNote, taskFile):
+        """Find the owner (task or category) of a note."""
+        # Search through all tasks
+        for aTask in taskFile.tasks():
+            if hasattr(aTask, "notes"):
+                for aNote in aTask.notes(recursive=True):
+                    if aNote is targetNote:
+                        return aTask
+        # Search through all categories
+        for aCat in taskFile.categories():
+            if hasattr(aCat, "notes"):
+                for aNote in aCat.notes(recursive=True):
+                    if aNote is targetNote:
+                        return aCat
+        return None
+
+    def _getObjectDisplayPath(self, obj, taskFile):
+        """Get the full display path for an object, including its owner if applicable."""
+        objType = obj.__class__.__name__
+        objSubject = obj.subject(recursive=True)
+
+        # For notes, try to find their owner (task or category)
+        if isinstance(obj, note.Note):
+            owner = self._findNoteOwner(obj, taskFile)
+            if owner:
+                ownerPath = owner.subject(recursive=True)
+                ownerType = owner.__class__.__name__
+                return "[%s] %s -> [%s] %s" % (
+                    ownerType,
+                    ownerPath,
+                    objType,
+                    objSubject,
+                )
+
+        return "[%s] %s" % (objType, objSubject)
+
+    def _showCategoryInUseDialog(self, assignedObjects):
+        """Show a scrollable dialog listing all objects that prevent category deletion."""
+        # Build the list content only (no header/footer)
+        lines = []
+
+        # Get taskFile for finding note owners
+        taskFile = self.mainWindow().taskFile
+
+        for cat, objects in assignedObjects.items():
+            catName = cat.subject(recursive=True)
+            lines.append(_("Category: %s") % catName)
+            for obj in sorted(
+                objects, key=lambda x: x.subject(recursive=True)
+            ):
+                displayPath = self._getObjectDisplayPath(obj, taskFile)
+                lines.append("  - %s" % displayPath)
+            lines.append("")
+
+        # Create a scrollable dialog for potentially long lists
+        dlg = wx.Dialog(
+            self.mainWindow(),
+            title=_("Cannot Delete - Category In Use"),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Header message (outside the scrollable area)
+        headerText = wx.StaticText(
+            dlg,
+            label=_(
+                "Cannot delete the selected category/categories because they have assigned objects:"
+            ),
+        )
+        sizer.Add(headerText, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 10)
+
+        # Scrollable text area with the list
+        textCtrl = wx.TextCtrl(
+            dlg,
+            value="\n".join(lines),
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_DONTWRAP,
+            size=(600, 400),
+        )
+        sizer.Add(textCtrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+
+        # Footer message (outside the scrollable area)
+        footerText = wx.StaticText(
+            dlg,
+            label=_(
+                "Please remove these assignments before deleting the category."
+            ),
+        )
+        sizer.Add(footerText, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 10)
+
+        # OK button
+        okBtn = wx.Button(dlg, wx.ID_OK, _("OK"))
+        okBtn.SetDefault()
+        sizer.Add(okBtn, 0, wx.ALIGN_CENTER | wx.BOTTOM, 10)
+
+        dlg.SetSizer(sizer)
+        dlg.Fit()
+        dlg.CentreOnParent()
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def enabled(self, event) -> bool:
         """
@@ -2506,6 +2859,7 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
     Les méthodes categoriesForTheNewTask, prerequisitesForTheNewTask, et dependenciesForTheNewTask peuvent être adaptées pour implémenter des logiques spécifiques de définition des catégories, prérequis et dépendances pour la nouvelle tâche.
     La méthode __shouldPreset*DateTime peut être étendue pour prendre en charge d'autres paramètres de date et d'heure par défaut.
     """
+
     def __init__(self, *args, **kwargs):
         # Dictionnaire de mots-clés à utiliser pour la création de la tâche :
         self.taskKeywords = kwargs.pop("taskKeywords", dict())
@@ -2537,13 +2891,19 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
         kwargs = self.taskKeywords.copy()
         # Vérifie si des paramètres par défaut doivent être appliqués pour les dates et rappels en fonction des paramètres de configuration :
         if self.__shouldPresetPlannedStartDateTime():
-            kwargs["plannedStartDateTime"] = task.Task.suggestedPlannedStartDateTime()
+            kwargs["plannedStartDateTime"] = (
+                task.Task.suggestedPlannedStartDateTime()
+            )
         if self.__shouldPresetDueDateTime():
             kwargs["dueDateTime"] = task.Task.suggestedDueDateTime()
         if self.__shouldPresetActualStartDateTime():
-            kwargs["actualStartDateTime"] = task.Task.suggestedActualStartDateTime()
+            kwargs["actualStartDateTime"] = (
+                task.Task.suggestedActualStartDateTime()
+            )
         if self.__shouldPresetCompletionDateTime():
-            kwargs["completionDateTime"] = task.Task.suggestedCompletionDateTime()
+            kwargs["completionDateTime"] = (
+                task.Task.suggestedCompletionDateTime()
+            )
         if self.__shouldPresetReminderDateTime():
             kwargs["reminder"] = task.Task.suggestedReminderDateTime()
         #  Création de la commande NewTaskCommand :
@@ -2611,9 +2971,12 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
         Returns :
             bool : True si la date de début prévue doit être préremplie, False sinon.
         """
-        return "plannedStartDateTime" not in self.taskKeywords and self.settings.get(
-            "view", "defaultplannedstartdatetime"
-        ).startswith("preset")
+        return (
+            "plannedStartDateTime" not in self.taskKeywords
+            and self.settings.get(
+                "view", "defaultplannedstartdatetime"
+            ).startswith("preset")
+        )
 
     def __shouldPresetDueDateTime(self):
         """
@@ -2639,9 +3002,12 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
         Returns :
             bool : True si la date de début réelle doit être préremplie, False sinon.
         """
-        return "actualStartDateTime" not in self.taskKeywords and self.settings.get(
-            "view", "defaultactualstartdatetime"
-        ).startswith("preset")
+        return (
+            "actualStartDateTime" not in self.taskKeywords
+            and self.settings.get(
+                "view", "defaultactualstartdatetime"
+            ).startswith("preset")
+        )
 
     def __shouldPresetCompletionDateTime(self):
         """
@@ -2653,9 +3019,12 @@ class TaskNew(TaskListCommand, settings_uicommand.SettingsCommand):
         Returns :
             bool : True si la date de fin doit être préremplie, False sinon.
         """
-        return "completionDateTime" not in self.taskKeywords and self.settings.get(
-            "view", "defaultcompletiondatetime"
-        ).startswith("preset")
+        return (
+            "completionDateTime" not in self.taskKeywords
+            and self.settings.get(
+                "view", "defaultcompletiondatetime"
+            ).startswith("preset")
+        )
 
     def __shouldPresetReminderDateTime(self):
         """
@@ -2715,6 +3084,7 @@ class TaskNewFromTemplate(TaskNew):
 
     Vous pouvez envisager d'ajouter des docstrings aux méthodes d'assistance comme __readTemplate avec des explications sur leur objectif et leurs valeurs de retour.
     """
+
     def __init__(self, filename, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__filename = filename
@@ -2743,7 +3113,9 @@ class TaskNewFromTemplate(TaskNew):
         """
         # file -> open !!!? import io.open
         # return persistence.TemplateXMLReader(open(self.__filename, "rU")).read()
-        return persistence.TemplateXMLReader(open(self.__filename, "r", newline=None)).read()
+        return persistence.TemplateXMLReader(
+            open(self.__filename, "r", encoding="utf-8", newline=None)
+        ).read()
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
         """
@@ -2810,6 +3182,7 @@ class TaskNewFromTemplateButton(
     Lorsqu'un modèle de tâche est sélectionné, une nouvelle tâche est créée en
     utilisant le modèle comme base.
     """
+
     def createPopupMenu(self):
         """
         Crée le menu contextuel pour la commande.
@@ -2822,7 +3195,9 @@ class TaskNewFromTemplateButton(
         """
         from taskcoachlib.gui import menu
 
-        return menu.TaskTemplateMenu(self.mainWindow(), self.taskList, self.settings)
+        return menu.TaskTemplateMenu(
+            self.mainWindow(), self.taskList, self.settings
+        )
 
     def getMenuText(self):
         """
@@ -2853,12 +3228,20 @@ class NewTaskWithSelectedCategories(TaskNew, ViewerCommand):
     Args :
         *args, **kwargs : Arguments supplémentaires passés au constructeur de la classe de base.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("New task with selected &categories..."),
-            helpText=_("Insert a new task with the selected categories checked"),
+            helpText=_(
+                "Insert a new task with the selected categories checked"
+            ),
             *args,
             **kwargs,
+        )
+
+    def enabled(self, event):
+        return super().enabled(event) and bool(
+            self.viewer.curselection(forceUpdate=True)
         )
 
     def categoriesForTheNewTask(self):
@@ -2883,6 +3266,7 @@ class NewTaskWithSelectedTasksAsPrerequisites(
     Args :
         *args, **kwargs : Arguments supplémentaires passés au constructeur de la classe de base.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("New task with selected tasks as &prerequisites..."),
@@ -2915,10 +3299,13 @@ class NewTaskWithSelectedTasksAsDependencies(
     Args :
         *args, **kwargs : Arguments supplémentaires passés au constructeur de la classe de base.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("New task with selected tasks as &dependents..."),
-            helpText=_("Insert a new task with the selected tasks as dependent tasks"),
+            helpText=_(
+                "Insert a new task with the selected tasks as dependent tasks"
+            ),
             *args,
             **kwargs,
         )
@@ -2933,7 +3320,9 @@ class NewTaskWithSelectedTasksAsDependencies(
         return self.viewer.curselection()
 
 
-class NewSubItem(mixin_uicommand.NeedsOneSelectedCompositeItemMixin, ViewerCommand):
+class NewSubItem(
+    mixin_uicommand.NeedsOneSelectedCompositeItemMixin, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour créer un nouvel élément enfant.
 
@@ -2944,7 +3333,10 @@ class NewSubItem(mixin_uicommand.NeedsOneSelectedCompositeItemMixin, ViewerComma
     Le texte du menu et l'icône de la commande sont adaptés en fonction du type de l'élément
     parent sélectionné.
     """
-    shortcut = "\tCtrl+INS" if operating_system.isWindows() else "\tShift+Ctrl+N"
+
+    shortcut = (
+        "\tCtrl+INS" if operating_system.isWindows() else "\tShift+Ctrl+N"
+    )
     # defaultMenuText = _('New &subitem...') + shortcut
     # TypeError: unsupported operand type(s) for +: 'NoneType' and 'str'
     defaultMenuText = _("New &subitem...") + shortcut
@@ -2992,6 +3384,7 @@ class TaskMarkActive(
     La commande nécessite la sélection d'au moins une tâche et vérifie si les tâches
     sélectionnées peuvent être marquées comme actives avant d'exécuter l'action.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             bitmap=task.active.getBitmap(kwargs["settings"]),
@@ -3008,7 +3401,9 @@ class TaskMarkActive(
 
     def enabled(self, event):
         def canBeMarkedActive(aTask):
-            return aTask.actualStartDateTime() > date.Now() or aTask.completed()
+            return (
+                aTask.actualStartDateTime() > date.Now() or aTask.completed()
+            )
 
         return super().enabled(event) and any(
             [canBeMarkedActive(task) for task in self.viewer.curselection()]
@@ -3029,6 +3424,7 @@ class TaskMarkInactive(
     La commande nécessite la sélection d'au moins une tâche et vérifie si les tâches
     sélectionnées peuvent être marquées comme inactives avant d'exécuter l'action.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             bitmap=task.inactive.getBitmap(kwargs["settings"]),
@@ -3066,6 +3462,7 @@ class TaskMarkCompleted(
     La commande nécessite la sélection d'au moins une tâche et vérifie si les tâches
     sélectionnées peuvent être marquées comme terminées avant d'exécuter l'action.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             bitmap=task.completed.getBitmap(kwargs["settings"]),
@@ -3101,6 +3498,7 @@ class TaskMaxPriority(
 
     La commande nécessite la sélection d'au moins une tâche avant de pouvoir être exécutée.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Maximize priority\tShift+Ctrl+I"),
@@ -3128,6 +3526,7 @@ class TaskMinPriority(
 
     La commande nécessite la sélection d'au moins une tâche avant de pouvoir être exécutée.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Minimize priority\tShift+Ctrl+D"),
@@ -3155,6 +3554,7 @@ class TaskIncPriority(
 
     La commande nécessite la sélection d'au moins une tâche avant de pouvoir être exécutée.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Increase priority\tCtrl+I"),
@@ -3182,6 +3582,7 @@ class TaskDecPriority(
 
     La commande nécessite la sélection d'au moins une tâche avant de pouvoir être exécutée.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Decrease priority\tCtrl+D"),
@@ -3213,6 +3614,7 @@ class DragAndDropCommand(ViewerCommand):
     La classe ne gère pas le traitement spécifique de l'opération de glisser-déposer.
     Les classes filles doivent implémenter la logique de déplacement des éléments.
     """
+
     def onCommandActivate(
         self, dropItem, dragItems, part, column
     ):  # pylint: disable=W0221
@@ -3231,10 +3633,14 @@ class DragAndDropCommand(ViewerCommand):
             dropItem,
             dragItems,
             part,
-            column=None if column == -1 else self.viewer.visibleColumns()[column],
+            column=(
+                None if column == -1 else self.viewer.visibleColumns()[column]
+            ),
         )
 
-    def doCommand(self, dropItem, dragItems, part, column):  # pylint: disable=W0221
+    def doCommand(
+        self, dropItem, dragItems, part, column, dropColumn=-1
+    ):  # pylint: disable=W0221
         """Méthode principale pour exécuter l'opération de glisser-déposer.
 
         Cette méthode crée la commande spécifique en utilisant la méthode `createCommand` et
@@ -3250,12 +3656,15 @@ class DragAndDropCommand(ViewerCommand):
             part=part,
             column=column,
             isTree=self.viewer.isTreeViewer(),
+            dropColumn=dropColumn,
         )
         if dragAndDropCommand.canDo():
             dragAndDropCommand.do()
             return dragAndDropCommand
 
-    def createCommand(self, dropItem, dragItems, part, column, isTree):
+    def createCommand(
+        self, dropItem, dragItems, part, column, isTree, dropColumn=-1
+    ):
         """Méthode abstraite à implémenter pour créer la commande de glisser-déposer.
 
         Cette méthode doit être redéfinie par les classes filles pour créer la commande
@@ -3279,7 +3688,8 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
     Cette classe gère le cas spécifique où le glisser-déposer a pour but de réorganiser
     les éléments.
     """
-    def doCommand(self, dropItem, dragItems, part, column):
+
+    def doCommand(self, dropItem, dragItems, part, column, dropColumn=-1):
         """Exécute la commande de glisser-déposer et trie les éléments si nécessaire.
 
         Cette méthode se base sur la méthode `doCommand` de la classe parent,
@@ -3288,10 +3698,12 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
         s'assurer que l'ordre de la vue est cohérent avec l'ordre des tâches.
         """
         command = super().doCommand(
-            dropItem, dragItems, part, column
+            dropItem, dragItems, part, column, dropColumn
         )  # command à renommer !
         if command is not None and command.isOrdering():
-            sortCommand = ViewerSortByCommand(viewer=self.viewer, value="ordering")
+            sortCommand = ViewerSortByCommand(
+                viewer=self.viewer, value="ordering"
+            )
             sortCommand.doCommand(None)
 
 
@@ -3307,7 +3719,17 @@ class TaskDragAndDrop(OrderingDragAndDropCommand, TaskListCommand):
     Cette classe permet de déplacer des tâches et de maintenir l'ordre de la liste
     de tâches à jour après un glisser-déposer.
     """
-    def createCommand(self, dropItem, dragItems, part, column, isTree):
+
+    def createCommand(
+        self, dropItem, dragItems, part, column, isTree, dropColumn=-1
+    ):
+        # Get column name if dropColumn is valid
+        dropColumnName = None
+        if dropColumn >= 0:
+            visibleCols = self.viewer.visibleColumns()
+            if dropColumn < len(visibleCols):
+                dropColumnName = visibleCols[dropColumn].name()
+
         return command.DragAndDropTaskCommand(
             self.taskList,
             dragItems,
@@ -3315,10 +3737,14 @@ class TaskDragAndDrop(OrderingDragAndDropCommand, TaskListCommand):
             part=part,
             column=column,
             isTree=isTree,
+            dropColumn=dropColumn,
+            dropColumnName=dropColumnName,
         )
 
 
-class ToggleCategory(mixin_uicommand.NeedsSelectedCategorizableMixin, ViewerCommand):
+class ToggleCategory(
+    mixin_uicommand.NeedsSelectedCategorizableMixin, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour activer/désactiver une catégorie pour les éléments sélectionnés.
 
@@ -3336,6 +3762,7 @@ class ToggleCategory(mixin_uicommand.NeedsSelectedCategorizableMixin, ViewerComm
     Attributes :
         category (Category) : La catégorie à activer/désactiver.
     """
+
     def __init__(self, *args, **kwargs):
         self.category = kwargs.pop("category")
         subject = self.category.subject()
@@ -3410,6 +3837,7 @@ class Mail(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
         rx_attr (re.compile) : Expression régulière pour extraire les destinataires (To et Cc)
             à partir des attributs des éléments sélectionnés.
     """
+
     rx_attr = re.compile(r"(cc|to)=(.*)")
 
     def __init__(self, *args, **kwargs):
@@ -3491,13 +3919,14 @@ class Mail(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
     def mail(self, to, cc, subject, body, mail, showerror):
         try:
             mail(to, subject, body, cc=cc)
-        except:
+        except Exception:
             # Try again with a dummy recipient:
             try:
                 mail("recipient@domain.com", subject, body)
             except Exception as reason:  # pylint: disable=W0703
                 showerror(
-                    _("Cannot send email:\n%s") % ExceptionAsUnicode(reason),
+                    # _("Cannot send email:\n%s") % ExceptionAsUnicode(reason),
+                    _("Cannot send email:\n%s") % str(reason),
                     caption=_("%s mail error") % meta.name,
                     style=wx.ICON_ERROR,
                 )
@@ -3520,6 +3949,7 @@ class AddNote(
     Attributes :
         bitmap (str) : Le chemin vers l'icône de la commande (facultatif).
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Add &note...\tCtrl+B"),
@@ -3562,6 +3992,7 @@ class OpenAllNotes(
     Attributes :
         bitmap (str) : Le chemin vers l'icône de la commande (facultatif).
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Open all notes...\tShift+Ctrl+B"),
@@ -3605,6 +4036,7 @@ class EffortNew(
         bitmap (str) : Le chemin vers l'icône de la commande (facultatif).
         effortList (EffortList) : La liste d'efforts utilisée pour gérer les efforts.
     """
+
     def __init__(self, *args, **kwargs):
         effortList = kwargs["effortList"]
         super().__init__(
@@ -3615,19 +4047,35 @@ class EffortNew(
             **kwargs,
         )
 
+    def enabled(self, event):
+        if not super().enabled(event):
+            return False
+        # When viewer is showing tasks, require a task to be selected
+        if self.viewer and self.viewer.isShowingTasks():
+            return bool(self.viewer.curselection(forceUpdate=True))
+        return True
+
     def doCommand(self, event, show=True):
-        if self.viewer and self.viewer.isShowingTasks() and self.viewer.curselection():
+        if (
+            self.viewer
+            and self.viewer.isShowingTasks()
+            and self.viewer.curselection()
+        ):
             selectedTasks = self.viewer.curselection()
         elif self.viewer and self.viewer.isShowingEffort():
             selectedEfforts = self.viewer.curselection()
             if selectedEfforts:
                 selectedTasks = [selectedEfforts[0].task()]
             else:
-                selectedTasks = [self.firstTask(self.viewer.domainObjectsToView())]
+                selectedTasks = [
+                    self.firstTask(self.viewer.domainObjectsToView())
+                ]
         else:
             selectedTasks = [self.firstTask(self.taskList)]
 
-        newEffortCommand = command.NewEffortCommand(self.effortList, selectedTasks)
+        newEffortCommand = command.NewEffortCommand(
+            self.effortList, selectedTasks
+        )
         newEffortCommand.do()
         newEffortDialog = dialog.editor.EffortEditor(
             self.mainWindow(),
@@ -3673,7 +4121,9 @@ class EffortStart(
         )
 
     def doCommand(self, event):
-        start = command.StartEffortCommand(self.taskList, self.viewer.curselection())
+        start = command.StartEffortCommand(
+            self.taskList, self.viewer.curselection()
+        )
         start.do()
 
     def enabled(self, event):
@@ -3708,7 +4158,9 @@ class EffortStartForEffort(
         )
 
     def doCommand(self, event):
-        start = command.StartEffortCommand(self.taskList, self.trackableTasks())
+        start = command.StartEffortCommand(
+            self.taskList, self.trackableTasks()
+        )
         start.do()
 
     def enabled(self, event):
@@ -3717,7 +4169,9 @@ class EffortStartForEffort(
     def trackableTasks(self):
         tasks = set([effort.task() for effort in self.viewer.curselection()])
         return [
-            task for task in tasks if not task.completed() and not task.isBeingTracked()
+            task
+            for task in tasks
+            if not task.completed() and not task.isBeingTracked()
         ]
 
 
@@ -3725,7 +4179,8 @@ class EffortStartForTask(TaskListCommand):
     """UICommand(Commande d'interface utilisateur) pour démarrer le suivi d’une tâche spécifique.
 
 
-    Cette commande peut être utilisée pour créer un menu avec des éléments de menu séparés pour toutes les tâches.
+    Cette commande peut être utilisée
+    pour créer un menu avec des éléments de menu séparés pour toutes les tâches.
     Voir gui.menu.StartEffortForTaskMenu.
 
     Cette classe permet de lancer le suivi des efforts pour une tâche spécifique. Elle peut être utilisée
@@ -3762,12 +4217,15 @@ class EffortStartButton(mixin_uicommand.PopupButtonMixin, TaskListCommand):
 
     La commande nécessite la présence d'au moins une tâche non terminée dans la liste de tâches.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs["taskList"] = base.filter.DeletedFilter(kwargs["taskList"])
         super().__init__(
             bitmap="clock_menu_icon",
             menuText=_("&Start tracking effort"),
-            helpText=_("Select a task via the menu and start tracking effort for it"),
+            helpText=_(
+                "Select a task via the menu and start tracking effort for it"
+            ),
             *args,
             **kwargs,
         )
@@ -3783,72 +4241,75 @@ class EffortStartButton(mixin_uicommand.PopupButtonMixin, TaskListCommand):
 
 class EffortStop(EffortListCommand, TaskListCommand, ViewerCommand):
     """
-    Commande d'interface utilisateur pour arrêter ou reprendre le suivi des efforts.
+        Commande d'interface utilisateur pour arrêter ou reprendre le suivi des efforts.
 
-     Cette classe permet d'arrêter le suivi des efforts en cours ou de reprendre le suivi
-     du dernier arrêt. Elle utilise la commande `StopEffortCommand` pour arrêter le suivi
-     et `StartEffortCommand` pour le reprendre.
+         Cette classe permet d'arrêter le suivi des efforts en cours ou de reprendre le suivi
+         du dernier arrêt. Elle utilise la commande `StopEffortCommand` pour arrêter le suivi
+         et `StartEffortCommand` pour le reprendre.
 
-     La commande peut être utilisée via un bouton de la barre d'outils avec un menu contextuel
-     qui affiche des options en fonction de l'état actuel du suivi.
+         La commande peut être utilisée via un bouton de la barre d'outils avec un menu contextuel
+         qui affiche des options en fonction de l'état actuel du suivi.
 
-     Le comportement de la commande change en fonction de l'état du suivi des efforts:
+         Le comportement de la commande change en fonction de l'état du suivi des efforts:
 
-     * Si un ou plusieurs efforts sont en cours de suivi, la commande les arrête.
-     * Si aucun effort n'est en cours de suivi mais qu'il y a eu des arrêts précédents,
-       la commande reprend le suivi de la dernière tâche arrêtée.
+         * Si un ou plusieurs efforts sont en cours de suivi, la commande les arrête.
+         * Si aucun effort n'est en cours de suivi mais qu'il y a eu des arrêts précédents,
+           la commande reprend le suivi de la dernière tâche arrêtée.
 
-     Attributes :
-         defaultMenuText (str) : Texte par défaut du menu ("Stop tracking or resume tracking effort\tShift+Ctrl+T")
-         defaultHelpText (str) : Texte d'aide par défaut ("Stop or resume tracking effort")
-         stopMenuText (str) : Texte du menu pour arrêter le suivi ("Stop tracking %s\tShift+Ctrl+T")
-         stopHelpText (str) : Texte d'aide pour arrêter le suivi ("Stop tracking effort for the active task(s)")
-         resumeMenuText (str) : Texte du menu pour reprendre le suivi ("Resume tracking %s\tShift+Ctrl+T")
-         resumeHelpText (str) : Texte d'aide pour reprendre le suivi ("Resume tracking effort for the last tracked task")
-         bitmap (str) : Chemin vers l'icône de la commande pour le suivi en cours (facultatif).
-         bitmap2 (str) : Chemin vers l'icône de la commande pour le suivi arrêté (facultatif).
+         Attributes :
+             defaultMenuText (str) : Texte par défaut du menu ("Stop tracking or resume tracking effort\tShift+Ctrl+T")
+             defaultHelpText (str) : Texte d'aide par défaut ("Stop or resume tracking effort")
+             stopMenuText (str) : Texte du menu pour arrêter le suivi ("Stop tracking %s\tShift+Ctrl+T")
+             stopHelpText (str) : Texte d'aide pour arrêter le suivi ("Stop tracking effort for the active task(s)")
+             resumeMenuText (str) : Texte du menu pour reprendre le suivi ("Resume tracking %s\tShift+Ctrl+T")
+             resumeHelpText (str) : Texte d'aide pour reprendre le suivi ("Resume tracking effort for the last tracked task")
+             bitmap (str) : Chemin vers l'icône de la commande pour le suivi en cours (facultatif).
+             bitmap2 (str) : Chemin vers l'icône de la commande pour le suivi arrêté (facultatif).
 
-    Les méthodes clés de cette classe sont les suivantes :
-**Méthodes de gestion de l'état et de l'interface utilisateur :**
+        Les méthodes clés de cette classe sont les suivantes :
+    **Méthodes de gestion de l'état et de l'interface utilisateur :**
 
-    __onEffortsChanged(efforts) : Cette méthode privée est appelée lorsqu'il y a une modification dans la liste des efforts. Elle déclenche la mise à jour de l'interface utilisateur pour refléter les changements d'état.
-    updateUI() : Cette méthode met à jour l'interface utilisateur en fonction de l'état actuel du suivi :
-        État du bouton de la barre d'outils : Active ou désactive le bouton en fonction de si des efforts peuvent être démarrés ou arrêtés.
-        Icône du bouton : Change l'icône du bouton en fonction de si le suivi est en cours ou arrêté.
-        Texte du menu : Met à jour le texte du menu pour indiquer l'action à effectuer (arrêter ou reprendre).
-        État des éléments de menu : Met à jour l'état des éléments de menu pour refléter l'état du suivi.
+        __onEffortsChanged(efforts) : Cette méthode privée est appelée lorsqu'il y a une modification dans la liste des efforts. Elle déclenche la mise à jour de l'interface utilisateur pour refléter les changements d'état.
+        updateUI() : Cette méthode met à jour l'interface utilisateur en fonction de l'état actuel du suivi :
+            État du bouton de la barre d'outils : Active ou désactive le bouton en fonction de si des efforts peuvent être démarrés ou arrêtés.
+            Icône du bouton : Change l'icône du bouton en fonction de si le suivi est en cours ou arrêté.
+            Texte du menu : Met à jour le texte du menu pour indiquer l'action à effectuer (arrêter ou reprendre).
+            État des éléments de menu : Met à jour l'état des éléments de menu pour refléter l'état du suivi.
 
-**Méthodes de récupération des informations sur l'état du suivi :**
+    **Méthodes de récupération des informations sur l'état du suivi :**
 
-    efforts () : Cette méthode retourne un ensemble des efforts actuellement suivis, en tenant compte de la sélection de l'utilisateur et de l'état des efforts dans la liste.
-    anyStoppedEfforts () : Cette méthode indique s'il y a eu des efforts arrêtés précédemment.
-    anyTrackedEfforts () : Cette méthode indique s'il y a des efforts actuellement en cours de suivi.
-    mostRecentTrackedTask () : Cette méthode retourne la tâche pour laquelle le suivi a été arrêté le plus récemment.
+        efforts () : Cette méthode retourne un ensemble des efforts actuellement suivis, en tenant compte de la sélection de l'utilisateur et de l'état des efforts dans la liste.
+        anyStoppedEfforts () : Cette méthode indique s'il y a eu des efforts arrêtés précédemment.
+        anyTrackedEfforts () : Cette méthode indique s'il y a des efforts actuellement en cours de suivi.
+        mostRecentTrackedTask () : Cette méthode retourne la tâche pour laquelle le suivi a été arrêté le plus récemment.
 
-**Méthodes pour effectuer les actions de démarrage et d'arrêt :**
+    **Méthodes pour effectuer les actions de démarrage et d'arrêt :**
 
-    doCommand (event=None) : Cette méthode est appelée lorsque l'utilisateur clique sur le bouton ou le menu. Elle détermine si le suivi doit être démarré ou arrêté en fonction de l'état actuel et exécute la commande correspondante (StartEffortCommand ou StopEffortCommand).
+        doCommand (event=None) : Cette méthode est appelée lorsque l'utilisateur clique sur le bouton ou le menu. Elle détermine si le suivi doit être démarré ou arrêté en fonction de l'état actuel et exécute la commande correspondante (StartEffortCommand ou StopEffortCommand).
 
-**Méthodes utilitaires :**
+    **Méthodes utilitaires :**
 
-    trimmedSubject (subject, maxLength=35, postFix="...") : Cette méthode tronque un sujet trop long pour l'affichage dans le menu.
+        trimmedSubject (subject, maxLength=35, postFix="...") : Cette méthode tronque un sujet trop long pour l'affichage dans le menu.
 
-**Fonctionnement général :**
+    **Fonctionnement général :**
 
-    Initialisation : Lors de la création de l'instance, la classe s'abonne aux événements de modification de la liste des efforts pour pouvoir mettre à jour l'interface utilisateur en temps réel.
-    Mise à jour de l'interface utilisateur : L'interface utilisateur est mise à jour régulièrement pour refléter l'état actuel du suivi. Le texte du menu, l'icône du bouton et l'état des éléments de menu sont ajustés en conséquence.
-    Exécution de la commande : Lorsque l'utilisateur clique sur le bouton ou le menu, la méthode doCommand est appelée. Elle détermine l'action à effectuer (démarrer ou arrêter le suivi) et exécute la commande correspondante.
+        Initialisation : Lors de la création de l'instance, la classe s'abonne aux événements de modification de la liste des efforts pour pouvoir mettre à jour l'interface utilisateur en temps réel.
+        Mise à jour de l'interface utilisateur : L'interface utilisateur est mise à jour régulièrement pour refléter l'état actuel du suivi. Le texte du menu, l'icône du bouton et l'état des éléments de menu sont ajustés en conséquence.
+        Exécution de la commande : Lorsque l'utilisateur clique sur le bouton ou le menu, la méthode doCommand est appelée. Elle détermine l'action à effectuer (démarrer ou arrêter le suivi) et exécute la commande correspondante.
 
-En résumé, cette classe offre une interface utilisateur flexible et réactive pour gérer le démarrage et l'arrêt du suivi des efforts dans une application de gestion de tâches. Elle s'adapte aux différents états du système et fournit à l'utilisateur des informations claires sur l'action en cours.
+    En résumé, cette classe offre une interface utilisateur flexible et réactive pour gérer le démarrage et l'arrêt du suivi des efforts dans une application de gestion de tâches. Elle s'adapte aux différents états du système et fournit à l'utilisateur des informations claires sur l'action en cours.
 
-Points clés:
+    Points clés:
 
-    Flexibilité: La classe peut gérer différents scénarios (aucun effort en cours, plusieurs efforts en cours, reprise d'un effort arrêté).
-    Réactivité: L'interface utilisateur est mise à jour en temps réel pour refléter les changements d'état.
-    Clarté: Les textes des menus et les icônes sont clairs et concis.
-    Extensibilité: La classe peut être facilement adaptée à d'autres types d'applications de gestion de tâches.
+        Flexibilité: La classe peut gérer différents scénarios (aucun effort en cours, plusieurs efforts en cours, reprise d'un effort arrêté).
+        Réactivité: L'interface utilisateur est mise à jour en temps réel pour refléter les changements d'état.
+        Clarté: Les textes des menus et les icônes sont clairs et concis.
+        Extensibilité: La classe peut être facilement adaptée à d'autres types d'applications de gestion de tâches.
     """
-    defaultMenuText = _("Stop tracking or resume tracking effort\tShift+Ctrl+T")
+
+    defaultMenuText = _(
+        "Stop tracking or resume tracking effort\tShift+Ctrl+T"
+    )
     defaultHelpText = help.effortStopOrResume
     stopMenuText = _("St&op tracking %s\tShift+Ctrl+T")
     stopHelpText = _("Stop tracking effort for the active task(s)")
@@ -3877,12 +4338,14 @@ Points clés:
 
     def __onEffortsChanged(self, efforts):
         """Cette méthode privée est appelée lorsqu'il y a une modification dans la liste des efforts.
-        Elle déclenche la mise à jour de l'interface utilisateur pour refléter les changements d'état."""
+        Elle déclenche la mise à jour de l'interface utilisateur pour refléter les changements d'état.
+        """
         self.updateUI()
 
     def efforts(self):
-        """ Cette méthode retourne un ensemble des efforts actuellement suivis,
-        en tenant compte de la sélection de l'utilisateur et de l'état des efforts dans la liste."""
+        """Cette méthode retourne un ensemble des efforts actuellement suivis,
+        en tenant compte de la sélection de l'utilisateur et de l'état des efforts dans la liste.
+        """
         selectedEfforts = set()
         for item in self.viewer.curselection():
             if isinstance(item, task.Task):
@@ -3890,7 +4353,11 @@ Points clés:
             elif isinstance(item, effort.Effort):
                 selectedEfforts.add(item)
         selectedEfforts &= set(self.__tracker.trackedEfforts())
-        return selectedEfforts if selectedEfforts else self.__tracker.trackedEfforts()
+        return (
+            selectedEfforts
+            if selectedEfforts
+            else self.__tracker.trackedEfforts()
+        )
 
     def doCommand(self, event=None):
         """Cette méthode est appelée lorsque l'utilisateur clique sur le bouton ou le menu.
@@ -3909,7 +4376,7 @@ Points clés:
         effortCommand.do()
 
     def enabled(self, event=None):
-        """ S'il y a des efforts suivis, cette commande les arrêtera. S'il y a
+        """S'il y a des efforts suivis, cette commande les arrêtera. S'il y a
         efforts non suivis, cette commande les reprendra. Sinon, cette commande
         est désactivée."""
         return self.anyTrackedEfforts() or self.anyStoppedEfforts()
@@ -3934,7 +4401,11 @@ Points clés:
         bitmapName = self.bitmap if paused else self.bitmap2
         menuText = self.getMenuText(paused)
         if (bitmapName != self.__currentBitmap) or bool(
-            [item for item in self.menuItems if item.GetItemLabel() != menuText]
+            [
+                item
+                for item in self.menuItems
+                if item.GetItemLabel() != menuText
+            ]
         ):
             self.__currentBitmap = bitmapName
             self.updateToolBitmap(bitmapName)
@@ -4018,7 +4489,9 @@ Points clés:
     def trimmedSubject(subject, maxLength=35, postFix="..."):
         """Cette méthode tronque un sujet trop long pour l'affichage dans le menu."""
         trim = len(subject) > maxLength
-        return subject[: maxLength - len(postFix)] + postFix if trim else subject
+        return (
+            subject[: maxLength - len(postFix)] + postFix if trim else subject
+        )
 
 
 class CategoryNew(CategoriesCommand, settings_uicommand.SettingsCommand):
@@ -4033,6 +4506,7 @@ class CategoryNew(CategoriesCommand, settings_uicommand.SettingsCommand):
         menuText (str) : Texte du menu contextuel ("New category...\tCtrl-G").
         helpText (str) : Texte d'aide pour la commande.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             bitmap="new",
@@ -4077,7 +4551,10 @@ class CategoryDragAndDrop(OrderingDragAndDropCommand, CategoriesCommand):
         # Héritées de CategoriesCommand
         # ... (attributs de CategoriesCommand)
     """
-    def createCommand(self, dropItem, dragItems, part, column, isTree):
+
+    def createCommand(
+        self, dropItem, dragItems, part, column, isTree, dropColumn=-1
+    ):
         """
         Crée une commande `DragAndDropCategoryCommand` pour effectuer
         l'opération de réorganisation de catégorie.
@@ -4103,7 +4580,47 @@ class CategoryDragAndDrop(OrderingDragAndDropCommand, CategoriesCommand):
             part=part,
             column=column,
             isTree=isTree,
+            dropColumn=dropColumn,
         )
+
+
+class CategoryCheckAll(ViewerCommand):
+    """Command to check all category checkboxes in the viewer.
+
+    Used in the category viewer to quickly select all categories for
+    filtering or assignment.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            bitmap="checkall",
+            menuText=_("Check &all categories"),
+            helpText=_("Check all category checkboxes"),
+            *args,
+            **kwargs,
+        )
+
+    def doCommand(self, event):
+        self.viewer.checkAllCategories()
+
+
+class CategoryUncheckAll(ViewerCommand):
+    """Command to uncheck all category checkboxes in the viewer.
+
+    Used in the category viewer to quickly deselect all categories.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            bitmap="uncheckall",
+            menuText=_("&Uncheck all categories"),
+            helpText=_("Uncheck all category checkboxes"),
+            *args,
+            **kwargs,
+        )
+
+    def doCommand(self, event):
+        self.viewer.uncheckAllCategories()
 
 
 class NoteNew(NotesCommand, settings_uicommand.SettingsCommand, ViewerCommand):
@@ -4125,6 +4642,7 @@ class NoteNew(NotesCommand, settings_uicommand.SettingsCommand, ViewerCommand):
         helpText (str) : Texte d'aide pour la commande.
         bitmap (str) : Chemin vers l'icône de la commande (facultatif).
     """
+
     menuText = _("New note...\tCtrl-J")
     helpText = help.noteNew
 
@@ -4183,8 +4701,14 @@ class NewNoteWithSelectedCategories(NoteNew, ViewerCommand):
         menuText (str) : Texte du menu contextuel ("New note with selected categories...")
         helpText (str) : Texte d'aide pour la commande.
     """
+
     menuText = _("New &note with selected categories...")
     helpText = _("Insert a new note with the selected categories checked")
+
+    def enabled(self, event):
+        return super().enabled(event) and bool(
+            self.viewer.curselection(forceUpdate=True)
+        )
 
     def categoriesForTheNewNote(self):
         """
@@ -4220,7 +4744,10 @@ class NoteDragAndDrop(OrderingDragAndDropCommand, NotesCommand):
         # Héritées de NotesCommand
         # ... (attributs de NotesCommand)
     """
-    def createCommand(self, dropItem, dragItems, part, column, isTree):
+
+    def createCommand(
+        self, dropItem, dragItems, part, column, isTree, dropColumn=-1
+    ):
         """
         Crée une commande `DragAndDropNoteCommand` pour effectuer
         l'opération de réorganisation de note.
@@ -4242,6 +4769,7 @@ class NoteDragAndDrop(OrderingDragAndDropCommand, NotesCommand):
             part=part,
             column=column,
             isTree=isTree,
+            dropColumn=dropColumn,
         )
 
 
@@ -4260,6 +4788,7 @@ class AttachmentNew(
         # Héritées de AttachmentsCommand et ViewerCommand
         # ... (attributs de AttachmentsCommand et ViewerCommand)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande en récupérant le texte du menu et l'aide
@@ -4313,6 +4842,7 @@ class AddAttachment(
         # Héritées de NeedsSelectedAttachmentOwnersMixin, ViewerCommand et SettingsCommand
         # ... (attributs hérités)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialiser la commande en définissant le texte du menu, l'aide
@@ -4338,7 +4868,9 @@ class AddAttachment(
         Args :
             event : L'événement déclenchant la commande.
         """
-        print(f"uicommand.AddAttachment.doCommand : 📌 [DEBUG] Ajout d’un attachement : {attachment}")
+        print(
+            f"uicommand.AddAttachment.doCommand : 📌 [DEBUG] Ajout d’un attachement : {attachment}"
+        )
         filename = widgets.AttachmentSelector()
         if not filename:
             return
@@ -4401,6 +4933,7 @@ class AttachmentOpen(
         # Héritées de NeedsSelectedAttachmentsMixin, ViewerCommand, AttachmentsCommand et SettingsCommand
         # ... (attributs hérités)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande en récupérant le texte du menu et l'aide
@@ -4419,7 +4952,9 @@ class AttachmentOpen(
             **kwargs,
         )
 
-    def doCommand(self, event, showerror=wx.MessageBox):  # pylint: disable=W0221
+    def doCommand(
+        self, event, showerror=wx.MessageBox
+    ):  # pylint: disable=W0221
         """
         Ouvre les pièces jointes des éléments sélectionnés dans la visionneuse.
 
@@ -4436,21 +4971,22 @@ class OpenAllAttachments(
     settings_uicommand.SettingsCommand,
 ):
     """
-     Commande d'interface utilisateur pour ouvrir toutes les pièces jointes
-     des éléments sélectionnés.
+    Commande d'interface utilisateur pour ouvrir toutes les pièces jointes
+    des éléments sélectionnés.
 
-     Cette classe permet d'ouvrir toutes les pièces jointes présentes dans
-     les éléments sélectionnés de la visionneuse. Elle collecte toutes les
-     pièces jointes des éléments sélectionnés puis les ouvre à l'aide de
-     la fonction `openAttachments`.
+    Cette classe permet d'ouvrir toutes les pièces jointes présentes dans
+    les éléments sélectionnés de la visionneuse. Elle collecte toutes les
+    pièces jointes des éléments sélectionnés puis les ouvre à l'aide de
+    la fonction `openAttachments`.
 
-     Attributes :
-         menuText (str) : Texte du menu contextuel ("Open all attachments...\tShift-Ctrl-O").
-         helpText (str) : Texte d'aide pour la commande (défini par `help.openAllAttachments`).
-         bitmap (str) : Chemin vers l'icône de la commande ("paperclip_icon").
-        # Héritées de NeedsSelectedAttachmentsMixin, ViewerCommand, AttachmentsCommand et SettingsCommand
-        # ... (attributs hérités)
+    Attributes :
+        menuText (str) : Texte du menu contextuel ("Open all attachments...\tShift-Ctrl-O").
+        helpText (str) : Texte d'aide pour la commande (défini par `help.openAllAttachments`).
+        bitmap (str) : Chemin vers l'icône de la commande ("paperclip_icon").
+       # Héritées de NeedsSelectedAttachmentsMixin, ViewerCommand, AttachmentsCommand et SettingsCommand
+       # ... (attributs hérités)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande en définissant le texte du menu, l'aide
@@ -4468,7 +5004,9 @@ class OpenAllAttachments(
             **kwargs,
         )
 
-    def doCommand(self, event, showerror=wx.MessageBox):  # pylint: disable=W0221
+    def doCommand(
+        self, event, showerror=wx.MessageBox
+    ):  # pylint: disable=W0221
         """
         Ouvre toutes les pièces jointes des éléments sélectionnés dans la visionneuse.
 
@@ -4500,6 +5038,7 @@ class DialogCommand(base_uicommand.UICommand):
                        (True) ou ouverte (False).
         bitmap (str, optionnel) : Chemin vers l'icône de la commande.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande en stockant les paramètres de la boîte de dialogue.
@@ -4532,6 +5071,7 @@ class DialogCommand(base_uicommand.UICommand):
         self.dialog = widgets.HTMLDialog(
             self._dialogTitle,
             self._dialogText,
+            parent=wx.GetApp().GetTopWindow(),
             bitmap=self.bitmap,
             direction=self._direction,
         )  # TODO : Instance attribute dialog defined outside __init__ : pourquoi défini ici ?
@@ -4585,6 +5125,7 @@ class Help(DialogCommand):
         # Héritées de DialogCommand
         # ... (attributs de DialogCommand)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise la commande en définissant le texte du menu, l'aide
@@ -4627,6 +5168,7 @@ class Tips(settings_uicommand.SettingsCommand):
         # Héritées de SettingsCommand
         # ... (attributs de SettingsCommand)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialiset la commande en définissant le texte du menu, l'aide
@@ -4669,6 +5211,7 @@ class Anonymize(IOCommand):
         # Héritées de IOCommand
         # ... (attributs de IOCommand)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialiser la commande en définissant le texte du menu et l'aide
@@ -4731,6 +5274,7 @@ class HelpAbout(DialogCommand):
         # Héritées de DialogCommand
         # ... (attributs de DialogCommand)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialiser la commande en définissant le texte du menu, l'aide
@@ -4762,6 +5306,7 @@ class HelpLicense(DialogCommand):
 
     Attributes :
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&License"),
@@ -4791,6 +5336,7 @@ class CheckForUpdate(settings_uicommand.SettingsCommand):
         # Héritées de SettingsCommand
         # ... (attributs de SettingsCommand)
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialiser la commande en définissant le texte du menu, l'aide
@@ -4802,7 +5348,8 @@ class CheckForUpdate(settings_uicommand.SettingsCommand):
         """
         super().__init__(
             menuText=_("Check for update"),
-            helpText=_("Check for the availability of a new version of %s") % meta.name,
+            helpText=_("Check for the availability of a new version of %s")
+            % meta.name,
             bitmap="box_icon",
             *args,
             **kwargs,
@@ -4828,6 +5375,7 @@ class URLCommand(base_uicommand.UICommand):
     Attributes :
         url (str) : URL à ouvrir.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialiser la commande en stockant l'URL et en appelant le
@@ -4854,7 +5402,8 @@ class URLCommand(base_uicommand.UICommand):
             openfile.openFile(self.url)
         except Exception as reason:
             wx.MessageBox(
-                _("Cannot open URL:\n%s") % reason,
+                # _("Cannot open URL:\n%s") % reason,
+                _("Cannot open URL:\n%s") % str(reason),
                 caption=_("%s URL error") % meta.name,
                 style=wx.ICON_ERROR,
             )
@@ -4874,6 +5423,7 @@ class FAQ(URLCommand):
     - `__init__(self, *args, **kwargs)` : Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés.
     """
+
     def __init__(self, *args, **kwargs):
         """Initialiser la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés."""
@@ -4901,6 +5451,7 @@ class ReportBug(URLCommand):
     - `__init__(self, *args, **kwargs)` : Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés.
     """
+
     def __init__(self, *args, **kwargs):
         """Initialiser la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés."""
@@ -4928,6 +5479,7 @@ class RequestFeature(URLCommand):
     - `__init__(self, *args, **kwargs)` : Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés.
     """
+
     def __init__(self, *args, **kwargs):
         """Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés."""
@@ -4955,6 +5507,7 @@ class RequestSupport(URLCommand):
     - `__init__ (self, *args, **kwargs)` : Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Request &support..."),
@@ -4980,12 +5533,28 @@ class HelpTranslate(URLCommand):
     - `__init__ (self, *args, **kwargs)` : Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("Help improve &translations..."),
             helpText=_("Help improve the translations of %s") % meta.name,
             bitmap="person_talking_icon",
             url=meta.translations_url,
+            *args,
+            **kwargs,
+        )
+
+
+class CheckForUpdate(URLCommand):
+    def __init__(self, *args, **kwargs):
+        # Remove settings from kwargs if present (not needed for URLCommand)
+        kwargs.pop("settings", None)
+        super().__init__(
+            menuText=_("Check for update"),
+            helpText=_("Check for the availability of a new version of %s")
+            % meta.name,
+            bitmap="box_icon",
+            url=meta.github_url,
             *args,
             **kwargs,
         )
@@ -5005,6 +5574,7 @@ class Donate(URLCommand):
     - `__init__ (self, *args, **kwargs)` : Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Donate..."),
@@ -5027,6 +5597,7 @@ class MainWindowRestore(base_uicommand.UICommand):
     - `doCommand (self, event)` : Restaure la fenêtre principale.
     - `mainWindow (self)` (méthode interne) : Renvoie la référence à la fenêtre principale.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Restore"),
@@ -5037,8 +5608,24 @@ class MainWindowRestore(base_uicommand.UICommand):
         )
 
     def doCommand(self, event):
-        """ Restaure la fenêtre principale."""
+        """Restaure la fenêtre principale."""
         self.mainWindow().restore(event)
+
+
+class ResetWindowLayout(base_uicommand.UICommand):
+    """Reset the window layout (AUI panes) to default positions."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            menuText=_("Reset &window layout"),
+            helpText=_("Reset all panes to their default positions"),
+            bitmap="reset",
+            *args,
+            **kwargs,
+        )
+
+    def doCommand(self, event):
+        self.mainWindow().resetWindowLayout()
 
 
 class Search(ViewerCommand, settings_uicommand.SettingsCommand):
@@ -5071,6 +5658,7 @@ class Search(ViewerCommand, settings_uicommand.SettingsCommand):
         pour détecter les touches Escape et Ctrl+Flèche Bas et effectuer les actions appropriées.
     - `doCommand (self, event)` : Cette méthode n'est pas utilisée dans cette classe.
     """
+
     def __init__(self, *args, **kwargs):
         self.searchControl = None
         self.__bound = False
@@ -5118,12 +5706,15 @@ class Search(ViewerCommand, settings_uicommand.SettingsCommand):
             regularExpression=regularExpression,
             callback=self.onFind,
         )
+        # Set minimum size to ensure the text input is visible in AUI toolbars
+        # that use AUI_TB_NO_AUTORESIZE flag
+        self.searchControl.SetMinSize((150, -1))
         toolbar.AddControl(self.searchControl)
         self.bindKeyDownInViewer()
         self.bindKeyDownInSearchCtrl()
 
     def bindKeyDownInViewer(self):
-        """ Lie l'événement `wx.EVT_KEY_DOWN` à la méthode `onViewerKeyDown`
+        """Lie l'événement `wx.EVT_KEY_DOWN` à la méthode `onViewerKeyDown`
         pour détecter la combinaison de touches Ctrl+F.
 
         Bind wx.EVT_KEY_DOWN to self.onViewerKeyDown so we can catch
@@ -5136,16 +5727,20 @@ class Search(ViewerCommand, settings_uicommand.SettingsCommand):
         window.Bind(wx.EVT_KEY_DOWN, self.onViewerKeyDown)
 
     def bindKeyDownInSearchCtrl(self):
-        """ Lie l'événement `wx.EVT_KEY_DOWN` au contrôle de recherche
+        """Lie l'événement `wx.EVT_KEY_DOWN` au contrôle de recherche
         pour détecter les touches Escape et Ctrl+Flèche Bas.
 
         Bind wx.EVT_KEY_DOWN to self.onSearchCtrlKeyDown so we can catch
         the Escape key and drop down the menu on Ctrl-Down."""
-        self.searchControl.getTextCtrl().Bind(wx.EVT_KEY_DOWN, self.onSearchCtrlKeyDown)
+        self.searchControl.getTextCtrl().Bind(
+            wx.EVT_KEY_DOWN, self.onSearchCtrlKeyDown
+        )
 
     def unbind(self, window, id_):
         """Détache les liaisons d'événements du contrôle de recherche."""
         self.__bound = False
+        if hasattr(self, "searchControl") and self.searchControl:
+            self.searchControl.cleanup()
         super().unbind(window, id_)
 
     def onViewerKeyDown(self, event):
@@ -5153,7 +5748,11 @@ class Search(ViewerCommand, settings_uicommand.SettingsCommand):
         détecter la combinaison de touches Ctrl+F et déplacer le focus vers le contrôle de recherche.
 
         On Ctrl-F, move focus to the search control."""
-        if event.KeyCode == ord("F") and event.CmdDown() and not event.AltDown():
+        if (
+            event.KeyCode == ord("F")
+            and event.CmdDown()
+            and not event.AltDown()
+        ):
             self.searchControl.SetFocus()
         else:
             event.Skip()
@@ -5199,6 +5798,7 @@ class ToolbarChoiceCommandMixin(object):
     - `setChoice (choice)` : Définit l'option sélectionnée programmatiquement.
     - `enable (enable=True)` : Active ou désactive le contrôle de choix.
     """
+
     def __init__(self, *args, **kwargs):
         self.currentChoice = None
         self.choiceCtrl = None
@@ -5222,7 +5822,7 @@ class ToolbarChoiceCommandMixin(object):
         super().unbind(window, id_)
 
     def onChoice(self, event):
-        """ Gère l'événement de sélection d'une option dans le contrôle de choix.
+        """Gère l'événement de sélection d'une option dans le contrôle de choix.
 
         L'utilisateur a sélectionné un choix dans le contrôle de choix."""
         choiceIndex = event.GetInt()
@@ -5256,7 +5856,9 @@ class ToolbarChoiceCommandMixin(object):
 
 
 class EffortViewerAggregationChoice(
-    ToolbarChoiceCommandMixin, settings_uicommand.SettingsCommand, ViewerCommand
+    ToolbarChoiceCommandMixin,
+    settings_uicommand.SettingsCommand,
+    ViewerCommand,
 ):
     """
     Commande d'interface utilisateur pour choisir le mode d'agrégation des efforts.
@@ -5274,6 +5876,7 @@ class EffortViewerAggregationChoice(
     - `doChoice (self, choice)` : Enregistre le choix d'agrégation dans les paramètres de l'application.
     - `on_setting_changed (self, value)` : Met à jour le choix dans le contrôle en fonction du paramètre enregistré.
     """
+
     choiceLabels = [
         _("Effort details"),
         _("Effort per day"),
@@ -5299,14 +5902,18 @@ class EffortViewerAggregationChoice(
 
     def doChoice(self, choice):
         """Enregistre le choix d'agrégation dans les paramètres de l'application."""
-        self.settings.settext(self.viewer.settingsSection(), "aggregation", choice)
+        self.settings.settext(
+            self.viewer.settingsSection(), "aggregation", choice
+        )
 
     def on_setting_changed(self, value):
         """Met à jour le choix dans le contrôle en fonction du paramètre enregistré."""
         self.setChoice(value)
 
 
-class EffortViewerAggregationOption(settings_uicommand.UIRadioCommand, ViewerCommand):
+class EffortViewerAggregationOption(
+    settings_uicommand.UIRadioCommand, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour sélectionner une option d'agrégation des efforts.
 
@@ -5318,6 +5925,7 @@ class EffortViewerAggregationOption(settings_uicommand.UIRadioCommand, ViewerCom
     - `isSettingChecked (self)` : Vérifie si l'option d'agrégation est actuellement sélectionnée.
     - `doCommand (self, event)` : Enregistre l'option d'agrégation dans les paramètres de l'application.
     """
+
     def isSettingChecked(self):
         """Vérifie si l'option d'agrégation est actuellement sélectionnée."""
         return (
@@ -5327,7 +5935,9 @@ class EffortViewerAggregationOption(settings_uicommand.UIRadioCommand, ViewerCom
 
     def doCommand(self, event):
         """Enregistre l'option d'agrégation dans les paramètres de l'application."""
-        self.settings.settext(self.viewer.settingsSection(), "aggregation", self.value)
+        self.settings.settext(
+            self.viewer.settingsSection(), "aggregation", self.value
+        )
 
 
 class TaskViewerTreeOrListChoice(
@@ -5350,6 +5960,7 @@ class TaskViewerTreeOrListChoice(
     - `doChoice (self, choice)` : Enregistre le choix d'affichage dans les paramètres de l'application.
     - `on_setting_changed (self, value)` : Met à jour le choix dans le contrôle en fonction du paramètre enregistré.
     """
+
     choiceLabels = [_("Tree"), _("List")]
     choiceData = [True, False]
 
@@ -5357,7 +5968,8 @@ class TaskViewerTreeOrListChoice(
         super().__init__(
             menuText=self.choiceLabels[0],
             helpText=_(
-                "When checked, show tasks as tree, " "otherwise show tasks as list"
+                "When checked, show tasks as tree, "
+                "otherwise show tasks as list"
             ),
             *args,
             **kwargs,
@@ -5381,14 +5993,18 @@ class TaskViewerTreeOrListChoice(
 
     def doChoice(self, choice):
         """Enregistre le choix d'affichage dans les paramètres de l'application."""
-        self.settings.setboolean(self.viewer.settingsSection(), "treemode", choice)
+        self.settings.setboolean(
+            self.viewer.settingsSection(), "treemode", choice
+        )
 
     def on_setting_changed(self, value):
         """Met à jour le choix dans le contrôle en fonction du paramètre enregistré."""
         self.setChoice(value)
 
 
-class TaskViewerTreeOrListOption(settings_uicommand.UIRadioCommand, ViewerCommand):
+class TaskViewerTreeOrListOption(
+    settings_uicommand.UIRadioCommand, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour sélectionner le mode d'affichage des tâches.
 
@@ -5400,8 +6016,9 @@ class TaskViewerTreeOrListOption(settings_uicommand.UIRadioCommand, ViewerComman
     - `isSettingChecked (self)` : Vérifie si l'option d'affichage est actuellement sélectionnée.
     - `doCommand (self, event)` : Enregistre l'option d'affichage dans les paramètres de l'application.
     """
+
     def isSettingChecked(self):
-        """ Vérifie si l'option d'affichage est actuellement sélectionnée."""
+        """Vérifie si l'option d'affichage est actuellement sélectionnée."""
         return (
             self.settings.getboolean(self.viewer.settingsSection(), "treemode")
             == self.value
@@ -5409,7 +6026,9 @@ class TaskViewerTreeOrListOption(settings_uicommand.UIRadioCommand, ViewerComman
 
     def doCommand(self, event):
         """Enregistre l'option d'affichage dans les paramètres de l'application."""
-        self.settings.setboolean(self.viewer.settingsSection(), "treemode", self.value)
+        self.settings.setboolean(
+            self.viewer.settingsSection(), "treemode", self.value
+        )
 
 
 class CategoryViewerFilterChoice(
@@ -5436,6 +6055,7 @@ class CategoryViewerFilterChoice(
     - `doCommand (self, event)` : Enregistre le mode de filtrage en fonction de l'état de la case à cocher.
     - `on_setting_changed (self, value)` : Met à jour le choix dans le contrôle en fonction du paramètre enregistré.
     """
+
     choiceLabels = [
         _("Filter on all checked categories"),
         _("Filter on any checked category"),
@@ -5457,7 +6077,9 @@ class CategoryViewerFilterChoice(
         """Ajoute le contrôle de choix à la barre d'outils
         et initialise la sélection en fonction du paramètre enregistré."""
         super().appendToToolBar(*args, **kwargs)
-        pub.subscribe(self.on_setting_changed, "settings.view.categoryfiltermatchall")
+        pub.subscribe(
+            self.on_setting_changed, "settings.view.categoryfiltermatchall"
+        )
 
     def isSettingChecked(self):
         """Vérifie si le mode de filtrage "toutes les catégories" est sélectionné."""
@@ -5479,7 +6101,9 @@ class CategoryViewerFilterChoice(
 
 
 class SquareTaskViewerOrderChoice(
-    ToolbarChoiceCommandMixin, settings_uicommand.SettingsCommand, ViewerCommand
+    ToolbarChoiceCommandMixin,
+    settings_uicommand.SettingsCommand,
+    ViewerCommand,
 ):
     """
     Commande d'interface utilisateur pour choisir le critère de tri des tâches.
@@ -5497,6 +6121,7 @@ class SquareTaskViewerOrderChoice(
     - `doChoice (self, choice)` : Enregistre le critère de tri dans les paramètres de l'application.
     - `on_setting_changed (self, value)` : Met à jour le choix dans le contrôle en fonction du paramètre enregistré.
     """
+
     choiceLabels = [
         _("Budget"),
         _("Time spent"),
@@ -5531,7 +6156,9 @@ class SquareTaskViewerOrderChoice(
         self.setChoice(value)
 
 
-class SquareTaskViewerOrderByOption(settings_uicommand.UIRadioCommand, ViewerCommand):
+class SquareTaskViewerOrderByOption(
+    settings_uicommand.UIRadioCommand, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour sélectionner le critère de tri des tâches.
 
@@ -5543,15 +6170,19 @@ class SquareTaskViewerOrderByOption(settings_uicommand.UIRadioCommand, ViewerCom
     - `isSettingChecked (self)` : Vérifie si l'option de tri est actuellement sélectionnée.
     - `doCommand (self, event)` : Enregistre le critère de tri dans les paramètres de l'application.
     """
+
     def isSettingChecked(self):
         """Vérifie si l'option de tri est actuellement sélectionnée."""
         return (
-            self.settings.gettext(self.viewer.settingsSection(), "sortby") == self.value
+            self.settings.gettext(self.viewer.settingsSection(), "sortby")
+            == self.value
         )
 
     def doCommand(self, event):
         """Enregistre le critère de tri dans les paramètres de l'application."""
-        self.settings.settext(self.viewer.settingsSection(), "sortby", self.value)
+        self.settings.settext(
+            self.viewer.settingsSection(), "sortby", self.value
+        )
 
 
 class CalendarViewerConfigure(ViewerCommand):
@@ -5566,6 +6197,7 @@ class CalendarViewerConfigure(ViewerCommand):
     - `helpText` : Infobulle affichée au survol de la commande.
     - `bitmap` : Nom de l'icône associée à la commande.
     """
+
     menuText = _("&Configure")
     helpText = _("Configure the calendar viewer")
     bitmap = "wrench_icon"
@@ -5606,6 +6238,7 @@ class CalendarViewerNavigationCommand(ViewerCommand):
     **Méthodes :**
     - `doCommand (self, event)` : Gèle le calendrier, modifie la vue, puis le débloque.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=self.menuText,
@@ -5619,7 +6252,9 @@ class CalendarViewerNavigationCommand(ViewerCommand):
         """Gèle le calendrier, modifie la vue, puis le débloque."""
         self.viewer.freeze()
         try:
-            self.viewer.SetViewType(self.calendarViewType)  # pylint: disable=E1101
+            self.viewer.SetViewType(
+                self.calendarViewType
+            )  # pylint: disable=E1101
         finally:
             self.viewer.thaw()
 
@@ -5633,6 +6268,7 @@ class CalendarViewerNextPeriod(CalendarViewerNavigationCommand):
 
     Cette classe permet d'afficher la période suivante dans le calendrier.
     """
+
     menuText = _("&Next period")
     helpText = _("Show next period")
     bitmap = "next"
@@ -5680,6 +6316,7 @@ class CalendarViewerPreviousPeriod(CalendarViewerNavigationCommand):
 
     Cette classe permet d'afficher la période précédente dans le calendrier.
     """
+
     menuText = _("&Previous period")
     helpText = _("Show previous period")
     bitmap = "prev"
@@ -5710,15 +6347,16 @@ class CalendarViewerToday(CalendarViewerNavigationCommand):
 
     Cette classe permet d'afficher la vue "Aujourd'hui" dans le calendrier.
     """
+
     menuText = _("&Today")
-    helpText = _("Show Today")
+    helpText = _("Show today")
     bitmap = "calendar_icon"
     calendarViewType = wxSCHEDULER_TODAY
 
 
 class HierarchicalCalendarViewerToday(ViewerCommand):
     menuText = _("&Today")
-    helpText = _("Show Today")
+    helpText = _("Show today")
     bitmap = "calendar_icon"
 
     def __init__(self, *args, **kwargs):
@@ -5734,7 +6372,9 @@ class HierarchicalCalendarViewerToday(ViewerCommand):
         self.viewer.widget.Today()  # Today or Today ?
 
 
-class ToggleAutoColumnResizing(settings_uicommand.UICheckCommand, ViewerCommand):
+class ToggleAutoColumnResizing(
+    settings_uicommand.UICheckCommand, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour activer/désactiver le redimensionnement automatique des colonnes.
 
@@ -5746,11 +6386,13 @@ class ToggleAutoColumnResizing(settings_uicommand.UICheckCommand, ViewerCommand)
     - `isSettingChecked()` : Vérifie si le redimensionnement automatique est actuellement activé.
     - `doCommand (self, event)` : Enregistre l'état du redimensionnement automatique dans les paramètres de l'application et met à jour le widget.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             menuText=_("&Automatic column resizing"),
             helpText=_(
-                "When checked, automatically resize columns to fill" " available space"
+                "When checked, automatically resize columns to fill"
+                " available space"
             ),
             *args,
             **kwargs,
@@ -5759,7 +6401,16 @@ class ToggleAutoColumnResizing(settings_uicommand.UICheckCommand, ViewerCommand)
 
     def updateWidget(self):
         """Met à jour l'état du redimensionnement automatique dans le widget de la vue."""
-        self.viewer.getWidget().ToggleAutoResizing(self.isSettingChecked())
+        # self.viewer.getWidget().ToggleAutoResizing(self.isSettingChecked())
+        # Guard against deleted C++ object - can happen when wx.CallAfter
+        # callback executes after window destruction
+        try:
+            widget = self.viewer.getWidget()
+            if widget:
+                widget.ToggleAutoResizing(self.isSettingChecked())
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            pass
 
     def isSettingChecked(self):
         """Vérifie si le redimensionnement automatique est actuellement activé."""
@@ -5818,7 +6469,7 @@ class ViewerPieChartAngle(ViewerCommand, settings_uicommand.SettingsCommand):
         toolbar.AddControl(self.sliderCtrl)
 
     def unbind(self, window, itemId):
-        """ Détache les liaisons d'événements du contrôle de curseur."""
+        """Détache les liaisons d'événements du contrôle de curseur."""
         if self.sliderCtrl is not None:
             self.sliderCtrl.Unbind(wx.EVT_SLIDER)
             self.sliderCtrl = None
@@ -5837,7 +6488,9 @@ class ViewerPieChartAngle(ViewerCommand, settings_uicommand.SettingsCommand):
 
     def getCurrentAngle(self):
         """Récupère l'angle actuel enregistré dans les paramètres de l'application."""
-        return self.settings.getint(self.viewer.settingsSection(), "piechartangle")
+        return self.settings.getint(
+            self.viewer.settingsSection(), "piechartangle"
+        )
 
     def setCurrentAngle(self):
         """Enregistre la valeur actuelle du curseur dans les paramètres de l'application."""
@@ -5850,7 +6503,9 @@ class ViewerPieChartAngle(ViewerCommand, settings_uicommand.SettingsCommand):
 
 
 class RoundingPrecision(
-    ToolbarChoiceCommandMixin, ViewerCommand, settings_uicommand.SettingsCommand
+    ToolbarChoiceCommandMixin,
+    ViewerCommand,
+    settings_uicommand.SettingsCommand,
 ):
     """
     Commande d'interface utilisateur pour choisir la précision d'arrondi.
@@ -5865,6 +6520,7 @@ class RoundingPrecision(
     **Méthodes :**
     - `doChoice (self, choice)` : Enregistre la précision d'arrondi dans les paramètres de l'application.
     """
+
     roundingChoices = (0, 1, 3, 5, 6, 10, 15, 20, 30, 60)  # Minutes
     choiceData = [minutes * 60 for minutes in roundingChoices]  # Seconds
     # choiceLabels = [_('No rounding'), _('1 minute')] + [_('%d minutes') % minutes for minutes in roundingChoices[2:]]
@@ -5894,15 +6550,19 @@ class RoundBy(settings_uicommand.UIRadioCommand, ViewerCommand):
     - `isSettingChecked (self)` : Vérifie si l'option d'arrondi est actuellement sélectionnée.
     - `doCommand (self, event)` : Enregistre l'option d'arrondi dans les paramètres de l'application.
     """
+
     def isSettingChecked(self):
         """Vérifie si l'option d'arrondi est actuellement sélectionnée."""
         return (
-            self.settings.getint(self.viewer.settingsSection(), "round") == self.value
+            self.settings.getint(self.viewer.settingsSection(), "round")
+            == self.value
         )
 
     def doCommand(self, event):
         """Enregistre l'option d'arrondi dans les paramètres de l'application."""
-        self.settings.setint(self.viewer.settingsSection(), "round", self.value)
+        self.settings.setint(
+            self.viewer.settingsSection(), "round", self.value
+        )
 
 
 class AlwaysRoundUp(settings_uicommand.UICheckCommand, ViewerCommand):
@@ -5925,6 +6585,7 @@ class AlwaysRoundUp(settings_uicommand.UICheckCommand, ViewerCommand):
     - `setValue (self, value)` : Définit l'état de la case à cocher.
     - `enable (self, enable=True)` : Active ou désactive la case à cocher.
     """
+
     def __init__(self, *args, **kwargs):
         self.checkboxCtrl = None
         super().__init__(
@@ -5952,7 +6613,9 @@ class AlwaysRoundUp(settings_uicommand.UICheckCommand, ViewerCommand):
 
     def isSettingChecked(self):
         """Vérifie si l'arrondi au supérieur est activé."""
-        return self.settings.getboolean(self.viewer.settingsSection(), "alwaysroundup")
+        return self.settings.getboolean(
+            self.viewer.settingsSection(), "alwaysroundup"
+        )
 
     def onCheck(self, event):
         """Enregistre l'état de l'arrondi au supérieur dans les paramètres de l'application."""
@@ -5979,7 +6642,9 @@ class AlwaysRoundUp(settings_uicommand.UICheckCommand, ViewerCommand):
             self.checkboxCtrl.Enable(enable)
 
 
-class ConsolidateEffortsPerTask(settings_uicommand.UICheckCommand, ViewerCommand):
+class ConsolidateEffortsPerTask(
+    settings_uicommand.UICheckCommand, ViewerCommand
+):
     """
     Commande d'interface utilisateur pour activer/désactiver la consolidation des efforts par tâche.
 
@@ -5999,6 +6664,7 @@ class ConsolidateEffortsPerTask(settings_uicommand.UICheckCommand, ViewerCommand
     - `setValue (self, value)` : Définit l'état de la case à cocher.
     - `enable (self, enable=True)` : Active ou désactive la case à cocher.
     """
+
     def __init__(self, *args, **kwargs):
         self.checkboxCtrl = None
         super().__init__(
@@ -6037,7 +6703,7 @@ class ConsolidateEffortsPerTask(settings_uicommand.UICheckCommand, ViewerCommand
         self.setSetting(self._isMenuItemChecked(event))
 
     def doCommand(self, event):
-        """ Enregistre l'état de la consolidation dans les paramètres de l'application."""
+        """Enregistre l'état de la consolidation dans les paramètres de l'application."""
         self.setSetting(self._isMenuItemChecked(event))
 
     def setSetting(self, consolidateEffortsPerTask):
@@ -6049,7 +6715,7 @@ class ConsolidateEffortsPerTask(settings_uicommand.UICheckCommand, ViewerCommand
         )
 
     def setValue(self, value):
-        """ Définit l'état de la case à cocher."""
+        """Définit l'état de la case à cocher."""
         if self.checkboxCtrl is not None:
             self.checkboxCtrl.SetValue(value)
 
