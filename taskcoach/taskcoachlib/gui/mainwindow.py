@@ -62,6 +62,7 @@ Remarques supplémentaires :
 import ctypes
 import logging
 import wx
+
 # try:
 #    from ..thirdparty.pubsub import pub
 # except ImportError:
@@ -80,6 +81,7 @@ from taskcoachlib import (
     operating_system,
 )  # pylint: disable=W0622
 
+# from taskcoachlib.application.application import detect_dark_theme
 from taskcoachlib.config.settings import Settings
 
 # from . import viewer, toolbar, uicommand, remindercontroller, \
@@ -90,12 +92,14 @@ from taskcoachlib.gui import (
     # menu,  # crée ImportError: cannot import name 'CheckableTaskViewer' from partially initialized module 'taskcoachlib.gui.viewer.task' (most likely due to a circular import) (*/taskcoach/taskcoachlib/gui/viewer/task.py)
     remindercontroller,
     status,
+    timer as globaltimer,
     toolbar,
     # uicommand,
     viewer,
     windowdimensionstracker,
 )
 from taskcoachlib.gui.uicommand import uicommand
+
 # from taskcoachlib.gui.uicommand import base_uicommand
 # from taskcoachlib.gui.uicommand import settings_uicommand
 # from taskcoachlib.gui.uicommand import uicommandcontainer
@@ -132,7 +136,9 @@ def turn_on_double_buffering_on_windows(window):
 
 
 class MainWindow(
-    PowerStateMixin, BalloonTipManager, widgets.AuiManagedFrameWithDynamicCenterPane
+    PowerStateMixin,
+    BalloonTipManager,
+    widgets.AuiManagedFrameWithDynamicCenterPane,
 ):
     """
     Classe représentant la fenêtre/frame principale de Task Coach.
@@ -188,7 +194,9 @@ class MainWindow(
             Ajoute un volet à la fenêtre.
     """
 
-    def __init__(self, iocontroller, taskFile, settings, *args, **kwargs):
+    def __init__(
+        self, iocontroller, taskFile, settings: Settings, *args, **kwargs
+    ):
         """
         Initialise la fenêtre principale de Task Coach avec les paramètres fournis.
 
@@ -232,16 +240,25 @@ class MainWindow(
         """
         log.info("Début d'initialisation de MainWindow")
         self.__splash = kwargs.pop("splash", None)
+        # Initialize with valid default size to prevent GTK warnings
+        # The WindowDimensionsTracker will set the actual saved size/position
+        if "size" not in kwargs:
+            kwargs["size"] = (800, 600)
         # super(MainWindow, self).__init__(None, -1, '', *args, **kwargs)
-        super().__init__(None, -1, "", *args, **kwargs)   # -1 est-ce height ? Non, c'est pour l'assignation d'id automatique.
+        super().__init__(
+            None, -1, "", *args, **kwargs
+        )  # -1 est-ce height ? Non, c'est pour l'assignation d'id automatique.
         log.info(f"MainWindow : self.GetId() id={self.GetId()}")
         # Après il devrait y avoir self.mainwindow.Show(true) !(Voir start())
         # Active le double buffering pour éviter le scintillement des visionneuses sur Windows 7 et supérieur
         # if operating_system.isWindows7_OrNewer():
         #     turn_on_double_buffering_on_windows(self)
 
-        self.__dimensions_tracker = windowdimensionstracker.WindowDimensionsTracker(
-            self, settings
+        self.__dimensions_tracker = (
+            windowdimensionstracker.WindowDimensionsTracker(self, settings)
+        )
+        log.info(
+            "MainWindow : Initialisation de WindowDimensionsTracker pour la gestion de la taille et de la position de la fenêtre."
         )
         # Attributs :
         self.iocontroller = iocontroller  # Contrôleur d'entrée/sortie pour la gestion des fichiers.
@@ -257,25 +274,35 @@ class MainWindow(
         self.Bind(wx.EVT_SIZE, self.onResize)
 
         # Crée et initialise les composants de la fenêtre
-        log.info("MainWindow : Création et initialisation des composants de la fenêtre :")
+        log.info(
+            "MainWindow : Création et initialisation des composants de la fenêtre :"
+        )
         self._create_window_components()  # Not private for test purposes, doit être précédé du réglage du menu :
-        log.debug("MainWindow : ✅ Création et initialisation des différents composants de la fenêtre effectuée.")
+        log.debug(
+            "MainWindow : ✅ Création et initialisation des différents composants de la fenêtre effectuée."
+        )
         # # Setting up the menu.
         # # filemenu= wx.Menu()
         # Voir menu.MainMenu
         # Ici, nous en avons plusieurs FileMenu, Editer, Actions... basés sur gui.menu.Menu (une surcharge de wx.Menu)
         # log.debug("MainWindow : Initialisation des composants principaux de la fenêtre (barre d'outils, barre d'état) et restauration de la perspective de la fenêtre:")
         self.__init_window_components()
-        log.debug("MainWindow : ✅ Initialisation des composants principaux de la fenêtre terminée et perspective de la fenêtre restaurée.")
+        log.debug(
+            "MainWindow : ✅ Initialisation des composants principaux de la fenêtre terminée et perspective de la fenêtre restaurée."
+        )
         # log.debug("MainWindow : Initialisation de la fenêtre principale de Task Coach en définissant la disposition des composants:")
         try:
             self.__init_window()
         except Exception as e:
-            log.exception(f"Problème avec __init__window() : {e}", exc_info=True)
+            log.exception(
+                f"Problème avec __init__window() : {e}", exc_info=True
+            )
         log.debug("MainWindow : ✅ Fenêtre principale Initialisée.")
         # log.debug("MainWindow : Enregistrement pour recevoir des notifications de changement de composants de fenêtre, comme les barres d'outils et les barres de statut:")
         self.__register_for_window_component_changes()
-        log.debug("MainWindow : ✅ Enregistrement effectué pour recevoir des notifications de changement de composants de fenêtre, comme les barres d'outils et les barres de statut.")
+        log.debug(
+            "MainWindow : ✅ Enregistrement effectué pour recevoir des notifications de changement de composants de fenêtre, comme les barres d'outils et les barres de statut."
+        )
         log.debug("MainWindow : ✅ Composants de fenêtre créés")
 
         # Gère l'importation SyncML et affiche un avertissement si nécessaire
@@ -300,11 +327,20 @@ class MainWindow(
 
         # Attribut :
         # Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches. :
-        log.debug("MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts")
+        log.debug(
+            "MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts"
+        )
         self._idleController = idlecontroller.IdleController(
             self, self.settings, self.taskFile.efforts()
         )
-        self._idleController.start()
+        # try:
+        #     self._idleController.start()
+        # except Exception as e:
+        #     log.error(
+        #         f"MainWindow : erreur d'initialisation d'inactivité : {e}",
+        #         stack_info=True,
+        #     )
+
         # Vérifie XFCE4 après l'initialisation complète
         log.debug("MainWindow : Appel de CallAfter(self.checkXFCE4).")
         wx.CallAfter(self.checkXFCE4)
@@ -315,6 +351,9 @@ class MainWindow(
 
         # self.task_tree_viewer = self.create_task_tree_viewer()  # Créez le viewer
         # self.task_popup_menu = self.createTaskPopupMenu()  # Créez le menu ici
+        # System theme change monitor (Windows/macOS)
+        # self._lastDetectedDark = detect_dark_theme()
+        self.Bind(wx.EVT_SYS_COLOUR_CHANGED, self._onSysColourChanged)
         self.manager.Update()
         log.info("MainWindow : ✅ Initialisé avec succès")
 
@@ -335,7 +374,17 @@ class MainWindow(
     #     )
 
     def onAnyMenu(self, event):
-        log.debug(f"gui.mainwindow.MainWindow.onAnyMenu: Menu event triggered. ID: {event.GetId()}")
+        """
+
+        Args:
+            event:
+
+        Returns:
+            None
+        """
+        log.debug(
+            f"gui.mainwindow.MainWindow.onAnyMenu: Menu event triggered. ID: {event.GetId()}"
+        )
         event.Skip()
 
     def _registerBonjour(self, value=True):
@@ -373,9 +422,14 @@ class MainWindow(
             try:
                 # Tente de charger les modules nécessaires pour la synchronisation iPhone
                 from taskcoachlib.thirdparty import pybonjour
-                from taskcoachlib.iphone import IPhoneAcceptor, BonjourServiceRegister
+                from taskcoachlib.iphone import (
+                    IPhoneAcceptor,
+                    BonjourServiceRegister,
+                )
 
-                acceptor = IPhoneAcceptor(self, self.settings, self.iocontroller)
+                acceptor = IPhoneAcceptor(
+                    self, self.settings, self.iocontroller
+                )
 
                 # Callback de succès lors de l'enregistrement du service Bonjour
                 def success(reader):
@@ -388,7 +442,9 @@ class MainWindow(
                     wx.MessageBox(reason.getErrorMessage(), _("Error"), wx.OK)
 
                 # Enregistre le service Bonjour et configure les callbacks
-                BonjourServiceRegister(self.settings, acceptor.port).addCallbacks(success, error)
+                BonjourServiceRegister(
+                    self.settings, acceptor.port
+                ).addCallbacks(success, error)
 
             except Exception as e:
                 # Si le chargement échoue, affiche un avertissement pour l'utilisateur
@@ -411,10 +467,10 @@ class MainWindow(
         if operating_system.isGTK():
             mon = application.Application().sessionMonitor
             if (
-                    mon is not None
-                    and self.settings.getboolean("feature", "usesm2")
-                    and self.settings.getboolean("feature", "showsmwarning")
-                    and mon.vendor == "xfce4-session"
+                mon is not None
+                and self.settings.getboolean("feature", "usesm2")
+                and self.settings.getboolean("feature", "showsmwarning")
+                and mon.vendor == "xfce4-session"
             ):
                 dlg = XFCE4WarningDialog(self, self.settings)
                 dlg.Show()
@@ -423,45 +479,84 @@ class MainWindow(
         """
         Indique que le processus d'arrêt de l'application est en cours, afin d'éviter toute autre action durant cette phase.
         """
-        log.info("MainWindow.setShutdownInProgress : Le processus d'arrêt de l'application est en cours. Plus aucune action durant cette phase !")
+        log.info(
+            "MainWindow.setShutdownInProgress : Le processus d'arrêt de l'application est en cours. Plus aucune action durant cette phase !"
+        )
         self.__shutdown = True
 
-    def _create_window_components(self) -> None:  # Not private for test purposes
+    def _create_window_components(
+        self,
+    ) -> None:  # Not private for test purposes
         """
         Crée et initialise les différents composants de la fenêtre,
         comme les barres d'outils, les barres de statut, et les autres éléments de l'interface graphique.
         """
-        log.debug("MainWindow._create_window_components : création du conteneur pour les visionneuses.")
-        self._create_viewer_container()
-        log.debug("MainWindow._create_window_components : Lance une classe-méthode pour ajouter des viewers.")
-        viewer.addViewers(self.viewer, self.taskFile, self.settings)
-        # viewer.factory.addViewers(self.viewer, self.taskFile, self.settings)
-        # # Setting up the menu. :
-        # # filemenu= wx.Menu()  # Devrait exister avant la création du menu ! (->Voir menu.MainMenu)
-        # Ici, nous en avons plusieurs FileMenu, Editer, Actions... basés sur gui.menu.Menu (une surcharge de wx.Menu)
-        log.debug("MainWindow._create_window_components : création de la barre de status.")
-        self._create_status_bar()  # Crée la barre de status en bas de la fenêtre.
-        log.debug("MainWindow._create_window_components : création de la barre de menu.")
-        self.__create_menu_bar()  # Crée la barre de menu.
-        log.debug("MainWindow._create_window_components : création du contrôleur de rappel des tâches et efforts.")
-        self.__create_reminder_controller()
-        log.debug("MainWindow._create_window_components : rafraîchissement !")
-        self.Refresh()
-        log.debug("MainWindow._create_window_components : utilisation de CallAfter")
-        wx.CallAfter(self.viewer.componentsCreated)
-        log.debug("MainWindow._create_window_components : CallAfter passé ! Terminé !")
+        log.debug(
+            "MainWindow._create_window_components : création du conteneur pour les visionneuses."
+        )
+        # Freeze to prevent flickering during viewer creation
+        self.Freeze()
+        try:
+            # Start global timer FIRST - other components subscribe to its events
+            self._globalTimer = globaltimer.GlobalTimer(self)
+            self._globalTimer.start()
+            # ComputeStyles handles per-second polling for status + appearance SSOT updates
+            from taskcoachlib.domain.base.appearance import ComputeStyles
 
-    def _create_viewer_container(self) -> None:  # Not private for test purposes
+            self._computeStyles = ComputeStyles(self.taskFile)
+
+            self._create_viewer_container()
+            log.debug(
+                "MainWindow._create_window_components : Lance une classe-méthode pour ajouter des viewers."
+            )
+            viewer.addViewers(self.viewer, self.taskFile, self.settings)
+            # viewer.factory.addViewers(self.viewer, self.taskFile, self.settings)
+            # # Setting up the menu. :
+            # # filemenu= wx.Menu()  # Devrait exister avant la création du menu ! (->Voir menu.MainMenu)
+            # Ici, nous en avons plusieurs FileMenu, Editer, Actions... basés sur gui.menu.Menu (une surcharge de wx.Menu)
+            log.debug(
+                "MainWindow._create_window_components : création de la barre de status."
+            )
+            self._create_status_bar()  # Crée la barre de status en bas de la fenêtre.
+            log.debug(
+                "MainWindow._create_window_components : création de la barre de menu."
+            )
+            self.__create_menu_bar()  # Crée la barre de menu.
+            log.debug(
+                "MainWindow._create_window_components : création du contrôleur de rappel des tâches et efforts."
+            )
+            self.__create_reminder_controller()
+            log.debug(
+                "MainWindow._create_window_components : rafraîchissement !"
+            )
+            # self.Refresh()
+        finally:
+            self.Thaw()
+        log.debug(
+            "MainWindow._create_window_components : utilisation de CallAfter"
+        )
+        wx.CallAfter(self.viewer.componentsCreated)
+        log.debug(
+            "MainWindow._create_window_components : CallAfter passé ! Terminé !"
+        )
+
+    def _create_viewer_container(
+        self,
+    ) -> None:  # Not private for test purposes
         # pylint: disable=W0201
         """
         Crée le conteneur pour les visionneuses (tâches, notes, etc.) dans la fenêtre principale.
         Ce conteneur gère l'affichage et l'organisation des différentes visionneuses.
         """
-        log.debug("MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses.")
+        log.debug(
+            "MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses."
+        )
         # self.viewer = viewer.ViewerContainer(self, self.settings)
         self.viewer = viewer.container.ViewerContainer(self, self.settings)
         # self.viewer = container.ViewerContainer(self, self.settings)
-        log.debug("MainWindow._create_viewer_container : conteneur de visionneuses créé !")
+        log.debug(
+            "MainWindow._create_viewer_container : conteneur de visionneuses créé !"
+        )
         # self.Refresh()
 
     def _create_status_bar(self) -> None:
@@ -480,12 +575,14 @@ class MainWindow(
             - La barre de statut est créée en passant la fenêtre principale (`self`) et les visionneuses (`self.viewer`).
             - La barre de statut est ensuite associée à la fenêtre principale à l'aide de `SetStatusBar`.
         """
-        log.info("MainWindow._create_status_bar : Création d'une barre de status et association avec la fenêtre principale.")
+        log.info(
+            "MainWindow._create_status_bar : Création d'une barre de status et association avec la fenêtre principale."
+        )
         # from taskcoachlib.gui import status  # pylint: disable=W0404
 
         # self.CreateStatusBar(1, STB_DEFAULT_STYLE, IdProvider.get(), "")  # TODO : à essayer
         self.SetStatusBar(status.StatusBar(self, self.viewer))  # Erreur ?
-        self.Update()
+        # self.Update()
 
     def __create_menu_bar(self) -> None:
         """
@@ -507,7 +604,9 @@ class MainWindow(
         # Sinon : ImportError: cannot import name 'CheckableTaskViewer' from partially initialized module 'taskcoachlib.gui.viewer.task' (most likely due to a circular import) (/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/gui/viewer/task.py)
         from taskcoachlib.gui import menu  # pylint: disable=W0404
 
-        log.info("MainWindow.__create_menu_bar : Création d'une barre de menus et association avec la fenêtre principale.")
+        log.info(
+            "MainWindow.__create_menu_bar : Création d'une barre de menus et association avec la fenêtre principale."
+        )
 
         # Sauf si c'est programmé avant, devrait contenir :
         # La création des menus Fichiers, Editer, Affichage, Nouveau, etc.
@@ -550,7 +649,7 @@ class MainWindow(
         # self.SetSize((300, 200))
         # self.SetTitle('Simple menu')
         # self.Centre()
-        self.Refresh()
+        # self.Refresh()
 
     def __create_reminder_controller(self) -> None:
         # pylint: disable=W0201
@@ -574,7 +673,9 @@ class MainWindow(
             self, self.taskFile.tasks(), self.taskFile.efforts(), self.settings
         )
 
-    def addPane(self, page, caption, name, floating: bool = False) -> None:  # pylint: disable=W0221
+    def addPane(
+        self, page, caption, name, floating: bool = False
+    ) -> None:  # pylint: disable=W0221
         # Overrides method in widget.frame.AuiManagedFrameWithDynamicCenterPane
         """
         Ajoute un volet (pane) à la fenêtre principale.
@@ -594,7 +695,7 @@ class MainWindow(
         # if self.Show() is True:
         name = page.settingsSection()
         super().addPane(page, caption, name, floating=floating)
-        self.Refresh()
+        # self.Refresh()
         # else:
         #    pass
 
@@ -603,7 +704,9 @@ class MainWindow(
         Initialise la fenêtre principale de Task Coach en définissant la disposition des composants (barres d'outils, barres de statut, etc.)
         et en appliquant les paramètres d'affichage sauvegardés.
         """
-        log.debug("MainWindow._init_window : Initialisation de la fenêtre principale.")
+        log.debug(
+            "MainWindow._init_window : Initialisation de la fenêtre principale."
+        )
         # log.debug(f"MainWindow._init_window : self.taskFile = {self.taskFile}")  # Problème !
         self.__filename = self.taskFile.filename()
         # log.debug("MainWindow._init_window : s'arrêt après cela :")
@@ -613,7 +716,7 @@ class MainWindow(
             _("Welcome to %(name)s version %(version)s")
             % {"name": meta.name, "version": meta.version},
             pane=1,
-            )
+        )
         # self.Refresh()
         log.debug("MainWindow._init_window : Fenêtre principale initialisée.")
 
@@ -630,13 +733,28 @@ class MainWindow(
             - Affiche ou masque la barre d'état en fonction du paramètre "statusbar" des réglages utilisateur.
             - Restaure la disposition des panneaux de la fenêtre en appelant `__restore_perspective`.
         """
-        self.showToolBar(self.settings.getvalue("view", "toolbar"))
-        # Nous utilisons CallAfter car sinon la barre d'état apparaîtra en haut
-        # de la fenêtre lorsqu'elle est initialement masquée puis affichée.
-        wx.CallAfter(self.showStatusBar, self.settings.getboolean("view", "statusbar"))
-        # Restaure la perspective de la fenêtre
-        self.__restore_perspective()
-        self.Refresh()
+        # Freeze to prevent flickering during AUI layout restoration
+        self.Freeze()
+
+        try:
+            self.showToolBar(self.settings.getvalue("view", "toolbar"))
+            # Nous utilisons CallAfter car sinon la barre d'état apparaîtra en haut
+            # de la fenêtre lorsqu'elle est initialement masquée puis affichée.
+            wx.CallAfter(
+                self.showStatusBar,
+                self.settings.getboolean("view", "statusbar"),
+            )
+            # Restaure la perspective de la fenêtre
+            self.__restore_perspective()
+        finally:
+            self.Thaw()
+        # self.Refresh()
+        # Reset toolbar position after perspective is loaded
+        wx.CallAfter(self._resetToolbarPosition)
+
+        # Note: Window position/size tracking uses debouncing to handle spurious
+        # events from AUI LoadPerspective() and GTK window realization.
+        # Events are bound immediately in __init__, no manual start needed.
 
     def __restore_perspective(self):
         """
@@ -659,45 +777,55 @@ class MainWindow(
             - Empêche l'apparition de "panneaux zombies" en s'assurant que tous les panneaux sont visibles.
             - Met à jour les titres des panneaux pour refléter la traduction correcte en cas de changement de langue.
         """
-        log.debug("__restore_perspective : Restauration de la perspective depuis les paramètres")
+        log.debug(
+            "__restore_perspective : Restauration de la perspective depuis les paramètres"
+        )
         perspective = self.settings.get("view", "perspective")
         #  Vérifie si le nombre de visionneuses a changé entre les versions
         for viewer_type in viewer.viewerTypes():
             # for viewer_type in factory.viewerTypes():
-            if self.__perspective_and_settings_viewer_count_differ(viewer_type):
+            if self.__perspective_and_settings_viewer_count_differ(
+                viewer_type
+            ):
                 # Différents nombres de spectateurs peuvent se produire
                 # lorsque le nom d'un spectateur
                 # est modifié entre les versions
-                perspective = ""  # Réinitialise la perspective en cas de différence
-                log.warning("__restore_perspective : Incompatibilité entre la perspective et les viewers."
-                            "Le nombre de visionneuses dans la perspective actuelle de la fenêtre diffère de celui sauvegardé dans les paramètres")
+                perspective = (
+                    ""  # Réinitialise la perspective en cas de différence
+                )
+                log.warning(
+                    "__restore_perspective : Incompatibilité entre la perspective et les viewers."
+                    "Le nombre de visionneuses dans la perspective actuelle de la fenêtre diffère de celui sauvegardé dans les paramètres"
+                )
                 break
 
         try:
-            self.manager.LoadPerspective(perspective)  # Tente de charger la perspective sauvegardée
+            self.manager.LoadPerspective(
+                perspective
+            )  # Tente de charger la perspective sauvegardée
         except ValueError as reason:
             # Cela a été rapporté. Je ne sais pas pourquoi. Continuez
             # si c'est le cas.
             # Si la restauration échoue, affiche une erreur et utilise une perspective par défaut
-            log.error(f"__restore_perspective : Erreur lors de la restauration de la perspective : {reason}", exc_info=True)
+            log.error(
+                f"__restore_perspective : Erreur lors de la restauration de la perspective : {reason}",
+                exc_info=True,
+            )
 
             if self.__splash:
                 self.__splash.Destroy()
             wx.MessageBox(
-                _(
-                    """Couldn't restore the pane layout from TaskCoach.ini:
+                _("""Couldn't restore the pane layout from TaskCoach.ini:
                     %s
                     
                     The default pane layout will be used.
                     
                     If this happens again, please make a copy of your TaskCoach.ini file
                     before closing the program, open a bug report, and attach the
-                    copied TaskCoach.ini file to the bug report."""
-                )
-                % reason,
+                    copied TaskCoach.ini file to the bug report.""") % reason,
                 _("%s settings error") % meta.name,
                 style=wx.OK | wx.ICON_ERROR,
-                )
+            )
             self.manager.LoadPerspective("")
 
         # S'assure que tous les panneaux sont visibles et actualise leurs titres
@@ -709,8 +837,14 @@ class MainWindow(
             # ils peuvent être incorrects lorsque l'utilisateur change de traduction :
             if hasattr(pane.window, "title"):
                 pane.Caption(pane.window.title())
+            # Reset toolbar MinSize - width is derived from window, not saved.
+            # Old INI files may have hard-coded widths like minw=1840.
+            # Use GetBestSize() for height - toolbar calculates this in Realize()
+            if pane.name == "toolbar":
+                best_size = pane.window.GetBestSize()
+                pane.MinSize((-1, best_size.GetHeight()))
         self.manager.Update()
-        self.Refresh()
+        # self.Refresh()
 
     def __perspective_and_settings_viewer_count_differ(self, viewer_type):
         """
@@ -721,7 +855,9 @@ class MainWindow(
         """
         perspective = self.settings.get("view", "perspective")
         perspective_viewer_count = perspective.count("name=%s" % viewer_type)
-        settings_viewer_count = self.settings.getint("view", "%scount" % viewer_type)
+        settings_viewer_count = self.settings.getint(
+            "view", "%scount" % viewer_type
+        )
         return perspective_viewer_count != settings_viewer_count
 
     def __register_for_window_component_changes(self):
@@ -735,6 +871,8 @@ class MainWindow(
         pub.subscribe(self.showStatusBar, "settings.view.statusbar")
         pub.subscribe(self.showToolBar, "settings.view.toolbar")
         self.Bind(aui.EVT_AUI_PANE_CLOSE, self.onCloseToolBar)
+        # Detect toolbar drag-end and float-to-dock transitions to reset position
+        self.manager.Bind(aui.EVT_AUI_RENDER, self._onAuiRender)
 
     def __onFilenameChanged(self, filename):
         """
@@ -757,7 +895,9 @@ class MainWindow(
         Args :
             taskFile (TaskFile) : Le fichier de tâches dont l'état de modification a changé.
         """
-        self.__dirty = taskFile.isDirty()  # Met à jour l'état interne selon l'état "dirty" du fichier de tâches
+        self.__dirty = (
+            taskFile.isDirty()
+        )  # Met à jour l'état interne selon l'état "dirty" du fichier de tâches
         self.__setTitle()  # Met à jour le titre de la fenêtre pour refléter cet état
 
     def __setTitle(self):
@@ -798,7 +938,9 @@ class MainWindow(
         """
         statusBar = self.GetStatusBar()  # Récupère la barre de statut
         if statusBar:  # Vérifie si une barre de statut est présente
-            statusBar.SetStatusText(message, pane)  # Affiche le message dans le panneau spécifié
+            statusBar.SetStatusText(
+                message, pane
+            )  # Affiche le message dans le panneau spécifié
 
     def save_settings(self):
         """
@@ -842,14 +984,29 @@ class MainWindow(
         """
         Ferme tous les éditeurs ouverts dans la fenêtre principale.
         """
-        log.info("MainWindow.closeEditors : Fermeture de tous les éditeurs ouverts dans la fenêtre principale.")
+        log.info(
+            "MainWindow.closeEditors : Fermeture de tous les éditeurs ouverts dans la fenêtre principale."
+        )
         try:
             for child in self.GetChildren():
                 if isinstance(child, Editor):
                     child.Close()
         except Exception as e:
-            log.exception("MainWindow.closeEditors : Erreur inattendue lors de la fermeture : %s", e)
+            log.exception(
+                "MainWindow.closeEditors : Erreur inattendue lors de la fermeture : %s",
+                e,
+            )
         self.Refresh()
+
+    def _onSysColourChanged(self, event):
+        """Handle system theme/colour change event (Windows/macOS)."""
+        # currentDark = detect_dark_theme()
+        # if currentDark != self._lastDetectedDark:
+        #     self._lastDetectedDark = currentDark
+        #     pub.sendMessage("system.appearance.changed")
+        #     if self.settings.get("window", "theme") == "automatic":
+        #         pub.sendMessage("settings.window.theme")
+        event.Skip()
 
     def onClose(self, event):
         # TODO : A revoir https://docs.wxpython.org/wx.CloseEvent.html
@@ -922,7 +1079,9 @@ class MainWindow(
         #         # Arrêter le contrôleur d'inactivité :
         #         self._idleController.stop()
 
-        log.info("mainWindow.onClose : Fermeture de la fenêtre par l'utilisateur.")
+        log.info(
+            "mainWindow.onClose : Fermeture de la fenêtre par l'utilisateur."
+        )
         # Nouveau code :
         try:
             # Simplifier la logique
@@ -948,7 +1107,7 @@ class MainWindow(
                 self.taskFile.stop()  # Arrêter le suivi des tâches.
                 self._idleController.stop()  # Arrêter le contrôleur d'inactivité.
                 self.closeEditors()  # Fermer les éditeurs.
-                self.manager.UnInit() # Désinitialise le manageur de trames. AUI
+                self.manager.UnInit()  # Désinitialise le manageur de trames. AUI
                 event.Skip()  # Autoriser la fermeture.
             elif should_hide:
                 # Si l'utilisateur a configuré pour cacher la fenêtre plutôt que de la fermer, la fenêtre est minimisée.
@@ -960,13 +1119,18 @@ class MainWindow(
                 # Si aucune des conditions ci-dessus n'est remplie,
                 # par défaut, on autorise la fermeture (peut-être après une confirmation).
                 # print("onClose : Fermeture par défaut avec event.Skip()")
-                log.debug("MainWindow.onClose : Fermeture par défaut avec event.Skip()")
+                log.debug(
+                    "MainWindow.onClose : Fermeture par défaut avec event.Skip()"
+                )
                 self.taskFile.stop()
                 self._idleController.stop()
                 self.manager.Unit()  # Désinitialise le manageur de trame AUI.
                 event.Skip()
         except Exception as e:
-            log.exception("MainWindow.onClose : Erreur inattendue lors de la fermeture : %s", e)
+            log.exception(
+                "MainWindow.onClose : Erreur inattendue lors de la fermeture : %s",
+                e,
+            )
         # Arrêtez le thread de détection d'inactivité à la fin du programme.
         self._idleController.stop()
         log.info("MainWindow.onCLose : Fenêtre fermée par l'utilisateur")
@@ -1030,20 +1194,26 @@ class MainWindow(
             ):
                 self.Hide()
                 # Logging plus informatif en cas d'erreur :
-                log.debug("MainWindow.onIconify : iconified and hidden.")  # Ajout d'un log
+                log.debug(
+                    "MainWindow.onIconify : iconified and hidden."
+                )  # Ajout d'un log
                 log.debug("Fenêtre iconifiée")
                 # Mise à jour de l'état interne (si nécessaire) :
                 #  Ajoutez un attribut à MainWindow (par exemple, self._is_hidden_when_iconified)
                 #  pour suivre si la fenêtre est cachée à cause de l'iconification.
                 #  Cela pourrait être utile ailleurs dans l'application.
-                self._is_hidden_when_iconified = True  # Exemple de mise à jour d'un état interne
+                self._is_hidden_when_iconified = (
+                    True  # Exemple de mise à jour d'un état interne
+                )
             else:
                 event.Skip()
                 self._is_hidden_when_iconified = False
         except RuntimeError as e:
             # print("mainwindow : Error onIconify :", str(e))
             # Logging plus informatif en cas d'erreur :
-            log.error(f"MainWindow.onIconify : {e}", exc_info=True)  # Log avec traceback
+            log.error(
+                f"MainWindow.onIconify : {e}", exc_info=True
+            )  # Log avec traceback
 
     def onResize(self, event):
         """
@@ -1064,18 +1234,32 @@ class MainWindow(
         # #  currentToolbar.IsOk() est une vérification essentielle
         # #  pour s'assurer que le pane de la barre d'outils existe
         # #  et est valide avant d'essayer d'accéder à sa fenêtre.
-        # if currentToolbar.IsOk():
-        #     # currentToolbar.window.SetSize((event.GetSize().GetWidth(), -1))
-        #     currentToolbar.window.SetSize((event.GetSize().GetWidth(), -1))
-        #     currentToolbar.window.SetMinSize((event.GetSize().GetWidth(), 42))
+        if currentToolbar.IsOk():
+            width = event.GetSize().GetWidth()
+            # Get height from toolbar's GetBestSize() - calculated during Realize()
+            best_size = currentToolbar.window.GetBestSize()
+            height = best_size.GetHeight()
+            # Set size on the window widget for current display
+            # currentToolbar.window.SetSize((event.GetSize().GetWidth(), -1))
+            currentToolbar.window.SetSize((width, -1))
+            # currentToolbar.window.SetMinSize((event.GetSize().GetWidth(), 42))
+            currentToolbar.window.SetMinSize((width, height))
+            # Use -1 for width on pane info so SavePerspective doesn't save
+            # a hard-coded width value. The toolbar width is derived from
+            # window width at runtime, not a user preference to persist.
+            currentToolbar.MinSize((-1, height))
         if not hasattr(self, "_lastSize"):
             self._lastSize = newSize
 
         if newSize != self._lastSize:
-            log.debug(f"MainWindow.onResize : Redimensionnement de la fenêtre : {newSize}, ancienne valeur={self._lastSize}")
+            log.debug(
+                f"MainWindow.onResize : Redimensionnement de la fenêtre : {newSize}, ancienne valeur={self._lastSize}"
+            )
             self._lastSize = newSize
             # TODO : mettre self._lastSize = self._lastSize or self.GetSize() dans __init__
-            log.info(f"MainWindow.onResize : Fenêtre redimensionnée, résultat : {self.GetSize()}")
+            log.info(
+                f"MainWindow.onResize : Fenêtre redimensionnée, résultat : {self.GetSize()}"
+            )
 
         event.Skip()
 
@@ -1098,7 +1282,10 @@ class MainWindow(
         Args :
             value (bool) : True pour afficher, False pour masquer.
         """
-        log.debug("MainWindow.showStatusBar : Affichage de la barre de status : %s", value)
+        log.debug(
+            "MainWindow.showStatusBar : Affichage de la barre de status : %s",
+            value,
+        )
 
         # FIXME: Masquer d'abord la barre d'état, puis masquer la barre d'outils, puis
         #  afficher la barre d'état la met au mauvais endroit (uniquement sous Linux ?)
@@ -1117,7 +1304,9 @@ class MainWindow(
         Returns :
             (list) : Une liste d'instances de commandes UI.
         """
-        log.debug("MainWindow.createToolBarUICommands: Création des commandes UI de la barre d'outils.")
+        log.debug(
+            "MainWindow.createToolBarUICommands: Création des commandes UI de la barre d'outils."
+        )
         # Cette liste est manuellement construite et peut contenir :
         #     - des instances de UICommand comme FileOpen, EditUndo, etc.
         #     - None pour indiquer un séparateur.
@@ -1197,9 +1386,14 @@ class MainWindow(
             - `self.manager.AddPane(pane, paneInfo)` : Ajoute un panneau à la fenêtre principale.
             - `self.manager.Update()` : Met à jour la disposition de la fenêtre après les modifications.
         """
-        log.debug("MainWindow.showToolBar : Affichage de la barre d’outils : %s", value)
+        log.debug(
+            "MainWindow.showToolBar : Affichage de la barre d’outils : %s",
+            value,
+        )
 
-        currentToolbar = self.manager.GetPane("toolbar")  # La méthode vérifie d'abord s'il existe déjà une barre d'outils
+        currentToolbar = self.manager.GetPane(
+            "toolbar"
+        )  # La méthode vérifie d'abord s'il existe déjà une barre d'outils
         if currentToolbar.IsOk():
             # Détache et détruit la barre d'outils actuelle si elle existe
             self.manager.DetachPane(currentToolbar.window)
@@ -1208,7 +1402,8 @@ class MainWindow(
         if value:
             # Crée et ajoute une nouvelle barre d'outils si 'value' est différent de False
             bar = toolbar.MainToolBar(self, self.settings, size=value)
-
+            # Use GetBestSize() for height - toolbar calculates this during Realize()
+            best_size = bar.GetBestSize()
             self.manager.AddPane(
                 bar,
                 aui.AuiPaneInfo()
@@ -1216,10 +1411,11 @@ class MainWindow(
                 .Caption("Toolbar")
                 .ToolbarPane()
                 .Top()
+                .MinSize((-1, best_size.GetHeight()))
                 .DestroyOnClose()
                 .LeftDockable(False)
                 .RightDockable(False),
-                )
+            )
             # Using .Gripper(False) does not work here
             # Appelle SetGripperVisible après la création de la barre d'outils pour masquer la poignée
             wx.CallAfter(bar.SetGripperVisible, False)
@@ -1233,16 +1429,69 @@ class MainWindow(
         Args :
             event (wx.Event) : L'événement de fermeture de la barre d'outils.
         """
-        log.debug("mainwindows.MainWindow.onCloseToolBar : Debug"
-                  "Fermeture de la barre d'outils. Si la barre d'outils est fermée,"
-                  " elle est masquée et les paramètres sont mis à jour.")
+        log.debug(
+            "mainwindows.MainWindow.onCloseToolBar : Debug"
+            "Fermeture de la barre d'outils. Si la barre d'outils est fermée,"
+            " elle est masquée et les paramètres sont mis à jour."
+        )
         try:
-            if event.GetPane().IsToolbar():  # Unresolved attribute reference 'GetPane' for class 'Event'
+            if (
+                event.GetPane().IsToolbar()
+            ):  # Unresolved attribute reference 'GetPane' for class 'Event'
                 self.settings.setvalue("view", "toolbar", None)
             event.Skip()
         except Exception as e:
-            log.exception("MainWindow.onCloseToolBar : Erreur inattendue lors de la fermeture : %s", e)
+            log.exception(
+                "MainWindow.onCloseToolBar : Erreur inattendue lors de la fermeture : %s",
+                e,
+            )
         self.Refresh()
+
+    def _resetToolbarPosition(self):
+        """Reset toolbar to position 0 to fill the dock area.
+
+        Called on startup, drag-end, and float-to-dock transitions.
+        For top/bottom docking: sticks left and fills width.
+        For left/right docking: sticks up and fills height.
+        Does nothing if toolbar is floating.
+        """
+        pane = self.manager.GetPane("toolbar")
+        if not pane.IsOk() or pane.IsFloating():
+            return
+
+        direction = pane.dock_direction
+        # Only handle docked positions: 1=top, 2=right, 3=bottom, 4=left
+        if direction not in (1, 2, 3, 4):
+            return
+
+        if pane.dock_pos != 0:
+            pane.Position(0)
+            if direction in (1, 3):  # top/bottom: fill width
+                pane.MinSize((self.GetSize().GetWidth(), -1))
+            else:  # left/right: fill height
+                pane.MinSize((-1, self.GetSize().GetHeight()))
+            self.manager.Update()
+
+    def _onAuiRender(self, event):
+        """Detect toolbar drag-end and float-to-dock to reset position."""
+        action = getattr(self.manager, "_action", 0)
+        prev_action = getattr(self, "_prev_manager_action", 0)
+
+        # Detect transition from dragging to idle
+        if prev_action != 0 and action == 0:
+            wx.CallAfter(self._resetToolbarPosition)
+
+        # Detect floating->docked transition
+        pane = self.manager.GetPane("toolbar")
+        if pane.IsOk():
+            was_floating = getattr(self, "_toolbar_was_floating", False)
+            is_floating = pane.IsFloating()
+            if was_floating and not is_floating:
+                wx.CallAfter(self._resetToolbarPosition)
+            self._toolbar_was_floating = is_floating
+
+        self._prev_manager_action = action
+        event.Skip()
 
     # Viewers
 
@@ -1254,7 +1503,9 @@ class MainWindow(
             forward (bool) : Si True, avance vers l'élément suivant. Si False, recule vers l'élément précédent.
         """
         # log.debug("MainWindow.advanceSelection : Sélection avancée dans les viewers")
-        log.debug(f"MainWindow.advanceSelection: Avance la sélection des tâches (forward: {forward}).")
+        log.debug(
+            f"MainWindow.advanceSelection: Avance la sélection des tâches (forward: {forward})."
+        )
         self.viewer.advanceSelection(forward)
 
     def viewerCount(self) -> int:
@@ -1300,7 +1551,9 @@ class MainWindow(
         return IPhoneSyncFrame(
             self.settings,
             _("iPhone/iPod"),
-            icon=wx.ArtProvider.GetBitmap("taskcoach", wx.ART_FRAME_ICON, (16, 16)),
+            icon=wx.ArtProvider.GetBitmap(
+                "taskcoach", wx.ART_FRAME_ICON, (16, 16)
+            ),
             parent=self,
         )
 
@@ -1324,7 +1577,9 @@ class MainWindow(
         dlg = IPhoneSyncTypeDialog(self, wx.ID_ANY, _("Synchronization type"))
         try:
             dlg.ShowModal()
-            return dlg.value  # Retourne le type de synchronisation choisi par l'utilisateur
+            return (
+                dlg.value
+            )  # Retourne le type de synchronisation choisi par l'utilisateur
         finally:
             dlg.Destroy()  # Ferme la boîte de dialogue après utilisation
 
@@ -1360,7 +1615,9 @@ class MainWindow(
         Cette méthode est souvent utilisée lors de la fermeture d'un fichier ou avant l'ouverture d'un nouveau fichier de tâches.
         """
         self.taskFile.clear(False)
-        log.info("MainWindow.clearTasks : Toutes les tâches ont été effacées de l’interface.")
+        log.info(
+            "MainWindow.clearTasks : Toutes les tâches ont été effacées de l’interface."
+        )
 
     # def viewerIsActive(self):
     #     """
@@ -1402,9 +1659,17 @@ class MainWindow(
             categories (list) : Liste des catégories à restaurer.
             tasks (list) : Liste des tâches à restaurer.
         """
-        log.debug("MainWindow.restoreTasks : Restauration des tâches : %d catégories, %d tâches", len(categories), len(tasks))
-        self.taskFile.clear(False)  # Efface les catégories et tâches actuelles sans sauvegarder.
-        self.taskFile.categories().extend(categories)  # Ajoute les nouvelles catégories.
+        log.debug(
+            "MainWindow.restoreTasks : Restauration des tâches : %d catégories, %d tâches",
+            len(categories),
+            len(tasks),
+        )
+        self.taskFile.clear(
+            False
+        )  # Efface les catégories et tâches actuelles sans sauvegarder.
+        self.taskFile.categories().extend(
+            categories
+        )  # Ajoute les nouvelles catégories.
         self.taskFile.tasks().extend(tasks)  # Ajoute les nouvelles tâches.
 
     def addIPhoneCategory(self, category) -> None:
@@ -1415,7 +1680,9 @@ class MainWindow(
             category (Category) : La catégorie à ajouter.
         """
         log.info("Catégorie iPhone ajoutée : %s", category)
-        self.taskFile.categories().append(category)  # Ajoute la catégorie à la liste des catégories.
+        self.taskFile.categories().append(
+            category
+        )  # Ajoute la catégorie à la liste des catégories.
 
     def removeIPhoneCategory(self, category) -> None:
         """
@@ -1424,8 +1691,13 @@ class MainWindow(
         Args :
             category (Category) : La catégorie à supprimer.
         """
-        log.info("MainWindow.removeIPhoneCategory : Catégorie iPhone supprimée : %s", category)
-        self.taskFile.categories().remove(category)  # Supprime la catégorie de la liste.
+        log.info(
+            "MainWindow.removeIPhoneCategory : Catégorie iPhone supprimée : %s",
+            category,
+        )
+        self.taskFile.categories().remove(
+            category
+        )  # Supprime la catégorie de la liste.
 
     # @staticmethod
     def modifyIPhoneCategory(self, category, name) -> None:
@@ -1436,7 +1708,9 @@ class MainWindow(
             category (Category) : La catégorie à modifier.
             name (str) : Le nouveau nom de la catégorie.
         """
-        log.info("Catégorie %s iPhone modifiée, nouveau nom : %s", category, name)
+        log.info(
+            "Catégorie %s iPhone modifiée, nouveau nom : %s", category, name
+        )
         category.setSubject(name)  # Modifie le sujet (nom) de la catégorie.
 
     def addIPhoneTask(self, task, categories) -> None:
@@ -1447,7 +1721,9 @@ class MainWindow(
             task (Task) : La tâche à ajouter.
             categories (list) : Les catégories à associer à la tâche.
         """
-        log.info("Tâche iPhone %s ajoutée avec %d catégories", task, len(categories))
+        log.info(
+            "Tâche iPhone %s ajoutée avec %d catégories", task, len(categories)
+        )
         self.taskFile.tasks().append(task)  # Ajoute la tâche à la liste.
         for category in categories:  # Associe les catégories à la tâche.
             task.addCategory(category)
@@ -1487,24 +1763,26 @@ class MainWindow(
             started (datetime) : La date et l'heure de début de l'effort.
             ended (datetime) : La date et l'heure de fin de l'effort.
         """
-        log.info("MainWindow.modifyIPhoneEffort: Effort iPhone %s modifié.", effort)
+        log.info(
+            "MainWindow.modifyIPhoneEffort: Effort iPhone %s modifié.", effort
+        )
         effort.setSubject(subject)  # Modifie le sujet (nom) de l'effort.
         effort.setStart(started)  # Modifie la date de début.
         effort.setStop(ended)  # Modifie la date de fin.
 
     # @staticmethod
     def modifyIPhoneTask(
-            self,
-            task,
-            subject,
-            description,
-            plannedStartDateTime,
-            dueDateTime,
-            completionDateTime,
-            reminderDateTime,
-            recurrence,
-            priority,
-            categories,
+        self,
+        task,
+        subject,
+        description,
+        plannedStartDateTime,
+        dueDateTime,
+        completionDateTime,
+        reminderDateTime,
+        recurrence,
+        priority,
+        categories,
     ) -> None:
         """
         Modifie une tâche synchronisée depuis un iPhone.
@@ -1524,9 +1802,13 @@ class MainWindow(
         log.info("Tâche iPhone modifiée : %s", task)
         task.setSubject(subject)  # Modifie le sujet de la tâche.
         task.setDescription(description)  # Modifie la description.
-        task.setPlannedStartDateTime(plannedStartDateTime)  # Modifie la date de début planifiée.
+        task.setPlannedStartDateTime(
+            plannedStartDateTime
+        )  # Modifie la date de début planifiée.
         task.setDueDateTime(dueDateTime)  # Modifie la date d'échéance.
-        task.setCompletionDateTime(completionDateTime)  # Modifie la date de complétion.
+        task.setCompletionDateTime(
+            completionDateTime
+        )  # Modifie la date de complétion.
         task.setReminder(reminderDateTime)  # Modifie la date du rappel.
         task.setRecurrence(recurrence)  # Modifie la récurrence.
         task.setPriority(priority)  # Modifie la priorité.
