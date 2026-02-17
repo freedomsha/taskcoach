@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import wx
 from pubsub import pub
+
 # try:
 #    from ..thirdparty.pubsub import pub
 # except ImportError:
@@ -40,11 +41,15 @@ class StatusBar(wx.StatusBar):
             parent.Bind(eventType, self.resetStatusBar)
 
     def resetStatusBar(self, event):
-        """ Unfortunately, the menu's and toolbar don't restore the
-            previous statusbar text after they have displayed their help
-            text, so we have to do it by hand. """
+        """
+        Unfortunately, the menu's and toolbar don't restore the
+        previous statusbar text after they have displayed their help
+        text, so we have to do it by hand.
+        """
         try:
-            toolOrMenuId = event.GetSelection()  # for CommandEvent from the Toolbar
+            toolOrMenuId = (
+                event.GetSelection()
+            )  # for CommandEvent from the Toolbar
         except AttributeError:
             toolOrMenuId = event.GetMenuId()  # for MenuEvent
         if toolOrMenuId == -1:
@@ -69,7 +74,9 @@ class StatusBar(wx.StatusBar):
         super().SetStatusText(status1, 0)
         super().SetStatusText(status2, 1)
 
-    def SetStatusText(self, message, pane=0, delay=3000):  # pylint: disable=W0221
+    def SetStatusText(
+        self, message, pane=0, delay=3000
+    ):  # pylint: disable=W0221
         if self.scheduledStatusDisplay:
             self.scheduledStatusDisplay.Stop()
         super().SetStatusText(message, pane)
@@ -79,6 +86,14 @@ class StatusBar(wx.StatusBar):
     def Destroy(self):  # pylint: disable=W0221
         for eventType in self.wxEventTypes:
             self.parent.Unbind(eventType)
+        # Unsubscribe from pubsub to prevent callbacks after destruction
+        try:
+            pub.unsubscribe(self.onViewerStatusChanged, "viewer.status")
+        except Exception:
+            pass  # May already be unsubscribed or topic may not exist
+        # Stop the status update timer to prevent crashes during destruction
+        if self.__timer and self.__timer.IsRunning():
+            self.__timer.Stop()
         if self.scheduledStatusDisplay:
             self.scheduledStatusDisplay.Stop()
         super().Destroy()
