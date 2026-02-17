@@ -96,17 +96,21 @@ Dependencies:
 # from builtins import object
 
 import calendar
+import datetime
 import locale
 import logging  # Attendre avant son implantation
 import os
 import re
+import subprocess
 import sys
 import threading  # Unused import
 import traceback
 import time
 import wx
+
 # try:
 from pubsub import pub
+
 # except ImportError:
 #    try:
 #       # from ..thirdparty.pubsub import pub
@@ -115,7 +119,7 @@ from pubsub import pub
 from io import open
 
 # from taskcoachlib import workarounds  # pylint: disable=W0611  unused import statement
-from taskcoachlib import patterns, operating_system
+from taskcoachlib import patterns, operating_system, workarounds
 
 # nouveau :
 from taskcoachlib.i18n import _
@@ -125,12 +129,37 @@ from taskcoachlib import gui, persistence
 log = logging.getLogger(__name__)
 
 
+def detect_dark_theme():
+    """Detect if system is using dark theme.
+
+    Returns True if dark theme detected, False otherwise.
+    Requires wxApp to be initialized.
+    """
+    try:
+        appearance = wx.SystemSettings.GetAppearance()
+        return appearance.IsDark()
+    except AttributeError:
+        # Older wxPython without GetAppearance()
+        # Fallback: check if window background is dark
+        try:
+            bg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+            # Consider dark if luminance < 128
+            luminance = (
+                0.299 * bg.Red() + 0.587 * bg.Green() + 0.114 * bg.Blue()
+            )
+            return luminance < 128
+        except Exception:
+            return False
+
+
 class RedirectedOutput(object):
     """Classe objet de redirection de la sortie."""
 
     # TODO : A VERIFIER si la virgule est nécessaire
     _rx_ignore = [
-        re.compile("RuntimeWarning: PyOS_InputHook",)
+        re.compile(
+            "RuntimeWarning: PyOS_InputHook",
+        )
     ]
 
     def __init__(self):
@@ -138,7 +167,9 @@ class RedirectedOutput(object):
         # Argument fichier à utiliser
         self.__handle = None
         # chemin de taskcoachlog.txt
-        self.__path = os.path.join(Settings.pathToDocumentsDir(), "taskcoachlog.txt")
+        self.__path = os.path.join(
+            Settings.pathToDocumentsDir(), "taskcoachlog.txt"
+        )
 
     def write(self, bf):
         """Fonction-méthode pour ouvrir puis écrire la Date et l'heure actuelle et bf dans taskcoachlog.txt"""
@@ -193,12 +224,13 @@ class RedirectedOutput(object):
                 _('Errors have occured. Please see "%s"') % self.__path,
                 _("Error"),
                 wx.OK,
-                )
+            )
             # wx.MessageBox(_('Errors have occured. Please see "{}"'.format(self.__path)), _('Error'), wx.OK)
             # wx.MessageBox(_(f'Errors have occured. Please see "{self.__path}"'), _('Error'), wx.OK)
 
 
 # pylint: disable=W0404
+
 
 class wxApp(wx.App):
     """Classe App pour wxpython"""
@@ -253,6 +285,7 @@ class wxApp(wx.App):
             and not isatty
         ) or not isatty:
             sys.stdout = sys.stderr = RedirectedOutput()
+            self.Bind(wx.EVT_QUERY_END_SESSION, self.onQueryEndSession)
 
         return True
 
@@ -269,6 +302,24 @@ class wxApp(wx.App):
 
         if event is not None:
             event.Skip()
+
+    def OnExceptionInMainLoop(self):
+        """Called by wx when an unhandled exception occurs during event dispatch.
+
+        Logs the full traceback to stderr so crashes during event handling
+        are visible instead of being silently swallowed. Returns True to
+        continue running (the event that caused the error is skipped).
+        See docs/CRASH_GUARD.md for details.
+        """
+        import traceback
+
+        # from taskcoachlib.meta.debug import log_step
+
+        log.debug(
+            "Unhandled exception in MainLoop:",
+            traceback.format_exc(),
+        )
+        return True
 
     # disparition de :
     def ProcessIdle(self):
@@ -299,7 +350,20 @@ class Application(object, metaclass=patterns.Singleton):
     et en démarrant la boucle d'événements de Twisted.
 
     La méthode quitApplication permet de quitter l'application
-    en sauvegardant les paramètres et l'état de l'application."""
+    en sauvegardant les paramètres et l'état de l'application.
+
+    DESIGN NOTE (Twisted Removal - 2024):
+    Previously used Twisted's wxreactor to integrate Twisted's event loop with
+    wxPython. This has been replaced with native wxPython functionality:
+    - wxreactor.install() → removed (wx.App.MainLoop() used directly)
+    - reactor.registerWxApp() → removed (not needed)
+    - reactor.run() → wx.App.MainLoop()
+    - reactor.stop() → wx.App.ExitMainLoop() via EVT_CLOSE handlers
+    - reactor.callLater() → wx.CallLater() (in scheduler.py)
+
+    This simplifies the event loop architecture and eliminates potential
+    race conditions between two event loops.
+    """
 
     def __init__(self, options=None, args=None, **kwargs):
         """La méthode init est appelée avant le démarrage de l'application.
@@ -321,20 +385,30 @@ class Application(object, metaclass=patterns.Singleton):
 
         self._options = options
         self._args = args
-        # Initialisation de Twisted (1-3/5)
-        # self.initTwisted()
-        try:
-            self.initTwisted()
-        except Exception as e:
-            log.exception(f"application.py: Error initializing Twisted: {str(e)}", exc_info=True)
-            # print(f"application.py: Error initializing Twisted: {e}")
-            # wx.MessageBox(f"application.py Application.__init__: Error initializing Twisted: {e}",
-            #               "Error", wx.OK | wx.ICON_ERROR)
-        # print("application.Application.__init__: Twisted initialized")
-        log.info("Application : Twisted initialisé avec succès.")
+        # # Initialisation de Twisted (1-3/5)
+        # # self.initTwisted()
+        # try:
+        #     self.initTwisted()
+        # except Exception as e:
+        #     log.exception(
+        #         f"application.py: Error initializing Twisted: {str(e)}",
+        #         exc_info=True,
+        #     )
+        #     # print(f"application.py: Error initializing Twisted: {e}")
+        #     # wx.MessageBox(f"application.py Application.__init__: Error initializing Twisted: {e}",
+        #     #               "Error", wx.OK | wx.ICON_ERROR)
+        # # print("application.Application.__init__: Twisted initialized")
+        # log.info("Application : Twisted initialisé avec succès.")
+        # # 1. Log environment info first (no dependencies)
+        # _log_environment()
+
+        # 2. Load settings
+        self.__init_config(kwargs.get("loadSettings", True))
 
         # wx-1-Create a new app, don't redirect stdout/stderr to a window.
-        self.__wx_app = wxApp(self.on_end_session, self.on_reopen_app, redirect=False)
+        self.__wx_app = wxApp(
+            self.on_end_session, self.on_reopen_app, redirect=False
+        )
         # myapp = MyApp() # functions normally. Stdio is redirected to its own window
         # myapp = MyApp(0) #does not redirect stdout. Tracebacks will show up at the console.
         # myapp = MyApp(1, 'filespec') #redirects stdout to the file 'filespec'
@@ -347,9 +421,17 @@ class Application(object, metaclass=patterns.Singleton):
         # print("application.Application.__init__: self.__wx_app défini !")
         # log.debug("Application wxApp créée.")
 
-        # Twisted (4/5) Enregistrement de l'application dans Twisted
-        self.registerApp()
-        # print("application.Application.__init__: self.registerApp() !")
+        # # Twisted (4/5) Enregistrement de l'application dans Twisted
+        # self.registerApp()
+        # # print("application.Application.__init__: self.registerApp() !")
+        # Expose settings on wxApp so wx.GetApp().settings works everywhere
+        self.__wx_app.settings = self.settings
+
+        # # 4. Log wx-specific info (needs wxApp)
+        # _log_wx_info()
+
+        # 5. Acquire INI lock (needs wxApp for error dialog)
+        self.settings.acquire_ini_lock()
         # wx-2 :
         # log.debug("Appel de la Méthode init().")
         self.init(**kwargs)  # passe mais n'atteint pas la suite ! goto l540
@@ -385,7 +467,9 @@ class Application(object, metaclass=patterns.Singleton):
                         self.setProperty(xsm.SmRestartCommand, sys.argv)
                         self.setProperty(xsm.SmCurrentDirectory, os.getcwd())
                         self.setProperty(xsm.SmProgram, sys.argv[0])
-                        self.setProperty(xsm.SmRestartStyleHint, xsm.SmRestartNever)
+                        self.setProperty(
+                            xsm.SmRestartStyleHint, xsm.SmRestartNever
+                        )
 
                     def saveYourself(
                         self, saveType, shutdown, interactStyle, fast
@@ -414,139 +498,158 @@ class Application(object, metaclass=patterns.Singleton):
             dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
         )
 
-    def initTwisted(self):
-        """Fonction-méthode pour initialiser et lancer Twisted.
+    # # NOTE: initTwisted(), stopTwisted(), and registerApp() methods removed.
+    # # Previously used Twisted's wxreactor for event loop integration.
+    # # Now using native wx.App.MainLoop() which is simpler and more reliable.
+    # # See class docstring for migration details.
+    # def initTwisted(self):
+    #     """Fonction-méthode pour initialiser et lancer Twisted.
+    #
+    #     Initialise et lance le réacteur Twisted, qui permet de gérer les événements asynchrones de l'application.
+    #     Centralise aussi tous les logs (Twisted inclus).
+    #     """
+    #     # voir peut-être https://docs.twisted.org/en/stable/core/howto/design.html
+    #     # et https://docs.twisted.org/en/stable/core/howto/process.html
+    #     # et pour python 3 : https://docs.twisted.org/en/stable/core/howto/python3.html
+    #     # https://docs.twisted.org/en/stable/core/howto/choosing-reactor.html
+    #     # Twisted (1/5) to use Twisted
+    #     from twisted.internet import wxreactor
+    #
+    #     # twisted.python.log s'est sensiblement déplacé vers le texte des str
+    #     # à partir de lignes d'octets.
+    #     # Événements d'exploitation forestière,
+    #     # en particulier ceux produits par un Appel comme msg("foo"),
+    #     # doit maintenant être des chaînes de texte.
+    #     # Par conséquent, sur Python 3, les dictionnaires d'événements
+    #     # passés aux enregistrements de journaliser
+    #     # confulent une chaîne de texte où
+    #     # elles contenaient précédemment des chaînes d'octets.
+    #     # twisted.python.filepath.FilePath n'a pas changé.
+    #     # Il ne supporte que des lignes d'octets.
+    #     # Cela nécessitera probablement des demandes pour
+    #     # mettre à jour leur utilisation de FilePath,
+    #     # au moins pour passer un octet explicite littérales de chaîne
+    #     # plutôt que "native" littérales de chaîne (qui sont du texte sur Python 3).
+    #
+    #     # Twisted (2/5)
+    #     wxreactor.install()
+    #
+    #     # Monkey-patching older versions because of https://twistedmatrix.com/trac/ticket/3948
+    #     # J'ai deux alternatives à :
+    #     #         if map(int, twisted.__version__.split('.')) < (11,):
+    #     #             from twisted.internet import reactor
+    #     #             if wxreactor.WxReactor.callFromThread is not None:
+    #     #                 oldStop = wxreactor.WxReactor.stop
+    #     #                 def stopFromThread(self):
+    #     #                     self.callFromThread(oldStop, self)
+    #     #                 wxreactor.WxReactor.stop = stopFromThread
+    #     # celle généré par futurize:
+    #     # import twisted  # Unused import
+    #
+    #     # if list(map(int, twisted.__version__.split('.'))) < (11,):
+    #     # if list(twisted.__version__.split(".")) < ['11', ]:
+    #     # if tuple(map(int, twisted.__version__.split("."))) < (11,):
+    #     # ValueError: invalid literal for int() with base 10: '0rc1'
+    #     # Est-ce nécessaire ?
+    #     # Twisted (3/5), when Wxapp has been created :
+    #     # from twisted.internet import wxreactor, threads  # unused import
+    #     from twisted.internet import wxreactor
+    #
+    #     # TODO: retrouver dans twisted de quoi remplacer callFromThread
+    #     # une piste sur https://stackoverflow.com/questions/4081578/python-twisted-with-callinthread
+    #     # https://docs.twistedmatrix.com/en/stable/core/howto/threading.html#getting-results
+    #     if wxreactor.WxReactor.callFromThread is not None:
+    #         # if threads.deferToThread is not None:
+    #         oldStop = wxreactor.WxReactor.stop
+    #
+    #         def stopFromThread(self):
+    #             self.callFromThread(oldStop, self)
+    #             # self.deferToThread(oldStop, self)
+    #             # ou
+    #             # self.blockingCallFromThread(oldStop, self)
+    #
+    #         wxreactor.WxReactor.stop = stopFromThread
+    #         # wxreactor.WxReactor.stop = wxreactor.WxReactor.callFromThread(wxreactor.WxReactor.stop, self)  # Ne fonctionne pas !
+    #         # <taskcoachlib.application.application.Application object at 0x7c07fff70110> is not callable
+    #     # ou
+    #     # import twisted
+    #     # print(list(twisted.__version__.split('.')))
+    #     # if list(twisted.__version__.split('.')) < ['11', '0']:
+    #     #    # essayer list seul sinon list(map())
+    #     #    # from twisted.internet import reactor  # doublon soit-disant déjà installé
+    #     #    if wxreactor.WxReactor.callFromThread is not None:
+    #     #        oldStop = wxreactor.WxReactor.stop
+    #     #        def stopFromThread(self):
+    #     #            self.callFromThread(oldStop, self)
+    #     #        wxreactor.WxReactor.stop = stopFromThread
+    #     #        # ou essayer avec https://www.programcreek.com/python/example/117947/twisted.internet.error
+    #     #        # .ReactorAlreadyInstalledError
+    #
+    #     # Centraliser tous les logs (Twisted inclus) :
+    #     from twisted.python import log as twisted_log
+    #
+    #     twisted_log.startLoggingWithObserver(
+    #         lambda msg: log.info(msg.get("message"))
+    #     )
+    #     # msg("Log opened.")
 
-        Initialise et lance le réacteur Twisted, qui permet de gérer les événements asynchrones de l'application.
-        Centralise aussi tous les logs (Twisted inclus).
-        """
-        # voir peut-être https://docs.twisted.org/en/stable/core/howto/design.html
-        # et https://docs.twisted.org/en/stable/core/howto/process.html
-        # et pour python 3 : https://docs.twisted.org/en/stable/core/howto/python3.html
-        # https://docs.twisted.org/en/stable/core/howto/choosing-reactor.html
-        # Twisted (1/5) to use Twisted
-        from twisted.internet import wxreactor
+    # def stopTwisted(self):
+    #     """Fonction-méthode pour arrêter twisted-reactor"""
+    #     # voir https://stackoverflow.com/questions/6526923/stop-twisted-reactor-on-a-condition
+    #     # from twisted.internet import reactor, error
+    #     from twisted.internet import reactor, error
+    #
+    #     log.debug("Application.stopTwisted : Essaie d'arrêter reactor.")
+    #     try:
+    #         reactor.stop()  # cannot find stop in reactor, but don't use yourApp.ExitMainLoop()
+    #         log.debug("Application.stopTwisted : A lancé reactorstop().")
+    #     except error.ReactorNotRunning as e:
+    #         # Happens on Fedora 14 when running unit tests. Old Twisted ?
+    #         # in Arch, reference 'stop' not find in 'reactor.py'
+    #         log.error(
+    #             "Application.stopTwisted : Reactor n'a pas démarré !",
+    #             exc_info=True,
+    #             stack_info=True,
+    #         )
+    #         pass
+    #     # Arrêter les threads workers
+    #     log.debug(
+    #         "Application.stopTwisted : Essaie d'arrêter les threads workers"
+    #     )
+    #     try:
+    #         reactor.getThreadPool().stop()
+    #         log.debug(
+    #             "Application.stopTwisted : avec la méthode getThreadPool().stop()."
+    #         )
+    #     except AttributeError:
+    #         # Certains réacteurs n'ont pas de threadpool explicite
+    #         try:
+    #             reactor.threadpool.stop()
+    #             log.debug(
+    #                 "Application.stopTwisted : avec la méthode threadpool().stop()."
+    #             )
+    #         except AttributeError:
+    #             log.debug(
+    #                 "Application.stopTwisted : aucune méthode ne fonctionne pour arrêter les workers."
+    #             )
+    #     time.sleep(0.1)  # Donne un peu de temps au worker pour s'arrêter
 
-        # twisted.python.log s'est sensiblement déplacé vers le texte des str
-        # à partir de lignes d'octets.
-        # Événements d'exploitation forestière,
-        # en particulier ceux produits par un Appel comme msg("foo"),
-        # doit maintenant être des chaînes de texte.
-        # Par conséquent, sur Python 3, les dictionnaires d'événements
-        # passés aux enregistrements de journaliser
-        # confulent une chaîne de texte où
-        # elles contenaient précédemment des chaînes d'octets.
-        # twisted.python.filepath.FilePath n'a pas changé.
-        # Il ne supporte que des lignes d'octets.
-        # Cela nécessitera probablement des demandes pour
-        # mettre à jour leur utilisation de FilePath,
-        # au moins pour passer un octet explicite littérales de chaîne
-        # plutôt que "native" littérales de chaîne (qui sont du texte sur Python 3).
-
-        # Twisted (2/5)
-        wxreactor.install()
-
-        # Monkey-patching older versions because of https://twistedmatrix.com/trac/ticket/3948
-        # J'ai deux alternatives à :
-        #         if map(int, twisted.__version__.split('.')) < (11,):
-        #             from twisted.internet import reactor
-        #             if wxreactor.WxReactor.callFromThread is not None:
-        #                 oldStop = wxreactor.WxReactor.stop
-        #                 def stopFromThread(self):
-        #                     self.callFromThread(oldStop, self)
-        #                 wxreactor.WxReactor.stop = stopFromThread
-        # celle généré par futurize:
-        # import twisted  # Unused import
-
-        # if list(map(int, twisted.__version__.split('.'))) < (11,):
-        # if list(twisted.__version__.split(".")) < ['11', ]:
-        # if tuple(map(int, twisted.__version__.split("."))) < (11,):
-        # ValueError: invalid literal for int() with base 10: '0rc1'
-        # Est-ce nécessaire ?
-        # Twisted (3/5), when Wxapp has been created :
-        # from twisted.internet import wxreactor, threads  # unused import
-        from twisted.internet import wxreactor
-
-        # TODO: retrouver dans twisted de quoi remplacer callFromThread
-        # une piste sur https://stackoverflow.com/questions/4081578/python-twisted-with-callinthread
-        # https://docs.twistedmatrix.com/en/stable/core/howto/threading.html#getting-results
-        if wxreactor.WxReactor.callFromThread is not None:
-            # if threads.deferToThread is not None:
-            oldStop = wxreactor.WxReactor.stop
-
-            def stopFromThread(self):
-                self.callFromThread(oldStop, self)
-                # self.deferToThread(oldStop, self)
-                # ou
-                # self.blockingCallFromThread(oldStop, self)
-
-            wxreactor.WxReactor.stop = stopFromThread
-            # wxreactor.WxReactor.stop = wxreactor.WxReactor.callFromThread(wxreactor.WxReactor.stop, self)  # Ne fonctionne pas !
-            # <taskcoachlib.application.application.Application object at 0x7c07fff70110> is not callable
-        # ou
-        # import twisted
-        # print(list(twisted.__version__.split('.')))
-        # if list(twisted.__version__.split('.')) < ['11', '0']:
-        #    # essayer list seul sinon list(map())
-        #    # from twisted.internet import reactor  # doublon soit-disant déjà installé
-        #    if wxreactor.WxReactor.callFromThread is not None:
-        #        oldStop = wxreactor.WxReactor.stop
-        #        def stopFromThread(self):
-        #            self.callFromThread(oldStop, self)
-        #        wxreactor.WxReactor.stop = stopFromThread
-        #        # ou essayer avec https://www.programcreek.com/python/example/117947/twisted.internet.error
-        #        # .ReactorAlreadyInstalledError
-
-        # Centraliser tous les logs (Twisted inclus) :
-        from twisted.python import log as twisted_log
-        twisted_log.startLoggingWithObserver(lambda msg: log.info(msg.get('message')))
-        # msg("Log opened.")
-
-    def stopTwisted(self):
-        """Fonction-méthode pour arrêter twisted-reactor"""
-        # voir https://stackoverflow.com/questions/6526923/stop-twisted-reactor-on-a-condition
-        # from twisted.internet import reactor, error
-        from twisted.internet import reactor, error
-
-        log.debug("Application.stopTwisted : Essaie d'arrêter reactor.")
-        try:
-            reactor.stop()  # cannot find stop in reactor, but don't use yourApp.ExitMainLoop()
-            log.debug("Application.stopTwisted : A lancé reactorstop().")
-        except error.ReactorNotRunning as e:
-            # Happens on Fedora 14 when running unit tests. Old Twisted ?
-            # in Arch, reference 'stop' not find in 'reactor.py'
-            log.error("Application.stopTwisted : Reactor n'a pas démarré !", exc_info=True, stack_info=True)
-            pass
-        # Arrêter les threads workers
-        log.debug("Application.stopTwisted : Essaie d'arrêter les threads workers")
-        try:
-            reactor.getThreadPool().stop()
-            log.debug("Application.stopTwisted : avec la méthode getThreadPool().stop().")
-        except AttributeError:
-            # Certains réacteurs n'ont pas de threadpool explicite
-            try:
-                reactor.threadpool.stop()
-                log.debug("Application.stopTwisted : avec la méthode threadpool().stop().")
-            except AttributeError:
-                log.debug("Application.stopTwisted : aucune méthode ne fonctionne pour arrêter les workers.")
-        time.sleep(0.1)  # Donne un peu de temps au worker pour s'arrêter
-
-    def registerApp(self):
-        """Fonction-méthode pour Enregistrez l'instance d'application avec Twisted:"""
-        # try:
-        # Twisted (3/5), when Wxapp has been created :
-        from twisted.internet import reactor
-
-        # voir peut-etre aussi twisted.internet.wxreactor.WxReactor !
-        # Twisted (4/5) : (5/5) est dans start !
-        reactor.registerWxApp(self.__wx_app)
-        # except ModuleNotFoundError:
-        #     from twisted.internet import wxreactor
-        #     # https://docs.twistedmatrix.com/en/stable/api/twisted.internet.wxreactor.WxReactor.html#registerWxApp
-        #     wxreactor.WxReactor.registerWxApp(self.__wx_app)
-        # except TypeError:
-        #     print("registerWxApp missing 1 argument")
-        #     pass
+    # def registerApp(self):
+    #     """Fonction-méthode pour Enregistrez l'instance d'application avec Twisted:"""
+    #     # try:
+    #     # Twisted (3/5), when Wxapp has been created :
+    #     from twisted.internet import reactor
+    #
+    #     # voir peut-etre aussi twisted.internet.wxreactor.WxReactor !
+    #     # Twisted (4/5) : (5/5) est dans start !
+    #     reactor.registerWxApp(self.__wx_app)
+    #     # except ModuleNotFoundError:
+    #     #     from twisted.internet import wxreactor
+    #     #     # https://docs.twistedmatrix.com/en/stable/api/twisted.internet.wxreactor.WxReactor.html#registerWxApp
+    #     #     wxreactor.WxReactor.registerWxApp(self.__wx_app)
+    #     # except TypeError:
+    #     #     print("registerWxApp missing 1 argument")
+    #     #     pass
 
     def start(self):
         """Fonction-méthode d'Appel pour démarrer l'application.
@@ -562,9 +665,17 @@ class Application(object, metaclass=patterns.Singleton):
             self.__version_checker = meta.VersionChecker(self.settings)
             self.__version_checker.start()
         if self.settings.getboolean("view", "developermessages"):
-            self.__message_checker = meta.DeveloperMessageChecker(self.settings)
+            self.__message_checker = meta.DeveloperMessageChecker(
+                self.settings
+            )
             self.__message_checker.start()
         self.__copy_default_templates()
+
+        # Redirect wx log messages to stderr instead of popup dialogs
+        if operating_system.isGTK():
+            wx.Log.SetActiveTarget(wx.LogStderr())
+            wx.Log.SetLogLevel(wx.LOG_Info)
+            wx.Log.SetVerbose(True)
 
         # Show the frame.
         # self.mainwindow.Show()  # ligne qui devrait être la 2e dans OnInit, ou en 3e après frame !
@@ -572,27 +683,32 @@ class Application(object, metaclass=patterns.Singleton):
         # Ensuite, il devrait y avoir self.__wx_app.MainLoop() !
         # Ici, c'est remplacé par twisted.reactor.
 
-        # vieux code
-        #  from twisted.internet import reactor
-        #         reactor.run()
-        # Twisted (3/5) :
-        from twisted.internet import reactor
+        # # vieux code
+        # #  from twisted.internet import reactor
+        # #         reactor.run()
+        # # Twisted (3/5) :
+        # from twisted.internet import reactor
+        #
+        # # Twisted (4/5) : est dans RegisterApp
 
-        # Twisted (4/5) : est dans RegisterApp
-
-        # voir https://github.com/twisted/twisted/blob/63df84e454978bd7a2d57ed292913384ca352e1a/src/twisted/internet/wxreactor.py#L74
-        # start the event loop:
-        # Démarre la boucle des événements:
-        # Twisted (5/5):
-        # reactor.run()
-        try:
-            reactor.run()
-        except Exception as e:
-            # logging.error("application.py: Error running Twisted reactor: %s", str(e))
-            # wx.MessageBox(f"application.py: Error running Twisted reactor: {e}",
-            #               "Error", wx.OK | wx.ICON_ERROR)
-            wx.MessageDialog(self, message=f"application.py: Error running Twisted reactor: {e}", caption="Error", style=wx.OK | wx.ICON_ERROR)
-            # Gérer l'erreur de manière appropriée (par exemple, afficher un message à l'utilisateur)
+        # # voir https://github.com/twisted/twisted/blob/63df84e454978bd7a2d57ed292913384ca352e1a/src/twisted/internet/wxreactor.py#L74
+        # # start the event loop:
+        # # Démarre la boucle des événements:
+        # # Twisted (5/5):
+        # # reactor.run()
+        # try:
+        #     reactor.run()
+        # except Exception as e:
+        #     # logging.error("application.py: Error running Twisted reactor: %s", str(e))
+        #     # wx.MessageBox(f"application.py: Error running Twisted reactor: {e}",
+        #     #               "Error", wx.OK | wx.ICON_ERROR)
+        #     wx.MessageDialog(
+        #         self,
+        #         message=f"application.py: Error running Twisted reactor: {e}",
+        #         caption="Error",
+        #         style=wx.OK | wx.ICON_ERROR,
+        #     )
+        #     # Gérer l'erreur de manière appropriée (par exemple, afficher un message à l'utilisateur)
         # IMPORTANT: tests will fail when run under this reactor. This is
         # expected and probably does not reflect on the reactor's ability to run
         # real applications.
@@ -617,6 +733,42 @@ class Application(object, metaclass=patterns.Singleton):
         # twisted.internet.testing.MemoryReactor.run
         # twisted.internet.wxreactor.WxReactor.run
         # twisted.internet.wxsupport.wxRunner.run
+        # Position correction is handled automatically by WindowDimensionsTracker
+        # via EVT_MOVE detection until EVT_ACTIVATE fires (window ready for input)
+        # Use native wxPython main loop instead of Twisted reactor
+        # NOTE: Previously used reactor.run() with wxreactor integration.
+        # Now using wx.App.MainLoop() directly for simpler event handling.
+        try:
+            self.__wx_app.MainLoop()
+        finally:
+            # Explicitly cleanup wx.App to prevent crashes during Python shutdown
+            # See: https://github.com/wxWidgets/Phoenix/issues/429
+            if (
+                hasattr(self, "_signal_check_timer")
+                and self._signal_check_timer
+            ):
+                self._signal_check_timer.Stop()
+
+            # On Windows with console (python.exe), detach from console before cleanup
+            # The crash only happens with python.exe (console subsystem), not pythonw.exe (GUI subsystem)
+            # This suggests the crash is related to console cleanup during Python shutdown
+            if operating_system.isWindows():
+                sys.stderr.flush()
+                sys.stdout.flush()
+                try:
+                    import ctypes
+
+                    # FreeConsole detaches the process from its console
+                    # This prevents console-related cleanup issues during Python shutdown
+                    ctypes.windll.kernel32.FreeConsole()
+                except Exception:
+                    pass
+                # Redirect stdout/stderr to devnull to prevent write errors after console detach
+                sys.stderr = open(os.devnull, "w")
+                sys.stdout = open(os.devnull, "w")
+
+            # Prevent destructor issues by explicitly destroying the app
+            self.__wx_app.Destroy()
         log.info("Application.start : Terminé.")
 
     def __copy_default_templates(self):
@@ -624,21 +776,33 @@ class Application(object, metaclass=patterns.Singleton):
 
         # class getDefaultTemplates créé par templates.in/make.py
         from taskcoachlib.persistence import getDefaultTemplates
+
         # créé par templates.in/make
 
         template_dir = self.settings.pathToTemplatesDir()
         if (
             len(
-                [name for name in os.listdir(template_dir) if name.endswith(".tsktmpl")]
+                [
+                    name
+                    for name in os.listdir(template_dir)
+                    if name.endswith(".tsktmpl")
+                ]
             )
             == 0
         ):
             for name, template in getDefaultTemplates():
                 filename = os.path.join(template_dir, name + ".tsktmpl")
                 if not os.path.exists(filename):
-                    # ouverture du fichier filename en mode bytes !!! et y écrire template
-                    # file(filename, "wb").write(template)
-                    open(filename, "wb").write(template)
+                    # # ouverture du fichier filename en mode bytes !!! et y écrire template
+                    # # file(filename, "wb").write(template)
+                    # open(filename, "wb").write(template)
+                    # Decode bytes to string for text mode writing
+                    template_str = (
+                        template.decode("utf-8")
+                        if isinstance(template, bytes)
+                        else template
+                    )
+                    open(filename, "w", encoding="utf-8").write(template_str)
 
     def init(self, loadSettings=True, loadTaskFile=True):
         """Initialiser l'application.
@@ -650,7 +814,9 @@ class Application(object, metaclass=patterns.Singleton):
             loadSettings (bool, optional): Charger les paramètres de l'application. Defaults to True.
             loadTaskFile (bool, optional): Charger le fichier de tâches. Defaults to True.
         """
-        log.info("Application.init: Initialisation des composants de l'application.")
+        log.info(
+            "Application.init: Initialisation des composants de l'application."
+        )
 
         # try:
         # Attributs d'instance:
@@ -662,15 +828,29 @@ class Application(object, metaclass=patterns.Singleton):
         self.__init_application()  # Réglage des paramètres nom et auteurs de l'application.
         # Problème de doublon d'image ! : réglé, double entrée de .mainwindow dans gui/init.py
         # print("application.Application.init : attributs ok !")
+
+        # Check file lock BEFORE creating main window to avoid dialog/focus issues
+        # This is done early because showing dialogs after main window creation
+        # causes GTK focus fighting and dialog disappearing issues
+        # Note: INI file lock is already checked in __init_config() above
+        self.__early_lock_result = None  # None=no file, 'ok'=proceed, 'break'=break lock, 'skip'=don't open file
+        if loadTaskFile:
+            self.__check_file_lock_early()
+            # If user said "No" to break lock, we continue but don't open the file
+            # (program starts with no file open, like a fresh start)
+
         # from taskcoachlib import gui, persistence  # TODO : à mettre au début !
 
         gui.init()  # goto gui.artprovider.init : Initialise l'ArtProvider
         # print("application.Application.init : gui.init(), Problème de doublons ? C'était MainWindow en double dans gui/init.py")
-        show_splash_screen = self.settings.getboolean("window", "splash")  # = True puis l560
+        show_splash_screen = self.settings.getboolean(
+            "window", "splash"
+        )  # = True puis l560
         splash = gui.SplashScreen() if show_splash_screen else None
         # pylint: disable=W0201
         self.taskFile = persistence.LockedTaskFile(
-            poll=not self.settings.getboolean("file", "nopoll")
+            # poll=not self.settings.getboolean("file", "nopoll")
+            poll=self.settings.getboolean("file", "fspoll")
         )  # Application.taskFile puis passe à l160 flush . Pourquoi ? Parce que persistence.LockedTaskFile plante.
 
         self.__auto_saver = persistence.AutoSaver(self.settings)
@@ -703,11 +883,16 @@ class Application(object, metaclass=patterns.Singleton):
         log.info("Application.init : loadTaskFile est coché ?")
         # Si loadTaskFile est configuré sur True ouvrir le fichier de self._args avec openAfterStart:
         if loadTaskFile:
-            log.info(f"Oui, Application.init ouvre un fichier grâce à _args={self._args}.")
-            self.iocontroller.openAfterStart(self._args)
+            log.info(
+                f"Oui, Application.init ouvre un fichier grâce à _args={self._args}."
+            )
+            # self.iocontroller.openAfterStart(self._args)
+            self.iocontroller.openAfterStart(
+                self._args, self.__early_lock_result
+            )
         else:
             log.info("Non, Application.init n'ouvre pas de fichier.")
-        # self.__register_signal_handlers()  # Est-elle bien implémentée ?
+        self.__register_signal_handlers()  # Est-elle bien implémentée ?
         self.__create_mutex()
         self.__create_task_bar_icon()
         # wxPython ferme l'écran splash.
@@ -725,7 +910,62 @@ class Application(object, metaclass=patterns.Singleton):
         #     )
         #     return False
         # self.mainwindow.Show()  # Ré-affiche la fenêtre principale pour éviter de voir les scintillements ! Ne fonctionne pas !
-        log.info("Application.init : Composants de l'application initialisés. ✅Terminé")
+        log.info(
+            "Application.init : Composants de l'application initialisés. ✅Terminé"
+        )
+
+    def __check_file_lock_early(self):
+        """Check file lock before main window creation.
+
+        This avoids GTK dialog/focus issues by showing any lock dialogs
+        before any windows exist.
+        """
+        from taskcoachlib import persistence, meta
+
+        # Get filename from args or last file
+        if self._args:
+            filename = self._args[0]
+        else:
+            filename = self.settings.get("file", "lastfile")
+
+        if not filename or not os.path.exists(filename):
+            self.__early_lock_result = None
+            return
+
+        # Try to check if file is locked
+        lock_file_path = filename + ".lock"
+        try:
+            import fasteners
+
+            lock = fasteners.InterProcessLock(lock_file_path)
+            acquired = lock.acquire(blocking=False)
+            if acquired:
+                # Not locked - release and proceed normally
+                lock.release()
+                self.__early_lock_result = "ok"
+                return
+            else:
+                # File is locked - show dialog BEFORE main window
+                result = wx.MessageBox(
+                    _("""Cannot open %s because it is locked.
+
+This means either that another instance of TaskCoach
+is running and has this file opened, or that a previous
+instance of Task Coach crashed. If no other instance is
+running, you can safely break the lock.
+
+Break the lock?""") % filename,
+                    _("%s: file locked") % meta.name,
+                    style=wx.YES_NO | wx.ICON_QUESTION | wx.NO_DEFAULT,
+                )
+                if result == wx.YES:
+                    self.__early_lock_result = "break"
+                else:
+                    # User said No - don't open file, start with empty/new
+                    self.__early_lock_result = "skip"
+        except Exception:
+            # Lock check failed (e.g., network drive) - proceed normally
+            self.__early_lock_result = "ok"
 
     def __init_config(self, load_settings):
         """Fonction-méthode d'initialisation de la configuration.
@@ -742,7 +982,10 @@ class Application(object, metaclass=patterns.Singleton):
             # AttributeError: 'Namespace' object has no attribute 'inifile'
             # pylint: disable=W0201
             # self.settings = config.Settings(load_settings, ini_file)  #
-            self.settings = Settings(load_settings, ini_file)  #
+            # self.settings = Settings(load_settings, ini_file)  #
+            self.settings = Settings(
+                load_settings, ini_file, gui_used="wx"
+            )  # avec wx, pas tk !
             # TODO : ini_file is None !
         except IOError or Exception as e:
             # print(
@@ -760,7 +1003,9 @@ class Application(object, metaclass=patterns.Singleton):
         try:
             from taskcoachlib import i18n
 
-            i18n.Translator(self.determine_language(self._options, self.settings))
+            i18n.Translator(
+                self.determine_language(self._options, self.settings)
+            )
         except Exception as e:
             # print(
             #     "application.py: Erreur lors de l'initialisation de la langue: %s",
@@ -772,7 +1017,9 @@ class Application(object, metaclass=patterns.Singleton):
             )
 
     @staticmethod
-    def determine_language(options, settings, locale=locale):  # pylint: disable=W0621
+    def determine_language(
+        options, settings, locale=locale
+    ):  # pylint: disable=W0621
         # Shadows name 'locale' from outer scope
         """Détermine la langue locale utilisée.
 
@@ -795,13 +1042,29 @@ class Application(object, metaclass=patterns.Singleton):
             # Get language as set by the user or externally (e.g. PortableApps)
             language = settings.get("view", "language")
         if not language:
-            # Use the user's locale
-            language = locale.getdefaultlocale()[0]
-            # language = locale.getlocale()[0]
-            if language == "C":
-                # TODO: essayer:
-                # locale.setlocale(locale.LC_ALL, "C")
-                # language = locale.setlocale(locale.LC_ALL, "C")
+            # # Use the user's locale
+            # language = locale.getdefaultlocale()[0]
+            # # language = locale.getlocale()[0]
+            # Note: locale.getdefaultlocale() is deprecated since Python 3.11
+            # and doesn't reliably read LANG on Linux. We check env vars directly.
+            language = os.environ.get("LANG", os.environ.get("LC_ALL", ""))
+            # if language == "C":
+            #     # TODO: essayer:
+            #     # locale.setlocale(locale.LC_ALL, "C")
+            #     # language = locale.setlocale(locale.LC_ALL, "C")
+            #     language = None
+            if language:
+                # Strip encoding suffix (e.g., "de_DE.UTF-8" -> "de_DE")
+                language = language.split(".")[0]
+                if not language or language == "C" or language == "POSIX":
+                    language = None
+        if not language:
+            # Fallback to locale.getlocale() which may work after setlocale
+            try:
+                language = locale.getlocale(locale.LC_MESSAGES)[0]
+                if language == "C" or language == "POSIX":
+                    language = None
+            except Exception:
                 language = None
         if not language:
             # Fall back on what the majority of our users use
@@ -820,16 +1083,33 @@ class Application(object, metaclass=patterns.Singleton):
     def __init_application(self):
         """Fonction-méthode qui règle les paramètres nom et auteurs de l'application."""
         from taskcoachlib import meta
+
         # Attributs d'instance
         self.__wx_app.SetAppName(meta.name)
         self.__wx_app.SetVendorName(meta.author)
+        # Set WM_CLASS for Linux app grouping (must match StartupWMClass in .desktop)
+        self.__wx_app.SetClassName("taskcoach")
+        # Set AppUserModelID for Windows 7+ taskbar grouping
+        if operating_system.isWindows():
+            try:
+                import ctypes
+
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                    "org.taskcoach.TaskCoach"
+                )
+            except (ImportError, AttributeError, OSError):
+                pass  # Not on Windows or API not available
 
     def __init_spell_checking(self):
         """Fonction-méthode qui règle-initialise."""
         log.debug("Vérification orthographique initialisée")
 
-        self.on_spell_checking(self.settings.getboolean("editor", "maccheckspelling"))
-        pub.subscribe(self.on_spell_checking, "settings.editor.maccheckspelling")
+        self.on_spell_checking(
+            self.settings.getboolean("editor", "maccheckspelling")
+        )
+        pub.subscribe(
+            self.on_spell_checking, "settings.editor.maccheckspelling"
+        )
 
     def on_spell_checking(self, value):
         """Fonction-méthode qui utilise SystemOptions qui stocke les paires option/valeur que wxWidgets lui-même
@@ -842,10 +1122,26 @@ class Application(object, metaclass=patterns.Singleton):
             and not operating_system.isMacOsXMountainLion_OrNewer()
         ):
             # wx.SystemOptions.SetOptionInt("mac.textcontrol-use-spell-checker", value)
-            wx.SystemOptions.SetOption("mac.textcontrol-use-spell-checker", value)
+            wx.SystemOptions.SetOption(
+                "mac.textcontrol-use-spell-checker", value
+            )
 
     def __register_signal_handlers(self):
-        """Fonction-méthode pour quitter à cause d'un signal."""
+        """Fonction-méthode pour quitter à cause d'un signal.
+
+        DESIGN NOTE (Twisted Removal - 2024):
+        Previously used Twisted's reactor which properly handled SIGINT.
+        Now using Python's signal module with direct cleanup.
+
+        Key challenges with native wxPython:
+        1. Python signal handlers only run when main thread has control
+        2. GUI event loops block in C code, preventing signal delivery
+        3. Must save settings before exit
+
+        Solution:
+        - Custom signal handler uses wx.CallAfter for clean shutdown
+        - Periodic timer wakes event loop so Python can check signals
+        """
         # if operating_system.isWindows():
         #     import win32api  # pylint: disable=F0401
         #
@@ -870,26 +1166,80 @@ class Application(object, metaclass=patterns.Singleton):
         # else:
         import signal
 
-        log.debug("Application.__register_signal_handlers : Quitter à cause d'un signal !")
+        log.debug(
+            "Application.__register_signal_handlers : Quitter à cause d'un signal !"
+        )
+
+        def handle_signal(signum, frame):
+            """Handle SIGINT/SIGTERM by scheduling clean shutdown."""
+            # Use CallAfter to run shutdown in the main event loop
+            # This ensures proper cleanup of wx resources
+            wx.CallAfter(self.quitApplication)
+
+            # Register SIGINT/SIGTERM handlers for Unix
+            if not operating_system.isWindows():
+                signal.signal(signal.SIGINT, handle_signal)
+                signal.signal(signal.SIGTERM, handle_signal)
+
+                # Start a timer to periodically wake the event loop
+                # This allows Python to check for pending signals
+                self._signal_check_timer = wx.Timer()
+                self._signal_check_timer.Start(500)  # Check every 500ms
+
+            # NOTE: We intentionally do NOT use SetConsoleCtrlHandler on Windows.
+            # According to Microsoft docs, if an app loads gdi32.dll or user32.dll
+            # (which wxPython does), the handler doesn't receive CTRL_LOGOFF_EVENT
+            # or CTRL_SHUTDOWN_EVENT. It can also cause shutdown issues.
+            # Instead, we rely on wxPython's EVT_CLOSE and EVT_END_SESSION events.
+            # See: https://learn.microsoft.com/en-us/windows/console/setconsolectrlhandler
 
         def quit_adapter(*args):
+            """
+            Fonction pour quitter l'application.
+
+            Args :
+                *args :
+
+            Returns :
+                La fonction-méthode pour quitter.
+            """
             # Parameter 'args' value is not used
-            log.debug("Application.__register_signal_handlers.quit_adapter : Retourne la fonction pour quitter l'application.")
+            log.debug(
+                "Application.__register_signal_handlers.quit_adapter : Retourne la fonction pour quitter l'application."
+            )
             return self.quitApplication()
-        log.debug("Application.__register_signal_handlers : Signale pour quitter l'application.")
+
+        log.debug(
+            "Application.__register_signal_handlers : Signale pour quitter l'application."
+        )
         signal.signal(signal.SIGTERM, quit_adapter)
         if hasattr(signal, "SIGHUP"):
             # forced_quit = lambda *args: self.quitApplication(force=True)
             def forced_quit(*args):
+                """
+                Fonction pour forcer à quitter l'application.
+
+                Args :
+                    *args :
+
+                Returns :
+                    La fonction-méthode pour quitter avec l'option force.
+                """
                 # Parameter 'args' value is not used
-                log.debug("Application.__register_signal_handlers.forced_quit : Force à quitter l'application.")
+                log.debug(
+                    "Application.__register_signal_handlers.forced_quit : Force à quitter l'application."
+                )
                 return self.quitApplication(force=True)
-            log.debug("Application.__register_signal_handlers : Signale de forçage pour quitter l'application.")
+
+            log.debug(
+                "Application.__register_signal_handlers : Signale de forçage pour quitter l'application."
+            )
             signal.signal(signal.SIGHUP, forced_quit)  # pylint: disable=E1101
 
     @staticmethod
     def __create_mutex():
-        """Sous Windows, crée un mutex pour qu'InnoSetup puisse vérifier si l'application est en cours d'exécution."""
+        """Sous Windows, crée un mutex pour qu'InnoSetup puisse vérifier
+        si l'application est en cours d'exécution."""
         if operating_system.isWindows():
             import ctypes
             from taskcoachlib import meta
@@ -905,6 +1255,8 @@ class Application(object, metaclass=patterns.Singleton):
         if self.__can_create_task_bar_icon():
             from taskcoachlib.gui import taskbaricon, menu
 
+            # Use factory function to get the appropriate icon type
+            # (AppIndicator on Wayland, wx.adv.TaskBarIcon otherwise)
             self.taskBarIcon = taskbaricon.TaskBarIcon(
                 self.mainwindow,  # pylint: disable=W0201
                 self.taskFile.tasks(),
@@ -920,10 +1272,12 @@ class Application(object, metaclass=patterns.Singleton):
             # )
             self.taskBarIcon.setPopupMenu(
                 menu.TaskBarMenu(
+                    # self.taskBarIcon,
                     self.mainwindow,  # Passer self.mainwindow au lieu de self.taskBarIcon.
                     self.settings,
                     self.taskFile,
                     self.mainwindow.viewer,
+                    # self.mainwindow.__dict__.get("viewer"),  # TODO : essayer ceci
                 )
             )
             # En passant self.mainwindow à TaskBarMenu,
@@ -949,7 +1303,9 @@ class Application(object, metaclass=patterns.Singleton):
         # (comme ceux gérés par UICommandContainerMixin)
         # sont conçus pour être associés à des wx.Window.
         try:
-            from taskcoachlib.gui import taskbaricon  # pylint: disable=W0612  # noqa: F401
+            from taskcoachlib.gui import (
+                taskbaricon,
+            )  # pylint: disable=W0612  # noqa: F401
 
             return True
             # except:
@@ -986,7 +1342,14 @@ class Application(object, metaclass=patterns.Singleton):
 
     def displayMessage(self, message):
         """Fonction-méthode pour afficher le message."""
-        self.mainwindow.displayMessage(message)
+        # self.mainwindow.displayMessage(message)
+        # Guard against deleted mainwindow during shutdown
+        if getattr(self, "_quitting", False):
+            return
+        try:
+            self.mainwindow.displayMessage(message)
+        except RuntimeError:
+            pass  # MainWindow C++ object already deleted
 
     def on_end_session(self):
         """Fonction de fin de session.
@@ -998,7 +1361,9 @@ class Application(object, metaclass=patterns.Singleton):
         """
         # self.mainwindow.setShutdownInProgress()
         # self.quitApplication(force=True)
-        log.debug("Application.on_end_session : Essaie de terminer la session et fermer l'application.")
+        log.debug(
+            "Application.on_end_session : Essaie de terminer la session et fermer l'application."
+        )
         try:
             self.mainwindow.setShutdownInProgress()
             self.quitApplication(force=True)
@@ -1006,11 +1371,95 @@ class Application(object, metaclass=patterns.Singleton):
             # print(
             #     "application.py: Erreur lors de la fermeture de la session: %s", str(e)
             # )
-            log.exception(f"Application : Erreur lors de la fermeture de la session : {e}")
+            log.exception(
+                f"Application : Erreur lors de la fermeture de la session : {e}"
+            )
 
     def on_reopen_app(self):
         """Fonction-méthode pour rouvrir l'application."""
         self.taskBarIcon.onTaskbarClick(None)
+
+    def save_all_settings(self):
+        """Save all settings to disk. Called on normal exit and signal handlers.
+
+        This is the single place for saving settings, ensuring consistency
+        between normal close, Ctrl-C, and other exit paths.
+        """
+        try:
+            # Remember what the user was working on
+            if hasattr(self, "taskFile"):
+                self.settings.set(
+                    "file", "lastfile", self.taskFile.lastFilename()
+                )
+            # Save window position, size, perspective
+            if hasattr(self, "mainwindow"):
+                self.mainwindow.save_settings()
+            # Write settings to disk
+            self.settings.save()
+            # Release ini file lock after saving
+            self.settings.release_ini_lock()
+        except Exception:
+            pass  # Best effort - don't prevent exit
+
+    def _stopAllTimers(self):
+        """Stop all known timers to prevent crashes during shutdown.
+
+        Timer events can be delivered after frames are destroyed but before
+        the program ends, causing access violations on Windows.
+        See: https://github.com/wxWidgets/Phoenix/issues/429
+        """
+        import sys
+
+        # Stop signal check timer
+        if hasattr(self, "_signal_check_timer") and self._signal_check_timer:
+            try:
+                self._signal_check_timer.Stop()
+            except Exception:
+                pass
+
+        # Stop all wx.Timer instances we can find
+        # Walk through all top-level windows and their children
+        def stop_timers_in_window(window):
+            if window is None:
+                return
+            # Check for timer attributes
+            for attr_name in [
+                "__timer",
+                "_timer",
+                "timer",
+                "_sizeTimer",
+                "_refreshTimer",
+                "_dragTimer",
+                "_findTimer",
+                "_editTimer",
+                "__tmr",
+                "scheduledStatusDisplay",
+                "_globalTimer",
+            ]:
+                # Try both public and name-mangled private attributes
+                for prefix in ["", "_" + window.__class__.__name__]:
+                    full_name = prefix + attr_name
+                    timer = getattr(window, full_name, None)
+                    if timer is not None and hasattr(timer, "Stop"):
+                        try:
+                            if (
+                                hasattr(timer, "IsRunning")
+                                and timer.IsRunning()
+                            ):
+                                timer.Stop()
+                        except Exception:
+                            pass
+            # Recurse into children
+            if hasattr(window, "GetChildren"):
+                try:
+                    for child in window.GetChildren():
+                        stop_timers_in_window(child)
+                except Exception:
+                    pass
+
+        # Stop timers in all top-level windows
+        for window in wx.GetTopLevelWindows():
+            stop_timers_in_window(window)
 
     def quitApplication(self, force=False):
         """Fonction-méthode pour quitter l'application.
@@ -1024,26 +1473,40 @@ class Application(object, metaclass=patterns.Singleton):
             bool : True si l'application a été arrêtée avec succès, False sinon.
         """
         # Voir https://pythonhosted.org/wxPython/window_deletion_overview.html#window-deletion
-        log.info("Application.quitApplication : Début de la Fermeture de l'application")
+        log.info(
+            "Application.quitApplication : Début de la Fermeture de l'application"
+        )
+        # Prevent re-entry - quitApplication may be called multiple times
+        # (e.g., from window close, signal handler, console ctrl handler)
+        if getattr(self, "_quitting", False):
+            return True
+        self._quitting = True
 
         if not self.iocontroller.close(force=force):
             return False
-        # Rappelez-vous sur quoi l'utilisateur travaillait :
-        self.settings.set("file", "lastfile", self.taskFile.lastFilename())
-        self.mainwindow.save_settings()
-        self.settings.save()
+        # # Rappelez-vous sur quoi l'utilisateur travaillait :
+        # self.settings.set("file", "lastfile", self.taskFile.lastFilename())
+        # self.mainwindow.save_settings()
+        # self.settings.save()
+        self.save_all_settings()
         if self.taskFile:
             self.taskFile.stop()
         log.info("Avant suppression de l'icône barre de tâches")
         if hasattr(self, "taskBarIcon"):
             self.taskBarIcon.RemoveIcon()
+            self.taskBarIcon.Destroy()
         if self.mainwindow.bonjourRegister is not None:
             self.mainwindow.bonjourRegister.stop()
+        # Stop notification timers to prevent crashes during shutdown
+        from taskcoachlib.notify.notifier_universal import NotificationCenter
+
+        NotificationCenter().cleanup()
         from taskcoachlib.domain import date
 
         date.Scheduler().shutdown()
         # self.__wx_app.ProcessIdle()  # wxApp/ProcessIdle is not in application.py but used in tests !
-        wx.GUIEventLoop.GetActive().ProcessIdle()  # wxApp/ProcessIdle is not in application.py but used in tests !
+        # wx.GUIEventLoop.GetActive().ProcessIdle()  # wxApp/ProcessIdle is not in application.py but used in tests !
+        wx.EventLoop.GetActive().ProcessIdle()
 
         # For PowerStateMixin
         log.info("Avant appel à mainwindow.OnQuit")
@@ -1052,33 +1515,123 @@ class Application(object, metaclass=patterns.Singleton):
         if operating_system.isGTK() and self.sessionMonitor is not None:
             self.sessionMonitor.stop()
 
+        # Stop all timers before closing windows to prevent crashes
+        # See: https://github.com/wxWidgets/Phoenix/issues/429
+        self._stopAllTimers()
+
         if isinstance(sys.stdout, RedirectedOutput):
             sys.stdout.summary()
 
-        log.info("Avant appel stopTwisted()")
-        log.debug("Application.quitApplication : Essaie d'arrêter Twisted.")
-        try:
-            self.stopTwisted()
-        except Exception as e:
-            # print(
-            #     "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
-            # )
-            log.error(
-                f"Application.quitApplication : Erreur lors de l'arrêt de Twisted: {str(e)}", exc_info=True
-            )
+        # log.info("Avant appel stopTwisted()")
+        # log.debug("Application.quitApplication : Essaie d'arrêter Twisted.")
+        # try:
+        #     self.stopTwisted()
+        # except Exception as e:
+        #     # print(
+        #     #     "application.py:Erreur lors de l'arrêt de Twisted: %s", str(e)
+        #     # )
+        #     log.error(
+        #         f"Application.quitApplication : Erreur lors de l'arrêt de Twisted: {str(e)}",
+        #         exc_info=True,
+        #     )
+
+        # End any modal dialogs before closing - modal dialogs have their own
+        # nested event loops that prevent ExitMainLoop() from working
+        has_modal_dialogs = False
+        for window in wx.GetTopLevelWindows():
+            if isinstance(window, wx.Dialog) and window.IsModal():
+                has_modal_dialogs = True
+                window.EndModal(wx.ID_CANCEL)
+
+        # Explicitly close the main window to trigger exit.
+        # Set shutdown flag so onClose() won't veto or recurse into quitApplication.
+        self.mainwindow.setShutdownInProgress()
+        self.mainwindow.Close()
 
         log.info("Avant appel sys.exit()")
         if self.mainwindow:
             try:
                 self.mainwindow.Destroy()
             except Exception as e:
-                log.error(f"Erreur lors de la destruction de la fenêtre principale: {e}")
+                log.error(
+                    f"Erreur lors de la destruction de la fenêtre principale: {e}"
+                )
         log.info("Fenêtre principale détruite, appel de sys.exit()")
+
+        if has_modal_dialogs:
+            # Modal dialogs have nested event loops. Use ScheduleExit on the
+            # main loop - it will exit when the nested modal loop terminates.
+            # See: https://docs.wxpython.org/wx.EventLoopBase.html
+            main_loop = wx.GetApp().GetMainLoop()
+            if main_loop:
+                main_loop.ScheduleExit(0)
+            else:
+                wx.GetApp().ExitMainLoop()
+        else:
+            # Force MainLoop to exit in case something is keeping it alive
+            # See: https://discuss.wxpython.org/t/wxpython-app-hanging-not-ending-mainloop/29797
+            wx.GetApp().ExitMainLoop()
+
+        def _stack_for_thread(t, frames=None):
+            import sys, traceback
+
+            frames = frames or sys._current_frames()
+            if not t.is_alive():
+                return "Thread not alive"
+            ident = t.ident
+            if ident is None:
+                return "Thread alive but no ident (not started?)"
+            frame = frames.get(ident)  # Modified line
+            if frame is None:
+                return "Thread alive but no frame available (it may have just exited)"
+            try:
+                return "".join(traceback.format_stack(frame))
+            except Exception as e:
+                return f"Unable to format stack: {e}"
+
         log.info("Threads actifs avant sys.exit(): %s", threading.enumerate())
+        frames = sys._current_frames()
         for t in threading.enumerate():
-            log.debug(f"Thread: {t.name}, Daemon: {t.daemon}, Class: {type(t)}")
-            log.debug(f"Stack for thread {t.name}:\n{''.join(traceback.format_stack(sys._current_frames()[t.ident])) if t.is_alive() else 'Thread not alive'}")
-        log.debug("Application.quitApplication : Essaie de quitter proprement l'application avec sys.exit().")
+            log.debug(
+                f"Thread: {t.name}, Daemon: {t.daemon}, Class: {type(t)}"
+            )
+            # log.debug(
+            #     f"Stack for thread {t.name}:\n{''.join(traceback.format_stack(sys._current_frames()[t.ident])) if t.is_alive() else 'Thread not alive'}"
+            # )
+            # frames = sys._current_frames()
+            # if t.is_alive():
+            #     if t.ident is not None and frames.get(t.ident) is not None:
+            #         # Ce genre de protection est recommandé dès qu’on interroge sys._current_frames()
+            #         # pour diagnostiquer des threads (cf. documentation/ressources sur threading & wxPython)
+            #         try:
+            #             stack = "".join(
+            #                 traceback.format_stack(frames[t.ident])
+            #             )
+            #         except Exception as exc:
+            #             stack = f"Unable to format stack: {exc}"
+            #     else:
+            #         stack = "Thread alive but no frame available (it may have just exited)"
+            # else:
+            #     stack = "Thread not alive"
+            # log.debug(f"Stack for thread {t.name}:\n{stack}")
+            # frames = sys._current_frames()
+            stack = _stack_for_thread(t, frames)
+            # msg = f"Stack for thread {t.name}:\n{stack}"
+            # log.debug(msg)
+            # Utiliser la méthode de log avec paramètres (évite le formatage inutile si le niveau est désactivé).
+            # J’ai mis log.debug("...", t.name, stack) au lieu de f-strings
+            # pour laisser logging gérer l’encodage et la mise en forme.
+            # Cela prévient aussi d’éventuels problèmes
+            # si stack contient des caractères non imprimables/encodages inattendus.
+            log.debug("Stack for thread %s:\n%s", t.name, stack.rstrip())
+            # Supprimer les newlines superflus en fin de stack
+            # traceback.format_stack(frame) renvoie des lignes finissant par '\n',
+            # ce qui peut laisser une ligne vide après l’affichage.
+            # Utiliser stack.rstrip() évite la ligne vide si cela vous gêne.
+
+        log.debug(
+            "Application.quitApplication : Essaie de quitter proprement l'application avec sys.exit()."
+        )
         # sys.exit()  # Quitter proprement l'application
         #
         # Toutes les étapes avant sys.exit() doivent être exécutées sans erreur (fermeture du fichier de tâches, sauvegarde des paramètres, suppression de l’icône de la barre, etc).
@@ -1122,7 +1675,9 @@ class Application(object, metaclass=patterns.Singleton):
         # le process Python (car tous les threads non-daemon doivent être morts pour cela).
         # Comme tout nettoyage/sauvegarde a déjà été fait à ce stade, il n'y a pas de risque de fuite.
         # Voir : https://github.com/freedomsha/taskcoach/issues/<ton-issue> pour le détail du diagnostic.
-        os._exit(0)  # TODO : Attention, c'est brutal ! Revenir à sys.exit() dès que possible.
+        os._exit(
+            0
+        )  # TODO : Attention, c'est brutal ! Revenir à sys.exit() dès que possible.
 
         # Si ça ferme tout instantanément,
         # c’est bien un problème de threads/boucles non stoppés proprement dans wx/Twisted.
