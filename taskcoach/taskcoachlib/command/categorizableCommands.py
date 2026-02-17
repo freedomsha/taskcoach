@@ -35,7 +35,9 @@ class ToggleCategoryCommand(base.BaseCommand):
         # When some items are in the category and some are not, only toggle
         # the items that are not in the category.
         items_not_in_category = [
-            item for item in self.items if self.category not in item.categories()
+            item
+            for item in self.items
+            if self.category not in item.categories()
         ]
         if 0 < len(items_not_in_category) < len(self.items):
             self.items = items_not_in_category
@@ -67,11 +69,16 @@ class ToggleCategoryCommand(base.BaseCommand):
         appartenir."""
         if self.category.isMutualExclusive():
             parent = self.category.parent()
-            if parent in categorizable.categories() and not parent.isMutualExclusive():
+            if (
+                parent in categorizable.categories()
+                and not parent.isMutualExclusive()
+            ):
                 self.unlink_previous_category(parent, categorizable, event)
             else:
                 self.unlink_previous_mutual_exclusive_category(
-                    self.category.siblings(recursive=True), categorizable, event
+                    self.category.siblings(recursive=True),
+                    categorizable,
+                    event,
                 )
         if self.category.hasExclusiveSubcategories():
             self.unlink_previous_mutual_exclusive_category(
@@ -91,7 +98,9 @@ class ToggleCategoryCommand(base.BaseCommand):
         """Remove categorizable from category, but remember the category so
         it can be restored later."""
         self.unlink_category(category, categorizable, event)
-        self.__previous_categories.setdefault(categorizable, []).append(category)
+        self.__previous_categories.setdefault(categorizable, []).append(
+            category
+        )
 
     def relink_previous_categories(self, categorizable, event):
         """Re-add categorizable to its previous categories."""
@@ -99,12 +108,16 @@ class ToggleCategoryCommand(base.BaseCommand):
             for previous_category in self.__previous_categories[categorizable]:
                 self.link_category(previous_category, categorizable, event)
 
-    def link_category(self, category, categorizable, event):  # Method may be 'static'
+    def link_category(
+        self, category, categorizable, event
+    ):  # Method may be 'static'
         """Make categorizable belong to category."""
         category.addCategorizable(categorizable, event=event)
         categorizable.addCategory(category, event=event)
 
-    def unlink_category(self, category, categorizable, event):  # Method may be 'static'
+    def unlink_category(
+        self, category, categorizable, event
+    ):  # Method may be 'static'
         """Make categorizable no longer belong to category."""
         category.removeCategorizable(categorizable, event=event)
         categorizable.removeCategory(category, event=event)
