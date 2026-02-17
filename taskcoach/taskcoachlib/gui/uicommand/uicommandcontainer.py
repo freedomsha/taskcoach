@@ -32,6 +32,7 @@ import wx
 
 # from taskcoachlib import patterns
 from taskcoachlib.gui.newid import IdProvider
+
 # from taskcoachlib.gui.menu import AppendSeparator, AppendStretchSpacer, Append, appendUICommand, _window, appendMenu
 # from taskcoachlib.gui.menu import Menu
 # from taskcoachlib.gui.toolbar import ToolBar
@@ -41,7 +42,7 @@ log = logging.getLogger(__name__)
 
 # class UICommandContainerMixin(object):
 class UICommandContainerMixin(object):
-    """ Mixin avec la (sous-)classe wx.Menu ou wx.ToolBar.
+    """Mixin avec la (sous-)classe wx.Menu ou wx.ToolBar.
 
     Fournit la méthode appendUICommands aux classes qui veulent
     ajouter des commandes UI (comme les Menu et potentiellement les ToolBar).
@@ -51,8 +52,9 @@ class UICommandContainerMixin(object):
     #     #     self._window = None  # Il faut que self._window du menu existe et soit différent de None !
     #     self._window = wx.GetActiveWindow()  # À tester si la fenêtre doit être active
 
+    # def appendUICommands(self, *uiCommands):
     def appendUICommands(self, *uiCommands, **kwargs):
-        """ Ajout de *uiCommand.
+        """Ajout de *uiCommand.
 
         **Responsabilité** :
         Cette méthode, qui est mélangée dans la classe Menu,
@@ -71,14 +73,24 @@ class UICommandContainerMixin(object):
 
         """
         # Il faut s'assurer que l'ID du menu est valide à ce moment-là.
-        if not hasattr(self, "_window") or self._window is None:
+        if (
+            not hasattr(self, "_window") or self._window is None
+        ):  # Unresolved attribute reference '_window' for class 'UICommandContainerMixin'
             # log.warning("UICommandContainerMixin.appendUICommands : l'attribut _window est manquant ou None, cela peut causer une erreur.")
             if not hasattr(self, "_window"):
-                log.warning("UICommandContainerMixin.appendUICommands : l'attribut _window est manquant, cela peut causer une erreur.")
+                log.warning(
+                    "UICommandContainerMixin.appendUICommands : l'attribut _window est manquant, cela peut causer une erreur."
+                )
             elif self._window is None:
-                log.warning("UICommandContainerMixin.appendUICommands : l'attribut _window est None, cela peut causer une erreur.")
-            self._window = wx.GetActiveWindow()  # Assigner une fenêtre active si manquante
-            log.warning(f"UICommandContainerMixin.appendUICommands : Attribution : self._window={self._window}")
+                log.warning(
+                    "UICommandContainerMixin.appendUICommands : l'attribut _window est None, cela peut causer une erreur."
+                )
+            self._window = (
+                wx.GetActiveWindow()
+            )  # Assigner une fenêtre active si manquante
+            log.warning(
+                f"UICommandContainerMixin.appendUICommands : Attribution : self._window={self._window}."
+            )
         # log.debug(f"UICommandContainerMixin.appendUICommands ajoute les UI commands: {uiCommands} au menu {self} id=?")  # Débogage
         # uicommands : taskcoachlib.gui.uicommand.uicommand.EditCut, EditCopy, EditPaste, EditPasteAsSubItem, Edit,
         # Delete, AddAtachment, OpenAllAttachments, AddNote, OpenAllNotes, Mail,...
@@ -93,12 +105,14 @@ class UICommandContainerMixin(object):
                 self.AppendSeparator()
             elif isinstance(uiCommand, int):  # Toolbars only
                 self.AppendStretchSpacer(uiCommand)
-                # elif isinstance(uiCommand, (str, unicode)):
-            elif isinstance(uiCommand, (str, str)):
+            # elif isinstance(uiCommand, (str, unicode)):
+            # elif isinstance(uiCommand, (str, str)):
+            elif isinstance(uiCommand, str):
                 label = wx.MenuItem(self, text=uiCommand)
                 # must append item before disable to insure
                 # that internal object exists
-                self.AppendItem(label)
+                # self.AppendItem(label)
+                self.Append(label)
                 label.Enable(False)
             elif type(uiCommand) is type(()):  # This only works for menu's
                 menuTitle, menuUICommands = uiCommand[0], uiCommand[1:]
@@ -202,7 +216,9 @@ class UICommandContainerMixin(object):
         #         #     self._observers.append(uiCommand)
         #         # return cmd
         # log.debug(f"UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands={uiCommands}")
-        log.debug(f"UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !")
+        log.debug(
+            f"UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !"
+        )
 
     def appendSubMenuWithUICommands(self, menuTitle, uiCommands):
         """
@@ -218,9 +234,14 @@ class UICommandContainerMixin(object):
         Returns :
 
         """
-        from taskcoachlib.gui import menu  # Pas en début de fichier, risque de circular import (menu->viewer->viewer.task->viewer.base->toolbar->uicommandcontainer)
-        if not hasattr(self, '_window') or self._window is None:
-            log.warning("UICommandContainerMixin.appendSubMenuWithUICommands : l'attribut _window est manquant ou None, cela peut causer une erreur.")
+        from taskcoachlib.gui import (
+            menu,
+        )  # Pas en début de fichier, risque de circular import (menu->viewer->viewer.task->viewer.base->toolbar->uicommandcontainer)
+
+        if not hasattr(self, "_window") or self._window is None:
+            log.warning(
+                "UICommandContainerMixin.appendSubMenuWithUICommands : l'attribut _window est manquant ou None, cela peut causer une erreur."
+            )
 
         subMenu = menu.Menu(self._window)
         self.appendMenu(menuTitle, subMenu)
