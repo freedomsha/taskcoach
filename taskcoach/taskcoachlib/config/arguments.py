@@ -40,23 +40,25 @@ class ApplicationArgumentParser:
 
     def __init__(self, *args, **kwargs) -> None:
         """
-            Initialisez l'analyseur d'arguments avec des informations d'utilisation personnalisées.
+        Initialisez l'analyseur d'arguments avec des informations d'utilisation personnalisées.
 
-            Args :
-                *args : liste d'arguments de longueur variable.
-                **kwargs : arguments de mots clés arbitraires.
+        Args :
+            *args : liste d'arguments de longueur variable.
+            **kwargs : arguments de mots clés arbitraires.
 
-            Sets :
-                kwargs["usage"] (str) : message d'utilisation personnalisé décrivant
-                l'utilisation du programme.
+        Sets :
+            kwargs["usage"] (str) : message d'utilisation personnalisé décrivant
+            l'utilisation du programme.
         """
         # 3 anciennes lignes :
         # kwargs["usage"] = "usage='%(prog)s [options] [.tsk file]'"
         # super().__init__(*args, **kwargs)
         # pass
         # Initialisez l'ArgumentParser avec une description
-        self.parser = argparse.ArgumentParser(usage="%(prog)s [options] [.tsk file]",
-                                              description="Your friendly task manager")
+        self.parser = argparse.ArgumentParser(
+            usage="%(prog)s [options] [.tsk file]",
+            description="Your friendly task manager",
+        )
 
         # Définir les arguments de la ligne de commande
         self.parser.add_argument(
@@ -115,10 +117,10 @@ class ApplicationArgumentParser:
             "--gui",
             action="store",
             nargs=1,
-            default="tk",
+            default="wx",
             choices=["tk", "wx"],
             dest="gui_name",
-            help="Use the specified GUI_NAME for choose the GUI to use(wx or tk)."
+            help="Use the specified GUI_NAME for choose the GUI to use(wx or tk).",
         )
 
     def parse_args(self, args: List[str] = None) -> argparse.Namespace:
@@ -141,4 +143,6 @@ def set_gui(gui_name: str):
 
 def get_gui() -> str:
     """Renvoie le nom de l'interface graphique courante ('tk' ou 'wx')."""
-    return CURRENT_GUI or "tk"  # Valeur par défaut pour compatibilité, la même que dans le add_argument par défaut.
+    return (
+        CURRENT_GUI or "wx"
+    )  # Valeur par défaut pour compatibilité, la même que dans le add_argument par défaut.
