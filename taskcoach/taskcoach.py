@@ -37,6 +37,8 @@ taskcoach.py est le point d'entrée principal. Il :
 import logging
 import logging.handlers
 
+from taskcoachlib.config.arguments import CURRENT_GUI
+
 # Créer un enregistreur de niveau module
 log = logging.getLogger(__name__)
 
