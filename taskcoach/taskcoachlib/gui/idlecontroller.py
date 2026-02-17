@@ -16,12 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from taskcoachlib.command import NewEffortCommand, EditEffortStopDateTimeCommand
+from taskcoachlib.command import (
+    NewEffortCommand,
+    EditEffortStopDateTimeCommand,
+)
 from taskcoachlib.domain import effort, date
 from taskcoachlib.i18n import _
 from taskcoachlib.notify import NotificationFrameBase, NotificationCenter
 from taskcoachlib.patterns import Observer
-from taskcoachlib.powermgt import IdleNotifier
+from taskcoachlib.powermgt.idle import IdleNotifier
+
 # try:
 #    from ..thirdparty.pubsub import pub
 # except ImportError:
@@ -35,6 +39,7 @@ class WakeFromIdleFrame(NotificationFrameBase):
     """
     Fenêtre de notification affichée lorsque le système est réveillé de l'inactivité.
     """
+
     def __init__(self, idleTime, effort, displayedEfforts, *args, **kwargs):
         self._idleTime = idleTime
         self._effort = effort
@@ -47,23 +52,40 @@ class WakeFromIdleFrame(NotificationFrameBase):
         Crée les widgets à l'intérieur de la fenêtre.
         """
         idleTimeFormatted = render.dateTime(self._idleTime)
-        sizer.Add(wx.StaticText(panel, wx.ID_ANY,
-                                _("No user input since %s. The following task was\nbeing tracked:") %
-                                idleTimeFormatted))
-        sizer.Add(wx.StaticText(panel, wx.ID_ANY,
-                                self._effort.task().subject()))
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                wx.ID_ANY,
+                _(
+                    "No user input since %s. The following task was\nbeing tracked:"
+                )
+                % idleTimeFormatted,
+            )
+        )
+        sizer.Add(
+            wx.StaticText(panel, wx.ID_ANY, self._effort.task().subject())
+        )
 
         btnNothing = wx.Button(panel, wx.ID_ANY, _("Do nothing"))
-        btnStopAt = wx.Button(panel, wx.ID_ANY, _("Stop it at %s") % idleTimeFormatted)
-        btnStopResume = wx.Button(panel, wx.ID_ANY, _("Stop it at %s and resume Now") % idleTimeFormatted)
+        btnStopAt = wx.Button(
+            panel, wx.ID_ANY, _("Stop it at %s") % idleTimeFormatted
+        )
+        btnStopResume = wx.Button(
+            panel,
+            wx.ID_ANY,
+            _("Stop it at %s and resume Now") % idleTimeFormatted,
+        )
 
         sizer.Add(btnNothing, 0, wx.EXPAND | wx.ALL, 1)
         sizer.Add(btnStopAt, 0, wx.EXPAND | wx.ALL, 1)
         sizer.Add(btnStopResume, 0, wx.EXPAND | wx.ALL, 1)
 
-        wx.EVT_BUTTON(btnNothing, wx.ID_ANY, self.DoNothing)
-        wx.EVT_BUTTON(btnStopAt, wx.ID_ANY, self.DoStopAt)
-        wx.EVT_BUTTON(btnStopResume, wx.ID_ANY, self.DoStopResume)
+        # wx.EVT_BUTTON(btnNothing, wx.ID_ANY, self.DoNothing)
+        btnNothing.Bind(wx.EVT_BUTTON, self.DoNothing)
+        # wx.EVT_BUTTON(btnStopAt, wx.ID_ANY, self.DoStopAt)
+        btnStopAt.Bind(wx.EVT_BUTTON, self.DoStopAt)
+        # wx.EVT_BUTTON(btnStopResume, wx.ID_ANY, self.DoStopResume)
+        btnStopResume.Bind(wx.EVT_BUTTON, self.DoStopResume)
 
     def CloseButton(self, panel):
         """
@@ -83,7 +105,9 @@ class WakeFromIdleFrame(NotificationFrameBase):
         Action pour le bouton "Stop it at...".
         """
         self._displayed.remove(self._effort)
-        EditEffortStopDateTimeCommand(newValue=self._idleTime, items=[self._effort]).do()
+        EditEffortStopDateTimeCommand(
+            newValue=self._idleTime, items=[self._effort]
+        ).do()
         self.DoClose()
 
     def DoStopResume(self, event):
@@ -91,7 +115,9 @@ class WakeFromIdleFrame(NotificationFrameBase):
         Action pour le bouton "Stop it at... and resume Now".
         """
         self._displayed.remove(self._effort)
-        EditEffortStopDateTimeCommand(newValue=self._idleTime, items=[self._effort]).do()
+        EditEffortStopDateTimeCommand(
+            newValue=self._idleTime, items=[self._effort]
+        ).do()
         NewEffortCommand(items=[self._effort.task()]).do()
         self.DoClose()
 
@@ -100,6 +126,7 @@ class IdleController(Observer, IdleNotifier):
     """
     Contrôleur pour l'inactivité du système.
     """
+
     def __init__(self, mainWindow, settings, effortList):
         self._mainWindow = mainWindow
         self._settings = settings
@@ -143,11 +170,22 @@ class IdleController(Observer, IdleNotifier):
         for effort in self.__tracker.trackedEfforts():
             if effort not in self._displayed:
                 self._displayed.add(effort)
-                frm = WakeFromIdleFrame(date.DateTime.fromtimestamp(self._lastActivity),
-                                        effort,
-                                        self._displayed,
-                                        _("Notification"),
-                                        icon=wx.ArtProvider.GetBitmap("taskcoach",
-                                                                      wx.ART_FRAME_ICON,
-                                                                      (16, 16)))
+                frm = WakeFromIdleFrame(
+                    date.DateTime.fromtimestamp(self._lastActivity),
+                    effort,
+                    self._displayed,
+                    _("Notification"),
+                    icon=wx.ArtProvider.GetBitmap(
+                        "taskcoach",
+                        wx.ART_FRAME_ICON,
+                        (16, 16),
+                    ),
+                )
                 NotificationCenter().NotifyFrame(frm)
+
+    def start(self):
+        """
+
+        Returns:
+
+        """
