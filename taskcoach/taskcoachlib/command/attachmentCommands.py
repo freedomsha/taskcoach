@@ -20,16 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # from builtins import zip
 # from builtins import object
+import logging
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib.domain import attachment
 from . import base
+
 # from . import noteCommands
+
+log = logging.getLogger(__name__)
 
 
 class EditAttachmentLocationCommand(base.BaseCommand):
-    pluralName = _("Edit location of attachments")
-    singularName = _('Edit attachment "%s" location')
+    plural_name = _("Edit location of attachments")
+    singular_name = _('Edit attachment "%s" location')
 
     def __init__(self, *args, **kwargs):
         self.__newLocation = kwargs.pop("newValue")
@@ -53,13 +57,14 @@ class EditAttachmentLocationCommand(base.BaseCommand):
 
 
 class AddAttachmentCommand(base.BaseCommand):
-    pluralName = _("Add attachment")
-    singularName = _("Add attachment to '%s'")
+    plural_name = _("Add attachment")
+    singular_name = _('Add attachment to "%s"')
 
     def __init__(self, *args, **kwargs):
         self.owners = []
         self.__attachments = kwargs.get(
-            "attachments", [attachment.FileAttachment("", subject=_("New attachment"))]
+            "attachments",
+            [attachment.FileAttachment("", subject=_("New attachment"))],
         )
         super().__init__(*args, **kwargs)
         self.owners = self.items
@@ -71,11 +76,15 @@ class AddAttachmentCommand(base.BaseCommand):
 
     @patterns.eventSource
     def addAttachments(self, event=None):
-        print(f"attachmentCommands.AddAttachmentsCommand.addAttachments : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self.attachments}, event={event}")
+        log.debug(
+            f"attachmentCommands.AddAttachmentsCommand.addAttachments : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self.__attachments}, event={event}"
+        )
 
         kwargs = dict(event=event)
         for owner in self.owners:
-            owner.addAttachments(*self.__attachments, **kwargs)  # pylint: disable=W0142
+            owner.addAttachments(
+                *self.__attachments, **kwargs
+            )  # pylint: disable=W0142
 
     @patterns.eventSource
     def removeAttachments(self, event=None):
@@ -99,8 +108,8 @@ class AddAttachmentCommand(base.BaseCommand):
 
 
 class RemoveAttachmentCommand(base.BaseCommand):
-    pluralName = _("Remove attachment")
-    singularName = _("Remove attachment to '%s'")
+    plural_name = _("Remove attachment")
+    singular_name = _('Remove attachment to "%s"')
 
     def __init__(self, *args, **kwargs):
         self._attachments = kwargs.pop("attachments")
@@ -108,11 +117,15 @@ class RemoveAttachmentCommand(base.BaseCommand):
 
     @patterns.eventSource
     def addAttachments(self, event=None):
-        print(f"attachmentsCommands.RemoveAttachmentCommand.addAttachments : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self.attachments}, event={event}")
+        log.debug(
+            f"attachmentsCommands.RemoveAttachmentCommand.addAttachments : 🛠️ DEBUG - Création d'une tâche self={self} avec attachements: {self._attachments}, event={event}"
+        )
 
         kwargs = dict(event=event)
         for item in self.items:
-            item.addAttachments(*self._attachments, **kwargs)  # pylint: disable=W0142
+            item.addAttachments(
+                *self._attachments, **kwargs
+            )  # pylint: disable=W0142
 
     @patterns.eventSource
     def removeAttachments(self, event=None):
