@@ -16,11 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
+
 # gui_used ?
 from taskcoachlib.config.arguments import get_gui
 
+log = logging.getLogger(__name__)
 gui_name = get_gui()
 if gui_name == "wx":
+    log.info("application avec wx")
     from taskcoachlib.application.application import Application
 # try:
 #     from .application import Application
@@ -28,4 +32,5 @@ if gui_name == "wx":
 # except ImportError:
 #     from taskcoachlib.application.application import Application, TkinterApplication
 if gui_name == "tk":
+    log.info("application avec tk")
     from taskcoachlib.application.tkapplication import TkinterApplication
