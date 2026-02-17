@@ -21,24 +21,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 from taskcoachlib import operating_system
 import taskcoachlib.gui.menu
+
 # from taskcoachlib.gui.menu import *
 # try:
 from pubsub import pub
+
 # except ImportError:
 #     try:
 #        from ...thirdparty.pubsub import pub
 #    except ImportError:
 #        from wx.lib.pubsub import pub
 import wx
+
 # from taskcoachlib.thirdparty import aui as aui
 import wx.lib.agw.aui as aui
+
 # import aui2 as aui
 
 log = logging.getLogger(__name__)
 
 
 class ViewerContainer(object):
-    """ ViewerContainer est un conteneur de visionneuses.
+    """ViewerContainer est un conteneur de visionneuses.
 
     Il possède un conteneurWidget qui affiche les visionneuses.
     Le conteneurWidget est supposé être une trame gérée par AUI.
@@ -48,7 +52,7 @@ class ViewerContainer(object):
     Cela permet à d'autres composants GUI, par ex. menu,
     pour parler au ViewerContainer comme s'il s'agissait d'un spectateur régulier.
     """
-        
+
     def __init__(self, containerWidget, settings, *args, **kwargs):
         """
         Initialise le conteneur de visionneuse.
@@ -59,7 +63,9 @@ class ViewerContainer(object):
             *args:
             **kwargs:
         """
-        self.containerWidget = containerWidget  # L'afficheur de visionneuse. Trame gérée par AUI.
+        self.containerWidget = (
+            containerWidget  # L'afficheur de visionneuse. Trame gérée par AUI.
+        )
         self._notifyActiveViewer = False
         self.__bind_event_handlers()  # Inscription aux événements de fermeture, d'activation et de flottement du volet.
         self._settings = settings
@@ -68,80 +74,111 @@ class ViewerContainer(object):
 
     def componentsCreated(self):
         self._notifyActiveViewer = True
+        # Activate the first viewer (TaskViewer) as the default at startup
+        if self.viewers:
+            self.activateViewer(self.viewers[0])
 
     def advanceSelection(self, forward):
-        """ Activez la visionneuse suivante si le transfert est vrai, sinon la visionneuse précédente. """
+        """Activez la visionneuse suivante si le transfert est vrai, sinon la visionneuse précédente."""
         if len(self.viewers) <= 1:
             return  # Not enough viewers to advance selection
         active_viewer = self.activeViewer()
-        current_index = self.viewers.index(active_viewer) if active_viewer else 0
+        current_index = (
+            self.viewers.index(active_viewer) if active_viewer else 0
+        )
         minimum_index, maximum_index = 0, len(self.viewers) - 1
         if forward:
-            new_index = current_index + 1 if minimum_index <= current_index < maximum_index else minimum_index
+            new_index = (
+                current_index + 1
+                if minimum_index <= current_index < maximum_index
+                else minimum_index
+            )
         else:
-            new_index = current_index - 1 if minimum_index < current_index <= maximum_index else maximum_index
+            new_index = (
+                current_index - 1
+                if minimum_index < current_index <= maximum_index
+                else maximum_index
+            )
         self.activateViewer(self.viewers[new_index])
-        
+
     # @staticmethod
     def isViewerContainer(self) -> bool:
-        """ Indique s'il s'agit d'un conteneur de visionneuse ou sinon d'une visionneuse réelle. """
+        """Indique s'il s'agit d'un conteneur de visionneuse ou sinon d'une visionneuse réelle."""
         return True
 
     def __bind_event_handlers(self):
-        """ Inscrivez-vous aux événements de fermeture, d'activation et de flottement du volet (PANE)."""
+        """Inscrivez-vous aux événements de fermeture, d'activation et de flottement du volet (PANE)."""
         self.containerWidget.Bind(aui.EVT_AUI_PANE_CLOSE, self.onPageClosed)
-        self.containerWidget.Bind(aui.EVT_AUI_PANE_ACTIVATED,
-                                  self.onPageChanged)
+        self.containerWidget.Bind(
+            aui.EVT_AUI_PANE_ACTIVATED, self.onPageChanged
+        )
         self.containerWidget.Bind(aui.EVT_AUI_PANE_FLOATED, self.onPageFloated)
-    
+
     def __getitem__(self, index):
         return self.viewers[index]
-    
+
     def __len__(self):
         return len(self.viewers)
 
     def addViewer(self, viewer, floating=False):
-        """ Ajoute un nouveau volet avec la visionneuse spécifiée. """
+        """Ajoute un nouveau volet avec la visionneuse spécifiée."""
         name = viewer.settingsSection()  # Nouvelle ligne
-        self.containerWidget.addPane(viewer, viewer.title(), name, floating=floating)  # TypeError: DummyMainWindow.addPane() got multiple values for argument 'floating'
+        self.containerWidget.addPane(
+            viewer, viewer.title(), name, floating=floating
+        )  # TypeError: DummyMainWindow.addPane() got multiple values for argument 'floating'
         self.viewers.append(viewer)
         if len(self.viewers) == 1:
             self.activateViewer(viewer)
         pub.subscribe(self.onStatusChanged, viewer.viewerStatusEventType())
-        
+
     def closeViewer(self, viewer):
-        """ Ferme la visionneuse spécifiée. """
+        """Ferme la visionneuse spécifiée."""
         if viewer == self.activeViewer():
             self.advanceSelection(False)
         pane = self.containerWidget.manager.GetPane(viewer)
         self.containerWidget.manager.ClosePane(pane)
-    
+
     def __getattr__(self, attribute):
-        """ Transférez les attributs inconnus au visualiseur actif ou au premier visualiseur
+        """Transférez les attributs inconnus au visualiseur actif ou au premier visualiseur
             s'il n'y a pas de visualiseur actif.
 
         Prend en compte le stockage spécial d'attributs dans wxPython Phoenix.
         """
         # return getattr(self.activeViewer() or self.viewers[0], attribute)
 
-        viewer = self.activeViewer() or (self.viewers[0] if self.viewers else None)
+        viewer = self.activeViewer() or (
+            self.viewers[0] if self.viewers else None
+        )
         if viewer is None:
-            raise AttributeError(f"'ViewerContainer' object has no attribute '{attribute}'")
+            raise AttributeError(
+                f"'ViewerContainer' object has no attribute '{attribute}'"
+            )
         # Pour les objets hérités de wx.PyEvent ou wx.PyCommandEvent sous Phoenix
+        # Il est certainement possible d'utiliser la méthode curselectionIsInstanceOf de BaseCategoryViewer !
         if hasattr(viewer, "_getAttrDict"):
             d = viewer._getAttrDict()
             if attribute in d:
-                log.info("ViewerContainer.__getattr__ retourne l'attribut {d[attribute]} de _getAttrDict !")
+                log.info(
+                    f"ViewerContainer.__getattr__ retourne l'attribut {d[attribute]} de _getAttrDict !"
+                )
                 return d[attribute]
         # Fallback classique
         # return getattr(viewer, attribute)
         attr_to_ret = getattr(viewer, attribute)
-        log.info("ViewerContainer.__getattr__ retourne l'attribut {attr_to_ret} avec l'ancienne méthode !")
+        # log.info(
+        #     f"ViewerContainer.__getattr__ retourne l'attribut {attr_to_ret} avec l'ancienne méthode !"
+        # )
+        log.info(
+            "ViewerContainer.__getattr__ retourne l'attribut %s avec l'ancienne méthode !",
+            attr_to_ret,
+        )
         return attr_to_ret
 
     def activeViewer(self):
-        """ Renvoie la visionneuse active (sélectionnée). """
-        all_panes = self.containerWidget.manager.GetAllPanes()  # Obtenir une référence de toutes les structures d'information de volet.
+        """Renvoie la visionneuse active (sélectionnée)."""
+        all_panes = (
+            self.containerWidget.manager.GetAllPanes()
+        )  # Obtenir une référence de toutes les structures d'information de volet.
         for pane in all_panes:
             if pane.IsToolbar():
                 continue
@@ -152,9 +189,9 @@ class ViewerContainer(object):
                 else:
                     return pane.window
         return None
-        
+
     def activateViewer(self, viewer_to_activate):
-        """ Active (sélectionne) la visionneuse spécifiée. """
+        """Active (sélectionne) la visionneuse spécifiée."""
         self.containerWidget.manager.ActivatePane(viewer_to_activate)
         paneInfo = self.containerWidget.manager.GetPane(viewer_to_activate)
         if paneInfo.IsNotebookPage():
@@ -163,7 +200,7 @@ class ViewerContainer(object):
 
     def __del__(self):
         pass  # Ne transmettez pas le message Del à l'un des viewers.
-    
+
     def onStatusChanged(self, viewer):
         if self.activeViewer() == viewer:
             self.sendViewerStatusEvent()
@@ -198,9 +235,13 @@ class ViewerContainer(object):
                 break
             window = window.GetParent()
         else:
-            wx.LogDebug("ViwerContainer.__ensure_active_viewer_has_focus : Appel de CallAfter.")
+            wx.LogDebug(
+                "ViwerContainer.__ensure_active_viewer_has_focus : Appel de CallAfter."
+            )
             wx.CallAfter(self.activeViewer().SetFocus)
-            wx.LogDebug("ViwerContainer.__ensure_active_viewer_has_focus : CallAfter passé avec succès.")
+            wx.LogDebug(
+                "ViwerContainer.__ensure_active_viewer_has_focus : CallAfter passé avec succès."
+            )
 
     def onPageClosed(self, event):
         if event.GetPane().IsToolbar():
@@ -219,11 +260,18 @@ class ViewerContainer(object):
         event.Skip()
 
     def __close_viewer(self, viewer):
-        """ Fermez la visionneuse spécifiée et désabonnez tous ses gestionnaires d'événements. """
+        """Fermez la visionneuse spécifiée et désabonnez tous ses gestionnaires d'événements."""
         # Lors de la fermeture d'une trame gérée par AUI, nous obtenons deux événements Close,
         # soyez prêt :
         if viewer in self.viewers:
             self.viewers.remove(viewer)
+            # Unsubscribe from the viewer's status event before detaching
+            try:
+                pub.unsubscribe(
+                    self.onStatusChanged, viewer.viewerStatusEventType()
+                )
+            except Exception:
+                pass  # May already be unsubscribed
             viewer.detach()
 
     @staticmethod
@@ -233,10 +281,20 @@ class ViewerContainer(object):
         pour activer la visionneuse suivante et précédente.
         """
         viewer = event.GetPane().window
-        table = wx.AcceleratorTable([(wx.ACCEL_CTRL, wx.WXK_PAGEDOWN,
-                                     taskcoachlib.gui.menu.activateNextViewerId),
-                                    (wx.ACCEL_CTRL, wx.WXK_PAGEUP,
-                                     taskcoachlib.gui.menu.activatePreviousViewerId)])
+        table = wx.AcceleratorTable(
+            [
+                (
+                    wx.ACCEL_CTRL,
+                    wx.WXK_PAGEDOWN,
+                    taskcoachlib.gui.menu.activateNextViewerId,
+                ),
+                (
+                    wx.ACCEL_CTRL,
+                    wx.WXK_PAGEUP,
+                    taskcoachlib.gui.menu.activatePreviousViewerId,
+                ),
+            ]
+        )
         # table = wx.AcceleratorTable([(wx.ACCEL_CTRL, wx.WXK_PAGEDOWN,
         #                               activateNextViewerId),
         #                              (wx.ACCEL_CTRL, wx.WXK_PAGEUP,
