@@ -60,8 +60,10 @@ class TaskStatus(object):
         hideMenuText (str) : Le texte à afficher dans le menu pour masquer les tâches avec ce statut status.
         hideHelpText (str) : Un texte d'aide expliquant la signification du statut.
     """
-    def __init__(self, statusString, pluralLabel, countLabel, hideMenuText,
-                 hideHelpText):
+
+    def __init__(
+        self, statusString, pluralLabel, countLabel, hideMenuText, hideHelpText
+    ):
         self.statusString = statusString
         self.pluralLabel = pluralLabel
         self.countLabel = countLabel
@@ -137,7 +139,7 @@ class TaskStatus(object):
             return self.statusString == other.statusString
         return False
 
-# j'ai ajouté cette fonction :
+    # j'ai ajouté cette fonction :
     def __hash__(self) -> int:
         """
         Renvoie le hachage de l'objet TaskStatus.
@@ -169,6 +171,9 @@ class TaskStatus(object):
             (bool) : toujours vrai.
         """
         return True
+
+    def __hash__(self) -> int:
+        return hash(self.statusString)
 
 
 # Définition des statuts
@@ -235,18 +240,22 @@ _status_map = {
     4: duesoon,
     5: active,
     6: inactive,
-    7: late
+    7: late,
 }
 
 
 def from_int(value):
-    """ Convertit un entier en instance de TaskStatus. """
+    """Convertit un entier en instance de TaskStatus."""
     # print(f"TaskStatus.from_int() appelé avec {value}, _status_map = {_status_map}")
     # print(f"DEBUG - TaskStatus.from_int() appelé avec {value}, retourne {_status_map.get(int(value))}")
     if isinstance(value, int):
-        return _status_map.get(value)  # Par défaut, retourne "inactive" si inconnu
-    else :
-        return _status_map.get(int(value))  # Par défaut, retourne "inactive" si inconnu
+        return _status_map.get(
+            value
+        )  # Par défaut, retourne "inactive" si inconnu
+    else:
+        return _status_map.get(
+            int(value)
+        )  # Par défaut, retourne "inactive" si inconnu
     # return _status_map.get(value, inactive)  # Par défaut, retourne "inactive" si inconnu
 
 

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 from taskcoachlib.domain import base
+
 # try:
 #     from taskcoachlib.thirdparty.pubsub import pub
 # except ImportError:
@@ -36,18 +37,22 @@ class Sorter(base.TreeSorter):
         "dueDateTime",
         "plannedStartDateTime",
         "actualStartDateTime",
-        "completionDateTime"
+        "completionDateTime",
     )
 
     def __init__(self, *args, **kwargs):
         self.__treeMode = kwargs.pop("treeMode", False)
-        self.__sortByTaskStatusFirst = kwargs.pop("sortByTaskStatusFirst", True)
+        self.__sortByTaskStatusFirst = kwargs.pop(
+            "sortByTaskStatusFirst", True
+        )
         super().__init__(*args, **kwargs)
-        for eventType in (task.Task.prerequisitesChangedEventType(),
-                          task.Task.dueDateTimeChangedEventType(),
-                          task.Task.plannedStartDateTimeChangedEventType(),
-                          task.Task.actualStartDateTimeChangedEventType(),
-                          task.Task.completionDateTimeChangedEventType()):
+        for eventType in (
+            task.Task.prerequisitesChangedEventType(),
+            task.Task.dueDateTimeChangedEventType(),
+            task.Task.plannedStartDateTimeChangedEventType(),
+            task.Task.actualStartDateTimeChangedEventType(),
+            task.Task.completionDateTimeChangedEventType(),
+        ):
             pub.subscribe(self.onAttributeChanged, eventType)
             # pubsub.core.callables.ListenerMismatchError: Listener "Sorter.onAttributeChanged"
             # (from module "taskcoachlib.domain.task.sorter") inadequate: needs to accept 1 more args (newValue)
@@ -72,14 +77,22 @@ class Sorter(base.TreeSorter):
     def createSortKeyFunction(self, sortKey):
         statusSortKey = self.__createStatusSortKey()
         regularSortKey = super().createSortKeyFunction(sortKey)
-        return lambda the_task: statusSortKey(the_task) + [regularSortKey(the_task)]
+        return lambda the_task: statusSortKey(the_task) + [
+            regularSortKey(the_task)
+        ]
 
     def __createStatusSortKey(self):
         if self.__sortByTaskStatusFirst:
             if self.isAscending():
-                return lambda the_task: [the_task.completed(), the_task.inactive()]
+                return lambda the_task: [
+                    the_task.completed(),
+                    the_task.inactive(),
+                ]
             else:
-                return lambda the_task: [not the_task.completed(), not the_task.inactive()]
+                return lambda the_task: [
+                    not the_task.completed(),
+                    not the_task.inactive(),
+                ]
         else:
             return lambda the_task: []
 

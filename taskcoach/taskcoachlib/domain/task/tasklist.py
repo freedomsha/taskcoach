@@ -30,6 +30,7 @@ class TaskListQueryMixin(object):
     """
     Classe mixin.
     """
+
     def nrOfTasksPerStatus(self):
         """
         Calculer le nombre de tâches pour chaque statut possible.
@@ -40,7 +41,9 @@ class TaskListQueryMixin(object):
         Returns :
             count (dict) : Un dictionnaire dont les clés sont les statuts possibles.
         """
-        statuses = [eachTask.status() for eachTask in self if not eachTask.isDeleted()]
+        statuses = [
+            eachTask.status() for eachTask in self if not eachTask.isDeleted()
+        ]
         count = dict()
         for status in task.Task.possibleStatuses():
             count[status] = statuses.count(status)
@@ -85,14 +88,16 @@ class TaskList(TaskListQueryMixin, categorizable.CategorizableContainer):
                             si aucune tâche n'est trouvée pour éviter une erreur
                             min() ou max() sur une liste vide.
     """
+
     # FIXME: TaskList should be called TaskCollection or TaskSet
 
     # newItemMenuText = _("&New task...") + (
     #     "\tINSERT" if not operating_system.isMac() else "\tCtrl+N"
     # )
-    newItemMenuText = "{0}{1}".format(_("&New task..."), (
-        "\tINSERT" if not operating_system.isMac() else "\tCtrl+N"
-    ))
+    newItemMenuText = "{0}{1}".format(
+        _("&New task..."),
+        ("\tINSERT" if not operating_system.isMac() else "\tCtrl+N"),
+    )
     # TypeError: unsupported operand type(s) for +: 'NoneType' and 'str'
     newItemHelpText = help.taskNew
 
@@ -125,4 +130,6 @@ class TaskList(TaskListQueryMixin, categorizable.CategorizableContainer):
         return max(self.__allPriorities())
 
     def __allPriorities(self):
-        return [task.priority() for task in self if not task.isDeleted()] or (0,)  # pylint: disable=W0621
+        return [task.priority() for task in self if not task.isDeleted()] or (
+            0,
+        )  # pylint: disable=W0621

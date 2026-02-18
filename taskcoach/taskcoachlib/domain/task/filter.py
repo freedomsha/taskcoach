@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from taskcoachlib import patterns
 from taskcoachlib.domain import base, date
+
 # try:
 #    from taskcoachlib.thirdparty.pubsub import pub
 # except ImportError:
@@ -37,34 +38,46 @@ class ViewFilter(tasklist.TaskListQueryMixin, base.Filter):
 
     def registerObservers(self):
         registerObserver = patterns.Publisher().registerObserver
-        for eventType in (task.Task.plannedStartDateTimeChangedEventType(),
-                          task.Task.dueDateTimeChangedEventType(),
-                          task.Task.actualStartDateTimeChangedEventType(),
-                          task.Task.completionDateTimeChangedEventType(),
-                          task.Task.prerequisitesChangedEventType(),
-                          task.Task.appearanceChangedEventType(),  # Proxy for status changes
-                          task.Task.addChildEventType(),
-                          task.Task.removeChildEventType()):
+        for eventType in (
+            task.Task.plannedStartDateTimeChangedEventType(),
+            task.Task.dueDateTimeChangedEventType(),
+            task.Task.actualStartDateTimeChangedEventType(),
+            task.Task.completionDateTimeChangedEventType(),
+            task.Task.prerequisitesChangedEventType(),
+            task.Task.appearanceChangedEventType(),  # Proxy for status changes
+            task.Task.addChildEventType(),
+            task.Task.removeChildEventType(),
+        ):
             if eventType.startswith("pubsub"):
                 pub.subscribe(self.onTaskStatusChange, eventType)
             else:
-                registerObserver(self.onTaskStatusChange_Deprecated,
-                                 eventType=eventType)
-        date.Scheduler().schedule_interval(self.atMidnight, days=1)
+                registerObserver(
+                    self.onTaskStatusChange_Deprecated, eventType=eventType
+                )
+        # date.Scheduler().schedule_interval(self.atMidnight, days=1)
+        # Subscribe to global timer for midnight processing
+        pub.subscribe(self._onDateChanged, "timer.date")
 
     def detach(self):
         super().detach()
         patterns.Publisher().removeObserver(self.onTaskStatusChange_Deprecated)
+        pub.unsubscribe(self._onDateChanged, "timer.date")
+
+    def _onDateChanged(self, timestamp):
+        """Handle date change from global timer."""
+        self.atMidnight()
 
     def atMidnight(self):
-        """ Whether tasks are included in the filter or not may change at
-            midnight. """
+        """Whether tasks are included in the filter or not may change at
+        midnight."""
         self.reset()
 
     def onTaskStatusChange(self, newValue, sender):  # pylint: disable=W0613
         self.reset()
 
-    def onTaskStatusChange_Deprecated(self, event=None):  # pylint: disable=W0613
+    def onTaskStatusChange_Deprecated(
+        self, event=None
+    ):  # pylint: disable=W0613
         self.reset()
 
     def hideTaskStatus(self, status, hide=True):
@@ -78,16 +91,87 @@ class ViewFilter(tasklist.TaskListQueryMixin, base.Filter):
         self.__hideCompositeTasks = hide
         self.reset()
 
+    # Le bug des filtres : C'est une correction visuelle importante.
+    # Avant, si vous filtriez par "Catégorie A" (qui contient Tâche 1 -> Sous-tâche 2)
+    # et que vous masquiez les tâches "Terminées" (et que Sous-tâche 2 est terminée),
+    # Tâche 1 restait visible mais vide. Le nouveau code nettoie cela.
+    @patterns.eventSource
+    def reset(self, event=None):
+        """Override reset to add recursive cleanup of orphan ancestors.
+
+        This fixes a bug where uncategorized parent tasks would appear when
+        filtering by category, if they had a categorized child that was hidden
+        by the status filter.
+
+        The problem:
+        - Filter chain: TaskList -> CategoryFilter -> ViewFilter
+        - CategoryFilter includes parent as ancestor of categorized child
+        - ViewFilter hides the child (e.g., completed)
+        - Without cleanup, parent remains visible despite having no visible
+          children and not matching the category filter itself
+
+        The solution:
+        - After normal filtering, get all "filter_forced" items from the chain
+          (items added as ancestors, not because they matched filter criteria)
+        - Recursively remove filter_forced items that have no visible children
+        - The recursion handles grandparents that become orphans when their
+          children are removed
+        """
+        # Call parent reset first (does normal filtering + ancestor addition)
+        super().reset(event=event)
+
+        if not self.treeMode():
+            return
+
+        # Get filter_forced items from entire filter chain (e.g., parents added
+        # by CategoryFilter as ancestors of categorized children)
+        filterForced = self.getAccumulatedFilterForced()
+        if not filterForced:
+            return
+
+        # Recursive cleanup: remove filter_forced items with no visible children.
+        # We loop until no more removals because removing a parent may make its
+        # grandparent an orphan too.
+        currentItems = set(self)
+        changed = True
+        while changed:
+            changed = False
+            for item in list(filterForced):
+                if item in currentItems:
+                    # Check if item has any children still in the visible set
+                    hasVisibleChild = any(
+                        child in currentItems for child in item.children()
+                    )
+                    if not hasVisibleChild:
+                        # This item was only included as an ancestor and now has
+                        # no visible children - remove it
+                        currentItems.discard(item)
+                        filterForced.discard(item)
+                        changed = True  # Removal may create new orphans
+
+        # Apply the cleanup by removing orphaned items
+        orphans = set(self) - currentItems
+        if orphans:
+            self.removeItemsFromSelf(list(orphans), event=event)
+
     def filterItems(self, tasks):
-        return [task for task in tasks if self.filterTask(task)]  # pylint: disable=W0621
+        return [
+            task for task in tasks if self.filterTask(task)
+        ]  # pylint: disable=W0621
 
     def filterTask(self, task):  # pylint: disable=W0621
         result = True
         if task.status() in self.__statusesToHide:
             result = False
-        elif self.__hideCompositeTasks and not self.treeMode() and task.children():
+        elif (
+            self.__hideCompositeTasks
+            and not self.treeMode()
+            and task.children()
+        ):
             result = False  # Hide composite task
         return result
 
     def hasFilter(self):
-        return len(self.__statusesToHide) != 0 or (self.__hideCompositeTasks and not self.treeMode())
+        return len(self.__statusesToHide) != 0 or (
+            self.__hideCompositeTasks and not self.treeMode()
+        )
