@@ -25,6 +25,7 @@ from taskcoachlib.domain import base
 #    from wx.lib.pubsub import pub
 from pubsub import pub
 from .category import Category
+
 # Le module sre_constants est un détail d'implémentation interne qui a changé/disparu.
 # re.error est la manière standard et portable de capturer les erreurs d'expression régulière.
 
