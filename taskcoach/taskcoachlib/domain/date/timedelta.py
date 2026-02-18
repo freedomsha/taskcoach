@@ -15,12 +15,18 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+# Le piège de la division : C'est le point le plus critique.
+# En Python 2, 1/1000 vaut 0.
+# En Python 3, cela vaut 0.001.
+# Le code a été corrigé pour s'assurer que
+# les conversions de microsecondes en millisecondes ne soient pas réduites à zéro.
+
 # from __future__ import division
 
 # from past.utils import old_div
+from typing import Tuple
 import datetime
 import math
-
 
 # def legacy_round(x):
 #     # The builtin round() behavior changed in Python 3. Not sure we
@@ -35,38 +41,39 @@ import math
 
 class TimeDelta(datetime.timedelta):
     """
-    Hérite de la classe datetime.timedelta de Python.
-    Elle fournit des fonctionnalités supplémentaires pour
-    manipuler des intervalles de temps en tenant compte des heures, minutes, secondes et millisecondes.
+        Hérite de la classe datetime.timedelta de Python.
+        Elle fournit des fonctionnalités supplémentaires pour
+        manipuler des intervalles de temps en tenant compte des heures, minutes, secondes et millisecondes.
 
-    Voici une analyse plus détaillée des éléments clés du code :
+        Voici une analyse plus détaillée des éléments clés du code :
 
-Constantes :
+    Constantes :
 
-    millisecondsPerSecond : Nombre de millisecondes dans une seconde.
-    millisecondsPerDay : Nombre de millisecondes dans un jour.
-    millisecondsPerMicroSecond : Nombre de millisecondes dans une microseconde.
+        millisecondsPerSecond : Nombre de millisecondes dans une seconde.
+        millisecondsPerDay : Nombre de millisecondes dans un jour.
+        millisecondsPerMicroSecond : Nombre de millisecondes dans une microseconde.
 
-Méthodes de la classe TimeDelta :
+    Méthodes de la classe TimeDelta :
 
-    hoursMinutesSeconds (self) : Renvoie un tuple contenant le nombre d'heures, de minutes et de secondes de l'intervalle.
-    sign (self) : Renvoie un entier indiquant le signe de l'intervalle (1 pour positif, -1 pour négatif).
-    hours (self) : Renvoie l'intervalle exprimé en nombre d'heures en tenant compte du signe.
-    minutes (self) : Renvoie l'intervalle exprimé en nombre de minutes en tenant compte du signe.
-    totalSeconds (self) : Renvoie l'intervalle exprimé en nombre de secondes en tenant compte du signe.
-    milliseconds (self) : Renvoie l'intervalle exprimé en nombre de millisecondes.
-    round (self, hours=0, minutes=0, seconds=0, alwaysUp=False) : Arrondi l'intervalle aux unités spécifiées (heures, minutes, secondes). alwaysUp permet de toujours arrondir vers le haut.
-    __add__ (self, other) : Permet l'addition de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
-    __sub__ (self, other) : Permet la soustraction de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
+        hoursMinutesSeconds (self) : Renvoie un tuple contenant le nombre d'heures, de minutes et de secondes de l'intervalle.
+        sign (self) : Renvoie un entier indiquant le signe de l'intervalle (1 pour positif, -1 pour négatif).
+        hours (self) : Renvoie l'intervalle exprimé en nombre d'heures en tenant compte du signe.
+        minutes (self) : Renvoie l'intervalle exprimé en nombre de minutes en tenant compte du signe.
+        totalSeconds (self) : Renvoie l'intervalle exprimé en nombre de secondes en tenant compte du signe.
+        milliseconds (self) : Renvoie l'intervalle exprimé en nombre de millisecondes.
+        round (self, hours=0, minutes=0, seconds=0, alwaysUp=False) : Arrondi l'intervalle aux unités spécifiées (heures, minutes, secondes). alwaysUp permet de toujours arrondir vers le haut.
+        __add__ (self, other) : Permet l'addition de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
+        __sub__ (self, other) : Permet la soustraction de deux objets TimeDelta en renvoyant une nouvelle instance de TimeDelta.
 
-Commentaires supplémentaires :
+    Commentaires supplémentaires :
 
-    La méthode legacy_round (commentée) est conservée pour des raisons de tests unitaires.
-    La conversion en flottant (float(self.totalSeconds())) dans la méthode round pourrait être évitée en Python 3 car la division d'entiers par des nombres flottants renvoie automatiquement un flottant.
-    La méthode parseTimeDelta permet de parser une chaîne de caractères au format "heures:minutes:secondes" en un objet TimeDelta.
+        La méthode legacy_round (commentée) est conservée pour des raisons de tests unitaires.
+        La conversion en flottant (float(self.totalSeconds())) dans la méthode round pourrait être évitée en Python 3 car la division d'entiers par des nombres flottants renvoie automatiquement un flottant.
+        La méthode parseTimeDelta permet de parser une chaîne de caractères au format "heures:minutes:secondes" en un objet TimeDelta.
 
-En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la classe intégrée de Python pour une manipulation plus flexible et informative des intervalles de temps.
+    En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la classe intégrée de Python pour une manipulation plus flexible et informative des intervalles de temps.
     """
+
     millisecondsPerSecond = 1000
     millisecondsPerDay = 24 * 60 * 60 * millisecondsPerSecond
     millisecondsPerMicroSecond = 1 / 1000
@@ -74,9 +81,9 @@ En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la 
     # millisecondsPerMicroSecond = old_div(1, 1000)
 
     def hoursMinutesSeconds(self):
-        """ Renvoie un tuple (heures, minutes, secondes). Notez que l'appelant
-            est chargé de vérifier si l'instance TimeDelta est
-            positive ou négative. """
+        """Renvoie un tuple (heures, minutes, secondes). Notez que l'appelant
+        est chargé de vérifier si l'instance TimeDelta est
+        positive ou négative."""
         if self < TimeDelta():
             seconds = 3600 * 24 - self.seconds
             days = abs(self.days) - 1
@@ -94,26 +101,26 @@ En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la 
         return -1 if self < TimeDelta() else 1
 
     def hours(self):
-        """ Timedelta expressed in number of hours. """
+        """Timedelta expressed in number of hours."""
         hours, minutes, seconds = self.hoursMinutesSeconds()
         return self.sign() * (hours + (minutes / 60) + (seconds / 3600))
         # return self.sign() * (hours + (old_div(minutes, 60)) + (old_div(seconds, 3600)))
         # return self.sign() * (hours + (minutes // 60) + (seconds // 3600))
 
     def minutes(self):
-        """ Timedelta expressed in number of minutes. """
+        """Timedelta expressed in number of minutes."""
         hours, minutes, seconds = self.hoursMinutesSeconds()
         return self.sign() * (hours * 60 + minutes + (seconds / 60))
         # return self.sign() * (hours * 60 + minutes + (old_div(seconds, 60)))
         # return self.sign() * (hours * 60 + minutes + (seconds // 60))
 
     def totalSeconds(self):
-        """ Timedelta expressed in number of seconds. """
+        """Timedelta expressed in number of seconds."""
         hours, minutes, seconds = self.hoursMinutesSeconds()
         return self.sign() * (hours * 3600 + minutes * 60 + seconds)
 
     def milliseconds(self):
-        """ Timedelta expressed in number of milliseconds. """
+        """Timedelta expressed in number of milliseconds."""
         # No need to use self.sign() since self.days is negative for negative values
         # return int(legacy_round((self.days * self.millisecondsPerDay) +
         #                         (self.seconds * self.millisecondsPerSecond) +
@@ -157,12 +164,12 @@ En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la 
 
         :returns : Un nouvel objet TimeDelta arrondi.
         """
-        # Calcule de l'unité d'arrondi:
+        # Calcule de l'unité d'arrondi :
         # Les paramètres hours, minutes, seconds sont combinés
         # pour obtenir une valeur roundingUnit exprimant le nombre de secondes
         # correspondant à l'unité d'arrondi souhaitée :
         assert [hours, minutes, seconds].count(0) >= 2
-        # Arrondi des secondes totales (valeur de l'unité d'arrondi):
+        # Arrondi des secondes totales (valeur de l'unité d'arrondi) :
         roundingUnit = hours * 3600 + minutes * 60 + seconds
         #
         # Le nombre total de secondes de l'intervalle est divisé par roundingUnit
@@ -180,7 +187,7 @@ En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la 
             # quotient: quantité (valeur à l'unité) d'arrondi.
             # remainder: reste de la division.
             quotient, remainder = divmod(self.total_seconds(), roundingUnit)
-            # Si arrondir vers le haut est choisi (vrai):
+            # Si arrondir vers le haut est choisi (vrai) :
             if alwaysUp:
                 # Si le reste est supérieur à 0, on arrondit au-dessus.
                 if remainder > 0:
@@ -245,18 +252,18 @@ En résumé, ce code fournit une classe TimeDelta améliorée par rapport à la 
         # # * **Gestion de `alwaysUp`**: Cette condition arrondira toujours au chiffre supérieur si le paramètre `alwaysUp` est True.
 
     def __add__(self, other):
-        """ Assurez-vous que nous renvoyons une instance TimeDelta et non une instance
-            datetime.timedelta. """
+        """Assurez-vous que nous renvoyons une instance TimeDelta et non une instance
+        datetime.timedelta."""
         timeDelta = super().__add__(other)
-        return self.__class__(timeDelta.days,
-                              timeDelta.seconds,
-                              timeDelta.microseconds)
+        return self.__class__(
+            timeDelta.days, timeDelta.seconds, timeDelta.microseconds
+        )
 
     def __sub__(self, other):
         timeDelta = super().__sub__(other)
-        return self.__class__(timeDelta.days,
-                              timeDelta.seconds,
-                              timeDelta.microseconds)
+        return self.__class__(
+            timeDelta.days, timeDelta.seconds, timeDelta.microseconds
+        )
 
 
 ONE_SECOND = TimeDelta(seconds=1)

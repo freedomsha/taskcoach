@@ -20,11 +20,11 @@ import string
 import time
 import datetime
 import re
+
 # import timedelta  # pylint: disable=W0402
 from taskcoachlib.domain.date import timedelta
 from taskcoachlib import patterns
 from .fix import StrftimeFix
-
 
 infinite = datetime.date.max
 
@@ -37,15 +37,21 @@ class RealDate(StrftimeFix, datetime.date):
     def __sub__(self, other):
         newdate = super().__sub__(other)
         if isinstance(newdate, datetime.timedelta):
-            return timedelta.TimeDelta(newdate.days, newdate.seconds, newdate.microseconds)
+            return timedelta.TimeDelta(
+                newdate.days, newdate.seconds, newdate.microseconds
+            )
         else:
             return RealDate(newdate.year, newdate.month, newdate.day)
 
 
 class InfiniteDate(datetime.date, metaclass=patterns.Singleton):
     def __new__(self):
-        return super().__new__(InfiniteDate, infinite.year,
-                               infinite.month, infinite.day)
+        return super().__new__(
+            InfiniteDate,
+            infinite.year,
+            infinite.month,
+            infinite.day,
+        )
 
     def _getyear(self):
         return None
@@ -77,6 +83,7 @@ class InfiniteDate(datetime.date, metaclass=patterns.Singleton):
 
 
 # factories:
+
 
 def parseDate(dateString, default=None):
     try:

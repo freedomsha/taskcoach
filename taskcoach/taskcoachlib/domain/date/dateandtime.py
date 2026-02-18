@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 # from __future__ import division
 
 # from past.utils import old_div
@@ -36,15 +37,28 @@ class DateTime(StrftimeFix, datetime.datetime):
     def __new__(class_, *args, **kwargs):
         if not args and not kwargs:
             max = datetime.datetime.max  # pylint: disable=W0622
-            args = (max.year, max.month, max.day,
-                    max.hour, max.minute, max.second, max.microsecond)
+            args = (
+                max.year,
+                max.month,
+                max.day,
+                max.hour,
+                max.minute,
+                max.second,
+                max.microsecond,
+            )
         return datetime.datetime.__new__(class_, *args, **kwargs)
 
     @staticmethod
     def fromDateTime(dateTime):
-        return DateTime(year=dateTime.year, month=dateTime.month, day=dateTime.day,
-                        hour=dateTime.hour, minute=dateTime.minute, second=dateTime.second,
-                        microsecond=dateTime.microsecond)
+        return DateTime(
+            year=dateTime.year,
+            month=dateTime.month,
+            day=dateTime.day,
+            hour=dateTime.hour,
+            minute=dateTime.minute,
+            second=dateTime.second,
+            microsecond=dateTime.microsecond,
+        )
 
     def date(self):
         return Date(self.year, self.month, self.day)
@@ -56,10 +70,14 @@ class DateTime(StrftimeFix, datetime.datetime):
         return self.isoweekday()  # Sunday = 7, Monday = 1, etc.
 
     def toordinal(self):
-        """ Return the ordinal number of the day, plus a fraction between 0 and
-            1 for parts of the day. """
+        """Return the ordinal number of the day, plus a fraction between 0 and
+        1 for parts of the day."""
         ordinal = super().toordinal()
-        seconds = self.hour * self.secondsPerHour + self.minute * self.secondsPerMinute + self.second
+        seconds = (
+            self.hour * self.secondsPerHour
+            + self.minute * self.secondsPerMinute
+            + self.second
+        )
         # return ordinal + (old_div(seconds, self.secondsPerDay))
         return ordinal + (seconds / float(self.secondsPerDay))
 
@@ -108,24 +126,40 @@ class DateTime(StrftimeFix, datetime.datetime):
         return DateTime(self.year, 12, 31).endOfDay()
 
     def __sub__(self, other):
-        """ Make sure substraction returns instances of the right classes. """
+        """Make sure substraction returns instances of the right classes."""
         if self == DateTime() and isinstance(other, datetime.datetime):
             max = timedelta.TimeDelta.max  # pylint: disable=W0622
             return timedelta.TimeDelta(max.days, max.seconds, max.microseconds)
         result = super().__sub__(other)
         if isinstance(result, datetime.timedelta):
-            result = timedelta.TimeDelta(result.days, result.seconds,
-                                         result.microseconds)
+            result = timedelta.TimeDelta(
+                result.days,
+                result.seconds,
+                result.microseconds,
+            )
         elif isinstance(result, datetime.datetime):
-            result = self.__class__(result.year, result.month, result.day,
-                                    result.hour, result.minute, result.second,
-                                    result.microsecond)
+            result = self.__class__(
+                result.year,
+                result.month,
+                result.day,
+                result.hour,
+                result.minute,
+                result.second,
+                result.microsecond,
+            )
         return result
 
     def __add__(self, other):
         result = super().__add__(other)
-        return self.__class__(result.year, result.month, result.day,
-                              result.hour, result.minute, result.second, result.microsecond)
+        return self.__class__(
+            result.year,
+            result.month,
+            result.day,
+            result.hour,
+            result.minute,
+            result.second,
+            result.microsecond,
+        )
 
 
 DateTime.max = DateTime(datetime.datetime.max.year, 12, 31).endOfDay()
