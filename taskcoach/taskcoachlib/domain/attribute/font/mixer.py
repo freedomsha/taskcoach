@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 # from __future__ import division
 
 # from builtins import object
@@ -35,7 +36,9 @@ class FontMixer(object):  # nouvelle classe mère mélange de caractères
         weight = class_.mixFontWeights(*fonts)
         style = class_.mixFontStyles(*fonts)
         underlined = class_.mixFontUnderlining(*fonts)
-        return wx.Font(int(pointSize), family, style, weight, underline=underlined)
+        return wx.Font(
+            int(pointSize), family, style, weight, underline=underlined
+        )
 
     @staticmethod
     def mixFontSizes(*fonts):
@@ -46,9 +49,14 @@ class FontMixer(object):  # nouvelle classe mère mélange de caractères
         # return old_div(size, len(fonts))
         return size // len(fonts)
 
-    allFamilies = (wx.FONTFAMILY_SWISS, wx.FONTFAMILY_DECORATIVE,
-                   wx.FONTFAMILY_ROMAN, wx.FONTFAMILY_SCRIPT,
-                   wx.FONTFAMILY_MODERN, wx.FONTFAMILY_TELETYPE)
+    allFamilies = (
+        wx.FONTFAMILY_SWISS,
+        wx.FONTFAMILY_DECORATIVE,
+        wx.FONTFAMILY_ROMAN,
+        wx.FONTFAMILY_SCRIPT,
+        wx.FONTFAMILY_MODERN,
+        wx.FONTFAMILY_TELETYPE,
+    )
 
     @classmethod
     def mixFontFamilies(class_, *fonts):
@@ -76,10 +84,10 @@ class FontMixer(object):  # nouvelle classe mère mélange de caractères
 
     @staticmethod
     def mixFontStyles(*fonts):
-        """ If any of the fonts is italic, return italic else normal. We
-            ignore slant style since a font created with the
-            wx.FONTSTYLE_SLANT style returns wx.FONTSTYLE_ITALIC as its
-            style. """
+        """If any of the fonts is italic, return italic else normal. We
+        ignore slant style since a font created with the
+        wx.FONTSTYLE_SLANT style returns wx.FONTSTYLE_ITALIC as its
+        style."""
         anyItalic = wx.FONTSTYLE_ITALIC in [font.GetStyle() for font in fonts]
         return wx.FONTSTYLE_ITALIC if anyItalic else wx.FONTSTYLE_NORMAL
 

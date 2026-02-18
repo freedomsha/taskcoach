@@ -61,7 +61,7 @@ itemImagePlural = dict(
     led_red_icon="folder_red_icon",
     led_yellow_icon="folder_yellow_icon",
     checkmark_green_icon="checkmark_green_icon_multiple",
-    person_icon="persons_icon"
+    person_icon="persons_icon",
 )
 
 
