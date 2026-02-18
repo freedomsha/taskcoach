@@ -16,13 +16,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import ast
 import configparser
 import logging
 import os
 import sys
-import tkinter as tk  # TODO : mettre les condition pour le choix entre tkinter et wx
+
+from taskcoachlib.config.arguments import get_gui
+
+gui_name = get_gui()
+if gui_name == "wx":
+    import wx
+elif gui_name == "tk":
+    import tkinter as tk
 from tkinter import messagebox
-# import wx
+
 import shutil
 
 # from taskcoachlib.thirdparty.pubsub import pub
@@ -31,8 +39,10 @@ from pubsub import pub
 from typing import Dict, Any
 from taskcoachlib import meta, patterns, operating_system
 from taskcoachlib.i18n import _
+
 # from taskcoachlib.workarounds import ExceptionAsUnicode  # unused import
 from . import defaults
+
 # from ..application import Application
 # from taskcoachlib.application.application import Application
 # ImportError: cannot import name 'Application' from partially initialized module
@@ -42,7 +52,8 @@ from . import defaults
 log = logging.getLogger(__name__)
 
 
-class UnicodeAwareConfigParser(configparser.RawConfigParser):
+# class UnicodeAwareConfigParser(configparser.RawConfigParser):
+class UnicodeAwareConfigParser(configparser.ConfigParser):
     # class UnicodeAwareConfigParser(configparser.ConfigParser(interpolation=None)):
     """
     Un ConfigParser personnalisé qui gère les chaînes Unicode.
@@ -50,10 +61,15 @@ class UnicodeAwareConfigParser(configparser.RawConfigParser):
     Cette classe hérite de RawConfigParser et fournit des méthodes
     compatibles Unicode pour définir et obtenir des valeurs de configuration.
     """
+
     # Note
     #
     # Pensez plutôt à utiliser ConfigParser qui vérifie les types de valeurs à stocker en interne.
     # Si vous ne souhaitez pas d'interpolation, vous pouvez utiliser ConfigParser(interpolation=None).
+    def __init__(self, *args, **kwargs):
+        if "interpolation" not in kwargs:
+            kwargs["interpolation"] = None
+        super().__init__(*args, **kwargs)
 
     def set(self, section, setting, value=None):  # pylint: disable=W0222
         # def set(self, section: str, setting: str, value: str | None = None):  # pylint: disable=W0222
@@ -67,7 +83,9 @@ class UnicodeAwareConfigParser(configparser.RawConfigParser):
         """
         configparser.RawConfigParser.set(self, section, setting, value)
 
-    def get(self, section, setting, *, raw=False, vars=None):  # pylint: disable=W0221
+    def get(
+        self, section, setting, *, raw=False, vars=None
+    ):  # pylint: disable=W0221
         # def get(self, section: str, setting: str, *, raw: bool = False, vars=None) -> str:  # pylint: disable=W0221
         """
         Obtenez une valeur de configuration à partir de la section spécifiée.
@@ -117,7 +135,8 @@ class CachingConfigParser(UnicodeAwareConfigParser):
             **kwargs : arguments de mots clés supplémentaires.
         """
         self.__cachedValues = dict()
-        UnicodeAwareConfigParser.__init__(self, *args, **kwargs)
+        # UnicodeAwareConfigParser.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def read(self, *args, **kwargs):
         """
@@ -133,10 +152,12 @@ class CachingConfigParser(UnicodeAwareConfigParser):
             bool : True en cas de succès, False sinon.
         """
         self.__cachedValues = dict()
-        return UnicodeAwareConfigParser.read(self, *args, **kwargs)
+        # return UnicodeAwareConfigParser.read(self, *args, **kwargs)
+        return super().read(*args, **kwargs)
         # Alors read ou readfp ?
 
-    def set(self, section, setting, value=None):
+    # def set(self, section, setting, value=None):
+    def set(self, section, option, value=None):
         """
         Définissez une valeur de configuration et mettez-la en cache.
 
@@ -147,10 +168,13 @@ class CachingConfigParser(UnicodeAwareConfigParser):
             setting (str) : Le nom du paramètre.
             value : La valeur à définir.
         """
-        self.__cachedValues[(section, setting)] = value
-        UnicodeAwareConfigParser.set(self, section, setting, value)
+        # self.__cachedValues[(section, setting)] = value
+        # UnicodeAwareConfigParser.set(self, section, setting, value)
+        self.__cachedValues[(section, option)] = value
+        super().set(section, option, value)
 
-    def get(self, section, setting, *, raw=False, vars=None):
+    # def get(self, section, setting, *, raw=False, vars=None):
+    def get(self, section, option, **kwargs):
         """
         Obtenez une valeur de configuration à partir du cache ou lisez-la si elle n'est pas mise en cache.
 
@@ -174,9 +198,11 @@ class CachingConfigParser(UnicodeAwareConfigParser):
         Returns :
             La valeur de configuration.
         """
-        cache, key = self.__cachedValues, (section, setting)
+        # cache, key = self.__cachedValues, (section, setting)
+        cache, key = self.__cachedValues, (section, option)
         if key not in cache:
-            cache[key] = UnicodeAwareConfigParser.get(self, *key)  # pylint: disable=W0142
+            # cache[key] = UnicodeAwareConfigParser.get(self, *key)  # pylint: disable=W0142
+            cache[key] = super().get(*key, **kwargs)
         return cache[key]
 
 
@@ -188,7 +214,9 @@ class Settings(CachingConfigParser):
     y compris la gestion des valeurs par défaut et la migration des fichiers de configuration.
     """
 
-    def __init__(self, load=True, iniFile=None, gui_used="tk", *args, **kwargs):
+    def __init__(
+        self, load=True, iniFile=None, gui_used="tk", *args, **kwargs
+    ):
         """
         Initialisez l'objet Paramètres.
 
@@ -213,16 +241,28 @@ class Settings(CachingConfigParser):
         self.initializeWithDefaults()
         self.__loadAndSave = load
         self.__iniFileSpecifiedOnCommandLine = iniFile
+        self.__ini_lock = (
+            None  # Lock for ini file to prevent concurrent access
+        )
+
         self.migrateConfigurationFiles()
         self.gui_used = gui_used
         if self.gui_used == "wx":
-            # import wx  # TODO : Trouver le moyen d'implémenter wx sans wx.App ou créer un autre fichier wxsettings.
-            self.wx = None  # wx quand ce sera corrigé !
+            log.info("Settings.__init__ avec wx.")
+            import wx  # TODO : Trouver le moyen d'implémenter wx sans wx.App ou créer un autre fichier wxsettings.
+
+            # self.wx = None  # wx quand ce sera corrigé !
+            self.wx = wx  # wx quand ce sera corrigé !
             self.MessageboxUsed = self.wx.MessageBox
         elif self.gui_used == "tk":
+            log.info("Serttings.__init__ avec tkinter.")
             self.MessageboxUsed = messagebox.showerror
         # Ensure errorMessage is initialized
         errorMessage = None
+
+        # Check if this is first run (no INI file exists yet)
+        isFirstRun = load and not self._iniFileExists()
+
         if load:
             # Tout d'abord, essayez de charger le fichier de paramètres depuis le répertoire du programme,
             # si cela échoue, chargez le fichier de paramètres depuis le répertoire des paramètres
@@ -237,8 +277,12 @@ class Settings(CachingConfigParser):
                 errorMessage = str(e)
             finally:
                 # self.setLoadStatus(ExceptionAsUnicode(errorMessage))
-                self.setLoadStatus(errorMessage)  # UnboundLocalError: cannot access local variable 'errorMessage' where it is not associated with a value
-
+                self.setLoadStatus(
+                    errorMessage
+                )  # UnboundLocalError: cannot access local variable 'errorMessage' where it is not associated with a value
+            # On first run, set up Welcome.tsk in user's Documents folder
+            if isFirstRun:
+                self._setupFirstRunWelcomeFile()
         else:
             # Supposons que si les paramètres ne doivent pas être chargés, nous
             # devrions également rester silencieux (c'est-à-dire que nous sommes probablement en mode test) :
@@ -248,6 +292,52 @@ class Settings(CachingConfigParser):
             "settings.file.saveinifileinprogramdir",
         )  # Envoie un message de notification à onSettingsFileLocationChanged
         log.info("Settings.__init__ terminé avec succès !")
+
+    def acquire_ini_lock(self):
+        """Acquire lock on ini file to prevent multiple instances from
+        corrupting config. Shows error and exits if another instance has lock.
+
+        Note: This must be called after wxApp is created, as it may display
+        a wx.MessageBox on failure."""
+        try:
+            import fasteners
+
+            lock_path = self.filename() + ".lock"
+            self.__ini_lock = fasteners.InterProcessLock(lock_path)
+            acquired = self.__ini_lock.acquire(blocking=False)
+            if not acquired:
+                # Another instance has the lock
+                # wx.MessageBox(
+                self.MessageboxUsed(
+                    _(
+                        "Another instance of %s is already running with the same "
+                        "configuration file.\n\n"
+                        "You can run multiple instances with different configuration "
+                        "files using the --ini option:\n"
+                        "  taskcoach --ini=/path/to/other.ini\n\n"
+                        "The program will now exit."
+                    )
+                    % meta.name,
+                    _("%s: configuration locked") % meta.name,
+                    # style=wx.OK | wx.ICON_ERROR,
+                )
+                sys.exit(1)
+        except ImportError:
+            # fasteners not available - skip locking
+            pass
+        except Exception as e:
+            # Lock failed for other reasons (permissions, etc.) - continue without lock
+            log.error("acquire_ini_lock", stack_info=True)
+            pass
+
+    def release_ini_lock(self):
+        """Release the ini file lock. Call this on application shutdown."""
+        if self.__ini_lock is not None:
+            try:
+                self.__ini_lock.release()
+            except Exception:
+                pass  # Ignore errors during cleanup
+            self.__ini_lock = None
 
     def onSettingsFileLocationChanged(self, value):
         """
@@ -348,7 +438,7 @@ class Settings(CachingConfigParser):
         return super().set(section, option, value)
 
     # def get(self, section, option, raise_on_missing=False, *, raw=False, vars=None):
-    def get(self, section, option, raise_on_missing=False, *args):
+    def get(self, section, option, raise_on_missing=False, **kwargs):
         # def get(self, section: str, option: str):
         """
         Obtenez une valeur à partir des paramètres, de la gestion des valeurs par défaut et des anciens formats de fichier .ini.
@@ -364,7 +454,7 @@ class Settings(CachingConfigParser):
             La valeur du paramètre.
         """
         try:
-            result = super().get(section, option)
+            result = super().get(section, option, **kwargs)
         except configparser.NoSectionError:
             if raise_on_missing:
                 raise
@@ -374,7 +464,9 @@ class Settings(CachingConfigParser):
             if raise_on_missing:
                 raise  # Raise for tests
             else:
-                return self.getDefault(section, option)  # Use default for normal use
+                return self.getDefault(
+                    section, option
+                )  # Use default for normal use
         except KeyError:
             if raise_on_missing:
                 raise configparser.NoOptionError(option, section)
@@ -411,9 +503,13 @@ class Settings(CachingConfigParser):
         # Profilage: Utiliser un profileur pour identifier les goulots d'étranglement
         # et optimiser les parties les plus lentes du code.
         if not section or not option:
-            raise ValueError("Settings.getDefault : Section et option doivent être des chaînes non vides.")
+            raise ValueError(
+                "Settings.getDefault : Section et option doivent être des chaînes non vides."
+            )
 
-        defaultSectionKey = section.strip("0123456789")  # Suppression des chiffres non pertinents
+        defaultSectionKey = section.strip(
+            "0123456789"
+        )  # Suppression des chiffres non pertinents
         # try:
         #     defaultSection = defaults.defaults[defaultSectionKey]
         # except KeyError:
@@ -452,6 +548,23 @@ class Settings(CachingConfigParser):
             result = max(result, defaults.minimum[section][option])
         return result
 
+    def _migrateOldSettingNames(self):
+        """Migrate old setting names to new names for backward compatibility."""
+        # Mapping of (section, old_name) -> new_name
+        migrations = [
+            ("feature", "sdtcspans", "task_duration_presets"),
+            ("feature", "sdtcspans_effort", "effort_duration_presets"),
+        ]
+        for section, old_name, new_name in migrations:
+            try:
+                if self.has_option(section, old_name):
+                    old_value = super().get(section, old_name)
+                    if not self.has_option(section, new_name):
+                        self.set(section, new_name, old_value)
+                    self.remove_option(section, old_name)
+            except (configparser.NoSectionError, configparser.NoOptionError):
+                pass
+
     def _fixValuesFromOldIniFiles(self, section, option, result):
         # def _fixValuesFromOldIniFiles(self, section: str, option: str, result):
         """
@@ -483,7 +596,8 @@ class Settings(CachingConfigParser):
             if result in taskDateColumns:
                 result += "Time"
             try:
-                eval(result)
+                # eval(result)
+                ast.literal_eval(result)
             except Exception:
                 sortKeys = [result]
                 try:
@@ -495,13 +609,15 @@ class Settings(CachingConfigParser):
         elif option == "columns":
             columns = [
                 (col + "Time" if col in taskDateColumns else col)
-                for col in eval(result)
+                # for col in eval(result)
+                for col in ast.literal_eval(result)
             ]
             result = str(columns)
         elif option == "columnwidths":
             widths = dict()
             try:
-                columnWidthMap = eval(result)
+                # columnWidthMap = eval(result)
+                columnWidthMap = ast.literal_eval(result)
             except SyntaxError:
                 columnWidthMap = dict()
             for column, width in list(columnWidthMap.items()):
@@ -521,7 +637,8 @@ class Settings(CachingConfigParser):
             result = result.replace("colors", "appearance")
         elif section in orderingViewers and option == "columnsalwaysvisible":
             try:
-                columns = eval(result)
+                # columns = eval(result)
+                columns = ast.literal_eval(result)
             except SyntaxError:
                 columns = ["ordering"]
             else:
@@ -532,7 +649,9 @@ class Settings(CachingConfigParser):
             super().set(section, option, result)
         return result
 
-    def set(self, section, option, value=None, new=False):  # pylint: disable=W0221
+    def set(
+        self, section, option, value=None, new=False
+    ):  # pylint: disable=W0221
         # def set(self, section: str, option: str, value, new: bool = False) -> bool:  # pylint: disable=W0221
         """
         Définissez une valeur dans les paramètres.
@@ -608,7 +727,8 @@ class Settings(CachingConfigParser):
         Returns :
             list : La valeur de la liste.
         """
-        return self.getEvaluatedValue(section, option, eval)
+        # return self.getEvaluatedValue(section, option, eval)
+        return self.getEvaluatedValue(section, option, ast.literal_eval)
 
     getvalue = gettuple = getdict = getlist
 
@@ -646,7 +766,9 @@ class Settings(CachingConfigParser):
             # L'erreur `ValueError: invalid literal for Boolean value: '(22, 22)'`
             # indique que le paramètre "view", "toolbar" n'est pas une valeur booléenne.
             # Nous renvoyons True par défaut pour que l'application puisse continuer.
-            log.warning(f"Settings.getboolean : La valeur pour [{section}] {option} n'est pas un booléen valide. Utilisation de la valeur par défaut True.")
+            log.warning(
+                f"Settings.getboolean : La valeur pour [{section}] {option} n'est pas un booléen valide. Utilisation de la valeur par défaut True."
+            )
             return True
 
     def gettext(self, section, option):
@@ -691,7 +813,11 @@ class Settings(CachingConfigParser):
     #     self, section, option, evaluate=eval, showerror=wx.MessageBox
     # ):
     def getEvaluatedValue(
-        self, section, option, evaluate=eval,
+        # self, section, option, evaluate=eval,
+        self,
+        section,
+        option,
+        evaluate=ast.literal_eval,
     ):
         # def getEvaluatedValue(
         #         self, section: str, option: str, evaluate=eval, showerror=wx.MessageBox
@@ -717,7 +843,9 @@ class Settings(CachingConfigParser):
                     [
                         # _("Error while reading the %s-%s setting from %s.ini.")
                         # % (section, option, meta.filename),
-                        _(f"Error while reading the {section}.{option} setting from {meta.filename}.ini."),
+                        _(
+                            f"Error while reading the {section}.{option} setting from {meta.filename}.ini."
+                        ),
                         # _("The value is: %s") % stringValue,
                         _(f"The value is: {stringValue}"),
                         # _("The error is: %s") % exceptionMessage,
@@ -733,12 +861,12 @@ class Settings(CachingConfigParser):
                 )
                 if self.gui_used == "wx" and self.wx:
                     self.wx.MessageBox(
-                        message, caption=_("Settings error"), style=self.wx.ICON_ERROR
+                        message,
+                        caption=_("Settings error"),
+                        style=self.wx.ICON_ERROR,
                     )
                 elif self.gui_used == "tk":
-                    messagebox.showerror(
-                        _("Settings error"), message
-                    )
+                    messagebox.showerror(_("Settings error"), message)
                 log.error(message)
                 defaultValue = self.getDefault(section, option)
                 self.set(
@@ -751,9 +879,7 @@ class Settings(CachingConfigParser):
     # def save(
     #     self, showerror=wx.MessageBox, file=open
     # ):  # pylint: disable=W0622
-    def save(
-        self, file=open
-    ):  # pylint: disable=W0622
+    def save(self, file=open):  # pylint: disable=W0622
         """
         Enregistrez les paramètres dans un fichier.
 
@@ -783,8 +909,10 @@ class Settings(CachingConfigParser):
         try:
             path = self.path()
             if not os.path.exists(path):
-                os.mkdir(path)
-            tmpFile = file(self.filename() + ".tmp", "w")
+                # os.mkdir(path)
+                os.makedirs(path, exist_ok=True)
+            # tmpFile = file(self.filename() + ".tmp", "w")
+            tmpFile = file(self.filename() + ".tmp", "w", encoding="utf-8")
             self.write(tmpFile)
             tmpFile.close()
             if os.path.exists(self.filename()):
@@ -802,7 +930,7 @@ class Settings(CachingConfigParser):
             elif self.gui_used == "tk":
                 messagebox.showerror(
                     _("Save error"),
-                    _(f"Error while saving {meta.filename}.ini:\n{message}\n")
+                    _(f"Error while saving {meta.filename}.ini:\n{message}\n"),
                 )
 
     # if Application._options.gui_name == "tk":
@@ -950,8 +1078,82 @@ class Settings(CachingConfigParser):
                 pass
             else:
                 return str(KGlobalSettings.documentPath())
-        # Assuming Unix-like
+            # Check XDG_DOCUMENTS_DIR (standard on Linux)
+            xdg_docs = os.environ.get("XDG_DOCUMENTS_DIR")
+            if xdg_docs and os.path.isdir(xdg_docs):
+                return xdg_docs
+            # Fall back to ~/Documents if it exists
+            docs_dir = os.path.join(os.path.expanduser("~"), "Documents")
+            if os.path.isdir(docs_dir):
+                return docs_dir
+        # Assuming Unix-like, fall back to home
         return os.path.expanduser("~")
+
+    def _iniFileExists(self):
+        """Check if INI file exists in either program dir or config dir."""
+        return os.path.exists(
+            self.filename(forceProgramDir=True)
+        ) or os.path.exists(self.filename())
+
+    @staticmethod
+    def pathToSystemWelcomeFile():
+        """Find the system-installed Welcome.tsk file."""
+        # Check platform-specific locations
+        if operating_system.isWindows():
+            # Windows: look in install directory
+            candidates = [
+                os.path.join(os.path.dirname(sys.executable), "Welcome.tsk"),
+                os.path.join(os.path.dirname(sys.argv[0]), "Welcome.tsk"),
+            ]
+        elif operating_system.isMac():
+            # macOS: look in app bundle Resources
+            candidates = [
+                os.path.join(
+                    os.path.dirname(sys.executable),
+                    "..",
+                    "Resources",
+                    "Welcome.tsk",
+                ),
+                os.path.join(os.path.dirname(sys.argv[0]), "Welcome.tsk"),
+            ]
+        else:
+            # Linux: check standard system locations
+            candidates = [
+                "/usr/share/taskcoach/Welcome.tsk",
+                "/usr/local/share/taskcoach/Welcome.tsk",
+                "/usr/share/doc/taskcoach/Welcome.tsk",
+                os.path.join(os.path.dirname(sys.argv[0]), "Welcome.tsk"),
+            ]
+        for path in candidates:
+            if os.path.exists(path):
+                return path
+        return None
+
+    def _setupFirstRunWelcomeFile(self):
+        """On first run, copy Welcome.tsk to user's Documents folder."""
+        systemWelcome = self.pathToSystemWelcomeFile()
+        if not systemWelcome:
+            return  # No system Welcome.tsk found
+
+        # Create TaskCoach folder in user's Documents
+        docsDir = self.pathToDocumentsDir()
+        taskcoachDocsDir = os.path.join(docsDir, meta.filename)
+        userWelcome = os.path.join(taskcoachDocsDir, "Welcome.tsk")
+
+        # Don't overwrite if user already has a Welcome.tsk
+        if os.path.exists(userWelcome):
+            # But still set it as the file to open on first run
+            self.set("file", "lastfile", userWelcome)
+            return
+
+        try:
+            if not os.path.exists(taskcoachDocsDir):
+                os.makedirs(taskcoachDocsDir)
+            shutil.copy(systemWelcome, userWelcome)
+            # Set this as the last opened file so it opens on startup
+            self.set("file", "lastfile", userWelcome)
+        except OSError:
+            pass  # Silently fail if we can't copy
 
     def pathToProgramDir(self):
         """
@@ -960,7 +1162,8 @@ class Settings(CachingConfigParser):
         Returns :
             str : Le chemin d'accès au répertoire du programme.
         """
-        path = sys.argv[0]
+        # path = sys.argv[0]
+        path = os.path.abspath(sys.argv[0])
         if not os.path.isdir(path):
             path = os.path.dirname(path)
         return path
@@ -1187,9 +1390,7 @@ class Settings(CachingConfigParser):
             str : Le nom de fichier généré du fichier .ini.
         """
         # return os.path.join(self.path(forceProgramDir), '%s.ini' % meta.filename)
-        return os.path.join(
-            self.path(forceProgramDir), f"{meta.filename}.ini"
-        )
+        return os.path.join(self.path(forceProgramDir), f"{meta.filename}.ini")
 
     def migrateConfigurationFiles(self):
         # def migrateConfigurationFiles(self) -> None:
