@@ -20,24 +20,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import patterns
 from taskcoachlib.i18n import _
 from taskcoachlib import help
+
 # try:
 #    from ...thirdparty.pubsub import pub
 # except ImportError:
 #    from wx.lib.pubsub import pub
 # except ModuleNotFoundError:
 from pubsub import pub
+
 # try:
 #    from ...thirdparty.pubsub.core import Publisher
 # except ImportError:
 #    from wx.lib.pubsub.core.publisherbase import PublisherBase as Publisher
 from pubsub.core.publisher import Publisher
-from .. import task
+from taskcoachlib.domain import task
 from . import effort
 
 
 class MaxDateTimeMixin(object):
     def maxDateTime(self):
-        stopTimes = [effort.getStop() for effort in self if effort.getStop() is not None]
+        stopTimes = [
+            effort.getStop() for effort in self if effort.getStop() is not None
+        ]
         return max(stopTimes) if stopTimes else None
 
 
@@ -46,8 +50,9 @@ class EffortUICommandNamesMixin(object):
     newItemHelpText = help.effortNew
 
 
-class EffortList(patterns.SetDecorator, MaxDateTimeMixin,
-                 EffortUICommandNamesMixin):
+class EffortList(
+    patterns.SetDecorator, MaxDateTimeMixin, EffortUICommandNamesMixin
+):
     """
     EffortList observe une liste de tâches et contient
     tous les enregistrements d'effort de toutes les tâches
@@ -56,73 +61,89 @@ class EffortList(patterns.SetDecorator, MaxDateTimeMixin,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        pub.subscribe(self.onAddEffortToOrRemoveEffortFromTask,
-                      task.Task.effortsChangedEventType())
+        pub.subscribe(
+            self.onAddEffortToOrRemoveEffortFromTask,
+            task.Task.effortsChangedEventType(),
+        )
 
     def extendSelf(self, tasks, event=None):
-        """ This method is called when a task is added to the observed list.
-            It overrides ObservableListObserver.extendSelf whose default
-            behaviour is to add the item that is added to the observed
-            list to the observing list (this list) unchanged. But we want to
-            add the efforts of the tasks, rather than the tasks themselves. """
+        """This method is called when a task is added to the observed list.
+        It overrides ObservableListObserver.extendSelf whose default
+        behaviour is to add the item that is added to the observed
+        list to the observing list (this list) unchanged. But we want to
+        add the efforts of the tasks, rather than the tasks themselves."""
         effortsToAdd = []
         for task in tasks:
             effortsToAdd.extend(task.efforts())
         super().extendSelf(effortsToAdd, event)
         for effort in effortsToAdd:
             if effort.getStop() is None:
-                pub.sendMessage(effort.trackingChangedEventType(), newValue=True, sender=effort)
+                pub.sendMessage(
+                    effort.trackingChangedEventType(),
+                    newValue=True,
+                    sender=effort,
+                )
 
     def removeItemsFromSelf(self, tasks, event=None):
-        """ This method is called when a task is removed from the observed
-            list. It overrides ObservableListObserver.removeItemsFromSelf
-            whose default behaviour is to remove the item that was removed
-            from the observed list from the observing list (this list)
-            unchanged. But we want to remove the efforts of the tasks, rather
-            than the tasks themselves. """
+        """This method is called when a task is removed from the observed
+        list. It overrides ObservableListObserver.removeItemsFromSelf
+        whose default behaviour is to remove the item that was removed
+        from the observed list from the observing list (this list)
+        unchanged. But we want to remove the efforts of the tasks, rather
+        than the tasks themselves."""
         effortsToRemove = []
         for task in tasks:
             effortsToRemove.extend(task.efforts())
         for effort in effortsToRemove:
             if effort.getStop() is None:
-                pub.sendMessage(effort.trackingChangedEventType(), newValue=False, sender=effort)
+                pub.sendMessage(
+                    effort.trackingChangedEventType(),
+                    newValue=False,
+                    sender=effort,
+                )
         super().removeItemsFromSelf(effortsToRemove, event)
 
     def onAddEffortToOrRemoveEffortFromTask(self, newValue, sender):
         if sender not in self.observable():
             return
         newValue, oldValue = newValue
-        effortsToAdd = [effort for effort in newValue if not effort in oldValue]
-        effortsToRemove = [effort for effort in oldValue if not effort in newValue]
+        effortsToAdd = [
+            effort for effort in newValue if not effort in oldValue
+        ]
+        effortsToRemove = [
+            effort for effort in oldValue if not effort in newValue
+        ]
         super().extendSelf(effortsToAdd)
         super().removeItemsFromSelf(effortsToRemove)
         for effort in effortsToAdd + effortsToRemove:
             if effort.getStop() is None:
-                pub.sendMessage(effort.trackingChangedEventType(),
-                                newValue=effort in effortsToAdd,
-                                sender=effort)
+                pub.sendMessage(
+                    effort.trackingChangedEventType(),
+                    newValue=effort in effortsToAdd,
+                    sender=effort,
+                )
 
     def originalLength(self):
-        """ Do not delegate originalLength to the underlying TaskList because
-            that would return a number of tasks, and not the number of effort
-            records."""
+        """Do not delegate originalLength to the underlying TaskList because
+        that would return a number of tasks, and not the number of effort
+        records."""
         return len(self)
 
     def removeItems(self, efforts):  # pylint: disable=W0221
-        """ We override ObservableListObserver.removeItems because the default
-            implementation is to remove the arguments from the original list,
-            which in this case would mean removing efforts from a task list.
-            Since that wouldn't work we remove the efforts from the tasks by
-            hand. """
+        """We override ObservableListObserver.removeItems because the default
+        implementation is to remove the arguments from the original list,
+        which in this case would mean removing efforts from a task list.
+        Since that wouldn't work we remove the efforts from the tasks by
+        hand."""
         for effort in efforts:
             effort.task().removeEffort(effort)
 
     def extend(self, efforts):  # pylint: disable=W0221
-        """ We override ObservableListObserver.extend because the default
-            implementation is to add the arguments to the original list,
-            which in this case would mean adding efforts to a task list.
-            Since that wouldn't work we add the efforts to the tasks by
-            hand. """
+        """We override ObservableListObserver.extend because the default
+        implementation is to add the arguments to the original list,
+        which in this case would mean adding efforts to a task list.
+        Since that wouldn't work we add the efforts to the tasks by
+        hand."""
         for effort in efforts:
             effort.task().addEffort(effort)
 
@@ -131,8 +152,10 @@ class EffortList(patterns.SetDecorator, MaxDateTimeMixin,
         return "this event type is not used"
 
 
-class EffortListTracker(patterns.Observer, Publisher):  # classe enfant de Publisher
-    """ EffortListTracker observes an EffortList and keeps track of
+class EffortListTracker(
+    patterns.Observer, Publisher
+):  # classe enfant de Publisher
+    """EffortListTracker observes an EffortList and keeps track of
     currently tracked efforts.
 
     EffortListTracker observe une EffortList et assure le suivi
@@ -156,27 +179,38 @@ class EffortListTracker(patterns.Observer, Publisher):  # classe enfant de Publi
         # would be missing from the set after the removal event.
         self.__trackedEfforts = self.__filterTrackedEfforts(self.__effortList)
 
-        self.registerObserver(self.onEffortAdded,
-                              eventType=self.__effortList.addItemEventType(),
-                              eventSource=self.__effortList)
-        self.registerObserver(self.onEffortRemoved,
-                              eventType=self.__effortList.removeItemEventType(),
-                              eventSource=self.__effortList)
-        pub.subscribe(self.onTrackingChanged,
-                      effort.Effort.trackingChangedEventType())
+        self.registerObserver(
+            self.onEffortAdded,
+            eventType=self.__effortList.addItemEventType(),
+            eventSource=self.__effortList,
+        )
+        self.registerObserver(
+            self.onEffortRemoved,
+            eventType=self.__effortList.removeItemEventType(),
+            eventSource=self.__effortList,
+        )
+        pub.subscribe(
+            self.onTrackingChanged, effort.Effort.trackingChangedEventType()
+        )
 
     def trackedEfforts(self):
         return self.__trackedEfforts
 
     def onEffortAdded(self, event):
-        self.__trackedEfforts.extend(self.__filterTrackedEfforts(list(event.values())))
-        self.sendMessage("effortlisttracker.changed.added", efforts=self.__trackedEfforts)
+        self.__trackedEfforts.extend(
+            self.__filterTrackedEfforts(list(event.values()))
+        )
+        self.sendMessage(
+            "effortlisttracker.changed.added", efforts=self.__trackedEfforts
+        )
 
     def onEffortRemoved(self, event):
         for effort in list(event.values()):
             if effort in self.__trackedEfforts:
                 self.__trackedEfforts.remove(effort)
-        self.sendMessage("effortlisttracker.changed.removed", efforts=self.__trackedEfforts)
+        self.sendMessage(
+            "effortlisttracker.changed.removed", efforts=self.__trackedEfforts
+        )
 
     def onTrackingChanged(self, newValue, sender):
         if sender.parent() is None and not self.__includeComposites:
@@ -189,7 +223,9 @@ class EffortListTracker(patterns.Observer, Publisher):  # classe enfant de Publi
         else:
             if sender in self.__trackedEfforts:
                 self.__trackedEfforts.remove(sender)
-        self.sendMessage("effortlisttracker.changed", efforts=self.__trackedEfforts)
+        self.sendMessage(
+            "effortlisttracker.changed", efforts=self.__trackedEfforts
+        )
 
     @staticmethod
     def __filterTrackedEfforts(efforts):

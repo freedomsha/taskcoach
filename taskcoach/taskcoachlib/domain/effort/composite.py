@@ -22,9 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import render
 from taskcoachlib.domain import date
 from taskcoachlib.i18n import _  # à ne pas oublier !
+
 # try:
 #    from taskcoachlib.thirdparty.pubsub import pub
-#except ImportError:
+# except ImportError:
 #    from wx.lib.pubsub import pub
 # except ModuleNotFoundError:
 from pubsub import pub
@@ -38,6 +39,7 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
     Cette classe fournit une implémentation de base pour les efforts composites,
     y compris les méthodes de calcul de la durée, des revenus et d'autres propriétés.
     """
+
     def parent(self):
         """
         Renvoie None, car les efforts composites n'ont pas de parent.
@@ -58,7 +60,7 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
         return self.getStart() <= effort.getStart() <= self.getStop()
 
     def mayContain(self, effort):
-        """ Renvoie si l'effort est contenu dans cet effort composite
+        """Renvoie si l'effort est contenu dans cet effort composite
         s'il existe.
 
         Renvoyez si l'effort serait contenu dans cet effort composite s'il existait.
@@ -104,7 +106,7 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
         """
         return len(self._getEfforts())
 
-    def _getEfforts(self):
+    def _getEfforts(self, recursive=False):
         """
         Obtenez la liste des efforts dans cet effort composite.
 
@@ -139,8 +141,9 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
             return duration.round(seconds=rounding, alwaysUp=roundUp)
         return duration
 
-    def duration(self, recursive=False, rounding=0, roundUp=False,
-                 consolidate=False):
+    def duration(
+        self, recursive=False, rounding=0, roundUp=False, consolidate=False
+    ):
         """
         Calcule la durée totale de cet effort composite.
 
@@ -154,11 +157,21 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
             La durée totale de cet effort composite.
         """
         if consolidate:
-            totalEffort = sum((self.__doRound(effort.duration(), 0, False) for effort in
-                               self._getEfforts(recursive)), date.TimeDelta())
+            totalEffort = sum(
+                (
+                    self.__doRound(effort.duration(), 0, False)
+                    for effort in self._getEfforts(recursive)
+                ),
+                date.TimeDelta(),
+            )
             return totalEffort.round(seconds=rounding, alwaysUp=roundUp)
-        return sum((self.__doRound(effort.duration(), rounding, roundUp) for effort in
-                    self._getEfforts(recursive)), date.TimeDelta())
+        return sum(
+            (
+                self.__doRound(effort.duration(), rounding, roundUp)
+                for effort in self._getEfforts(recursive)
+            ),
+            date.TimeDelta(),
+        )
 
     def isBeingTracked(self, recursive=False):  # pylint: disable=W0613
         """
@@ -172,8 +185,10 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
         """
         return any(effort.isBeingTracked() for effort in self._getEfforts())
 
-    def durationDay(self, dayOffset, rounding=0, roundUp=False, consolidate=False):
-        """ Retournez la durée de cet effort composite un jour spécifique.
+    def durationDay(
+        self, dayOffset, rounding=0, roundUp=False, consolidate=False
+    ):
+        """Retournez la durée de cet effort composite un jour spécifique.
 
         Args :
             dayOffset : Le nombre de jours à partir de la date de début.
@@ -187,15 +202,23 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
         startOfDay = self.getStart() + date.TimeDelta(days=dayOffset)
         endOfDay = self.getStart() + date.TimeDelta(days=dayOffset + 1)
         if consolidate:
-            totalEffort = sum((self.__doRound(effort.duration(), 0, False) for effort in
-                               self._getEfforts(recursive=False)
-                               if startOfDay <= effort.getStart() <= endOfDay),
-                              date.TimeDelta())
+            totalEffort = sum(
+                (
+                    self.__doRound(effort.duration(), 0, False)
+                    for effort in self._getEfforts(recursive=False)
+                    if startOfDay <= effort.getStart() <= endOfDay
+                ),
+                date.TimeDelta(),
+            )
             return self.__doRound(totalEffort, rounding, roundUp)
-        return sum((self.__doRound(effort.duration(), rounding, roundUp) for effort in
-                    self._getEfforts(recursive=False)
-                    if startOfDay <= effort.getStart() <= endOfDay),
-                   date.TimeDelta())
+        return sum(
+            (
+                self.__doRound(effort.duration(), rounding, roundUp)
+                for effort in self._getEfforts(recursive=False)
+                if startOfDay <= effort.getStart() <= endOfDay
+            ),
+            date.TimeDelta(),
+        )
 
     def notifyObserversOfDurationOrEmpty(self):
         """
@@ -221,14 +244,16 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
     @classmethod
     def modificationEventTypes(class_):
         """
-         Renvoyez les types d'événements qui indiquent que cet effort composite a été modifié.
+        Renvoyez les types d'événements qui indiquent que cet effort composite a été modifié.
 
-         Returns :
-             Une liste vide, car les efforts composites ne peuvent pas être
-             «sales» car leur contenu est déterminé par les efforts contenus.
-         """
+        Returns :
+            Une liste vide, car les efforts composites ne peuvent pas être
+            «sales» car leur contenu est déterminé par les efforts contenus.
+        """
         # return []  # A composite effort cannot be 'dirty' since its contents
-        return list()  # A composite effort cannot be 'dirty' since its contents
+        return (
+            list()
+        )  # A composite effort cannot be 'dirty' since its contents
         # are determined by the contained efforts.
 
     def onTimeSpentChanged(self, newValue, sender):  # pylint: disable=W0613
@@ -266,7 +291,7 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
         raise NotImplementedError  # pragma: no cover
 
     def _invalidateCache(self):
-        """ Videz le cache pour qu'il soit rempli à la recherche.
+        """Videz le cache pour qu'il soit rempli à la recherche.
 
         Invalider le cache de cet effort composite.
 
@@ -278,7 +303,7 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
         raise NotImplementedError  # pragma: no cover
 
     def _refreshCache(self):
-        """ Actualisez le cache immédiatement et renvoyez si le cache a
+        """Actualisez le cache immédiatement et renvoyez si le cache a
         réellement changé.
 
         Actualiser le cache de cet effort composite.
@@ -292,11 +317,11 @@ class BaseCompositeEffort(base.BaseEffort):  # pylint: disable=W0223
 
 
 class CompositeEffort(BaseCompositeEffort):
-    """ CompositeEffort est une liste paresseuse (mais met en cache) des efforts
+    """CompositeEffort est une liste paresseuse (mais met en cache) des efforts
     pour une tâche (et ses enfants) et dans un certain délai. La tâche, le début
     de la période de temps et la période de fin de temps doivent être fournis
     lorsqu'on initialise le composite effort et cela ne peut pas être modifié
-    par la suite. """
+    par la suite."""
 
     def __init__(self, task, start, stop):  # pylint: disable=W0621
         """
@@ -311,11 +336,11 @@ class CompositeEffort(BaseCompositeEffort):
         self.__hash_value = hash((task, start))
         # Effort cache: {True: [efforts recursively], False: [efforts]}
         self.__effort_cache = dict()
-        '''
+        """
         FIMXE! CompositeEffort ne dérive pas de base.Object
         patterns.Publisher().registerObserver(self.onAppearanceChanged,
         eventType=task.appearanceChangedEventType(), eventSource=task)
-        '''
+        """
 
     def __hash__(self):
         """
@@ -336,9 +361,11 @@ class CompositeEffort(BaseCompositeEffort):
         # return "CompositeEffort(task=%s, start=%s, stop=%s, efforts=%s)" % \
         #     (self.task(), self.getStart(), self.getStop(),
         #      str([e for e in self._getEfforts()]))
-        return (f"CompositeEffort(task={self.task()},"
-                f" start={self.getStart()}, stop={self.getStop()},"
-                f" efforts={str([e for e in self._getEfforts()])})")
+        return (
+            f"CompositeEffort(task={self.task()},"
+            f" start={self.getStart()}, stop={self.getStop()},"
+            f" efforts={str([e for e in self._getEfforts()])})"
+        )
 
     def addEffort(self, anEffort):
         """
@@ -384,10 +411,13 @@ class CompositeEffort(BaseCompositeEffort):
         previous_cache = self.__effort_cache.copy()
         cache_changed = False
         for recursive in recursive_values:
-            cache = self.__effort_cache[recursive] = \
-                set([effort for effort in
-                     self.task().efforts(recursive=recursive) if
-                     self._inPeriod(effort)])
+            cache = self.__effort_cache[recursive] = set(
+                [
+                    effort
+                    for effort in self.task().efforts(recursive=recursive)
+                    if self._inPeriod(effort)
+                ]
+            )
             if cache != previous_cache.get(recursive, set()):
                 cache_changed = True
         return cache_changed
@@ -407,7 +437,7 @@ class CompositeEffort(BaseCompositeEffort):
         return list(self.__effort_cache[recursive])
 
     def mayContain(self, effort):
-        """ Renvoyez si l'effort serait contenu dans cet effort composite
+        """Renvoyez si l'effort serait contenu dans cet effort composite
         s'il existait.
 
         Args :
@@ -416,8 +446,7 @@ class CompositeEffort(BaseCompositeEffort):
         Returns :
             bool : Vrai si l'effort était contenu, faux autrement.
         """
-        return effort.task() == self.task() and \
-            super().mayContain(effort)
+        return effort.task() == self.task() and super().mayContain(effort)
 
     def description(self):
         """
@@ -429,14 +458,23 @@ class CompositeEffort(BaseCompositeEffort):
         Returns :
             str : La description de cet effort composite.
         """
-        if len(set(effort.description() for effort in self._getEfforts(False))) == 1:
+        if (
+            len(
+                set(effort.description() for effort in self._getEfforts(False))
+            )
+            == 1
+        ):
             # if len(set(effort.getDescription() for effort in self._getEfforts(False))) == 1:
             return self._getEfforts(False)[0].description()
             # return self._getEfforts(False)[0].getDescription()
         # effortDescriptions = [effort.getDescription() for effort in
-        effortDescriptions = [effort.description() for effort in
-                              sorted(self._getEfforts(False),
-                              key=lambda effort: effort.getStart()) if effort.description()]
+        effortDescriptions = [
+            effort.description()
+            for effort in sorted(
+                self._getEfforts(False), key=lambda effort: effort.getStart()
+            )
+            if effort.description()
+        ]
         # key=lambda effort: effort.getStart()) if effort.getDescription()]
         return "\n".join(effortDescriptions)
 
@@ -456,10 +494,12 @@ class CompositeEffortPerPeriod(BaseCompositeEffort):
     CompositeEffortPerPeriod est un effort composite qui représente l'effort
     total pendant une période de temps spécifique.
     """
+
     class Total(object):
         """
         Une classe factice pour représenter l'effort total.
         """
+
         # pylint: disable=W0613
         def subject(self, *args, **kwargs):
             """
@@ -554,8 +594,9 @@ class CompositeEffortPerPeriod(BaseCompositeEffort):
         Returns :
             str : La description de cet effort composite.
         """
-        return _("Total for %s") % render.dateTimePeriod(self.getStart(),
-                                                         self.getStop())
+        return _("Total for %s") % render.dateTimePeriod(
+            self.getStart(), self.getStop()
+        )
 
     def revenue(self, recursive=False):  # pylint: disable=W0613
         """
@@ -579,7 +620,7 @@ class CompositeEffortPerPeriod(BaseCompositeEffort):
         return []
 
     def tasks(self):
-        """ Renvoyez les tâches qui ont des efforts pendant cette période.
+        """Renvoyez les tâches qui ont des efforts pendant cette période.
 
         Returns :
             set : Un ensemble de tâches qui ont des efforts pendant cette période.
@@ -596,9 +637,11 @@ class CompositeEffortPerPeriod(BaseCompositeEffort):
         # return "CompositeEffortPerPeriod(start=%s, stop=%s, efforts=%s)" % \
         #     (self.getStart(), self.getStop(),
         #      str([e for e in self._getEfforts()]))
-        return (f"CompositeEffortPerPeriod(start={self.getStart()},"
-                f" stop={self.getStop()},"
-                f" efforts={str([e for e in self._getEfforts()])})")
+        return (
+            f"CompositeEffortPerPeriod(start={self.getStart()},"
+            f" stop={self.getStop()},"
+            f" efforts={str([e for e in self._getEfforts()])})"
+        )
 
     # Cache handling:
 
@@ -629,18 +672,21 @@ class CompositeEffortPerPeriod(BaseCompositeEffort):
         Returns :
             bool : Vrai si le cache a été modifié, sinon faux.
         """
-        previous_cache = [] if self.__effort_cache is None else self.__effort_cache[:]
+        previous_cache = (
+            [] if self.__effort_cache is None else self.__effort_cache[:]
+        )
         self.__effort_cache = []
         self.__add_task_effort_to_cache(self.taskList)
         return previous_cache != self.__effort_cache
 
     def __add_task_effort_to_cache(self, tasks):
-        """ Ajoutez l'effort des tâches au cache.
+        """Ajoutez l'effort des tâches au cache.
 
         Args :
             tasks (list) : La liste des tâches pour ajouter l'effort.
         """
         for task in tasks:
-            effort_in_period = [effort for effort in task.efforts() if
-                                self._inPeriod(effort)]
+            effort_in_period = [
+                effort for effort in task.efforts() if self._inPeriod(effort)
+            ]
             self.__effort_cache.extend(effort_in_period)
