@@ -31,15 +31,22 @@ log = logging.getLogger(__name__)  # Logger pour ce fichier
 
 
 class BaseCommand(patterns.Command):
+    """Classe de base pour toutes les commandes dans Task Coach.
+
+    Cette classe fournit une structure de base pour les commandes qui peuvent être exécutées,
+    annulées et répétées. Elle gère également les dates de modification des objets concernés.
+    """
+
     def __init__(
         self, list=None, items=None, *args, **kwargs
     ):  # pylint: disable=W0622
-        """
-        Initializes the command.
+        """Initialise une commande de base.
 
         Args:
-            list: The collection the command operates on.
-            items: The items to be processed.
+            list: La liste à laquelle les éléments appartiennent.
+            items: Les éléments concernés par la commande.
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
         """
         super().__init__(*args, **kwargs)
         self.list = list
@@ -47,9 +54,7 @@ class BaseCommand(patterns.Command):
         self.save_modification_datetimes()
 
     def save_modification_datetimes(self):
-        """
-        Saves the current modification date and time for all items.
-        """
+        """Sauvegarde les dates de modification des éléments modifiés."""
         self.__oldModificationDatetimes = [
             (item, item.modificationDateTime())
             for item in self.modified_items()
@@ -58,17 +63,17 @@ class BaseCommand(patterns.Command):
         self.__now = date.Now()
 
     def __str__(self):
+        """Retourne une représentation sous forme de chaîne de la commande."""
         return self.name()
 
     singular_name = "Do something with %s"  # Override in subclass
     plural_name = "Do something"  # Override in subclass
 
     def name(self):
-        """
-        Returns the human-readable name of the command.
+        """Retourne le nom de la commande.
 
         Returns:
-            A string containing the command name.
+            str: Le nom de la commande, soit au singulier, soit au pluriel selon le nombre d'éléments.
         """
         return (
             self.singular_name % self.name_subject(self.items[0])
@@ -77,144 +82,142 @@ class BaseCommand(patterns.Command):
         )
 
     def name_subject(self, item):
-        """
-        Returns a truncated subject for use in the singular name.
+        """Retourne le sujet d'un élément pour le nom de la commande.
 
         Args:
-            item: The item to get the subject from.
+            item: L'élément dont on veut le sujet.
 
         Returns:
-            The truncated subject string.
+            str: Le sujet de l'élément, tronqué si nécessaire.
         """
         subject = item.subject()
         return subject if len(subject) < 60 else subject[:57] + "..."
 
     def items_are_new(self):
-        """
-        Indicates whether the items are newly created.
+        """Détermine si les éléments sont nouveaux.
 
         Returns:
-            False by default.
+            bool: True si les éléments sont nouveaux, False sinon.
         """
         return False
 
     def getItems(self):
-        """The items this command operates on."""
+        """Retourne les éléments sur lesquels la commande opère.
+
+        Returns:
+            list: La liste des éléments concernés par la commande.
+        """
         return self.items
 
     def modified_items(self):
-        """Return the items that are modified by this command."""
+        """Retourne les éléments qui sont modifiés par cette commande.
+
+        Returns:
+            list: La liste des éléments modifiés.
+        """
         return self.items
 
     def canDo(self):
-        """
-        Checks if the command can be executed.
+        """Vérifie si la commande peut être exécutée.
 
         Returns:
-            True if there are items to operate on.
+            bool: True si la commande peut être exécutée, False sinon.
         """
         return bool(self.items)
 
     def do(self):
-        """Executes the command if possible."""
+        """Exécute la commande si elle peut être exécutée."""
         if self.canDo():
             super().do()
             self.do_command()
 
     def undo(self):
-        """Undoes the command."""
+        """Annule la commande."""
         super().undo()
         self.undo_command()
 
     def redo(self):
-        """Redoes the command."""
+        """Répète la commande."""
         super().redo()
         self.redo_command()
 
     def __tryInvokeMethodOnSuper(self, method_name, *args, **kwargs):
-        """Attempts to invoke a method on the super class."""
-        #  C'est le changement critique.
-        #  Dans Task Coach, les commandes héritent souvent de plusieurs classes
-        #  (ex: class CutCommand(CutCommandMixin, DeleteCommand)).
-        #  Si l'ordre d'héritage change ou si un Mixin manque une méthode,
-        #  super().do_command() pouvait faire planter l'application.
-        #  Le nouveau code attrape cette erreur et continue,
-        #  ce qui est beaucoup plus sûr.
+        """Tente d'appeler une méthode sur la classe parente.
+
+        Args:
+            method_name: Le nom de la méthode à appeler.
+            *args: Arguments à passer à la méthode.
+            **kwargs: Arguments de mots-clés à passer à la méthode.
+
+        Returns:
+            Le résultat de l'appel à la méthode, ou None si la méthode n'existe pas.
+        """
         try:
             method = getattr(super(), method_name)
         except AttributeError as e:
-            log.error(
-                f"BaseCommand.__tryInvokeMethodOnSuper : AttributeError: {e}",
-                exc_info=True,
-            )
+            log.error(f"AttributeError: {e}", exc_info=True)
             return  # no 'method' in any super class
         return method(*args, **kwargs)
 
     def do_command(self):
-        """
-        Core logic for executing the command. Updates modification times.
-        """
+        """Exécute la commande spécifique."""
         self.__tryInvokeMethodOnSuper("do_command")
         for item in self.modified_items():
             item.setModificationDateTime(self.__now)
 
     def undo_command(self):
-        """
-        Core logic for undoing the command. Restores modification times.
-        """
+        """Annule la commande spécifique."""
         self.__tryInvokeMethodOnSuper("undo_command")
         for item, old_modification_datetime in self.__oldModificationDatetimes:
             item.setModificationDateTime(old_modification_datetime)
 
     def redo_command(self):
-        """
-        Core logic for redoing the command.
-        """
+        """Répète la commande spécifique."""
         self.__tryInvokeMethodOnSuper("redo_command")
         for item in self.modified_items():
             item.setModificationDateTime(self.__now)
 
 
-# class SaveStateMixin(object):
-class SaveStateMixin:
+class SaveStateMixin(object):
     """Mixin class for commands that need to keep the states of objects.
     Objects should provide __getstate__ and __setstate__ methods."""
 
     # pylint: disable=W0201
 
     def saveStates(self, objects):
-        """
-        Saves the current state of the given objects.
+        """Sauvegarde les états des objets.
 
         Args:
-            objects: List of objects to save state for.
+            objects: La liste des objets à sauvegarder.
         """
         self.objectsToBeSaved = objects
         self.oldStates = self.__getStates()
 
     @patterns.eventSource
     def undoStates(self, event=None):
-        """
-        Store current states and restore old states.
+        """Store current states and restore old states.
 
         Args:
-            event: The event that triggered the undo.
+            event: L'événement de notification.
         """
         self.newStates = self.__getStates()
         self.__setStates(self.oldStates, event=event)
 
     @patterns.eventSource
     def redoStates(self, event=None):
-        """
-        Restore previously stored new states.
+        """Restore previously stored new states.
 
         Args:
-            event: The event that triggered the redo.
+            event: L'événement de notification.
         """
         self.__setStates(self.newStates, event=event)
 
     def __getStates(self):
-        """Internal method to collect states from objects."""
+        """Récupère les états des objets sauvegardés.
+
+        Returns:
+            list: La liste des états des objets.
+        """
         return [
             objectToBeSaved.__getstate__()
             for objectToBeSaved in self.objectsToBeSaved
@@ -222,24 +225,31 @@ class SaveStateMixin:
 
     @patterns.eventSource
     def __setStates(self, states, event=None):
-        """Internal method to restore states to objects."""
+        """Restaure les états des objets.
+
+        Args:
+            states: La liste des états à restaurer.
+            event: L'événement de notification.
+        """
         for objectToBeSaved, state in zip(self.objectsToBeSaved, states):
             objectToBeSaved.__setstate__(state, event=event)
 
 
-# class CompositeMixin(object):
-class CompositeMixin:
-    """Mixin class for commands that deal with composites."""
+class CompositeMixin(object):
+    """
+    Mixin class for commands that deal with composites.
+
+    Récupère les états des objets sauvegardés.
+    """
 
     def getAncestors(self, composites):  # Method may be 'static'
-        """
-        Retrieves all ancestors for a list of composite objects.
+        """Retourne les ancêtres des composites.
 
         Args:
-            composites: List of composite objects.
+            composites: La liste des composites.
 
         Returns:
-            A list containing all ancestors.
+            list: La liste des ancêtres.
         """
         ancestors = []
         for composite in composites:
@@ -247,14 +257,13 @@ class CompositeMixin:
         return ancestors
 
     def getAllChildren(self, composites):  # Method may be 'static'
-        """
-        Retrieves all recursive children for a list of composite objects.
+        """Retourne tous les enfants des composites.
 
         Args:
-            composites: List of composite objects.
+            composites: La liste des composites.
 
         Returns:
-            A list containing all children.
+            list: La liste de tous les enfants.
         """
         all_children = []
         for composite in composites:
@@ -262,14 +271,13 @@ class CompositeMixin:
         return all_children
 
     def getAllParents(self, composites):  # Method may be 'static'
-        """
-        Retrieves the direct parents for a list of composite objects.
+        """Retourne tous les parents des composites.
 
         Args:
-            composites: List of composite objects.
+            composites: La liste des composites.
 
         Returns:
-            A list of parent objects.
+            list: La liste de tous les parents.
         """
         return [
             composite.parent()
@@ -279,20 +287,41 @@ class CompositeMixin:
 
 
 class NewItemCommand(BaseCommand):
+    """Commande pour créer de nouveaux éléments."""
+
     def name(self):
+        """Retourne le nom de la commande.
+
+        Returns:
+            str: Le nom de la commande au singulier.
+        """
         # Override to always return the singular name without a subject. The
         # subject would be something like "New task", so not very interesting.
         return self.singular_name
 
     def items_are_new(self):
+        """Détermine si les éléments sont nouveaux.
+
+        Returns:
+            bool: True car les éléments sont nouveaux.
+        """
         return True
 
     def modified_items(self):
+        """Retourne les éléments modifiés par cette commande.
+
+        Returns:
+            list: La liste vide car les nouveaux éléments ne modifient pas d'autres éléments.
+        """
         return []
 
     @patterns.eventSource
     def do_command(self, event=None):
-        """Executes addition of new items."""
+        """Exécute la commande de création d'éléments.
+
+        Args:
+            event: L'événement de notification.
+        """
         super().do_command()
         self.list.extend(
             self.items
@@ -301,13 +330,21 @@ class NewItemCommand(BaseCommand):
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        """Undoes addition of new items."""
+        """Annule la commande de création d'éléments.
+
+        Args:
+            event: L'événement de notification.
+        """
         super().undo_command()
         self.list.removeItems(self.items, event=event)
 
     @patterns.eventSource
     def redo_command(self, event=None):
-        """Redoes addition of new items."""
+        """Répète la commande de création d'éléments.
+
+        Args:
+            event: L'événement de notification.
+        """
         super().redo_command()
         self.list.extend(
             self.items
@@ -316,22 +353,42 @@ class NewItemCommand(BaseCommand):
 
 
 class NewSubItemCommand(NewItemCommand):
+    """Commande pour créer de nouveaux sous-éléments."""
+
     def name_subject(self, subitem):
+        """Retourne le sujet du parent du sous-élément.
+
+        Args:
+            subitem: Le sous-élément.
+
+        Returns:
+            str: Le sujet du parent du sous-élément.
+        """
         # Override to use the subject of the parent of the new subitem instead
         # of the subject of the new subitem itself, which wouldn't be very
         # interesting because it's something like 'New subitem'.
         return subitem.parent().subject()
 
     def modified_items(self):
+        """Retourne les éléments modifiés par cette commande.
+
+        Returns:
+            list: La liste des parents des sous-éléments créés.
+        """
         return [item.parent() for item in self.items]
 
 
 class CopyCommand(BaseCommand):
+    """Commande pour copier des éléments."""
+
     plural_name = _("Copy")
     singular_name = _('Copy "%s"')
 
     def do_command(self):
-        """Copies items to the clipboard."""
+        """Exécute la commande de copie.
+
+        Sauvegarde les copies des éléments dans le presse-papiers.
+        """
         self.__copies = [
             item.copy() for item in self.items
         ]  # pylint: disable=W0201
@@ -339,27 +396,40 @@ class CopyCommand(BaseCommand):
         Clipboard().put(self.__copies, self.list)
 
     def undo_command(self):
-        """Clears the clipboard."""
+        """Annule la commande de copie."""
         Clipboard().clear()
 
     def redo_command(self):
-        """Restores copied items to the clipboard."""
+        """Répète la commande de copie."""
         Clipboard().put(self.__copies, self.list)
 
 
 class DeleteCommand(BaseCommand, SaveStateMixin):
+    """Commande pour supprimer des éléments."""
+
     plural_name = _("Delete")
     singular_name = _('Delete "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande de suppression.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.__shadow = kwargs.pop("shadow", False)
         super().__init__(*args, **kwargs)
 
     def modified_items(self):
+        """Retourne les éléments modifiés par cette commande.
+
+        Returns:
+            list: La liste des parents des éléments supprimés.
+        """
         return [item.parent() for item in self.items if item.parent()]
 
     def do_command(self):
-        """Deletes items or marks them as deleted."""
+        """Exécute la commande de suppression."""
         super().do_command()
         if self.__shadow:
             self.saveStates(self.items)
@@ -370,7 +440,7 @@ class DeleteCommand(BaseCommand, SaveStateMixin):
             self.list.removeItems(self.items)
 
     def undo_command(self):
-        """Restores deleted items."""
+        """Annule la commande de suppression."""
         super().undo_command()
         if self.__shadow:
             self.undoStates()
@@ -378,7 +448,7 @@ class DeleteCommand(BaseCommand, SaveStateMixin):
             self.list.extend(self.items)
 
     def redo_command(self):
-        """Deletes items again."""
+        """Répète la commande de suppression."""
         super().redo_command()
         if self.__shadow:
             self.redoStates()
@@ -386,14 +456,14 @@ class DeleteCommand(BaseCommand, SaveStateMixin):
             self.list.removeItems(self.items)
 
 
-# class CutCommandMixin(object):
-class CutCommandMixin:
+class CutCommandMixin(object):
     """Mixin class for commands that cut items to the clipboard."""
 
     plural_name = _("Cut")
     singular_name = _('Cut "%s"')
 
     def __putItemsOnClipboard(self):
+        """Met les éléments sur le presse-papiers."""
         cb = Clipboard()
         self.__previousClipboardContents = cb.get()  # pylint: disable=W0201
         cb.put(
@@ -401,39 +471,59 @@ class CutCommandMixin:
         )  # Unresolved attribute car mixin !
 
     def __removeItemsFromClipboard(self):
+        """Retire les éléments du presse-papiers."""
         cb = Clipboard()
         cb.put(*self.__previousClipboardContents)
 
     def do_command(self):
-        """Put the items on the clipboard and execute the command."""
+        """Met les éléments sur le presse-papiers et exécute la commande."""
         self.__putItemsOnClipboard()
         super().do_command()
 
     def undo_command(self):
-        """Restore the previous clipboard contents and undo the command."""
+        """Restaure le contenu précédent du presse-papiers et annule la commande."""
         self.__removeItemsFromClipboard()
         super().undo_command()
 
     def redo_command(self):
-        """Put the items back on the clipboard and redo the command."""
+        """Met les éléments de nouveau sur le presse-papiers et répète la commande."""
         self.__putItemsOnClipboard()
         super().redo_command()
 
 
 class CutCommand(CutCommandMixin, DeleteCommand):
+    """Commande pour couper des éléments."""
+
     def itemsToCut(self):
-        """Return the items that are to be cut to the clipboard."""
+        """Retourne les éléments à couper.
+
+        Returns:
+            list: La liste des éléments à couper.
+        """
         return self.items
 
     def sourceOfItemsToCut(self):
+        """Retourne la source des éléments à couper.
+
+        Returns:
+            list: La liste source des éléments à couper.
+        """
         return self.list
 
 
 class PasteCommand(BaseCommand, SaveStateMixin):
+    """Commande pour coller des éléments."""
+
     plural_name = _("Paste")
     singular_name = _('Paste "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande de collage.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         super().__init__(*args, **kwargs)
         self.__itemsToPaste, self.__sourceOfItemsToPaste = (
             self.getItemsToPaste()
@@ -441,76 +531,105 @@ class PasteCommand(BaseCommand, SaveStateMixin):
         self.saveStates(self.getItemsToSave())
 
     def getItemsToSave(self):
-        """Return the items that need to be saved for undo/redo."""
+        """Retourne les éléments à sauvegarder pour l'annulation/répétition.
+
+        Returns:
+            list: La liste des éléments à sauvegarder.
+        """
         return self.__itemsToPaste
 
     def canDo(self):
-        """Check if there are items to paste."""
+        """Vérifie si la commande peut être exécutée.
+
+        Returns:
+            bool: True si des éléments peuvent être collés, False sinon.
+        """
         return bool(self.__itemsToPaste)
 
     def do_command(self):
-        """Perform the paste operation by adding items to the source list."""
+        """Exécute la commande de collage."""
         self.setParentOfPastedItems()
         self.__sourceOfItemsToPaste.extend(self.__itemsToPaste)
 
     def undo_command(self):
-        """Undo the paste by removing items and restoring saved states."""
+        """Annule la commande de collage."""
         self.__sourceOfItemsToPaste.removeItems(self.__itemsToPaste)
         self.undoStates()
 
     def redo_command(self):
-        """Redo the paste by restoring states and re-adding items."""
+        """Répète la commande de collage."""
         self.redoStates()
         self.__sourceOfItemsToPaste.extend(self.__itemsToPaste)
 
     def setParentOfPastedItems(self, newParent=None):
-        """Sets the parent for all items currently being pasted.
+        """Définit le parent pour tous les éléments en cours de collage.
+
+        Détermine si les éléments sont nouveaux.
 
         Args:
-            newParent: The domain object to set as the parent.
+            newParent: L'objet de domaine à définir comme parent.
         """
         for item in self.__itemsToPaste:
             item.setParent(newParent)
 
     @staticmethod
     def getItemsToPaste():
-        """Retrieves items from the clipboard and creates copies for pasting.
+        """Récupère les éléments depuis le presse-papiers et crée des copies pour le collage.
 
         Returns:
-            A tuple containing a list of copied items and the source collection.
+            tuple: Une liste d'éléments copiés et la collection source.
         """
         items, source = Clipboard().get()
         return [item.copy() for item in items], source
 
 
 class PasteAsSubItemCommand(PasteCommand, CompositeMixin):
+    """Commande pour coller des éléments en tant que sous-éléments."""
+
     plural_name = _("Paste as subitem")
     singular_name = _('Paste as subitem of "%s"')
 
     def setParentOfPastedItems(self):  # pylint: disable=W0221
+        """Définit le parent pour les éléments collés.
+
+        Args:
+            newParent: Le parent à définir.
+        """
         newParent = self.items[0]
         super().setParentOfPastedItems(newParent)
 
     def getItemsToSave(self):
+        """Retourne les éléments à sauvegarder pour l'annulation/répétition.
+
+        Returns:
+            list: La liste des éléments à sauvegarder.
+        """
         return self.getAncestors([self.items[0]]) + super().getItemsToSave()
 
 
 class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
+    """Commande pour le glisser-déposer."""
+
     plural_name = _("Drag and drop")
     singular_name = _('Drag and drop "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande de glisser-déposer.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         dropTargets = kwargs.pop("drop")
         self._itemToDropOn = dropTargets[0] if dropTargets else None
         super().__init__(*args, **kwargs)
         self.saveStates(self.getItemsToSave())
 
     def getItemsToSave(self):
-        """
-        Returns items whose state needs to be saved.
+        """Retourne les éléments à sauvegarder pour l'annulation/répétition.
 
         Returns:
-            A list of items to save.
+            list: La liste des éléments à sauvegarder.
         """
         toSave = self.items[:]
         if self._itemToDropOn is not None:
@@ -518,6 +637,11 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
         return toSave
 
     def modified_items(self):
+        """Retourne les éléments modifiés par cette commande.
+
+        Returns:
+            list: La liste des éléments modifiés.
+        """
         return (
             [item.parent() for item in self.items if item.parent()]
             + [self._itemToDropOn]
@@ -526,11 +650,10 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
         )
 
     def canDo(self):
-        """
-        Checks if the drop is valid.
+        """Vérifie si la commande peut être exécutée.
 
         Returns:
-            True if the drop is not on a child or parent.
+            bool: True si la commande peut être exécutée, False sinon.
         """
         return self._itemToDropOn not in (
             self.items
@@ -539,7 +662,7 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
         )
 
     def do_command(self):
-        """Executes the drag and drop move."""
+        """Exécute la commande de glisser-déposer."""
         super().do_command()
         self.list.removeItems(self.items)
         for item in self.items:
@@ -547,14 +670,14 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
         self.list.extend(self.items)
 
     def undo_command(self):
-        """Undoes the drag and drop move."""
+        """Annule la commande de glisser-déposer."""
         super().undo_command()
         self.list.removeItems(self.items)
         self.undoStates()
         self.list.extend(self.items)
 
     def redo_command(self):
-        """Redoes the drag and drop move."""
+        """Répète la commande de glisser-déposer."""
         super().redo_command()
         self.list.removeItems(self.items)
         self.redoStates()
@@ -562,27 +685,33 @@ class DragAndDropCommand(BaseCommand, SaveStateMixin, CompositeMixin):
 
 
 class OrderingDragAndDropCommand(DragAndDropCommand):
+    """Commande pour le glisser-déposer avec réorganisation."""
+
     def __init__(self, *args, **kwargs):
+        """Initialise une commande de glisser-déposer avec réorganisation.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.column = kwargs.pop("column", None)
         self.isTreeMode = kwargs.pop("isTree", True)
         self.part = kwargs.pop("part", 0)
         super().__init__(*args, **kwargs)
 
     def isOrdering(self):
-        """
-        Checks if this is an ordering operation.
+        """Détermine si l'opération concerne l'ordre.
 
         Returns:
-            True if the target column is 'ordering'.
+            bool: True si l'opération concerne l'ordre, False sinon.
         """
         return self.column is not None and self.column.name() == "ordering"
 
     def getSiblings(self):
-        """
-        Returns siblings of the drop target.
+        """Retourne les frères et sœurs de l'élément déplacé.
 
         Returns:
-            A list of sibling items.
+            list: La liste des frères et sœurs.
         """
         siblings = []
         for item in self.list:
@@ -594,11 +723,10 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
         return siblings
 
     def getOrderingSiblings(self):
-        """
-        Returns siblings relevant for ordering.
+        """Retourne les frères et sœurs concernés par l'ordre.
 
         Returns:
-            A list of siblings.
+            list: La liste des frères et sœurs concernés par l'ordre.
         """
         if self.isTreeMode:
             return self.getSiblings()
@@ -606,17 +734,28 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
         return [item for item in self.list if item not in self.items]
 
     def getItemsToSave(self):
+        """Retourne les éléments à sauvegarder pour l'annulation/répétition.
+
+        Returns:
+            list: La liste des éléments à sauvegarder.
+        """
         items = super().getItemsToSave()
         if self.isOrdering():
             items.extend(self.getOrderingSiblings())
         return items
 
     def canDo(self):
+        """Vérifie si la commande peut être exécutée.
+
+        Returns:
+            bool: True si la commande peut être exécutée, False sinon.
+        """
         if self.isOrdering():
             return True  # Already checked when drag and droppin
         return super().canDo()
 
     def do_command(self):
+        """Exécute la commande de glisser-déposer avec réorganisation."""
         if self.isOrdering():
             siblings = self.getOrderingSiblings()
 
@@ -721,21 +860,28 @@ class OrderingDragAndDropCommand(DragAndDropCommand):
 
 
 class EditSubjectCommand(BaseCommand):
+    """Commande pour modifier le sujet d'éléments."""
+
     plural_name = _("Edit subjects")
     singular_name = _('Edit subject "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande d'édition de sujet.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.__newSubject = kwargs.pop("newValue")
         super().__init__(*args, **kwargs)
         self.__old_subjects = [(item, item.subject()) for item in self.items]
 
     @patterns.eventSource
     def do_command(self, event=None):
-        """
-        Updates the subjects of the items.
+        """Exécute la commande d'édition de sujet.
 
         Args:
-            event: The event source.
+            event: L'événement de notification.
         """
         super().do_command()
         for item in self.items:
@@ -743,36 +889,43 @@ class EditSubjectCommand(BaseCommand):
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        """
-        Restores the old subjects.
+        """Annule la commande d'édition de sujet.
 
         Args:
-            event: The event source.
+            event: L'événement de notification.
         """
         super().undo_command()
         for item, old_subject in self.__old_subjects:
             item.setSubject(old_subject, event=event)
 
     def redo_command(self):
+        """Répète la commande d'édition de sujet."""
         self.do_command()
 
 
 class EditDescriptionCommand(BaseCommand):
+    """Commande pour modifier la description d'éléments."""
+
     plural_name = _("Edit descriptions")
     singular_name = _('Edit description "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande d'édition de description.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.__new_description = kwargs.pop("newValue")
         super().__init__(*args, **kwargs)
         self.__old_descriptions = [item.description() for item in self.items]
 
     @patterns.eventSource
     def do_command(self, event=None):
-        """
-        Updates descriptions.
+        """Exécute la commande d'édition de description.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().do_command()
         for item in self.items:
@@ -780,26 +933,33 @@ class EditDescriptionCommand(BaseCommand):
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        """
-        Restores descriptions.
+        """Annule la commande d'édition de description.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().undo_command()
         for item, old_description in zip(self.items, self.__old_descriptions):
             item.setDescription(old_description, event=event)
 
     def redo_command(self):
-        """Redoes the description change."""
+        """Répète la commande d'édition de description."""
         self.do_command()
 
 
 class EditIconCommand(BaseCommand):
+    """Commande pour modifier l'icône d'éléments."""
+
     plural_name = _("Change icons")
     singular_name = _('Change icon "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande d'édition d'icône.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.__newIcon = icon = kwargs.pop("newValue")
         self.__newSelectedIcon = (
             icon[: -len("_icon")] + "_open_icon"
@@ -813,11 +973,10 @@ class EditIconCommand(BaseCommand):
 
     @patterns.eventSource
     def do_command(self, event=None):
-        """
-        Sets the new icon for all items.
+        """Exécute la commande d'édition d'icône.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().do_command()
         for item in self.items:
@@ -826,11 +985,10 @@ class EditIconCommand(BaseCommand):
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        """
-        Restores the old icons.
+        """Annule la commande d'édition d'icône.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().undo_command()
         for item, (oldIcon, oldSelectedIcon) in zip(
@@ -840,26 +998,33 @@ class EditIconCommand(BaseCommand):
             item.setSelectedIcon(oldSelectedIcon, event=event)
 
     def redo_command(self):
-        """Redoes the icon change."""
+        """Répète la commande d'édition d'icône."""
         self.do_command()
 
 
 class EditFontCommand(BaseCommand):
+    """Commande pour modifier la police d'éléments."""
+
     plural_name = _("Change fonts")
     singular_name = _('Change font "%s"')
 
     def __init__(self, *args, **kwargs):
+        """Initialise une commande d'édition de police.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.__newFont = kwargs.pop("newValue")
         super().__init__(*args, **kwargs)
         self.__oldFonts = [item.font() for item in self.items]
 
     @patterns.eventSource
     def do_command(self, event=None):
-        """
-        Sets the new font.
+        """Exécute la commande d'édition de police.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().do_command()
         for item in self.items:
@@ -867,59 +1032,63 @@ class EditFontCommand(BaseCommand):
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        """
-        Restores old font.
+        """Annule la commande d'édition de police.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().undo_command()
         for item, oldFont in zip(self.items, self.__oldFonts):
             item.setFont(oldFont, event=event)
 
     def redo_command(self):
-        """Redoes font change."""
+        """Répète la commande d'édition de police."""
         self.do_command()
 
 
 class EditColorCommand(BaseCommand):
+    """Commande pour modifier la couleur d'éléments."""
+
     def __init__(self, *args, **kwargs):
+        """Initialise une commande d'édition de couleur.
+
+        Args:
+            *args: Arguments supplémentaires.
+            **kwargs: Arguments de mots-clés supplémentaires.
+        """
         self.__newColor = kwargs.pop("newValue")
         super().__init__(*args, **kwargs)
         self.__oldColors = [self.getItemColor(item) for item in self.items]
 
     @staticmethod
     def getItemColor(item):
-        """
-        Retrieves the color for an item.
+        """Retourne la couleur d'un élément.
 
         Args:
-            item: The item.
+            item: L'élément dont on veut la couleur.
 
         Returns:
-            The color value.
+            La couleur de l'élément.
         """
         raise NotImplementedError
 
     @staticmethod
     def setItemColor(item, color, event):
-        """
-        Sets the color for an item.
+        """Définit la couleur d'un élément.
 
         Args:
-            item: The item.
-            color: The new color.
-            event: Event source.
+            item: L'élément dont on veut définir la couleur.
+            color: La couleur à définir.
+            event: L'événement de notification.
         """
         raise NotImplementedError
 
     @patterns.eventSource
     def do_command(self, event=None):
-        """
-        Executes color change.
+        """Exécute la commande d'édition de couleur.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().do_command()
         for item in self.items:
@@ -927,42 +1096,75 @@ class EditColorCommand(BaseCommand):
 
     @patterns.eventSource
     def undo_command(self, event=None):
-        """
-        Undoes color change.
+        """Annule la commande d'édition de couleur.
 
         Args:
-            event: Event source.
+            event: L'événement de notification.
         """
         super().undo_command()
         for item, oldColor in zip(self.items, self.__oldColors):
             self.setItemColor(item, oldColor, event)
 
     def redo_command(self):
-        """Redoes color change."""
+        """Répète la commande d'édition de couleur."""
         self.do_command()
 
 
 class EditForegroundColorCommand(EditColorCommand):
+    """Commande pour modifier la couleur de premier plan d'éléments."""
+
     plural_name = _("Change foreground colors")
     singular_name = _('Change foreground color "%s"')
 
     @staticmethod
     def getItemColor(item):
+        """Retourne la couleur de premier plan d'un élément.
+
+        Args:
+            item: L'élément dont on veut la couleur de premier plan.
+
+        Returns:
+            La couleur de premier plan de l'élément.
+        """
         return item.foregroundColor()
 
     @staticmethod
     def setItemColor(item, color, event):
+        """Définit la couleur de premier plan d'un élément.
+
+        Args:
+            item: L'élément dont on veut définir la couleur de premier plan.
+            color: La couleur à définir.
+            event: L'événement de notification.
+        """
         item.setForegroundColor(color, event=event)
 
 
 class EditBackgroundColorCommand(EditColorCommand):
+    """Commande pour modifier la couleur d'arrière-plan d'éléments."""
+
     plural_name = _("Change background colors")
     singular_name = _('Change background color "%s"')
 
     @staticmethod
     def getItemColor(item):
+        """Retourne la couleur d'arrière-plan d'un élément.
+
+        Args:
+            item: L'élément dont on veut la couleur d'arrière-plan.
+
+        Returns:
+            La couleur d'arrière-plan de l'élément.
+        """
         return item.backgroundColor()
 
     @staticmethod
     def setItemColor(item, color, event):
+        """Définit la couleur d'arrière-plan d'un élément.
+
+        Args:
+            item: L'élément dont on veut définir la couleur d'arrière-plan.
+            color: La couleur à définir.
+            event: L'événement de notification.
+        """
         item.setBackgroundColor(color, event=event)
