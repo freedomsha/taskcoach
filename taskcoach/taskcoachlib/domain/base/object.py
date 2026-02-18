@@ -273,6 +273,10 @@ class SynchronizedObject(object):
         """
         return "object.marknotdeleted"
 
+    # Sérialisation : C'est ce qui permet d'ouvrir et de sauvegarder
+    # les fichiers .tsk sans les corrompre.
+    # Le passage à Python 3 a changé la façon dont les attributs privés sont gérés,
+    # obligeant à filtrer manuellement ce qu'on sauvegarde.
     def __getstate__(self):
         """
         Étend l'état sérialisé de l'objet avec les informations de synchronisation.

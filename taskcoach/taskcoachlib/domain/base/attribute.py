@@ -40,6 +40,10 @@ import weakref
 from weakref import WeakSet  # En test!
 
 
+# Le bug __func__ : C'est une correction technique subtile mais critique.
+# En Python 3, manipuler __func__ sur des méthodes liées est risqué
+# car on perd le contexte self.
+# Le nouveau code passe simplement la méthode, ce qui est plus standard et fonctionne.
 class Attribute(object):
     """
     A class to manage a single attribute with event handling.
