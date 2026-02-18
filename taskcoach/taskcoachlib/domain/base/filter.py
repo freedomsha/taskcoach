@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 import re
+
 # import sre_constants # inutile avec re sous python 3
 from taskcoachlib import patterns
 from taskcoachlib.domain.base import object as domainobject
@@ -37,6 +38,7 @@ class Filter(patterns.SetDecorator):
     Ivar Args :
         __treeMode : Un booléen indiquant si le filtre doit fonctionner en mode arborescence.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise une nouvelle instance de filtre.
@@ -49,6 +51,9 @@ class Filter(patterns.SetDecorator):
                 treeMode : Un booléen indiquant si le filtre doit fonctionner en mode arborescence.
         """
         self.__treeMode = kwargs.pop("treeMode", False)
+        # Track items added as ancestors to maintain tree hierarchy, not because
+        # they matched filter criteria. Used by outer filters for orphan cleanup.
+        self.__filterForced = set()
         super().__init__(*args, **kwargs)
         self.reset()
 
@@ -81,7 +86,9 @@ class Filter(patterns.SetDecorator):
         Return :
             Un booléen indiquant si le filtre fonctionne en mode arborescence.
         """
-        log.debug(f"Filter.treeMode : renvoie le mode d'arborescence actuel de {self.__class__.__name__}: {self.__treeMode}.")
+        log.debug(
+            f"Filter.treeMode : renvoie le mode d'arborescence actuel de {self.__class__.__name__}: {self.__treeMode}."
+        )
         return self.__treeMode
 
     @patterns.eventSource
@@ -99,11 +106,45 @@ class Filter(patterns.SetDecorator):
         if self.treeMode():
             for item in filteredItems.copy():
                 filteredItems.update(set(item.ancestors()))
-        self.removeItemsFromSelf([item for item in self if item not in filteredItems], event=event)
-        self.extendSelf([item for item in filteredItems if item not in self], event=event)
+        self.removeItemsFromSelf(
+            [item for item in self if item not in filteredItems], event=event
+        )
+        self.extendSelf(
+            [item for item in filteredItems if item not in self], event=event
+        )
+
+    def getFilterForced(self):
+        """Return items that were added as ancestors, not directly matched.
+
+        These items are in the filter only to maintain tree hierarchy, not
+        because they passed the filter criteria.
+        """
+        return self.__filterForced.copy()
+
+    def getAccumulatedFilterForced(self):
+        """Return filter_forced items accumulated from the entire filter chain.
+
+        Walks up the filter chain (via observable()) to collect all items that
+        were added as ancestors by any filter in the chain. This is used by
+        the outermost filter (typically ViewFilter) to identify items that may
+        need cleanup if they've become orphans.
+
+        Example: CategoryFilter adds a parent as ancestor of a categorized child.
+        ViewFilter later hides the child (completed). ViewFilter uses this method
+        to find that the parent was filter_forced, and removes it since it has
+        no visible children.
+        """
+        accumulated = self.__filterForced.copy()
+        try:
+            inner = self.observable()
+            if hasattr(inner, "getAccumulatedFilterForced"):
+                accumulated |= inner.getAccumulatedFilterForced()
+        except AttributeError:
+            pass
+        return accumulated
 
     def filterItems(self, items):
-        """ Ce filtre renvoie les éléments qui passent le filtre.
+        """Ce filtre renvoie les éléments qui passent le filtre.
 
         Filtre les articles donnés, ne renvoyant que ceux qui passent les critères de filtre.
 
@@ -152,6 +193,7 @@ class SelectedItemsFilter(Filter):
         __selectedItems : Un ensemble d'éléments sélectionnés.
         __includeSubItems : Un booléen indiquant s'il faut inclure des sous-éléments d'articles sélectionnés.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise une nouvelle instance SelectedItemsFilter.
@@ -192,7 +234,11 @@ class SelectedItemsFilter(Filter):
             Une liste d'éléments sélectionnés ou qui sont des ancêtres d'articles sélectionnés.
         """
         if self.__selectedItems:
-            result = [item for item in items if self.itemOrAncestorInSelectedItems(item)]
+            result = [
+                item
+                for item in items
+                if self.itemOrAncestorInSelectedItems(item)
+            ]
             if self.__includeSubItems:
                 for item in result[:]:
                     result.extend(item.children(recursive=True))
@@ -232,6 +278,7 @@ class SearchFilter(Filter):
         __regularExpression : Un booléen indiquant si la chaîne de recherche est une expression régulière.
         __searchPredicate : Un texte appelant un texte et renvoie True si l'élément correspond aux critères de recherche.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise une nouvelle instance SearchFilter.
@@ -256,16 +303,26 @@ class SearchFilter(Filter):
         regularExpression = kwargs.pop("regularExpression", False)
         # self.__regularExpression = regularExpression = kwargs.pop("regularExpression", False)
 
-        self.setSearchFilter(searchString, matchCase=matchCase,
-                             includeSubItems=includeSubItems,
-                             searchDescription=searchDescription,
-                             regularExpression=regularExpression, doReset=False)
+        self.setSearchFilter(
+            searchString,
+            matchCase=matchCase,
+            includeSubItems=includeSubItems,
+            searchDescription=searchDescription,
+            regularExpression=regularExpression,
+            doReset=False,
+        )
 
         super().__init__(*args, **kwargs)
 
-    def setSearchFilter(self, searchString, matchCase=False,
-                        includeSubItems=False, searchDescription=False,
-                        regularExpression=False, doReset=True):
+    def setSearchFilter(
+        self,
+        searchString,
+        matchCase=False,
+        includeSubItems=False,
+        searchDescription=False,
+        regularExpression=False,
+        doReset=True,
+    ):
         """
         Définit les paramètres de filtre de recherche.
 
@@ -281,7 +338,9 @@ class SearchFilter(Filter):
         self.__includeSubItems = includeSubItems
         self.__searchDescription = searchDescription
         self.__regularExpression = regularExpression
-        self.__searchPredicate = self.__compileSearchPredicate(searchString, matchCase, regularExpression)
+        self.__searchPredicate = self.__compileSearchPredicate(
+            searchString, matchCase, regularExpression
+        )
         if doReset:
             self.reset()
 
@@ -325,9 +384,15 @@ class SearchFilter(Filter):
         Return :
             Une liste d'éléments qui correspondent aux critères de recherche.
         """
-        return [item for item in items if
-                self.__searchPredicate(self.__itemText(item))] \
-                if self.__searchPredicate else items
+        return (
+            [
+                item
+                for item in items
+                if self.__searchPredicate(self.__itemText(item))
+            ]
+            if self.__searchPredicate
+            else items
+        )
 
     def __itemText(self, item):
         """
@@ -348,8 +413,13 @@ class SearchFilter(Filter):
                 text += self.__itemOwnText(parent)
                 parent = parent.parent()
         if self.treeMode():
-            text += " ".join([self.__itemOwnText(child) for child in
-                              item.children(recursive=True) if child in self.observable()])
+            text += " ".join(
+                [
+                    self.__itemOwnText(child)
+                    for child in item.children(recursive=True)
+                    if child in self.observable()
+                ]
+            )
         return text
 
     def __itemOwnText(self, item):
@@ -372,6 +442,7 @@ class DeletedFilter(Filter):
     """
     Un filtre qui exclut les articles supprimés.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise une nouvelle instance supprimée.
@@ -382,10 +453,13 @@ class DeletedFilter(Filter):
         """
         super().__init__(*args, **kwargs)
 
-        for eventType in [domainobject.Object.markDeletedEventType(),
-                          domainobject.Object.markNotDeletedEventType()]:
-            patterns.Publisher().registerObserver(self.onObjectMarkedDeletedOrNot,
-                                                  eventType=eventType)
+        for eventType in [
+            domainobject.Object.markDeletedEventType(),
+            domainobject.Object.markNotDeletedEventType(),
+        ]:
+            patterns.Publisher().registerObserver(
+                self.onObjectMarkedDeletedOrNot, eventType=eventType
+            )
 
     def detach(self):
         """

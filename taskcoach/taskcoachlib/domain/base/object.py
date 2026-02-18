@@ -181,6 +181,7 @@ Considérations supplémentaires :
 
 En abordant ces points, vous pouvez améliorer davantage la classe Object et la rendre plus robuste, maintenable et adaptable aux exigences futures.
 """
+
 # TODO : faire log !
 import functools
 import logging
@@ -192,8 +193,10 @@ from pubsub import pub
 from taskcoachlib import patterns
 from taskcoachlib.domain.attribute import icon
 from taskcoachlib.domain.date import DateTime, Now
+
 # from taskcoachlib.domain.task.task import Task
 from . import attribute
+from .appearance import FIELD_DEFAULTS, FIELD_NO_VALUE_SOURCE
 
 log = logging.getLogger(__name__)
 
@@ -225,9 +228,13 @@ class SynchronizedObject(object):
         # log.debug(f"SynchronizedObject.__init__ : 🔍 Avant super().__init__() : self.__status = kwargs.pop('status', self.STATUS_NEW)={kwargs.get('status', 'Non défini')}")
         log.debug("SynchronizedObject : Initialisation.")
         # self.__status = kwargs.pop("status", self.STATUS_NEW)
-        self.__status = kwargs.pop("status", None)  # On ne met PAS STATUS_NEW par défaut !
+        self.__status = kwargs.pop(
+            "status", None
+        )  # On ne met PAS STATUS_NEW par défaut !
         if self.__status is None:
-            self.__status = self.STATUS_NEW  # On met STATUS_NEW UNIQUEMENT si rien n'est défini
+            self.__status = (
+                self.STATUS_NEW
+            )  # On met STATUS_NEW UNIQUEMENT si rien n'est défini
         # print(f"SynchronizedObject.__init__ : ✅ Après assignation : self.__status = {self.__status}")
         # print(
         #     f"SynchronizedObject.__init__ : 🔍 Avant super().__init__() : self.__status = {getattr(self, '__status', 'Non défini')}")
@@ -278,7 +285,9 @@ class SynchronizedObject(object):
             state = super().__getstate__()
         except AttributeError:
             state = dict()
-        log.debug(f"SynchronizedObject.__getstate__ : state avant update {state}.")
+        log.debug(
+            f"SynchronizedObject.__getstate__ : state avant update {state}."
+        )
         # Ajout de l'attribut de statut de synchronisation
         state["status"] = self.__status
         log.debug(f"SynchronizedObject.__getstate__ : retourne state {state}.")
@@ -293,13 +302,17 @@ class SynchronizedObject(object):
             state (dict) : L’état à définir.
             event : (event) L'événement associé à la définition de l'état.
         """
-        log.debug(f"SynchronizedObject.__setstate__ : pour state {state} et event {event}.")
+        log.debug(
+            f"SynchronizedObject.__setstate__ : pour state {state} et event {event}."
+        )
         # try:
         #     super().__setstate__(state, event=event)
         # except AttributeError:
         #     pass
         # C'est dans Object()!
-        if state["status"] != self.__status:  # Utiliser les différents cas avec match !
+        if (
+            state["status"] != self.__status
+        ):  # Utiliser les différents cas avec match !
             # if state["status"] == self.STATUS_CHANGED:
             #     self.markDirty(event=event)
             # elif state["status"] == self.STATUS_DELETED:
@@ -343,7 +356,9 @@ class SynchronizedObject(object):
         #     # print("🟡 getStatus : self.__status est None → Forçage à STATUS_CHANGED (2)")
         #     self.__status = self.STATUS_CHANGED  # Force le recalcul
 
-        log.debug(f"✅ SynchronizedObject.getStatus renvoie {self.__status} - de type {type(self.__status)}")
+        log.debug(
+            f"✅ SynchronizedObject.getStatus renvoie {self.__status} - de type {type(self.__status)}"
+        )
         return self.__status
 
     @patterns.eventSource
@@ -377,7 +392,9 @@ class SynchronizedObject(object):
         if self.__status == self.STATUS_NONE or force:
             self.__status = self.STATUS_CHANGED
             # print(f"SynchronizedObject.setStatusDirty : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}")
-            log.debug(f"SynchronizedObject.setStatusDirty : 🛑 Modification de self.__status pour {self} : {self.__status}")
+            log.debug(
+                f"SynchronizedObject.setStatusDirty : 🛑 Modification de self.__status pour {self} : {self.__status}"
+            )
 
             return oldStatus == self.STATUS_DELETED
         else:
@@ -490,10 +507,11 @@ class SynchronizedObject(object):
         # return NotImplemented  # Non
         pass
 
-# méthode à ajouter ? oui ou non ?
+    # méthode à ajouter ? oui ou non ?
     @classmethod
     def modificationEventTypes(class_):
         pass
+
 
 # @functools.total_ordering
 class Object(SynchronizedObject):
@@ -524,7 +542,10 @@ class Object(SynchronizedObject):
     Encapsulation des attributs: Beaucoup d'attributs sont encapsulés par des classes Attribute (ex: self.__subject = attribute.Attribute(...)).
     C'est un pattern qui permet d'ajouter de la logique (validation, événements de changement) lors de la lecture/écriture des attributs.
     """
-    rx_attributes = re.compile(r"\[(\w+):(.+)\]")  # Expression régulière pour parser les attributs
+
+    rx_attributes = re.compile(
+        r"\[(\w+):(.+)\]"
+    )  # Expression régulière pour parser les attributs
 
     # Gestion de la compatibilité Python 2/3 pour un entier long zéro
     if sys.version_info.major == 2:
@@ -559,17 +580,29 @@ class Object(SynchronizedObject):
 
         # On récupère la liste des clés à traiter localement
         accepted_keys = [
-            'id', 'subject', 'description', 'creationDateTime',
-            'modificationDateTime', 'fgColor', 'bgColor',
-            'font', 'icon', 'selectedIcon', 'ordering'
+            "id",
+            "subject",
+            "description",
+            "creationDateTime",
+            "modificationDateTime",
+            "fgColor",
+            "bgColor",
+            "font",
+            "icon",
+            "selectedIcon",
+            "ordering",
         ]
 
         # On extrait les attributs pour soi
-        local_kwargs = {key: kwargs.pop(key) for key in accepted_keys if key in kwargs}
+        local_kwargs = {
+            key: kwargs.pop(key) for key in accepted_keys if key in kwargs
+        }
 
         # Faut-il les garder ou les effacer de kwargs ?
 
-        log.debug(f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs} avant appel à super.")
+        log.debug(
+            f"Object.__init__ : kwargs={kwargs} et local_kwargs={local_kwargs} avant appel à super."
+        )
         # Appel sécurisé au constructeur parent (sans kwargs dangereux)
         super().__init__(*args, **kwargs)
 
@@ -597,9 +630,13 @@ class Object(SynchronizedObject):
         # On extrait d'abord les données utiles pour Object
         # Attributs principaux, initialisés avec leurs gestionnaires d'événements
         # self.__creationDateTime = kwargs.pop("creationDateTime", None) or Now()
-        self.__creationDateTime = local_kwargs.pop("creationDateTime", None) or Now()
+        self.__creationDateTime = (
+            local_kwargs.pop("creationDateTime", None) or Now()
+        )
         # self.__modificationDateTime = kwargs.pop("modificationDateTime", DateTime.min)
-        self.__modificationDateTime = local_kwargs.pop("modificationDateTime", DateTime.min)
+        self.__modificationDateTime = local_kwargs.pop(
+            "modificationDateTime", DateTime.min
+        )
         # self.__subject = Attribute(
         #     kwargs.pop("subject", ""), self, self.subjectChangedEvent
         # )
@@ -614,7 +651,9 @@ class Object(SynchronizedObject):
         else:
             self.__subject = Attribute(subject_value, self, setSubjectEvent)
         # log.debug(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject!r}")
-        log.debug(f"[DEBUG] Object.__init__() → subject reçu: {self.__subject.get()}")
+        log.debug(
+            f"[DEBUG] Object.__init__() → subject reçu: {self.__subject.get()}"
+        )
         # self.__description = Attribute(
         #     kwargs.pop("description", ""), self, self.descriptionChangedEvent
         # )
@@ -626,8 +665,12 @@ class Object(SynchronizedObject):
         if isinstance(description_value, attribute.Attribute):
             self.__description = description_value
         else:
-            self.__description = Attribute(description_value, self, setDescriptionEvent)
-        log.debug(f"Object.__init__() : description reçu: {self.__description}")
+            self.__description = Attribute(
+                description_value, self, setDescriptionEvent
+            )
+        log.debug(
+            f"Object.__init__() : description reçu: {self.__description}"
+        )
         # self.__fgColor = Attribute(
         #     kwargs.pop("fgColor", None), self, self.appearanceChangedEvent
         # )
@@ -687,7 +730,9 @@ class Object(SynchronizedObject):
         if isinstance(selectedIcon_value, attribute.Attribute):
             self.__selectedIcon = selectedIcon_value
         else:
-            self.__selectedIcon = Attribute(selectedIcon_value, self, setAppearanceEvent)
+            self.__selectedIcon = Attribute(
+                selectedIcon_value, self, setAppearanceEvent
+            )
         # self.__ordering = Attribute(
         #     kwargs.pop("ordering", Object._long_zero),
         #     self,
@@ -704,7 +749,9 @@ class Object(SynchronizedObject):
             setOrderingEvent,
         )
         # self.__id = kwargs.pop("id", None or str(uuid.uuid1()))  # ID unique
-        self.__id = local_kwargs.pop("id", None or str(uuid.uuid1()))  # ID unique
+        self.__id = local_kwargs.pop(
+            "id", None or str(uuid.uuid1())
+        )  # ID unique
         # self.__id = local_kwargs.pop("id", str(uuid.uuid1()))  # ID unique, TODO : à essayer
 
         # Initialisation du parent
@@ -727,6 +774,19 @@ class Object(SynchronizedObject):
         """
         return self.subject()
         # return str(self.subject()) or __repr__(self.subject())
+
+    def __eq__(self, other):
+        if not isinstance(other, Object):
+            return NotImplemented
+        return self.id() == other.id()
+
+    def __lt__(self, other):
+        if not isinstance(other, Object):
+            return NotImplemented
+        return self.id() < other.id()
+
+    def __hash__(self):
+        return hash(self.id())
 
     def __getstate__(self):
         """
@@ -754,8 +814,10 @@ class Object(SynchronizedObject):
         # if hasattr(self, 'subject'):
         #     log.debug(f"Object.__setstate__() - subject avant update: {self.subject}")
         # else:
-        if not hasattr(self, 'subject'):
-            log.debug("Object.__setstate__() - subject non défini avant update.")
+        if not hasattr(self, "subject"):
+            log.debug(
+                "Object.__setstate__() - subject non défini avant update."
+            )
 
         # On ajoute uniquement les champs publics attendus,
         # extraits via les attributs "Attribute"
@@ -776,8 +838,15 @@ class Object(SynchronizedObject):
         )
         # On supprime les clés privées (souvent nommées _NomClasse__attribut)
         # Ici, on retire tous les attributs privés de 'Object' (ex: _Object__subject)
-        private_prefixes = [f"_{self.__class__.__name__}__", '_SynchronizedObject__']
-        keys_to_remove = [key for key in state if any(key.startswith(prefix) for prefix in private_prefixes)]
+        private_prefixes = [
+            f"_{self.__class__.__name__}__",
+            "_SynchronizedObject__",
+        ]
+        keys_to_remove = [
+            key
+            for key in state
+            if any(key.startswith(prefix) for prefix in private_prefixes)
+        ]
         for key in keys_to_remove:
             del state[key]
 
@@ -851,7 +920,9 @@ class Object(SynchronizedObject):
             state (dict) : L’état à définir.
             event : (event) L'événement associé à la définition de l'état.
         """
-        log.debug(f"Object.__setstate__ : avant super, state={state} et event={event}.")
+        log.debug(
+            f"Object.__setstate__ : avant super, state={state} et event={event}."
+        )
         # Appeler le parent
         # C'est l'appel crucial qui va charger les attributs du parent SynchronizedObject
         try:
@@ -864,7 +935,9 @@ class Object(SynchronizedObject):
         # Récupérer la valeur du sujet du dictionnaire d'état
         log.debug(f"Object.__setstate__ : setSubject :")
         self.setSubject(state["subject"], event=event)
-        log.debug(f"Object.__setstate__() - subject après set: {self.__subject.get()}")
+        log.debug(
+            f"Object.__setstate__() - subject après set: {self.__subject.get()}"
+        )
         self.setDescription(state["description"], event=event)
         self.setForegroundColor(state["fgColor"], event=event)
         self.setBackgroundColor(state["bgColor"], event=event)
@@ -1029,7 +1102,9 @@ class Object(SynchronizedObject):
         Returns :
             (str) : Le sujet de l'objet.
         """
-        return self.__subject.get()  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
+        return (
+            self.__subject.get()
+        )  # AttributeError: 'CompositeObject' object has no attribute '_Object__subject'
         # return self.__subject
 
     def setSubject(self, subject, event=None):
@@ -1220,16 +1295,17 @@ class Object(SynchronizedObject):
         new_description = self.description()
 
         # DEBUG facultatif :
-        log.debug(f"descriptionChangedEvent — new_description = {new_description!r}")
+        log.debug(
+            f"descriptionChangedEvent — new_description = {new_description!r}"
+        )
 
         # Ajoute la description comme source et comme valeur pour ce type d'événement
         event.addSource(
             self,
             # new_description,               # source de l'événement
-            new_description,               # valeur associée à cette source
-            type=self.descriptionChangedEventType()  # type d'événement
+            new_description,  # valeur associée à cette source
+            type=self.descriptionChangedEventType(),  # type d'événement
         )
-
 
     @classmethod
     def descriptionChangedEventType(class_):
@@ -1344,6 +1420,10 @@ class Object(SynchronizedObject):
             event : L'événement associé à la définition de la police.
         """
         self.__font.set(font, event=event)
+        # Trigger computeEffective after SSOT update
+        from . import appearance
+
+        appearance.computeEffective(self, "font")
 
     # Icons:
 
@@ -1365,6 +1445,10 @@ class Object(SynchronizedObject):
             event : L'événement associé à la définition de l'icône.
         """
         self.__icon.set(icon, event=event)
+        # Trigger computeEffective after SSOT update
+        from . import appearance
+
+        appearance.computeEffective(self, "icon")
 
     def selectedIcon(self):
         """
@@ -1406,6 +1490,191 @@ class Object(SynchronizedObject):
             event : L'événement.
         """
         event.addSource(self, type=self.appearanceChangedEventType())
+
+    # --- Derived SSOT Getters ---
+
+    def derivedFgColor(self):
+        return self.__derivedFgColorValue.get() or FIELD_DEFAULTS["fgColor"]
+
+    def derivedFgColorSource(self):
+        return (
+            self.__derivedFgColorSource.get()
+            or FIELD_NO_VALUE_SOURCE["fgColor"]
+        )
+
+    def derivedBgColor(self):
+        return self.__derivedBgColorValue.get() or FIELD_DEFAULTS["bgColor"]
+
+    def derivedBgColorSource(self):
+        return (
+            self.__derivedBgColorSource.get()
+            or FIELD_NO_VALUE_SOURCE["bgColor"]
+        )
+
+    def derivedIcon(self):
+        return self.__derivedIconValue.get() or FIELD_DEFAULTS["icon"]
+
+    def derivedIconSource(self):
+        return self.__derivedIconSource.get() or FIELD_NO_VALUE_SOURCE["icon"]
+
+    def derivedFont(self):
+        return self.__derivedFontValue.get() or FIELD_DEFAULTS["font"]
+
+    def derivedFontSource(self):
+        return self.__derivedFontSource.get() or FIELD_NO_VALUE_SOURCE["font"]
+
+    # --- Derived SSOT Setters (for use by computeDerived) ---
+
+    def setDerivedFgColor(self, value, source, event=None):
+        self.__derivedFgColorValue.set(value, event=event)
+        self.__derivedFgColorSource.set(source, event=event)
+
+    def setDerivedBgColor(self, value, source, event=None):
+        self.__derivedBgColorValue.set(value, event=event)
+        self.__derivedBgColorSource.set(source, event=event)
+
+    def setDerivedIcon(self, value, source, event=None):
+        self.__derivedIconValue.set(value, event=event)
+        self.__derivedIconSource.set(source, event=event)
+
+    def setDerivedFont(self, value, source, event=None):
+        self.__derivedFontValue.set(value, event=event)
+        self.__derivedFontSource.set(source, event=event)
+
+    # --- Derived Event Handlers ---
+
+    def _onDerivedFgColorChanged(self, event):
+        event.addSource(self, type=self.derivedFgColorChangedEventType())
+
+    def _onDerivedBgColorChanged(self, event):
+        event.addSource(self, type=self.derivedBgColorChangedEventType())
+
+    def _onDerivedIconChanged(self, event):
+        event.addSource(self, type=self.derivedIconChangedEventType())
+
+    def _onDerivedFontChanged(self, event):
+        event.addSource(self, type=self.derivedFontChangedEventType())
+
+    # --- Derived Event Types ---
+
+    @classmethod
+    def derivedFgColorChangedEventType(class_):
+        return "pubsub.derived.fgColor"
+
+    @classmethod
+    def derivedBgColorChangedEventType(class_):
+        return "pubsub.derived.bgColor"
+
+    @classmethod
+    def derivedIconChangedEventType(class_):
+        return "pubsub.derived.icon"
+
+    @classmethod
+    def derivedFontChangedEventType(class_):
+        return "pubsub.derived.font"
+
+    # --- Effective SSOT Getters ---
+
+    def effectiveFgColor(self):
+        return self.__effectiveFgColorValue.get() or FIELD_DEFAULTS["fgColor"]
+
+    def effectiveFgColorSource(self):
+        return (
+            self.__effectiveFgColorSource.get()
+            or FIELD_NO_VALUE_SOURCE["fgColor"]
+        )
+
+    def effectiveFgColorDefault(self):
+        return (
+            self.__effectiveFgColorDefault.get() or FIELD_DEFAULTS["fgColor"]
+        )
+
+    def effectiveBgColor(self):
+        return self.__effectiveBgColorValue.get() or FIELD_DEFAULTS["bgColor"]
+
+    def effectiveBgColorSource(self):
+        return (
+            self.__effectiveBgColorSource.get()
+            or FIELD_NO_VALUE_SOURCE["bgColor"]
+        )
+
+    def effectiveBgColorDefault(self):
+        return (
+            self.__effectiveBgColorDefault.get() or FIELD_DEFAULTS["bgColor"]
+        )
+
+    def effectiveIcon(self):
+        return self.__effectiveIconValue.get() or FIELD_DEFAULTS["icon"]
+
+    def effectiveIconSource(self):
+        return (
+            self.__effectiveIconSource.get() or FIELD_NO_VALUE_SOURCE["icon"]
+        )
+
+    def effectiveFont(self):
+        return self.__effectiveFontValue.get() or FIELD_DEFAULTS["font"]
+
+    def effectiveFontSource(self):
+        return (
+            self.__effectiveFontSource.get() or FIELD_NO_VALUE_SOURCE["font"]
+        )
+
+    def effectiveFontDefault(self):
+        return self.__effectiveFontDefault.get() or FIELD_DEFAULTS["font"]
+
+    # --- Effective SSOT Setters (for use by computeEffective) ---
+
+    def setEffectiveFgColor(self, value, default, source, event=None):
+        self.__effectiveFgColorValue.set(value, event=event)
+        self.__effectiveFgColorDefault.set(default, event=event)
+        self.__effectiveFgColorSource.set(source, event=event)
+
+    def setEffectiveBgColor(self, value, default, source, event=None):
+        self.__effectiveBgColorValue.set(value, event=event)
+        self.__effectiveBgColorDefault.set(default, event=event)
+        self.__effectiveBgColorSource.set(source, event=event)
+
+    def setEffectiveIcon(self, value, source, event=None):
+        # Icon has no default
+        self.__effectiveIconValue.set(value, event=event)
+        self.__effectiveIconSource.set(source, event=event)
+
+    def setEffectiveFont(self, value, default, source, event=None):
+        self.__effectiveFontValue.set(value, event=event)
+        self.__effectiveFontDefault.set(default, event=event)
+        self.__effectiveFontSource.set(source, event=event)
+
+    # --- Effective Event Handlers ---
+
+    def _onEffectiveFgColorChanged(self, event):
+        event.addSource(self, type=self.effectiveFgColorChangedEventType())
+
+    def _onEffectiveBgColorChanged(self, event):
+        event.addSource(self, type=self.effectiveBgColorChangedEventType())
+
+    def _onEffectiveIconChanged(self, event):
+        event.addSource(self, type=self.effectiveIconChangedEventType())
+
+    def _onEffectiveFontChanged(self, event):
+        event.addSource(self, type=self.effectiveFontChangedEventType())
+
+    # --- Effective Event Types ---
+
+    @classmethod
+    def effectiveFgColorChangedEventType(class_):
+        return "pubsub.effective.fgColor"
+
+    @classmethod
+    def effectiveBgColorChangedEventType(class_):
+        return "pubsub.effective.bgColor"
+
+    @classmethod
+    def effectiveIconChangedEventType(class_):
+        return "pubsub.effective.icon"
+
+    @classmethod
+    def effectiveFontChangedEventType(class_):
+        return "pubsub.effective.font"
 
     @classmethod
     def modificationEventTypes(class_):
@@ -1468,7 +1737,9 @@ class Object(SynchronizedObject):
 # dans l'héritage multiple (ou être le parent le plus "à gauche"
 # qui définit ces attributs), de sorte que son __init__ et __setstate__
 # soient appelés tôt dans la chaîne super().
-class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le seul bon ordre !
+class CompositeObject(
+    Object, patterns.composite.ObservableComposite
+):  # Est le seul bon ordre !
     """
     Un objet composite qui peut contenir d'autres objets en tant qu'enfants.
 
@@ -1512,14 +1783,22 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
         children = kwargs.pop("children", None)
         parent = kwargs.pop("parent", None)
 
-        log.debug(f"CompositeObject.__init__() → kwargs avant Object: {kwargs}")
+        log.debug(
+            f"CompositeObject.__init__() → kwargs avant Object: {kwargs}"
+        )
         # Initialisation de la logique Object (subject, description, etc.)
         Object.__init__(self, *args, **kwargs)
-        log.debug(f"CompositeObject.__init__() → kwargs après Object: {kwargs}")
+        log.debug(
+            f"CompositeObject.__init__() → kwargs après Object: {kwargs}"
+        )
 
         # Initialisation manuelle de Composite
-        patterns.composite.Composite.__init__(self, children=children, parent=parent)
-        log.debug(f"CompositeObject.__init__() → kwargs après Composite: {kwargs}")
+        patterns.composite.Composite.__init__(
+            self, children=children, parent=parent
+        )
+        log.debug(
+            f"CompositeObject.__init__() → kwargs après Composite: {kwargs}"
+        )
 
     def __getcopystate__(self) -> dict:
         """
@@ -1532,9 +1811,13 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
         state = super().__getcopystate__()
         # log.debug(f"CompositeObject.__getcopystate__ : __getstate__() avant subject.get() : {self.__subject.get()}, state avant update {state}.")
         # AttributeError: 'Task' object has no attribute '_CompositeObject__subject'
-        log.debug(f"CompositeObject.__getcopystate__ : state avant update {state}.")
+        log.debug(
+            f"CompositeObject.__getcopystate__ : state avant update {state}."
+        )
         state.update(dict(expandedContexts=self.expandedContexts()))
-        log.debug(f"CompositeObject.__getcopystate__ : retourne state {state}.")
+        log.debug(
+            f"CompositeObject.__getcopystate__ : retourne state {state}."
+        )
         return state
 
     def __setstate__(self, state, event=None):
@@ -1580,11 +1863,16 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
         #     #     subject,
         #     # )
         #     subject = f"{self.parent().subject(recursive=True)} -> {subject}"
-        if recursive and ((hasattr(self, "parent") and callable(self.parent)) or self.parent()):
+        if recursive and (
+            (hasattr(self, "parent") and callable(self.parent))
+            or self.parent()
+        ):
             parent = self.parent()
             if parent:
                 subject = f"{parent.subject(recursive=True)} -> {subject}"
-        log.debug(f"CompositeObject.subject : retourne le sujet de {self.__class__.__name__} id={self.id()} : {subject}.")
+        log.debug(
+            f"CompositeObject.subject : retourne le sujet de {self.__class__.__name__} id={self.id()} : {subject}."
+        )
         # RecursionError: maximum recursion depth exceeded
         return subject
 
@@ -1619,6 +1907,9 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
             return lambda item: item.subject(recursive=recursive).lower()
 
     # Description:
+    def description(self, recursive=False):  # pylint: disable=W0221,W0613
+        # Allow for the recursive flag, but ignore it
+        return super().description()
 
     def getDescription(self, recursive=False):  # pylint: disable=W0221,W0613
         """
@@ -1812,7 +2103,9 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
             return myIcon
         if not myIcon and self.parent():
             myIcon = self.parent().selectedIcon(recursive=True)
-        return self.pluralOrSingularIcon(myIcon, native=super().selectedIcon() == "")
+        return self.pluralOrSingularIcon(
+            myIcon, native=super().selectedIcon() == ""
+        )
 
     def pluralOrSingularIcon(self, myIcon, native=True):
         """
@@ -1825,8 +2118,12 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
         Returns :
             L'icône plurielle ou singulière.
         """
-        hasChildren = any(child for child in self.children() if not child.isDeleted())
-        mapping = icon.itemImagePlural if hasChildren else icon.itemImageSingular
+        hasChildren = any(
+            child for child in self.children() if not child.isDeleted()
+        )
+        mapping = (
+            icon.itemImagePlural if hasChildren else icon.itemImageSingular
+        )
         # Si l'icône provient des paramètres utilisateur, mettez-la uniquement au pluriel ; c'est probablement
         # la voie du moindre étonnement
         if native or hasChildren:
@@ -1862,12 +2159,12 @@ class CompositeObject(Object, patterns.composite.ObservableComposite):  # Est le
         # Appel explicite à la méthode de ObservableComposite
         # observable_events = patterns.ObservableComposite.modificationEventTypes()
         return (
-                [
-                    class_.addChildEventType(),
-                    class_.removeChildEventType(),
-                ]
-                + parent_events
-                + [class_.expansionChangedEventType()]
+            [
+                class_.addChildEventType(),
+                class_.removeChildEventType(),
+            ]
+            + parent_events
+            + [class_.expansionChangedEventType()]
         )
         # Changement possible :
         #     parent_events = set(super().modificationEventTypes())

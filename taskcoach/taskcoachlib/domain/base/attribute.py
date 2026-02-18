@@ -35,6 +35,7 @@ ou de supprimer des éléments avec des événements déclenchés en conséquenc
 # from builtins import object
 from taskcoachlib import patterns
 import weakref
+
 # from taskcoachlib.thirdparty._weakrefset import WeakSet
 from weakref import WeakSet  # En test!
 
@@ -51,6 +52,7 @@ class Attribute(object):
     Le réglage et l'obtention de la classe `Attribut` appelle une seule valeur avec un gestionnaire d'événements associé.
     Il utilise des références faibles pour son objet propriétaire pour éviter les fuites de mémoire.
     """
+
     __slots__ = ("__value", "__owner", "__setEvent")
 
     def __init__(self, value, owner, setEvent):
@@ -122,7 +124,7 @@ class Attribute(object):
 
         # >>> class Foo(object):
         # ...     def f(self): pass
-        # ... 
+        # ...
         # >>> Foo.f
         # <unbound method Foo.f>
         # >>> Foo().f
@@ -180,7 +182,9 @@ class Attribute(object):
                 return False
             self.__value = value
             # self.__setEvent(owner, event)  # ❌ trop d'arguments
-            self.__setEvent(event)  # ✅ juste l'event, self est déjà lié via owner
+            self.__setEvent(
+                event
+            )  # ✅ juste l'event, self est déjà lié via owner
             return True
 
 
@@ -192,13 +196,14 @@ class SetAttribute(object):
     éléments d'être ajoutés ou supprimés avec des événements déclenchés en conséquence.
     Il utilise des références faibles pour son objet propriétaire pour éviter les fuites de mémoire.
     """
+
     __slots__ = (
         "__set",
         "__owner",
         "__addEvent",
         "__removeEvent",
         "__changeEvent",
-        "__setClass"
+        "__setClass",
     )
 
     def __init__(
@@ -208,7 +213,7 @@ class SetAttribute(object):
         addEvent=None,
         removeEvent=None,
         changeEvent=None,
-        weak=False
+        weak=False,
     ):
         """
         Initialise une nouvelle instance de la classe «setAttribute».
@@ -227,7 +232,7 @@ class SetAttribute(object):
         self.__addEvent = (addEvent or self.__nullEvent).__func__
         self.__removeEvent = (removeEvent or self.__nullEvent).__func__
         self.__changeEvent = (changeEvent or self.__nullEvent).__func__
-        
+
     def get(self):
         """
         Obtenir une copie de l'ensemble actuel des valeurs.
@@ -236,7 +241,7 @@ class SetAttribute(object):
             Un nouvel ensemble contenant les valeurs actuelles de l'attribut.
         """
         return set(self.__set)
-    
+
     @patterns.eventSource
     def set(self, values, event=None):
         """
@@ -259,11 +264,13 @@ class SetAttribute(object):
             if added:
                 self.__addEvent(owner, event, *added)  # pylint: disable=W0142
             if removed:
-                self.__removeEvent(owner, event, *removed)  # pylint: disable=W0142
+                self.__removeEvent(
+                    owner, event, *removed
+                )  # pylint: disable=W0142
             if added or removed:
                 self.__changeEvent(owner, event, *set(self.__set))
             return True
-    
+
     @patterns.eventSource
     def add(self, values, event=None):
         """
