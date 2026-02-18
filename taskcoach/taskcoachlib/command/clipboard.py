@@ -42,6 +42,7 @@ from taskcoachlib import patterns
 
 class Clipboard(metaclass=patterns.Singleton):
     """Classe qui gère le presse-papier de l'application Task Coach."""
+
     def __init__(self):
         self._contents = []
         self._source = None
@@ -79,3 +80,6 @@ class Clipboard(metaclass=patterns.Singleton):
             il est recommandé d'utiliser la méthode __bool__() à la place.
         """
         return len(self._contents)
+
+    def __bool__(self):
+        return len(self._contents) > 0
