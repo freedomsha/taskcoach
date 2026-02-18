@@ -45,14 +45,20 @@ class CategorizableCompositeObject(base.CompositeObject):
 
     def __getstate__(self):
         state = super().__getstate__()
-        log.debug(f"CategorizableCompositeObject.__getstate__ : state avant update : {state}")
+        log.debug(
+            f"CategorizableCompositeObject.__getstate__ : state avant update : {state}"
+        )
         state.update(dict(categories=self.categories()))
-        log.debug(f"CategorizableCompositeObject.__getstate__ : renvoie {state}.")
+        log.debug(
+            f"CategorizableCompositeObject.__getstate__ : renvoie {state}."
+        )
         return state
 
     @patterns.eventSource
     def __setstate__(self, state, event=None):
-        log.debug(f"CategorizableCompositeObject.__setstate__ : pour state {state} et event {event}")
+        log.debug(
+            f"CategorizableCompositeObject.__setstate__ : pour state {state} et event {event}"
+        )
         super().__setstate__(state, event=event)
         self.setCategories(state["categories"], event=event)
         # # Gérer uniquement les attributs spécifiques à CategorizableCompositeObject, comme 'categories'.
@@ -65,16 +71,24 @@ class CategorizableCompositeObject(base.CompositeObject):
         #     )
         # log.debug(f"CategorizableCompositeObject.__setstate__() - subject après set: {self.__subject.get()}")
         # AttributeError: 'Task' object has no attribute '_CategorizableCompositeObject__subject'
-        if hasattr(self, 'subject'):
-            log.debug(f"CategorizableCompositeObject.__setstate__() - subject après set: {self.subject}")
+        if hasattr(self, "subject"):
+            log.debug(
+                f"CategorizableCompositeObject.__setstate__() - subject après set: {self.subject}"
+            )
         else:
-            log.debug("CategorizableCompositeObject.__setstate__() - subject non défini")
+            log.debug(
+                "CategorizableCompositeObject.__setstate__() - subject non défini"
+            )
 
     def __getcopystate__(self):
         state = super().__getcopystate__()
-        log.debug(f"CategorizableCompositeObject.__getcopystate__ : state avant update {state}.")
+        log.debug(
+            f"CategorizableCompositeObject.__getcopystate__ : state avant update {state}."
+        )
         state.update(dict(categories=self.categories()))
-        log.debug(f"CategorizableCompositeObject.__getcopystate__ : retourne state {state}.")
+        log.debug(
+            f"CategorizableCompositeObject.__getcopystate__ : retourne state {state}."
+        )
         return state
 
     def categories(self, recursive=False, upwards=False):
@@ -92,19 +106,28 @@ class CategorizableCompositeObject(base.CompositeObject):
     def categoryAddedEventType(class_):
         return "categorizable.category.add"
 
+    # Bug SetAttribute (categorizable.py) :
+    # La classe SetAttribute attend souvent un ensemble de valeurs.
+    # Si on lui passe un objet unique sans le mettre dans un set ({obj}),
+    # cela peut provoquer des erreurs d'itération ou d'ajout.
+    # La correction ici est importante pour la stabilité.
     def addCategory(self, *categories, **kwargs):
         # print(f"CategorizableCompositeObject.addCategory : 🛠 DEBUG - Ajout de {categories} à {self} dans {self.__class__.__name__}")
         # return self.__categories.add(set(categories), event=kwargs.pop("event", None))
         # self.__categories.update(categories)  # Ajoute les catégories. Erreur, update() ne fonctionne pas.
         for category in categories:
             # self.__categories.add(category)  # Utilise add() pour un SetAttribute. ⚠️ Erreur, category est un objet et pas un set
-            self.__categories.add({category})  # ✅ Convertit en set avant l'ajout
+            self.__categories.add(
+                {category}
+            )  # ✅ Convertit en set avant l'ajout
         # print(f"CategorizableCompositeObject.addCategory : ✅ DEBUG - self.__categories après ajout = {self.__categories}")
 
         return True  # Retourne True pour que Task.addCategory() fonctionne
 
     def addCategoryEvent(self, event, *categories):
-        event.addSource(self, *categories, **dict(type=self.categoryAddedEventType()))
+        event.addSource(
+            self, *categories, **dict(type=self.categoryAddedEventType())
+        )
         for child in self.children(recursive=True):
             event.addSource(
                 child, *categories, **dict(type=child.categoryAddedEventType())
@@ -114,10 +137,10 @@ class CategorizableCompositeObject(base.CompositeObject):
 
     def categoriesChangeAppearance(self, categories):
         return (
-                self.categoriesChangeFgColor(categories)
-                or self.categoriesChangeBgColor(categories)
-                or self.categoriesChangeFont(categories)
-                or self.categoriesChangeIcon(categories)
+            self.categoriesChangeFgColor(categories)
+            or self.categoriesChangeBgColor(categories)
+            or self.categoriesChangeFont(categories)
+            or self.categoriesChangeIcon(categories)
         )
 
     def categoriesChangeFgColor(self, categories):
@@ -150,10 +173,14 @@ class CategorizableCompositeObject(base.CompositeObject):
         )
 
     def removeCategoryEvent(self, event, *categories):
-        event.addSource(self, *categories, **dict(type=self.categoryRemovedEventType()))
+        event.addSource(
+            self, *categories, **dict(type=self.categoryRemovedEventType())
+        )
         for child in self.children(recursive=True):
             event.addSource(
-                child, *categories, **dict(type=child.categoryRemovedEventType())
+                child,
+                *categories,
+                **dict(type=child.categoryRemovedEventType()),
             )
         if self.categoriesChangeAppearance(categories):
             self.appearanceChangedEvent(event)
@@ -197,6 +224,7 @@ class CategorizableCompositeObject(base.CompositeObject):
             Returns :
 
             """
+
             def sortedSubjects(items):
                 """
                 Retourne les sujets des items triés par nom.
@@ -215,8 +243,8 @@ class CategorizableCompositeObject(base.CompositeObject):
             isListMode = not kwargs.get("treeMode", False)
             # Retire les catégories triées de la liste des catégories catégorisables.
             childCategories = (
-                    categorizable.categories(recursive=True, upwards=isListMode)
-                    - categories
+                categorizable.categories(recursive=True, upwards=isListMode)
+                - categories
             )
             # Ajoute les catégories enfants triées par nom de sujet à la liste des catégories triées.
             sortedCategorySubjects.extend(sortedSubjects(childCategories))
@@ -227,9 +255,12 @@ class CategorizableCompositeObject(base.CompositeObject):
 
     @classmethod
     def categoriesSortEventTypes(class_):
-        """Les types d'événements qui influencent l'ordre de tri des catégories. """
+        """Les types d'événements qui influencent l'ordre de tri des catégories."""
         # return (class_.categoryAddedEventType(), class_.categoryRemovedEventType())
-        return class_.categoryAddedEventType(), class_.categoryRemovedEventType()
+        return (
+            class_.categoryAddedEventType(),
+            class_.categoryRemovedEventType(),
+        )
 
     def foregroundColor(self, recursive=False):
         myOwnFgColor = super().foregroundColor()
@@ -259,7 +290,8 @@ class CategorizableCompositeObject(base.CompositeObject):
         Si un objet composite catégorisable n'a pas de couleur de premier plan,
         il utilise la couleur de premier plan des parents."""
         colors = [
-            category.foregroundColor(recursive=True) for category in self.categories()
+            category.foregroundColor(recursive=True)
+            for category in self.categories()
         ]
         if not colors and self.parent():
             return self.parent()._categoryForegroundColor()
@@ -274,7 +306,8 @@ class CategorizableCompositeObject(base.CompositeObject):
         composite object has no background color of its own, it uses its
         parent's background color."""
         colors = [
-            category.backgroundColor(recursive=True) for category in self.categories()
+            category.backgroundColor(recursive=True)
+            for category in self.categories()
         ]
         if not colors and self.parent():
             return self.parent()._categoryBackgroundColor()
@@ -297,7 +330,9 @@ class CategorizableCompositeObject(base.CompositeObject):
         When a categorizable object belongs to multiple categories, the
         font is mixed. If a categorizable composite object has no font of
         its own, it uses its parent's font."""
-        fonts = [category.font(recursive=True) for category in self.categories()]
+        fonts = [
+            category.font(recursive=True) for category in self.categories()
+        ]
         if not fonts and self.parent():
             return self.parent()._categoryFont()
         else:
@@ -323,7 +358,9 @@ class CategorizableCompositeObject(base.CompositeObject):
     def selectedIcon(self, recursive=False):
         icon = super().selectedIcon()
         if not icon and recursive:
-            icon = self.categorySelectedIcon() or super().selectedIcon(recursive=True)
+            icon = self.categorySelectedIcon() or super().selectedIcon(
+                recursive=True
+            )
         return icon
 
     def categorySelectedIcon(self):

@@ -111,15 +111,19 @@ Considérations supplémentaires
 
 from io import open as file
 from filecmp import cmp
+
 # unresolved reference 'cmp'
+from functools import total_ordering
 import os
 from urllib.parse import urlparse
 from taskcoachlib import patterns, mailer
 from taskcoachlib.domain import base
 from taskcoachlib.i18n import _
 from taskcoachlib.tools import openfile
+
 # try:
 from pubsub import pub
+
 # except ImportError:
 #    # try:
 #    from taskcoachlib.thirdparty.pubsub import pub
@@ -152,7 +156,8 @@ def getRelativePath(path, basePath=os.getcwd()):
         if path2 == os.path.sep:
             return path1[1:].replace("\\", "/")
 
-        return path1[len(path2) + 1:].replace("\\", "/")
+        # return path1[len(path2) + 1:].replace("\\", "/")
+        return path1[len(path2) + 1 :].replace("\\", "/")
 
     path1 = path1.split(os.path.sep)
     path2 = path2.split(os.path.sep)
@@ -169,8 +174,9 @@ def getRelativePath(path, basePath=os.getcwd()):
 
 
 # class Attachment(base.Object, NoteOwner):
+@total_ordering
 class Attachment(base.Object, NoteOwner):
-    """ Classe de base abstraite pour les pièces jointes. """
+    """Classe de base abstraite pour les pièces jointes."""
 
     type_ = "unknown"  # Utilisé dans XML.xriter.py
 
@@ -183,9 +189,14 @@ class Attachment(base.Object, NoteOwner):
             *args : Arguments positionnels.
             **kwargs : Attributs hérités de la copie/sérialisation.
         """
-        print(f"DEBUG - Attachment.__init__() appelé avec location={location}, args={args}, kwargs={kwargs}")
+        print(
+            f"DEBUG - Attachment.__init__() appelé avec location={location}, args={args}, kwargs={kwargs}"
+        )
         if "subject" not in kwargs:
-            kwargs["subject"] = location
+            # kwargs["subject"] = location
+            # Use filename without extension as subject, not full path/URL
+            filename = os.path.basename(location)
+            kwargs["subject"] = os.path.splitext(filename)[0] or location
 
         # On extrait l’attribut propre à Attachment
         self.__location = kwargs.pop("location", location)
@@ -241,7 +252,9 @@ class Attachment(base.Object, NoteOwner):
         # super().__init__()
         # self.__location = location
 
-        print(f"DEBUG - Attachment.__init__() terminé avec location={self.__location}")
+        print(
+            f"DEBUG - Attachment.__init__() terminé avec location={self.__location}"
+        )
 
     def copy(self):
         """
@@ -264,7 +277,11 @@ class Attachment(base.Object, NoteOwner):
         # # Filtrage pour ne pas écraser les méthodes comme description()
         # Retirer les clés qui risquent de masquer des méthodes, mais **sans les perdre**
         # On va les réinjecter via les setters juste après instanciation
-        overrides = {key: state.pop(key) for key in ("subject", "description") if key in state}
+        overrides = {
+            key: state.pop(key)
+            for key in ("subject", "description")
+            if key in state
+        }
         # overrides = {}
         # for key in ['subject', 'description']:
         #     if key in state:
@@ -289,14 +306,13 @@ class Attachment(base.Object, NoteOwner):
         # if hasattr(self, 'subject') and callable(getattr(self, 'subject')):
         #     new_attachment.setSubject(self.subject())
         # On applique proprement les valeurs via les méthodes existantes
-        if 'subject' in overrides:
-            new_attachment.setSubject(overrides['subject'])
-        if 'description' in overrides:
-            new_attachment.setDescription(overrides['description'])
+        if "subject" in overrides:
+            new_attachment.setSubject(overrides["subject"])
+        if "description" in overrides:
+            new_attachment.setDescription(overrides["description"])
 
         # return self.__class__(**state)
         return new_attachment
-
 
     def data(self):
         return None
@@ -313,8 +329,11 @@ class Attachment(base.Object, NoteOwner):
         if location != self.__location:
             self.__location = location
             self.markDirty()
-            pub.sendMessage(self.locationChangedEventType(), newValue=location,
-                            sender=self)
+            pub.sendMessage(
+                self.locationChangedEventType(),
+                newValue=location,
+                sender=self,
+            )
 
     @classmethod
     def locationChangedEventType(class_):  # better use cls not class_
@@ -330,6 +349,10 @@ class Attachment(base.Object, NoteOwner):
     def open(self, workingDir=None):
         raise NotImplementedError
 
+    # En Python 3, __cmp__ n'existe plus. Pour que les objets soient triables
+    # (par exemple dans les listes de tâches), il faut définir __eq__ et __lt__
+    # et utiliser @functools.total_ordering
+    # qui génère automatiquement les autres opérateurs de comparaison (>, <=, etc.).
     def __cmp__(self, other):
         try:
             return cmp(self.location(), other.location())
@@ -337,10 +360,22 @@ class Attachment(base.Object, NoteOwner):
             # return False
             return 1
 
-# j'ai ajouté cette fonction
-# à commenter ?
-#     def __hash__(self):
-#         return hash(self.__location)
+    # # j'ai ajouté cette fonction
+    # # à commenter ?
+    # def __hash__(self):
+    #     return hash(self.__location)
+
+    # Note: We intentionally do NOT override __hash__ or __eq__ here.
+    # The parent class (base.Object) provides stable ID-based hashing
+    # which is required for observer registration to work correctly.
+    # Using location-based hashing caused KeyError crashes when the
+    # location changed after observer registration (issue #84).
+
+    def __lt__(self, other):
+        try:
+            return self.location() < other.location()
+        except AttributeError:
+            return False
 
     def __getstate__(self):
         try:
@@ -360,7 +395,11 @@ class Attachment(base.Object, NoteOwner):
         self.setLocation(state["location"])
 
     def __getcopystate__(self):
-        return self.__getstate__()
+        # return self.__getstate__()
+        # Don't include id and creationDateTime - copies should get new ones
+        state = super().__getcopystate__()
+        state.update(dict(location=self.location()))
+        return state
 
     def __unicode__(self):
         return self.subject()
@@ -375,7 +414,9 @@ class Attachment(base.Object, NoteOwner):
 class FileAttachment(Attachment):
     type_ = "file"
 
-    def open(self, workingDir=None, openAttachment=openfile.openFile):  # pylint: disable=W0221
+    def open(
+        self, workingDir=None, openAttachment=openfile.openFile
+    ):  # pylint: disable=W0221
         return openAttachment(self.normalizedLocation(workingDir))
 
     def normalizedLocation(self, workingDir=None):
@@ -387,6 +428,7 @@ class FileAttachment(Attachment):
         return location
 
     def isLocalFile(self) -> bool:
+        # return urlparse(self.location())[0] == ""
         return urlparse(self.location())[0] == ""
 
 
@@ -429,7 +471,9 @@ class MailAttachment(Attachment):
     def data(self):
         try:
             # return file(self.location(), "rb").read()  # fichier binaire !!!
-            with open(self.location(), "rb") as f:  # Ouvre le fichier en mode binaire
+            with open(
+                self.location(), "rb"
+            ) as f:  # Ouvre le fichier en mode binaire
                 return f.read()  # Lit et retourne le contenu du fichier
         except IOError:
             return None  # En cas d'erreur, retourne None
@@ -437,13 +481,17 @@ class MailAttachment(Attachment):
 
 def AttachmentFactory(location, type_=None, *args, **kwargs):
     if not location:
-        print(f"⚠️ [DEBUG] L'attachement a un emplacement vide ! kwargs={kwargs}")
+        print(
+            f"⚠️ [DEBUG] L'attachement a un emplacement vide ! kwargs={kwargs}"
+        )
     else:
         print(f"✅ [DEBUG] Attachement valide : {location}")
     return None if not location else Attachment(location, *args, **kwargs)
 
     if not location or not isinstance(location, str):
-        print(f"attachment.AttachmentFactory : ⚠️ WARNING - Emplacement d'attachement invalide : {location}")
+        print(
+            f"attachment.AttachmentFactory : ⚠️ WARNING - Emplacement d'attachement invalide : {location}"
+        )
         return None
     if type_ is None:
         if location.startswith("URI:"):

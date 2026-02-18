@@ -15,6 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 # Le piège de la division : C'est le point le plus critique.
 # En Python 2, 1/1000 vaut 0.
 # En Python 3, cela vaut 0.001.
