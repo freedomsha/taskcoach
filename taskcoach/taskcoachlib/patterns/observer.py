@@ -21,6 +21,7 @@ import logging
 from collections.abc import Iterable
 from taskcoachlib.patterns import singleton
 import functools
+
 # from taskcoachlib.thirdparty.pubsub import pub
 from pubsub import pub
 
@@ -160,10 +161,11 @@ class Event(object):
 
         # TODO : problème d'utilisation de __sourcesAndValuesByType !
         self.__sourcesAndValuesByType = (
-            dict()
+            # dict()
+            {}
             if type is None
-            # else {type: {} if source is None else {source: values}}
-            else {type: dict() if source is None else {source: values}}
+            else {type: {} if source is None else {source: values}}
+            # else {type: dict() if source is None else {source: values}}
         )  # dict or set ?
 
     # def __repr__(self) -> str:  # pragma: no cover
@@ -205,17 +207,25 @@ class Event(object):
         # self.__sourcesAndValuesByType.setdefault(eventType, {})[source] = tuple(currentValues)
 
         # TODO : à vérifier problèmes dans les tests
-        eventType = kwargs.pop("type", self.type())  # Définit le type d'événement
+        eventType = kwargs.pop(
+            "type", self.type()
+        )  # Définit le type d'événement
         # log.debug(f"Event: Ajout de source : {source}, type : {eventType}, valeurs : {values}")
-        currentValues = set(
-            self.__sourcesAndValuesByType.setdefault(eventType, {}).setdefault(
-                source, tuple()
-            )
-        )
-        currentValues |= set(values)
-        self.__sourcesAndValuesByType.setdefault(eventType, {})[source] = (
-            tuple(currentValues)
-        )
+        # currentValues = set(
+        #     self.__sourcesAndValuesByType.setdefault(eventType, {}).setdefault(
+        #         source, tuple()
+        #     )
+        # )
+        sources = self.__sourcesAndValuesByType.setdefault(
+            eventType, {}
+        )  # Récupère ou crée le dictionnaire des sources pour le type d'événement
+        currentValues = sources.get(
+            source, tuple()
+        )  # Récupère les valeurs actuelles pour la source, ou une tuple vide si la source n'existe pas
+        # self.__sourcesAndValuesByType.setdefault(eventType, {})[source] = (
+        #     tuple(currentValues)
+        # )
+        sources[source] = currentValues + values
         # self.__sourcesAndValuesByType[eventType][source] = tuple(currentValues)
 
     # def type(self) -> str:
@@ -254,7 +264,9 @@ class Event(object):
         Returns :
             set : L'ensemble des sources.
         """
-        types = types or self.types()  # Utilise tous les types si aucun n'est spécifié
+        types = (
+            types or self.types()
+        )  # Utilise tous les types si aucun n'est spécifié
         sources = set()
         for type in types:
             sources |= set(
@@ -404,7 +416,8 @@ class MethodProxy(object):
         """
         self.method = method
 
-    def __repr__(self) -> str:
+    # def __repr__(self) -> str:
+    def __repr__(self):
         # return "MethodProxy(%s)" % self.method  # pragma: no cover
         return f"MethodProxy({self.method})"  # pragma: no cover
 
@@ -633,9 +646,13 @@ class Publisher(object, metaclass=singleton.Singleton):
         """
         if not event.sources():
             return
-        log.debug(f"Publisher.notifyObservers : lancé par {self.__class__.__name__} pour informer les observateurs de l'événement {event} avec sources {event.sources()}.")
+        log.debug(
+            f"Publisher.notifyObservers : lancé par {self.__class__.__name__} pour informer les observateurs de l'événement {event} avec sources {event.sources()}."
+        )
         # Recueillir les observateurs *et* les types et sources pour lesquels ils sont enregistrés
-        observers = dict()  # {observer: set([(type, source), ...])}  liste set ou dict ? TODO !
+        observers = (
+            dict()
+        )  # {observer: set([(type, source), ...])}  liste set ou dict ? TODO !
         # observers = set()
         types = event.types()
         # Inclure les observateurs non inscrits pour une source d'événement spécifique :
@@ -644,18 +661,27 @@ class Publisher(object, metaclass=singleton.Singleton):
         eventTypesAndSources = [
             (type, source) for source in sources for type in types
         ]
-        log.debug(f"Publisher.notifyObservers : pour chaque sources {sources} de chaque types {types} récupère {eventTypesAndSources}.")
+        log.debug(
+            f"Publisher.notifyObservers : pour chaque sources {sources} de chaque types {types} récupère {eventTypesAndSources}."
+        )
         for eventTypeAndSource in eventTypesAndSources:
             for observer in self.__observers.get(eventTypeAndSource, set()):
                 # for observer in self.__observers.get(eventTypeAndSource, dict()):
                 observers.setdefault(observer, set()).add(eventTypeAndSource)
                 # observers.setdefault(observer, []).append(eventTypeAndSource)
-        for observer, eventTypesAndSources in observers.items():  # AttributeError: 'set' object has no attribute 'items'
+        for (
+            observer,
+            eventTypesAndSources,
+        ) in (
+            observers.items()
+        ):  # AttributeError: 'set' object has no attribute 'items'
             # for observer, eventTypesAndSources in observers.:
             subEvent = event.subEvent(*eventTypesAndSources)
             if subEvent.types():
                 observer(subEvent)
-        log.debug(f"Publisher.notifyObservers : observers={observers} et observers.items={observers.items()} sont définis !")
+        log.debug(
+            f"Publisher.notifyObservers : observers={observers} et observers.items={observers.items()} sont définis !"
+        )
 
     @unwrapObservers
     def observers(self, eventType=None):
@@ -791,6 +817,7 @@ class Decorator(Observer):
 class ObservableCollection(object):
     """
     Classe mixin de base pour les collections observables."""
+
     # def __hash__(self) -> int:
     def __hash__(self):
         """Rendre les ObservableCollections appropriées comme clés dans les dictionnaires."""
@@ -1043,7 +1070,9 @@ class CollectionDecorator(Decorator, ObservableCollection):
         """
         super().__init__(observedCollection, *args, **kwargs)
         self.__freezeCount = 0
-        observable = self.observable()  # C'est ici que l'observable est stocké.
+        observable = (
+            self.observable()
+        )  # C'est ici que l'observable est stocké.
         # Observe les événements d'ajout et de suppression dans la collection observable
         self.registerObserver(
             self.onAddItem,
@@ -1081,7 +1110,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         de changement.
         """
         observable = self.observable()
-        if hasattr(observable, 'refresh'):
+        if hasattr(observable, "refresh"):
             observable.refresh()
         else:
             # # Si l'objet de base ne peut pas être rafraîchi (comme un NoteContainer),
@@ -1126,10 +1155,12 @@ class CollectionDecorator(Decorator, ObservableCollection):
         #     self.observable().freeze()
         # AJOUTER LA VÉRIFICATION :
         observable = self.observable()
-        if hasattr(observable, 'freeze'):
+        if hasattr(observable, "freeze"):
             observable.freeze()
         self.__freezeCount += 1
-        log.debug(f"{self.__class__.__name__}.freeze() - Sortie, compteur = {self.__freezeCount}")
+        log.debug(
+            f"{self.__class__.__name__}.freeze() - Sortie, compteur = {self.__freezeCount}"
+        )
 
     def thaw(self):
         """
@@ -1162,7 +1193,7 @@ class CollectionDecorator(Decorator, ObservableCollection):
         #         # self.notifyFrozenObservers()
         # AJOUTER LA VÉRIFICATION :
         observable = self.observable()
-        if hasattr(observable, 'thaw'):
+        if hasattr(observable, "thaw"):
             observable.thaw()  # Boucle entre ici et domain.base.filter.Filter.thaw()
 
         # if not self._frozen:
@@ -1170,7 +1201,9 @@ class CollectionDecorator(Decorator, ObservableCollection):
             self.refresh()  # Update the collection if counter is back to zero
         # log.debug(f"{self.__class__.__name__}.thaw() - Sortie")
         # log.debug(f"{self.__class__.__name__}.thaw() - Sortie, compteur = {self._frozen}")
-        log.debug(f"{self.__class__.__name__}.thaw() - Sortie, compteur = {self.__freezeCount}")
+        log.debug(
+            f"{self.__class__.__name__}.thaw() - Sortie, compteur = {self.__freezeCount}"
+        )
 
     # def isFrozen(self) -> bool:
     def isFrozen(self):
@@ -1278,6 +1311,7 @@ class ListDecorator(CollectionDecorator, ObservableList):
     Cette classe hérite de CollectionDecorator et ObservableList, permettant de décorer une liste observable
     et d'ajouter des comportements supplémentaires tout en notifiant les observateurs des changements dans la liste.
     """
+
     pass
 
 
@@ -1288,4 +1322,5 @@ class SetDecorator(CollectionDecorator, ObservableSet):
     Cette classe hérite de CollectionDecorator et ObservableSet, permettant de décorer un ensemble observable
     et d'ajouter des comportements supplémentaires tout en notifiant les observateurs des changements dans l'ensemble.
     """
+
     pass
