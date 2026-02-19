@@ -599,61 +599,61 @@ class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
         Args :
             uiCommand (uicommand.UICommand) : La commande UI à ajouter.
         """
-        # Cette méthode distingue :
-        #     - les None ➜ séparateurs
-        #     - les int ➜ espaceurs
-        #     - les objets hérités de UICommand ➜ ajoutés à la barre avec appendToToolBar()
-        # Déboggage :
-        # Ajoutez des débogage pour vérifier les paramètres
-        log.debug(
-            f"ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}"
-        )
-        # 1. Récupération de l'icône
-        # forcer la conversion de l'image juste avant l'ajout :
-        bmp = uiCommand.bitmap  # TypeError: 'str' object is not callable
-        if isinstance(bmp, str):
-            # if isinstance(uiCommand.bitmap(), str):
-            # On force la conversion si on a encore une chaîne
-            from taskcoachlib.gui import artprovider
-
-            bmp = artprovider.IconProvider().getIconFromArtProvider(
-                bmp, self.__size
-            )
-            # bmp = artprovider.getBitmap(uiCommand.bitmap(), self._size)
-        else:
-            bmp = uiCommand.bitmap()
-
-        # 2. Détermination du type de bouton (Correction actuelle)
-        # On vérifie si la commande a une méthode kind(), sinon normal.
-        if hasattr(uiCommand, "kind") and callable(uiCommand.kind):
-            kind_of_uicommand = uiCommand.kind()
-        else:
-            kind_of_uicommand = wx.ITEM_NORMAL
-        # # Remplacer self.kind(uiCommand) par l'accès direct au type de la commande
-        # # Si uiCommand est un objet UICommand standard :
-        # kind_of_uicommand = (
-        #     uiCommand.kind() if hasattr(uiCommand, "kind") else wx.ITEM_NORMAL
+        # # Cette méthode distingue :
+        # #     - les None ➜ séparateurs
+        # #     - les int ➜ espaceurs
+        # #     - les objets hérités de UICommand ➜ ajoutés à la barre avec appendToToolBar()
+        # # Déboggage :
+        # # Ajoutez des débogage pour vérifier les paramètres
+        # log.debug(
+        #     f"ToolBar.appendUICommand : Adding UI Command: {uiCommand.menuText}"
         # )
-        # Pourquoi cette erreur ?
-        # Dans les versions précédentes ou d'autres implémentations de barres d'outils
-        # (comme wx.ToolBar standard), il y avait parfois une fonction helper nommée kind.
-        # Ici, vous utilisez AuiToolBar, et il semble que la méthode kind ait été oubliée dans la classe
-        # ou que vous ayez copié un bout de code d'une classe parente sans la définir.
-        # Ensuite on utilise bmp au lieu de uiCommand.bitmap()
-        # 3. Ajout à la barre d'outils AUI
-        self.AddLabelTool(
-            # uiCommand.id(),
-            uiCommand.id,
-            # uiCommand.menuText(),
-            uiCommand.menuText,
-            bmp,
-            bmp,
-            # self.kind(uiCommand),
-            kind_of_uicommand,
-            shortHelp=uiCommand.helpText,
-            longHelp=uiCommand.getHelpText(),
-        )
-        # vous garantissez que AddLabelTool reçoit un objet wx.Bitmap (ou wx.NullBitmap), et jamais une str. L'appel à .IsOk() ne plantera donc plus.
+        # # 1. Récupération de l'icône
+        # # forcer la conversion de l'image juste avant l'ajout :
+        # bmp = uiCommand.bitmap  # TypeError: 'str' object is not callable
+        # if isinstance(bmp, str):
+        #     # if isinstance(uiCommand.bitmap(), str):
+        #     # On force la conversion si on a encore une chaîne
+        #     from taskcoachlib.gui import artprovider
+        #
+        #     bmp = artprovider.IconProvider().getIconFromArtProvider(  # Attention il faut obtenir un Bitmap, pas une chaîne ni un wx.Icon
+        #         bmp, self.__size
+        #     )
+        #     # bmp = artprovider.getBitmap(uiCommand.bitmap(), self._size)
+        # else:
+        #     bmp = uiCommand.bitmap()
+        #
+        # # 2. Détermination du type de bouton (Correction actuelle)
+        # # On vérifie si la commande a une méthode kind(), sinon normal.
+        # if hasattr(uiCommand, "kind") and callable(uiCommand.kind):
+        #     kind_of_uicommand = uiCommand.kind()
+        # else:
+        #     kind_of_uicommand = wx.ITEM_NORMAL
+        # # # Remplacer self.kind(uiCommand) par l'accès direct au type de la commande
+        # # # Si uiCommand est un objet UICommand standard :
+        # # kind_of_uicommand = (
+        # #     uiCommand.kind() if hasattr(uiCommand, "kind") else wx.ITEM_NORMAL
+        # # )
+        # # Pourquoi cette erreur ?
+        # # Dans les versions précédentes ou d'autres implémentations de barres d'outils
+        # # (comme wx.ToolBar standard), il y avait parfois une fonction helper nommée kind.
+        # # Ici, vous utilisez AuiToolBar, et il semble que la méthode kind ait été oubliée dans la classe
+        # # ou que vous ayez copié un bout de code d'une classe parente sans la définir.
+        # # Ensuite on utilise bmp au lieu de uiCommand.bitmap()
+        # # 3. Ajout à la barre d'outils AUI
+        # self.AddLabelTool(
+        #     # uiCommand.id(),
+        #     uiCommand.id,
+        #     # uiCommand.menuText(),
+        #     uiCommand.menuText,
+        #     bmp,
+        #     bmp,
+        #     # self.kind(uiCommand),
+        #     kind_of_uicommand,
+        #     shortHelp=uiCommand.helpText,
+        #     longHelp=uiCommand.getHelpText(),
+        # )
+        # # vous garantissez que AddLabelTool reçoit un objet wx.Bitmap (ou wx.NullBitmap), et jamais une str. L'appel à .IsOk() ne plantera donc plus.
 
         try:
             return uiCommand.appendToToolBar(self)
@@ -796,30 +796,30 @@ class MainToolBar(ToolBar):
             # réarme le timer (cancel/restart) : CallLater retourne un objet, on l'arrêtera
             self._resize_timer.Stop()
             self._resize_timer = None
-            log.debug(
-                "MainToolBar._OnSize: relance le timer pour le redimensionnement."
-            )
+            # log.debug(
+            #     "MainToolBar._OnSize: relance le timer pour le redimensionnement."
+            # )
             self._resize_timer = wx.CallLater(
                 self._resize_delay_ms, self._do_parent_send_size
             )
         # self._is_resizing = False
-        log.debug("MainToolBar._OnSize : terminé !")
+        # log.debug("MainToolBar._OnSize : terminé !")
 
     def _do_parent_send_size(self):
         self._resize_timer = None
         try:
-            log.debug(
-                "MainToolBar._do_parent_send_size :  met à jour la nouvelle taille de fenêtre."
-            )
+            # log.debug(
+            #     "MainToolBar._do_parent_send_size :  met à jour la nouvelle taille de fenêtre."
+            # )
             self.GetParent().SendSizeEvent()
         except Exception as e:
             log.error(
                 "MainToolBar._do_parent_send_size : Erreur en appelant SendSizeEvent depuis _do_parent_send_size: %s",
                 e,
             )
-        log.debug(
-            "MainToolBar._do_parent_send_size : ToolBar et fenêtre redimensionnées !"
-        )
+        # log.debug(
+        #     "MainToolBar._do_parent_send_size : ToolBar et fenêtre redimensionnées !"
+        # )
 
     def _call_parent_send_size_and_unset_flag(self):
         try:
@@ -827,9 +827,9 @@ class MainToolBar(ToolBar):
             self._do_parent_send_size()
         finally:
             self._is_resizing = False
-            log.debug(
-                "MainToolBar._call_parent_send_size_and_unset_flag : _is_resizing remis à False après SendSizeEvent !"
-            )
+            # log.debug(
+            #     "MainToolBar._call_parent_send_size_and_unset_flag : _is_resizing remis à False après SendSizeEvent !"
+            # )
 
     def Realize(self):
         """wx.lib.agw.aui.auibar.AuiToolBar.Realize Réalise la barre d'outils.
@@ -844,18 +844,18 @@ class MainToolBar(ToolBar):
         self._agwStyle &= ~aui.AUI_TB_NO_AUTORESIZE
         super().Realize()
         self._agwStyle |= aui.AUI_TB_NO_AUTORESIZE
-        log.debug("MainToolBar.Realize : appel wx.CallAfter().")
+        # log.debug("MainToolBar.Realize : appel wx.CallAfter().")
         # # wx.CallAfter(self.GetParent().SendSizeEvent)
         # wx.CallAfter(self._call_parent_send_size_and_unset_flag)
         wx.CallAfter(self._do_parent_send_size)
         # log.debug("MainToolBar.Realize : L'appel wx.CallAfter(SendSizeEvent) est passé.")
         # w, h = self.GetParent().GetClientSizeTuple()
         w, h = self.GetParent().GetClientSize()
-        log.debug("MainToolBar.Realize : appel CallAfter(self.SetMinSize).")
+        # log.debug("MainToolBar.Realize : appel CallAfter(self.SetMinSize).")
         wx.CallAfter(self.SetMinSize, (w, -1))
         # Après les appels mise à jour pour nous assurer que notre suivi de taille est correct dès le départ.
         self._last_size = self.GetSize()
         # log.debug("MainToolBar.Realize : L'appel wx.CallAfter(SetMinSize) est passé.")
-        log.debug(
-            "MainToolBar.Realize : Les appels wx.CallAfter(SendSizeEvent & SetMinSize) sont passé avec succès !"
-        )
+        # log.debug(
+        #     "MainToolBar.Realize : Les appels wx.CallAfter(SendSizeEvent & SetMinSize) sont passé avec succès !"
+        # )
