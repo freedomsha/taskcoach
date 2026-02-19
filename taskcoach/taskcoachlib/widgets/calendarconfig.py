@@ -105,7 +105,7 @@ class CalendarConfigDialog(sized_controls.SizedDialog):
         buttonSizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.SetButtonSizer(buttonSizer)  # Attache les boutons à la boîte de dialogue.
         self.Fit()  # Redimensionne la boîte de dialogue pour s'adapter à son contenu.
-
+        self.SetMinSize(self.GetSize())
         # Lie l'événement de clic du bouton OK à la méthode 'ok' de cette classe.
         # Utilise wxhelper pour obtenir le bouton OK de manière robuste.
         # buttonSizer.GetAffirmativeButton().Bind(wx.EVT_BUTTON, self.ok) # Ancienne méthode commentée.

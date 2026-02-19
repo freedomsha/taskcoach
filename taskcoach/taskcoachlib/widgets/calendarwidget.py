@@ -48,19 +48,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from past.utils import old_div # Compatibilité pour la division entière avec Python 2.
 import logging  # Module de journalisation.
 import wx  # La bibliothèque principale wxPython.
-from taskcoachlib.thirdparty.wxScheduler import (wxScheduler, wxSchedule,
-                                                 wxReportScheduler, wxTimeFormat)  # Composants de wxScheduler.
+from taskcoachlib.thirdparty.wxScheduler import (
+    wxScheduler,
+    wxSchedule,
+    wxReportScheduler,
+    wxTimeFormat,
+)  # Composants de wxScheduler.
 from taskcoachlib.thirdparty.wxScheduler.wxSchedulerPaint import (
     EVT_SCHEDULE_ACTIVATED,  # Événement : un élément de calendrier est activé.
     EVT_SCHEDULE_RIGHT_CLICK,  # Événement : clic droit sur un élément.
     EVT_SCHEDULE_DCLICK,  # Événement : double-clic sur un élément.
-    EVT_PERIODWIDTH_CHANGED)  # Événement : la largeur de la période d'affichage a changé.
+    EVT_PERIODWIDTH_CHANGED,  # Événement : la largeur de la période d'affichage a changé.
+)
 from taskcoachlib.thirdparty.wxScheduler.wxSchedulerConstants import (
     wxSCHEDULER_WEEKSTART_MONDAY,  # Constante : la semaine commence le lundi.
-    wxSCHEDULER_WEEKSTART_SUNDAY)  # Constante : la semaine commence le dimanche.
-from taskcoachlib.domain import date  # Module pour la gestion des dates et heures spécifiques à Task Coach.
-from taskcoachlib.widgets import draganddrop  # Module pour la gestion du glisser-déposer.
-from taskcoachlib import command, render  # Modules pour les commandes et le rendu.
+    wxSCHEDULER_WEEKSTART_SUNDAY,  # Constante : la semaine commence le dimanche.
+)
+from taskcoachlib.domain import (
+    date,
+)  # Module pour la gestion des dates et heures spécifiques à Task Coach.
+from taskcoachlib.widgets import (
+    draganddrop,
+)  # Module pour la gestion du glisser-déposer.
+from taskcoachlib import (
+    command,
+    render,
+)  # Modules pour les commandes et le rendu.
 from . import tooltip  # Module pour les info-bulles.
 
 log = logging.getLogger(__name__)  # Initialise le logger pour ce module.
@@ -79,8 +92,20 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
     Elle repose sur `wxScheduler`, un widget étendu pour afficher des périodes temporelles,
     et intègre la gestion des info-bulles contextuelles via `ToolTipMixin`.
     """
-    def __init__(self, parent, taskList, iconProvider, onSelect, onEdit,
-                 onCreate, onChangeConfig, popupMenu, *args, **kwargs):
+
+    def __init__(
+        self,
+        parent,
+        taskList,
+        iconProvider,
+        onSelect,
+        onEdit,
+        onCreate,
+        onChangeConfig,
+        popupMenu,
+        *args,
+        **kwargs,
+    ):
         """
         Initialise le panneau de contenu du calendrier avec les tâches à afficher.
 
@@ -96,21 +121,29 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         :param kwargs: mots-clés supplémentaires (incluant onDropURL, onDropFiles, onDropMail)
         """
         log.debug(f"_CalendarContent.__init__ : args={args}, kwargs={kwargs}")
-        log.debug(f"_CalendarContent.__init__ : mro={_CalendarContent.__mro__}")
+        log.debug(
+            f"_CalendarContent.__init__ : mro={_CalendarContent.__mro__}"
+        )
+        # self.getItemTooltipData = parent.getItemTooltipData
 
         self.__onDropURLCallback = kwargs.pop("onDropURL", None)
         self.__onDropFilesCallback = kwargs.pop("onDropFiles", None)
         self.__onDropMailCallback = kwargs.pop("onDropMail", None)
 
-        log.debug(f"_CalendarContent.__init__ : avant super args={args}, kwargs={kwargs}")
+        log.debug(
+            f"_CalendarContent.__init__ : avant super args={args}, kwargs={kwargs}"
+        )
         # super().__init__(id=wx.ID_ANY, *args, **kwargs)
-        super().__init__(parent, *args, **kwargs)  # Faire attention à faire suivre les arguments dans tous les Parents-Enfants de la classe en suivant le MRO
-        log.debug(f"_CalendarContent.__init__ : après super args={args}, kwargs={kwargs}")
+        # super().__init__(parent, *args, **kwargs)  # Faire attention à faire suivre les arguments dans tous les Parents-Enfants de la classe en suivant le MRO
+        super().__init__(parent, wx.ID_ANY, *args, **kwargs)
+        log.debug(
+            f"_CalendarContent.__init__ : après super args={args}, kwargs={kwargs}"
+        )
         self.getItemTooltipData = parent.getItemTooltipData
 
-        self.dropTarget = draganddrop.DropTarget(self.OnDropURL,
-                                                 self.OnDropFiles,
-                                                 self.OnDropMail)
+        self.dropTarget = draganddrop.DropTarget(
+            self.OnDropURL, self.OnDropFiles, self.OnDropMail
+        )
 
         self.SetDropTarget(self.dropTarget)
 
@@ -157,8 +190,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         :param includeMinutes: booléen, indique s’il faut inclure les minutes
         :return: Chaîne de caractères formatée.
         """
-        return render.time(TaskSchedule.tcDateTime(dateTime),
-                           minutes=includeMinutes)
+        return render.time(
+            TaskSchedule.tcDateTime(dateTime), minutes=includeMinutes
+        )
 
     # Gestion du glisser-déposer
     def _handleDrop(self, x, y, droppedObject, cb):
@@ -177,11 +211,26 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
                 if isinstance(item, TaskSchedule):
                     cb(item.task, droppedObject)
                 else:
-                    datetime = date.DateTime(item.GetYear(),
-                                             item.GetMonth() + 1,
-                                             item.GetDay())
-                    cb(None, droppedObject, plannedStartDateTime=datetime,
-                       dueDateTime=datetime.endOfDay())
+                    datetime = date.DateTime(
+                        item.GetYear(), item.GetMonth() + 1, item.GetDay()
+                    )
+                    cb(
+                        None,
+                        droppedObject,
+                        plannedStartDateTime=datetime,
+                        dueDateTime=datetime.endOfDay(),
+                    )
+
+    def GetPrintout(self, settings):
+        return wxReportScheduler(
+            self.GetViewType(),
+            self.GetStyle(),
+            self.GetDrawer(),
+            self.GetDate(),
+            self.GetWeekStart(),
+            self.GetPeriodCount(),
+            self.GetSchedules(),
+        )
 
     def OnDropURL(self, x, y, url):
         """Gère le drop d’une URL."""
@@ -195,15 +244,6 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         """Gère le drop de mails (via Drag & Drop)."""
         self._handleDrop(x, y, mail, self.__onDropMailCallback)
 
-    def GetPrintout(self, settings):
-        return wxReportScheduler(self.GetViewType(),
-                                 self.GetStyle(),
-                                 self.GetDrawer(),
-                                 self.GetDate(),
-                                 self.GetWeekStart(),
-                                 self.GetPeriodCount(),
-                                 self.GetSchedules())
-
     # Affichage conditionnel des tâches
     def SetShowNoStartDate(self, doShow):
         """
@@ -211,7 +251,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
         :param doShow: Booléen.
         """
-        log.info(f"_CalendarContent.SetShowNoStartDate : L’affichage des tâches sans date de début est {doShow}. Rafraîchissement.")
+        log.info(
+            f"_CalendarContent.SetShowNoStartDate : L’affichage des tâches sans date de début est {doShow}. Rafraîchissement."
+        )
         self.__showNoPlannedStartDate = doShow
         self.RefreshAllItems(0)
 
@@ -221,7 +263,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
         :param doShow: Booléen.
         """
-        log.info(f"_CalendarContent.SetShowNoDueDate : L’affichage des tâches sans date d’échéance est {doShow}. Rafraîchissement.")
+        log.info(
+            f"_CalendarContent.SetShowNoDueDate : L’affichage des tâches sans date d’échéance est {doShow}. Rafraîchissement."
+        )
         self.__showNoDueDate = doShow
         self.RefreshAllItems(0)
 
@@ -231,7 +275,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
         :param doShow: Booléen.
         """
-        log.info(f"_CalendarContent.SetShowUnplanned : L’affichage des tâches non planifiées est {doShow}. Rafraîchissement.")
+        log.info(
+            f"_CalendarContent.SetShowUnplanned : L’affichage des tâches non planifiées est {doShow}. Rafraîchissement."
+        )
         self.__showUnplanned = doShow
         self.RefreshAllItems(0)
 
@@ -256,12 +302,16 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         """
         if event.schedule is None:
             if event.date is not None:
-                self.createCommand(date.DateTime(event.date.GetYear(),
-                                                 event.date.GetMonth() + 1,
-                                                 event.date.GetDay(),
-                                                 event.date.GetHour(),
-                                                 event.date.GetMinute(),
-                                                 event.date.GetSecond()))
+                self.createCommand(
+                    date.DateTime(
+                        event.date.GetYear(),
+                        event.date.GetMonth() + 1,
+                        event.date.GetDay(),
+                        event.date.GetHour(),
+                        event.date.GetMinute(),
+                        event.date.GetSecond(),
+                    )
+                )
         else:
             self.editCommand(event.schedule.task)
 
@@ -281,7 +331,17 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
             self.__selection = [schedule.task]
             schedule.SetSelected(True)
 
-        wx.CallAfter(self.selectCommand)
+        # wx.CallAfter(self.selectCommand)
+        wx.CallAfter(self.__safeSelectCommand)
+
+    def __safeSelectCommand(self):
+        """Safely call selectCommand, guarding against deleted C++ objects."""
+        try:
+            if self:
+                self.selectCommand()
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            pass
 
     def SelectTask(self, task):
         """
@@ -299,7 +359,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
         :param count: Nombre d’éléments (non utilisé directement).
         """
-        log.info(f"_CalendarContent.RefreshAllItems : Recharge et redessine toutes les tâches dans le calendrier selon les filtres actifs.")
+        log.info(
+            f"_CalendarContent.RefreshAllItems : Recharge et redessine toutes les tâches dans le calendrier selon les filtres actifs."
+        )
         x, y = self.GetViewStart()
         selectionId = None
         if self.__selection:
@@ -314,15 +376,27 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
         for task in self.taskList:
             if not task.isDeleted():
-                if task.plannedStartDateTime() == maxDateTime or not task.completed():
-                    if task.plannedStartDateTime() == maxDateTime and not self.__showNoPlannedStartDate:
+                if (
+                    task.plannedStartDateTime() == maxDateTime
+                    or not task.completed()
+                ):
+                    if (
+                        task.plannedStartDateTime() == maxDateTime
+                        and not self.__showNoPlannedStartDate
+                    ):
                         continue
 
-                    if task.dueDateTime() == maxDateTime and not self.__showNoDueDate:
+                    if (
+                        task.dueDateTime() == maxDateTime
+                        and not self.__showNoDueDate
+                    ):
                         continue
 
                     if not self.__showUnplanned:
-                        if task.plannedStartDateTime() == maxDateTime and task.dueDateTime() == maxDateTime:
+                        if (
+                            task.plannedStartDateTime() == maxDateTime
+                            and task.dueDateTime() == maxDateTime
+                        ):
                             continue
 
                 schedule = TaskSchedule(task, self.iconProvider)
@@ -334,9 +408,12 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
                     schedule.SetSelected(True)
 
         self.Add(schedules)
-        wx.CallAfter(self.selectCommand)
+        # wx.CallAfter(self.selectCommand)
+        wx.CallAfter(self.__safeSelectCommand)
         self.Scroll(x, y)
-        log.info(f"_CalendarContent.RefreshAllItems : Terminé ! Toutes les tâches sont redessinées!")
+        log.info(
+            f"_CalendarContent.RefreshAllItems : Terminé ! Toutes les tâches sont redessinées!"
+        )
 
     def RefreshItems(self, *args):
         """
@@ -344,7 +421,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
 
         :param args: Arguments contenant la liste de tâches à rafraîchir.
         """
-        log.info(f"_CalendarContent.RefreshItems : Met à jour dynamiquement certaines tâches de {args}.")
+        log.info(
+            f"_CalendarContent.RefreshItems : Met à jour dynamiquement certaines tâches de {args}."
+        )
         selectionId = None
         if self.__selection:
             selectionId = self.__selection[0].id()
@@ -353,19 +432,32 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         for task in args:
             doShow = True
 
-            if task.plannedStartDateTime() == date.DateTime() and task.dueDateTime() == date.DateTime() and not self.__showUnplanned:
+            if (
+                task.plannedStartDateTime() == date.DateTime()
+                and task.dueDateTime() == date.DateTime()
+                and not self.__showUnplanned
+            ):
                 doShow = False
 
-            if task.plannedStartDateTime() == date.DateTime() and not self.__showNoPlannedStartDate:
+            if (
+                task.plannedStartDateTime() == date.DateTime()
+                and not self.__showNoPlannedStartDate
+            ):
                 doShow = False
 
-            if task.dueDateTime() == date.DateTime() and not self.__showNoDueDate:
+            if (
+                task.dueDateTime() == date.DateTime()
+                and not self.__showNoDueDate
+            ):
                 doShow = False
 
             # Special case
             if task.isDeleted():
                 doShow = False
-            elif task.plannedStartDateTime() != date.DateTime() and task.completed():
+            elif (
+                task.plannedStartDateTime() != date.DateTime()
+                and task.completed()
+            ):
                 doShow = True
 
             if doShow:
@@ -384,9 +476,13 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
                 if task.id() in self.taskMap:
                     self.Delete(self.taskMap[task.id()])
                     del self.taskMap[task.id()]
-                    if self.__selection and self.__selection[0].id() == task.id():
+                    if (
+                        self.__selection
+                        and self.__selection[0].id() == task.id()
+                    ):
                         self.__selection = []
-                        wx.CallAfter(self.selectCommand)
+                        # wx.CallAfter(self.selectCommand)
+                        wx.CallAfter(self.__safeSelectCommand)
         log.info("_CalendarContent.RefreshItems : Mise à jour terminée !")
 
     # Utilitaires
@@ -415,8 +511,9 @@ class _CalendarContent(tooltip.ToolTipMixin, wxScheduler):
         unitX, unitY = self.GetScrollPixelsPerUnit()
 
         try:
-            _, _, schedule = self._findSchedule(wx.Point(x + originX * unitX,
-                                                         y + originY * unitY))
+            _, _, schedule = self._findSchedule(
+                wx.Point(x + originX * unitX, y + originY * unitY)
+            )
         except TypeError:
             return
 
@@ -455,8 +552,20 @@ class Calendar(wx.Panel):
 
     Il délègue la logique d'affichage et d'interaction à la classe `_CalendarContent`.
     """
-    def __init__(self, parent, taskList, iconProvider, onSelect, onEdit,
-                 onCreate, onChangeConfig=None, popupMenu=None, *args, **kwargs):
+
+    def __init__(
+        self,
+        parent,
+        taskList,
+        iconProvider,
+        onSelect,
+        onEdit,
+        onCreate,
+        onChangeConfig=None,
+        popupMenu=None,
+        *args,
+        **kwargs,
+    ):
         """
         Initialise le widget calendrier.
 
@@ -479,10 +588,18 @@ class Calendar(wx.Panel):
         # Initialisation du panneau d'en-tête du calendrier
         self._headers = wx.Panel(self)
         # Initialisation du panneau des tâches
-        self._content = _CalendarContent(self, taskList, iconProvider,
-                                         onSelect, onEdit, onCreate,
-                                         onChangeConfig=onChangeConfig, popupMenu=popupMenu,
-                                         *args, **kwargs)
+        self._content = _CalendarContent(
+            self,
+            taskList,
+            iconProvider,
+            onSelect,
+            onEdit,
+            onCreate,
+            onChangeConfig=onChangeConfig,
+            popupMenu=popupMenu,
+            *args,
+            **kwargs,
+        )
         # self.widget._drawHeaders = True
         # Composition des 2 sous-panneaux :
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -506,7 +623,9 @@ class Calendar(wx.Panel):
 
         :param dc: Contexte de dessin wx.DC utilisé pour peindre le calendrier.
         """
-        log.debug(f"Calendar.Draw : Utilise _content.Draw() sur {self.__class__.__name__} avec le contexte de dessin {dc}.")
+        log.debug(
+            f"Calendar.Draw : Utilise _content.Draw() sur {self.__class__.__name__} avec le contexte de dessin {dc}."
+        )
         self._content.Draw(dc)
 
     def SetShowNoStartDate(self, doShow):
@@ -548,18 +667,26 @@ class Calendar(wx.Panel):
         Rafraîchit entièrement le contenu du calendrier avec un nombre d'éléments donnés.
         :param count: Nombre total d'éléments à afficher.
         """
-        log.info(f"Calendar.RefreshAllItems : Rafraîchit entièrement le contenu du calendrier avec {count} éléments.")
+        log.info(
+            f"Calendar.RefreshAllItems : Rafraîchit entièrement le contenu du calendrier avec {count} éléments."
+        )
         self._content.RefreshAllItems(count)
-        log.info(f"Calendar.RefreshAllItems : Les {count} éléments du calendrier ont été rafraîchit !")
+        log.info(
+            f"Calendar.RefreshAllItems : Les {count} éléments du calendrier ont été rafraîchit !"
+        )
 
     def RefreshItems(self, *args):
         """
         Rafraîchit une sélection d'éléments uniquement (optimisé).
         :param args: Identifiants ou objets à mettre à jour
         """
-        log.info(f"Calendar.RefreshItems : Rafraîchit uniquement les éléments {args}.")
+        log.info(
+            f"Calendar.RefreshItems : Rafraîchit uniquement les éléments {args}."
+        )
         self._content.RefreshItems(*args)
-        log.info(f"Calendar.RefreshItems : Les éléments {args} sont rafraîchit ! Terminé !")
+        log.info(
+            f"Calendar.RefreshItems : Les éléments {args} sont rafraîchit ! Terminé !"
+        )
 
     # Gestion de sélection
     def GetItemCount(self):
@@ -630,6 +757,7 @@ class TaskSchedule(wxSchedule):
     icônes, progression), la sélection visuelle, et les modifications de dates
     via glisser-déposer ou redimensionnement.
     """
+
     def __init__(self, task, iconProvider):
         """
         Initialise une instance de TaskSchedule.
@@ -638,12 +766,16 @@ class TaskSchedule(wxSchedule):
             task : L'objet tâche Task Coach à encapsuler.
             iconProvider : Un objet capable de fournir l'icône appropriée pour la tâche.
         """
-        log.info(f"TaskSchedule.__init__ : Représente la tâche {task} comme un événement de calendrier pour wxScheduler.")
+        log.info(
+            f"TaskSchedule.__init__ : Représente la tâche {task} comme un événement de calendrier pour wxScheduler."
+        )
         super().__init__()  # Appelle le constructeur de la classe parente (wxSchedule).
 
         self.__selected = False  # Attribut privé pour suivre l'état de sélection de l'événement.
 
-        self.clientdata = task  # Stocke la tâche Task Coach réelle comme données client.
+        self.clientdata = (
+            task  # Stocke la tâche Task Coach réelle comme données client.
+        )
         self.iconProvider = iconProvider  # Stocke le fournisseur d'icônes.
         self.update()  # Appelle la méthode update pour initialiser les propriétés d'affichage.
         log.info(f"TaskSchedule.__init__ : tâche {task} initialisée !")
@@ -660,27 +792,45 @@ class TaskSchedule(wxSchedule):
         """
         self.Freeze()  # Gèle les mises à jour visuelles pour des performances accrues.
         try:
-            self.__selected = selected  # Met à jour l'état de sélection interne.
+            self.__selected = (
+                selected  # Met à jour l'état de sélection interne.
+            )
             if selected:
                 # Si sélectionné, utilise la couleur de surbrillance du système pour le fond.
-                self.color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT)
+                self.color = wx.SystemSettings.GetColour(
+                    wx.SYS_COLOUR_HIGHLIGHT
+                )
                 # Sur Windows, la couleur de surbrillance est parfois très foncée.
                 # Si la couleur de premier plan de la tâche est également foncée,
                 # on l'inverse pour assurer la lisibilité du texte.
-                color = self.task.foregroundColor(True) or (0, 0, 0)  # Récupère la couleur de texte de la tâche.
+                color = self.task.foregroundColor(True) or (
+                    0,
+                    0,
+                    0,
+                )  # Récupère la couleur de texte de la tâche.
                 if len(color) == 3:  # Gère les tuples (R,G,B) ou (R,G,B,A).
                     r, g, b = color
                 else:
                     r, g, b, a = color
-                if r + g + b < 128 * 3:  # Si la somme des composantes est trop faible (couleur foncée).
-                    self.foreground = wx.Colour(255 - r, 255 - g, 255 - b)  # Inverse la couleur.
+                if (
+                    r + g + b < 128 * 3
+                ):  # Si la somme des composantes est trop faible (couleur foncée).
+                    self.foreground = wx.Colour(
+                        255 - r, 255 - g, 255 - b
+                    )  # Inverse la couleur.
                 else:
                     # Si la couleur est claire, utilise la couleur d'origine.
-                    self.foreground = wx.Colour(*(self.task.foregroundColor(True) or (0, 0, 0)))
+                    self.foreground = wx.Colour(
+                        *(self.task.foregroundColor(True) or (0, 0, 0))
+                    )
             else:
                 # Si non sélectionné, utilise les couleurs de fond et de premier plan de la tâche.
-                self.color = wx.Colour(*(self.task.backgroundColor(True) or (255, 255, 255)))
-                self.foreground = wx.Colour(*(self.task.foregroundColor(True) or (0, 0, 0)))
+                self.color = wx.Colour(
+                    *(self.task.backgroundColor(True) or (255, 255, 255))
+                )
+                self.foreground = wx.Colour(
+                    *(self.task.foregroundColor(True) or (0, 0, 0))
+                )
         finally:
             self.Thaw()  # Dégèle les mises à jour visuelles.
 
@@ -696,7 +846,9 @@ class TaskSchedule(wxSchedule):
         """
         # Exécute une commande pour modifier la date de début planifiée de la tâche.
         # La date wx.DateTime est convertie en date.DateTime de Task Coach.
-        command.EditPlannedStartDateTimeCommand(items=[self.task], newValue=self.tcDateTime(start)).do()
+        command.EditPlannedStartDateTimeCommand(
+            items=[self.task], newValue=self.tcDateTime(start)
+        ).do()
 
     def SetEnd(self, end):
         """
@@ -711,12 +863,14 @@ class TaskSchedule(wxSchedule):
         """
         if self.task.completed():
             # Si la tâche est complétée, modifie la date de complétion.
-            command.EditCompletionDateTimeCommand(items=[self.task],
-                                                  newValue=self.tcDateTime(end)).do()
+            command.EditCompletionDateTimeCommand(
+                items=[self.task], newValue=self.tcDateTime(end)
+            ).do()
         else:
             # Sinon, modifie la date d'échéance.
-            command.EditDueDateTimeCommand(items=[self.task],
-                                           newValue=self.tcDateTime(end)).do()
+            command.EditDueDateTimeCommand(
+                items=[self.task], newValue=self.tcDateTime(end)
+            ).do()
 
     def Offset(self, ts):
         # kwargs = dict()
@@ -734,31 +888,40 @@ class TaskSchedule(wxSchedule):
 
         # Si la tâche a une date de début planifiée.
         if self.task.plannedStartDateTime() != date.DateTime():
-            start = self.GetStart()  # Récupère la date de début actuelle de l'événement wxSchedule.
+            start = (
+                self.GetStart()
+            )  # Récupère la date de début actuelle de l'événement wxSchedule.
             # start.AddTS(ts) # Ancienne syntaxe wx.DateTime pour ajouter un TimeSpan.
             # start.Add(ts)   # Ancienne syntaxe wx.DateTime.
             start += ts  # Ajoute le TimeSpan à la date de début.
             # Exécute une commande pour modifier la date de début planifiée de la tâche.
-            command.EditPlannedStartDateTimeCommand(items=[self.task],
-                                                    newValue=self.tcDateTime(start)).do()
+            command.EditPlannedStartDateTimeCommand(
+                items=[self.task], newValue=self.tcDateTime(start)
+            ).do()
         # Si la tâche est complétée.
         if self.task.completed():
-            end = self.GetEnd()  # Récupère la date de fin actuelle de l'événement wxSchedule.
+            end = (
+                self.GetEnd()
+            )  # Récupère la date de fin actuelle de l'événement wxSchedule.
             # end.AddTS(ts) # Ancienne syntaxe.
             # end.Add(ts)   # Ancienne syntaxe.
-            end += ts # Ajoute le TimeSpan à la date de fin.
+            end += ts  # Ajoute le TimeSpan à la date de fin.
             # Exécute une commande pour modifier la date de complétion de la tâche.
-            command.EditCompletionDateTimeCommand(items=[self.task],
-                                                  newValue=self.tcDateTime(end)).do()
+            command.EditCompletionDateTimeCommand(
+                items=[self.task], newValue=self.tcDateTime(end)
+            ).do()
         # Sinon, si la tâche a une date d'échéance.
         elif self.task.dueDateTime() != date.DateTime():
-            end = self.GetEnd()  # Récupère la date de fin actuelle de l'événement wxSchedule.
+            end = (
+                self.GetEnd()
+            )  # Récupère la date de fin actuelle de l'événement wxSchedule.
             # end.AddTS(ts) # Ancienne syntaxe.
             # end.Add(ts)   # Ancienne syntaxe.
             end += ts  # Ajoute le TimeSpan à la date de fin.
             # Exécute une commande pour modifier la date d'échéance de la tâche.
-            command.EditDueDateTimeCommand(items=[self.task],
-                                           newValue=self.tcDateTime(end)).do()
+            command.EditDueDateTimeCommand(
+                items=[self.task], newValue=self.tcDateTime(end)
+            ).do()
 
     @property
     def task(self):
@@ -773,7 +936,9 @@ class TaskSchedule(wxSchedule):
         """
         # Args:
         #     wxSchedule (wxSchedule): L'objet wxSchedule dont on veut la tâche.
-        return self.clientdata  # La tâche est stockée dans l'attribut clientdata.
+        return (
+            self.clientdata
+        )  # La tâche est stockée dans l'attribut clientdata.
         # return wxSchedule.GetClientData()  # La tâche est stockée comme ClientData dans wxSchedule.
 
     def wxScheduleById(self, id):
@@ -786,7 +951,9 @@ class TaskSchedule(wxSchedule):
         Returns :
             (wxSchedule) : L'objet wxSchedule correspondant.
         """
-        return self._wxSchedulesById[id]  # Retourne le wxSchedule à partir de son ID wxSchedule.
+        return self._wxSchedulesById[
+            id
+        ]  # Retourne le wxSchedule à partir de son ID wxSchedule.
 
     def update(self):
         """
@@ -796,36 +963,57 @@ class TaskSchedule(wxSchedule):
         Cette méthode est appelée chaque fois que la tâche sous-jacente est modifiée
         afin que le calendrier puisse se rafraîchir et afficher les informations les plus récentes.
         """
-        log.info("TaskSchedule.update : Met à jour toutes les propriétés visuelles de l'événement wxSchedule en fonction de l'état actuel de la tâche associée.")
+        log.info(
+            "TaskSchedule.update : Met à jour toutes les propriétés visuelles de l'événement wxSchedule en fonction de l'état actuel de la tâche associée."
+        )
         self.Freeze()  # Gèle les mises à jour visuelles.
         try:
-            self.description = self.task.subject()  # Le sujet de la tâche devient la description de l'événement.
+            self.description = (
+                self.task.subject()
+            )  # Le sujet de la tâche devient la description de l'événement.
 
             # Définit la date de début de l'événement.
             # Utilise la date de début planifiée de la tâche, ou le début du jour actuel comme défaut.
-            self.start = self.wxDateTime(self.task.plannedStartDateTime(),
-                                         self.tupleFromDateTime(date.Now().startOfDay()))
+            self.start = self.wxDateTime(
+                self.task.plannedStartDateTime(),
+                self.tupleFromDateTime(date.Now().startOfDay()),
+            )
             # Définit la date de fin de l'événement.
             # Utilise la date de complétion si la tâche est complétée, sinon la date d'échéance.
             # Si aucune n'est présente, utilise la fin du jour actuel comme défaut.
-            end = self.task.completionDateTime() if self.task.completed() else self.task.dueDateTime()
-            self.end = self.wxDateTime(end,
-                                       self.tupleFromDateTime(date.Now().endOfDay()))
+            end = (
+                self.task.completionDateTime()
+                if self.task.completed()
+                else self.task.dueDateTime()
+            )
+            self.end = self.wxDateTime(
+                end, self.tupleFromDateTime(date.Now().endOfDay())
+            )
 
             if self.task.completed():
                 self.done = True  # Indique que la tâche est terminée (peut influencer le rendu).
 
             # Définit les couleurs de fond et de premier plan de l'événement basées sur les couleurs de la tâche.
-            self.color = wx.Colour(*(self.task.backgroundColor(True) or (255, 255, 255)))
-            self.foreground = wx.Colour(*(self.task.foregroundColor(True) or (0, 0, 0)))
+            self.color = wx.Colour(
+                *(self.task.backgroundColor(True) or (255, 255, 255))
+            )
+            self.foreground = wx.Colour(
+                *(self.task.foregroundColor(True) or (0, 0, 0))
+            )
             # Définit la police de caractères basée sur la police de la tâche.
             self.font = self.task.font(True)
 
-            self.icons = [self.iconProvider(self.task, False)]  # Ajoute l'icône principale de la tâche.
+            self.icons = [
+                self.iconProvider(self.task, False)
+            ]  # Ajoute l'icône principale de la tâche.
             if self.task.attachments():
-                self.icons.append("paperclip_icon")  # Ajoute l'icône de pièce jointe si nécessaire.
+                self.icons.append(
+                    "paperclip_icon"
+                )  # Ajoute l'icône de pièce jointe si nécessaire.
             if self.task.notes():
-                self.icons.append("note_icon")  # Ajoute l'icône de note si nécessaire.
+                self.icons.append(
+                    "note_icon"
+                )  # Ajoute l'icône de note si nécessaire.
 
             # Calcule le pourcentage d'achèvement récursif de la tâche pour la barre de progression.
             if self.task.percentageComplete(recursive=True):
@@ -833,10 +1021,14 @@ class TaskSchedule(wxSchedule):
                 # old_div est pour la compatibilité Python 2, en Python 3 la division est flottante par défaut.
                 # self.complete = old_div(1.0 * self.task.percentageComplete(recursive=True), 100)
                 self.complete = (
-                        1.0 * self.task.percentageComplete(recursive=True) / 100  # Convertit le pourcentage en une valeur entre 0.0 et 1.0.
+                    1.0
+                    * self.task.percentageComplete(recursive=True)
+                    / 100  # Convertit le pourcentage en une valeur entre 0.0 et 1.0.
                 )
             else:
-                self.complete = None  # Pas de barre de progression si aucun pourcentage.
+                self.complete = (
+                    None  # Pas de barre de progression si aucun pourcentage.
+                )
         finally:
             self.Thaw()  # Dégèle les mises à jour visuelles.
         log.info("TaskSchedule.update : Mise à jour terminée !")
@@ -855,12 +1047,14 @@ class TaskSchedule(wxSchedule):
         Returns :
             (tuple) : Un tuple représentant la date et l'heure.
         """
-        return (dateTime.day,  # Jour du mois.
-                dateTime.month - 1,  # Mois (0-11 pour wxPython).
-                dateTime.year,  # Année.
-                dateTime.hour,  # Heure.
-                dateTime.minute,  # Minute.
-                dateTime.second)  # Seconde.
+        return (
+            dateTime.day,  # Jour du mois.
+            dateTime.month - 1,  # Mois (0-11 pour wxPython).
+            dateTime.year,  # Année.
+            dateTime.hour,  # Heure.
+            dateTime.minute,  # Minute.
+            dateTime.second,
+        )  # Seconde.
 
     @staticmethod
     def wxDateTime(dateTime, default):
@@ -878,11 +1072,22 @@ class TaskSchedule(wxSchedule):
             (wx.DateTime) : L'objet wx.DateTime converti.
         """
         # Utilise les valeurs par défaut si dateTime est l'objet DateTime() par défaut (vide).
-        args = default if dateTime == date.DateTime() else \
-            (dateTime.day, dateTime.month - 1, dateTime.year,
-             dateTime.hour, dateTime.minute, dateTime.second)
+        args = (
+            default
+            if dateTime == date.DateTime()
+            else (
+                dateTime.day,
+                dateTime.month - 1,
+                dateTime.year,
+                dateTime.hour,
+                dateTime.minute,
+                dateTime.second,
+            )
+        )
         # Crée un objet wx.DateTime à partir du tuple d'arguments.
-        return wx.DateTimeFromDMY(*args)  # pylint: disable=W0142  # L'unpacking d'args est standard.
+        return wx.DateTimeFromDMY(
+            *args
+        )  # pylint: disable=W0142  # L'unpacking d'args est standard.
 
     @staticmethod
     def tcDateTime(dateTime):
@@ -897,9 +1102,11 @@ class TaskSchedule(wxSchedule):
         """
         # Crée un objet date.DateTime à partir des composants de wx.DateTime.
         # Note : Le mois de wx.DateTime est 0-indexé, donc on ajoute 1 pour Task Coach.
-        return date.DateTime(dateTime.GetYear(),
-                             dateTime.GetMonth() + 1,  # Ajustement du mois.
-                             dateTime.GetDay(),
-                             dateTime.GetHour(),
-                             dateTime.GetMinute(),
-                             dateTime.GetSecond())
+        return date.DateTime(
+            dateTime.GetYear(),
+            dateTime.GetMonth() + 1,  # Ajustement du mois.
+            dateTime.GetDay(),
+            dateTime.GetHour(),
+            dateTime.GetMinute(),
+            dateTime.GetSecond(),
+        )
