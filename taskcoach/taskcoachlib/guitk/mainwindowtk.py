@@ -49,6 +49,7 @@ Fonctionnalités clés :
         Crée un cadre de progression pour la synchronisation iPhone.
         Définit les méthodes de gestion des types de synchronisation iPhone, des échecs de protocole et de la modification/ajout/suppression de tâches et de catégories.
 """
+
 # La conversion de mainwindow.py de wxPython à tkinter est une tâche complexe
 # en raison des différences fondamentales entre les deux frameworks GUI,
 # en particulier la gestion des mises en page (AUI),
@@ -170,11 +171,13 @@ Fonctionnalités clés :
 import logging
 import tkinter
 import tkinter as tk
+
 # from tkinterdnd2 import *
 # from tkinterdnd2 import TkinterDnD as tk
 from tkinter import ttk
 from tkinter import messagebox, PhotoImage
 from PIL import Image, ImageTk
+
 # from pubsub import pub # pubsub est cross-platform, mais son intégration peut varier
 
 
@@ -259,17 +262,19 @@ class MockIPhoneSyncFrame(tk.Toplevel):
     def __init__(self, settings, title, icon, parent):
         super().__init__(parent)
         self.title(title)
-        self.iconphoto(False, icon) # Définir l'icône de la fenêtre
+        self.iconphoto(False, icon)  # Définir l'icône de la fenêtre
         self.geometry("300x200")
         # tk.Label(self, text="Progression de la synchronisation iPhone").pack(pady=20)
-        tk.Label(self, text="Progression de la synchronisation iPhone").grid(pady=20)
+        tk.Label(self, text="Progression de la synchronisation iPhone").grid(
+            pady=20
+        )
 
 
 class MockIPhoneSyncTypeDialog(tk.Toplevel):
     def __init__(self, parent, title):
         super().__init__(parent)
         self.title(title)
-        self.value = 0 # Valeur par défaut
+        self.value = 0  # Valeur par défaut
         # tk.Label(self, text="Type de synchronisation (Mock)").pack(pady=10)
         tk.Label(self, text="Type de synchronisation (Mock)").grid(pady=10)
         # tk.Button(self, text="OK", command=self.destroy).pack()
@@ -310,18 +315,30 @@ class MockXFCE4WarningDialog(tk.Toplevel):
 # Remplacer les imports wx par nos mocks ou tkinter
 from taskcoachlib import application, meta, widgetstk, operating_system
 from taskcoachlib.config.settings import Settings
-from taskcoachlib.guitk import toolbarttk, artprovidertk, idlecontrollertk, iocontrollertk, remindercontrollertk, statustk  # , viewer,  windowdimensionstracker
+from taskcoachlib.guitk import (
+    toolbarttk,
+    artprovidertk,
+    idlecontrollertk,
+    iocontrollertk,
+    remindercontrollertk,
+    statustk,
+)  # , viewer,  windowdimensionstracker
+
 # , remindercontroller, status
 # !!! viewer crée une boucle infinie d'import avec dialog.editor
 from taskcoachlib.guitk.viewer import factorytk
+
 # from taskcoachlib.guitk.uicommand import uicommand
 # from taskcoachlib.gui.newid import IdProvider  # ? wx.newid n'a pas d'équivalent !
 # from taskcoachlib.gui.dialog.iphone import IPhoneSyncTypeDialog
 # from taskcoachlib.gui.dialog.xfce4warning import XFCE4WarningDialog
 from taskcoachlib.guitk.dialog.editor import Editor
+
 # from taskcoachlib.gui.iphone import IPhoneSyncFrame
 from taskcoachlib.guitk.viewer import factorytk, containertk
+from taskcoachlib.widgetstk import frametk
 from taskcoachlib.i18n import _
+
 # from taskcoachlib.powermgt import PowerStateMixin # Pas de PowerStateMixin direct dans tkinter
 # from taskcoachlib.help.balloontips import BalloonTipManager # Pas de BalloonTipManager direct dans tkinter
 
@@ -350,7 +367,9 @@ from taskcoachlib.i18n import _
 #     'EffortStartButton': lambda taskList: type('Cmd', (object,), {'name': 'EffortStartButton'})(),
 #     'EffortStop': lambda viewer, effortList, taskList: type('Cmd', (object,), {'name': 'EffortStop'})(),
 # })()
-IdProvider = type('IdProvider', (object,), {'get': lambda: 1})()  # Mock pour IdProvider
+IdProvider = type(
+    "IdProvider", (object,), {"get": lambda: 1}
+)()  # Mock pour IdProvider
 IPhoneSyncTypeDialog = MockIPhoneSyncTypeDialog
 XFCE4WarningDialog = MockXFCE4WarningDialog
 # Editor = MockEditor
@@ -361,14 +380,18 @@ log = logging.getLogger(__name__)
 
 
 # class MainWindow(tk.Frame):  # Hérite de tk.Frame
-class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
+class MainWindow(
+    tk.LabelFrame, widgetstk.frametk.TtkManagedFrame
+):  # Hérite de tk.Frame
     #     PowerStateMixin, BalloonTipManager, widgets.AuiManagedFrameWithDynamicCenterPane
     # ):
     """
     Classe représentant le cadre/frame principale de Task Coach pour Tkinter.
     """
 
-    def __init__(self, parent, iocontroller, taskFile, settings, *args, **kwargs):
+    def __init__(
+        self, parent, iocontroller, taskFile, settings, *args, **kwargs
+    ):
         """
         Initialise la fenêtre principale de Task Coach avec les paramètres fournis.
 
@@ -412,7 +435,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         log.info("* Début d'initialisation de MainWindow (Tkinter) *****")
         log.info("****************************************************")
         self.__splash = kwargs.pop("splash", None)
-        super().__init__(parent, *args, text="MainWindow", **kwargs)  # Initialisation de tk.Frame
+        super().__init__(
+            parent, *args, text="MainWindow", **kwargs
+        )  # Initialisation de tk.Frame
 
         # Le parent est maintenant la fenêtre racine (tk.Tk)
         self.parent = parent
@@ -422,6 +447,8 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # self.title(meta.name)
         # self.title("MainWindow")
         # self.geometry("800x600")  # Taille par défaut
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)  # Pour le viewer
 
         # self.protocol("WM_DELETE_WINDOW", self.onClose)  # Gérer la fermeture de la fenêtre
         # self.bind("<Unmap>", self.onIconify)  # Gérer la minimisation (Unmap sur X11)
@@ -439,30 +466,50 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         self._handling_resize = False
         # self.__dimensions_tracker = windowdimensionstracker.WindowDimensionsTracker(self, settings)
 
-        log.info("MainWindow: Création et initialisation des composants de la fenêtre :")
+        log.info(
+            "MainWindow: Création et initialisation des composants de la fenêtre :"
+        )
         self._create_window_components()  # Crée les composants de la fenêtre (Les viewer, la barre de statut, la barre de menu, les barres d'outils, et le contrôleur de rappel sont créés ici.)
-        log.debug("MainWindow: ✅ Création effectuée et initialisation des différents composants de la fenêtre.")
+        log.debug(
+            "MainWindow: ✅ Création effectuée et initialisation des différents composants de la fenêtre."
+        )
 
         self.__init_window_components()
-        log.debug("MainWindow: ✅ Initialisation des composants principaux de la fenêtre terminée et perspective de la fenêtre restaurée.")
+        log.debug(
+            "MainWindow: ✅ Initialisation des composants principaux de la fenêtre terminée et perspective de la fenêtre restaurée."
+        )
+
+        self.toolbar_frame.grid(row=0, column=0, sticky="ew")
+        self.viewer.grid(row=1, column=0, sticky="nsew")
+        self.status_bar.grid(row=2, column=0, sticky="ew")
 
         try:
             self.__init_window()
         except Exception as e:
-            log.exception(f"Problème avec __init__window() : {e}", exc_info=True)
+            log.exception(
+                f"Problème avec __init__window() : {e}", exc_info=True
+            )
         log.debug("MainWindow: ✅ Fenêtre principale Initialisée.")
 
         self.__register_for_window_component_changes()
-        log.debug("MainWindow: ✅ Enregistrement effectué pour recevoir des notifications de changement de composants de fenêtre, comme les barres d'outils et les barres de statut.")
+        log.debug(
+            "MainWindow: ✅ Enregistrement effectué pour recevoir des notifications de changement de composants de fenêtre, comme les barres d'outils et les barres de statut."
+        )
         log.debug("MainWindow: ✅ Composants de fenêtre créés.")
 
         # Simplification pour SyncML et iPhone, car pybonjour n'est pas directement compatible
         if self.settings.getboolean("feature", "iphone"):
-            log.warning("La synchronisation iPhone n'est pas supportée dans cette version Tkinter.")
+            log.warning(
+                "La synchronisation iPhone n'est pas supportée dans cette version Tkinter."
+            )
 
         # Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches. :
-        log.debug("MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts")
-        self._idleController = idlecontrollertk.IdleController(self, self.settings, self.taskFile.efforts())
+        log.debug(
+            "MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts"
+        )
+        self._idleController = idlecontrollertk.IdleController(
+            self, self.settings, self.taskFile.efforts()
+        )
 
         # wx.CallAfter n'est pas directement nécessaire ici si les composants sont déjà packés/gridés
         # self.after(100, self.checkXFCE4) # Utiliser after pour différer l'appel
@@ -477,10 +524,14 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         Gère la fermeture de la fenêtre, en arrêtant le suivi des tâches et en vérifiant si l'application doit quitter.
         """
-        log.info("MainWindow.onClose: Fermeture de la fenêtre par l'utilisateur.")
+        log.info(
+            "MainWindow.onClose: Fermeture de la fenêtre par l'utilisateur."
+        )
         try:
             # Vérifier les paramètres de l'application. :
-            app_instance = application.tkapplication.TkinterApplication.getInstance()
+            app_instance = (
+                application.tkapplication.TkinterApplication.getInstance()
+            )
             # should_quit = application.TkinterApplication.quitApplication(force=True)
             # should_quit = application.TkinterApplication.quitApplication(self, force=True)  # ?
             should_quit = app_instance.quitApplication(force=True)  # ?
@@ -511,17 +562,23 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
                 self.parent.destroy()
                 # self.root.destroy()
         except Exception as e:
-            log.exception("MainWindow.onClose: Erreur inattendue lors de la fermeture : %s", e)
+            log.exception(
+                "MainWindow.onClose: Erreur inattendue lors de la fermeture : %s",
+                e,
+            )
         # Arrêtez le thread de détection d'inactivité à la fin du programme.
         self._idleController.stop()
         log.info("MainWindow.onClose: Fenêtre fermée par l'utilisateur.")
 
     def onIconify(self, event):
         """
-        Gère la minimisation de la fenêtre. Cache la fenêtre si l'option "hidewheniconized" est activée dans les paramètres.
+        Gère la minimisation de la fenêtre.
+         Cache la fenêtre si l'option "hidewheniconized" est activée dans les paramètres.
         """
-        # Pour Tkinter, <Unmap> est déclenché quand la fenêtre est minimisée
-        if self.settings.getboolean("window", "hidewheniconized"):
+        # # Pour Tkinter, <Unmap> est déclenché quand la fenêtre est minimisée
+        # if self.settings.getboolean("window", "hidewheniconized"):
+        #     # Remplacez <Unmap> par une vérification de l'état de la fenêtre :
+        if self.parent.wm_state() == "iconic":
             # self.withdraw()  # Cache la fenêtre
             self.parent.withdraw()  # Cache la fenêtre racine
             log.debug("MainWindow.onIconify: Fenêtre iconifiée et cachée.")
@@ -548,7 +605,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # new_height = self.winfo_height()
         new_height = self.parent.winfo_height()
         self.after(10, lambda: setattr(self, "_handling_resize", False))
-        log.debug(f"MainWindow.onResize: Fenêtre redimensionnée à {new_width}x{new_height}.")
+        log.debug(
+            f"MainWindow.onResize: Fenêtre redimensionnée à {new_width}x{new_height}."
+        )
 
         # Pour les barres d'outils et de statut, Tkinter gère la géométrie automatiquement
         # si elles sont packées ou gridées correctement.
@@ -559,7 +618,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         Indique que le processus d'arrêt de l'application est en cours, afin d'éviter toute autre action durant cette phase.
         """
-        log.info("MainWindow.setShutdownInProgress: Le processus d'arrêt de l'application est en cours.")
+        log.info(
+            "MainWindow.setShutdownInProgress: Le processus d'arrêt de l'application est en cours."
+        )
         self.__shutdown = True
 
     def _create_window_components(self) -> None:
@@ -571,27 +632,41 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         # La méthode _create_window_components dans MainWindow appelle showToolBar
         # pour s'assurer que la barre d'outils est instanciée lors de la création de la fenêtre.
-        log.debug("MainWindow._create_window_components: Création du conteneur pour les visionneuses.")
+        log.debug(
+            "MainWindow._create_window_components: Création du conteneur pour les visionneuses."
+        )
         self._create_viewer_container()
-        log.debug("mainWindow._create_window_components : Lance une classe-méthode pour ajouter des viewers dans self.viewer.")
+        log.debug(
+            "mainWindow._create_window_components : Lance une classe-méthode pour ajouter des viewers dans self.viewer."
+        )
         # viewer.factorytk.addViewers(self.viewer, self.taskFile, self.settings)
-        factorytk.addViewers(self.viewer, self.taskFile, self.settings)  # Ajoute les visualiseurs
+        factorytk.addViewers(
+            self.viewer, self.taskFile, self.settings
+        )  # Ajoute les visualiseurs
         # add_viewers_strategy = addViewers(viewer_container, mock_task_file, mock_settings)
         # add_viewers_strategy = viewer.factory.addViewers(self.viewer, self.taskFile, self.settings)
         # add_viewers_strategy()
         # self.viewer.addViewer(self.viewer, self.taskFile, self.settings)
 
-        log.debug("MainWindow._create_window_components: Création de la barre de statut.")
+        log.debug(
+            "MainWindow._create_window_components: Création de la barre de statut."
+        )
         self._create_status_bar()
-        log.debug("MainWindow._create_window_components: Création de la barre de menu.")
+        log.debug(
+            "MainWindow._create_window_components: Création de la barre de menu."
+        )
         self.__create_menu_bar()
-        log.debug("MainWindow._create_window_components: Création du contrôleur de rappel des tâches et efforts.")
+        log.debug(
+            "MainWindow._create_window_components: Création du contrôleur de rappel des tâches et efforts."
+        )
         self.__create_reminder_controller()
         log.debug("MainWindow._create_window_components: Composants créés.")
         self.viewer.componentsCreated()  # Appeler la méthode
         log.debug("mainWindow._create_window_components : Terminé !")
         # self.showToolBar(self.settings.getboolean("view", "toolbar"))
-        self.showToolBar(True)  # Toujours afficher la barre d'outils pour l'instant
+        self.showToolBar(
+            True
+        )  # Toujours afficher la barre d'outils pour l'instant
 
     def _create_viewer_container(self) -> None:
         """
@@ -625,9 +700,13 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         #
         # Pour le moment, votre journal (taskcoach.log) confirme que la MainWindow est initialisée avec succès, mais il n'y a pas de mention explicite de l'initialisation du Taskviewer après cette étape.
         # Assurez-vous que cette partie est bien présente et fonctionnelle
-        log.debug("MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses self.viewer.")
+        log.debug(
+            "MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses self.viewer."
+        )
         # self.viewer = viewer.containertk.ViewerContainer(self, self.settings)
-        log.debug(f"MainWindow._create_viewer_container : création de self.viewer avec parent_widget={self}.")
+        log.debug(
+            f"MainWindow._create_viewer_container : création de self.viewer avec parent_widget={self}."
+        )
         self.viewer = containertk.ViewerContainer(self, self.settings)
         # Tkinter: Les viewers seraient des widgets Tkinter packés ou gridés
         # Pour l'exemple, nous allons juste créer un Frame comme conteneur principal
@@ -670,8 +749,12 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # log.debug("MainWindow._create_viewer_container : Le ViewerContainer pour les viewers sont instanciés et positionnés dans le MainWindow.")
 
         # self.viewer.pack(anchor="center", fill="both", expand=True)  # Colle le conteneur pour qu'il remplisse l'espace disponible
-        self.viewer.grid(row=0, column=0, sticky="news")  # Colle le conteneur pour qu'il remplisse l'espace disponible
-        log.debug(f"MainWindow._create_viewer_container : Conteneur {self.viewer} de visionneuses créé !")
+        self.viewer.grid(
+            row=0, column=0, sticky="news"
+        )  # Colle le conteneur pour qu'il remplisse l'espace disponible
+        log.debug(
+            f"MainWindow._create_viewer_container : Conteneur {self.viewer} de visionneuses créé !"
+        )
 
     def _create_status_bar(self) -> None:
         """
@@ -689,11 +772,15 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             - La barre de statut est créée en passant la fenêtre principale (`self`) et les visionneuses (`self.viewer`).
             - La barre de statut est ensuite associée à la fenêtre principale à l'aide de `SetStatusBar`.
         """
-        log.info(f"MainWindow._create_status_bar : Création d'une barre de status et association avec la fenêtre principale {self}.")
+        log.info(
+            f"MainWindow._create_status_bar : Création d'une barre de status et association avec la fenêtre principale {self}."
+        )
         self.status_bar = statustk.StatusBar(self, self.viewer)
         # self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.status_bar.grid(row=10, column=0, sticky="ews")
-        log.info("MainWindow._create_status_bar: Barre de statut créée et associée.")
+        log.info(
+            "MainWindow._create_status_bar: Barre de statut créée et associée."
+        )
 
     def __create_menu_bar(self) -> None:
         """
@@ -715,19 +802,33 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # Tkinter utilise self.parent.config(menu=...) pour la barre de menus de la fenêtre racine
 
         from taskcoachlib.guitk import menutk as menu
-        log.info(f"MainWindow.__create_menu_bar : Création d'une barre de menus et association avec la fenêtre principale {self.parent.__class__.__name__}.")
+
+        log.info(
+            f"MainWindow.__create_menu_bar : Création d'une barre de menus et association avec la fenêtre principale {self.parent.__class__.__name__}."
+        )
         # self.menu_bar = MockMainMenu(self, self.settings, self.iocontroller, self.viewer, self.taskFile)
         # self.menu_bar = MockMainMenu(self.parent, self.settings, self.iocontroller, self.viewer, self.taskFile)
         # self.menu_bar = menu.MainMenu(self.parent, self.settings, self.iocontroller, self.viewer, self.taskFile)
-        log.debug(f"MainWindow.__create_menu_bar : création de menu_bar avec self={self} avec self.parent={self.parent} de type {type(self.parent)} et parent_window=self.parent.")
-        self.menu_bar = menu.MainMenu(parent=self.parent, parent_window=self.parent, settings=self.settings,
-                                      iocontroller=self.iocontroller, viewerContainer=self.viewer,
-                                      taskFile=self.taskFile)
-        log.debug(f"MainWindow.__create_menu_bar : Menu bar created: {self.menu_bar}")
+        log.debug(
+            f"MainWindow.__create_menu_bar : création de menu_bar avec self={self} avec self.parent={self.parent} de type {type(self.parent)} et parent_window=self.parent."
+        )
+        self.menu_bar = menu.MainMenu(
+            parent=self.parent,
+            parent_window=self.parent,
+            settings=self.settings,
+            iocontroller=self.iocontroller,
+            viewerContainer=self.viewer,
+            taskFile=self.taskFile,
+        )
+        log.debug(
+            f"MainWindow.__create_menu_bar : Menu bar created: {self.menu_bar}"
+        )
         # self.config(menu=self.menu_bar)
         self.parent.config(menu=self.menu_bar)  # c'est tk qui a le menu.
         # root.config(menu=self.menu_bar)  # root non défini !
-        log.debug(f"MainWindow.__create_menu_bar : Menu bar attached to parent.")
+        log.debug(
+            f"MainWindow.__create_menu_bar : Menu bar attached to parent."
+        )
         # self.parent["menu"] = self.menu_bar
         # # menu_bar = tk.Menu(self.root)
         # menu_bar = tk.Menu(self.parent)
@@ -739,7 +840,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # file_menu.add_command(label="Quitter", command=self.on_quit)
 
         # log.info("MainWindow.__create_menu_bar: Barre de menus créée et associée.")
-        log.info("MainWindow.__create_menu_bar: Barre de menus créée et associée à la fenêtre racine.")
+        log.info(
+            "MainWindow.__create_menu_bar: Barre de menus créée et associée à la fenêtre racine."
+        )
 
     def __create_reminder_controller(self) -> None:
         """
@@ -774,7 +877,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # Tkinter n'a pas de concept direct de "panes" comme AUI.
         # Cela nécessiterait une logique de gestion de layout personnalisée.
         # Pour l'exemple, nous allons juste "pack" le widget dans le viewer_frame.
-        log.warning(f"MainWindow.addPane: La gestion des volets (panes) est simplifiée pour Tkinter. Ajout de {caption} ({name}).")
+        log.warning(
+            f"MainWindow.addPane: La gestion des volets (panes) est simplifiée pour Tkinter. Ajout de {caption} ({name})."
+        )
         # page.pack(expand=True, fill=tk.BOTH) # Ceci est une simplification.
         # Dans une vraie conversion, il faudrait gérer la disposition des viewers.
 
@@ -783,11 +888,16 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Initialise la fenêtre principale de Task Coach en définissant la disposition des composants (barres d'outils, barres de statut, etc.)
         et en appliquant les paramètres d'affichage sauvegardés.
         """
-        log.debug("MainWindow._init_window : Initialisation de la fenêtre principale.")
+        log.debug(
+            "MainWindow._init_window : Initialisation de la fenêtre principale."
+        )
         self.__filename = self.taskFile.filename()
         self.__setTitle()
         # self.SetIcons(artprovider.iconBundle("taskcoach")) # Déjà fait dans __init__
-        self.displayMessage(_("Welcome to %(name)s version %(version)s") % {"name": meta.name, "version": meta.version})
+        self.displayMessage(
+            _("Welcome to %(name)s version %(version)s")
+            % {"name": meta.name, "version": meta.version}
+        )
         log.debug("MainWindow.__init_window: Fenêtre principale initialisée.")
 
     def __init_window_components(self):
@@ -806,12 +916,20 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # La méthode __init_window_components appelle également showToolBar
         # pour s'assurer que la barre d'outils est affichée au démarrage,
         # en fonction du paramètre "view", "toolbar".
-        log.debug("MainWindow.__init_window_components: Initialisation des composants principaux.")
-        log.debug(f"MainWindow.__init_window_components: Affichage de la barre d'outils selon le paramètre : {self.settings.getvalue('view', 'toolbar')}.")
-        self.showToolBar(self.settings.getvalue("view", "toolbar"))  # TODO : a remettre dès que possible.
+        log.debug(
+            "MainWindow.__init_window_components: Initialisation des composants principaux."
+        )
+        log.debug(
+            f"MainWindow.__init_window_components: Affichage de la barre d'outils selon le paramètre : {self.settings.getvalue('view', 'toolbar')}."
+        )
+        self.showToolBar(
+            self.settings.getvalue("view", "toolbar")
+        )  # TODO : a remettre dès que possible.
         self.showStatusBar(self.settings.getboolean("view", "statusbar"))
         self.__restore_perspective()  # Appelle la méthode mock
-        log.debug("MainWindow.__init_window_components: Composants de fenêtre initialisés.")
+        log.debug(
+            "MainWindow.__init_window_components: Composants de fenêtre initialisés."
+        )
 
     def __restore_perspective(self):
         """
@@ -834,32 +952,58 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             - Empêche l'apparition de "panneaux zombies" en s'assurant que tous les panneaux sont visibles.
             - Met à jour les titres des panneaux pour refléter la traduction correcte en cas de changement de langue.
         """
-        log.debug("MainWindow.__restore_perspective: Restauration de la perspective depuis les paramètres (mock).")
+        log.debug(
+            "MainWindow.__restore_perspective: Restauration de la perspective depuis les paramètres (mock)."
+        )
         # Tkinter n'a pas de "perspective" AUI. Cette logique serait à réimplémenter.
         # Pour l'exemple, nous ne faisons rien de fonctionnel ici.
         perspective = self.settings.get("view", "perspective")
         if not perspective:
-            log.info("MainWindow.__restore_perspective: Pas de perspective sauvegardée, utilisation de la disposition par défaut.")
+            log.info(
+                "MainWindow.__restore_perspective: Pas de perspective sauvegardée, utilisation de la disposition par défaut."
+            )
         else:
-            log.info("MainWindow.__restore_perspective: Perspective sauvegardée trouvée (mock).")
-            for viewer_type in ["taskviewer", "categoryviewer", "noteviewer", "effortviewer"]:
-                if self.__perspective_and_settings_viewer_count_differ(viewer_type):
-                    log.info(f"MainWindow.__restore_perspective: Le nombre de visionneuses pour {viewer_type} diffère, réinitialisation de la perspective.")
+            log.info(
+                "MainWindow.__restore_perspective: Perspective sauvegardée trouvée (mock)."
+            )
+            for viewer_type in [
+                "taskviewer",
+                "categoryviewer",
+                "noteviewer",
+                "effortviewer",
+            ]:
+                if self.__perspective_and_settings_viewer_count_differ(
+                    viewer_type
+                ):
+                    log.info(
+                        f"MainWindow.__restore_perspective: Le nombre de visionneuses pour {viewer_type} diffère, réinitialisation de la perspective."
+                    )
                     perspective = None
                     break
 
         # Dans une vraie application, vous chargeriez ici une disposition de widgets.
         try:
             if perspective:
-                log.info("MainWindow.__restore_perspective: Restauration de la perspective sauvegardée (mock).")
+                log.info(
+                    "MainWindow.__restore_perspective: Restauration de la perspective sauvegardée (mock)."
+                )
                 # Charger la perspective (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
             else:
-                log.info("MainWindow.__restore_perspective: Utilisation de la perspective par défaut (mock).")
+                log.info(
+                    "MainWindow.__restore_perspective: Utilisation de la perspective par défaut (mock)."
+                )
                 # Charger la perspective par défaut (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
                 self.settings.set("view", "perspective", "default_perspective")
         except Exception as e:
-            log.exception(f"MainWindow.__restore_perspective: Erreur lors de la restauration de la perspective : {e}")
-            messagebox.showerror(_("Error"), _("Could not restore window layout. Using default layout instead."))
+            log.exception(
+                f"MainWindow.__restore_perspective: Erreur lors de la restauration de la perspective : {e}"
+            )
+            messagebox.showerror(
+                _("Error"),
+                _(
+                    "Could not restore window layout. Using default layout instead."
+                ),
+            )
             # Charger la perspective par défaut (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
             self.settings.set("view", "perspective", "default_perspective")
 
@@ -868,10 +1012,15 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         #     # Frame.Show()  # wxPython
         #     Frame.pack()  # Tkinter
         if self.viewer.winfo_viewable():
-            log.debug(f"MainWindow.__restore_perspective: Les panneaux {self.viewer} sont déjà visibles.")
+            log.debug(
+                f"MainWindow.__restore_perspective: Les panneaux {self.viewer} sont déjà visibles."
+            )
         else:
-            log.debug(f"MainWindow.__restore_perspective: Rendre les panneaux {self.viewer} visibles.")
-            self.viewer.grid()  # Tkinter
+            log.debug(
+                f"MainWindow.__restore_perspective: Rendre les panneaux {self.viewer} visibles."
+            )
+            # self.viewer.grid()  # Tkinter
+            self.viewer.grid_info()  # Tkinter
             # for frame in self.viewer.get_all_frames():
             # frame.grid()  # Tkinter
             # if hasattr(frame.window, "title"):
@@ -879,7 +1028,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             #     # frame.window.title(frame.get_translated_title())
             #     self.viewer.title(self.viewer.winfo_name())
 
-        log.debug("MainWindow.__restore_perspective: Perspective restaurée (mock).")
+        log.debug(
+            "MainWindow.__restore_perspective: Perspective restaurée (mock)."
+        )
 
     def __perspective_and_settings_viewer_count_differ(self, viewer_type):
         """
@@ -890,14 +1041,20 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         # Cette logique est spécifique à AUI. Dans Tkinter, cela dépendrait de votre gestionnaire de layout.
         # return False  # Simplifié pour le mock
-        log.debug(f"MainWindow.__perspective_and_settings_viewer_count_differ: Vérification du nombre de visionneuses pour {viewer_type} (mock).")
+        log.debug(
+            f"MainWindow.__perspective_and_settings_viewer_count_differ: Vérification du nombre de visionneuses pour {viewer_type} (mock)."
+        )
         perspective = self.settings.get("view", "perspective")
         perspective_viewer_count = 1  # Mock : extraire le nombre de viewers du type viewer_type dans la perspective
         perspective_viewer_count = perspective.count(f"name={viewer_type}")
         # settings_viewer_count = self.settings.getint("view", f"{viewer_type}_count")  # TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
         # settings_viewer_count = self.settings.getint("view", f"{viewer_type}count")
-        settings_viewer_count = self.settings.getint("view", f"{viewer_type}_count") or 1  # Mock : obtenir le nombre de viewers du type viewer_type dans les paramètres
-        log.debug(f"MainWindow.__perspective_and_settings_viewer_count_differ: perspective_viewer_count={perspective_viewer_count}, settings_viewer_count={settings_viewer_count}")
+        settings_viewer_count = (
+            self.settings.getint("view", f"{viewer_type}_count") or 1
+        )  # Mock : obtenir le nombre de viewers du type viewer_type dans les paramètres
+        log.debug(
+            f"MainWindow.__perspective_and_settings_viewer_count_differ: perspective_viewer_count={perspective_viewer_count}, settings_viewer_count={settings_viewer_count}"
+        )
         if perspective_viewer_count == settings_viewer_count:
             return False
         if not perspective:
@@ -939,7 +1096,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             taskFile (TaskFile) : Le fichier de tâches dont l'état de modification a changé.
         """
-        self.__dirty = taskFile.isDirty()  # Met à jour l'état interne selon l'état "dirty" du fichier de tâches.
+        self.__dirty = (
+            taskFile.isDirty()
+        )  # Met à jour l'état interne selon l'état "dirty" du fichier de tâches.
         self.__setTitle()  # Met à jour le titre de la fenêtre pour refléter cet état.
 
     def __setTitle(self):
@@ -965,7 +1124,7 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             message (str) : Le message à afficher dans la barre de statut.
             pane (int) : Le panneau de la barre de statut où le message doit être affiché (par défaut, le premier panneau).
         """
-        if hasattr(self, 'status_bar') and self.status_bar:
+        if hasattr(self, "status_bar") and self.status_bar:
             # self.status_bar.SetStatusText(message, pane)
             self.status_bar.set_status_text(message, pane)
 
@@ -973,14 +1132,18 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         Sauvegarde les paramètres actuels de la fenêtre, y compris les dimensions, la perspective et le nombre de visionneuses.
         """
-        log.info("save.Settings : Sauvegarde des paramètres actuels de la fenêtre.(simulation)")
+        log.info(
+            "save.Settings : Sauvegarde des paramètres actuels de la fenêtre.(simulation)"
+        )
         self.__save_viewer_counts()
         self.__save_perspective()
         self.__save_position()
 
     def __save_viewer_counts(self):
         """Enregistrez le nombre de visionneuses pour chaque type de visionneuse."""
-        log.debug("MainWindow.__save_viewer_counts: Sauvegarde du nombre de viewers (mock).")
+        log.debug(
+            "MainWindow.__save_viewer_counts: Sauvegarde du nombre de viewers (mock)."
+        )
         # Logique spécifique à AUI/wxPython à réimplémenter pour Tkinter.
         pass
 
@@ -988,23 +1151,32 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         Sauvegarde la perspective actuelle de la fenêtre, c'est-à-dire l'organisation des différents volets et composants (barre d'outils, visionneuses, etc.).
         """
-        log.debug("MainWindow.__save_perspective: Sauvegarde de la perspective (mock).")
+        log.debug(
+            "MainWindow.__save_perspective: Sauvegarde de la perspective (mock)."
+        )
         # Logique spécifique à AUI/wxPython à réimplémenter pour Tkinter.
         self.settings.set("view", "perspective", "mock_perspective_data")
+        # perspective = self.manager.SavePerspective()
+        perspective = self.main_frame.grid_info()
+        self.settings.set("view", "perspective", perspective)
 
     def __save_position(self) -> None:
         """
         Sauvegarde la position et la taille actuelles de la fenêtre principale dans les paramètres de l'application.
         Cela permet de restaurer la fenêtre à la même position lors de la prochaine ouverture.
         """
-        log.debug("MainWindow.__save_position: Sauvegarde de la position (mock).")
+        log.debug(
+            "MainWindow.__save_position: Sauvegarde de la position (mock)."
+        )
         # self.__dimensions_tracker.save_position()  # TODO : convertir windowdimensionstracker pour tkinter
 
     def closeEditors(self) -> None:
         """
         Ferme tous les éditeurs ouverts dans la fenêtre principale.
         """
-        log.info("MainWindow.closeEditors: Fermeture de tous les éditeurs ouverts (mock).")
+        log.info(
+            "MainWindow.closeEditors: Fermeture de tous les éditeurs ouverts (mock)."
+        )
         # Dans Tkinter, vous devriez garder une liste des Toplevels (éditeurs) ouverts
         # et les détruire ici.
         # Exemple:
@@ -1021,14 +1193,18 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
     def on_quit(self):
         self.parent.destroy()
 
-    def restore(self) -> None:  # Pas d'événement direct pour restore dans Tkinter comme dans wx
+    def restore(
+        self,
+    ) -> (
+        None
+    ):  # Pas d'événement direct pour restore dans Tkinter comme dans wx
         """
         Restaure la fenêtre principale à partir de la barre des tâches
         lorsque l'application a été minimisée ou réduite dans la barre d'état système.
         """
         if self.settings.getboolean("window", "maximized"):
             # self.state('zoomed')  # Maximise la fenêtre
-            self.parent.state('zoomed')  # Maximise la fenêtre racine
+            self.parent.state("zoomed")  # Maximise la fenêtre racine
         # self.deiconify()  # Restaure la fenêtre si elle est minimisée
         self.parent.deiconify()  # Restaure la fenêtre racine si elle est minimisée
         # self.lift()  # Met la fenêtre au premier plan
@@ -1044,8 +1220,10 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             value (bool) : True pour afficher, False pour masquer.
         """
-        log.debug(f"MainWindow.showStatusBar: Affichage de la barre de statut: {value}")
-        if hasattr(self, 'status_bar') and self.status_bar:
+        log.debug(
+            f"MainWindow.showStatusBar: Affichage de la barre de statut: {value}"
+        )
+        if hasattr(self, "status_bar") and self.status_bar:
             if value:
                 # self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
                 self.status_bar.grid(row=10, column=0, sticky="ews")
@@ -1112,13 +1290,16 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         # pour chaque commande et de son ajout à la barre d'outils.
         # Il faut s'assurer que self.toolbar est correctement défini
         # et que le bouton est bien packé.
-        log.debug("MainWindow.createToolBarUICommands: Création des commandes UI de la barre d'outils.")
+        log.debug(
+            "MainWindow.createToolBarUICommands: Création des commandes UI de la barre d'outils."
+        )
         # Cette liste est manuellement construite et peut contenir :
         #     - des instances de UICommand comme FileOpen, EditUndo, etc.
         #     - None pour indiquer un séparateur.
         #     - 1 pour un espace extensible.
         # Appelée par gui.toolbar.ToolBar.uiCommands
         from taskcoachlib.guitk.uicommand import uicommandtk as uicommand
+
         # return [
         #     uicommand.FileOpen(iocontroller=self.iocontroller),
         #     uicommand.FileSave(iocontroller=self.iocontroller),
@@ -1157,7 +1338,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Returns :
             (str) : La perspective de la barre d'outils.
         """
-        log.debug("MainWindow.getToolBarPerspective: Récupération de la perspective de la barre d'outils.")
+        log.debug(
+            "MainWindow.getToolBarPerspective: Récupération de la perspective de la barre d'outils."
+        )
         return self.settings.get("view", "toolbarperspective")
 
     def saveToolBarPerspective(self, perspective):
@@ -1167,7 +1350,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             perspective (str) : La perspective à sauvegarder.
         """
-        log.debug("MainWindow.saveToolBarPerspective: Sauvegarde de la perspective de la barre d'outils.")
+        log.debug(
+            "MainWindow.saveToolBarPerspective: Sauvegarde de la perspective de la barre d'outils."
+        )
         self.settings.set("view", "toolbarperspective", perspective)
 
     # def showToolBar(self, value) -> None:
@@ -1212,9 +1397,15 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             - `self.manager.Update()` : Met à jour la disposition de la fenêtre après les modifications.
         """
         # log.debug(f"MainWindow.showToolBar: Affichage de la barre d'outils: {value}")
-        log.debug(f"MainWindow.showToolBar: Affichage de la barre d'outils: {show}")
-        log.debug(f"MainWindow.showToolBar: self.toolbar_frame avant modification: {self.toolbar_frame}")
-        log.debug(f"MainWindow.showToolBar: self.settings avant modification: {self.settings}")
+        log.debug(
+            f"MainWindow.showToolBar: Affichage de la barre d'outils: {show}"
+        )
+        log.debug(
+            f"MainWindow.showToolBar: self.toolbar_frame avant modification: {self.toolbar_frame}"
+        )
+        log.debug(
+            f"MainWindow.showToolBar: self.settings avant modification: {self.settings}"
+        )
         # Dans Tkinter, cela impliquerait de créer/détruire ou de pack/pack_forget un Frame contenant les boutons.
         # TODO : s'aider de gui.Mainwindow.showtoolbar et toolbartk:
         # if value:
@@ -1246,15 +1437,21 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
                 # Ici, la MainWindow est à la fois le parent et le contrôleur.
                 # Utilise une taille par défaut pour les icônes (à ajuster si besoin).
                 # self.toolbar_frame = toolbarttk.ToolBar(self, self, self.settings, (16, 16))
-                self.toolbar_frame = toolbarttk.ToolBar(self, self, self.settings, size=show)
+                self.toolbar_frame = toolbarttk.ToolBar(
+                    self, self, self.settings, size=show
+                )
                 # self.toolbar_frame = toolbarttk.ToolBar(self, self, self.settings, (16, 16), relief=tk.RAISED, border=2)
-                log.debug(f"MainWindow.showToolBar: Nouvelle barre d'outils créée: {self.toolbar_frame}.")
+                log.debug(
+                    f"MainWindow.showToolBar: Nouvelle barre d'outils créée: {self.toolbar_frame}."
+                )
                 # S'assurer que la barre d'outils est placée correctement (ex: en haut)
                 # self.toolbar_frame.pack(side=tk.TOP, fill=tk.X, expand=False)
                 self.toolbar_frame.grid(row=0, column=0, sticky="ewn")
             else:
                 # self.toolbar_frame.pack(side=tk.TOP, fill=tk.X, expand=False)  # Assure-toi qu'elle réapparaît
-                self.toolbar_frame.grid(row=0, column=0, sticky="ewn")  # Assure-toi qu'elle réapparaît
+                self.toolbar_frame.grid(
+                    row=0, column=0, sticky="ewn"
+                )  # Assure-toi qu'elle réapparaît
         else:
             if self.toolbar_frame:
                 # self.toolbar_frame.pack_forget()  # Cache la barre d'outils
@@ -1270,13 +1467,17 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             event (wx.Event) : L'événement de fermeture de la barre d'outils.
         """
-        log.debug("MainWindow.onCloseToolBar: Fermeture de la barre d'outils (mock).")
+        log.debug(
+            "MainWindow.onCloseToolBar: Fermeture de la barre d'outils (mock)."
+        )
         # # Cette méthode est spécifique à AUI. Dans Tkinter, la barre d'outils serait gérée via pack_forget ou destroy.
         # self.settings.setvalue("view", "toolbar", False)  # Mettre à jour les paramètres
-        if hasattr(self, 'toolbar_frame'):
+        if hasattr(self, "toolbar_frame"):
             # self.toolbar_frame.pack_forget()  # Hide toolbar
             self.toolbar_frame.grid_forget()  # Hide toolbar
-        self.settings.setvalue("view", "toolbar", False)  # Mettre à jour les paramètres
+        self.settings.setvalue(
+            "view", "toolbar", False
+        )  # Mettre à jour les paramètres
 
     # Viewers
     def advanceSelection(self, forward) -> None:
@@ -1286,7 +1487,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             forward (bool) : Si True, avance vers l'élément suivant. Si False, recule vers l'élément précédent.
         """
-        log.debug(f"MainWindow.advanceSelection: Avance la sélection des tâches (forward: {forward}).")
+        log.debug(
+            f"MainWindow.advanceSelection: Avance la sélection des tâches (forward: {forward})."
+        )
         self.viewer.advanceSelection(forward)
 
     def viewerCount(self) -> int:
@@ -1296,7 +1499,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Returns :
             (int) : Le nombre de visionneuses.
         """
-        log.debug(f"MainWindow.viewerCount: Retourne le nombre de viewers : {len(self.viewer)}.")
+        log.debug(
+            f"MainWindow.viewerCount: Retourne le nombre de viewers : {len(self.viewer)}."
+        )
         return len(self.viewer)
 
     # Power management
@@ -1312,7 +1517,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         """
         # Pas d'équivalent direct à PowerStateMixin dans Tkinter.
         # La logique de pubsub devrait être gérée indépendamment du framework GUI.
-        log.info(f"MainWindow.OnPowerState: État d'alimentation: {state} (mock).")
+        log.info(
+            f"MainWindow.OnPowerState: État d'alimentation: {state} (mock)."
+        )
 
     # iPhone-related methods.
     def createIPhoneProgressFrame(self):
@@ -1325,7 +1532,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Returns :
             IPhoneSyncFrame : La fenêtre de progression pour la synchronisation avec l'iPhone/iPod.
         """
-        log.debug("MainWindow.createIPhoneProgressFrame: Création de la fenêtre de progression iPhone (mock).")
+        log.debug(
+            "MainWindow.createIPhoneProgressFrame: Création de la fenêtre de progression iPhone (mock)."
+        )
         # Utilise MockIPhoneSyncFrame
         return IPhoneSyncFrame(
             self.settings,
@@ -1333,7 +1542,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             # icon=artprovider.GetBitmap("taskcoach", "ART_FRAME_ICON", (16, 16)),  # Utilise MockArtProvider
             # utiliser artprovidertk.MockImage.GetBitmap() ou artprovidertk.IconProvider.getIcon() ?
             # icon=artprovidertk.MockImage.GetBitmap("taskcoach", "ART_FRAME_ICON", (16, 16)),  # Utilise ArtProviderTk
-            icon=artprovidertk.ArtProviderTk.GetBitmap("taskcoach", "ART_FRAME_ICON", (16, 16)),  # Utilise ArtProviderTk
+            icon=artprovidertk.ArtProviderTk.GetBitmap(
+                "taskcoach", "ART_FRAME_ICON", (16, 16)
+            ),  # Utilise ArtProviderTk
             parent=self,
         )
 
@@ -1351,14 +1562,20 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Returns :
             (int) : 0 pour une synchronisation bidirectionnelle, ou une autre valeur en fonction du choix de l'utilisateur.
         """
-        log.debug(f"MainWindow.getIPhoneSyncType: Obtention du type de synchronisation iPhone pour GUID: {guid} (mock).")
-        if guid == self.taskFile.filename():  # Utilise le nom de fichier comme GUID factice
+        log.debug(
+            f"MainWindow.getIPhoneSyncType: Obtention du type de synchronisation iPhone pour GUID: {guid} (mock)."
+        )
+        if (
+            guid == self.taskFile.filename()
+        ):  # Utilise le nom de fichier comme GUID factice
             return 0  # two-way. Synchronisation bidirectionnelle.
         dlg = IPhoneSyncTypeDialog(self, _("Synchronization type"))
         # dlg.ShowModal() # Tkinter utilise grab_set() pour les modales
         dlg.grab_set()
         self.wait_window(dlg)
-        return dlg.value  # Retourne le type de synchronisation choisi par l'utilisateur.
+        return (
+            dlg.value
+        )  # Retourne le type de synchronisation choisi par l'utilisateur.
 
     def notifyIPhoneProtocolFailed(self) -> None:
         """
@@ -1374,10 +1591,17 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Actions :
             - Affiche une boîte de dialogue avec un message d'erreur.
         """
-        log.debug("MainWindow.notifyIPhoneProtocolFailed: Notification d'échec du protocole iPhone (mock).")
-        messagebox.showerror(_("Error"), _("""An iPhone or iPod Touch device tried to synchronize with this\n"""
-                                            """task file, but the protocol negotiation failed. Please file a\n"""
-                                            """bug report."""))
+        log.debug(
+            "MainWindow.notifyIPhoneProtocolFailed: Notification d'échec du protocole iPhone (mock)."
+        )
+        messagebox.showerror(
+            _("Error"),
+            _(
+                """An iPhone or iPod Touch device tried to synchronize with this\n"""
+                """task file, but the protocol negotiation failed. Please file a\n"""
+                """bug report."""
+            ),
+        )
 
     def clearTasks(self) -> None:
         """
@@ -1397,7 +1621,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             categories (list) : Liste des catégories à restaurer.
             tasks (list) : Liste des tâches à restaurer.
         """
-        log.debug(f"MainWindow.restoreTasks: Restauration des tâches: {len(categories)} catégories, {len(tasks)} tâches (mock).")
+        log.debug(
+            f"MainWindow.restoreTasks: Restauration des tâches: {len(categories)} catégories, {len(tasks)} tâches (mock)."
+        )
         self.taskFile.clear(False)
         # Ces listes seraient normalement étendues aux vraies listes de tâches/catégories
         # self.taskFile.categories().extend(categories)  # Ajoute les nouvelles catégories.
@@ -1410,7 +1636,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             category (Category) : La catégorie à ajouter.
         """
-        log.debug(f"MainWindow.addIPhoneCategory: Ajout de la catégorie iPhone: {category} (mock).")
+        log.debug(
+            f"MainWindow.addIPhoneCategory: Ajout de la catégorie iPhone: {category} (mock)."
+        )
         # self.taskFile.categories().append(category)  # Ajoute la catégorie à la liste des catégories.
 
     def removeIPhoneCategory(self, category) -> None:
@@ -1420,7 +1648,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             category (Category) : La catégorie à supprimer.
         """
-        log.debug(f"MainWindow.removeIPhoneCategory: Suppression de la catégorie iPhone: {category} (mock).")
+        log.debug(
+            f"MainWindow.removeIPhoneCategory: Suppression de la catégorie iPhone: {category} (mock)."
+        )
         # self.taskFile.categories().remove(category)  # Supprime la catégorie de la liste.
 
     def modifyIPhoneCategory(self, category, name) -> None:
@@ -1431,7 +1661,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             category (Category) : La catégorie à modifier.
             name (str) : Le nouveau nom de la catégorie.
         """
-        log.debug(f"MainWindow.modifyIPhoneCategory: Modification de la catégorie iPhone {category} en {name} (mock).")
+        log.debug(
+            f"MainWindow.modifyIPhoneCategory: Modification de la catégorie iPhone {category} en {name} (mock)."
+        )
         # category.setSubject(name)  # Modifie le sujet (nom) de la catégorie.
 
     def addIPhoneTask(self, task, categories) -> None:
@@ -1442,7 +1674,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             task (Task) : La tâche à ajouter.
             categories (list) : Les catégories à associer à la tâche.
         """
-        log.debug(f"MainWindow.addIPhoneTask: Ajout de la tâche iPhone {task} avec {len(categories)} catégories (mock).")
+        log.debug(
+            f"MainWindow.addIPhoneTask: Ajout de la tâche iPhone {task} avec {len(categories)} catégories (mock)."
+        )
         # self.taskFile.tasks().append(task)  # Ajoute la tâche à la liste.
         # for category in categories:  # Associe les catégories à la tâche.
         #     task.addCategory(category)
@@ -1455,7 +1689,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
         Args :
             task (Task) : La tâche à supprimer.
         """
-        log.debug(f"MainWindow.removeIPhoneTask: Suppression de la tâche iPhone: {task} (mock).")
+        log.debug(
+            f"MainWindow.removeIPhoneTask: Suppression de la tâche iPhone: {task} (mock)."
+        )
         # self.taskFile.tasks().remove(task)  # Supprime la tâche de la liste.
 
     def addIPhoneEffort(self, task, effort) -> None:
@@ -1466,7 +1702,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             task (Task) : La tâche à laquelle l'effort est ajouté.
             effort (Effort) : L'effort à ajouter.
         """
-        log.debug(f"MainWindow.addIPhoneEffort: Ajout de l'effort iPhone {effort} à la tâche {task} (mock).")
+        log.debug(
+            f"MainWindow.addIPhoneEffort: Ajout de l'effort iPhone {effort} à la tâche {task} (mock)."
+        )
         # if task is not None:
         #     task.addEffort(effort)  # Ajoute l'effort à la tâche.
 
@@ -1480,23 +1718,25 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             started (datetime) : La date et l'heure de début de l'effort.
             ended (datetime) : La date et l'heure de fin de l'effort.
         """
-        log.debug(f"MainWindow.modifyIPhoneEffort: Modification de l'effort iPhone {effort} (mock).")
+        log.debug(
+            f"MainWindow.modifyIPhoneEffort: Modification de l'effort iPhone {effort} (mock)."
+        )
         effort.setSubject(subject)  # Modifie le sujet (nom) de l'effort.
         effort.setStart(started)  # Modifie la date de début.
         effort.setStop(ended)  # Modifie la date de fin.
 
     def modifyIPhoneTask(
-            self,
-            task,
-            subject,
-            description,
-            plannedStartDateTime,
-            dueDateTime,
-            completionDateTime,
-            reminderDateTime,
-            recurrence,
-            priority,
-            categories,
+        self,
+        task,
+        subject,
+        description,
+        plannedStartDateTime,
+        dueDateTime,
+        completionDateTime,
+        reminderDateTime,
+        recurrence,
+        priority,
+        categories,
     ) -> None:
         """
         Modifie une tâche synchronisée depuis un iPhone.
@@ -1513,7 +1753,9 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
             priority (int) : La priorité de la tâche.
             categories (set) : Ensemble des catégories à associer à la tâche.
         """
-        log.debug(f"MainWindow.modifyIPhoneTask: Modification de la tâche iPhone {task} (mock).")
+        log.debug(
+            f"MainWindow.modifyIPhoneTask: Modification de la tâche iPhone {task} (mock)."
+        )
         # task.setSubject(subject)  # Modifie le sujet de la tâche.
         # task.setDescription(description)  # Modifie la description.
         # task.setPlannedStartDateTime(plannedStartDateTime)  # Modifie la date de début planifiée.
@@ -1550,8 +1792,8 @@ class MainWindow(tk.LabelFrame):  # Hérite de tk.Frame
 #     mock_settings = Settings()
 #
 #     # Créez et packez l'instance de MainWindow dans la fenêtre racine
-#     app = MainWindow(root, mock_iocontroller, mock_taskfile, mock_settings)
-#     # app = MainWindow(root, iocontroller, taskfile, settings)
+#     # app = MainWindow(root, mock_iocontroller, mock_taskfile, mock_settings)
+#     app = MainWindow(root, iocontroller, taskFile, settings)
 #     # app.pack(fill=tk.BOTH, expand=True)
 #     app.grid()
 #

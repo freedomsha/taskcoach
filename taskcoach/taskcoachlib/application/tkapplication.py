@@ -10,6 +10,7 @@ la barre des tâches, la gestion des sessions et l'intégration de Twisted)
 n'ont pas d'équivalent direct dans tkinter et ont été supprimées ou
 "maquettées" pour des raisons de démonstration.
 """
+
 # En général, il n'est pas recommandé de faire de TkinterApplication un enfant de tkinter.Tk. Voici pourquoi :
 #
 # Le design actuel de votre code utilise le principe de composition. Cela signifie que votre classe TkinterApplication possède une fenêtre principale (self.root = tk.Tk()), mais n'est pas elle-même la fenêtre. C'est une approche solide pour plusieurs raisons :
@@ -32,6 +33,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import Menu
 import threading
+
 # from tkinterdnd2 import TkinterDnD
 from tkinterdnd2 import *
 import re
@@ -40,7 +42,14 @@ import calendar
 
 # Importer les classes nécessaires de votre bibliothèque d'application.
 # Notez que ces modules sont supposés avoir été mis à jour pour fonctionner avec tkinter.
-from taskcoachlib import operating_system, patterns, persistencetk, operating_system, meta, i18n
+from taskcoachlib import (
+    operating_system,
+    patterns,
+    persistencetk,
+    operating_system,
+    meta,
+    i18n,
+)
 from taskcoachlib.i18n import _
 from taskcoachlib.config.settings import Settings
 from taskcoachlib.domain import date
@@ -48,6 +57,7 @@ from taskcoachlib import guitk
 from taskcoachlib.guitk import artprovidertk
 from taskcoachlib.guitk import mainwindowtk
 from taskcoachlib.guitk import iocontrollertk
+
 # Remplacement de la création de IdleController par:
 from taskcoachlib.powermgt import idletk
 
@@ -57,14 +67,16 @@ log = logging.getLogger(__name__)
 # Maquette de la classe RedirectedOutput car elle utilise wx.MessageBox
 class RedirectedOutput:
     _rx_ignore = [
-        re.compile('RuntimeWarning: PyOS_InputHook'),
+        re.compile("RuntimeWarning: PyOS_InputHook"),
     ]
 
     def __init__(self):
         self.__handle = None
         # Simuler un chemin de fichier de log
         # self.__path = os.path.join(os.path.expanduser('~'), 'taskcoachlog.txt')
-        self.__path = os.path.join(Settings.pathToDocumentsDir(), "taskcoachlog.txt")
+        self.__path = os.path.join(
+            Settings.pathToDocumentsDir(), "taskcoachlog.txt"
+        )
 
     def write(self, bf):
         for rx in self._rx_ignore:
@@ -74,8 +86,8 @@ class RedirectedOutput:
         if self.__handle is None:
             # Créer le fichier de log
             try:
-                self.__handle = open(self.__path, 'a+')
-                self.__handle.write('============= %s\n' % time.ctime())
+                self.__handle = open(self.__path, "a+")
+                self.__handle.write("============= %s\n" % time.ctime())
             except IOError:
                 # Si le fichier ne peut pas être ouvert, ne rien faire
                 self.__handle = None
@@ -101,17 +113,22 @@ class RedirectedOutput:
         if self.__handle is not None:
             self.close()
             # Utiliser messagebox de tkinter au lieu de wx.MessageBox
-            messagebox.showerror('Erreur',
-                                 f'Des erreurs se sont produites. Veuillez consulter le fichier "{self.__path}".')
+            messagebox.showerror(
+                "Erreur",
+                f'Des erreurs se sont produites. Veuillez consulter le fichier "{self.__path}".',
+            )
 
 
 # class TkinterApplication:
-class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclasse Singleton
+class TkinterApplication(
+    metaclass=patterns.Singleton
+):  # Utilise la métaclasse Singleton
     """
     Classe principale de l'application utilisant Tkinter.
 
     Singleton Encapsule l'instance Tkinter et simplifie la gestion.
     """
+
     # # La classe Application originale utilisait un métaclass Singleton.
     # # On la simule ici.
     # __instance = None  # Retirer l'attribut de classe car il est géré par la métaclasse.
@@ -122,7 +139,7 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
     #     return TkinterApplication.__instance
 
     def __init__(self, options=None, args=None, **kwargs):
-        if hasattr(self, 'initialized'):  # Prevent multiple initializations
+        if hasattr(self, "initialized"):  # Prevent multiple initializations
             return
         self.initialized = True
 
@@ -169,9 +186,15 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         # Dans tkinter, il faudrait utiliser un réacteur Twisted compatible avec tkinter.
         # Un exemple serait `from twisted.internet.tkreactor import install; install()`
         # mais la logique de cette classe est bien plus complexe.
-        self.stoptwisted = lambda: print("Twisted a été arrêté (maquette) en simulation")
-        self.initTwisted = lambda: print("Twisted a été initialisé (maquette) en simulation")
-        self.registerApp = lambda: print("L'application a été enregistrée auprès de Twisted (maquette) en simulation.")
+        self.stoptwisted = lambda: print(
+            "Twisted a été arrêté (maquette) en simulation"
+        )
+        self.initTwisted = lambda: print(
+            "Twisted a été initialisé (maquette) en simulation"
+        )
+        self.registerApp = lambda: print(
+            "L'application a été enregistrée auprès de Twisted (maquette) en simulation."
+        )
 
         self.initTwisted()
         # self.registerApp()
@@ -191,7 +214,9 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
                         self.setProperty(xsm.SmRestartCommand, sys.argv)
                         self.setProperty(xsm.SmCurrentDirectory, os.getcwd())
                         self.setProperty(xsm.SmProgram, sys.argv[0])
-                        self.setProperty(xsm.SmRestartStyleHint, xsm.SmRestartNever)
+                        self.setProperty(
+                            xsm.SmRestartStyleHint, xsm.SmRestartNever
+                        )
 
                     def saveYourself(
                         self, saveType, shutdown, interactStyle, fast
@@ -217,7 +242,11 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
             self.sessionMonitor = None
 
         # Remplacement de calendar.setfirstweekday
-        calendar.setfirstweekday(dict(monday=0, sunday=6).get(self.settings.get('view', 'weekstart'), 0))
+        calendar.setfirstweekday(
+            dict(monday=0, sunday=6).get(
+                self.settings.get("view", "weekstart"), 0
+            )
+        )
         calendar.setfirstweekday(
             dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
         )
@@ -229,9 +258,9 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         Démarrer la boucle principale de l'application Tkinter.
         """
         # Remplacer les vérificateurs de version et de messages
-        if self.settings.getboolean('version', 'notify'):
+        if self.settings.getboolean("version", "notify"):
             print("Vérificateur de version démarré (maquette)")
-        if self.settings.getboolean('view', 'developermessages'):
+        if self.settings.getboolean("view", "developermessages"):
             print("Vérificateur de messages de développeur démarré (maquette)")
 
         self.__copy_default_templates()
@@ -287,12 +316,12 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         self.root.mainloop()  # Lance la boucle principale de l'application
 
     def __copy_default_templates(self):
-        """ Copier les modèles par défaut """
+        """Copier les modèles par défaut"""
         # Logique de la copie des modèles (maquettée)
         print("Modèles par défaut copiés (maquette)")
 
     def init(self, loadSettings=True, loadTaskFile=True):
-        """ Initialise l'application. """
+        """Initialise l'application."""
         # Initialisation des réglages
         self.__init_config(loadSettings)
         self.__init_language()
@@ -319,11 +348,14 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         # persistence = MockPersistence()
 
         guitk.init()
-        show_splash_screen = self.settings.getboolean('window', 'splash')
+        show_splash_screen = self.settings.getboolean("window", "splash")
         splash = guitk.SplashScreen(self.root) if show_splash_screen else None
 
         # self.taskFile = persistencetk.LockedTaskFile(poll=not self.settings.getboolean('file', 'nopoll'))
-        self.taskFile = persistencetk.LockedTaskFile(parent=self.root, poll=not self.settings.getboolean('file', 'nopoll'))
+        self.taskFile = persistencetk.LockedTaskFile(
+            parent=self.root,
+            poll=not self.settings.getboolean("file", "nopoll"),
+        )
         # self.__auto_saver = persistence.AutoSaver(self.settings)
         # self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
         # self.__auto_backup = persistence.AutoBackup(self.settings)
@@ -356,13 +388,21 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         #         self.root.destroy()
 
         # self.iocontroller = MockIOController(self.taskFile, self.displayMessage, self.settings, splash)
-        self.iocontroller = guitk.iocontrollertk.IOController(self.root, self.taskFile, self.displayMessage, self.settings, splash)
+        self.iocontroller = guitk.iocontrollertk.IOController(
+            self.root,
+            self.taskFile,
+            self.displayMessage,
+            self.settings,
+            splash,
+        )
         # self.mainwindow = MockMainWindow(self.iocontroller, self.taskFile, self.settings, splash)
         # self.mainwindow = guitk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings, splash)  # A Frame is a top-level window.
         # Créez et packez l'instance de MainWindow dans la fenêtre racine
         # app = MainWindow(root, mock_iocontroller, mock_taskfile, mock_settings)
         # app = self.mainwindow = guitk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings)
-        self.mainwindow = guitk.mainwindowtk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings)
+        self.mainwindow = guitk.mainwindowtk.MainWindow(
+            self.root, self.iocontroller, self.taskFile, self.settings
+        )
         # app.pack(fill=tk.BOTH, expand=True)
         # self.mainwindow.pack(fill=tk.BOTH, expand=True)
         self.mainwindow.grid(row=0, column=0, sticky="news")
@@ -381,15 +421,22 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         # self.root.iconphoto(False, artprovidertk.iconBundle("taskcoach"))  # TODO : problème d'Image non trouvée !
 
         # Initialize IdleNotifier *after* MainWindow  -> A mettre dans une méthode !
-        self.idle_notifier = idletk.IdleNotifier(root=self.root, min_idle_time=self.settings.getint("feature", "minidletime") * 60)  # Minutes to seconds
+        self.idle_notifier = idletk.IdleNotifier(
+            root=self.root,
+            min_idle_time=self.settings.getint("feature", "minidletime") * 60,
+        )  # Minutes to seconds
 
         # self.idle_controller = guitk.idlecontroller.IdleController(mainWindow=app, settings=self.settings, effortList=self.taskFile.efforts())  # a verif l'ordre des arguments !
-        self.idle_controller = guitk.idlecontrollertk.IdleController(mainWindow=self.mainwindow, settings=self.settings, effortList=self.taskFile.efforts())  # a verif l'ordre des arguments !
+        self.idle_controller = guitk.idlecontrollertk.IdleController(
+            mainWindow=self.mainwindow,
+            settings=self.settings,
+            effortList=self.taskFile.efforts(),
+        )  # a verif l'ordre des arguments !
         self.idle_notifier.start()  # Démarrer la surveillance !
 
         # self.__wx_app.SetTopWindow(self.mainwindow) n'a pas d'équivalent direct
         self.__init_spell_checking()
-        if not self.settings.getboolean('file', 'inifileloaded'):
+        if not self.settings.getboolean("file", "inifileloaded"):
             self.__close_splash(splash)
             self.__warn_user_that_ini_file_was_not_loaded()
         if loadTaskFile:
@@ -416,7 +463,7 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
             None
         """
         ini_file = self._options.inifile if self._options else None
-        self.settings = Settings(load_settings, ini_file)
+        self.settings = Settings(load_settings, ini_file, "tk")
         # self.settings.load()  # AttributeError: 'Settings' object has no attribute 'load'
         log.info("init_config : passé avec succès !")
 
@@ -431,19 +478,20 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         if options:
             language = options.pofile or options.language
         if not language:
-            language = settings.get('view', 'language_set_by_user')
+            language = settings.get("view", "language_set_by_user")
         if not language:
-            language = settings.get('view', 'language')
+            language = settings.get("view", "language")
         if not language:
             language = locale.getdefaultlocale()[0]
-            if language == 'C':
+            if language == "C":
                 language = None
         if not language:
-            language = 'en_US'
+            language = "en_US"
         return language
 
     def __init_domain_objects(self):
         from taskcoachlib.domain import task, attachment
+
         task.Task.settings = self.settings
         attachment.Attachment.settings = self.settings
 
@@ -470,7 +518,9 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         # La création d'une icône dans la barre des tâches n'est pas une fonctionnalité native de tkinter.
         # Des bibliothèques tierces comme 'pystray' seraient nécessaires.
         if self.__can_create_task_bar_icon():
-            print("Icône de la barre des tâches non créée car elle n'est pas prise en charge par tkinter.")
+            print(
+                "Icône de la barre des tâches non créée car elle n'est pas prise en charge par tkinter."
+            )
         self.taskBarIcon = None
 
     def __can_create_task_bar_icon(self):
@@ -483,17 +533,21 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
             splash.close_splash()
 
     def __show_tips(self):
-        if self.settings.getboolean('window', 'tips'):
+        if self.settings.getboolean("window", "tips"):
             from taskcoachlib import help
+
             help.showTips(self.mainwindow, self.settings)
 
     def __warn_user_that_ini_file_was_not_loaded(self):
         from taskcoachlib import meta
-        reason = self.settings.get('file', 'inifileloaderror')
+
+        reason = self.settings.get("file", "inifileloaderror")
         # Utiliser messagebox de tkinter
-        messagebox.showerror(f'{meta.name} erreur de fichier',
-                             f"Impossible de charger les paramètres depuis TaskCoach.ini:\n{reason}")
-        self.settings.setboolean('file', 'inifileloaded', True)
+        messagebox.showerror(
+            f"{meta.name} erreur de fichier",
+            f"Impossible de charger les paramètres depuis TaskCoach.ini:\n{reason}",
+        )
+        self.settings.setboolean("file", "inifileloaded", True)
 
     def displayMessage(self, message):
         self.mainwindow.displayMessage(message)
@@ -515,21 +569,23 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
 
     def on_reopen_app(self):
         # Cette fonctionnalité est liée à l'icône de la barre des tâches et n'est pas applicable.
-        print("La fonctionnalité de réouverture d'application n'est pas prise en charge.")
+        print(
+            "La fonctionnalité de réouverture d'application n'est pas prise en charge."
+        )
 
     def quitApplication(self, force=False):
         """
-         Quitte l'application et enregistre tout.
-         :param force: S'il faut forcer la fermeture même s'il y a des modifications non sauvegardées.
-         :return: True si l'application peut se fermer, False sinon.
-         """
+        Quitte l'application et enregistre tout.
+        :param force: S'il faut forcer la fermeture même s'il y a des modifications non sauvegardées.
+        :return: True si l'application peut se fermer, False sinon.
+        """
         if self.taskFile.isDirty() and not force:
             pass  # Gérer la boîte de dialogue de sauvegarde ici
 
         if not self.iocontroller.close(force=force):
             return False
 
-        self.settings.set('file', 'lastfile', self.taskFile.lastFilename())
+        self.settings.set("file", "lastfile", self.taskFile.lastFilename())
         # self.mainwindow.save_settings()
         # self.mainwindow.saveSettings()  # Crée une boucle !
         # La méthode saveSettings est une méthode d'instance de la classe MainWindow,
@@ -539,12 +595,15 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         self.settings.save()
 
         # Suppression des composants wxPython
-        if hasattr(self, 'taskBarIcon') and self.taskBarIcon is not None:
+        if hasattr(self, "taskBarIcon") and self.taskBarIcon is not None:
             # self.taskBarIcon.RemoveIcon()
             pass
         # if self.mainwindow and hasattr(self.mainwindow, 'bonjourRegister') and self.mainwindow.bonjourRegister is not None:
         #     self.mainwindow.bonjourRegister.stop()
-        if hasattr(self, 'bonjourRegister') and self.bonjourRegister is not None:
+        if (
+            hasattr(self, "bonjourRegister")
+            and self.bonjourRegister is not None
+        ):
             self.bonjourRegister.stop()
 
         date.Scheduler().shutdown()
@@ -577,7 +636,7 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
 
     def OnQuit(self):
         # Stop the IdleNotifier before quitting
-        if hasattr(self, 'idle_notifier') and self.idle_notifier:
+        if hasattr(self, "idle_notifier") and self.idle_notifier:
             self.idle_notifier.stop()
 
     @staticmethod
@@ -588,6 +647,7 @@ class TkinterApplication(metaclass=patterns.Singleton):  # Utilise la métaclass
         #    TkinterApplication()  # Crée l'instance si elle n'existe pas
         return TkinterApplication.instance
         # return patterns.Singleton.__call__(TkinterApplication)
+
 
 # if __name__ == '__main__':
 #     # Les importations et l'initialisation originales
