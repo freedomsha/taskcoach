@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import range
 # from builtins import object
 import logging
+import os
 import wx
 import urllib.request
 import urllib.parse
@@ -33,15 +34,97 @@ from taskcoachlib.i18n import _
 
 log = logging.getLogger(__name__)
 
+# Cached cursors for different scale factors
+_linkCursors = {}  # size -> cursor
+_homeCursors = {}  # size -> cursor
+
+
+def _getIconPath(iconName):
+    """Get the full path to an icon file."""
+    return os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "gui", "icons", iconName
+    )
+
+
+def _getLinkCursor(window=None):
+    """Get or create a link cursor for prereq/dep column drag.
+
+    Uses HiDPI-appropriate icon size based on window's content scale factor.
+    """
+    # Determine scale factor
+    scaleFactor = 1.0
+    if window:
+        try:
+            scaleFactor = window.GetContentScaleFactor()
+        except (AttributeError, RuntimeError):
+            pass
+
+    # Round to nearest supported size: 1.0->16, 1.25-1.5->22, 2.0+->32
+    if scaleFactor >= 1.75:
+        size = 32
+    elif scaleFactor >= 1.125:
+        size = 22
+    else:
+        size = 16
+
+    # Cache cursors by size
+    if size not in _linkCursors:
+        iconPath = _getIconPath(f"link_icon{size}x{size}.png")
+        image = wx.Image(iconPath)
+        # Set hotspot to center of icon
+        hotspot = size // 2
+        image.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, hotspot)
+        image.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, hotspot)
+        _linkCursors[size] = wx.Cursor(image)
+
+    return _linkCursors[size]
+
+
+def _getHomeCursor(window=None):
+    """Get or create a home folder cursor for root drop locations.
+
+    Uses HiDPI-appropriate icon size based on window's content scale factor.
+    """
+    # Determine scale factor
+    scaleFactor = 1.0
+    if window:
+        try:
+            scaleFactor = window.GetContentScaleFactor()
+        except (AttributeError, RuntimeError):
+            pass
+
+    # Round to nearest supported size: 1.0->16, 1.25-1.5->22, 2.0+->32
+    if scaleFactor >= 1.75:
+        size = 32
+    elif scaleFactor >= 1.125:
+        size = 22
+    else:
+        size = 16
+
+    # Cache cursors by size
+    if size not in _homeCursors:
+        iconPath = _getIconPath(f"folder_home_icon{size}x{size}.png")
+        image = wx.Image(iconPath)
+        # Set hotspot to center of icon
+        hotspot = size // 2
+        image.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, hotspot)
+        image.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, hotspot)
+        _homeCursors[size] = wx.Cursor(image)
+
+    return _homeCursors[size]
+
 
 class FileDropTarget(wx.FileDropTarget):
     """
     Gère le lâcher de fichiers.
     """
+
     def __init__(self, onDropCallback=None, onDragOverCallback=None):
         wx.FileDropTarget.__init__(self)
         self.__onDropCallback = onDropCallback
-        self.__onDragOverCallback = onDragOverCallback or self.__defaultDragOverCallback
+        self.__onDragOverCallback = (
+            onDragOverCallback or self.__defaultDragOverCallback
+        )
 
     def OnDropFiles(self, x, y, filenames):  # pylint: disable=W0221
         if self.__onDropCallback:
@@ -53,7 +136,9 @@ class FileDropTarget(wx.FileDropTarget):
     def OnDragOver(self, x, y, defaultResult):  # pylint: disable=W0221
         return self.__onDragOverCallback(x, y, defaultResult)
 
-    def __defaultDragOverCallback(self, x, y, defaultResult):  # pylint: disable=W0613
+    def __defaultDragOverCallback(
+        self, x, y, defaultResult
+    ):  # pylint: disable=W0613
         return defaultResult
 
 
@@ -61,6 +146,7 @@ class TextDropTarget(wx.TextDropTarget):
     """
     Gère le lâcher de texte.
     """
+
     def __init__(self, onDropCallback):
         wx.TextDropTarget.__init__(self)
         self.__onDropCallback = onDropCallback
@@ -73,8 +159,14 @@ class DropTarget(wx.DropTarget):
     """
     Gère le lâcher d'objet.
     """
-    def __init__(self, onDropURLCallback, onDropFileCallback,
-                 onDropMailCallback, onDragOverCallback=None):
+
+    def __init__(
+        self,
+        onDropURLCallback,
+        onDropFileCallback,
+        onDropMailCallback,
+        onDragOverCallback=None,
+    ):
         super().__init__()
         self.__onDropURLCallback = onDropURLCallback
         self.__onDropFileCallback = onDropFileCallback
@@ -124,7 +216,14 @@ class DropTarget(wx.DropTarget):
         if formatId == "text/x-moz-message":
             self.onThunderbirdDrop(x, y)
         elif formatId == "text/uri-list" and formatType == wx.DF_FILENAME:
-            urls = self.__urilistDataObject.GetData().strip().split("\n")
+            # urls = self.__urilistDataObject.GetData().strip().split("\n")
+            # GetData() returns memoryview in wxPython 4, convert to string
+            data = self.__urilistDataObject.GetData()
+            if isinstance(data, memoryview):
+                data = bytes(data).decode("utf-8", errors="replace")
+            elif isinstance(data, bytes):
+                data = data.decode("utf-8", errors="replace")
+            urls = data.strip().split("\n")
             for url in urls:
                 url = url.strip()
                 if url.startswith("#"):
@@ -134,12 +233,24 @@ class DropTarget(wx.DropTarget):
                     self.__onDropMailCallback(x, y, filename)
                 elif self.__onDropURLCallback:
                     if url.startswith("file://"):
-                        url = urllib.request.url2pathname(url[7:])
-                    self.__onDropURLCallback(x, y, url)
+                        # url = urllib.request.url2pathname(url[7:])
+                        # file:// URLs should be treated as files, not links
+                        filename = urllib.request.url2pathname(
+                            urllib.parse.unquote(url[7:])
+                        )
+                        self.__onDropFileCallback(x, y, [filename])
+                    else:
+                        self.__onDropURLCallback(x, y, url)
+
         elif formatId == "Object Descriptor":
             self.onOutlookDrop(x, y)
         elif formatId == "public.url":
+            # GetData() returns memoryview in wxPython 4, convert to string
             url = self.__macMailObject.GetData()
+            if isinstance(url, memoryview):
+                url = bytes(url).decode("utf-8", errors="replace")
+            elif isinstance(url, bytes):
+                url = url.decode("utf-8", errors="replace")
             if (
                 url.startswith("imap:") or url.startswith("mailbox:")
             ) and self.__onDropMailCallback:
@@ -164,8 +275,8 @@ class DropTarget(wx.DropTarget):
         formatType = receivedFormat.GetType()
         try:
             formatId = receivedFormat.GetId()
-        except:
-            formatId = None  # pylint: disable=W0702
+        except RuntimeError:
+            formatId = None  # pylint: disable=W0702  Format ID not available
         return formatType, formatId
 
     @staticmethod
@@ -214,7 +325,9 @@ class DropTarget(wx.DropTarget):
 
     def onFileDrop(self, x, y):
         if self.__onDropFileCallback:
-            self.__onDropFileCallback(x, y, self.__fileDataObject.GetFilenames())
+            # self.__onDropFileCallback(x, y, self.__fileDataObject.GetFilenames())
+            filenames = self.__fileDataObject.GetFilenames()
+            self.__onDropFileCallback(x, y, filenames)
 
 
 class TreeHelperMixin(object):
@@ -226,7 +339,7 @@ class TreeHelperMixin(object):
         pass
 
     def GetItemChildren(self, item=None, recursively=False):
-        """ Return the children of item as a list. """
+        """Return the children of item as a list."""
         if not item:
             item = self.GetRootItem()
             if not item:
@@ -242,7 +355,7 @@ class TreeHelperMixin(object):
 
 
 class TreeCtrlDragAndDropMixin(TreeHelperMixin):
-    """ This is a mixin class that can be used to easily implement
+    """This is a mixin class that can be used to easily implement
     dragging and dropping of tree items. It can be mixed in with
     wx.TreeCtrl, wx.gizmos.TreeListCtrl, or wx.lib.customtree.CustomTreeCtrl.
 
@@ -255,23 +368,48 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     dropped an item on top of another item. It's up to you to decide how
     to handle the drop. If you are using this mixin together with the
     VirtualTree mixin, it makes sense to rearrange your underlying data
-    and then call RefreshItems to let the virtual tree refresh itself. """
+    and then call RefreshItems to let the virtual tree refresh itself."""
 
     def __init__(self, *args, **kwargs):
-        log.debug("TreeCtrlDragAndDropMixin.__init__ : initialisation du drag and drop dans l'arborescence.")
+        log.debug(
+            "TreeCtrlDragAndDropMixin.__init__ : initialisation du drag and drop dans l'arborescence."
+        )
         kwargs["style"] = (
             kwargs.get("style", wx.TR_DEFAULT_STYLE) | wx.TR_HIDE_ROOT
         )
         self._validateDragCallback = kwargs.pop("validateDrag", None)
         super().__init__(*args, **kwargs)
+        wx.CallAfter(self.__safeLateInit)
+
+    def __safeLateInit(self):
+        """Safely perform late initialization, guarding against deleted C++ objects."""
+        try:
+            if self:
+                self._lateInit()
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            pass
+
+    def _lateInit(self):
         self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnBeginDrag)
         self._dragStartPos = None
         self.GetMainWindow().Bind(wx.EVT_LEFT_DOWN, self._OnLeftDown)
         self._dragItems = []
-        log.debug("TreeCtrlDragAndDropMixin.__init__ : D    Équivalent simplifié de wx.FileDropTarget et wx.TextDropTarget.rag and drop dans l'arborescence initialisé.")
+        # Hover-expand timer: auto-expand collapsed items after hover delay
+        self._hoverExpandTimerId = wx.NewIdRef()
+        self._hoverExpandTimer = wx.Timer(self, self._hoverExpandTimerId)
+        self._hoverExpandItem = (
+            None  # Item currently being hovered for expansion
+        )
+        self.Bind(
+            wx.EVT_TIMER, self._onHoverExpandTimer, id=self._hoverExpandTimerId
+        )
+        log.debug(
+            "TreeCtrlDragAndDropMixin.__init__ : D    Équivalent simplifié de wx.FileDropTarget et wx.TextDropTarget.rag and drop dans l'arborescence initialisé."
+        )
 
     def OnDrop(self, dropItem, dragItems, part, column):
-        """ This function must be overloaded in the derived class. dragItems
+        """This function must be overloaded in the derived class. dragItems
         are the items being dragged by the user. dropItem is the item the
         dragItems are dropped on. If the user doesn't drop the dragItems
         on another item, dropItem equals the (hidden) root item of the
@@ -281,12 +419,16 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         raise NotImplementedError
 
     def OnBeginDrag(self, event):
-        """ This method is called when the drag starts. It either allows the
+        """This method is called when the drag starts. It either allows the
         drag and starts it or it vetoes the drag when the the root item is one
-        of the dragged items. """
+        of the dragged items."""
         column = self._ColumnHitTest(self._dragStartPos)
         selections = self.GetSelections()
-        self._dragItems = selections[:] if selections else [event.GetItem()] if event.GetItem() else []
+        self._dragItems = (
+            selections[:]
+            if selections
+            else [event.GetItem()] if event.GetItem() else []
+        )
         self._dragColumn = column
         if self._dragItems and (self.GetRootItem() not in self._dragItems):
             self.StartDragging()
@@ -314,9 +456,27 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
 
     def OnEndDrag(self, event):
         self.StopDragging()
-        dropTarget = event.GetItem()
-        if not dropTarget:
+        # dropTarget = event.GetItem()
+        # Use HitTest to determine actual drop target, not event.GetItem()
+        # which may return the last highlighted item even when outside
+        hitItem, flags, dropColumn = self.HitTest(event.GetPoint())
+
+        # Check if drop is outside items (left, right, above, below, or nowhere)
+        outsideFlags = (
+            wx.TREE_HITTEST_TOLEFT
+            | wx.TREE_HITTEST_TORIGHT
+            | wx.TREE_HITTEST_ABOVE
+            | wx.TREE_HITTEST_BELOW
+            | wx.TREE_HITTEST_NOWHERE
+        )
+        # if not dropTarget:
+        #     dropTarget = self.GetRootItem()
+        if not hitItem or (flags & outsideFlags):
+            # Drop outside items - make root task
             dropTarget = self.GetRootItem()
+        else:
+            dropTarget = hitItem
+
         if self.IsValidDropTarget(dropTarget):
             self.UnselectAll()
             if dropTarget != self.GetRootItem():
@@ -327,7 +487,11 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
                 part = -1
             elif flags & wx.TREE_HITTEST_ONITEMLOWERPART:
                 part = 1
-            self.OnDrop(dropTarget, self._dragItems, part, self._dragColumn)
+            # Use _ColumnHitTest on the drop point to reliably detect the
+            # target column (HitTest can return -1 for narrow columns)
+            actualDropColumn = self._ColumnHitTest(event.GetPoint())
+            # self.OnDrop(dropTarget, self._dragItems, part, self._dragColumn)
+            self.OnDrop(dropTarget, self._dragItems, part, actualDropColumn)
         else:
             # Work around an issue with HyperTreeList. HyperTreeList will
             # restore the selection to the last item highlighted by the drag,
@@ -335,8 +499,18 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
             # want, so use wx.CallAfter to clear the selection after
             # HyperTreeList did its (wrong) thing and reselect the previously
             # dragged item.
-            wx.CallAfter(self.select, self._dragItems)
+            # wx.CallAfter(self.select, self._dragItems)
+            wx.CallAfter(self.__safeSelect, self._dragItems)
         self._dragItems = []
+
+    def __safeSelect(self, items):
+        """Safely call select, guarding against deleted C++ objects."""
+        try:
+            if self:
+                self.select(items)
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            pass
 
     def selectDraggedItems(self):
         self.select(reversed(self._dragItems))
@@ -345,35 +519,159 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         if not event.Dragging():
             self.StopDragging()
             return
-        item, flags = self.HitTest(wx.Point(event.GetX(), event.GetY()))[:2]
+        # item, flags = self.HitTest(wx.Point(event.GetX(), event.GetY()))[:2]
+        point = wx.Point(event.GetX(), event.GetY())
+        item, flags, column = self.HitTest(point)
+        isRootDrop = not item or item == self.GetRootItem()
         if not item:
             item = self.GetRootItem()
         if self.IsValidDropTarget(item):
-            self.SetCursorToDragging()
+            # self.SetCursorToDragging()
+            # Use appropriate cursor based on drop location
+            if isRootDrop:
+                self.SetCursorToHome()
+            elif self._isPrereqOrDepColumn(column):
+                self.SetCursorToLink()
+            else:
+                self.SetCursorToDragging()
+            # Update drop visual feedback
+            self._UpdateDropFeedback(item, flags, column, point)
         else:
             self.SetCursorToDroppingImpossible()
-        if flags & wx.TREE_HITTEST_ONITEMBUTTON:
-            self.Expand(item)
+            self._ClearDropFeedback()
+        # if flags & wx.TREE_HITTEST_ONITEMBUTTON:
+        #     self.Expand(item)
+        # Auto-expand collapsed items on hover (modern UX behavior)
+        self._handleHoverExpand(item, flags)
         if self.GetSelections() != [item]:
             self.UnselectAll()
             if item != self.GetRootItem():
                 self.SelectItem(item)
         event.Skip()
 
+    def _handleHoverExpand(self, item, flags):
+        """Handle auto-expand of collapsed items during drag hover.
+
+        Expands collapsed items after a brief hover delay (500ms) for better UX.
+        Immediate expand when hovering directly on the expand button.
+        """
+        # Immediate expand when on the expand/collapse button
+        if flags & wx.TREE_HITTEST_ONITEMBUTTON:
+            self._hoverExpandTimer.Stop()
+            self._hoverExpandItem = None
+            self.Expand(item)
+            return
+
+        # Check if item is expandable (has children and is collapsed)
+        if item and item != self.GetRootItem():
+            try:
+                isExpandable = self.ItemHasChildren(
+                    item
+                ) and not self.IsExpanded(item)
+            except RuntimeError:
+                isExpandable = False
+        else:
+            isExpandable = False
+
+        if isExpandable:
+            # Start or continue timer for this item
+            if item != self._hoverExpandItem:
+                self._hoverExpandItem = item
+                self._hoverExpandTimer.Start(500, oneShot=True)
+        else:
+            # Not over an expandable item, cancel any pending expand
+            self._hoverExpandTimer.Stop()
+            self._hoverExpandItem = None
+
+    def _onHoverExpandTimer(self, event):
+        """Timer fired - expand the hovered item."""
+        if self._hoverExpandItem:
+            try:
+                if self.ItemHasChildren(
+                    self._hoverExpandItem
+                ) and not self.IsExpanded(self._hoverExpandItem):
+                    self.Expand(self._hoverExpandItem)
+            except RuntimeError:
+                pass  # Item may have been deleted
+        self._hoverExpandItem = None
+
+    def _UpdateDropFeedback(self, item, flags, column, point):
+        """Update visual feedback during drag based on drop position."""
+        mainWin = self.GetMainWindow()
+
+        if not item or item == self.GetRootItem():
+            mainWin.ClearDropHighlight()
+            return
+
+        # Highlight cell if on prereq/dep column
+        try:
+            mainWin.SetDropHighlight(item, column)
+        except (AttributeError, RuntimeError):
+            mainWin.ClearDropHighlight()
+
+    def _ClearDropFeedback(self):
+        """Clear all drop visual feedback."""
+        mainWin = self.GetMainWindow()
+        if hasattr(mainWin, "ClearDropHighlight"):
+            mainWin.ClearDropHighlight()
+
     def StartDragging(self):
         self.GetMainWindow().Bind(wx.EVT_MOTION, self.OnDragging)
+        self.GetMainWindow().Bind(wx.EVT_KEY_DOWN, self.OnKeyDuringDrag)
         self.Bind(wx.EVT_TREE_END_DRAG, self.OnEndDrag)
+        # Also bind to header window for header drops
+        headerWin = self.GetHeaderWindow()
+        if headerWin:
+            headerWin.Bind(wx.EVT_MOTION, self.OnDraggingOverHeader)
+            headerWin.Bind(wx.EVT_LEFT_UP, self.OnDropOnHeader)
         self.SetCursorToDragging()
+        self._droppedOnHeader = False
 
     def StopDragging(self):
         self.GetMainWindow().Unbind(wx.EVT_MOTION)
+        self.GetMainWindow().Unbind(wx.EVT_KEY_DOWN)
         self.Unbind(wx.EVT_TREE_END_DRAG)
+        # Unbind header events
+        headerWin = self.GetHeaderWindow()
+        if headerWin:
+            headerWin.Unbind(wx.EVT_MOTION)
+            headerWin.Unbind(wx.EVT_LEFT_UP)
+        # Cancel any pending hover-expand
+        self._hoverExpandTimer.Stop()
+        self._hoverExpandItem = None
+        # Clean up HyperTreeList's internal drag state
+        mainWin = self.GetMainWindow()
+        if hasattr(mainWin, "_dragImage") and mainWin._dragImage:
+            mainWin._dragImage.EndDrag()
+            mainWin._dragImage = None
+        if hasattr(mainWin, "_isDragging"):
+            mainWin._isDragging = False
         self.ResetCursor()
+        self._ResetHeaderCursor()
+        self._ClearDropFeedback()
         self.selectDraggedItems()
+        # Refresh to clear any visual artifacts
+        mainWin.Refresh()
+
+    def OnKeyDuringDrag(self, event):
+        """Handle key presses during drag - Escape cancels the operation."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.StopDragging()
+            self._dragItems = []
+        else:
+            event.Skip()
 
     def SetCursorToDragging(self):
         self.GetMainWindow().SetCursor(wx.StockCursor(wx.CURSOR_HAND))
         # self.GetMainWindow().SetCursor(wx.Cursor(wx.CURSOR_HAND))
+
+    def SetCursorToLink(self):
+        """Set cursor to link icon when over prereq/dep columns."""
+        self.GetMainWindow().SetCursor(_getLinkCursor(self.GetMainWindow()))
+
+    def SetCursorToHome(self):
+        """Set cursor to home folder icon when over root drop locations."""
+        self.GetMainWindow().SetCursor(_getHomeCursor(self.GetMainWindow()))
 
     def SetCursorToDroppingImpossible(self):
         self.GetMainWindow().SetCursor(wx.StockCursor(wx.CURSOR_NO_ENTRY))
@@ -382,19 +680,89 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     def ResetCursor(self):
         self.GetMainWindow().SetCursor(wx.NullCursor)
 
+    def _ResetHeaderCursor(self):
+        """Reset cursor on header window."""
+        headerWin = self.GetHeaderWindow()
+        if headerWin:
+            headerWin.SetCursor(wx.NullCursor)
+
+    def OnDraggingOverHeader(self, event):
+        """Handle mouse motion over the header window during dragging."""
+        if not self._dragItems:
+            event.Skip()
+            return
+        # Show home folder cursor when over header (indicates root drop)
+        headerWin = self.GetHeaderWindow()
+        if headerWin:
+            headerWin.SetCursor(_getHomeCursor(headerWin))
+        # Clear drop feedback in main window since we're over header
+        self._ClearDropFeedback()
+        event.Skip()
+
+    def OnDropOnHeader(self, event):
+        """Handle drop on the header window - makes task a root task."""
+        if not self._dragItems:
+            event.Skip()
+            return
+
+        # Get the column under the mouse
+        headerWin = self.GetHeaderWindow()
+        if not headerWin:
+            event.Skip()
+            return
+
+        x, _ = self.CalcUnscrolledPosition(event.GetX(), 0)
+        column = headerWin.XToCol(x)
+
+        # Only the main column (first column, index 0) makes task a root
+        # For other columns, we could add different behaviors later
+        if column == 0:
+            self._droppedOnHeader = True
+            # Make tasks root tasks by dropping on hidden root
+            dropTarget = self.GetRootItem()
+            self.OnDrop(dropTarget, self._dragItems, 0, 0)
+
+        self.StopDragging()
+        self._dragItems = []
+        event.Skip()
+
+    def _isPrereqOrDepColumn(self, column):
+        """Check if the column index is a prerequisites or dependencies column."""
+        if column < 0:
+            return False
+        try:
+            # Try to get column name via _getColumn (available in TreeListCtrl)
+            if hasattr(self, "_getColumn"):
+                col = self._getColumn(column)
+                if hasattr(col, "name"):
+                    name = col.name()
+                    return name in ("prerequisites", "dependencies")
+        except (IndexError, AttributeError):
+            pass
+        return False
+
     def IsValidDropTarget(self, dropTarget):
         if self._validateDragCallback is not None:
-            isValid = self._validateDragCallback(self.GetItemPyData(dropTarget),
-                                                 [self.GetItemPyData(item) for item in self._dragItems],
-                                                 self._dragColumn)
+            isValid = self._validateDragCallback(
+                self.GetItemPyData(dropTarget),
+                [self.GetItemPyData(item) for item in self._dragItems],
+                self._dragColumn,
+            )
             if isValid is not None:
                 return isValid
 
         if dropTarget:
+            # Dropping on hidden root is always valid (makes items root-level)
+            if dropTarget == self.GetRootItem():
+                return True
             invalidDropTargets = set(self._dragItems)
-            invalidDropTargets |= set(self.GetItemParent(item) for item in self._dragItems)
+            invalidDropTargets |= set(
+                self.GetItemParent(item) for item in self._dragItems
+            )
             for item in self._dragItems:
-                invalidDropTargets |= set(self.GetItemChildren(item, recursively=True))
+                invalidDropTargets |= set(
+                    self.GetItemChildren(item, recursively=True)
+                )
             return dropTarget not in invalidDropTargets
         else:
             return True
