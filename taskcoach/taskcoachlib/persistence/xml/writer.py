@@ -109,6 +109,7 @@ Fonctions principales:
 
 # from builtins import str
 # from builtins import object
+import base64
 import io
 import logging
 import os
@@ -173,6 +174,7 @@ class PIElementTree(eTree.ElementTree):
     Méthodes :
         - `write` : Écrit les nœuds XML avec l'instruction de traitement personnalisée.
     """
+
     def __init__(self, pi, *args, **kwargs):
         """
         Initialise une instance de `PIElementTree` avec une instruction de traitement.
@@ -182,7 +184,9 @@ class PIElementTree(eTree.ElementTree):
             *args :
             **kwargs :
         """
-        self._root = self.getroot()  # Attribut utilisé dans les write des classes suivantes
+        self._root = (
+            self.getroot()
+        )  # Attribut utilisé dans les write des classes suivantes
         self.__pi = pi
         eTree.ElementTree.__init__(self, *args, **kwargs)
 
@@ -203,34 +207,71 @@ class PIElementTree(eTree.ElementTree):
                 # for encoding in ["us-ascii", "utf-8"]:
                 # file.write('<?xml version="1.0" encoding="%s"?>\n' % encoding).encode(encoding)
                 # file.write(f'<?xml version="1.0" encoding="{encoding}"?>\n', )
-                log.debug("PIElementTree._write : Essaie d'écrire l'en-tête du fichier.")
-                try:
-                    file.write(f'<?xml version="1.0" encoding="{encoding}"?>\n'.encode(encoding))
-                except UnicodeEncodeError as e:
-                    log.exception(f"PIElementTree._write : Erreur en écrivant l'en-tête : {e}")
-                    pass
+                # Check if file is in binary mode or text mode
+                # Default to binary if mode cannot be determined (for wrapped file objects)
+                is_binary = not (
+                    hasattr(file, "mode") and "b" not in file.mode
+                )
+                log.debug(
+                    "PIElementTree._write : Essaie d'écrire l'en-tête du fichier."
+                )
+                if is_binary:
+                    # Binary mode: write bytes
+                    try:
+                        file.write(
+                            f'<?xml version="1.0" encoding="{encoding}"?>\n'.encode(
+                                encoding
+                            )
+                        )
+                    except UnicodeEncodeError as e:
+                        log.exception(
+                            f"PIElementTree._write : Erreur en écrivant l'en-tête : {e}"
+                        )
+                        pass
+                else:
+                    # Text mode: write strings
+                    file.write(
+                        f'<?xml version="1.0" encoding="{encoding}"?>\n'
+                    )
             # file.write(f"{self.__pi}\n".encode(encoding), )
-            try:
-                log.debug("PIElementTree._write : Essaie d'écrire la suite de l'en-tête du fichier.")
-                file.write(f"{self.__pi}\n".encode(encoding))
-            except UnicodeEncodeError as e:
-                log.exception(f"PIElementTree._write : Erreur en écrivant la suite de l'en-tête : {e}")
-                log.info(f"PIElementTree._write : L'erreur est écrite dans la suite de l'en-tête.")
-                file.write(f"{self.__pi}\n".encode('utf-8', errors='replace'))
-
+            # Write processing instruction
+            is_binary = not (hasattr(file, "mode") and "b" not in file.mode)
+            if is_binary:
+                try:
+                    log.debug(
+                        "PIElementTree._write : Essaie d'écrire la suite de l'en-tête du fichier."
+                    )
+                    file.write(f"{self.__pi}\n".encode(encoding))
+                except UnicodeEncodeError as e:
+                    log.exception(
+                        f"PIElementTree._write : Erreur en écrivant la suite de l'en-tête : {e}"
+                    )
+                    log.info(
+                        f"PIElementTree._write : L'erreur est écrite dans la suite de l'en-tête."
+                    )
+                    file.write(
+                        f"{self.__pi}\n".encode("utf-8", errors="replace")
+                    )
+            else:
+                file.write(self.__pi + "\n")
         # eTree.ElementTree._write(self, file, node, encoding, namespaces)  # pylint: disable=E1101
-        eTree.ElementTree.write(self, file, node, encoding, namespaces)  # pylint: disable=E1101
+        eTree.ElementTree.write(
+            self, file, node, encoding, namespaces
+        )  # pylint: disable=E1101
 
     # def write(self, file, encoding, *args, **kwargs):  # Signature of method 'PIElementTree.write()' does not match signature of the base method in class 'ElementTree'
     # def write(self, file, encoding, *args, **kwargs):  # Signature of Nonemethod 'PIElementTree.write()' does not match signature of the base method in class 'ElementTree'
-    def write(self, file, encoding: str | None = None,
-              xml_declaration: bool | None = None,
-              default_namespace: str | None = None,
-              method: str | None = None,
-              *args,
-              short_empty_elements: bool = True,
-              **kwargs,
-        ) -> None:
+    def write(
+        self,
+        file,
+        encoding: str | None = None,
+        xml_declaration: bool | None = None,
+        default_namespace: str | None = None,
+        method: str | None = None,
+        *args,
+        short_empty_elements: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Écrit l'arbre XML avec l'instruction de traitement.
 
@@ -250,6 +291,9 @@ class PIElementTree(eTree.ElementTree):
         # Mais il est inutile d'ajouter **kwargs deux fois !
         if encoding is None:
             encoding = "utf-8"
+        # Check if file is in binary mode or text mode
+        # Default to binary if mode cannot be determined (for wrapped file objects)
+        is_binary = not (hasattr(file, "mode") and "b" not in file.mode)
         if sys.version_info >= (2, 7):
             # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding), )
             # # file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n")
@@ -260,17 +304,43 @@ class PIElementTree(eTree.ElementTree):
             # file.write(f"{self.__pi}\n".encode(encoding), )
             # # content = (self.__pi + "\n").encode(encoding)
             # # file.write(content.decode(encoding))
-            try:
-                log.debug("PIElementTree.write : Essaie d'écrire l'instruction de traitement du fichier.")
-                file.write(f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(encoding))
-                file.write(f"{self.__pi}\n".encode(encoding))
-            except UnicodeEncodeError as e:
-                log.exception(f"PIElementTree.write : Erreur en écrivant l'instruction de traitement : {e}")
-                file.write(f"<?xml version='1.0' encoding='utf-8'?>\n".encode('utf-8', errors='replace'))
-                file.write(f"{self.__pi}\n".encode('utf-8', errors='replace'))
+            # Write XML declaration and processing instruction
+            if is_binary:
+                # Binary mode: write bytes
+                try:
+                    log.debug(
+                        "PIElementTree.write : Essaie d'écrire l'instruction de traitement du fichier."
+                    )
+                    file.write(
+                        f"<?xml version='1.0' encoding='{encoding}'?>\n".encode(
+                            encoding
+                        )
+                    )
+                    file.write(f"{self.__pi}\n".encode(encoding))
+                    kwargs["xml_declaration"] = False
+                    ET.ElementTree.write(self, file, encoding, *args, **kwargs)
+                except UnicodeEncodeError as e:
+                    log.exception(
+                        f"PIElementTree.write : Erreur en écrivant l'instruction de traitement : {e}"
+                    )
+                    file.write(
+                        f"<?xml version='1.0' encoding='utf-8'?>\n".encode(
+                            "utf-8", errors="replace"
+                        )
+                    )
+                    file.write(
+                        f"{self.__pi}\n".encode("utf-8", errors="replace")
+                    )
+            else:
+                # Text mode: write strings
+                file.write('<?xml version="1.0" encoding="%s"?>\n' % encoding)
+                file.write(self.__pi + "\n")
+                kwargs["xml_declaration"] = False
+                # Use 'unicode' encoding to write strings instead of bytes
+                ET.ElementTree.write(self, file, "unicode", *args, **kwargs)
 
-            kwargs["xml_declaration"] = False
-        eTree.ElementTree.write(self, file, encoding=encoding, *args, **kwargs)
+        #     kwargs["xml_declaration"] = False
+        # eTree.ElementTree.write(self, file, encoding=encoding, *args, **kwargs)
         # # eTree.ElementTree.write(self, file, encoding="unicode", *args, **kwargs)
         # if isinstance(file, io.BytesIO):
         #     eTree.ElementTree.write(self, file, encoding="utf-8", *args, **kwargs)
@@ -288,7 +358,9 @@ def sortedById(objects):
     Returns :
         (list) : Liste triée d'objets.
     """
-    log.debug(f"Trie d'une liste d'objets {objects} en fonction de leurs identifiants.")
+    log.debug(
+        f"Trie d'une liste d'objets {objects} en fonction de leurs identifiants."
+    )
     # s = [(obj.id(), obj) for obj in objects]
     # s.sort()
     # return [obj for dummy_id, obj in s]
@@ -314,6 +386,7 @@ class XMLWriter(object):
         - `noteNode` : Génère un nœud XML pour une note.
         - `effortNode` : Génère un nœud XML pour un effort.
     """
+
     maxDateTime = date.DateTime()
     # maxDateTime = eTree.Element("maxDateTime") # Peut-être initialiser un élément vide ?
 
@@ -329,8 +402,9 @@ class XMLWriter(object):
         self.__fd = fd
         self.__versionnr = versionnr
 
-    def write(self, taskList, categoryContainer,
-              noteContainer, syncMLConfig, guid):
+    def write(
+        self, taskList, categoryContainer, noteContainer, syncMLConfig, guid
+    ):
         """
         Écrit les données de domaine dans un fichier XML.
 
@@ -351,7 +425,9 @@ class XMLWriter(object):
 
         ownedNotes = self.notesOwnedByNoteOwners(taskList, categoryContainer)
         for rootCategory in sortedById(categoryContainer.rootItems()):
-            self.categoryNode(root, rootCategory, taskList, noteContainer, ownedNotes)
+            self.categoryNode(
+                root, rootCategory, taskList, noteContainer, ownedNotes
+            )
 
         for rootNote in sortedById(noteContainer.rootItems()):
             if rootNote not in ownedNotes:
@@ -364,6 +440,7 @@ class XMLWriter(object):
 
         # Formatter le nœud principal de façon lisible :
         flatten(root)
+        # Convertir cette ligne PIElementTree :
         # PIElementTree(
         #     '<?taskcoach release="%s" tskversion="%d"?>\n'
         #     % (meta.data.version, self.__versionnr),
@@ -377,7 +454,9 @@ class XMLWriter(object):
         log.debug(f"XMLWriter.write : Après flatten, root = {root}")
         tree = eTree.ElementTree(root)
         log.debug(f"XMLWriter.write : tree = {tree}")
-        tree_str = eTree.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False).decode('utf-8')
+        tree_str = eTree.tostring(
+            tree.getroot(), encoding="utf-8", xml_declaration=False
+        ).decode("utf-8")
         # xml_bytes = ET.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
         log.debug(f"XMLWriter.write : tree_str = {tree_str}")
         log.debug(f"XMLWriter.write : Écriture du fichier {self.__fd.name}.")
@@ -435,6 +514,12 @@ class XMLWriter(object):
             self.recurrenceNode(node, task.recurrence())
         if task.budget() != date.TimeDelta():
             node.attrib["budget"] = self.budgetAsAttribute(task.budget())
+        if task.plannedDuration() != date.TimeDelta():
+            node.attrib["plannedDuration"] = self.budgetAsAttribute(
+                task.plannedDuration()
+            )
+        if task.plannedDurationMode() != "implicit":
+            node.attrib["plannedDurationMode"] = task.plannedDurationMode()
         if task.priority():
             node.attrib["priority"] = str(task.priority())
         if task.hourlyFee():
@@ -458,7 +543,9 @@ class XMLWriter(object):
         )
         if prerequisiteIds:
             node.attrib["prerequisites"] = prerequisiteIds
-        if task.shouldMarkCompletedWhenAllChildrenCompleted() is not None:  # is not None !
+        if (
+            task.shouldMarkCompletedWhenAllChildrenCompleted() is not None
+        ):  # is not None !
             node.attrib["shouldMarkCompletedWhenAllChildrenCompleted"] = str(
                 task.shouldMarkCompletedWhenAllChildrenCompleted()
             )
@@ -494,6 +581,8 @@ class XMLWriter(object):
             attrs["sameWeekday"] = "True"
         if recurrence.recurBasedOnCompletion:
             attrs["recurBasedOnCompletion"] = "True"
+        if recurrence.weekdays:
+            attrs["weekdays"] = ",".join(str(d) for d in recurrence.weekdays)
         return eTree.SubElement(parentNode, "recurrence", attrs)
 
     def effortNode(self, parentNode, effort):
@@ -508,7 +597,11 @@ class XMLWriter(object):
 
         """
         formattedStart = self.formatDateTime(effort.getStart())
-        attrs = dict(id=effort.id(), status=str(effort.getStatus()), start=formattedStart, )
+        attrs = dict(
+            id=effort.id(),
+            status=str(effort.getStatus()),
+            start=formattedStart,
+        )
         stop = effort.getStop()
         if stop is not None:
             formattedStop = self.formatDateTime(stop)
@@ -516,12 +609,17 @@ class XMLWriter(object):
                 # Make sure the effort duration is at least one second
                 formattedStop = self.formatDateTime(stop + date.ONE_SECOND)
             attrs["stop"] = formattedStop
+        entryMode = effort.entryMode()
+        if entryMode and entryMode != "standard":
+            attrs["entryMode"] = entryMode
         node = eTree.SubElement(parentNode, "effort", attrs)
         if effort.description():
             eTree.SubElement(node, "description").text = effort.description()
         return node
 
-    def categoryNode(self, parentNode, category, *categorizableContainers):  # pylint: disable=W0621
+    def categoryNode(
+        self, parentNode, category, *categorizableContainers
+    ):  # pylint: disable=W0621
         """
         Crée un nœud XML pour une catégorie.
 
@@ -533,6 +631,7 @@ class XMLWriter(object):
         Returns :
 
         """
+
         def inCategorizableContainer(categorizable):
             """
             Renvoie Vrai si categorizable est dans le conteneur des catégorisables.
@@ -610,8 +709,11 @@ class XMLWriter(object):
                              et les dates de création, de modification, le sujet et la description.
 
         """
-        node = eTree.SubElement(parentNode, nodeName,
-                                dict(id=item.id(), status=str(item.getStatus())))
+        node = eTree.SubElement(
+            parentNode,
+            nodeName,
+            dict(id=item.id(), status=str(item.getStatus())),
+        )
         if item.creationDateTime() > date.DateTime.min:
             node.attrib["creationDateTime"] = str(item.creationDateTime())
         if item.modificationDateTime() > date.DateTime.min:
@@ -625,7 +727,7 @@ class XMLWriter(object):
         return node
 
     def baseNode(self, parentNode, item, nodeName):
-        """ Créer un nœud et ajouter les attributs partagés par tous les objets de domaine,
+        """Créer un nœud et ajouter les attributs partagés par tous les objets de domaine,
         tels que l'identifiant, le sujet et la description.
 
         Args :
@@ -654,9 +756,16 @@ class XMLWriter(object):
             node.attrib["ordering"] = str(item.ordering())
         return node
 
-    def baseCompositeNode(self, parentNode, item, nodeName, childNodeFactory, childNodeFactoryArgs=()):
-        """ Identique à baseNode, mais crée également des nœuds enfants au moyen de
-            childNodeFactory."""
+    def baseCompositeNode(
+        self,
+        parentNode,
+        item,
+        nodeName,
+        childNodeFactory,
+        childNodeFactoryArgs=(),
+    ):
+        """Identique à baseNode, mais crée également des nœuds enfants au moyen de
+        childNodeFactory."""
         node = self.__baseNode(parentNode, item, nodeName)
         if item.foregroundColor():
             node.attrib["fgColor"] = str(item.foregroundColor())
@@ -676,7 +785,9 @@ class XMLWriter(object):
                 tuple(sorted(item.expandedContexts()))
             )
         for child in sortedById(item.children()):
-            childNodeFactory(node, child, *childNodeFactoryArgs)  # pylint: disable=W0142
+            childNodeFactory(
+                node, child, *childNodeFactoryArgs
+            )  # pylint: disable=W0142
         return node
 
     def attachmentNode(self, parentNode, attachment):
@@ -697,8 +808,24 @@ class XMLWriter(object):
         if data is None:
             node.attrib["location"] = attachment.location()
         else:
-            eTree.SubElement(node, "data", dict(extension=os.path.splitext(attachment.location())[-1])).text = \
-                data.encode("base64")
+            try:
+                eTree.SubElement(
+                    node,
+                    "data",
+                    dict(
+                        extension=os.path.splitext(attachment.location())[-1]
+                    ),
+                    # ).text = data.encode("base64")
+                ).text = base64.b64encode(data)
+            except Exception:
+                log.error(f"eTree ne support pas base64 !")
+                eTree.SubElement(
+                    node,
+                    "data",
+                    dict(
+                        extension=os.path.splitext(attachment.location())[-1]
+                    ),
+                ).text = data.encode("base64")
         for eachNote in sortedById(attachment.notes()):
             self.noteNode(node, eachNote)
         return node
@@ -773,6 +900,7 @@ class ChangesXMLWriter(object):
     Méthodes :
         - `write` : Écrit les changements dans un fichier XML.
     """
+
     def __init__(self, fd):
         self.__fd = fd
 
@@ -799,13 +927,17 @@ class ChangesXMLWriter(object):
         # # tree.write(self.__fd)
         # # tree.write(self.__fd, encoding="unicode")  # Sauf que ce n'est pas de l'unicode mais de l'utf-8 !
         # # tree.write(self.__fd, encoding="utf-8")
-        log.info(f"ChangesXMLWriter.write : Écriture du fichier {self.__fd.name}.")
+        log.info(
+            f"ChangesXMLWriter.write : Écriture du fichier {self.__fd.name}."
+        )
         # tree.write(self.__fd)  # Essayer avec tostring !
         # log.debug(f"ChangesXMLWriter.write : DEBUG - Contenu du fichier écrit:\n{self.__fd.getvalue()}")
         # tree_as_bytes = eTree.tostring(root, encoding="utf-8")
         # xml_bytes = eTree.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
         # tree_str = eTree.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False).decode('utf-8')
-        tree_str = eTree.tostring(tree.getroot(), encoding='utf-8', xml_declaration=False)
+        tree_str = eTree.tostring(
+            tree.getroot(), encoding="utf-8", xml_declaration=False
+        )
         # self.__fd.write(tree_as_bytes)
         # self.__fd.write(xml_bytes)
         # self.__fd.write(tree_str)
@@ -818,24 +950,34 @@ class ChangesXMLWriter(object):
             # tree_str = tree_str.decode('utf-8')
             # self.__fd.write(tree_str)
             # Cette modification décode tree_str en utilisant l'encodage UTF-8 seulement si self.__fd est un fichier texte.
-            self.__fd.write(tree_str.decode('utf-8'))
+            self.__fd.write(tree_str.decode("utf-8"))
         else:
             self.__fd.write(tree_str)
         # Cette modification vérifie si le fichier a été ouvert en mode texte ou binaire. Si c'est un fichier texte, alors on décode tree_str avant d'écrire. Sinon, on écrit directement les bytes.
         # De plus, il est important de vérifier le mode d'ouverture du fichier dans taskfile.py. Il faut s'assurer que les fichiers .delta sont ouverts en mode texte ("w") avec l'encodage UTF-8 lors de l'écriture des changements.
 
-        log.info(f"ChangesXMLWriter.write : Tentative de lecture du fichier {self.__fd.name} :")
+        log.info(
+            f"ChangesXMLWriter.write : Tentative de lecture du fichier {self.__fd.name} :"
+        )
         if hasattr(self.__fd, "getvalue"):  # StringIO ou BytesIO
-            log.info(f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.getvalue()}")
+            log.info(
+                f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.getvalue()}"
+            )
         # else:  # Fichier ouvert en mode écriture
         # elif "r" in self.__fd.mode or "+" in self.__fd.mode:  # Si le fichier supporte la lecture
-        elif hasattr(self.__fd, 'mode') and ("r" in self.__fd.mode or "+" in self.__fd.mode):  # Si le fichier supporte la lecture
+        elif hasattr(self.__fd, "mode") and (
+            "r" in self.__fd.mode or "+" in self.__fd.mode
+        ):  # Si le fichier supporte la lecture
             # AttributeError: 'SafeWriteFile' object has no attribute 'mode'
             self.__fd.seek(0)  # Repositionne le curseur au début
-            log.info(f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.read()}")
+            log.info(
+                f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.read()}"
+            )
             self.__fd.seek(0)  # Remet le curseur au début du fichier
         else:
-            log.warning(f"ChangesXMLWriter.write : ⚠️ Impossible de lire {self.__fd.name}, mode : {self.__fd.mode}")
+            log.warning(
+                f"ChangesXMLWriter.write : ⚠️ Impossible de lire {self.__fd.name}, mode : {self.__fd.mode}"
+            )
 
 
 class TemplateXMLWriter(XMLWriter):
@@ -846,9 +988,9 @@ class TemplateXMLWriter(XMLWriter):
         - `write` : Écrit un modèle de tâche en XML.
         - `taskNode` : Génère un nœud XML pour une tâche avec des attributs spécifiques aux modèles.
     """
+
     # def write(self, tsk):  # pylint: disable=W0221 # Méthode de XMLWrite avec signature différente -> à changer !?
-    def write(self, tsk, categoryContainer,
-              noteContainer, syncMLConfig, guid):
+    def write(self, tsk, categoryContainer, noteContainer, syncMLConfig, guid):
         # def write(self, tsk, categoryContainer=None,
         #           noteContainer=None, syncMLConfig=None, guid=None):
         """
@@ -861,10 +1003,13 @@ class TemplateXMLWriter(XMLWriter):
             syncMLConfig :
             guid :
         """
-        super().write(task.TaskList([tsk]),
-                      category.CategoryList(),
-                      note.NoteContainer(),
-                      None, None)
+        super().write(
+            task.TaskList([tsk]),
+            category.CategoryList(),
+            note.NoteContainer(),
+            None,
+            None,
+        )
 
     def taskNode(self, parentNode, tsk):  # pylint: disable=W0621
         """

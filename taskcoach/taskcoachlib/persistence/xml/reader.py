@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 # Problème : Le code dépend de plusieurs modules externes (comme wx, lxml, etc.),
 # mais il n'y a pas de vérification explicite de leur disponibilité.
 # Solution : Ajoutez des vérifications pour s'assurer que tous les modules
@@ -44,6 +45,7 @@ import io  # as StringIO
 import logging
 import operator
 import os
+
 # Problème : Le code utilise os.path pour manipuler les chemins de fichiers,
 # mais il n'utilise pas pathlib, qui est plus moderne et plus sûr.
 # Solution : Envisagez de migrer vers pathlib pour une gestion
@@ -51,22 +53,38 @@ import os
 import re
 import stat
 import uuid
+
 # import wx
 import tkinter as tk
 import tkinter.font
+
 # from wx import adv as wxadv
 # import xml.etree.ElementTree as eTree
 from lxml import etree as ET
+
 # from xml.etree import ElementTree as ET
 
 from taskcoachlib.domain.task.task import GUI_NAME
 from taskcoachlib.persistence import sessiontempfile  # pylint: disable=F0401
 from taskcoachlib import meta, patterns
 from taskcoachlib.changes import ChangeMonitor
-from taskcoachlib.domain import base, date, effort, task, category, categorizable, note, attachment
+from taskcoachlib.domain import (
+    base,
+    date,
+    effort,
+    task,
+    category,
+    categorizable,
+    note,
+    attachment,
+)
 from taskcoachlib.i18n import translate
-from taskcoachlib.syncml.config import SyncMLConfigNode, createDefaultSyncConfig
+from taskcoachlib.syncml.config import (
+    SyncMLConfigNode,
+    createDefaultSyncConfig,
+)
 from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
+
 # from taskcoachlib.thirdparty.guid import generate
 
 # Import the UI backend which provides a `wx` namespace (real wx when available
@@ -88,6 +106,7 @@ log = logging.getLogger(__name__)
 #    Remplacement de eval par ast.literal_eval.
 #    Gestion plus sûre des fichiers temporaires avec des context managers.
 #    Gestion explicite de l’encodage lors de l’ouverture des fichiers (certains TODO le signalent).
+
 
 # TODO : safe_eval_date_expr ne devrait pas être ici !
 def safe_eval_date_expr(expr, context):
@@ -129,13 +148,17 @@ def safe_eval_date_expr(expr, context):
             raise ValueError(f"Name '{name}' not allowed in expression")
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in allowed_operators:
-                raise ValueError(f"Operator {type(node.op).__name__} not allowed")
+                raise ValueError(
+                    f"Operator {type(node.op).__name__} not allowed"
+                )
             left = eval_node(node.left)
             right = eval_node(node.right)
             return allowed_operators[type(node.op)](left, right)
         elif isinstance(node, ast.UnaryOp):
             if type(node.op) not in allowed_unary:
-                raise ValueError(f"Unary operator {type(node.op).__name__} not allowed")
+                raise ValueError(
+                    f"Unary operator {type(node.op).__name__} not allowed"
+                )
             operand = eval_node(node.operand)
             return allowed_unary[type(node.op)](operand)
         elif isinstance(node, ast.Call):
@@ -154,7 +177,7 @@ def safe_eval_date_expr(expr, context):
             raise ValueError(f"Node type {type(node).__name__} not allowed")
 
     try:
-        tree = ast.parse(expr, mode='eval')
+        tree = ast.parse(expr, mode="eval")
         return eval_node(tree)
     except (SyntaxError, ValueError) as e:
         raise ValueError(f"Invalid expression '{expr}': {e}")
@@ -321,13 +344,19 @@ class PIParser(ET.XMLParser):
                 # self.tskversion = int(match_object.group(1))
                 try:
                     self.tskversion = int(match_object.group(1))
-                    log.debug(f"PIParser.handle_pi : La version de taskcoach du fichier est {self.tskversion}.")
+                    log.debug(
+                        f"PIParser.handle_pi : La version de taskcoach du fichier est {self.tskversion}."
+                    )
                 # except ValueError:
                 except Exception:
-                    log.error(f"PIParser.handle_pi : Impossible de convertir la version '{match_object.group(1)}' en entier.")
+                    log.error(
+                        f"PIParser.handle_pi : Impossible de convertir la version '{match_object.group(1)}' en entier."
+                    )
             else:
                 # wx.LogError("PIParser.handle_pi : tskversion non trouvée dans la PI.")
-                log.error("PIParser.handle_pi : tskversion non trouvée dans la PI.")
+                log.error(
+                    "PIParser.handle_pi : tskversion non trouvée dans la PI."
+                )
             # print(f"PIParser.handle_pi définit self.tskversion = {self.tskversion}")
         else:
             # wx.LogError("PIParser.handle_pi : target différent de taskcoach")
@@ -341,11 +370,12 @@ class XMLReaderTooNewException(Exception):
     Cette exception est levée si le lecteur XML rencontre un format de fichier XML
     plus récent que celui qu'il est capable de gérer.
     """
+
     pass
 
 
 class XMLReader(object):  # nouvelle classe
-    """ Classe de lecture des fichiers de tâches dans le format de fichier de tâches XML par défaut.
+    """Classe de lecture des fichiers de tâches dans le format de fichier de tâches XML par défaut.
 
     **Méthodes**
 
@@ -379,12 +409,12 @@ class XMLReader(object):  # nouvelle classe
         * Vérifie si le fichier de tâches (version 24) contient des sauts de ligne incorrects dans les balises d'élément.
     `__fix_broken_lines`
         * Corrige les sauts de ligne incorrects identifiés dans les balises d'élément du fichier de tâches.
-        
+
     *** Méthodes privées ***
-    
+
     `__parse_task_nodes` (méthode privée)
         * Parse de manière récursive tous les noeuds de tâches de l'arbre XML et renvoie une liste d'instances de tâches.
-        
+
     `__resolve_prerequisites_and_dependencies` (méthode privée)
         * Remplace les identifiants de prérequis par les instances de tâches correspondantes et définit les dépendances entre les tâches.
 
@@ -392,32 +422,32 @@ class XMLReader(object):  # nouvelle classe
         * Associe les catégories aux tâches et aux notes correspondantes.
         * Établit les relations entre les catégories et les objets catégorisables (tâches, notes, etc.).
         * Garantit que les objets catégorisables soient correctement associés à leurs catégories et que les catégories soient informées de leur contenu.
-    
+
         **Arguments**
-    
+
         * `categories` (liste de `Category`): Liste d'objets de catégorie parsés à partir du XML.
         * `tasks` (liste de `Task`): Liste d'objets de tâche parsés à partir du XML.
         * `notes` (liste de `Note`): Liste d'objets de note parsés à partir du XML.
-    
+
         **Comportement**
-    
+
         1. Crée des dictionnaires de mappage pour les objets catégorisables et les catégories.
         2. Parcourt toutes les catégories, tâches et notes pour les ajouter aux dictionnaires de mappage respectifs.
         3. Itère sur les relations catégorie-objet catégorisable stockées dans `self.__categorizables`.
             * Récupère la catégorie correspondante à l'identifiant (vérifie les clés absentes).
             * Récupère l'objet catégorisable associé à l'identifiant dans la carte des objets catégorisables (vérifie les clés absentes).
             * Ajoute l'objet catégorisable à la catégorie et inversement (déclenche des événements pour notifier les changements).
-    
+
         **Erreurs gérées**
-    
+
         * `KeyError`: Si l'identifiant d'une catégorie référencée dans `self.__categorizables` n'est pas trouvé dans la carte des catégories parsées.
-    
+
     `__parse_category_nodes`
         * Parse de manière récursive tous les noeuds de catégorie de l'arbre XML et renvoie une liste d'instances de catégorie.
-    
+
     `__parse_note_nodes`
         * Parse de manière récursive tous les noeuds de note de l'arbre XML et renvoie une liste d'instances de note.
-    
+
     `__parse_category_node`
         * Parse un nœud XML de catégorie et retourne une instance de `category.Category`.
         * Récupère les attributs de base du nœud composite à l'aide de `__parse_base_composite_attributes`.
@@ -428,18 +458,18 @@ class XMLReader(object):  # nouvelle classe
         * Parse les pièces jointes si la version du fichier de tâches est supérieure à 20.
         * Crée et retourne une instance de `category.Category` en utilisant le dictionnaire d'arguments.
         * Enregistre la date de modification de la catégorie à l'aide de `__save_modification_datetime`.
-    
+
     `__parse_category_nodes_from_task_nodes`
         * Utilisée pour les versions de fichier <= 13 où les catégories étaient des sous-nœuds des tâches.
         * Récupère tous les nœuds de tâche et construit un mappage entre les identifiants de tâche et les catégories associées.
         * Crée un mappage distinct pour les catégories uniques.
         * Associe les catégories aux tâches via `self.__categorizables`.
         * Retourne une liste des objets `category.Category` créés.
-    
+
     `__parse_category_nodes_within_task_nodes`
         * Méthode statique (ou anciennement statique) pour parser les nœuds de catégorie imbriqués dans les nœuds de tâche.
         * Construit et retourne un dictionnaire mappant les identifiants de tâche à une liste de noms de catégorie.
-    
+
     `__parse_task_node`
         * Parse un nœud XML de tâche et retourne une instance de `task.Task`.
         * Gère la rétrocompatibilité pour l'attribut `planned_start_datetime_attribute_name` (nom différent selon la version).
@@ -456,30 +486,30 @@ class XMLReader(object):  # nouvelle classe
         * Parse les informations de récurrence à partir du nœud et retourne une instance de `date.Recurrence`.
         * Utilise différentes méthodes de parsing selon la version du fichier de tâches (inférieure ou supérieure à 19).
         * Délègue le parsing à `__parse_recurrence_attributes_from_task_node` (pour les versions <= 19) ou `__parse_recurrence_node` (pour les versions >= 20).
-    
+
     `__parse_recurrence_node`
         * Parse les informations de récurrence stockées dans un nœud séparé (à partir de la version 20).
         * Extrait les attributs `unit`, `amount`, `count`, `max`, `stop_datetime`, `sameWeekday` et `recurBasedOnCompletion` du nœud "recurrence".
         * Retourne un dictionnaire contenant les informations de récurrence.
-    
+
     `__parse_recurrence_attributes_from_task_node`
         * Méthode (anciennement statique) pour parser les informations de récurrence stockées directement dans les attributs du nœud de tâche (versions <= 19).
         * Extrait les attributs `recurrence`, `recurrenceCount`, `recurrenceFrequency` et `maxRecurrenceCount`.
         * Retourne un dictionnaire contenant les informations de récurrence.
-    
+
     `__parse_note_node`
         * Parse un nœud XML de note et retourne une instance de `note.Note`.
         * Récupère les attributs de base du nœud composite à l'aide de `__parse_base_composite_attributes`.
         * Parse les pièces jointes si la version du fichier de tâches est supérieure à 20.
         * Enregistre la date de modification de la note à l'aide de `__save_modification_datetime`.
-    
+
     `__parse_base_attributes`
         * Parse les attributs communs à tous les objets de domaine composites (id, date de création, date de modification, sujet, description, couleurs, police, icône, etc.).
         * Retourne un dictionnaire contenant ces attributs.
         * Gère la rétrocompatibilité pour l'attribut de couleur de fond (`color` ou `bgColor`).
         * Gère la rétrocompatibilité pour les pièces jointes (présentes dans les versions <= 20).
         * Parse l'attribut `status` (présent à partir de la version 22).
-    
+
     `__parse_base_composite_attributes`
         * Parse les attributs de base (comme `__parse_base_attributes`) et ajoute également le parsing des enfants et des contextes étendus.
         * Appelle `__parse_base_attributes` pour récupérer les attributs de base.
@@ -493,39 +523,39 @@ class XMLReader(object):  # nouvelle classe
         * Itère sur les nœuds "attachment" et crée des instances de `attachment.AttachmentFactory`.
         * Gère les différences entre les anciennes et les nouvelles versions pour la création des pièces jointes.
         * Gère les erreurs d'entrée/sortie (IOError) pour les pièces jointes (par exemple, les pièces jointes de courriel).
-    
+
     `__parse_effort_nodes`
         * Parse tous les enregistrements d'effort du nœud et les retourne sous forme de liste.
         * Utilise `__parse_effort_node` pour parser chaque enregistrement individuel.
-    
+
     `__parse_effort_node`
         * Parse un enregistrement d'effort individuel à partir du nœud.
         * Récupère et parse les attributs `start`, `stop` et `description`.
         * Gère l'attribut `status` (présent à partir de la version 22) et l'attribut `id` (présent à partir de la version 29).
         * Crée et retourne une instance de `effort.Effort`.
         * L'attribut `task` est initialisé à `None` et sera défini ultérieurement pour éviter des envois d'événements indésirables.
-    
+
     `__parse_syncml_node`
         * Parse le nœud SyncML et retourne la configuration SyncML.
         * Crée une configuration par défaut à l'aide de `createDefaultSyncConfig`.
         * Recherche le nœud SyncML (nom différent selon la version du fichier).
         * Appelle `__parse_syncml_nodes` pour parser les nœuds enfants.
-    
+
     `__parse_syncml_nodes`
         * Parse récursivement les nœuds SyncML.
         * Traite les nœuds "property" en définissant les propriétés correspondantes dans la configuration.
         * Traite les autres nœuds en créant des nœuds de configuration enfants et en appelant récursivement `__parse_syncml_nodes`.
-    
+
     `__parse_guid_node`
         * Parse le nœud GUID et retourne le GUID.
         * Extrait et nettoie le texte du nœud.
         * Génère un nouveau GUID si aucun n'est trouvé.
-    
+
     `__parse_attachments`
         * Parse les pièces jointes d'un nœud.
         * Itère sur les nœuds "attachment" et appelle `__parse_attachment` pour chaque pièce jointe.
         * Gère les erreurs d'entrée/sortie (IOError).
-    
+
     `__parse_attachment`
         * Parse une pièce jointe individuelle.
         * Récupère les attributs de base à l'aide de `__parse_base_attributes`.
@@ -543,49 +573,50 @@ class XMLReader(object):  # nouvelle classe
         * Traite différemment la description selon la version du fichier de tâches (avant ou après la version 6).
         * Pour les versions <= 6, récupère l'attribut "description" directement.
         * Pour les versions > 6, utilise `__parse_text` pour extraire le texte du nœud "description".
-    
+
     `__parse_text`
         * Parse le texte d'un nœud.
         * Retourne une chaîne vide si le nœud est `None` ou si son texte est vide.
         * Supprime les sauts de ligne en début et fin de texte pour les versions >= 24.
-    
+
     `__parse_int_attribute`
         * Parse un attribut entier d'un nœud.
         * Utilise une valeur par défaut en cas d'échec du parsing.
-    
+
     `__parse_datetime`
         * Parse une date et une heure à partir du texte.
         * Utilise `__parse` avec la fonction `date.parseDateTime`.
-    
+
     `__parse_font_description`
         * Parse une description de police à partir du texte.
         * Crée un objet `wx.Font` à partir de la description.
         * Ajuste la taille de la police si elle est inférieure à 4.
         * Retourne la police ou la valeur par défaut en cas d'échec.
-    
+
     `__parse_icon`
         * Parse un nom d'icône à partir du texte.
         * Corrige un nom d'icône spécifique ("clock_alarm").
-    
+
     `__parse_boolean`
         * Parse un booléen à partir du texte.
         * Convertit les chaînes "True" et "False" en booléens.
         * Lève une exception `ValueError` si le texte n'est pas "True" ou "False".
-    
+
     `__parse_tuple`
         * Parse un tuple à partir du texte.
         * Utilise `eval` pour convertir le texte en tuple si le texte commence par "(" et se termine par ")".
         * Retourne la valeur par défaut en cas d'échec.
-    
+
     `__parse`
         * Méthode générique pour parser du texte à l'aide d'une fonction de parsing.
         * Gère les exceptions `ValueError` et retourne une valeur par défaut en cas d'échec.
-    
+
     `__save_modification_datetime`
         * Enregistre la date et l'heure de modification d'un élément pour une restauration ultérieure.
         * Stocke la date et l'heure dans le dictionnaire `self.__modification_datetimes`.
         * Retourne l'élément.
     """
+
     defaultStartTime = (0, 0, 0, 0)
     defaultEndTime = (23, 59, 59, 999999)
 
@@ -609,7 +640,9 @@ class XMLReader(object):  # nouvelle classe
             ).GetPointSize()  # TODO : A modifier pour tkinter !
         elif GUI_NAME == "tk":
             # Créer un objet police par défaut
-            default_font = tkinter.font.Font(font=tkinter.font.nametofont("TkDefaultFont"))
+            default_font = tkinter.font.Font(
+                font=tkinter.font.nametofont("TkDefaultFont")
+            )
             # Obtenir la taille de la police par défaut
             self.__default_font_size = default_font.cget("size")
         # except Exception:
@@ -634,7 +667,7 @@ class XMLReader(object):  # nouvelle classe
         self.__tskversion = None
 
     def tskversion(self):
-        """ Renvoie la version du fichier de tâches actuel en cours de lecture. Notez qu'il ne s'agit pas
+        """Renvoie la version du fichier de tâches actuel en cours de lecture. Notez qu'il ne s'agit pas
             de la version de l'application. Le fichier de tâches possède sa propre numérotation de version
             (un numéro qui augmente à chaque modification).
 
@@ -694,7 +727,9 @@ class XMLReader(object):  # nouvelle classe
         """
         # wx.LogDebug(f"XMLReader.read : self.__fd={self.__fd} est de type {type(self.__fd)}.")  # le type est pompeux !
         # wx.LogDebug(f"XMLReader.read : Lit self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
-        log.debug(f"XMLReader.read : Lit self.__fd={self.__fd}.")  # Le type de classe est déjà dans self.__fd !
+        log.debug(
+            f"XMLReader.read : Lit self.__fd={self.__fd}."
+        )  # Le type de classe est déjà dans self.__fd !
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueTomorrow.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/tmpjwjkljek.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
         # self.__fd=<_io.TextIOWrapper name='/home/sylvain/.local/share/Task Coach/templates/dueToday.tsktmpl' mode='r' encoding='UTF-8'> est de type <class '_io.TextIOWrapper'>
@@ -702,11 +737,15 @@ class XMLReader(object):  # nouvelle classe
         # Vérification de self.__fd :
         # content = self.__fd.read()
         # if not self.__fd.getvalue().strip():
-        if isinstance(self.__fd, (io.StringIO, io.BytesIO)):  # Et si TextIOWrapper ?
+        if isinstance(
+            self.__fd, (io.StringIO, io.BytesIO)
+        ):  # Et si TextIOWrapper ?
             # if isinstance(self.__fd, (io.StringIO, io.BytesIO, io.TextIOWrapper)):
             # if isinstance(self.__fd, (io.BytesIO)):
             if self.__fd.readable():
-                contenu = self.__fd.read().strip()  # io.BufferedIOBase.read() renvoie des bytes !
+                contenu = (
+                    self.__fd.read().strip()
+                )  # io.BufferedIOBase.read() renvoie des bytes !
                 # wx.LogDebug(f"XMLReader.read : contenu = {contenu}")
                 log.debug(f"XMLReader.read : contenu = {contenu}")
                 if not contenu:
@@ -717,8 +756,17 @@ class XMLReader(object):  # nouvelle classe
             if not self.__fd.getvalue().strip():
                 # print("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
                 # wx.LogDebug("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
-                log.debug("XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides.")
-                return [], [], [], None, {}, None  # Retourne des listes et objets vides
+                log.debug(
+                    "XMLReader.read : ⚠️ Le fichier XML est vide, retour de valeurs vides."
+                )
+                return (
+                    [],
+                    [],
+                    [],
+                    None,
+                    {},
+                    None,
+                )  # Retourne des listes et objets vides
         # if isinstance(content, bytes):
         #     content = content.decode('utf-8', errors='replace')  # Décode en UTF-8, remplace les erreurs
         #     # Recherche et suppression des lignes brisées (méthode à adapter si nécessaire)
@@ -754,7 +802,9 @@ class XMLReader(object):  # nouvelle classe
         self.__fd.seek(0)  # Remet le curseur au début du fichier
         # wx.LogDebug(f"XMLReader.read : Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu. Ne s'affiche pas dans les tests !
         # log.debug(f"XMLReader.read : DEBUG - Contenu du fichier lu:\n{self.__fd.read()}")  # Vérifie le contenu lu. Ne s'affiche pas dans les tests !
-        log.debug(f"XMLReader.read : Contenu du fichier :\n{self.__fd.read()}")  # Vérifie le contenu lu
+        log.debug(
+            f"XMLReader.read : Contenu du fichier :\n{self.__fd.read()}"
+        )  # Vérifie le contenu lu
         self.__fd.seek(0)  # Reviens au début avant parsing
         # print(f"XMLReader.read : 3. Valeur du fichier lu : self.__fd.getvalue = {self.__fd.getvalue()}")
         # tree = eTree.parse(self.__fd, parser)
@@ -793,7 +843,9 @@ class XMLReader(object):  # nouvelle classe
         # # Récupérer l'instruction de traitement à partir de `docinfo`
         # tskversion = 1  # Valeur par défaut
         # pis = tree.getroot().xpath("//processing-instruction()")   # AttributeError: 'xml.etree.ElementTree.Element' object has no attribute 'xpath'
-        pis = root.xpath("//processing-instruction()")   # AttributeError: 'xml.etree.ElementTree.Element' object has no attribute 'xpath'
+        pis = root.xpath(
+            "//processing-instruction()"
+        )  # AttributeError: 'xml.etree.ElementTree.Element' object has no attribute 'xpath'
         # pis = tree.getroot().findall("//processing-instruction()")
         # print(f"pis = {pis}")
         # print(f"Valeur de tskversion avant affectation : {tskversion}")
@@ -803,13 +855,16 @@ class XMLReader(object):  # nouvelle classe
                 # tskversion = int(pi.attrib.get("tskversion"))
                 try:
                     # print(f"pi.attrib.get('tskversion') = {pi.attrib.get("tskversion")}")
-                    tskversion = int(pi.attrib.get("tskversion", "1"))  # Utiliser "1" si absent
+                    tskversion = int(
+                        pi.attrib.get("tskversion", "1")
+                    )  # Utiliser "1" si absent
                     log.info(f"pis récupère tskversion={tskversion}.")
                 except ValueError:
                     log.error(
-                        f"Erreur : tskversion invalide '{pi.attrib.get('tskversion')}', utilisation de la valeur par défaut 1.")
+                        f"Erreur : tskversion invalide '{pi.attrib.get('tskversion')}', utilisation de la valeur par défaut 1."
+                    )
                     tskversion = 1
-                break   # Sortir après la première occurrence trouvée
+                break  # Sortir après la première occurrence trouvée
         # if tree.docinfo.internalDTD:
         #     for pi in tree.docinfo.internalDTD.externalEntities():
         #         if pi.name == "taskcoach":
@@ -833,7 +888,9 @@ class XMLReader(object):  # nouvelle classe
 
         # Affectation à l'attribut de l'instance
         # self.__tskversion = parser.tskversion  # pylint: disable=W0201
-        self.__tskversion = tskversion  # Gemini utilise plutôt parser.tskversion !
+        self.__tskversion = (
+            tskversion  # Gemini utilise plutôt parser.tskversion !
+        )
 
         # print(f"XMLReader.read : Valeur de tskversion après affectation : {tskversion}, pas self.tskversion {parser.tskversion}!")
         # 5. Vérifie si la version du fichier est compatible avec la version de l'application Task Coach.
@@ -841,7 +898,9 @@ class XMLReader(object):  # nouvelle classe
         if self.__tskversion > meta.data.tskversion:
             # Version number of task file is too high
             # wx.LogError("XMLReader.read : Version du fichier supérieur à celle de taskcoach !!!")
-            log.error("XMLReader.read : Version du fichier supérieur à celle de taskcoach !!!")
+            log.error(
+                "XMLReader.read : Version du fichier supérieur à celle de taskcoach !!!"
+            )
             raise XMLReaderTooNewException
         # else:
         #     print("XMLReader.read : DEBUG : Version du fichier inférieure ou égale à celle de taskcoach. OK")
@@ -850,7 +909,9 @@ class XMLReader(object):  # nouvelle classe
         # print("XMLReader.read: 6. ANALYSE DES DIFFERENTS ELEMENTS DU FICHIER.")
         # print(f"XMLReader.read : 6.a Analyse des noeuds de tâche de : root = {root} avec _parse_task_nodes.")
         tasks = self.__parse_task_nodes(root)
-        print(f"XMLReader.read : Tâches lues avec status: {[(the_task, the_task.id(), the_task.getStatus()) for the_task in tasks]}")  # TODO : a retirer.
+        print(
+            f"XMLReader.read : Tâches lues avec status: {[(the_task, the_task.id(), the_task.getStatus()) for the_task in tasks]}"
+        )  # TODO : a retirer.
         # print(f"XMLReader.read : Résultat d'analyse des noeuds de tâche : tasks = {tasks}")
         # print(f"XMLReader.read : DEBUG - Après parsing : tasks[0].completed() = {tasks[0].completed()}")
         # * Résout les prérequis et les dépendances entre les tâches.
@@ -895,8 +956,8 @@ class XMLReader(object):  # nouvelle classe
 
         # for object, modification_datetime in list(self.__modification_datetimes.items()):
         for (
-                the_object,
-                modification_datetime,
+            the_object,
+            modification_datetime,
         ) in self.__modification_datetimes.items():
             # print(f"XMLReader.read : Règle la modification de date {modification_datetime} de l'objet {the_object}.")
             the_object.setModificationDateTime(modification_datetime)
@@ -914,7 +975,7 @@ class XMLReader(object):  # nouvelle classe
             # changes = ChangesXMLReader(
             #     open(f"{self.__fd.name}.delta", "r")
             # ).read()
-            with open(changesName, "r") as fromChangesName:
+            with open(changesName, "r", encoding="utf-8") as fromChangesName:
                 changes = ChangesXMLReader(fromChangesName).read()
             # try:
             #     with open(changesName, 'rb') as delta_f:
@@ -927,7 +988,9 @@ class XMLReader(object):  # nouvelle classe
             changes = dict()
             # print(f"XMLReader.read : Création des Informations de modification du fichier delta : changes = {changes}")
         # print("XMLReader.read avant retour :")
-        print(f"Tâches lues avant retour : {[(the_task.id(), the_task.status()) for the_task in tasks]}, tasks[0].completed() = {tasks[0].completed()}")
+        print(
+            f"Tâches lues avant retour : {[(the_task.id(), the_task.status()) for the_task in tasks]}, tasks[0].completed() = {tasks[0].completed()}"
+        )
         # print(f"Catégories lues : {[the_category.id() for the_category in categories]}")
         # print(f"Notes lues : {[the_note.id() for the_note in notes]}")
         # print(f"Syncml_config lue : {[syncml_config]}")
@@ -952,8 +1015,12 @@ class XMLReader(object):  # nouvelle classe
 
         * Vérifie si le fichier de tâches (version 24) contient des sauts de ligne incorrects dans les balises d'élément.
         """
-        log.warning(f"XMLReader.__has_broken_lines : Type de self.__fd: {type(self.__fd)}")  # <class '_io.BufferedReader'>
-        has_broken_lines = "><spds><sources><TaskCoach-\n" in self.__fd.read()  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
+        log.warning(
+            f"XMLReader.__has_broken_lines : Type de self.__fd: {type(self.__fd)}"
+        )  # <class '_io.BufferedReader'>
+        has_broken_lines = (
+            "><spds><sources><TaskCoach-\n" in self.__fd.read()
+        )  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
         # content = self.__fd.read()
         # if isinstance(content, bytes):
         #     return b'><spds><sources><TaskCoach-\n' in content
@@ -965,7 +1032,7 @@ class XMLReader(object):  # nouvelle classe
         return has_broken_lines
 
     def __fix_broken_lines(self):
-        """ Supprimer les nouvelles lignes parasites des balises d’élément.
+        """Supprimer les nouvelles lignes parasites des balises d’élément.
 
         * Corrige les sauts de ligne incorrects identifiés dans les balises d'élément du fichier de tâches.
         """
@@ -1018,15 +1085,23 @@ class XMLReader(object):  # nouvelle classe
         # task_return = [self.__parse_task_node(child) for child in node.iter("task")]
         task_return = []
         # notes = [self.__parse_note_node(child) for child in node.findall("note")]
-        for task_to_parse in node.findall("task"):  # Voir si ce ne serait plus rapide avec iter ?
-            print(f"XMLReader.__parser_task_nodes : Parse le noeud {task_to_parse.tag} d'attributs {task_to_parse.attrib}.")
+        for task_to_parse in node.findall(
+            "task"
+        ):  # Voir si ce ne serait plus rapide avec iter ?
+            print(
+                f"XMLReader.__parser_task_nodes : Parse le noeud {task_to_parse.tag} d'attributs {task_to_parse.attrib}."
+            )
             task_parsed = self.__parse_task_node(task_to_parse)
             # log.debug(f"XMLReader.__parse_task_nodes : 🔍 Tâche créée : {task_parsed.id()} | Instance mémoire : {id(task_parsed)}")
             # for subchild in task_parsed.children():
             #     log.debug(f"XMLReader.__perse_task_nodes : 🔍 Enfant : {subchild.id()} | Instance mémoire : {id(subchild)}")
-            task_return.append(task_parsed)  # Ajoute explicite de la tâche task_parsed à la liste de tâches
+            task_return.append(
+                task_parsed
+            )  # Ajoute explicite de la tâche task_parsed à la liste de tâches
             # log.debug(f"XMLReader.__perse_task_nodes : ✅ Sous-Note ajoutée : {task_parsed.id()} dans la liste des tâches {task_return}")
-        log.debug(f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}")
+        log.debug(
+            f"XMLReader.__parser_task_nodes retourne la liste de tâches : {task_return}"
+        )
         return task_return
 
         # categories = []
@@ -1045,7 +1120,7 @@ class XMLReader(object):  # nouvelle classe
         # return categories
 
     def __resolve_prerequisites_and_dependencies(self, tasks):
-        """ Remplacer toutes les conditions préalables par les instances de tâche réelles et définir les dépendances.
+        """Remplacer toutes les conditions préalables par les instances de tâche réelles et définir les dépendances.
 
         Résout les prérequis et les dépendances entre les tâches.
 
@@ -1055,7 +1130,7 @@ class XMLReader(object):  # nouvelle classe
         # print(f"__resolve_prerequisites_and_dependencies qui ajoute le dictionnaire tasks_by_id = dict() à {tasks}")
 
         def collect_ids(the_tasks):
-            """ Créez un mappage à partir des ID de tâche aux instances de tâche."""
+            """Créez un mappage à partir des ID de tâche aux instances de tâche."""
             # print(f"XMLReader.__resolve_prerequisites_and_dependencies.collect_ids sur the_tasks = {the_tasks}:")
             for each_task in the_tasks:
                 tasks_by_id[each_task.id()] = each_task
@@ -1064,19 +1139,20 @@ class XMLReader(object):  # nouvelle classe
             # print(f"collect_ids : Résultat du mappage tasks_by_id = {tasks_by_id}")
 
         def resolve_ids(the_tasks):
-            """ Remplacer tous les ID de prérequis par des instances de tâche réelles
+            """Remplacer tous les ID de prérequis par des instances de tâche réelles
             et définir les dépendances."""
             # print(f"XMLReader.__resolve_prerequisites_and_dependencies.resolve_ids sur the_tasks = {the_tasks}:")
             for each_task in the_tasks:
                 if each_task.isDeleted():
                     # Ne restaurez pas les conditions préalables et les dépendances pour les tâches supprimées
-                    for deleted_task in [each_task] + \
-                                        each_task.children(recursive=True):
+                    for deleted_task in [each_task] + each_task.children(
+                        recursive=True
+                    ):
                         deleted_task.setPrerequisites([])
                     continue
                 prerequisites = set()
                 for prerequisiteId in self.__prerequisites.get(
-                        each_task.id(), []
+                    each_task.id(), []
                 ):
                     try:
                         prerequisites.add(tasks_by_id[prerequisiteId])
@@ -1154,7 +1230,9 @@ class XMLReader(object):  # nouvelle classe
             # Si c'est un objet catégorisable (tâche, note, etc.), l'ajouter au resultMap
             if isinstance(obj, categorizable.CategorizableCompositeObject):
                 # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : ✅ Ajout de {obj}{obj.id()} à la liste des categorizables")
-                resultMap[obj.id()] = obj  # Ajoute l'objet au mapping des objets catégorisables
+                resultMap[obj.id()] = (
+                    obj  # Ajoute l'objet au mapping des objets catégorisables
+                )
                 # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : État actuel de resultMap après ajout des catégorisables : {resultMap}")
 
                 # # 🔥 Ajout récursif des sous-tâches
@@ -1168,10 +1246,14 @@ class XMLReader(object):  # nouvelle classe
             if isinstance(obj, category.Category):
                 if obj.id() not in categoryMap:
                     # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : ✅ Ajout immédiat de la catégorie {obj.id()} ({obj.subject()}) à la liste des catégories categoryMap")
-                    categoryMap[obj.id()] = obj  # Ajoute la catégorie à la carte des catégories
+                    categoryMap[obj.id()] = (
+                        obj  # Ajoute la catégorie à la carte des catégories
+                    )
                 else:
                     # wx.LogDebug(f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})")
-                    log.debug(f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})")
+                    log.debug(
+                        f"XMLReader.__resolve_categories.mapCategorizables : 🔍 Catégorie déjà dans categoryMap: {obj.id()} ({obj.subject()})"
+                    )
                 # log.debug(f"XMLReader.__resolve_categories.mapCategorizables : État actuel de categoryMap après ajout des catégories = {categoryMap}")
                 # # Gérer la récursivité des catégories
                 # for subcategory in obj.children(recursive=True):
@@ -1200,10 +1282,14 @@ class XMLReader(object):  # nouvelle classe
                 # log.debug(
                 #     f"DEBUG: mapCategorizables ajoute les pièces jointes de {obj.id()} à la liste resultMap en les renvoyant dans mapCategorizables.")
                 for theAttachment in obj.attachments():
-                    if theAttachment is not None:  # Vérifier si la pièce jointe n'est pas None
+                    if (
+                        theAttachment is not None
+                    ):  # Vérifier si la pièce jointe n'est pas None
                         # log.debug(
                         #     f"✅ Ajout immédiat de la pièce jointe {theAttachment.id()} ({obj.attachments()}) à la liste des catégories categoryMap")
-                        mapCategorizables(theAttachment, resultMap, categoryMap)
+                        mapCategorizables(
+                            theAttachment, resultMap, categoryMap
+                        )
 
         # Chaque catégorie est mise à jour pour inclure ses objets catégorisables connexes.
         # Parcourt toutes les catégories, tâches et notes pour les ajouter aux dictionnaires de mappage respectifs.
@@ -1267,16 +1353,21 @@ class XMLReader(object):  # nouvelle classe
                 # wx.LogWarning(
                 #     f"⚠️ Avertissement : La catégorie {categoryId} n'a pas d'objets catégorisables associés, elle sera ignorée.")
                 log.warning(
-                    f"⚠️ Avertissement : La catégorie {categoryId} n'a pas d'objets catégorisables associés, elle sera ignorée.")
+                    f"⚠️ Avertissement : La catégorie {categoryId} n'a pas d'objets catégorisables associés, elle sera ignorée."
+                )
                 continue
             try:
                 # * Récupère la catégorie correspondante à l'identifiant (vérifie les clés absentes).
                 if categoryId not in categoryMap:
                     # wx.LogWarning(f"XMLReader.__resolve_categories : ⚠️ Catégorie introuvable dans categoryMap : {categoryId}")
-                    log.warning(f"XMLReader.__resolve_categories : ⚠️ Catégorie introuvable dans categoryMap : {categoryId}")
+                    log.warning(
+                        f"XMLReader.__resolve_categories : ⚠️ Catégorie introuvable dans categoryMap : {categoryId}"
+                    )
                 else:
                     # wx.LogDebug(f"XMLReader.__resolve_categories : 🟢 Catégorie trouvée : {categoryId} -> categoryMap : {categoryMap}")
-                    log.debug(f"XMLReader.__resolve_categories : 🟢 Catégorie trouvée : {categoryId} -> categoryMap : {categoryMap}")
+                    log.debug(
+                        f"XMLReader.__resolve_categories : 🟢 Catégorie trouvée : {categoryId} -> categoryMap : {categoryMap}"
+                    )
 
                 # print(f"__resolve_categories : Création de theCategory = categoryMap[categoryId] pour categoryId = {categoryId}")
                 theCategory = categoryMap[categoryId]  # KeyError de categoryID
@@ -1293,15 +1384,20 @@ class XMLReader(object):  # nouvelle classe
 
                         if categorizableId not in categorizableMap:
                             # wx.LogWarning(f"XMLReader.__resolve_categories : ⚠️ Objet catégorisable {categorizableId} introuvable dans categorizableMap")
-                            log.warning(f"XMLReader.__resolve_categories : ⚠️ Objet catégorisable {categorizableId} introuvable dans categorizableMap")
+                            log.warning(
+                                f"XMLReader.__resolve_categories : ⚠️ Objet catégorisable {categorizableId} introuvable dans categorizableMap"
+                            )
                             # wx.LogError(
                             #     f"XMLReader.__resolve_categories : ⚠️ ERREUR - Impossible de trouver l'objet {categorizableId} dans categorizablesMap !")
                             log.error(
-                                f"XMLReader.__resolve_categories : ⚠️ ERREUR - Impossible de trouver l'objet {categorizableId} dans categorizablesMap !")
+                                f"XMLReader.__resolve_categories : ⚠️ ERREUR - Impossible de trouver l'objet {categorizableId} dans categorizablesMap !"
+                            )
                         if categorizableId in categorizableMap:
                             # log.debug(f"Pour categorizableId={categorizableId} dans categorizableMap={categorizableMap},")
                             # * Récupère l'objet catégorisable associé à l'identifiant dans la carte des objets catégorisables (vérifie les clés absentes).
-                            theCategorizable = categorizableMap[categorizableId]
+                            theCategorizable = categorizableMap[
+                                categorizableId
+                            ]
                             # log.debug(f"theCategorizable = {theCategorizable}")
                             # log.debug(f"🔍 DEBUG - Assignation de {theCategory.subject()} à {theCategorizable.subject()}")
                             # getted_categorizable = self.objects.get(categorizableId)  # ajouté via gémini
@@ -1316,7 +1412,9 @@ class XMLReader(object):  # nouvelle classe
                                 #
                                 # log.debug(f"🟢 Ajout de la catégorieId {categoryId} à l'objet catégorizableId {categorizableId}")
                                 # log.debug(f"Avant ajout : theCategorizable.categories() = {theCategorizable.categories()}")
-                                theCategorizable.addCategory(theCategory, event=event)
+                                theCategorizable.addCategory(
+                                    theCategory, event=event
+                                )
                                 # log.debug(f"Après ajout : theCategorizable.categories() = {theCategorizable.categories()}")
                                 # log.debug(
                                 #     f"🔍 DEBUG - Catégories de {theCategorizable.subject()} après ajout = {theCategorizable.categories()}")
@@ -1328,13 +1426,17 @@ class XMLReader(object):  # nouvelle classe
                                 # log.debug(f"Category ID: {categoryId}, Categorizable ID: {categorizableId}")
                             else:
                                 # wx.LogDebug(f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}")
-                                log.debug(f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}")
+                                log.debug(
+                                    f"XMLReader.__resolve_categories : Objet manquant : {categorizableId}"
+                                )
             # KeyError : Si l'identifiant d'une catégorie référencée dans `self.__categorizables`
             #            n'est pas trouvé dans la carte de catégorie analysée.
             except KeyError as e:
                 # Enregistre la catégorie manquante ou catégorisable
                 # wx.LogError(f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}")
-                log.error(f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}")
+                log.error(
+                    f"XMLReader.__resolve_categories : !!!Error: Missing category or categorizable for ID {e}"
+                )
         # log.debug(f"🛠 DEBUG - Assignation des catégories : {self.categories}")
 
         # for task in tasks:
@@ -1346,7 +1448,9 @@ class XMLReader(object):  # nouvelle classe
         for a_task in tasks:
             # log.debug(f"FORCAGE 🔍 DEBUG - Avant setCategories() | Task {task.id()} | Catégories actuelles = {task.categories()}")
             # task.setCategories(set(task.categories()))  # Force l'affectation
-            a_task.setCategories(a_task.categories() | set(a_task.categories()))
+            a_task.setCategories(
+                a_task.categories() | set(a_task.categories())
+            )
             # log.debug(f"🔍 DEBUG - Après setCategories() | Task {task.id()} | Catégories finales = {task.categories()}")
         # for obj in tasks + notes:
         #     log.debug(f"🔍 DEBUG - Après résolution, {obj.id()} a les catégories {obj.categories()}")
@@ -1379,7 +1483,9 @@ class XMLReader(object):  # nouvelle classe
         # Récupère toutes les catégories
         # Combine les catégories trouvées directement et celles sous <categories>
         # category_nodes = node.findall("categories/category")
-        category_nodes = node.findall("category") + node.findall("categories/category")
+        category_nodes = node.findall("category") + node.findall(
+            "categories/category"
+        )
         # print(f"DEBUG - __parse_category_nodes : category_nodes trouvés = {category_nodes}")
 
         # print(f"XMLReader.__parse_category_nodes: Catégories extraites : {categories_extracted}")  # Debug
@@ -1405,7 +1511,9 @@ class XMLReader(object):  # nouvelle classe
             # Vérifier si la catégorie a été bien créée
             if theCategory is None:
                 # wx.LogWarning(f"XMLReader.__parse_category_nodes : ⚠️ WARNING - self.__parse_category_node() a retourné None pour {child}")
-                log.warning(f"XMLReader.__parse_category_nodes : ⚠️ WARNING - self.__parse_category_node() a retourné None pour {child}")
+                log.warning(
+                    f"XMLReader.__parse_category_nodes : ⚠️ WARNING - self.__parse_category_node() a retourné None pour {child}"
+                )
                 # continue  # Ignore cette catégorie et passe à la suivante
             else:
                 # category_id = child.attrib.get("id", None)
@@ -1452,9 +1560,13 @@ class XMLReader(object):  # nouvelle classe
         # print(f"XMLReader.__parse_note_nodes pour node = {node}:")
         notes = []
         # notes = [self.__parse_note_node(child) for child in node.findall("note")]
-        for child in node.findall("note"):  # Voir si ce ne serait plus rapide avec iter ?
+        for child in node.findall(
+            "note"
+        ):  # Voir si ce ne serait plus rapide avec iter ?
             child_note = self.__parse_note_node(child)
-            notes.append(child_note)  # Ajoute explicite de l'enfant child_note à la liste de notes
+            notes.append(
+                child_note
+            )  # Ajoute explicite de l'enfant child_note à la liste de notes
             # print(f"✅ Sous-Note ajoutée : {child_note.id()} dans la liste des notes {notes}")
         #
         #   # Inutile ? Non, les notes peuvent aussi avoir des enfants !
@@ -1468,7 +1580,7 @@ class XMLReader(object):  # nouvelle classe
         return notes
 
     def __parse_category_node(self, category_node):
-        """ Analyser récursivement les catégories du nœud et renvoyer une instance de catégorie.
+        """Analyser récursivement les catégories du nœud et renvoyer une instance de catégorie.
 
         * Analyse un nœud XML de catégorie et retourne une instance de `category.Category`.
             * Récupère les attributs de base du nœud composite à l'aide de `__parse_base_composite_attributes`.
@@ -1499,15 +1611,15 @@ class XMLReader(object):  # nouvelle classe
         # Récupère les attributs de base du nœud composite à l'aide de `__parse_base_composite_attributes`.
         # print(f"XMLReader.__parse_category_node : Récupère les attributs de base du nœud composite {category_node} à l'aide de `__parse_base_composite_attributes`.")
         kwargs = self.__parse_base_composite_attributes(
-            category_node,
-            self.__parse_category_nodes
+            category_node, self.__parse_category_nodes
         )
         # print(f"kwargs = {kwargs}")
         if not kwargs:
             # wx.LogWarning(
             #     f"⚠️ WARNING - __parse_base_composite_attributes a retourné un dictionnaire vide pour {category_node}")
             log.warning(
-                f"⚠️ WARNING - __parse_base_composite_attributes a retourné un dictionnaire vide pour {category_node}")
+                f"⚠️ WARNING - __parse_base_composite_attributes a retourné un dictionnaire vide pour {category_node}"
+            )
 
         # Analyse les notes directement associées à la catégorie à l'aide de `__parse_note_nodes`.
         # print(f"XMLReader.__parse_category_node : Récupère les notes directes du nœud {category_node}.")
@@ -1562,7 +1674,9 @@ class XMLReader(object):  # nouvelle classe
             return None
 
         # Ajoute cette catégorie dans le mapping des catégories de l'instance (pour y accéder plus tard)
-        self.categories[theCategory.id()] = theCategory  # Ajout immédiat à self.categories
+        self.categories[theCategory.id()] = (
+            theCategory  # Ajout immédiat à self.categories
+        )
         # print(f"DEBUG - Ajout dans self.__categorizables[{theCategory.id()}] = {categorizable_ids.split(' ')}")
 
         # # Récupère les tâches associées à cette catégorie via les nœuds <category>test</category>
@@ -1652,7 +1766,7 @@ class XMLReader(object):  # nouvelle classe
 
     # @staticmethod
     def __parse_category_nodes_within_task_nodes(self, task_nodes):
-        """ In tskversion <=13 category nodes were subnodes of task nodes.
+        """In tskversion <=13 category nodes were subnodes of task nodes.
 
         * Méthode statique (ou anciennement statique) pour parser les nœuds de catégorie imbriqués dans les nœuds de tâche.
         * Construit et retourne un dictionnaire mappant les identifiants de tâche à une liste de noms de catégorie.
@@ -1722,23 +1836,29 @@ class XMLReader(object):  # nouvelle classe
                     task_node.attrib.get(
                         planned_start_datetime_attribute_name, ""
                     ),
-                    *self.defaultStartTime
+                    *self.defaultStartTime,
                 ),
                 dueDateTime=parseAndAdjustDateTime(
                     task_node.attrib.get("duedate", ""), *self.defaultEndTime
                 ),
                 actualStartDateTime=date.parseDateTime(
                     task_node.attrib.get("actualstartdate", ""),
-                    *self.defaultStartTime
+                    *self.defaultStartTime,
                 ),
                 completionDateTime=date.parseDateTime(
                     task_node.attrib.get("completiondate", ""),
-                    *self.defaultEndTime
+                    *self.defaultEndTime,
                 ),
                 percentageComplete=self.__parse_int_attribute(
                     task_node, "percentageComplete"
                 ),
                 budget=date.parseTimeDelta(task_node.attrib.get("budget", "")),
+                plannedDuration=date.parseTimeDelta(
+                    task_node.attrib.get("plannedDuration", "")
+                ),
+                plannedDurationMode=task_node.attrib.get(
+                    "plannedDurationMode", "implicit"
+                ),
                 priority=self.__parse_int_attribute(task_node, "priority"),
                 hourlyFee=float(task_node.attrib.get("hourlyFee", "0")),
                 fixedFee=float(task_node.attrib.get("fixedFee", "0")),
@@ -1758,9 +1878,10 @@ class XMLReader(object):  # nouvelle classe
                 efforts=self.__parse_effort_nodes(task_node),
                 notes=self.__parse_note_nodes(task_node),
                 recurrence=self.__parse_recurrence(task_node),
-
                 # 🔹 Ajout de l'attribut status
-                status=task_node.attrib.get("status", "inactive"),  # Par défaut 1 si absent
+                status=task_node.attrib.get(
+                    "status", "inactive"
+                ),  # Par défaut 1 si absent
             )
         )
         # print(f"XMLReader.__parse_task-node : kwargs['completionDateTime']={kwargs['completionDateTime']}")
@@ -1818,12 +1939,14 @@ class XMLReader(object):  # nouvelle classe
         # for sub_task_node in task_node.findall("task"):  # Trouve les sous-tâches
         #     sub_task = self.__parse_task_node(sub_task_node)  # Crée la sous-tâche
         #     theTask.addChild(sub_task)  # L'ajoute à la tâche parente
-        print(f"XMLReader.__parse_task_node : Retourne la tâche theTask = {theTask}{theTask.id} de status {theTask.status()}")
+        print(
+            f"XMLReader.__parse_task_node : Retourne la tâche theTask = {theTask}{theTask.id} de status {theTask.status()}"
+        )
         self.__current_path.pop()
         return theTask
 
     def __parse_recurrence(self, task_node):
-        """ Parse the recurrence from the node and return a recurrence
+        """Parse the recurrence from the node and return a recurrence
             instance.
 
         * Parse les informations de récurrence à partir du nœud et retourne une instance de `date.Recurrence`.
@@ -1854,9 +1977,16 @@ class XMLReader(object):  # nouvelle classe
             maximum=0,
             stop_datetime=None,
             sameWeekday=False,
+            weekdays=[],
         )
         node = task_node.find("recurrence")
         if node is not None:
+            weekdays_str = node.attrib.get("weekdays", "")
+            weekdays = (
+                [int(d) for d in weekdays_str.split(",") if d]
+                if weekdays_str
+                else []
+            )
             kwargs = dict(
                 unit=node.attrib.get("unit", ""),
                 amount=int(node.attrib.get("amount", "1")),
@@ -1871,6 +2001,7 @@ class XMLReader(object):  # nouvelle classe
                 recurBasedOnCompletion=self.__parse_boolean(
                     node.attrib.get("recurBasedOnCompletion", "False")
                 ),
+                weekdays=weekdays,
             )
         return kwargs
 
@@ -1895,7 +2026,7 @@ class XMLReader(object):  # nouvelle classe
         )
 
     def __parse_note_node(self, note_node):
-        """ Analyser les attributs et les notes des enfants du nœud de note.
+        """Analyser les attributs et les notes des enfants du nœud de note.
 
         * Analyse un nœud XML de note et retourne une instance de `note.Note`.
         * Récupère les attributs de base du nœud composite à l'aide de `__parse_base_composite_attributes`.
@@ -1908,15 +2039,16 @@ class XMLReader(object):  # nouvelle classe
         self.__current_path.append(f"Note: {subject}")
 
         kwargs = self.__parse_base_composite_attributes(
-            note_node,
-            self.__parse_note_nodes
+            note_node, self.__parse_note_nodes
         )
 
         if self.__tskversion > 20:
             kwargs["attachments"] = self.__parse_attachments(note_node)
             # theNote.setAttachments(self.__parse_attachments(note_node))  # ✅ Ajoute les pièces jointes si nécessaire
 
-        theNote = note.Note(**kwargs)  # ✅ Créer l'objet Note AVANT d'ajouter les enfants
+        theNote = note.Note(
+            **kwargs
+        )  # ✅ Créer l'objet Note AVANT d'ajouter les enfants
 
         # # Ajoute les sous-notes en tant qu'enfants
         # for child_node in note_node.findall("note"):
@@ -1928,7 +2060,9 @@ class XMLReader(object):  # nouvelle classe
         #     note.Note(**kwargs)
         # )  # pylint: disable=W0142
         self.__current_path.pop()
-        return self.__save_modification_datetime(theNote)  # ✅ Retourne un vrai objet Note
+        return self.__save_modification_datetime(
+            theNote
+        )  # ✅ Retourne un vrai objet Note
 
     def __parse_base_attributes(self, node):
         """
@@ -1944,7 +2078,9 @@ class XMLReader(object):  # nouvelle classe
         Returns :
             dict attributes : Un dictionnaire contenant ces attributs.
         """
-        log.debug(f"XMLReader.__parse_base_attributes : dans self={self} pour le noeud node={node}")
+        log.debug(
+            f"XMLReader.__parse_base_attributes : dans self={self} pour le noeud node={node}"
+        )
         bg_color_attribute = "color" if self.__tskversion <= 27 else "bgColor"
         # Dictionnaire des attributs du nœud node.
         attributes = dict(
@@ -1976,13 +2112,15 @@ class XMLReader(object):  # nouvelle classe
         if self.__tskversion >= 22:
             attributes["status"] = int(node.attrib.get("status", "1"))
 
-        log.debug(f"__parse_base_attributes : retourne attributes={attributes}")
+        log.debug(
+            f"__parse_base_attributes : retourne attributes={attributes}"
+        )
         return attributes
 
     def __parse_base_composite_attributes(
         self, node, parse_children, *parse_children_args
     ):
-        """ Identique à __parse_base_attributes, mais analyse également les enfants
+        """Identique à __parse_base_attributes, mais analyse également les enfants
         et les contextes étendus.
 
         * Analyse les attributs de base (comme `__parse_base_attributes`) et ajoute également le parsing des enfants et des contextes étendus.
@@ -2003,7 +2141,7 @@ class XMLReader(object):  # nouvelle classe
         return kwargs
 
     def __parse_attachments_before_version21(self, parent):
-        """ Analyser les pièces jointes à partir du nœud et renvoyer les instances de pièce jointe.
+        """Analyser les pièces jointes à partir du nœud et renvoyer les instances de pièce jointe.
 
         * Parse les pièces jointes pour les versions de fichier antérieures à 21.
         * Construit le chemin vers le répertoire des pièces jointes en se basant sur le nom du fichier de tâches.
@@ -2056,7 +2194,7 @@ class XMLReader(object):  # nouvelle classe
         return attachments
 
     def __parse_effort_nodes(self, node):
-        """ Parse all effort records from the node.
+        """Parse all effort records from the node.
 
         * Parse tous les enregistrements d'effort du nœud et les retourne sous forme de liste.
                 * Utilise `__parse_effort_node` pour parser chaque enregistrement individuel.
@@ -2068,7 +2206,7 @@ class XMLReader(object):  # nouvelle classe
         ]
 
     def __parse_effort_node(self, node):
-        """ Parse an effort record from the node.
+        """Parse an effort record from the node.
 
         * Parse un enregistrement d'effort individuel à partir du nœud.
         * Récupère et analyse les attributs `start`, `stop` et `description`.
@@ -2091,16 +2229,18 @@ class XMLReader(object):  # nouvelle classe
         # task by the task itself. This way no events are sent for changing the
         # effort owner, which is good.
         # pylint: disable=W0142
+        entryMode = node.attrib.get("entryMode", "standard")
         return effort.Effort(
             task=None,
             start=date.parseDateTime(start),
             stop=date.parseDateTime(stop),
             description=description,
-            **kwargs
+            entryMode=entryMode,
+            **kwargs,
         )
 
     def __parse_syncml_node(self, nodes, guid):
-        """ Parse the SyncML node from the nodes.
+        """Parse the SyncML node from the nodes.
 
         * Parse le nœud SyncML et retourne la configuration SyncML.
         * Crée une configuration par défaut à l'aide de `createDefaultSyncConfig`.
@@ -2119,7 +2259,7 @@ class XMLReader(object):  # nouvelle classe
         return syncml_config
 
     def __parse_syncml_nodes(self, node, config_node):
-        """ Parse les noeuds SyncML depuis le noeud node.
+        """Parse les noeuds SyncML depuis le noeud node.
 
         * Parse récursivement les nœuds SyncML.
         * Traite les nœuds "property" en définissant les propriétés correspondantes dans la configuration.
@@ -2141,7 +2281,7 @@ class XMLReader(object):  # nouvelle classe
                 self.__parse_syncml_nodes(child_node, child_config_node)
 
     def __parse_guid_node(self, node):
-        """ Parse the GUID from the node.
+        """Parse the GUID from the node.
 
         * Parse le nœud GUID et retourne le GUID.
         * Extrait et nettoie le texte du nœud.
@@ -2160,7 +2300,7 @@ class XMLReader(object):  # nouvelle classe
         return guid if guid else str(uuid.uuid4())
 
     def __parse_attachments(self, node):
-        """ Analyser les pièces jointes du nœud.
+        """Analyser les pièces jointes du nœud.
 
         * Analyse les pièces jointes d'un nœud.
         * Itère sur les nœuds "attachment" et appelle `__parse_attachment` pour chaque pièce jointe.
@@ -2177,7 +2317,7 @@ class XMLReader(object):  # nouvelle classe
         return attachments
 
     def __parse_attachment(self, node):
-        """ Analyser la pièce jointe du nœud.
+        """Analyser la pièce jointe du nœud.
 
         * Analyse une pièce jointe individuelle.
         * Récupère les attributs de base à l'aide de `__parse_base_attributes`.
@@ -2235,7 +2375,9 @@ class XMLReader(object):  # nouvelle classe
                 # open(location, "wb").write(data.decode("base64"))
                 with open(location, "wb") as to_location:
                     # to_location.write(data.decode("base64"))
-                    to_location.write(base64.b64decode(data))  # ✅ Compatible Python 3
+                    to_location.write(
+                        base64.b64decode(data)
+                    )  # ✅ Compatible Python 3
                 # log.debug(f"XMLReader.__parse_attachment(): écriture de {data} dans {location}")
 
                 # Problème : Les permissions du fichier temporaire sont
@@ -2256,7 +2398,7 @@ class XMLReader(object):  # nouvelle classe
             attachment.AttachmentFactory(
                 location,  # pylint: disable=W0142
                 node.attrib["type"],
-                **kwargs
+                **kwargs,
             )
         )
 
@@ -2310,7 +2452,7 @@ class XMLReader(object):  # nouvelle classe
 
     @classmethod
     def __parse_datetime(cls, text):
-        """ Analyser une datetime à partir du texte.
+        """Analyser une datetime à partir du texte.
 
         * Analyse une date et une heure à partir du texte.
         * Utilise `__parse` avec la fonction `date.parseDateTime`.
@@ -2318,13 +2460,14 @@ class XMLReader(object):  # nouvelle classe
         return cls.__parse(text, date.parseDateTime, None)
 
     def __parse_font_description(self, text, default_value=None):
-        """ Analyser une police du texte. En cas d'échec, renvoyez la valeur par défaut
+        """Analyser une police du texte. En cas d'échec, renvoyez la valeur par défaut
 
         * Parse une description de police à partir du texte.
         * Crée un objet `wx.Font` à partir de la description.
         * Ajuste la taille de la police si elle est inférieure à 4.
         * Retourne la police ou la valeur par défaut en cas d'échec.
         """
+
         def convert_wx_font_string_to_tk(font_string):
             # Exemple de parsing d'une chaîne de style "Arial 10 bold"
             parts = font_string.split()
@@ -2338,7 +2481,9 @@ class XMLReader(object):  # nouvelle classe
             if "italic" in parts:
                 style = tkinter.font.ITALIC
 
-            return tkinter.font.Font(family=family, size=size, weight=weight, slant=style)
+            return tkinter.font.Font(
+                family=family, size=size, weight=weight, slant=style
+            )
             # return tkinter.font.Font(family=parts[0], size=int(parts[1]), weight=tkinter.font.BOLD if "bold" in parts else tkinter.font.NORMAL, slant=tkinter.font.ITALIC if "italic" in parts else tkinter.font.NORMAL)
 
         if text:
@@ -2353,19 +2498,27 @@ class XMLReader(object):  # nouvelle classe
                 return font
         return default_value
 
+    # Mapping of removed/renamed icon names to their replacements
+    _deprecated_icons = {
+        "clock_alarm": "clock_alarm_icon",
+        "sign_warning_icon": "sign_important_icon",
+        "exclamation_icon": "sign_important_icon",
+    }
+
     @staticmethod
     def __parse_icon(text):
-        """ Analyser un nom d'icône du texte.
+        """Analyser un nom d'icône du texte.
 
         * Parse un nom d'icône à partir du texte.
         * Corrige un nom d'icône spécifique ("clock_alarm").
         """
         # Parse is a big word, we just need to fix one particular icon
         return "clock_alarm_icon" if text == "clock_alarm" else text
+        # return XMLReader._deprecated_icons.get(text, text)
 
     @classmethod
     def __parse_boolean(cls, text, default_value=None):
-        """ Analyser un booléen du texte. En cas d'échec, renvoyer la valeur par défaut
+        """Analyser un booléen du texte. En cas d'échec, renvoyer la valeur par défaut
 
         * Parse un booléen à partir du texte.
         * Convertit les chaînes "True" et "False" en booléens.
@@ -2406,7 +2559,7 @@ class XMLReader(object):  # nouvelle classe
 
     @staticmethod
     def __parse(text, parse_function, default_value):
-        """ Analyser le texte à l'aide de la fonction d'analyse.
+        """Analyser le texte à l'aide de la fonction d'analyse.
 
         En cas de défaillance, retourne la valeur par défaut.
 
@@ -2419,7 +2572,7 @@ class XMLReader(object):  # nouvelle classe
             return default_value
 
     def __save_modification_datetime(self, item):
-        """ Enregistrez la date de modification de l'heure de l'élément pour la restauration ultérieure.
+        """Enregistrez la date de modification de l'heure de l'élément pour la restauration ultérieure.
 
         * Enregistre la date et l'heure de modification d'un élément pour une restauration ultérieure.
         * Stocke la date et l'heure dans le dictionnaire `self.__modification_datetimes`.
@@ -2448,6 +2601,7 @@ class ChangesXMLReader(object):
         * Stocke l'objet `ChangeMonitor` dans un dictionnaire avec l'identifiant du périphérique comme clé.
         * Retourne le dictionnaire contenant tous les objets `ChangeMonitor`.
     """
+
     def __init__(self, fd):
         """
         Initialise le lecteur avec un descripteur de fichier (`fd`).
@@ -2489,11 +2643,11 @@ class ChangesXMLReader(object):
         # Création du lecteur de fd :
         xml_content = self.__fd.read()
         if isinstance(xml_content, bytes):
-            xml_content = xml_content.decode('utf-8', errors='replace')
+            xml_content = xml_content.decode("utf-8", errors="replace")
         if not xml_content.strip():
             return allChanges  # Fichier vide, retourne un dictionnaire vide
         try:
-            root = ET.fromstring(xml_content.encode('utf-8'))
+            root = ET.fromstring(xml_content.encode("utf-8"))
             for devNode in root.findall("device"):
                 id_ = devNode.attrib["guid"]
                 mon = ChangeMonitor(id_)
@@ -2506,10 +2660,14 @@ class ChangesXMLReader(object):
                 allChanges[id_] = mon
         # except ET.XMLSyntaxError:
         except SyntaxError:
-            log.error(f"Fichier de changements delta corrompu ou vide: {self.__fd.name}")
+            log.error(
+                f"Fichier de changements delta corrompu ou vide: {self.__fd.name}"
+            )
             return allChanges
         except Exception as e:
-            log.exception(f"Erreur inattendue lors de la lecture du fichier delta '{self.__fd.name}': {e}")
+            log.exception(
+                f"Erreur inattendue lors de la lecture du fichier delta '{self.__fd.name}': {e}"
+            )
             return allChanges
         return allChanges
 
@@ -2537,6 +2695,7 @@ class TemplateXMLReader(XMLReader):
         * Formatte le delta en une chaîne (par exemple, "10 minutes ago", "30 minutes from Now").
 
     """
+
     def read(self):
         """
         Appelle la méthode `read()` de la classe parente (`XMLReader`) et retourne la première tâche lue.
@@ -2561,7 +2720,9 @@ class TemplateXMLReader(XMLReader):
         Returns :
             La tâche parsée.
         """
-        log.debug(f"TemplateXMLReader.__parse_task_node : dans self={self} pour task_node={task_node}")
+        log.debug(
+            f"TemplateXMLReader.__parse_task_node : dans self={self} pour task_node={task_node}"
+        )
         attrs = dict()
         attribute_renames = dict(startdate="plannedstartdate")
         for name in [
@@ -2626,8 +2787,9 @@ class TemplateXMLReader(XMLReader):
         new_datetime = eval(expr, date.__dict__)
         # new_datetime = safe_eval_date_expr(expr, date.__dict__)
         if isinstance(new_datetime, date.date.RealDate):
-            new_datetime = date.DateTime(new_datetime.year, new_datetime.month,
-                                         new_datetime.day)
+            new_datetime = date.DateTime(
+                new_datetime.year, new_datetime.month, new_datetime.day
+            )
         delta = new_datetime - now()
         minutes = int(delta.minutes())
         if minutes < 0:
