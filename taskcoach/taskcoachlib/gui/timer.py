@@ -25,6 +25,18 @@ system with simple polling.
 
 See docs/SCHEDULERS.md for full architecture documentation.
 """
+# Points clés expliqués
+# 1.
+# Centralisation : Au lieu d'avoir des dizaines de timers dispersés dans l'interface
+# (un pour l'heure, un pour les rappels, un pour l'auto-save, etc.),
+# il n'y en a plus qu'un seul.
+# 2.
+# Performance : Appeler datetime.now() coûte du temps CPU.
+# Le faire une seule fois par seconde et passer le résultat à tout le monde
+# est beaucoup plus efficace que si chaque composant le fait dans son coin.
+# 3.
+# Stabilité : C'est ce composant qui permet de supprimer la dépendance à Twisted
+# (qui causait les crashs à la fermeture) tout en gardant les fonctionnalités périodiques.
 
 from pubsub import pub
 from taskcoachlib.domain import date as datemodule
