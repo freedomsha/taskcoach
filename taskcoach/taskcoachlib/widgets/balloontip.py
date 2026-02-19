@@ -36,10 +36,19 @@ class BalloonTip(wx.Frame):
     Utilisée pour mettre en avant une information liée à un widget cible,
     avec gestion fine de la disposition et de la forme.
     """
+
     ARROWSIZE = 16
     MAXWIDTH = 300
 
-    def __init__(self, parent, target, message=None, title=None, bitmap=None, getRect=None):
+    def __init__(
+        self,
+        parent,
+        target,
+        message=None,
+        title=None,
+        bitmap=None,
+        getRect=None,
+    ):
         """Baloon tip.
 
         Initialise une nouvelle info-bulle (BalloonTip).
@@ -52,9 +61,14 @@ class BalloonTip(wx.Frame):
         :param getRect: (optionnel) Fonction pour obtenir la position/zone du widget cible.
         """
 
-        super().__init__(parent,
-                         style=wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT | wx.FRAME_NO_TASKBAR | wx.FRAME_SHAPED |
-                         wx.POPUP_WINDOW)
+        super().__init__(
+            parent,
+            style=wx.NO_BORDER
+            | wx.FRAME_FLOAT_ON_PARENT
+            | wx.FRAME_NO_TASKBAR
+            | wx.FRAME_SHAPED
+            | wx.POPUP_WINDOW,
+        )
 
         wheat = wx.ColourDatabase().Find("WHEAT")
         self.SetBackgroundColour(wheat)
@@ -67,8 +81,12 @@ class BalloonTip(wx.Frame):
         vsizer = wx.BoxSizer(wx.VERTICAL)
         hsizer = wx.BoxSizer(wx.HORIZONTAL)
         if bitmap is not None:
-            hsizer.Add(wx.StaticBitmap(self._interior, wx.ID_ANY, bitmap), 0,
-                       wx.ALIGN_CENTRE | wx.ALL, 3)
+            hsizer.Add(
+                wx.StaticBitmap(self._interior, wx.ID_ANY, bitmap),
+                0,
+                wx.ALIGN_CENTRE | wx.ALL,
+                3,
+            )
         if title is not None:
             titleCtrl = wx.StaticText(self._interior, wx.ID_ANY, title)
             hsizer.Add(titleCtrl, 1, wx.ALL | wx.ALIGN_CENTRE, 3)
@@ -89,6 +107,7 @@ class BalloonTip(wx.Frame):
             Sizer personnalisé pour disposer le contenu de l'info-bulle (BalloonTip)
             en tenant compte de la flèche directionnelle et du décalage associé.
             """
+
             # Tout sizer custom doit impérativement positionner
             # ET dimensionner ses enfants dans RecalcSizes.
             # Sans cela, wxWidgets/wxPython plante ou affiche des warnings/erreurs.
@@ -143,7 +162,9 @@ class BalloonTip(wx.Frame):
                     self._interior.SetSize(parent_size)
                 else:
                     self._interior.SetPosition((0, self._offset))
-                    self._interior.SetSize((parent_size[0], parent_size[1] - self._offset))
+                    self._interior.SetSize(
+                        (parent_size[0], parent_size[1] - self._offset)
+                    )
 
         self._sizer = Sizer(self._interior, "bottom", self.ARROWSIZE)
         self.SetSizer(self._sizer)
@@ -175,8 +196,18 @@ class BalloonTip(wx.Frame):
         """
         # Utilisation correcte de CallAfter(Position)
         # pour éviter les glitchs de repaint dans wxPython.
-        wx.CallAfter(self.Position)
+        # wx.CallAfter(self.Position)
+        wx.CallAfter(self.__safePosition)
         event.Skip()
+
+    def __safePosition(self):
+        """Safely call Position, guarding against deleted C++ objects."""
+        try:
+            if self:
+                self.Position()
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            pass
 
     def DoClose(self, event=None, unbind=True):
         """
@@ -223,7 +254,10 @@ class BalloonTip(wx.Frame):
 
         # x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw / 2 - w / 2)))
         # x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + old_div(tw, 2) - old_div(w, 2))))
-        x = max(rect.GetLeft(), min(rect.GetRight() - w, int(tx + tw // 2 - w // 2)))
+        x = max(
+            rect.GetLeft(),
+            min(rect.GetRight() - w, int(tx + tw // 2 - w // 2)),
+        )
         y = ty - h
         direction = "bottom"
         if y < rect.GetTop():
@@ -231,7 +265,9 @@ class BalloonTip(wx.Frame):
             direction = "top"
 
         # mask = wx.EmptyBitmap(w, h)
-        mask = wx.Bitmap(w, h)  # Pas wx.EmptyBitmap pour la compatibilité Phoenix.
+        mask = wx.Bitmap(
+            w, h
+        )  # Pas wx.EmptyBitmap pour la compatibilité Phoenix.
         memDC = wx.MemoryDC()
         memDC.SelectObject(mask)
         try:
@@ -311,7 +347,15 @@ class BalloonTipManager(object):
         # Bind = wx.EvtHandler.Bind()
         self.Bind(wx.EVT_CLOSE, self.__OnClose)
 
-    def AddBalloonTip(self, target, message=None, title=None, bitmap=None, getRect=None, **kwargs):
+    def AddBalloonTip(
+        self,
+        target,
+        message=None,
+        title=None,
+        bitmap=None,
+        getRect=None,
+        **kwargs
+    ):
         """Schedules a tip. Extra keyword arguments will be passed to L{OnBalloonTipShow} and L{OnBalloonTipClosed}."""
         for eTarget, eMessage, eTitle, eBitmap, eGetRect, eArgs in self.__tips:
             if (eTitle, eMessage) == (title, message):
@@ -321,9 +365,17 @@ class BalloonTipManager(object):
 
     def __Try(self):
         if self.__tips and not self.__shutdown and self.__displaying is None:
-            target, message, title, bitmap, getRect, kwargs = self.__tips.pop(0)
-            tip = BalloonTip(self, target, message=message, title=title,
-                             bitmap=bitmap, getRect=getRect)
+            target, message, title, bitmap, getRect, kwargs = self.__tips.pop(
+                0
+            )
+            tip = BalloonTip(
+                self,
+                target,
+                message=message,
+                title=title,
+                bitmap=bitmap,
+                getRect=getRect,
+            )
             self.__displaying = tip
             self.OnBalloonTipShow(**kwargs)
             self.__kwargs = kwargs
@@ -350,7 +402,9 @@ if __name__ == "__main__":
 
     class Frame(wx.Frame):
         def __init__(self):
-            log.debug("BallonTipManager-Frame : Création du Frame principal BallonTip.")
+            log.debug(
+                "BallonTipManager-Frame : Création du Frame principal BallonTip."
+            )
 
             super().__init__(None, wx.ID_ANY, "Test")
             # wx.Frame.__init__(self,None, wx.ID_ANY, "Test")
@@ -368,19 +422,24 @@ if __name__ == "__main__":
             s.Fit(self)  # TODO : Essayer plutôt ceci !
 
         def OnClick(self, event):
-            BalloonTip(self, self.btn, """Your bones don't break, mine do. That's clear. Your cells react to bacteria 
+            BalloonTip(
+                self,
+                self.btn,
+                """Your bones don't break, mine do. That's clear. Your cells react to bacteria 
                        and viruses differently than mine. You don't get sick, I do. That's also clear. But for some 
                        reason, you and I react the exact same way to water. We swallow it too fast, we choke. We get 
                        some in our lungs, we drown. However unreal it may seem, we are connected, you and I. We're on 
-                       the same curve, just on opposite ends.""", title="Title",
-                       # bitmap=wx.ArtProvider.getBitmap(wx.ART_TIP, wx.ART_MENU, (16, 16)))
-                       bitmap=wx.ArtProvider.GetBitmap(wx.ART_TIP, wx.ART_MENU, (16, 16)))
-
+                       the same curve, just on opposite ends.""",
+                title="Title",
+                # bitmap=wx.ArtProvider.getBitmap(wx.ART_TIP, wx.ART_MENU, (16, 16)))
+                bitmap=wx.ArtProvider.GetBitmap(
+                    wx.ART_TIP, wx.ART_MENU, (16, 16)
+                ),
+            )
 
     class App(wx.App):
         def OnInit(self):
             Frame().Show()
             return True
-
 
     App(0).MainLoop()
