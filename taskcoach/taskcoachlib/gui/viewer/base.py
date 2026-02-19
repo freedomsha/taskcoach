@@ -19,6 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 # from __future__ import print_function
 
 # from builtins import object
@@ -27,23 +28,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import wx
 from taskcoachlib.widgets.tooltip import ToolTipMixin
-from taskcoachlib import patterns, widgets, command, render  # base à besoin des widgets .tooltip.ToolTipMixin, .itemctrl.Column,
+from taskcoachlib import (
+    patterns,
+    widgets,
+    command,
+    render,
+)  # base à besoin des widgets .tooltip.ToolTipMixin, .itemctrl.Column,
 from taskcoachlib.i18n import _
 from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui import toolbar, artprovider
+
 # try:
 #    from taskcoachlib.thirdparty.agw import hypertreelist
 # except ImportError:
 #    from agw import hypertreelist
 # try:
 from wx.lib.agw import hypertreelist
+
 # except ImportError:
 #    from taskcoachlib.thirdparty.pubsub import pub
 # else:
 #    from wx.lib.pubsub import pub
 from pubsub import pub
 
-from taskcoachlib.widgets.tooltip import ToolTipMixin
 from . import mixin
 
 log = logging.getLogger(__name__)
@@ -80,6 +87,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
 
     defaultTitle = "Subclass responsibility"
     defaultBitmap = "Subclass responsibility"
+    coreObjectType = None
     viewerImages = artprovider.itemImages
 
     def __init__(self, parent, taskFile, settings, *args, **kwargs):
@@ -93,10 +101,14 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             *args : Arguments supplémentaires.
             **kwargs : Arguments nommés supplémentaires.
         """
-        log.debug(f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
+        log.debug(
+            f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}."
+        )
         patterns.Observer.__init__(self)
         log.debug(f"Viewer : parent={parent.__class__.__name__}")
-        super().__init__(parent, -1)  # Pourquoi -1 ? Pour définir l'Id automatiquement.
+        super().__init__(
+            parent, -1
+        )  # Pourquoi -1 ? Pour définir l'Id automatiquement.
         # new_id = wx.NewIdRef().GetId()
         # new_id = wx.ID_ANY
         # super().__init__(parent, new_id)
@@ -106,9 +118,13 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.settings = settings
         self.__settingsSection = kwargs.pop("settingsSection")
         self.__freezeCount = 0
+        # Track items changed during bulk operations
+        self.__pendingRefreshItems = set()
         # The how maniest of this viewer type are we? Used for settings
         # Le quel plus grand nombre de ce type de visualiseur avons-nous? Utilisé pour les paramètres
-        self.__instanceNumber = kwargs.pop("instanceNumber")  # KeyError: 'instanceNumber'
+        self.__instanceNumber = kwargs.pop(
+            "instanceNumber"
+        )  # KeyError: 'instanceNumber'
         # self.__instanceNumber = kwargs.pop("instanceNumber", 0)
         self.__use_separate_settings_section = kwargs.pop(
             "use_separate_settings_section", True
@@ -171,10 +187,17 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         pub.subscribe(self.onEndIO, "taskfile.justRead")
         pub.subscribe(self.onEndIO, "taskfile.justCleared")
         pub.subscribe(self.onEndIO, "taskfile.justSaved")
+        # Subscribe to bulk operation signals to freeze/thaw during batch updates
+        pub.subscribe(self.onBeginBulkOperation, "command.aboutToBulkModify")
+        pub.subscribe(self.onEndBulkOperation, "command.justBulkModified")
 
-        if isinstance(self.widget, ToolTipMixin):  # si widget est une instance de ToolTipMixin
+        if isinstance(
+            self.widget, ToolTipMixin
+        ):  # si widget est une instance de ToolTipMixin
             # Informer l'utilisateur
-            pub.subscribe(self.onShowTooltipsChanged, "settings.view.descriptionpopups")
+            pub.subscribe(
+                self.onShowTooltipsChanged, "settings.view.descriptionpopups"
+            )
             # Régler les infos du widget
             self.widget.SetToolTipsEnabled(
                 settings.getboolean("view", "descriptionpopups")
@@ -184,10 +207,20 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         log.debug("Viewer : Appel de CallAfter.")
         wx.CallAfter(self.__DisplayBalloon)
         log.debug("Viewer : CallAfter passé avec succès.")
-        log.debug(f"Viewer.__init__ : La nouvelle visionneuse self={self.__class__.__name__} est initialisée !")
+        log.debug(
+            f"Viewer.__init__ : La nouvelle visionneuse self={self.__class__.__name__} est initialisée !"
+        )
 
     def __DisplayBalloon(self):
         """Affiche une info-bulle pour informer l'utilisateur que la barre d'outils est personnalisable."""
+        # Guard against deleted C++ object - can happen when wx.CallAfter
+        # callback executes after window destruction (e.g., closing nested dialogs)
+        try:
+            if not self or self.IsBeingDeleted():
+                return
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            return
         # AuiFloatingFrame is instantiated from framemanager, we can't derive it from BalloonTipManager
         if self.toolbar.IsShownOnScreen() and hasattr(
             wx.GetTopLevelParent(self), "AddBalloonTip"
@@ -202,7 +235,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
                 ),
                 message=_(
                     """Click on the gear icon on the right to add buttons and rearrange them."""
-                )
+                ),
             )
 
     def onShowTooltipsChanged(self, value):
@@ -213,7 +246,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.__freezeCount += 1
         self.__presentation.freeze()
 
-    def onEndIO(self, taskFile):  # Cette méthode est appelée lors de l'événement pubsub "taskfile.justRead"
+    def onEndIO(
+        self, taskFile
+    ):  # Cette méthode est appelée lors de l'événement pubsub "taskfile.justRead"
         """Termine les opérations de lecture/écriture dans le fichier de tâches."""
         self.__freezeCount -= 1
         # Voici l'appel initial de la traceback de thaw():
@@ -221,8 +256,50 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         if self.__freezeCount == 0:
             self.refresh()
 
+    def onBeginBulkOperation(self):
+        """Freeze viewer and presentation to batch updates during bulk operations."""
+        self.__freezeCount += 1
+        self.__presentation.freeze()
+
+    def onEndBulkOperation(self):
+        """Thaw viewer and presentation after bulk operation, refresh only changed items."""
+        self.__freezeCount -= 1
+        self.__presentation.thaw()
+        if self.__freezeCount == 0 and self.__pendingRefreshItems:
+            # Refresh only items that changed during the bulk operation
+            items = [
+                item
+                for item in self.__pendingRefreshItems
+                if item in self.presentation()
+            ]
+            self.__pendingRefreshItems.clear()
+            if items:
+                self.widget.RefreshItems(*items)
+
     def activate(self):
         pass
+
+    def _bindActivationEvents(self, window):
+        """Bind click events to activate this viewer's pane.
+
+        This ensures clicking anywhere on the viewer (toolbar, title bar area,
+        empty space) will activate the pane. We skip text controls to avoid
+        interfering with text input focus.
+        """
+        # Skip text input controls - they handle their own focus
+        if isinstance(window, (wx.TextCtrl, wx.SearchCtrl, wx.ComboBox)):
+            return
+        window.Bind(wx.EVT_LEFT_DOWN, self._onViewerClick)
+        # Recursively bind to children, but skip the main widget (tree/list)
+        for child in window.GetChildren():
+            if child != self.widget:
+                self._bindActivationEvents(child)
+
+    def _onViewerClick(self, event):
+        """Handle clicks on the viewer to activate its pane."""
+        wx.PostEvent(self, wx.ChildFocusEvent(self))
+        self.SetFocus()  # Clear focus from other controls (e.g., search box)
+        event.Skip()
 
     def domainObjectsToView(self):
         """Retourne les objets du domaine que cette visionneuse doit afficher.
@@ -290,6 +367,8 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         pub.unsubscribe(self.onEndIO, "taskfile.justRead")
         pub.unsubscribe(self.onEndIO, "taskfile.justCleared")
         pub.unsubscribe(self.onEndIO, "taskfile.justSaved")
+        pub.unsubscribe(self.onBeginBulkOperation, "command.aboutToBulkModify")
+        pub.unsubscribe(self.onEndBulkOperation, "command.justBulkModified")
 
         self.presentation().detach()
         self.toolbar.detach()
@@ -318,7 +397,10 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         Returns :
             (str) : Le titre actuel de la visionneuse.
         """
-        return self.settings.get(self.settingsSection(), "title") or self.defaultTitle
+        return (
+            self.settings.get(self.settingsSection(), "title")
+            or self.defaultTitle
+        )
 
     def setTitle(self, title):
         """Modifie le titre de la visionneuse.
@@ -327,8 +409,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             title (str) : Le nouveau titre à définir.
         """
         titleToSaveInSettings = "" if title == self.defaultTitle else title
-        self.settings.set(self.settingsSection(), "title", titleToSaveInSettings)
-        self.parent.setPaneTitle(self, title)  # setPaneTitle is for frame ! not window. SetLabel or SetName for window !
+        self.settings.set(
+            self.settingsSection(), "title", titleToSaveInSettings
+        )
+        self.parent.setPaneTitle(
+            self, title
+        )  # setPaneTitle is for frame ! not window. SetLabel or SetName for window !
         self.parent.manager.Update()  # L'affichage
 
     def initLayout(self):
@@ -338,7 +424,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         !!!TRES IMPORTANTE !!!
         """
 
-        log.debug(f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}.")
+        log.debug(
+            f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}."
+        )
         self._sizer = wx.BoxSizer(wx.VERTICAL)  # pylint: disable=W0201
         # log.debug(f"Viewer.initLayout : _sizer de {self} créé: {self._sizer}")
         self._sizer.Add(self.toolbar, flag=wx.EXPAND)
@@ -346,7 +434,9 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self._sizer.Add(self.widget, proportion=1, flag=wx.EXPAND)
         # log.debug(f"Viewer.initLayout : widget ajoutée, widget: {self.widget}, taille: {self.widget.GetSize()}")
         self.SetSizerAndFit(self._sizer)
-        log.debug(f"Viewer.initLayout : initLayout de {self.__class__.__name__} terminé, taille: {self.GetSize()}")
+        log.debug(
+            f"Viewer.initLayout : initLayout de {self.__class__.__name__} terminé, taille: {self.GetSize()}"
+        )
 
     def createWidget(self, *args):
         """Crée le widget utilisé pour afficher les objets. À implémenter dans les sous-classes.
@@ -367,9 +457,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             try:
                 # imageList.Add(wx.ArtProvider_GetBitmap(image, wx.ART_MENU, size))
                 # print(image)
-                imageList.Add(wx.ArtProvider.GetBitmap(image, wx.ART_MENU, size))
+                imageList.Add(
+                    wx.ArtProvider.GetBitmap(image, wx.ART_MENU, size)
+                )
                 # print(imageList)
-            except:
+            except Exception:
                 print(image)
                 raise
             self.imageIndex[image] = index
@@ -411,10 +503,20 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
 
     def onAttributeChanged(self, newValue, sender):  # pylint: disable=W0613
         if self:
-            self.refreshItems(sender)
+            # self.refreshItems(sender)
+            if self.__freezeCount:
+                # During bulk operation, collect items to refresh later
+                self.__pendingRefreshItems.add(sender)
+            else:
+                self.refreshItems(sender)
 
     def onAttributeChanged_Deprecated(self, event):
-        self.refreshItems(*event.sources())
+        # self.refreshItems(*event.sources())
+        if self.__freezeCount:
+            # During bulk operation, collect items to refresh later
+            self.__pendingRefreshItems.update(event.sources())
+        else:
+            self.refreshItems(*event.sources())
 
     def onNewItem(self, event):
         """Sélectionne un nouvel élément ajouté à la présentation.
@@ -423,9 +525,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             event (Event) : L'événement indiquant l'ajout d'un nouvel élément.
         """
         self.select(
-            [item
-             for item in list(event.values())
-             if item in self.presentation()]
+            [
+                item
+                for item in list(event.values())
+                if item in self.presentation()
+            ]
         )
 
     def onPresentationChanged(self, event):  # pylint: disable=W0613
@@ -517,11 +621,18 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         self.__curselection = items
         self.widget.select(items)
 
-    def curselection(self):
+    # def curselection(self):
+    def curselection(self, forceUpdate=False):
         """Retourne la sélection actuelle dans la visionneuse.
 
         Renvoie une liste d'éléments (objets de domaine) actuellement sélectionnés dans notre widget .
+        If forceUpdate is True, refresh the cached selection from the widget
+        before returning. This is useful when selection may have changed but
+        the cached value hasn't been updated yet (e.g., during double-click
+        handling where wx.CallAfter hasn't executed yet).
         """
+        if forceUpdate:
+            self.updateSelection(sendViewerStatusEvent=False)
         return self.__curselection
 
     def curselectionIsInstanceOf(self, class_):
@@ -547,6 +658,14 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         wx.CallAfter(self.endOfSelectAll)
 
     def endOfSelectAll(self):
+        # Guard against deleted C++ object - can happen when wx.CallAfter
+        # callback executes after window destruction (e.g., closing nested dialogs)
+        try:
+            if not self or self.IsBeingDeleted():
+                return
+        except RuntimeError:
+            # wrapped C/C++ object has been deleted
+            return
         self.__curselection = self.presentation()
         self.__selectingAllItems = False
         # Pretend we received one selection event for the select_all() call:
@@ -561,7 +680,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         return self.widget.GetItemCount()
 
     def presentation(self):
-        """Renvoie les objets de domaine que cette visionneuse affiche actuellement. """
+        """Renvoie les objets de domaine que cette visionneuse affiche actuellement."""
         return self.__presentation
 
     def setPresentation(self, presentation):
@@ -751,7 +870,7 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         """UI commands for manipulating the clipboard (cut, copy, paste)."""
         cutCommand = uicommand.EditCut(viewer=self)
         copyCommand = uicommand.EditCopy(viewer=self)
-        pasteCommand = uicommand.EditPaste()
+        pasteCommand = uicommand.EditPaste(viewer=self)
         # cutCommand.Bind(self, wx.ID_CUT)
         cutCommand.bind(self, wx.ID_CUT)
         # copyCommand.Bind(self, wx.ID_COPY)
@@ -794,8 +913,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         )
 
     def newSubItemDialog(self, bitmap):
+        parents = self.curselection()
         newSubItemCommand = self.newSubItemCommand()
         newSubItemCommand.do()
+        # Expand parent notes so the newly created subnotes are visible
+        for parent in parents:
+            parent.expand(True, context=self.settingsSection())
         return self.editItemDialog(
             newSubItemCommand.items, bitmap, items_are_new=True
         )
@@ -848,6 +971,20 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def cutItemCommandClass(self):
         return command.CutCommand
 
+    def pasteItemCommand(self):
+        return self.pasteItemCommandClass()(self.presentation())
+
+    def pasteItemCommandClass(self):
+        return command.PasteCommand
+
+    def getSupportedPasteTypes(self):
+        """Return tuple of domain object types that can be pasted into this viewer.
+
+        Override in subclasses to restrict paste to specific types.
+        Return None to accept any type (default behavior).
+        """
+        return None
+
     # @staticmethod
     def onEditSubject(self, item, newValue):
         command.EditSubjectCommand(items=[item], newValue=newValue).do()
@@ -862,7 +999,8 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
 
 
 class CategorizableViewerMixin(object):
-    """ Classe Mixin. """
+    """Classe Mixin."""
+
     def getItemTooltipData(self, item):
         return [
             (
@@ -879,7 +1017,9 @@ class CategorizableViewerMixin(object):
                     else []
                 ),
             )
-        ] + super().getItemTooltipData(item)  # It's a mixin.
+        ] + super().getItemTooltipData(
+            item
+        )  # It's a mixin.
 
 
 class WithAttachmentsViewerMixin(object):
@@ -909,6 +1049,7 @@ class ListViewer(Viewer):  # pylint: disable=W0223
     selectNextItemsAfterRemoval : Cette méthode est utilisée pour sélectionner les éléments après la suppression.
      Dans ce cas, elle ne fait rien, car les contrôles de liste gèrent cette sélection automatiquement.
     """
+
     # @staticmethod
     def isTreeViewer(self):
         # def isTreeViewer(self) -> bool:
@@ -989,6 +1130,7 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
 
     getRootItems, getItemParent, et children : Gèrent la relation parent-enfant dans l'arbre.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise TreeViewer avec gestion des événements d'expansion et de collapse des éléments.
@@ -1059,6 +1201,12 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
     def isAnyItemCollapsable(self):
         """Vérifie si un élément est collapsable."""
         return self.widget.isAnyItemCollapsable()
+
+    def createModeToolBarUICommands(self):
+        return super().createModeToolBarUICommands() + (
+            uicommand.ViewExpandAll(viewer=self),
+            uicommand.ViewCollapseAll(viewer=self),
+        )
 
     def isTreeViewer(self):
         # def isTreeViewer(self) -> bool:
@@ -1203,14 +1351,14 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
     def children(self, parent=None):
         # def children(self, parent=None) -> list:
         """
-         Retourne les enfants d'un élément donné.
+        Retourne les enfants d'un élément donné.
 
-         Args :
-             parent : (optionnel) L'élément parent. Si aucun parent n'est fourni, retourne les éléments racines.
+        Args :
+            parent : (optionnel) L'élément parent. Si aucun parent n'est fourni, retourne les éléments racines.
 
-         Returns :
-             (list) : Liste des enfants de l'élément parent, ou des éléments racines si aucun parent n'est spécifié.
-         """
+        Returns :
+            (list) : Liste des enfants de l'élément parent, ou des éléments racines si aucun parent n'est spécifié.
+        """
         if parent:
             children = parent.children()
             if children:
@@ -1236,7 +1384,9 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
         return item.subject()
 
 
-class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than Viewer ?
+class ViewerWithColumns(
+    Viewer
+):  # pylint: disable=W0223 better TreeViewer than Viewer ?
     """
     Classe ViewerWithColumns, héritant de Viewer.
 
@@ -1285,7 +1435,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             *args : Arguments supplémentaires pour l'initialisation.
             **kwargs : Arguments nommés supplémentaires pour l'initialisation.
         """
-        log.debug(f"ViewerWithColumns : Initialisation Création de la visionneuse avec des colonnes.")
+        log.debug(
+            f"ViewerWithColumns : Initialisation Création de la visionneuse avec des colonnes."
+        )
         # Indique si l'initialisation est terminée.
         self.__initDone = False
         # Liste des colonnes disponibles.
@@ -1381,7 +1533,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             )
             self.widget.showColumn(column, show=show)
         if show:
-            log.debug(f"ViewerWithColumns.initColumn : ajoute la colonne {type(column).__name__} aux colonnes visibles : {self.__visibleColumns}")
+            log.debug(
+                f"ViewerWithColumns.initColumn : ajoute la colonne {type(column).__name__} aux colonnes visibles : {self.__visibleColumns}"
+            )
             self.__visibleColumns.append(column)
             self.__startObserving(column.eventTypes())
         # self.refresh()
@@ -1428,6 +1582,10 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             self.__visibleColumns.remove(column)
             self.__stopObserving(column.eventTypes())
         self.widget.showColumn(column, show)
+        # Set main column AFTER inserting/removing the ordering column
+        if column.name() == "ordering":
+            self.widget.SetResizeColumn(1 if show else 0)
+            self.widget.SetMainColumn(1 if show else 0)
         self.settings.set(
             self.settingsSection(),
             "columns",
@@ -1478,7 +1636,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Returns :
             (bool) : True si la colonne est visible, sinon False.
         """
-        return columnName in [column.name() for column in self.__visibleColumns]
+        return columnName in [
+            column.name() for column in self.__visibleColumns
+        ]
 
     def isVisibleColumn(self, column):
         # def isVisibleColumn(self, column) -> bool:
@@ -1539,13 +1699,17 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             (int) : La largeur de la colonne.
         """
         # log.debug(f"ViewerWithColumns.getColumnWidth est appelé par self={self}, pour columnName={columnName}")
-        columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
+        columnWidths = self.settings.getdict(
+            self.settingsSection(), "columnwidths"
+        )
         # defaultWidth = (
         #     28 if columnName == "ordering" else hypertreelist._DEFAULT_COL_WIDTH
         # )  # pylint: disable=W0212
         # Access to a protected member _DEFAULT_COL_WIDTH of a module
         # Dans hypertreelist _DEFAULT_COL_WIDTH = 100
-        defaultWidth = 28 if columnName == "ordering" else 100  # pylint: disable=W0212
+        defaultWidth = (
+            28 if columnName == "ordering" else 100
+        )  # pylint: disable=W0212
         columnWidthGot = columnWidths.get(columnName, defaultWidth)
         # log.debug(f"ViewerWithColumns.getColumnWidth retourne la largeur de la colonne {columnName} : {columnWidthGot} pour self.={self.__class__.Name}")
         return columnWidthGot
@@ -1559,7 +1723,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             column : La colonne redimensionnée.
             width (int) : La nouvelle largeur de la colonne.
         """
-        columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
+        columnWidths = self.settings.getdict(
+            self.settingsSection(), "columnwidths"
+        )
         columnWidths[column.name()] = width
         self.settings.setdict(
             self.settingsSection(), "columnwidths", columnWidths
@@ -1579,7 +1745,10 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             (bool | None) : True si le déplacement est valide, sinon False.
         """
         log.debug(f"ViewerWithColumns.validateDrag est appelé.")
-        if columnIndex == -1 or self.visibleColumns()[columnIndex].name() != "ordering":
+        if (
+            columnIndex == -1
+            or self.visibleColumns()[columnIndex].name() != "ordering"
+        ):
             return None  # Normal behavior
 
         # Ordering
@@ -1606,7 +1775,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
             return False
 
         # S'ils sont parent, autorisez seulement la déplacer au même niveau.
-        if dragItems[0].parent() != (None if dropItem is None else dropItem.parent()):
+        if dragItems[0].parent() != (
+            None if dropItem is None else dropItem.parent()
+        ):
             wx.GetTopLevelParent(self).AddBalloonTip(
                 self.settings,
                 "treechildrenmanualordering",
@@ -1797,7 +1968,9 @@ class ViewerWithColumns(Viewer):  # pylint: disable=W0223 better TreeViewer than
         Returns :
             (str) : La date et l'heure de création de l'élément.
         """
-        return render.dateTime(item.creationDateTime(), humanReadable=humanReadable)
+        return render.dateTime(
+            item.creationDateTime(), humanReadable=humanReadable
+        )
 
     @staticmethod
     def renderModificationDateTime(item, humanReadable=True):
@@ -1875,6 +2048,7 @@ class SortableViewerWithColumns(
     Les méthodes gèrent aussi bien l'initialisation des colonnes que la gestion
     du tri avec des indicateurs visuels (icônes).
     """
+
     def initColumn(self, column):
         """
         Initialise une colonne et, si elle est utilisée pour le tri, affiche l'icône de tri correspondante.
@@ -1934,4 +2108,8 @@ class SortableViewerWithColumns(
         Returns :
             (str) : Le nom de l'icône pour indiquer le tri ascendant ou descendant.
         """
-        return "arrow_up_icon" if self.isSortOrderAscending() else "arrow_down_icon"
+        return (
+            "arrow_up_icon"
+            if self.isSortOrderAscending()
+            else "arrow_down_icon"
+        )
