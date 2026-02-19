@@ -43,6 +43,9 @@ Les fonctions internes telles que `convertAlphaToMask` gèrent des détails spé
 from taskcoachlib import patterns, operating_system
 from taskcoachlib.i18n import _
 from taskcoachlib.tools import wxhelper
+import numpy as np
+import os
+import sys
 import wx
 from taskcoachlib.gui import icons  # where?
 
@@ -86,7 +89,9 @@ class ArtProvider(wx.ArtProvider):
             #    # Handle the case where there is no alpha channel
             #     overlayAlpha = None
             # overlayAlpha = overlayImage.GetAlphaBuffer()  # TODO: a essayer (starofrainnight)
-            overlayAlpha = overlayImage.GetAlpha() if overlayImage.HasAlpha() else None
+            overlayAlpha = (
+                overlayImage.GetAlpha() if overlayImage.HasAlpha() else None
+            )
             overlayBitmap = (
                 overlayImage.ConvertToBitmap()
             )  # self._Application__wx_app.Traits={AttributeError}AttributeError("'ArtProvider' object has no attribute '_Application__wx_app'")
@@ -131,7 +136,9 @@ class ArtProvider(wx.ArtProvider):
             dstDC.SelectObject(mainBitmap)
             try:
                 # dstDC.DrawBitmap(overlayBitmap, w - int(old_div(w, 2)), h - int(old_div(h, 2)), True)
-                dstDC.DrawBitmap(overlayBitmap, w - (w // 2), h - (h // 2), True)
+                dstDC.DrawBitmap(
+                    overlayBitmap, w - (w // 2), h - (h // 2), True
+                )
             finally:
                 dstDC.SelectObject(wx.NullBitmap)
 
@@ -190,7 +197,11 @@ class ArtProvider(wx.ArtProvider):
             # if artClient == wx.ART_FRAME_ICON:
             #     bitmap = self.convertAlphaToMask(bitmap)
             # return bitmap
-            return self.convertAlphaToMask(bitmap) if artClient == wx.ART_FRAME_ICON else bitmap
+            return (
+                self.convertAlphaToMask(bitmap)
+                if artClient == wx.ART_FRAME_ICON
+                else bitmap
+            )
             # return icons.catalog[catalogKey].GetBitmap()
         else:
             return wx.NullBitmap
@@ -232,6 +243,8 @@ class IconProvider(object, metaclass=patterns.Singleton):
     def getIcon(self, iconTitle):
         """Renvoie l'icône. Utilisez un cache pour éviter la fuite du
         nombre d'objets GDI.
+
+        Recommandé pour l'usage général. Utilise le cache pour la performance.
         """
         try:
             return self.__iconCache[iconTitle]
@@ -241,26 +254,51 @@ class IconProvider(object, metaclass=patterns.Singleton):
             return icon
 
     def iconBundle(self, iconTitle):
-        """Créez un groupe d'icônes avec des icônes de différentes tailles."""
+        """Créez un groupe d'icônes avec des icônes de différentes tailles.
+
+        Utilisé pour les icônes de fenêtres (le logo en haut à gauche)
+        car il contient plusieurs tailles (16, 32, 48...)
+        pour que Windows/Linux choisisse la meilleure selon le contexte.
+        """
         bundle = wx.IconBundle()
         for size in (16, 22, 32, 48, 64, 128):
             bundle.AddIcon(self.getIconFromArtProvider(iconTitle, size))
         return bundle
 
     def getIconFromArtProvider(self, iconTitle, iconSize=None):
+        """
+        Recommandé pour la barre d'outils. Permet de forcer une taille précise (ex: 16x16 ou 32x32).
+
+        Args:
+            iconTitle:
+            iconSize:
+
+        Returns:
+
+        """
         size = iconSize or self.__iconSizeOnCurrentPlatform
         # I just spent two hours trying to get rid of garbage in the icon
         # background on KDE. I give up.
         if operating_system.isGTK():
-            return wx.ArtProvider.GetIcon(
-                iconTitle, wx.ART_FRAME_ICON, (size, size)
-                                          )
+            if type(size) is not tuple:
+                return wx.ArtProvider.GetIcon(
+                    iconTitle, wx.ART_FRAME_ICON, (size, size)
+                )
+            # elif type(size) is tuple:
+            #     return wx.ArtProvider.GetIcon(
+            #         iconTitle, wx.ART_FRAME_ICON, size
+            #     )  # NON, empêche de continuer sur les autres possibilités.
 
         # wx.ArtProvider_GetIcon doesn't convert alpha to mask, so we do it
         # ourselves:
-        bitmap = wx.ArtProvider.GetBitmap(
-            iconTitle, wx.ART_FRAME_ICON, (size, size)
-        )
+        if type(size) is not tuple:
+            bitmap = wx.ArtProvider.GetBitmap(
+                iconTitle, wx.ART_FRAME_ICON, (size, size)
+            )
+        elif type(size) is tuple:
+            bitmap = wx.ArtProvider.GetBitmap(
+                iconTitle, wx.ART_FRAME_ICON, size
+            )
         bitmap = ArtProvider.convertAlphaToMask(bitmap)
         # return wx.IconFromBitmap(bitmap)
         return wx.Icon(bitmap)
@@ -278,7 +316,8 @@ def getIcon(iconTitle):
 
 def init():
     """Initialise l'ArtProvider avec certaines options spécifiques à la plateforme,
-    notamment sous Windows pour désactiver certains remappages d'icônes avec corrections GTK."""
+    notamment sous Windows pour désactiver certains remappages d'icônes avec corrections GTK.
+    """
     # wx.ArtProvider.PushProvider() était une méthode utilisée pour temporairement
     # remplacer le fournisseur d'images par défaut par un autre,
     # ce qui permettait de personnaliser l'apparence des éléments de l'interface.
