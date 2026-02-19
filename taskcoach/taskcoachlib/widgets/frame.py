@@ -18,10 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging  # Module pour la journalisation
 import wx  # Bibliothèque wxPython pour l'interface graphique
+
 # from taskcoachlib.thirdparty import aui
 # import aui2 as aui
 # from wx.lib.agw import aui  # Importation de l'AUI avancé (Advanced User Interface)
-from taskcoachlib import operating_system  # Détection du système d'exploitation pour des réglages spécifiques
+from taskcoachlib import (
+    operating_system,
+)  # Détection du système d'exploitation pour des réglages spécifiques
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +34,9 @@ log = logging.getLogger(__name__)
 #     USING_AGW = False
 #     log.info("wx.aui (natif) utilisé.")
 # except ImportError:
-from wx.lib.agw import aui
+# from wx.lib.agw import aui
+import wx.lib.agw.aui as aui
+
 USING_AGW = True
 # log.warning("wx.lib.agw.aui utilisé (fallback), wx.aui ne fonctionne pas, AGW est plus flexible!")
 
@@ -45,6 +50,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
     Cadre principal personnalisé avec gestion de panneaux dynamiques via wx.aui ou wx.lib.agw.aui.
     Permet de gérer un panneau central protégé, des panneaux ancrés et flottants, avec fallback automatique.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initialise le cadre avec un gestionnaire AUI
@@ -53,32 +59,41 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         :param args: Arguments positionnels transmis à wx.Frame
         :param kwargs: Arguments nommés transmis à wx.Frame
         """
-        super().__init__(*args, **kwargs)  # Appel au constructeur de la classe parente
+        super().__init__(
+            *args, **kwargs
+        )  # Appel au constructeur de la classe parente
         # Style AUI : autorise panneau actif, et miniframe natif hors Windows
-        agwStyle = aui.AUI_MGR_DEFAULT | aui.AUI_MGR_ALLOW_ACTIVE_PANE  # Style de base avec panneau actif autorisé
+        agwStyle = (
+            aui.AUI_MGR_DEFAULT | aui.AUI_MGR_ALLOW_ACTIVE_PANE
+        )  # Style de base avec panneau actif autorisé
         if not operating_system.isWindows():
             # With this style on Windows, you can't dock back floating frames
             # Sur Windows, ce style empêche le redockage des fenêtres flottantes, donc on l'active ailleurs
             agwStyle |= aui.AUI_MGR_USE_NATIVE_MINIFRAMES
 
         # Initialisation du gestionnaire AUI
-        self.manager = aui.AuiManager(self, agwStyle)  # Création du gestionnaire AUI
+        self.manager = aui.AuiManager(
+            self, agwStyle
+        )  # Création du gestionnaire AUI
         # self.manager = aui.AuiManager(self, options=agwStyle)  # Variante avec aui à la place de AGW.
         # notify AUI which frame to use
         self.manager.SetManagedWindow(self)
 
         # Configuration des onglets (si AGW, on peut utiliser des options avancées) :
         if USING_AGW:
-            self.manager.SetAutoNotebookStyle(aui.AUI_NB_TOP |  # Configuration des onglets automatiques
-                                              aui.AUI_NB_CLOSE_BUTTON |
-                                              aui.AUI_NB_SUB_NOTEBOOK |
-                                              aui.AUI_NB_SCROLL_BUTTONS)
+            self.manager.SetAutoNotebookStyle(
+                aui.AUI_NB_TOP  # Configuration des onglets automatiques
+                | aui.AUI_NB_CLOSE_BUTTON
+                | aui.AUI_NB_SUB_NOTEBOOK
+                | aui.AUI_NB_SCROLL_BUTTONS
+            )
         else:
             # Configuration de base des notebooks (moins avancée que AGW)
             # wx.aui ne gère pas les notebooks imbriqués comme AGW
             # TODO : A vérifier
             notebook_art = aui.AuiDefaultTabArt()
             self.manager.SetArtProvider(notebook_art)
+        self.manager.Update()
         self.bindEvents()  # Liaison des événements personnalisés
 
     def bindEvents(self):
@@ -86,7 +101,9 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         Lie les événements liés à la fermeture ou au passage en flottant d'un panneau à un gestionnaire personnalisé.
         """
         for eventType in aui.EVT_AUI_PANE_CLOSE, aui.EVT_AUI_PANE_FLOATING:
-            self.manager.Bind(eventType, self.onPaneClosingOrFloating)  # Lien avec méthode personnalisée
+            self.manager.Bind(
+                eventType, self.onPaneClosingOrFloating
+            )  # Lien avec méthode personnalisée
 
     def onPaneClosingOrFloating(self, event):
         """
@@ -107,7 +124,9 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
                 if USING_AGW:  # TODO : A vérifier !
                     dockedPanes[0].Center()  # Centre un autre panneau
                 else:
-                    dockedPanes[0].dock_direction = aui.AUI_DOCK_CENTRE  # Version AUI
+                    dockedPanes[0].dock_direction = (
+                        aui.AUI_DOCK_CENTRE
+                    )  # Version AUI
 
     def addPane(self, window, caption, name, floating=False):
         """
@@ -131,29 +150,52 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         # x, y = window.ClientToScreen(x, y)  # J'ai ClientToScreen cannot work when toplevel window is not shown même si window.shown est True
         # #     # pour window CategoryViewer (gui.viewer.category.CategoryViewer)
         if window.IsShown():
-            x, y = window.ClientToScreenXY(x, y)  # Convertit la position en coordonnées écran si affichée
+            # x, y = window.ClientToScreenXY(
+            x, y = window.ClientToScreen(
+                x, y
+            )  # Convertit la position en coordonnées écran si affichée
         else:
-            log.debug("La fenêtre %s n'est pas encore affiché, ClientToScreen ignoré.", window)
+            log.debug(
+                "La fenêtre %s n'est pas encore affiché, ClientToScreen ignoré.",
+                window,
+            )
         #     print("frame.py: Debug: ClientToScreen cannot work when toplevel window is not shown")
         # RESOLUTION DE "ClientToScreen cannot work when toplevel window is not shown" :
 
         # Configuration des propriétés du panneau, création des options du panneau
         paneInfo = aui.AuiPaneInfo()
         if USING_AGW:
-            paneInfo = paneInfo.CloseButton(True).Floatable(True).\
-                Name(name).Caption(caption).Right().\
-                FloatingSize((300, 200)).BestSize((200, 200)).\
-                FloatingPosition((x + 30, y + 30)).\
-                CaptionVisible().MaximizeButton().DestroyOnClose()
+            paneInfo = (
+                paneInfo.CloseButton(True)
+                .Floatable(True)
+                .Name(name)
+                .Caption(caption)
+                .Right()
+                .FloatingSize((300, 200))
+                .BestSize((200, 200))
+                .FloatingPosition((x + 30, y + 30))
+                .CaptionVisible()
+                .MaximizeButton()
+                .DestroyOnClose()
+            )
             # paneInfo = paneInfo.CloseButton(True).Floatable(True). \
             #     Name(name).Caption(caption).Right(). \
             #     FloatingSize((300, 200)).BestSize((200, 200)). \
             #     CaptionVisible().MaximizeButton().DestroyOnClose()
         else:
             # Version AUI :
-            paneInfo = paneInfo.Name(name).Caption(caption).Floatable(True).CloseButton(True)\
-                .BestSize((200, 200)).FloatingSize((300, 200)).MaximizeButton(True)\
-                .DestroyOnClose(True).CaptionVisible(True).Right()
+            paneInfo = (
+                paneInfo.Name(name)
+                .Caption(caption)
+                .Floatable(True)
+                .CloseButton(True)
+                .BestSize((200, 200))
+                .FloatingSize((300, 200))
+                .MaximizeButton(True)
+                .DestroyOnClose(True)
+                .CaptionVisible(True)
+                .Right()
+            )
 
         if floating:
             # Positionner la fenêtre flottante de manière relative à l'écran ou à la fenêtre principale après l'ajout.
@@ -161,13 +203,23 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
             # Vous pourriez définir une position initiale approximative ici,
             # puis potentiellement l'ajuster après l'affichage.
             # Par exemple, centrer approximativement :
-            screen_rect = wx.GetClientDisplayRect()  # Récupère la taille de l'écran client
-            float_x = (screen_rect.width - 300) // 2 + 30  # Position horizontale centrée
-            float_y = (screen_rect.height - 200) // 2 + 30  # Position verticale centrée
-            paneInfo = paneInfo.FloatingPosition((float_x, float_y))  # Positionne le panneau flottant
+            screen_rect = (
+                wx.GetClientDisplayRect()
+            )  # Récupère la taille de l'écran client
+            float_x = (
+                screen_rect.width - 300
+            ) // 2 + 30  # Position horizontale centrée
+            float_y = (
+                screen_rect.height - 200
+            ) // 2 + 30  # Position verticale centrée
+            paneInfo = paneInfo.FloatingPosition(
+                (float_x, float_y)
+            )  # Positionne le panneau flottant
 
         if not self.dockedPanes():  # S'il n'y a aucun panneau ancré
-            paneInfo = paneInfo.Center()  # Définit ce panneau comme central
+            paneInfo = (
+                paneInfo.CenterPane()
+            )  # Définit ce panneau comme central
 
         # Ajoute les panneaux au gestionnaire :
         self.manager.AddPane(window, paneInfo)
@@ -191,13 +243,18 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         :return: Liste des objets AuiPaneInfo ancrés
         """
         if USING_AGW:
-            return [pane for pane in self.manager.GetAllPanes()
-                    if not pane.IsToolbar() and not pane.IsFloating()
-                    and not pane.IsNotebookPage()]
+            return [
+                pane
+                for pane in self.manager.GetAllPanes()
+                if not pane.IsToolbar()
+                and not pane.IsFloating()
+                and not pane.IsNotebookPage()
+            ]
         else:
             # Version AUI:
             return [
-                pane for pane in self.manager.GetAllPanes()
+                pane
+                for pane in self.manager.GetAllPanes()
                 if not pane.IsFloating() and not pane.IsToolbar()
             ]
         # self.manager.Update()  # Rafraîchit l'affichage
@@ -212,7 +269,6 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         self.manager.GetPane(window).Float()
         # self.manager.Update()  # Rafraîchit l'affichage
 
-
     @staticmethod
     def isCenterPane(pane):
         """
@@ -224,7 +280,10 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         # Vérifie la direction de dockage
         if USING_AGW:
             # Version AGW :
-            return pane.dock_direction_get() == aui.AUI_DOCK_CENTER
+            # return pane.dock_direction_get() == aui.AUI_DOCK_CENTER
+            return pane.dock_direction == aui.AUI_DOCK_CENTER
         else:
             # Version wx.aui :
-            return pane.dock_direction == aui.AUI_DOCK_CENTRE  # (orthographe britannique !)
+            return (
+                pane.dock_direction == aui.AUI_DOCK_CENTRE
+            )  # (orthographe britannique !)
