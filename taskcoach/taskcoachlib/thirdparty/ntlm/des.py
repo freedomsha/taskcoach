@@ -20,7 +20,6 @@ import logging
 
 from . import des_c
 
-
 log = logging.getLogger(__name__)
 
 
@@ -46,7 +45,9 @@ class DES:
         return self.des_c_obj.decrypt(crypted_text)
 
 
-DESException = 'DESException'
+# Some Helpers
+
+DESException = "DESException"
 
 
 def str_to_key56(key_str):
@@ -61,7 +62,9 @@ def str_to_key56(key_str):
 
     if len(key_str) < 7:
         # key_str = key_str + b'\000\000\000\000\000\000\000'[:(7 - len(key_str))]
-        key_str = key_str + "\000\000\000\000\000\000\000"[:(7 - len(key_str))]
+        key_str = (
+            key_str + "\000\000\000\000\000\000\000"[: (7 - len(key_str))]
+        )
     key_56 = []
     # for i in six.iterbytes(key_str[:7]):
     for i in key_str[:7]:

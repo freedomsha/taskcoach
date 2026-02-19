@@ -17,6 +17,7 @@ import hashlib
 import hmac
 import random
 import re
+import string
 import binascii
 from socket import gethostname
 
@@ -139,6 +140,73 @@ http://www.blackhat.com/presentations/bh-asia-04/bh-jp-04-pdfs/bh-jp-04-seki.pdf
 """
 
 
+def dump_NegotiateFlags(NegotiateFlags):
+    if NegotiateFlags & NTLM_NegotiateUnicode:
+        print("NTLM_NegotiateUnicode set")
+    if NegotiateFlags & NTLM_NegotiateOEM:
+        print("NTLM_NegotiateOEM set")
+    if NegotiateFlags & NTLM_RequestTarget:
+        print("NTLM_RequestTarget set")
+    if NegotiateFlags & NTLM_Unknown9:
+        print("NTLM_Unknown9 set")
+    if NegotiateFlags & NTLM_NegotiateSign:
+        print("NTLM_NegotiateSign set")
+    if NegotiateFlags & NTLM_NegotiateSeal:
+        print("NTLM_NegotiateSeal set")
+    if NegotiateFlags & NTLM_NegotiateDatagram:
+        print("NTLM_NegotiateDatagram set")
+    if NegotiateFlags & NTLM_NegotiateLanManagerKey:
+        print("NTLM_NegotiateLanManagerKey set")
+    if NegotiateFlags & NTLM_Unknown8:
+        print("NTLM_Unknown8 set")
+    if NegotiateFlags & NTLM_NegotiateNTLM:
+        print("NTLM_NegotiateNTLM set")
+    if NegotiateFlags & NTLM_NegotiateNTOnly:
+        print("NTLM_NegotiateNTOnly set")
+    if NegotiateFlags & NTLM_Anonymous:
+        print("NTLM_Anonymous set")
+    if NegotiateFlags & NTLM_NegotiateOemDomainSupplied:
+        print("NTLM_NegotiateOemDomainSupplied set")
+    if NegotiateFlags & NTLM_NegotiateOemWorkstationSupplied:
+        print("NTLM_NegotiateOemWorkstationSupplied set")
+    if NegotiateFlags & NTLM_Unknown6:
+        print("NTLM_Unknown6 set")
+    if NegotiateFlags & NTLM_NegotiateAlwaysSign:
+        print("NTLM_NegotiateAlwaysSign set")
+    if NegotiateFlags & NTLM_TargetTypeDomain:
+        print("NTLM_TargetTypeDomain set")
+    if NegotiateFlags & NTLM_TargetTypeServer:
+        print("NTLM_TargetTypeServer set")
+    if NegotiateFlags & NTLM_TargetTypeShare:
+        print("NTLM_TargetTypeShare set")
+    if NegotiateFlags & NTLM_NegotiateExtendedSecurity:
+        print("NTLM_NegotiateExtendedSecurity set")
+    if NegotiateFlags & NTLM_NegotiateIdentify:
+        print("NTLM_NegotiateIdentify set")
+    if NegotiateFlags & NTLM_Unknown5:
+        print("NTLM_Unknown5 set")
+    if NegotiateFlags & NTLM_RequestNonNTSessionKey:
+        print("NTLM_RequestNonNTSessionKey set")
+    if NegotiateFlags & NTLM_NegotiateTargetInfo:
+        print("NTLM_NegotiateTargetInfo set")
+    if NegotiateFlags & NTLM_Unknown4:
+        print("NTLM_Unknown4 set")
+    if NegotiateFlags & NTLM_NegotiateVersion:
+        print("NTLM_NegotiateVersion set")
+    if NegotiateFlags & NTLM_Unknown3:
+        print("NTLM_Unknown3 set")
+    if NegotiateFlags & NTLM_Unknown2:
+        print("NTLM_Unknown2 set")
+    if NegotiateFlags & NTLM_Unknown1:
+        print("NTLM_Unknown1 set")
+    if NegotiateFlags & NTLM_Negotiate128:
+        print("NTLM_Negotiate128 set")
+    if NegotiateFlags & NTLM_NegotiateKeyExchange:
+        print("NTLM_NegotiateKeyExchange set")
+    if NegotiateFlags & NTLM_Negotiate56:
+        print("NTLM_Negotiate56 set")
+
+
 def create_NTLM_NEGOTIATE_MESSAGE(user, type1_flags=NTLM_TYPE1_FLAGS):
     BODY_LENGTH = 40
     Payload_start = BODY_LENGTH  # in bytes
@@ -193,7 +261,9 @@ def create_NTLM_NEGOTIATE_MESSAGE(user, type1_flags=NTLM_TYPE1_FLAGS):
     #     BODY_LENGTH,
     #     len(msg1),
     # )
-    assert BODY_LENGTH == len(msg1), f"BODY_LENGTH: {BODY_LENGTH:d} != msg1: {len(msg1):d}"
+    assert BODY_LENGTH == len(
+        msg1
+    ), f"BODY_LENGTH: {BODY_LENGTH:d} != msg1: {len(msg1):d}"
 
     msg1 += Workstation + DomainName
     msg1 = base64.b64encode(msg1)
@@ -224,7 +294,9 @@ def parse_NTLM_CHALLENGE_MESSAGE(msg2):
     TargetNameOffset = struct.unpack("<I", msg2[16:20])[0]
 
     # TODO - this variable isn't used
-    TargetName = msg2[TargetNameOffset : TargetNameOffset + TargetNameMaxLen]  # noqa
+    TargetName = msg2[
+        TargetNameOffset : TargetNameOffset + TargetNameMaxLen
+    ]  # noqa
 
     NegotiateFlags = struct.unpack("<I", msg2[20:24])[0]
     ServerChallenge = msg2[24:32]
@@ -239,13 +311,13 @@ def parse_NTLM_CHALLENGE_MESSAGE(msg2):
         TargetInfoMaxLen = struct.unpack("<H", msg2[42:44])[0]  # noqa
 
         TargetInfoOffset = struct.unpack("<I", msg2[44:48])[0]
-        TargetInfo = msg2[TargetInfoOffset: TargetInfoOffset + TargetInfoLen]
+        TargetInfo = msg2[TargetInfoOffset : TargetInfoOffset + TargetInfoLen]
         i = 0
         TimeStamp = "\0" * 8
         while i < TargetInfoLen:
-            AvId = struct.unpack("<H", TargetInfo[i: i + 2])[0]
-            AvLen = struct.unpack("<H", TargetInfo[i + 2: i + 4])[0]
-            AvValue = TargetInfo[i + 4: i + 4 + AvLen]
+            AvId = struct.unpack("<H", TargetInfo[i : i + 2])[0]
+            AvLen = struct.unpack("<H", TargetInfo[i + 2 : i + 4])[0]
+            AvValue = TargetInfo[i + 4 : i + 4 + AvLen]
             i = i + 4 + AvLen
             if AvId == NTLM_MsvAvTimestamp:
                 # TODO - this variable isn't used
@@ -255,10 +327,14 @@ def parse_NTLM_CHALLENGE_MESSAGE(msg2):
     return ServerChallenge, NegotiateFlags
 
 
-def create_NTLM_AUTHENTICATE_MESSAGE(nonce, user, domain, password, NegotiateFlags):
+def create_NTLM_AUTHENTICATE_MESSAGE(
+    nonce, user, domain, password, NegotiateFlags
+):
 
     is_unicode = NegotiateFlags & NTLM_NegotiateUnicode
-    is_NegotiateExtendedSecurity = NegotiateFlags & NTLM_NegotiateExtendedSecurity
+    is_NegotiateExtendedSecurity = (
+        NegotiateFlags & NTLM_NegotiateExtendedSecurity
+    )
 
     flags = struct.pack("<I", NTLM_TYPE2_FLAGS)
 
@@ -274,8 +350,12 @@ def create_NTLM_AUTHENTICATE_MESSAGE(nonce, user, domain, password, NegotiateFla
         DomainName = domain.upper().encode("utf-16-le")
         UserName = user.encode("utf-16-le")
         EncryptedRandomSessionKey = "".encode("utf-16-le")
-    LmChallengeResponse = calc_resp(create_LM_hashed_password_v1(password), nonce)
-    NtChallengeResponse = calc_resp(create_NT_hashed_password_v1(password), nonce)
+    LmChallengeResponse = calc_resp(
+        create_LM_hashed_password_v1(password), nonce
+    )
+    NtChallengeResponse = calc_resp(
+        create_NT_hashed_password_v1(password), nonce
+    )
 
     if is_NegotiateExtendedSecurity:
         pwhash = create_NT_hashed_password_v1(password, UserName, DomainName)
@@ -283,7 +363,7 @@ def create_NTLM_AUTHENTICATE_MESSAGE(nonce, user, domain, password, NegotiateFla
         for i in range(8):
             ClientChallenge += six.int2byte(random.getrandbits(8))
 
-        (NtChallengeResponse, LmChallengeResponse) = ntlm2sr_calc_resp(
+        NtChallengeResponse, LmChallengeResponse = ntlm2sr_calc_resp(
             pwhash, nonce, ClientChallenge
         )  # ='\x39 e3 f4 cd 59 c5 d8 60')
     Signature = b"NTLMSSP\0"
@@ -314,8 +394,12 @@ def create_NTLM_AUTHENTICATE_MESSAGE(nonce, user, domain, password, NegotiateFla
     NtChallengeResponseOffset = struct.pack("<I", Payload_start)
     Payload_start += len(NtChallengeResponse)
 
-    EncryptedRandomSessionKeyLen = struct.pack("<H", len(EncryptedRandomSessionKey))
-    EncryptedRandomSessionKeyMaxLen = struct.pack("<H", len(EncryptedRandomSessionKey))
+    EncryptedRandomSessionKeyLen = struct.pack(
+        "<H", len(EncryptedRandomSessionKey)
+    )
+    EncryptedRandomSessionKeyMaxLen = struct.pack(
+        "<H", len(EncryptedRandomSessionKey)
+    )
     EncryptedRandomSessionKeyOffset = struct.pack("<I", Payload_start)
     Payload_start += len(EncryptedRandomSessionKey)
     NegotiateFlags = flags
@@ -440,7 +524,9 @@ def ComputeResponse(
     return NtChallengeResponse, LmChallengeResponse
 
 
-def ntlm2sr_calc_resp(ResponseKeyNT, ServerChallenge, ClientChallenge=b"\xaa" * 8):
+def ntlm2sr_calc_resp(
+    ResponseKeyNT, ServerChallenge, ClientChallenge=b"\xaa" * 8
+):
 
     LmChallengeResponse = ClientChallenge + b"\0" * 16
     sess = hashlib.md5(ServerChallenge + ClientChallenge).digest()
@@ -490,8 +576,107 @@ def create_NT_hashed_password_v2(passwd, user, domain):
     """Create NT hashed password."""
     digest = create_NT_hashed_password_v1(passwd)
 
-    return hmac.new(digest, (user.upper() + domain).encode("utf-16le")).digest()
+    return hmac.new(
+        digest, (user.upper() + domain).encode("utf-16le")
+    ).digest()
 
 
 def create_sessionbasekey(password):
     return hashlib.new("md4", create_NT_hashed_password_v1(password)).digest()
+
+
+if __name__ == "__main__":
+
+    def ByteToHex(byteStr):
+        """
+        Convert a byte string to it's hex string representation e.g. for output.
+        """
+        return " ".join(["%02X" % ord(x) for x in byteStr])
+
+    def HexToByte(hexStr):
+        """
+        Convert a string hex byte values into a byte string. The Hex Byte values may
+        or may not be space separated.
+        """
+        bytes = []
+
+        hexStr = "".join(hexStr.split(" "))
+
+        for i in range(0, len(hexStr), 2):
+            bytes.append(chr(int(hexStr[i : i + 2], 16)))
+
+        return "".join(bytes)
+
+    ServerChallenge = HexToByte("01 23 45 67 89 ab cd ef")
+    ClientChallenge = "\xaa" * 8
+    Time = "\x00" * 8
+    Workstation = "COMPUTER".encode("utf-16-le")
+    ServerName = "Server".encode("utf-16-le")
+    User = "User"
+    Domain = "Domain"
+    Password = "Password"
+    RandomSessionKey = "\55" * 16
+    assert HexToByte(
+        "e5 2c ac 67 41 9a 9a 22 4a 3b 10 8f 3f a6 cb 6d"
+    ) == create_LM_hashed_password_v1(
+        Password
+    )  # [MS-NLMP] page 72
+    assert HexToByte(
+        "a4 f4 9c 40 65 10 bd ca b6 82 4e e7 c3 0f d8 52"
+    ) == create_NT_hashed_password_v1(
+        Password
+    )  # [MS-NLMP] page 73
+    assert HexToByte(
+        "d8 72 62 b0 cd e4 b1 cb 74 99 be cc cd f1 07 84"
+    ) == create_sessionbasekey(Password)
+    assert HexToByte(
+        "67 c4 30 11 f3 02 98 a2 ad 35 ec e6 4f 16 33 1c 44 bd be d9 27 84 1f 94"
+    ) == calc_resp(create_NT_hashed_password_v1(Password), ServerChallenge)
+    assert HexToByte(
+        "98 de f7 b8 7f 88 aa 5d af e2 df 77 96 88 a1 72 de f1 1c 7d 5c cd ef 13"
+    ) == calc_resp(create_LM_hashed_password_v1(Password), ServerChallenge)
+
+    NTLMv1Response, LMv1Response = ntlm2sr_calc_resp(
+        create_NT_hashed_password_v1(Password),
+        ServerChallenge,
+        ClientChallenge,
+    )
+    assert (
+        HexToByte(
+            "aa aa aa aa aa aa aa aa 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+        )
+        == LMv1Response
+    )  # [MS-NLMP] page 75
+    assert (
+        HexToByte(
+            "75 37 f8 03 ae 36 71 28 ca 45 82 04 bd e7 ca f8 1e 97 ed 26 83 26 72 32"
+        )
+        == NTLMv1Response
+    )
+
+    assert HexToByte(
+        "0c 86 8a 40 3b fd 7a 93 a3 00 1e f2 2e f0 2e 3f"
+    ) == create_NT_hashed_password_v2(
+        Password, User, Domain
+    )  # [MS-NLMP] page 76
+    ResponseKeyLM = ResponseKeyNT = create_NT_hashed_password_v2(
+        Password, User, Domain
+    )
+    NTLMv2Response, LMv2Response = ComputeResponse(
+        ResponseKeyNT,
+        ResponseKeyLM,
+        ServerChallenge,
+        ServerName,
+        ClientChallenge,
+        Time,
+    )
+    assert (
+        HexToByte(
+            "86 c3 50 97 ac 9c ec 10 25 54 76 4a 57 cc cc 19 aa aa aa aa aa aa aa aa"
+        )
+        == LMv2Response
+    )  # [MS-NLMP] page 76
+
+    # expected failure
+    # According to the spec in section '3.3.2 NTLM v2 Authentication' the NTLMv2Response should be longer than the value given on page 77 (this suggests a mistake in the spec)
+    # ~ assert HexToByte("68 cd 0a b8 51 e5 1c 96 aa bc 92 7b eb ef 6a 1c") == NTLMv2Response, "\nExpected: 68 cd 0a b8 51 e5 1c 96 aa bc 92 7b eb ef 6a 1c\nActual:   %s" % ByteToHex(NTLMv2Response) # [MS-NLMP] page 77

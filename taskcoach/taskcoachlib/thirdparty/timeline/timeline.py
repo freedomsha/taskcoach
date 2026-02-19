@@ -25,7 +25,7 @@ class HotMap(object):
         self.nodes = []
         self.rects = {}
         self.children = {}
-        super(HotMap, self).__init__()
+        super().__init__()
 
     def append(self, node, rect):
         """
@@ -177,9 +177,12 @@ class TimeLine(wx.Panel):
         self.DEFAULT_PEN = wx.Pen(wx.BLACK, 1, wx.PENSTYLE_SOLID)
         self.SELECTED_PEN = wx.Pen(wx.WHITE, 2, wx.PENSTYLE_SOLID)
         kwargs["style"] = (
-            wx.TAB_TRAVERSAL | wx.NO_BORDER | wx.FULL_REPAINT_ON_RESIZE | wx.WANTS_CHARS
+            wx.TAB_TRAVERSAL
+            | wx.NO_BORDER
+            | wx.FULL_REPAINT_ON_RESIZE
+            | wx.WANTS_CHARS
         )
-        super(TimeLine, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_LEFT_UP, self.OnClickRelease)
@@ -375,7 +378,9 @@ class TimeLine(wx.Panel):
         font.SetPointSize(scale * font.GetPointSize())
         return font
 
-    def DrawBox(self, dc, node, y, h, hot_map, isSequentialNode=False, depth=0):
+    def DrawBox(
+        self, dc, node, y, h, hot_map, isSequentialNode=False, depth=0
+    ):
         """
         Dessinez une boîte représentant un nœud.
 
@@ -395,7 +400,9 @@ class TimeLine(wx.Panel):
             start = self.min_start - 10
         if stop is None:
             stop = self.max_stop + 10
-        start, stop = min(start, stop), max(start, stop)  # Désinfecter l'entrée
+        start, stop = min(start, stop), max(
+            start, stop
+        )  # Désinfecter l'entrée
         x = self.scaleX(start) + 2 * depth
         w = self.scaleWidth(stop - start) - 4 * depth
         hot_map.append(node, (wx.Rect(int(x), int(y), int(w), int(h))))
@@ -435,7 +442,8 @@ class TimeLine(wx.Panel):
         dc.SetPen(self.penForNode(node, isSequentialNode, depth))
         rounding = (
             0
-            if isSequentialNode and (h < self.padding * 4 or w < self.padding * 4)
+            if isSequentialNode
+            and (h < self.padding * 4 or w < self.padding * 4)
             else self.padding * 2
         )
         dc.DrawRoundedRectangle(x, y, w, h, rounding)
@@ -458,7 +466,9 @@ class TimeLine(wx.Panel):
         if x < 0:
             w -= abs(x)
             x = 0
-        dc.SetClippingRegion(x + 1, y + 1, w - 2, h - 2)  # Don't draw outside the box
+        dc.SetClippingRegion(
+            x + 1, y + 1, w - 2, h - 2
+        )  # Don't draw outside the box
         # icon = self.adapter.icon(node, node == self.selectedNode)
         if node == self.selectedNode:
             icon = self.adapter.icon(node)
@@ -491,16 +501,26 @@ class TimeLine(wx.Panel):
         childY = y
         h -= len(children)  # vertical space between children
         recursiveChildrenList = [
-            self.adapter.parallel_children(child, recursive=True) for child in children
+            self.adapter.parallel_children(child, recursive=True)
+            for child in children
         ]
         recursiveChildrenCounts = [
-            len(recursiveChildren) for recursiveChildren in recursiveChildrenList
+            len(recursiveChildren)
+            for recursiveChildren in recursiveChildrenList
         ]
-        recursiveChildHeight = h / float(len(children) + sum(recursiveChildrenCounts))
-        for child, numberOfRecursiveChildren in zip(children, recursiveChildrenCounts):
-            childHeight = recursiveChildHeight * (numberOfRecursiveChildren + 1)
+        recursiveChildHeight = h / float(
+            len(children) + sum(recursiveChildrenCounts)
+        )
+        for child, numberOfRecursiveChildren in zip(
+            children, recursiveChildrenCounts
+        ):
+            childHeight = recursiveChildHeight * (
+                numberOfRecursiveChildren + 1
+            )
             if childHeight >= self.padding:
-                self.DrawBox(dc, child, childY, childHeight, hot_map, depth=depth)
+                self.DrawBox(
+                    dc, child, childY, childHeight, hot_map, depth=depth
+                )
             childY += childHeight + 1
 
     def DrawSequentialChildren(self, dc, parent, y, h, hot_map, depth=0):
@@ -516,7 +536,9 @@ class TimeLine(wx.Panel):
             depth (int, optional): The depth of the node (default is 0).
         """
         for child in self.adapter.sequential_children(parent):
-            self.DrawBox(dc, child, y, h, hot_map, isSequentialNode=True, depth=depth)
+            self.DrawBox(
+                dc, child, y, h, hot_map, isSequentialNode=True, depth=depth
+            )
 
     def DrawNow(self, dc):
         """
@@ -573,7 +595,9 @@ class TimeLine(wx.Panel):
         else:
             fg_color = self.adapter.foreground_color(node, depth)
             if not fg_color:
-                fg_color = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+                fg_color = wx.SystemSettings.GetColour(
+                    wx.SYS_COLOUR_WINDOWTEXT
+                )
         return fg_color
 
     def fontForNode(self, dc, node, depth=0):
@@ -591,7 +615,11 @@ class TimeLine(wx.Panel):
         font = self.adapter.font(
             node, depth
         )  # Unresolved attribute reference 'font' for class 'DefaultAdapter'
-        font = font if font else wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        font = (
+            font
+            if font
+            else wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        )
         scale = dc.GetPPI()[0] / wx.ScreenDC().GetPPI()[0]
         font.SetPointSize(scale * font.GetPointSize())
         return font
@@ -614,7 +642,9 @@ class TimeLine(wx.Panel):
             color = self.adapter.background_color(node)
             if color:
                 # L'adaptateur renvoie un 3-tuple
-                color = tuple(int(c) for c in color[:3])  # Convertir RGB en entiers
+                color = tuple(
+                    int(c) for c in color[:3]
+                )  # Convertir RGB en entiers
                 if len(color) == 4:
                     color = color + (
                         int(color[3] * 255),
@@ -643,7 +673,11 @@ class TimeLine(wx.Panel):
         Returns :
             pen (wx.Pen) : Le stylet.
         """
-        pen = self.SELECTED_PEN if node == self.selectedNode else self.DEFAULT_PEN
+        pen = (
+            self.SELECTED_PEN
+            if node == self.selectedNode
+            else self.DEFAULT_PEN
+        )
         # style = wx.DOT if isSequentialNode else wx.SOLID
         # pen.SetStyle(style)
         return pen
@@ -728,7 +762,9 @@ class DefaultAdapter(object):
         """
         starts = [node.start]
         if recursive:
-            starts.extend([self.start(child, True) for child in self.children(node)])
+            starts.extend(
+                [self.start(child, True) for child in self.children(node)]
+            )
         return float(min(starts))
 
     def stop(self, node, recursive=False):
@@ -744,7 +780,9 @@ class DefaultAdapter(object):
         """
         stops = [node.stop]
         if recursive:
-            stops.extend([self.stop(child, True) for child in self.children(node)])
+            stops.extend(
+                [self.stop(child, True) for child in self.children(node)]
+            )
         return float(max(stops))
 
     def label(self, node):
