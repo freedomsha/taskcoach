@@ -38,7 +38,9 @@ import re  # noqa: E402
 import datetime  # noqa: E402
 
 try:
-    from taskcoachlib.meta.revision import revision  # pylint: disable=F0401,W0611
+    from taskcoachlib.meta.revision import (
+        revision,
+    )  # pylint: disable=F0401,W0611
 except ImportError:
     revision = None
 
@@ -110,9 +112,12 @@ author_email = "developers@taskcoach.org"
 filename = name.replace(" ", "")
 filename_lower = filename.lower()
 
-url = "http://taskcoach.org/"  # Ne supprimez pas la barre oblique finale, un autre code suppose qu'elle sera là
+# url = "http://taskcoach.org/"  # Ne supprimez pas la barre oblique finale, un autre code suppose qu'elle sera là
+url = "https://github.com/taskcoach/taskcoach"  # Project homepage (GitHub)
+github_url = url  # Alias for backwards compatibility
 screenshot = (
-    url + "screenshots/Windows/0.71.2-Windows_XP-Tasks_categories_and_effort.png"
+    url
+    + "screenshots/Windows/0.71.2-Windows_XP-Tasks_categories_and_effort.png"
 )
 # icon = url + "taskcoach.png"
 # icon = "{0}taskcoach.png".format(url)
@@ -143,7 +148,9 @@ donate_url = url + "givesupport.html"
 i18n_url = url + "i18n.html"
 # i18n_url = f"{url}i18n.html"
 
-announcement_addresses = "taskcoach@yahoogroups.com, python-announce-list@python.org"
+announcement_addresses = (
+    "taskcoach@yahoogroups.com, python-announce-list@python.org"
+)
 bcc_announcement_addresses = "johnhaller@portableapps.com"
 
 copyright = "Copyright (C) 2004-%s %s" % (
@@ -153,7 +160,9 @@ copyright = "Copyright (C) 2004-%s %s" % (
 license_title = "GNU General Public License"
 license_version = "3"
 license_title_and_version = "%s version %s" % (license_title, license_version)
-license = "%s or any later version" % license_title_and_version  # pylint: disable=W0622
+license = (
+    "%s or any later version" % license_title_and_version
+)  # pylint: disable=W0622
 license_title_and_version_abbrev = "GPLv%s" % license_version
 license_abbrev = "%s+" % license_title_and_version_abbrev
 license_notice = """%(name)s is free software: you can redistribute it and/or modify
@@ -171,7 +180,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.""" % dict(
     name=name
 )
 
-license_notice_html = "<p>%s</p>" % license_notice.replace('\n\n', '</p><p>')
+license_notice_html = "<p>%s</p>" % license_notice.replace("\n\n", "</p><p>")
 license_notice_html = re.sub(
     r"<http([^>]*)>",
     r'<a href="http\1" target="_blank">http\1</a>',
