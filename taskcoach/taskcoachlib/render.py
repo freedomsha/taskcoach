@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import zip
 # from builtins import str
 from taskcoachlib.domain import date as datemodule
+
 # from taskcoachlib.thirdparty import desktop
 import desktop
 from taskcoachlib.i18n import _
@@ -38,12 +39,12 @@ import re
 
 
 def priority(priority):
-    """ Rendre une priorité (entière). """
+    """Rendre une priorité (entière)."""
     return str(priority)
 
 
 def timeLeft(time_left, completed_task):
-    """ Rendre le temps restant sous forme de chaîne de texte.
+    """Rendre le temps restant sous forme de chaîne de texte.
 
     Renvoie une chaîne vide pour les tâches terminées
     et pour les tâches sans date d'échéance prévue. Sinon,
@@ -61,18 +62,23 @@ def timeLeft(time_left, completed_task):
         # days = _('{} days'.format(time_left.days)) if time_left.days > 1 else \
         #        _('1 day')
         # ou :
-        days = _(f"{time_left.days} days") if time_left.days > 1 else \
-               _("1 day")
+        days = (
+            _(f"{time_left.days} days") if time_left.days > 1 else _("1 day")
+        )
         days += ", "
     else:
         days = ""
-    hours_and_minutes = ":".join(str(time_left).split(":")[:-1]).split(", ")[-1]
+    hours_and_minutes = ":".join(str(time_left).split(":")[:-1]).split(", ")[
+        -1
+    ]
     return sign + days + hours_and_minutes
 
 
-def timeSpent(time_spent, showSeconds=True, decimal=False):
-    """ Render time spent (of type Date.TimeDelta) as
-        "<hours>:<minutes>:<seconds>" or "<hours>:<minutes>" """
+def timeSpent(
+    time_spent: datemodule.TimeDelta, showSeconds=True, decimal=False
+):
+    """Render time spent (of type Date.TimeDelta) as
+    "<hours>:<minutes>:<seconds>" or "<hours>:<minutes>" """
     if decimal:
         return timeSpentDecimal(time_spent)
 
@@ -91,8 +97,8 @@ def timeSpent(time_spent, showSeconds=True, decimal=False):
 
 
 def timeSpentDecimal(time_spent):
-    """ Render time spent (of type Date.TimeDelta) as
-        "<hours>.<fractional hours> """
+    """Render time spent (of type Date.TimeDelta) as
+    "<hours>.<fractional hours>"""
     zero = datemodule.TimeDelta()
     if time_spent == zero:
         return ""
@@ -104,8 +110,8 @@ def timeSpentDecimal(time_spent):
 
 
 def recurrence(recurrence):
-    """ Afficher la récurrence sous la forme d'une courte chaîne décrivant la fréquence de
-        la récurrence. """
+    """Afficher la récurrence sous la forme d'une courte chaîne décrivant la fréquence de
+    la récurrence."""
     if not recurrence:
         return ""
     if recurrence.amount > 2:
@@ -126,12 +132,27 @@ def recurrence(recurrence):
         labels = [_("Daily"), _("Weekly"), _("Monthly"), _("Yearly")]
     # mapping = dict(zip(['daily', 'weekly', 'monthly', 'yearly'], labels))
     mapping = dict(list(zip(["daily", "weekly", "monthly", "yearly"], labels)))
-    return mapping.get(recurrence.unit) % dict(frequency=recurrence.amount)
+    # return mapping.get(recurrence.unit) % dict(frequency=recurrence.amount)
+    result = mapping.get(recurrence.unit) % dict(frequency=recurrence.amount)
+    # Append weekday names for weekly recurrence if specific days are selected
+    if recurrence.unit == "weekly" and recurrence.weekdays:
+        weekday_names = [
+            _("Mon"),
+            _("Tue"),
+            _("Wed"),
+            _("Thu"),
+            _("Fri"),
+            _("Sat"),
+            _("Sun"),
+        ]
+        selected_days = [weekday_names[d] for d in sorted(recurrence.weekdays)]
+        result += " (" + ", ".join(selected_days) + ")"
+    return result
 
 
 def budget(aBudget):
-    """ Render budget (of type Date.TimeDelta) as
-        "<hours>:<minutes>:<seconds>". """
+    """Render budget (of type Date.TimeDelta) as
+    "<hours>:<minutes>:<seconds>"."""
     return timeSpent(aBudget)
 
 
@@ -152,11 +173,10 @@ else:
 def rawTimeFunc(dt, minutes=True, seconds=False):
     if seconds:
         fmt = timeWithSecondsFormat
+    elif minutes:
+        fmt = timeWithMinutesFormat
     else:
-        if minutes:
-            fmt = timeWithMinutesFormat
-        else:
-            fmt = timeFormat
+        fmt = timeFormat
     return datemodule.DateTime.strftime(dt, fmt)
 
 
@@ -186,16 +206,14 @@ if operating_system.isWindows():
     import pywintypes
     import win32api
 
-
     def rawTimeFunc(dt, minutes=True, seconds=False):
         if seconds:
             # You can't include seconds without minutes
             flags = 0x0
+        elif minutes:
+            flags = 0x2
         else:
-            if minutes:
-                flags = 0x2
-            else:
-                flags = 0x1
+            flags = 0x1
         return operating_system.decodeSystemString(
             win32api.GetTimeFormat(
                 0x400, flags, None if dt is None else pywintypes.Time(dt), None
@@ -212,6 +230,7 @@ if operating_system.isWindows():
 elif operating_system.isMac():
     import Cocoa
     import calendar
+
     # We don't actually respect the 'seconds' parameter; this assumes that the short time format does
     # not include them, but the medium format does.
     _shortFormatter = Cocoa.NSDateFormatter.alloc().init()
@@ -315,7 +334,9 @@ elif desktop.get_desktop() == "KDE4":
 #     rawTimeFunc(dt, minutes=minutes, seconds=seconds)
 # )
 def timeFunc(dt, minutes=True, seconds=False):
-    return operating_system.decodeSystemString(rawTimeFunc(dt, minutes=minutes, seconds=seconds))
+    return operating_system.decodeSystemString(
+        rawTimeFunc(dt, minutes=minutes, seconds=seconds)
+    )
 
 
 # dateTimeFunc = lambda dt=None, humanReadable=False: f"{dateFunc(dt, humanReadable=humanReadable)} {timeFunc(dt)}"
@@ -324,16 +345,17 @@ def dateTimeFunc(dt=None, humanReadable=False):
 
 
 def date(aDateTime, humanReadable=False):
-    """ Render a Date/time as Date. """
+    """Render a Date/time as Date."""
     if str(aDateTime) == "":
         return ""
     year = aDateTime.year
     if year >= 1900:
         return dateFunc(aDateTime, humanReadable=humanReadable)
     else:
-        result = date(datemodule.DateTime(year + 1900, aDateTime.month,
-                                          aDateTime.day),
-                      humanReadable=humanReadable)
+        result = date(
+            datemodule.DateTime(year + 1900, aDateTime.month, aDateTime.day),
+            humanReadable=humanReadable,
+        )
         return re.sub(str(year + 1900), str(year), result)
 
 
@@ -383,9 +405,9 @@ def time(dateTime, seconds=False, minutes=True):
         # strftime doesn't handle years before 1900, be prepared:
         dateTime = dateTime.replace(year=2000)
     except TypeError:  # We got a time instead of a dateTime
-        dateTime = datemodule.Now().replace(hour=dateTime.hour,
-                                            minute=dateTime.minute,
-                                            second=dateTime.second)
+        dateTime = datemodule.Now().replace(
+            hour=dateTime.hour, minute=dateTime.minute, second=dateTime.second
+        )
     return timeFunc(dateTime, minutes=minutes, seconds=seconds)
 
 
@@ -401,7 +423,7 @@ def weekNumber(dateTime):
 
 
 def monetaryAmount(aFloat):
-    """ Afficher un montant monétaire, en utilisant les paramètres régionaux de l'utilisateur. """
+    """Afficher un montant monétaire, en utilisant les paramètres régionaux de l'utilisateur."""
     return (
         ""
         if round(aFloat, 2) == 0
@@ -410,13 +432,13 @@ def monetaryAmount(aFloat):
 
 
 def percentage(aFloat):
-    """ Afficher un pourcentage. """
+    """Afficher un pourcentage."""
     # return "" if round(aFloat, 0) == 0 else "%.0f%%" % aFloat
     return "" if round(aFloat, 0) == 0 else f"{aFloat:.0f}%"
 
 
 def exception(exception, instance):
-    """ Générez une exception en toute sécurité, en vous préparant à de nouvelles exceptions. """
+    """Générez une exception en toute sécurité, en vous préparant à de nouvelles exceptions."""
 
     try:
         # Dans cet ordre. Python 2.6 a résolu le problème des exceptions Unicode.

@@ -23,6 +23,7 @@ from taskcoachlib import persistence, patterns, operating_system
 from taskcoachlib.i18n import _
 import wx
 import wx.html
+
 # from wx import *
 
 log = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ log = logging.getLogger(__name__)
 # class PrinterSettings(metaclass=patterns.Singleton):
 class PrinterSettings(object, metaclass=patterns.Singleton):
     """Classe pour gérer les paramètres d'impression."""
+
     edges = ("top", "left", "bottom", "right")
 
     def __init__(self, settings):
@@ -67,7 +69,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
             return getattr(self.printData, attr)
 
     def __initialize_from_settings(self):
-        """ Load the printer settings from the user settings. """
+        """Load the printer settings from the user settings."""
         margin = dict()
         for edge in self.edges:
             margin[edge] = self.__get_setting("margin_" + edge)
@@ -79,7 +81,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
         self.SetOrientation(self.__get_setting("orientation"))
 
     def __save_to_settings(self):
-        """ Save the printer settings to the user settings. """
+        """Save the printer settings to the user settings."""
         margin = dict()
         margin["left"], margin["top"] = self.GetMarginTopLeft()
         margin["right"], margin["bottom"] = self.GetMarginBottomRight()
@@ -97,6 +99,7 @@ class PrinterSettings(object, metaclass=patterns.Singleton):
 
 class HTMLPrintout(wx.html.HtmlPrintout):
     """Classe pour imprimer du contenu HTML."""
+
     def __init__(self, html_text, settings):
         super().__init__()
         # Définit le contenu HTML à imprimer
@@ -105,7 +108,9 @@ class HTMLPrintout(wx.html.HtmlPrintout):
         self.SetFooter(_("Page") + " @PAGENUM@/@PAGESCNT@", wx.html.PAGE_ALL)
         # Ancien code :
         # Définit les polices serif, sans serif et les tailles
-        self.SetFonts("Arial", "Courier", [7, 8, 10, 12, 14, 18, 24])
+        self.SetFonts(
+            "Arial", "Courier", [7, 8, 10, 12, 14, 16, 18, 22, 24, 30]
+        )
         # # Nouveau code :
         # Quand tu voudras remettre la personnalisation des polices :
         #     Assure-toi que settings transmis à HTMLPrintout est bien l’objet de configuration de Task Coach.
@@ -144,6 +149,7 @@ class HTMLPrintout(wx.html.HtmlPrintout):
 
 class DCPrintout(wx.Printout):
     """Classe pour imprimer le contenu d'un widget."""
+
     def __init__(self, widget):
         self.widget = widget
         super().__init__()
@@ -163,13 +169,18 @@ def Printout(viewer, settings, printSelectionOnly=False, twoPrintouts=False):
     if hasattr(widget, "GetPrintout"):
         _printout = widget.GetPrintout
     elif hasattr(widget, "Draw"):
+
         def _printout(settings):
             return DCPrintout(widget)
+
     else:
-        html_text = persistence.viewer2html(viewer, settings, selectionOnly=printSelectionOnly)[0]
+        html_text = persistence.viewer2html(
+            viewer, settings, selectionOnly=printSelectionOnly
+        )[0]
 
         def _printout(settings):
             return HTMLPrintout(html_text, settings)
+
     result = _printout(PrinterSettings(settings))
     if twoPrintouts:
         result = (result, _printout(PrinterSettings(settings)))

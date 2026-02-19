@@ -28,11 +28,12 @@ log = logging.getLogger(__name__)
 # et il semble qu'ils soient utilisés au-delà de leurs limites.
 class IdProvider(set):
     """
-        Fournisseur d'identifiants pour les éléments d'interface utilisateur dans wxPython.
+    Fournisseur d'identifiants pour les éléments d'interface utilisateur dans wxPython.
 
-        Cette classe gère les identifiants uniques nécessaires pour les éléments d'interface
-        utilisateur, en évitant les conflits et en assurant la disponibilité des identifiants.
-        """
+    Cette classe gère les identifiants uniques nécessaires pour les éléments d'interface
+    utilisateur, en évitant les conflits et en assurant la disponibilité des identifiants.
+    """
+
     # # ajout conseillé par chatgpt pour mieux gérer les identifiants (3 lignes)
     #
     # Compteur : Utilise un compteur pour générer des IDs positifs uniques.
@@ -89,9 +90,9 @@ class IdProvider(set):
         # # # # utiliser wx.NewIdRef().GetId() pour générer des IDs uniques :
         # # # return wx.NewIdRef().GetId()
         # #
-        # new_id = wx.NewId()
+        new_id = wx.NewId()
         # # new_id = wx.NewIdRef().GetId()  # Ne fonctionne pas !
-        new_id = wx.NewIdRef()
+        # new_id = wx.NewIdRef()
         # new_id = wx.ID_ANY
 
         # Si aucun ID libre n'est trouvé, génère un nouvel ID
