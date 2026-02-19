@@ -19,7 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import wx
 from wx.lib.agw import aui
+
 # import wx.lib.agw.aui as aui
+import wx.lib.scrolledpanel as scrolledpanel
 
 log = logging.getLogger(__name__)  # Logger pour ce fichier
 
@@ -95,7 +97,14 @@ class BookPage(wx.Panel):
         _borderWidth (int) : La largeur de la bordure autour des contrôles.
     """
 
-    def __init__(self, parent, *args, columns=None, growableColumn=None, **kwargs):
+    # Outer margin around page content (modern UI best practice: 10-12px)
+    _outerMargin = 10
+    # Grid spacing - subclasses can override
+    _vgap = 0
+    _hgap = 5
+    _borderWidth = 5
+
+    def __init__(self, parent, columns, growableColumn=None, *args, **kwargs):
         """
         Initialise l'instance BookPage.
 
@@ -118,22 +127,32 @@ class BookPage(wx.Panel):
         log.debug(f"  BookPage.__init__ - kwargs avant les pops: {kwargs}")
         # Récupère la valeur de 'columns' et 'growableColumn' des kwargs s'ils y sont,
         # sinon utilise les valeurs par défaut définies dans la signature (__init__ arguments).
-        _columns_val = kwargs.pop('columns', columns)
-        _growable_column_val = kwargs.pop('growableColumn', growableColumn)
+        _columns_val = kwargs.pop("columns", columns)
+        _growable_column_val = kwargs.pop("growableColumn", growableColumn)
         # --- LOG 3 : Après les pop de kwargs ---
         log.debug(f"  BookPage.__init__ - kwargs après les pops: {kwargs}")
-        log.debug(f"  BookPage.__init__ - Valeur extraite _columns_val: {_columns_val}")
-        log.debug(f"  BookPage.__init__ - Valeur extraite _growable_column_val: {_growable_column_val}")
+        log.debug(
+            f"  BookPage.__init__ - Valeur extraite _columns_val: {_columns_val}"
+        )
+        log.debug(
+            f"  BookPage.__init__ - Valeur extraite _growable_column_val: {_growable_column_val}"
+        )
 
         # Assurez-vous d'avoir une valeur par défaut si 'columns' n'est pas passé du tout.
         # Par exemple, si vous voulez que 2 soit la valeur par défaut pour BookPage:
         if _columns_val is None:
-            _columns_val = 2  # Valeur par défaut pour BookPage si non spécifiée
+            _columns_val = (
+                2  # Valeur par défaut pour BookPage si non spécifiée
+            )
             # --- LOG 4 : Quand _columns_val est mis par défaut ---
-            log.debug(f"  BookPage.__init__ - _columns_val mis par défaut à: {_columns_val}")
+            log.debug(
+                f"  BookPage.__init__ - _columns_val mis par défaut à: {_columns_val}"
+            )
 
         # --- LOG 5 : Avant l'appel à super().__init__ (wx.Panel) ---
-        log.debug(f"  BookPage.__init__ - Appel de super().__init__ (wx.Panel) avec:")
+        log.debug(
+            f"  BookPage.__init__ - Appel de super().__init__ (wx.Panel) avec:"
+        )
         log.debug(f"    parent passé à super: {parent}")
         log.debug(f"    style passé à super: {wx.TAB_TRAVERSAL}")
         log.debug(f"    *args passés à super: {args}")
@@ -142,33 +161,49 @@ class BookPage(wx.Panel):
         # en passant les arguments génériques restants (*args, **kwargs)
         super().__init__(parent, style=wx.TAB_TRAVERSAL, *args, **kwargs)
         # --- LOG 6 : Après l'appel à super().__init__ (wx.Panel) ---
-        log.debug(f"--- BookPage.__init__ super().__init__ (wx.Panel) terminé ---")
+        log.debug(
+            f"--- BookPage.__init__ super().__init__ (wx.Panel) terminé ---"
+        )
 
         # Affectez les valeurs consommées aux attributs internes
         # self._columns = columns
         # self._position = GridCursor(columns)
         self._columns = _columns_val
-        self._position = GridCursor(self._columns)  # Utilise la valeur correcte
+        self._position = GridCursor(
+            self._columns
+        )  # Utilise la valeur correcte
         # if growableColumn is None:
         if _growable_column_val is None:
             # self._growableColumn = columns - 1
-            self._growableColumn = self._columns - 1  # Le calcul est maintenant sûr
+            self._growableColumn = (
+                self._columns - 1
+            )  # Le calcul est maintenant sûr
 
         else:
             # self._growableColumn = growableColumn
             self._growableColumn = _growable_column_val
         self._borderWidth = 5
-        self._sizer = wx.GridBagSizer(vgap=5, hgap=5)  # type de sizer pour organiser ses contrôles
+        self._sizer = wx.GridBagSizer(
+            vgap=5, hgap=5
+        )  # type de sizer pour organiser ses contrôles
         # --- LOG 7 : Après l'initialisation des attributs de BookPage ---
-        log.debug(f"  BookPage.__init__ - self._columns final: {self._columns}")
+        log.debug(
+            f"  BookPage.__init__ - self._columns final: {self._columns}"
+        )
         log.debug(f"--- BookPage.__init__ terminé ---")
-
 
     def fit(self):
         """
         Régle le dimensionneur et ajuste le panneau à son contenu.
         """
         self.SetSizerAndFit(self._sizer)
+        # # Wrap GridBagSizer in outer BoxSizer with margins for proper spacing
+        # # Only create the outer sizer once - calling fit() multiple times is safe
+        # if not hasattr(self, '_outerSizer') or self._outerSizer is None:
+        #     self._outerSizer = wx.BoxSizer(wx.VERTICAL)
+        #     self._outerSizer.Add(self._sizer, 1, wx.EXPAND | wx.ALL, self._outerMargin)
+        #     self.SetSizer(self._outerSizer)
+        # self.Layout()  # Force layout recalculation (needed on Windows for lazy-loaded pages)
 
     def __defaultFlags(self, controls):
         """
@@ -252,7 +287,9 @@ class BookPage(wx.Panel):
             self.__addControl(  # Pour chaque contrôle, ajoute un contrôle au sizer
                 columnIndex,  # 0 pour le libellé, 1 pour le contrôle
                 control,  # l'objet wx.StaticText, puis le wx.TextCtrl
-                flags[columnIndex],  # flags[0] pour le libellé, flags[1] pour le contrôle
+                flags[
+                    columnIndex
+                ],  # flags[0] pour le libellé, flags[1] pour le contrôle
                 lastColumn=columnIndex == lastColumnIndex,
             )
             if columnIndex > 0:
@@ -322,10 +359,115 @@ class BookPage(wx.Panel):
         Returns :
             control (wx.Window) : Le contrôle.
         """
-        if type(control) in [type(""), type("")]:  # TODO: essayer de le remplacer par
+        if type(control) in [
+            type(""),
+            type(""),
+        ]:  # TODO: essayer de le remplacer par
             # if isinstance(control, str):
             # ou
             # if isinstance(control, list):
+            control = wx.StaticText(self, label=control)
+        return control
+
+
+class ScrolledBookPage(scrolledpanel.ScrolledPanel):
+    """A scrollable page in a notebook. Use for pages with lots of content."""
+
+    # Outer margin around page content
+    _outerMargin = 10
+    # Grid spacing - subclasses can override
+    _vgap = 0
+    _hgap = 5
+    _borderWidth = 5
+
+    def __init__(self, parent, columns, growableColumn=None, *args, **kwargs):
+        super().__init__(parent, style=wx.TAB_TRAVERSAL, *args, **kwargs)
+        self._sizer = wx.GridBagSizer(vgap=self._vgap, hgap=self._hgap)
+        self._columns = columns
+        self._position = GridCursor(columns)
+        if growableColumn is None:
+            self._growableColumn = columns - 1
+        else:
+            self._growableColumn = growableColumn
+
+    def fit(self):
+        # Wrap GridBagSizer in outer BoxSizer with margins for proper spacing
+        if not hasattr(self, "_outerSizer") or self._outerSizer is None:
+            self._outerSizer = wx.BoxSizer(wx.VERTICAL)
+            self._outerSizer.Add(
+                self._sizer, 1, wx.EXPAND | wx.ALL, self._outerMargin
+            )
+            self.SetSizer(self._outerSizer)
+        self.SetupScrolling(scroll_x=True, scroll_y=True)
+        self.Layout()
+
+    def __defaultFlags(self, controls):
+        """Return the default flags for placing a list of controls."""
+        flags = []
+        for columnIndex in range(len(controls)):
+            flag = wx.ALL | wx.ALIGN_TOP | wx.ALIGN_LEFT
+            flags.append(flag)
+        return flags
+
+    def __determineFlags(self, controls, flagsPassed):
+        """Return a merged list of flags by overriding the default
+        flags with flags passed by the caller."""
+        flagsPassed = flagsPassed or [None] * len(controls)
+        defaultFlags = self.__defaultFlags(controls)
+        return [
+            defaultFlag if flagPassed is None else flagPassed
+            for flagPassed, defaultFlag in zip(flagsPassed, defaultFlags)
+        ]
+
+    def addEntry(self, *controls, **kwargs):
+        """Add controls to the page on one row."""
+        flags = self.__determineFlags(controls, kwargs.get("flags", None))
+        controls = [
+            self._ScrolledBookPage__createStaticTextControlIfNeeded(control)
+            for control in controls
+            if control is not None
+        ]
+        lastColumnIndex = len(controls) - 1
+        for columnIndex, control in enumerate(controls):
+            self._ScrolledBookPage__addControl(
+                columnIndex,
+                control,
+                flags[columnIndex],
+                columnIndex == lastColumnIndex,
+            )
+        if kwargs.get("growable", False):
+            self._sizer.AddGrowableRow(self._position.maxRow())
+        # Add growable column once, when first entry has been added
+        if (
+            self._growableColumn >= 0
+            and self._sizer.GetItemCount() >= self._columns
+        ):
+            self._sizer.AddGrowableCol(self._growableColumn)
+            self._growableColumn = -1
+
+    def addLine(self):
+        line = wx.StaticLine(self)
+        colspan = max(self._columns, 1)
+        self._sizer.Add(
+            line,
+            self._position.next(colspan),
+            span=(1, colspan),
+            flag=wx.GROW | wx.ALIGN_CENTER_VERTICAL | wx.TOP | wx.BOTTOM,
+            border=5,
+        )
+
+    def __addControl(self, columnIndex, control, flag, lastColumn):
+        colspan = max(self._columns - columnIndex, 1) if lastColumn else 1
+        self._sizer.Add(
+            control,
+            self._position.next(colspan),
+            span=(1, colspan),
+            flag=flag,
+            border=self._borderWidth,
+        )
+
+    def __createStaticTextControlIfNeeded(self, control):
+        if type(control) in [type(""), type("")]:
             control = wx.StaticText(self, label=control)
         return control
 
@@ -370,8 +512,12 @@ class BookMixin(object):
         Raises :
             IndexError : Si l'index est hors de portée.
         """
-        if index < self.GetPageCount():  # Unresolved attribute reference 'GetPageCount' for class 'BookMixin'
-            return self.GetPage(index)  # Unresolved attribute reference 'GetPage' for class 'BookMixin'
+        if (
+            index < self.GetPageCount()
+        ):  # Unresolved attribute reference 'GetPageCount' for class 'BookMixin'
+            return self.GetPage(
+                index
+            )  # Unresolved attribute reference 'GetPage' for class 'BookMixin'
             # Normal, c'est un mixin !
         else:
             raise IndexError
@@ -397,7 +543,9 @@ class BookMixin(object):
         bitmap = wx.ArtProvider.GetBitmap(
             bitmap, wx.ART_MENU, self._bitmapSize
         )
-        super().AddPage(page, name, bitmap=bitmap)  # Unresolved attribute reference 'AddPage' for class 'object'
+        super().AddPage(
+            page, name, bitmap=bitmap
+        )  # Unresolved attribute reference 'AddPage' for class 'object'
 
     def ok(self, *args, **kwargs):
         """
@@ -408,7 +556,9 @@ class BookMixin(object):
             **kwargs : Arguments de mots clés arbitraires.
         """
         for page in self:
-            page.ok(*args, **kwargs)  # Unresolved attribute reference 'ok' for class 'Window'
+            page.ok(
+                *args, **kwargs
+            )  # Unresolved attribute reference 'ok' for class 'Window'
 
 
 class Notebook(BookMixin, aui.AuiNotebook):
@@ -436,3 +586,31 @@ class Notebook(BookMixin, aui.AuiNotebook):
             & ~aui.AUI_NB_MIDDLE_CLICK_CLOSE
         )
         super().__init__(*args, **kwargs)
+        # Bind mouse wheel directly on the tab control for tab scrolling
+        tabCtrl = self.GetActiveTabCtrl()
+        if tabCtrl:
+            tabCtrl.Bind(wx.EVT_MOUSEWHEEL, self.__onTabMouseWheel)
+        # Disable focus on internal AUI TabFrame to prevent "lost" tab keypress
+        self.__disableTabFrameFocus()
+
+    def __disableTabFrameFocus(self):
+        """Disable focus on internal AUI TabFrame windows."""
+        for child in self.GetChildren():
+            if child.__class__.__name__ == "TabFrame":
+                child.SetCanFocus(False)
+
+    def __onTabMouseWheel(self, event):
+        """Handle mouse wheel scrolling on the tab bar to switch tabs."""
+        rotation = event.GetWheelRotation()
+        if rotation > 0:
+            self.AdvanceSelection(False)  # Previous tab
+        elif rotation < 0:
+            self.AdvanceSelection(True)  # Next tab
+
+    def AdvanceSelectionForward(self):
+        """Move to the next tab (wraps around)."""
+        self.AdvanceSelection(True)
+
+    def AdvanceSelectionBackward(self):
+        """Move to the previous tab (wraps around)."""
+        self.AdvanceSelection(False)
