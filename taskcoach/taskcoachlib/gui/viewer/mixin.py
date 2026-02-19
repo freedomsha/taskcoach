@@ -32,11 +32,13 @@ from taskcoachlib import command
 from taskcoachlib.domain import base, task, category, attachment
 from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.i18n import _
+
 # try:
 #    from ...thirdparty.pubsub import pub
 # except ImportError:
 #    from wx.lib.pubsub import pub
 from pubsub import pub
+import ast
 import wx
 
 log = logging.getLogger(__name__)
@@ -44,7 +46,7 @@ log = logging.getLogger(__name__)
 
 # Il manque les classes mères ! Normal, ce sont des Mixins !
 class SearchableViewerMixin(object):
-    """ Classe Mixin pour obtenir une visionneuse consultable.
+    """Classe Mixin pour obtenir une visionneuse consultable.
 
     Fournit des méthodes:
         -createFilter:
@@ -96,7 +98,9 @@ class SearchableViewerMixin(object):
         section = self.settingsSection()
         self.settings.set(section, "searchfilterstring", searchString)
         self.settings.set(section, "searchfiltermatchcase", str(matchCase))
-        self.settings.set(section, "searchfilterincludesubitems", str(includeSubItems))
+        self.settings.set(
+            section, "searchfilterincludesubitems", str(includeSubItems)
+        )
         self.settings.set(section, "searchdescription", str(searchDescription))
         self.settings.set(section, "regularexpression", str(regularExpression))
         self.presentation().setSearchFilter(
@@ -111,30 +115,39 @@ class SearchableViewerMixin(object):
         section = self.settingsSection()
         searchString = self.settings.get(section, "searchfilterstring")
         matchCase = self.settings.getboolean(section, "searchfiltermatchcase")
-        includeSubItems = self.settings.getboolean(section, "searchfilterincludesubitems")
-        searchDescription = self.settings.getboolean(section, "searchdescription")
-        regularExpression = self.settings.getboolean(section, "regularexpression")
+        includeSubItems = self.settings.getboolean(
+            section, "searchfilterincludesubitems"
+        )
+        searchDescription = self.settings.getboolean(
+            section, "searchdescription"
+        )
+        regularExpression = self.settings.getboolean(
+            section, "regularexpression"
+        )
         return (
             searchString,
             matchCase,
             includeSubItems,
             searchDescription,
-            regularExpression)
+            regularExpression,
+        )
 
     def createToolBarUICommands(self):
-        """ UI commands to put on the toolbar of this viewer. """
+        """UI commands to put on the toolbar of this viewer."""
         searchUICommand = uicommand.Search(viewer=self, settings=self.settings)
         return super().createToolBarUICommands() + (1, searchUICommand)
 
 
 # class FilterableViewerMixin:
 class FilterableViewerMixin(object):
-    """ A viewer that is filterable. This is a mixin class.
+    """A viewer that is filterable. This is a mixin class.
     Créer une visionneuse filtrable.
     """
 
     def __init__(self, *args, **kwargs):
-        log.debug("FilterableViewerMixin.__init__ : initialisation d'une visionneuse filtrable.")
+        log.debug(
+            "FilterableViewerMixin.__init__ : initialisation d'une visionneuse filtrable."
+        )
         self.__filterUICommands = None
         super().__init__(*args, **kwargs)
         log.debug("FilterableViewerMixin initialisé !")
@@ -148,12 +161,18 @@ class FilterableViewerMixin(object):
             self.__filterUICommands = self.createFilterUICommands()
         # Recreate the category filter commands every time because the category
         # filter menu depends on what categories there are
-        return self.__filterUICommands[:2] + self.createCategoryFilterCommands() + self.__filterUICommands[2:]
+        return (
+            self.__filterUICommands[:2]
+            + self.createCategoryFilterCommands()
+            + self.__filterUICommands[2:]
+        )
 
     def createFilterUICommands(self):
-        return [uicommand.ResetFilter(viewer=self),
-                uicommand.CategoryViewerFilterChoice(settings=self.settings),
-                None]
+        return [
+            uicommand.ResetFilter(viewer=self),
+            uicommand.CategoryViewerFilterChoice(settings=self.settings),
+            None,
+        ]
 
     def createToolBarUICommands(self):
         clearUICommand = uicommand.ResetFilter(viewer=self)
@@ -167,25 +186,40 @@ class FilterableViewerMixin(object):
 
     def createCategoryFilterCommands(self):
         categories = self.taskFile.categories()
-        commands = [_("&Categories"),
-                    uicommand.ResetCategoryFilter(categories=categories)]
+        commands = [
+            _("&Categories"),
+            uicommand.ResetCategoryFilter(categories=categories),
+        ]
         if categories:
             commands.append(None)
-            commands.extend(self.createToggleCategoryFilterCommands(categories.rootItems()))
+            commands.extend(
+                self.createToggleCategoryFilterCommands(categories.rootItems())
+            )
         return [tuple(commands)]
 
     def createToggleCategoryFilterCommands(self, categories):
         categories = list(categories)
         categories.sort(key=lambda category: category.subject())
-        commands = [uicommand.ToggleCategoryFilter(
-            category=eachCategory) for eachCategory in categories]
-        categoriesWithChildren = [eachCategory for eachCategory
-                                  in categories if eachCategory.children()]
+        commands = [
+            uicommand.ToggleCategoryFilter(category=eachCategory)
+            for eachCategory in categories
+        ]
+        categoriesWithChildren = [
+            eachCategory
+            for eachCategory in categories
+            if eachCategory.children()
+        ]
         if categoriesWithChildren:
             commands.append(None)
             for eachCategory in categoriesWithChildren:
-                subCommands = [_("%s (subcategories)") % eachCategory.subject()]
-                subCommands.extend(self.createToggleCategoryFilterCommands(eachCategory.children()))
+                subCommands = [
+                    _("%s (subcategories)") % eachCategory.subject()
+                ]
+                subCommands.extend(
+                    self.createToggleCategoryFilterCommands(
+                        eachCategory.children()
+                    )
+                )
                 commands.append(tuple(subCommands))
         return commands
 
@@ -193,22 +227,29 @@ class FilterableViewerMixin(object):
 class FilterableViewerForCategorizablesMixin(FilterableViewerMixin):
     def createFilter(self, items):
         items = super().createFilter(items)
-        filterOnlyWhenAllCategoriesMatch = self.settings.getboolean("view", "categoryfiltermatchall")
-        return category.filter.CategoryFilter(items,
-                                              categories=self.taskFile.categories(),
-                                              treeMode=self.isTreeViewer(),
-                                              filterOnlyWhenAllCategoriesMatch=filterOnlyWhenAllCategoriesMatch)
+        filterOnlyWhenAllCategoriesMatch = self.settings.getboolean(
+            "view", "categoryfiltermatchall"
+        )
+        return category.filter.CategoryFilter(
+            items,
+            categories=self.taskFile.categories(),
+            treeMode=self.isTreeViewer(),
+            filterOnlyWhenAllCategoriesMatch=filterOnlyWhenAllCategoriesMatch,
+        )
 
 
 class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
     def createFilter(self, taskList):
         taskList = super().createFilter(taskList)
-        return task.filter.ViewFilter(taskList, treeMode=self.isTreeViewer(),
-                                      **self.viewFilterOptions())
+        return task.filter.ViewFilter(
+            taskList, treeMode=self.isTreeViewer(), **self.viewFilterOptions()
+        )
 
     def viewFilterOptions(self):
-        return dict(hideCompositeTasks=self.isHidingCompositeTasks(),
-                    statusesToHide=self.hiddenTaskStatuses())
+        return dict(
+            hideCompositeTasks=self.isHidingCompositeTasks(),
+            statusesToHide=self.hiddenTaskStatuses(),
+        )
 
     def hideTaskStatus(self, status, hide=True):
         # self.__setBooleanSetting("hide%stasks" % status, hide)
@@ -224,8 +265,11 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
         return self.__getBooleanSetting(f"hide{status}tasks")
 
     def hiddenTaskStatuses(self):
-        return [status for status in task.Task.possibleStatuses()
-                if self.isHidingTaskStatus(status)]
+        return [
+            status
+            for status in task.Task.possibleStatuses()
+            if self.isHidingTaskStatus(status)
+        ]
 
     def hideCompositeTasks(self, hide=True):
         self.__setBooleanSetting("hidecompositetasks", hide)
@@ -247,9 +291,16 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
         return super().hasFilter() or self.presentation().hasFilter()
 
     def createFilterUICommands(self):
-        return super().createFilterUICommands() + [uicommand.ViewerHideTasks(
-            taskStatus, viewer=self, settings=self.settings) for taskStatus in
-             task.Task.possibleStatuses()] + [uicommand.ViewerHideCompositeTasks(viewer=self)]
+        return (
+            super().createFilterUICommands()
+            + [
+                uicommand.ViewerHideTasks(
+                    taskStatus, viewer=self, settings=self.settings
+                )
+                for taskStatus in task.Task.possibleStatuses()
+            ]
+            + [uicommand.ViewerHideCompositeTasks(viewer=self)]
+        )
 
     def __getBooleanSetting(self, setting):
         return self.settings.getboolean(self.settingsSection(), setting)
@@ -259,10 +310,12 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
 
 
 class SortableViewerMixin(object):
-    """ A viewer that is sortable. This is a mixin class. """
+    """A viewer that is sortable. This is a mixin class."""
 
     def __init__(self, *args, **kwargs):
-        log.debug("SortableViewerMixin.__init__ : initialisation d'une visionneuse triable.")
+        log.debug(
+            "SortableViewerMixin.__init__ : initialisation d'une visionneuse triable."
+        )
         self._sortUICommands = []
         super().__init__(*args, **kwargs)
         log.debug("SortableViewerMixin initialisée !")
@@ -273,13 +326,15 @@ class SortableViewerMixin(object):
 
     def registerPresentationObservers(self):
         super().registerPresentationObservers()
-        pub.subscribe(self.onSortOrderChanged,
-                      self.presentation().sortEventType())
+        pub.subscribe(
+            self.onSortOrderChanged, self.presentation().sortEventType()
+        )
 
     def detach(self):
         super().detach()
-        pub.unsubscribe(self.onSortOrderChanged,
-                        self.presentation().sortEventType())
+        pub.unsubscribe(
+            self.onSortOrderChanged, self.presentation().sortEventType()
+        )
 
     def onSortOrderChanged(self, sender):
         if sender == self.presentation():
@@ -291,16 +346,23 @@ class SortableViewerMixin(object):
         return self.SorterClass(presentation, **self.sorterOptions())
 
     def sorterOptions(self):
-        return dict(sortBy=self.sortKey(),
-                    sortCaseSensitive=self.isSortCaseSensitive())
+        return dict(
+            sortBy=self.sortKey(), sortCaseSensitive=self.isSortCaseSensitive()
+        )
 
     def sortBy(self, sortKey):
         self.presentation().sortBy(sortKey)
-        self.settings.set(self.settingsSection(), "sortby", str(self.presentation().sortKeys()))
+        self.settings.set(
+            self.settingsSection(),
+            "sortby",
+            str(self.presentation().sortKeys()),
+        )
 
     def isSortedBy(self, sortKey):
         sortKeys = self.presentation().sortKeys()
-        return sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
+        return sortKeys and (
+            sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey
+        )
 
     def sortKey(self):
         return eval(self.settings.get(self.settingsSection(), "sortby"))
@@ -311,14 +373,21 @@ class SortableViewerMixin(object):
 
     def setSortOrderAscending(self, ascending=True):
         self.presentation().sortAscending(ascending)
-        self.settings.set(self.settingsSection(), "sortby", str(self.presentation().sortKeys()))
+        self.settings.set(
+            self.settingsSection(),
+            "sortby",
+            str(self.presentation().sortKeys()),
+        )
 
     def isSortCaseSensitive(self):
-        return self.settings.getboolean(self.settingsSection(), "sortcasesensitive")
+        return self.settings.getboolean(
+            self.settingsSection(), "sortcasesensitive"
+        )
 
     def setSortCaseSensitive(self, sortCaseSensitive=True):
-        self.settings.set(self.settingsSection(), "sortcasesensitive",
-                          str(sortCaseSensitive))
+        self.settings.set(
+            self.settingsSection(), "sortcasesensitive", str(sortCaseSensitive)
+        )
         self.presentation().sortCaseSensitive(sortCaseSensitive)
 
     def getSortUICommands(self):
@@ -327,9 +396,9 @@ class SortableViewerMixin(object):
         return self._sortUICommands
 
     def createSortUICommands(self):
-        """ (Re)Create the UICommands for sorting. These UICommands are put
-            in the View->Sort menu and are used when the user clicks a column
-            header. """
+        """(Re)Create the UICommands for sorting. These UICommands are put
+        in the View->Sort menu and are used when the user clicks a column
+        header."""
         self._sortUICommands = self.createSortOrderUICommands()
         sortByCommands = self.createSortByUICommands()
         if sortByCommands:
@@ -337,10 +406,12 @@ class SortableViewerMixin(object):
             self._sortUICommands.extend(sortByCommands)
 
     def createSortOrderUICommands(self):
-        """ Create the UICommands for changing sort order, like ascending/
-            descending, and match case. """
-        return [uicommand.ViewerSortOrderCommand(viewer=self),
-                uicommand.ViewerSortCaseSensitive(viewer=self)]
+        """Create the UICommands for changing sort order, like ascending/
+        descending, and match case."""
+        return [
+            uicommand.ViewerSortOrderCommand(viewer=self),
+            uicommand.ViewerSortCaseSensitive(viewer=self),
+        ]
 
     def createSortByUICommands(self):
         """Create the UICommands for changing what the items are sorted by,
@@ -375,13 +446,13 @@ class SortableViewerMixin(object):
 
 class SortableViewerForEffortMixin(SortableViewerMixin):
     def createSortOrderUICommands(self):
-        """ Create the UICommands for changing sort order. The only
-            option for efforts is ascending/descending at the moment. """
+        """Create the UICommands for changing sort order. The only
+        option for efforts is ascending/descending at the moment."""
         return [uicommand.ViewerSortOrderCommand(viewer=self)]
 
     def createSortByUICommands(self):
-        """ Create the UICommands for changing what the items are sorted by,
-            i.e. the columns. Currently, effort is always sorted by period. """
+        """Create the UICommands for changing what the items are sorted by,
+        i.e. the columns. Currently, effort is always sorted by period."""
         return []
 
     def sortKey(self):
@@ -391,9 +462,13 @@ class SortableViewerForEffortMixin(SortableViewerMixin):
 
 class ManualOrderingMixin(object):
     def __init__(self, *args, **kwargs):
-        log.debug("ManualOrderingMixin.__init__ : initialisation de l'ordre manuel.")
+        log.debug(
+            "ManualOrderingMixin.__init__ : initialisation de l'ordre manuel."
+        )
         if "sort" not in self.viewerImages:
-            log.debug("ManualOrderingMixin.__init__ : ajoute 'sort' à la liste des icones visibles pour le tri manuel.")
+            log.debug(
+                "ManualOrderingMixin.__init__ : ajoute 'sort' à la liste des icones visibles pour le tri manuel."
+            )
             self.viewerImages = self.viewerImages + ["sort"]
         super().__init__(*args, **kwargs)
         log.debug("ManualOrderingMixin initialisée.")
@@ -404,24 +479,29 @@ class ManualOrderingMixin(object):
                 viewer=self,
                 value="ordering",
                 menuText=_("&Manual ordering"),
-                helpText=self.sortByOrderingHelpText
-            )] + super(ManualOrderingMixin, self).createSortByUICommands()
+                helpText=self.sortByOrderingHelpText,
+            )
+        ] + super().createSortByUICommands()
 
     def orderingImageIndices(self, item):
         index = self.imageIndex["sort"]
         return {wx.TreeItemIcon_Normal: index, wx.TreeItemIcon_Expanded: index}
 
 
-class SortableViewerForCategoriesMixin(ManualOrderingMixin, SortableViewerMixin):
+class SortableViewerForCategoriesMixin(
+    ManualOrderingMixin, SortableViewerMixin
+):
     sortBySubjectHelpText = _("Sort categories by subject")
     sortByDescriptionHelpText = _("Sort categories by description")
     sortByCreationDateTimeHelpText = _("Sort categories by creation date")
-    sortByModificationDateTimeHelpText = _("Sort categories by last modification date")
+    sortByModificationDateTimeHelpText = _(
+        "Sort categories by last modification date"
+    )
     sortByOrderingHelpText = _("Sort categories manually")
 
 
 class SortableViewerForCategorizablesMixin(SortableViewerMixin):
-    """ Mixin class to create uiCommands for sorting categorizables. """
+    """Mixin class to create uiCommands for sorting categorizables."""
 
     def createSortByUICommands(self):
         commands = super().createSortByUICommands()
@@ -467,7 +547,9 @@ class SortableViewerForTasksMixin(
     sortByDescriptionHelpText = _("Sort tasks by description")
     sortByCategoryHelpText = _("Sort tasks by category")
     sortByCreationDateTimeHelpText = _("Sort tasks by creation date")
-    sortByModificationDateTimeHelpText = _("Sort tasks by last modification date")
+    sortByModificationDateTimeHelpText = _(
+        "Sort tasks by last modification date"
+    )
     sortByOrderingHelpText = _("Sort tasks manually")
 
     def __init__(self, *args, **kwargs):
@@ -502,8 +584,10 @@ class SortableViewerForTasksMixin(
 
     def sorterOptions(self):
         options = super().sorterOptions()
-        options.update(treeMode=self.isTreeViewer(),
-                       sortByTaskStatusFirst=self.isSortByTaskStatusFirst())
+        options.update(
+            treeMode=self.isTreeViewer(),
+            sortByTaskStatusFirst=self.isSortByTaskStatusFirst(),
+        )
         return options
 
     def createSortOrderUICommands(self):
@@ -579,7 +663,7 @@ class SortableViewerForTasksMixin(
 
 
 class AttachmentDropTargetMixin(object):
-    """ Classe Mixin pour les téléspectateurs qui sont des cibles de dépôt pour les pièces jointes (attachments). """
+    """Classe Mixin pour les téléspectateurs qui sont des cibles de dépôt pour les pièces jointes (attachments)."""
 
     def widgetCreationKeywordArguments(self):
         kwargs = super().widgetCreationKeywordArguments()
@@ -589,11 +673,13 @@ class AttachmentDropTargetMixin(object):
         return kwargs
 
     def _addAttachments(self, attachments, item, **itemDialogKwargs):
-        """ Ajouter des pièces jointes. Si l'élément fait référence à un objet de domaine existant,
-            ajoutez les pièces jointes à cet objet. Si l'élément est None, utilisez le
-            newItemDialog pour créer un nouvel objet de domaine et ajouter les pièces jointes
-            à ce nouvel objet. """
-        print(f"mixin.AttachmentDropTargetMixin._addAttachments : 📌 [DEBUG] Ajout des attachements : {attachments}")
+        """Ajouter des pièces jointes. Si l'élément fait référence à un objet de domaine existant,
+        ajoutez les pièces jointes à cet objet. Si l'élément est None, utilisez le
+        newItemDialog pour créer un nouvel objet de domaine et ajouter les pièces jointes
+        à ce nouvel objet."""
+        print(
+            f"mixin.AttachmentDropTargetMixin._addAttachments : 📌 [DEBUG] Ajout des attachements : {attachments}"
+        )
         if item is None:
             itemDialogKwargs["subject"] = attachments[0].subject()
             if self.settings.get(
@@ -630,34 +716,134 @@ class AttachmentDropTargetMixin(object):
                 bitmap="new", attachments=attachments, **itemDialogKwargs
             )
             newItemDialog.Show()
+            # Use CallAfter to ensure proper focus after drop completes
+            wx.CallAfter(newItemDialog.Raise)
+            wx.CallAfter(newItemDialog.SetFocus)
         else:
-            addAttachment = command.AddAttachmentCommand(self.presentation(),
-                                                         [item], attachments=attachments)
+            addAttachment = command.AddAttachmentCommand(
+                self.presentation(), [item], attachments=attachments
+            )
             addAttachment.do()
+            # Open the item's editor on attachments tab, then open attachment editor
+            self._openItemEditorOnAttachmentsTab(item, attachments)
+
+    def _openItemEditorOnAttachmentsTab(self, item, newAttachments=None):
+        """Open the item's editor on the attachments tab.
+
+        If an editor for this item is already open, bring it to front and
+        switch to the attachments tab. Otherwise, create a new editor.
+        If newAttachments is provided, also open the AttachmentEditor for them.
+        """
+        from taskcoachlib.gui.dialog import editor
+        from taskcoachlib.domain import note
+
+        # Determine editor class based on item type
+        if isinstance(item, task.Task):
+            EditorClass = editor.TaskEditor
+            container = self.taskFile.tasks()
+        elif isinstance(item, category.Category):
+            EditorClass = editor.CategoryEditor
+            container = self.taskFile.categories()
+        elif isinstance(item, note.Note):
+            EditorClass = editor.NoteEditor
+            container = self.taskFile.notes()
+        else:
+            return
+
+        # Search for an existing open editor for this item
+        existingEditor = None
+        for window in wx.GetTopLevelWindows():
+            if isinstance(window, EditorClass):
+                # Check if this editor is editing our item
+                if hasattr(window, "_items") and item in window._items:
+                    existingEditor = window
+                    break
+
+        if existingEditor:
+            # Bring to front and switch to attachments tab
+            existingEditor.Raise()
+            existingEditor.SetFocus()
+            if hasattr(existingEditor, "_interior"):
+                existingEditor._interior.setFocus("attachments")
+            itemEditor = existingEditor
+        else:
+            # Create a new editor with columnName="attachments"
+            itemEditor = EditorClass(
+                wx.GetTopLevelParent(self),
+                [item],
+                self.settings,
+                container,
+                self.taskFile,
+                bitmap="edit",
+                columnName="attachments",
+            )
+            itemEditor.Show()
+            wx.CallAfter(itemEditor.Raise)
+            wx.CallAfter(itemEditor.SetFocus)
+
+        # Also open the AttachmentEditor for the new attachments
+        if newAttachments:
+            # Use CallAfter to ensure item editor is fully shown first
+            def openAttachmentEditor():
+                # Wrap attachments in AttachmentList container for Editor
+                # (item.attachments() returns a plain list)
+                attachmentContainer = attachment.AttachmentList(
+                    item.attachments()
+                )
+                attachmentEditor = editor.AttachmentEditor(
+                    itemEditor,  # Parent to the item editor
+                    newAttachments,
+                    self.settings,
+                    attachmentContainer,
+                    self.taskFile,
+                    bitmap="edit",
+                    columnName="subject",  # Open on Description tab, not Notes
+                )
+                attachmentEditor.Show()
+                attachmentEditor.Raise()
+                attachmentEditor.SetFocus()
+
+            wx.CallAfter(openAttachmentEditor)
 
     def onDropURL(self, item, url, **kwargs):
-        """ Cette méthode est appelée par le widget lorsqu'une URL est déposée sur un élément.
-        """
+        """Cette méthode est appelée par le widget lorsqu'une URL est déposée sur un élément."""
         attachments = [attachment.URIAttachment(url)]
         self._addAttachments(attachments, item, **kwargs)
 
     def onDropFiles(self, item, filenames, **kwargs):
         """This method is called by the widget when one or more files
         are dropped on an item."""
+        import os
+        import urllib.request
+
         attachmentBase = self.settings.get("file", "attachmentbase")
-        if attachmentBase:
-            filenames = [attachment.getRelativePath(filename, attachmentBase)
-                         for filename in filenames]
-        attachments = [attachment.FileAttachment(filename) for filename in filenames]
+        attachments = []
+        # if attachmentBase:
+        #     filenames = [attachment.getRelativePath(filename, attachmentBase)
+        #                  for filename in filenames]
+        # attachments = [attachment.FileAttachment(filename) for filename in filenames]
+        for filename in filenames:
+            if os.path.isdir(filename):
+                # Folders become URI attachments that open in file explorer
+                folder_url = "file://" + urllib.request.pathname2url(filename)
+                attachments.append(attachment.URIAttachment(folder_url))
+            else:
+                # Regular files become file attachments
+                if attachmentBase:
+                    filename = attachment.getRelativePath(
+                        filename, attachmentBase
+                    )
+                attachments.append(attachment.FileAttachment(filename))
         self._addAttachments(attachments, item, **kwargs)
 
     def onDropMail(self, item, mail, **kwargs):
-        """ This method is called by the widget when a mail message is dropped
-            on an item. """
+        """This method is called by the widget when a mail message is dropped
+        on an item."""
         att = attachment.MailAttachment(mail)
         subject, content = att.read()
-        self._addAttachments([att], item, subject=subject, description=content,
-                             **kwargs)
+        self._addAttachments(
+            [att], item, subject=subject, description=content, **kwargs
+        )
 
 
 class NoteColumnMixin(object):
