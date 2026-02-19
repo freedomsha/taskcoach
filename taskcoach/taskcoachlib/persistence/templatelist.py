@@ -19,15 +19,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import object
 # from io import open as file  # j'ai ajouté
 from io import open  # j'ai ajouté
+import logging
 import os
 import pickle
 import tempfile
 import shutil
+
 # try:
 from pubsub import pub
+
 # except ImportError:
 #    from taskcoachlib.thirdparty.pubsub import pub
 from taskcoachlib.persistence.xml import TemplateXMLWriter, TemplateXMLReader
+
+log = logging.getLogger(__name__)
 
 
 class TemplateList(object):
@@ -47,37 +52,50 @@ class TemplateList(object):
 
     def _readTemplate(self, filename, TemplateReader, openFile):
         try:
-            fd = openFile(os.path.join(self._path, filename), "r")
+            fd = openFile(
+                os.path.join(self._path, filename), "r", encoding="utf-8"
+            )
         except IOError:
             return
         try:
             return TemplateReader(fd).read()
-        except Exception:  # else ?
-            pass
+        except Exception as e:  # else ?
+            log.error(
+                f"TemplateList._readTemplate : ERROR! Reading template {filename}: {e}"
+            )
         finally:
             fd.close()
 
     def _templateFilenames(self):
         if not os.path.exists(self._path):
             return []
-        filenames = [name for name in os.listdir(self._path) if
-                     name.endswith(".tsktmpl") and os.path.exists(os.path.join(self._path, name))]
+        filenames = [
+            name
+            for name in os.listdir(self._path)
+            if name.endswith(".tsktmpl")
+            and os.path.exists(os.path.join(self._path, name))
+        ]
         listName = os.path.join(self._path, "list.pickle")
         if os.path.exists(listName):
             try:
                 # filenames = pickle.load(file(listName, "rb"))
                 filenames = pickle.load(open(listName, "rb"))
-            except Exception:
+            except (OSError, pickle.UnpicklingError, EOFError):
                 pass
         return filenames
 
     def save(self):
         # pickle.dump([name for task, name in self._templates], file(os.path.join(self._path, "list.pickle"), "wb"))
-        pickle.dump([name for task, name in self._templates], open(os.path.join(self._path, "list.pickle"), "wb"))
+        pickle.dump(
+            [name for task, name in self._templates],
+            open(os.path.join(self._path, "list.pickle"), "wb"),
+        )
 
         for task, name in self._templates:
             # templateFile = file(os.path.join(self._path, name), "w")
-            templateFile = open(os.path.join(self._path, name), "w")
+            templateFile = open(
+                os.path.join(self._path, name), "w", encoding="utf-8"
+            )
             writer = TemplateXMLWriter(templateFile)
             writer.write(task)
             templateFile.close()
@@ -91,12 +109,14 @@ class TemplateList(object):
         handle, filename = tempfile.mkstemp(".tsktmpl", dir=self._path)
         os.close(handle)
         # templateFile = file(filename, "w")
-        templateFile = open(filename, "w")
+        templateFile = open(filename, "w", encoding="utf-8")
         writer = TemplateXMLWriter(templateFile)
         writer.write(task.copy())
         templateFile.close()
         # theTask = TemplateXMLReader(file(filename, "rU")).read()
-        theTask = TemplateXMLReader(open(filename, "r")).read()
+        theTask = TemplateXMLReader(
+            open(filename, "r", encoding="utf-8")
+        ).read()
         self._templates.append((theTask, os.path.split(filename)[-1]))
         return theTask
 
@@ -105,12 +125,16 @@ class TemplateList(object):
         del self._templates[idx]
 
     def copyTemplate(self, filename):
-        shutil.copyfile(filename,
-                        os.path.join(self._path, os.path.split(filename)[-1]))
+        shutil.copyfile(
+            filename, os.path.join(self._path, os.path.split(filename)[-1])
+        )
         pub.sendMessage("templates.saved")
 
     def swapTemplates(self, i, j):
-        self._templates[i], self._templates[j] = self._templates[j], self._templates[i]
+        self._templates[i], self._templates[j] = (
+            self._templates[j],
+            self._templates[i],
+        )
 
     def __len__(self):
         return len(self._templates)

@@ -69,8 +69,10 @@ import glob
 import math
 import re
 from taskcoachlib.domain import date
+
 # try:
 from pubsub import pub
+
 # except ImportError:
 #    try:
 #        from taskcoachlib.thirdparty.pubsub import pub
@@ -117,7 +119,12 @@ class BackupManifest(object):
             # with file(xmlName, 'rb') as fp:
             with open(xmlName, "rb") as fp:
                 root = eTree.parse(fp).getroot()
-                self.__files = dict([(node.attrib["sha"], node.text) for node in root.findall("file")])
+                self.__files = dict(
+                    [
+                        (node.attrib["sha"], node.text)
+                        for node in root.findall("file")
+                    ]
+                )
         else:
             self.__files = dict()
 
@@ -129,7 +136,10 @@ class BackupManifest(object):
             node.attrib["sha"] = sha
             node.text = filename
         # with file(os.path.join(self.__settings.pathToBackupsDir(), 'backups.xml'), 'wb') as fp:
-        with open(os.path.join(self.__settings.pathToBackupsDir(), "backups.xml"), "wb") as fp:
+        with open(
+            os.path.join(self.__settings.pathToBackupsDir(), "backups.xml"),
+            "wb",
+        ) as fp:
             eTree.ElementTree(root).write(fp)
 
     def listFiles(self):
@@ -139,9 +149,19 @@ class BackupManifest(object):
         backups = list()
         for name in os.listdir(self.backupPath(filename)):
             try:
-                comp = map(int, [name[0:4], name[4:6], name[6:8], name[8:10], name[10:12], name[12:14]])
+                comp = map(
+                    int,
+                    [
+                        name[0:4],
+                        name[4:6],
+                        name[6:8],
+                        name[8:10],
+                        name[10:12],
+                        name[12:14],
+                    ],
+                )
                 # comp = list(map(int, [name[0:4], name[4:6], name[6:8], name[8:10], name[10:12], name[12:14]]))
-            except Exception:  # else ?
+            except Exception:  # else ? ValueError
                 continue
             backups.append(date.DateTime(*tuple(comp)))
         return list(reversed(sorted(backups)))
@@ -167,8 +187,14 @@ class BackupManifest(object):
         if os.path.exists(dstName):
             os.remove(dstName)
         sha = SHA(filename)
-        src = bz2.BZ2File(os.path.join(self.__settings.pathToBackupsDir(), sha,
-                                       dateTime.strftime("%Y%m%d%H%M%S.bak")), "r")
+        src = bz2.BZ2File(
+            os.path.join(
+                self.__settings.pathToBackupsDir(),
+                sha,
+                dateTime.strftime("%Y%m%d%H%M%S.bak"),
+            ),
+            "r",
+        )
         try:
             # with file(dstName, 'wb') as dst:
             with open(dstName, "wb") as dst:
@@ -178,9 +204,9 @@ class BackupManifest(object):
 
 
 class AutoBackup(object):
-    """ AutoBackup crée une copie de sauvegarde du fichier de tâche
-        avant qu'il ne soit écrasé. Pour éviter que le nombre de sauvegardes n'augmente indéfiniment,
-        AutoBackup supprime les anciennes sauvegardes. """
+    """AutoBackup crée une copie de sauvegarde du fichier de tâche
+    avant qu'il ne soit écrasé. Pour éviter que le nombre de sauvegardes n'augmente indéfiniment,
+    AutoBackup supprime les anciennes sauvegardes."""
 
     minNrOfBackupFiles = 3  # Keep at least three backup files.
     maxNrOfBackupFilesToRemoveAtOnce = 3  # Slowly reduce the number of backups
@@ -193,7 +219,7 @@ class AutoBackup(object):
         pub.subscribe(self.onTaskFileRead, "taskfile.justRead")
 
     def onTaskFileRead(self, taskFile):
-        """ Copies old-style backups (in the same dictory as the task file) to the
+        """Copies old-style backups (in the same dictory as the task file) to the
         user-specific backup directory. The backup directory layout is as follows:
 
           <backupdir>/backups.xml          List of backups
@@ -201,7 +227,7 @@ class AutoBackup(object):
                                            hash of the task file name.
 
         backups.xml maps the SHA to actual file names, for enumeration in the
-        GUI. """
+        GUI."""
 
         if not taskFile.filename():
             return
@@ -215,14 +241,19 @@ class AutoBackup(object):
         rx = re.compile(r"\.(\d{8})-(\d{6})\.tsk\.bak$")
         for name in os.listdir(os.path.split(taskFile.filename())[0] or "."):
             try:
-                srcName = os.path.join(os.path.split(taskFile.filename())[0], name)
+                srcName = os.path.join(
+                    os.path.split(taskFile.filename())[0], name
+                )
             except UnicodeDecodeError:
                 # See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=764763
                 continue
 
             mt = rx.search(name)
             if mt:
-                dstName = os.path.join(man.backupPath(taskFile.filename()), "%s%s.bak" % (mt.group(1), mt.group(2)))
+                dstName = os.path.join(
+                    man.backupPath(taskFile.filename()),
+                    "%s%s.bak" % (mt.group(1), mt.group(2)),
+                )
                 if os.path.exists(dstName):
                     os.remove(dstName)
                 # with file(srcName, 'rb') as src:
@@ -235,8 +266,8 @@ class AutoBackup(object):
                 os.remove(srcName)
 
     def onTaskFileAboutToSave(self, taskFile):
-        """ Just before a task file is about to be saved, and backups are on,
-            create a backup and remove extraneous backup files. """
+        """Just before a task file is about to be saved, and backups are on,
+        create a backup and remove extraneous backup files."""
         if taskFile.exists():
             self.createBackup(taskFile)
             self.removeExtraneousBackupFiles(taskFile)
@@ -248,11 +279,16 @@ class AutoBackup(object):
             os.makedirs(path)
         self.__copyfile(taskFile.filename(), filename)
 
-    def removeExtraneousBackupFiles(self, taskFile, remove=os.remove,
-                                    glob=glob.glob):  # pylint: disable=W0621
+    def removeExtraneousBackupFiles(
+        self, taskFile, remove=os.remove, glob=glob.glob
+    ):  # pylint: disable=W0621
         backupFiles = self.backupFiles(taskFile, glob)
-        for _ in range(min(self.maxNrOfBackupFilesToRemoveAtOnce,
-                           self.numberOfExtraneousBackupFiles(backupFiles))):
+        for _ in range(
+            min(
+                self.maxNrOfBackupFilesToRemoveAtOnce,
+                self.numberOfExtraneousBackupFiles(backupFiles),
+            )
+        ):
             try:
                 remove(self.leastUniqueBackupFile(backupFiles))
             except OSError:
@@ -262,25 +298,28 @@ class AutoBackup(object):
         return max(0, len(backupFiles) - self.maxNrOfBackupFiles(backupFiles))
 
     def maxNrOfBackupFiles(self, backupFiles):
-        """ Le nombre maximum de fichiers de sauvegarde que nous conservons dépend de l'âge
-            du fichier de sauvegarde le plus ancien. Plus le fichier de sauvegarde est ancien (c'est-à-dire
-            jamais supprimé), plus nous conservons de fichiers de sauvegarde. """
+        """Le nombre maximum de fichiers de sauvegarde que nous conservons dépend de l'âge
+        du fichier de sauvegarde le plus ancien. Plus le fichier de sauvegarde est ancien (c'est-à-dire
+        jamais supprimé), plus nous conservons de fichiers de sauvegarde."""
         if not backupFiles:
             return 0
         age = date.DateTime.now() - self.backupDateTime(backupFiles[0])
         ageInMinutes = age.hours() * 60
         # We keep log(ageInMinutes) backups, but at least minNrOfBackupFiles:
-        return max(self.minNrOfBackupFiles, int(math.log(max(1, ageInMinutes))))
+        return max(
+            self.minNrOfBackupFiles, int(math.log(max(1, ageInMinutes)))
+        )
 
     def leastUniqueBackupFile(self, backupFiles):
-        """ Recherchez le fichier de sauvegarde le plus proche (dans le temps) de ses voisins,
-            c'est-à-dire le moins unique. Ignorez les sauvegardes les plus anciennes et les plus récentes.
+        """Recherchez le fichier de sauvegarde le plus proche (dans le temps) de ses voisins,
+        c'est-à-dire le moins unique. Ignorez les sauvegardes les plus anciennes et les plus récentes.
         """
         assert len(backupFiles) > self.minNrOfBackupFiles
         deltas = []
         for index in range(1, len(backupFiles) - 1):
-            delta = self.backupDateTime(backupFiles[index + 1]) - \
-                    self.backupDateTime(backupFiles[index - 1])
+            delta = self.backupDateTime(
+                backupFiles[index + 1]
+            ) - self.backupDateTime(backupFiles[index - 1])
             deltas.append((delta, backupFiles[index]))
         deltas.sort()
         return deltas[0][1]
@@ -291,14 +330,27 @@ class AutoBackup(object):
         return sorted(glob("%s.bak" % os.path.join(root, "[0-9]" * 14)))
 
     def backupFilename(self, taskFile, now=date.DateTime.now):
-        """ Générez un nom de fichier de sauvegarde pour la date/heure spécifiée. """
+        """Générez un nom de fichier de sauvegarde pour la date/heure spécifiée."""
         sha = SHA(taskFile.filename())
-        return os.path.join(self.__settings.pathToBackupsDir(), sha, now().strftime("%Y%m%d%H%M%S.bak"))
+        return os.path.join(
+            self.__settings.pathToBackupsDir(),
+            sha,
+            now().strftime("%Y%m%d%H%M%S.bak"),
+        )
 
     @staticmethod
     def backupDateTime(backupFilename):
-        """ Analysez la date et l'heure du nom de fichier et renvoyez une instance DateTime."""
+        """Analysez la date et l'heure du nom de fichier et renvoyez une instance DateTime."""
         dt = os.path.split(backupFilename)[-1][:-4]
-        parts = (int(part) for part in (dt[0:4], dt[4:6], dt[6:8],
-                                        dt[8:10], dt[10:12], dt[12:14]))
+        parts = (
+            int(part)
+            for part in (
+                dt[0:4],
+                dt[4:6],
+                dt[6:8],
+                dt[8:10],
+                dt[10:12],
+                dt[12:14],
+            )
+        )
         return date.DateTime(*parts)  # pylint: disable=W0142
