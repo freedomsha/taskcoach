@@ -38,7 +38,7 @@ except ImportError:
     )
 
 _system = platform.system()
-log.debug("filesystem : _system=", _system)
+log.debug("filesystem : _system=%s", _system)
 if _system == "Linux":
     from .fs_inotify import *
 elif _system == "Windows":

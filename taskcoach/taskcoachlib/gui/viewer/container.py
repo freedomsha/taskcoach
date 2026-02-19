@@ -163,16 +163,17 @@ class ViewerContainer(object):
                 )
                 return d[attribute]
         # Fallback classique
-        # return getattr(viewer, attribute)
-        attr_to_ret = getattr(viewer, attribute)
+        return getattr(viewer, attribute)
+        # # Pour obtenir le log :
+        # attr_to_ret = getattr(viewer, attribute)
+        # # log.info(
+        # #     f"ViewerContainer.__getattr__ retourne l'attribut {attr_to_ret} avec l'ancienne méthode !"
+        # # )
         # log.info(
-        #     f"ViewerContainer.__getattr__ retourne l'attribut {attr_to_ret} avec l'ancienne méthode !"
+        #     "ViewerContainer.__getattr__ retourne l'attribut %s avec l'ancienne méthode !",
+        #     attr_to_ret,
         # )
-        log.info(
-            "ViewerContainer.__getattr__ retourne l'attribut %s avec l'ancienne méthode !",
-            attr_to_ret,
-        )
-        return attr_to_ret
+        # return attr_to_ret
 
     def activeViewer(self):
         """Renvoie la visionneuse active (sélectionnée)."""

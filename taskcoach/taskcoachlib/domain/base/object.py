@@ -1874,9 +1874,9 @@ class CompositeObject(
             parent = self.parent()
             if parent:
                 subject = f"{parent.subject(recursive=True)} -> {subject}"
-        log.debug(
-            f"CompositeObject.subject : retourne le sujet de {self.__class__.__name__} id={self.id()} : {subject}."
-        )
+        # log.debug(
+        #     f"CompositeObject.subject : retourne le sujet de {self.__class__.__name__} id={self.id()} : {subject}."
+        # )
         # RecursionError: maximum recursion depth exceeded
         return subject
 

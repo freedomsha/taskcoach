@@ -419,9 +419,9 @@ class Task(
     def __setattr__(self, name, value):
         # if name == "_Task__status" and not isinstance(value, mod_status.TaskStatus):
         #     raise TypeError(f"Tentative d'assignation invalide à self.__status : {value} ({type(value)})")
-        log.debug(
-            f"Task.__setattr__ : utilise la méthode super avec name={name} et value={value}."
-        )
+        # log.debug(
+        #     f"Task.__setattr__ : utilise la méthode super avec name={name} et value={value}."
+        # )
         super().__setattr__(name, value)
 
     @patterns.eventSource

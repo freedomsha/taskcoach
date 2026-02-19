@@ -316,8 +316,8 @@ class wxApp(wx.App):
         # from taskcoachlib.meta.debug import log_step
 
         log.debug(
-            "Unhandled exception in MainLoop:",
-            traceback.format_exc(),
+            "Unhandled exception in MainLoop: %s",
+            traceback.format_exc()
         )
         return True
 
