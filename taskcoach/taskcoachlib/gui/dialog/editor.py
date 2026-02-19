@@ -53,27 +53,33 @@ Classes :
 
 # from builtins import str
 # from builtins import range
-
+# import datetime
 import wx
 import logging
 
 import os.path
+
 # try:
 from pubsub import pub
+
 # except ImportError:
 #    from taskcoachlib.thirdparty.pubsub import pub
 # else:
 #    from wx.lib.pubsub import pub
 
 from taskcoachlib import widgets, patterns, command, operating_system, render
-from taskcoachlib.domain import task, date, note, attachment
+from taskcoachlib.domain import task, date, note, attachment, base
+
 # from taskcoachlib.gui import uicommand, windowdimensionstracker
 from taskcoachlib.gui.uicommand import uicommand
-from taskcoachlib.gui import windowdimensionstracker
+from taskcoachlib.gui import windowdimensionstracker, artprovider
+
 # import taskcoachlib.gui.viewer
 from taskcoachlib.gui import viewer
 from taskcoachlib.gui.viewer.attachment import AttachmentViewer
-from taskcoachlib.gui.viewer.category import BaseCategoryViewer  # circular import !
+from taskcoachlib.gui.viewer.category import (
+    BaseCategoryViewer,
+)  # circular import !
 from taskcoachlib.gui.viewer.effort import EffortViewer
 from taskcoachlib.gui.viewer.note import BaseNoteViewer
 from taskcoachlib.gui.viewer.task import CheckableTaskViewer
@@ -90,6 +96,63 @@ from taskcoachlib.thirdparty import smartdatetimectrl as sdtc
 from taskcoachlib.help.balloontips import BalloonTipManager
 
 log = logging.getLogger(__name__)
+
+
+# --- System Theme Resolution Helpers ---
+# Single point for converting domain symbolic constants to wx values.
+# Domain SSOT methods return these constants; UI uses these helpers to resolve.
+
+
+def resolve_color(value):
+    """Convert domain color value to wx.Colour.
+
+    Args:
+        value: Color tuple (r,g,b), symbolic constant, or wx.Colour
+
+    Returns:
+        wx.Colour instance
+    """
+    if value == base.SYSTEM_FG_COLOR:
+        return wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+    elif value == base.SYSTEM_BG_COLOR:
+        return wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
+    elif isinstance(value, (tuple, list)):
+        return wx.Colour(*value)
+    elif isinstance(value, wx.Colour):
+        return value
+    else:
+        import inspect
+
+        caller = inspect.stack()[1]
+        log.debug(
+            f"resolve_color: unhandled value {repr(value)}"
+            f"from {caller[1]}:{caller[1]:d} in {caller[3]}"
+        )
+        return wx.NullColour
+
+
+def resolve_font(value):
+    """Convert domain font value to wx.Font.
+
+    Args:
+        value: wx.Font or symbolic constant (SYSTEM_FONT)
+
+    Returns:
+        wx.Font instance, or wx.NullFont if value is unhandled (bug)
+    """
+    if value == base.SYSTEM_FONT:
+        return wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+    elif isinstance(value, wx.Font):
+        return value
+    else:
+        import inspect
+
+        caller = inspect.stack()[1]
+        log.debug(
+            f"resolve_font: unhandled value {repr(value)}"
+            f"from {caller[1]}:{caller[1]:d} in {caller[3]}"
+        )
+        return wx.NullFont
 
 
 # Classe Page qui représente une page d'édition
@@ -110,6 +173,7 @@ class Page(patterns.Observer, widgets.BookPage):
         setFocusOnEntry (self, column_name) : Définit le focus sur une entrée spécifique.
         close (self) : Ferme la page et libère les ressources.
     """
+
     columns = 2  # Par défaut, deux colonnes pour l'édition.
 
     def __init__(self, items, parent, *args, **kwargs):
@@ -171,10 +235,12 @@ class Page(patterns.Observer, widgets.BookPage):
         # S'assurer que 'columns' est dans kwargs avant d'appeler super().
         # La valeur de 'Page.columns' est utilisée ici comme valeur par défaut pour *cette* page,
         # mais elle peut être surchargée si 'columns' est déjà dans kwargs.
-        if 'columns' not in kwargs:
-            kwargs['columns'] = self.columns
+        if "columns" not in kwargs:
+            kwargs["columns"] = self.columns
             # --- LOG 3 : Après l'ajout de 'columns' ---
-            log.debug(f"  Page.__init__ - Ajout de 'columns' à kwargs: {self.columns}")
+            log.debug(
+                f"  Page.__init__ - Ajout de 'columns' à kwargs: {self.columns}"
+            )
         log.debug(f"  Page.__init__ - kwargs après 'columns' check: {kwargs}")
 
         # Appelle le constructeur de la super-classe (via le MRO).
@@ -264,6 +330,9 @@ class Page(patterns.Observer, widgets.BookPage):
             the_entry = self.entries()[column_name]
         except KeyError:
             the_entry = self.entries()["firstEntry"]
+            # the_entry = self.entries().get("firstEntry")
+            if the_entry is None:
+                return
         self.__set_selection_and_focus(the_entry)
 
     def __set_selection_and_focus(self, the_entry):
@@ -279,19 +348,21 @@ class Page(patterns.Observer, widgets.BookPage):
         if the_entry is not None and self.focusTextControl():
             the_entry.SetFocus()
             try:
-                if operating_system.isWindows() and isinstance(the_entry, wx.TextCtrl):
-                    # XXXFIXME: See SR #325. Disable this for Now.
-
-                    # This ensures that if the TextCtrl value is more than can
-                    # be displayed, it will display the start instead of the
-                    # end:
-                    try:
-                        import SendKeys
-                    except ImportError:
-                        from taskcoachlib.thirdparty import (
-                            SendKeys,
-                        )  # pylint: disable=W0404
-                    SendKeys.SendKeys("{END}+{HOME}")
+                if operating_system.isWindows() and isinstance(
+                    the_entry, wx.TextCtrl
+                ):
+                    # # XXXFIXME: See SR #325. Disable this for Now.
+                    #
+                    # # This ensures that if the TextCtrl value is more than can
+                    # # be displayed, it will display the start instead of the
+                    # # end:
+                    # try:
+                    #     import SendKeys
+                    # except ImportError:
+                    #     from taskcoachlib.thirdparty import (
+                    #         SendKeys,
+                    #     )  # pylint: disable=W0404
+                    # SendKeys.SendKeys("{END}+{HOME}")
 
                     # Scrol to left...
                     the_entry.SetInsertionPoint(0)
@@ -318,20 +389,34 @@ class Page(patterns.Observer, widgets.BookPage):
         #     if isinstance(each_entry, widgets.DateTimeCtrl):
         #         each_entry.Cleanup()
 
+
+class ScrolledPage(patterns.Observer, widgets.notebook.ScrolledBookPage):
+    """A scrollable page for dialogs with lots of content (e.g., Appearance tab)."""
+
+    columns = 2
+
+    def __init__(self, items, *args, **kwargs):
+        self.items = items
+        super().__init__(columns=self.columns, *args, **kwargs)
+        self.addEntries()
+        self.fit()
+
+
 # Les autres classes de la même manière...
 
 
 class SubjectPage(Page):
     """
-        Page d'édition pour modifier le sujet d'un objet dans Task Coach.
+    Page d'édition pour modifier le sujet d'un objet dans Task Coach.
 
-        Cette page permet à l'utilisateur de modifier le champ "sujet" des objets,
-        qui peut représenter le titre ou la description courte de l'objet.
+    Cette page permet à l'utilisateur de modifier le champ "sujet" des objets,
+    qui peut représenter le titre ou la description courte de l'objet.
 
-        Méthodes :
-            addEntries (self) : Ajoute les champs d'entrée pour l'édition du sujet.
-            subject (self) : Retourne l'objet d'édition du sujet.
-        """
+    Méthodes :
+        addEntries (self) : Ajoute les champs d'entrée pour l'édition du sujet.
+        subject (self) : Retourne l'objet d'édition du sujet.
+    """
+
     pageName = "subject"
     pageTitle = _("Description")
     pageIcon = "pencil_icon"
@@ -440,7 +525,10 @@ class SubjectPage(Page):
         self.addEntry(  # de BookPage !
             _("Subject"),  # Ceci devient controls[0] (le texte du libellé)
             self._subjectEntry,  # Ceci devient controls[1] (le wx.TextCtrl)
-            flags=[wx.ALIGN_RIGHT, wx.EXPAND],  # Ceci devient flags[0] et flags[1]
+            flags=[
+                wx.ALIGN_RIGHT,
+                wx.EXPAND,
+            ],  # Ceci devient flags[0] et flags[1]
         )
         # Add a comment to explain the purpose of this code
 
@@ -451,7 +539,9 @@ class SubjectPage(Page):
         Cette méthode privée calcule le texte à afficher pour la date de modification,
         en tenant compte des dates minimale et maximale.
         """
-        modification_datetimes = [item.modificationDateTime() for item in self.items]
+        modification_datetimes = [
+            item.modificationDateTime() for item in self.items
+        ]
         # TODO: A ESSAYER :
         # modification_datetimes: List[datetime.datetime] = [
         #     item.modificationDateTime() for item in self.items
@@ -471,7 +561,10 @@ class SubjectPage(Page):
         modification_text = render.dateTime(
             min_modification_datetime, humanReadable=True
         )
-        if max_modification_datetime - min_modification_datetime > date.ONE_MINUTE:
+        if (
+            max_modification_datetime - min_modification_datetime
+            > date.ONE_MINUTE
+        ):
             modification_text += " - %s" % render.dateTime(
                 max_modification_datetime, humanReadable=True
             )
@@ -480,21 +573,24 @@ class SubjectPage(Page):
     def addDescriptionEntry(self):
         # pylint: disable=W0201
         """
-    Adds a multi-line text control for editing the description of the selected task(s).
-    It also creates an AttributeSync object to manage synchronization between the control
-    and the task object(s). Optionally sets a custom font based on application settings.
-    """
+        Adds a multi-line text control for editing the description of the selected task(s).
+        It also creates an AttributeSync object to manage synchronization between the control
+        and the task object(s). Optionally sets a custom font based on application settings.
+        """
+
         def combined_description(items):
-            return "[%s]\n\n" % _("Edit to change all descriptions") + "\n\n".join(
-                item.description() for item in items
-            )
+            return "[%s]\n\n" % _(
+                "Edit to change all descriptions"
+            ) + "\n\n".join(item.description() for item in items)
 
         current_description = (
             self.items[0].description()
             if len(self.items) == 1
             else combined_description(self.items)
         )
-        self._descriptionEntry = widgets.MultiLineTextCtrl(self, current_description)
+        self._descriptionEntry = widgets.MultiLineTextCtrl(
+            self, current_description
+        )
         native_info_string = self._settings.get("editor", "descriptionfont")
         # font = wx.FontFromNativeInfoString(native_info_string) if native_info_string else None
         # https://pythonhosted.org/wxPython/wx.Font.html#wx.Font
@@ -536,7 +632,9 @@ class SubjectPage(Page):
         creation_datetimes = [item.creationDateTime() for item in self.items]
         min_creation_datetime = min(creation_datetimes)
         max_creation_datetime = max(creation_datetimes)
-        creation_text = render.dateTime(min_creation_datetime, humanReadable=True)
+        creation_text = render.dateTime(
+            min_creation_datetime, humanReadable=True
+        )
         if max_creation_datetime - min_creation_datetime > date.ONE_MINUTE:
             creation_text += " - %s" % render.dateTime(
                 max_creation_datetime, humanReadable=True
@@ -571,6 +669,24 @@ class SubjectPage(Page):
                     eventSource=self.items[0],
                 )
 
+    def __modification_text(self):
+        modification_datetimes = [
+            item.modificationDateTime() for item in self.items
+        ]
+        min_modification_datetime = min(modification_datetimes)
+        max_modification_datetime = max(modification_datetimes)
+        modification_text = render.dateTime(
+            min_modification_datetime, humanReadable=True
+        )
+        if (
+            max_modification_datetime - min_modification_datetime
+            > date.ONE_MINUTE
+        ):
+            modification_text += " - %s" % render.dateTime(
+                max_modification_datetime, humanReadable=True
+            )
+        return modification_text
+
     def onAttributeChanged(self, newValue, sender):
         """Ces méthodes sont des callbacks appelés lorsque la date de modification
         d'une tâche change.
@@ -580,8 +696,8 @@ class SubjectPage(Page):
 
     def onAttributeChanged_Deprecated(self, *args, **kwargs):
         """Ces méthodes sont des callbacks appelés lorsque la date de modification d'une tâche change.
-         Elles mettent à jour le texte de l'étiquette correspondante.
-         """
+        Elles mettent à jour le texte de l'étiquette correspondante.
+        """
         self._modificationTextEntry.SetLabel(self.__modification_text())
 
     def close(self):
@@ -621,6 +737,7 @@ class TaskSubjectPage(SubjectPage):
         addEntries (self) : Ajoute les champs d'entrée pour l'édition du sujet et de la priorité.
                             Méthode lancée dans la classe SubjectPage.
     """
+
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
     #     super().__init__(items, parent, settings, args, kwargs)
@@ -636,7 +753,9 @@ class TaskSubjectPage(SubjectPage):
         log.debug(f"  *args (reçus par SubjectPage): {args}")
         log.debug(f"  **kwargs (reçus par SubjectPage): {kwargs}")
         # --- LOG 2 : Avant l'appel à super().__init__ ---
-        log.debug(f"  TaskSubjectPage.__init__ - Appel de super().__init__ avec:")
+        log.debug(
+            f"  TaskSubjectPage.__init__ - Appel de super().__init__ avec:"
+        )
         log.debug(f"    items passé à super: {items}")
         log.debug(f"    parent passé à super: {parent}")
         log.debug(f"    settings passé à super: {settings}")
@@ -670,12 +789,18 @@ class TaskSubjectPage(SubjectPage):
         Il crée un objet AttributeSync pour synchroniser la valeur du contrôle de rotation avec l'attribut "priorité" du ou des objets de tâche.
         Il ajoute une étiquette d'entrée pour "Priorité" et le faites tourner le contrôle sur la page en utilisant self.addEntry.
         """
-        current_priority = self.items[0].priority() if len(self.items) == 1 else 0
+        current_priority = (
+            self.items[0].priority() if len(self.items) == 1 else 0
+        )
         # Nous introduisons une constante nommée MAX_PRIORITY pour améliorer la lisibilité
         # et faciliter la modification de la valeur de priorité maximale à l'avenir.
         MAX_PRIORITY = 10
         self._priorityEntry = widgets.SpinCtrl(
-            self, size=(100, -1), value=current_priority, min=0, max=MAX_PRIORITY
+            self,
+            size=(100, -1),
+            value=current_priority,
+            min=0,
+            max=MAX_PRIORITY,
         )
         self._prioritySync = attributesync.AttributeSync(
             "priority",
@@ -713,6 +838,7 @@ class CategorySubjectPage(SubjectPage):
     Cette classe hérite de SubjectPage et ajoute la gestion des sous-catégories exclusives.
     Cette page permet de modifier le titre d'une catégorie dans Task Coach.
     """
+
     # Utilise la logique d'édition du sujet de base.
     # J'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
@@ -729,6 +855,7 @@ class CategorySubjectPage(SubjectPage):
         self.addSubjectEntry()  # Sujet
         self.addDescriptionEntry()  # Description
         self.addExclusiveSubcategoriesEntry()  # Sous-catégories exclusives (ajouté ici)
+        self.addStylePriorityEntry()
         self.addCreationDateTimeEntry()  # Date de création
         self.addModificationDateTimeEntry()  # Date de modification
 
@@ -738,12 +865,27 @@ class CategorySubjectPage(SubjectPage):
         Ajoute un champ pour définir si les sous-catégories doivent être exclusives.
         """
         currentExclusivity = (
-            self.items[0].hasExclusiveSubcategories() if len(self.items) == 1 else False
+            self.items[0].hasExclusiveSubcategories()
+            if len(self.items) == 1
+            else False
         )
+        panel = wx.Panel(self)
+        panelSizer = wx.BoxSizer(wx.HORIZONTAL)
         self._exclusiveSubcategoriesCheckBox = wx.CheckBox(
             self, label=_("Mutually exclusive")
         )
         self._exclusiveSubcategoriesCheckBox.SetValue(currentExclusivity)
+        panelSizer.Add(
+            self._exclusiveSubcategoriesCheckBox, 0, wx.ALIGN_CENTER_VERTICAL
+        )
+        hintText = wx.StaticText(
+            panel, label=_("Subcategories are mutually exclusive")
+        )
+        hintText.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        panelSizer.Add(hintText, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
+        panel.SetSizer(panelSizer)
         self._exclusiveSubcategoriesSync = attributesync.AttributeSync(
             "hasExclusiveSubcategories",
             self._exclusiveSubcategoriesCheckBox,
@@ -758,6 +900,26 @@ class CategorySubjectPage(SubjectPage):
             self._exclusiveSubcategoriesCheckBox,
             flags=[None, wx.ALL],
         )
+        self.addEntry(_("Mutually exclusive"), panel)
+
+    def addStylePriorityEntry(self):
+        # pylint: disable=W0201
+        currentPriority = (
+            self.items[0].stylePriority() if len(self.items) == 1 else 0
+        )
+        self._stylePriorityEntry = widgets.SpinCtrl(
+            self, size=(100, -1), value=currentPriority, min=-999, max=999
+        )
+        self._stylePrioritySync = attributesync.AttributeSync(
+            "stylePriority",
+            self._stylePriorityEntry,
+            currentPriority,
+            self.items,
+            command.EditStylePriorityCommand,
+            wx.EVT_SPINCTRL,
+            self.items[0].stylePriorityChangedEventType(),
+        )
+        self.addEntry(_("Style priority"), self._stylePriorityEntry)
 
 
 class AttachmentSubjectPage(SubjectPage):
@@ -788,7 +950,32 @@ class AttachmentSubjectPage(SubjectPage):
 
         onSelectLocation (self, event) :
            Permet à l'utilisateur de sélectionner un fichier à l'aide d'un sélecteur de pièces jointes. Met à jour le champ d'emplacement et le sujet en conséquence.
-       """
+    """
+
+    # Map type_ values to human-readable names and icons
+    TYPE_INFO = {
+        "file": (_("File"), "document_icon"),
+        "folder": (_("Folder"), "folder_blue_icon"),
+        "uri": (_("Link"), "earth_blue_icon"),
+        "mail": (_("Email"), "envelope_icon"),
+        "unknown": (_("Unknown"), None),
+    }
+
+    def _isFolderUri(self, item):
+        """Check if a URI attachment points to a local folder."""
+        if item.type_ != "uri":
+            return False
+        location = item.location()
+        if location.startswith("file://"):
+            import urllib.request
+            import os
+
+            try:
+                path = urllib.request.url2pathname(location[7:])
+                return os.path.isdir(path)
+            except Exception:
+                return False
+        return False
 
     # j'ai ajouté __init__
     # def __init__(self, items, parent, settings, *args, **kwargs):
@@ -803,14 +990,62 @@ class AttachmentSubjectPage(SubjectPage):
         # Remplacer pour insérer une entrée d'emplacement entre le sujet et
         # l'entrée de description
         self.addSubjectEntry()
+        self.addTypeEntry()
         self.addLocationEntry()
         self.addDescriptionEntry()
         self.addCreationDateTimeEntry()
         self.addModificationDateTimeEntry()
 
+    def addTypeEntry(self):
+        """Add a read-only type field with icon."""
+        import os
+
+        if len(self.items) == 1:
+            item = self.items[0]
+            if self._isFolderUri(item):
+                type_name, icon_name = self.TYPE_INFO.get("folder")
+            else:
+                item_type = item.type_
+                type_name, icon_name = self.TYPE_INFO.get(
+                    item_type, (item_type, None)
+                )
+                # Check if file exists for file attachments
+                if item_type == "file":
+                    attachmentBase = self._settings.get(
+                        "file", "attachmentbase"
+                    )
+                    if not os.path.exists(
+                        item.normalizedLocation(attachmentBase)
+                    ):
+                        icon_name = "fileopen_red"
+        else:
+            # Multiple items - show type if all same, otherwise "Mixed"
+            types = set(item.type_ for item in self.items)
+            if len(types) == 1:
+                item_type = types.pop()
+                type_name, icon_name = self.TYPE_INFO.get(
+                    item_type, (_("Unknown"), None)
+                )
+            else:
+                type_name = _("Mixed")
+                icon_name = None
+
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        if icon_name:
+            bitmap = wx.ArtProvider.GetBitmap(icon_name, wx.ART_MENU, (16, 16))
+            if bitmap.IsOk():
+                icon = wx.StaticBitmap(panel, bitmap=bitmap)
+                sizer.Add(icon, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        type_label = wx.StaticText(panel, label=type_name)
+        sizer.Add(type_label, 0, wx.ALIGN_CENTER_VERTICAL)
+        panel.SetSizer(sizer)
+        self.addEntry(_("Type"), panel, flags=[None, wx.ALIGN_CENTER_VERTICAL])
+
     def addLocationEntry(self):
         """Ajoute un champ d'édition pour l'emplacement du fichier de la pièce jointe.
-         Gère également la synchronisation de l'emplacement avec l'objet de tâche."""
+        Gère également la synchronisation de l'emplacement avec l'objet de tâche.
+        """
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         # pylint: disable=W0201
@@ -820,7 +1055,11 @@ class AttachmentSubjectPage(SubjectPage):
             else _("Edit to change location of all attachments")
         )
         # Objet de synchronisation pour l'attribut "location" des pièces jointes.
-        self._locationEntry = widgets.SingleLineTextCtrl(panel, current_location)
+        self._locationEntry = widgets.SingleLineTextCtrl(
+            panel,
+            current_location,
+            spellCheck=False,  # File paths/URLs shouldn't be spell checked
+        )
         # Champ de saisie pour l'emplacement du fichier de la pièce jointe.
         self._locationSync = attributesync.AttributeSync(
             "location",
@@ -877,10 +1116,15 @@ class TaskAppearancePage(Page):
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition de l'apparence.
     """
+
     pageName = "appearance"
     pageTitle = _("Appearance")
     pageIcon = "palette_icon"
-    columns = 5
+    # columns = 5
+    columns = 3  # Label, Control, Source
+    _vgap = 2
+    _hgap = 5
+    _borderWidth = 2
 
     # j'ai ajouté __init__
     def __init__(self, items, *args, **kwargs):
@@ -897,9 +1141,339 @@ class TaskAppearancePage(Page):
         """
         Ajoute les champs d'entrée pour modifier l'apparence de la tâche (couleur, style, etc.).
         """
+        self.addCalculatedSection()
+        # Show "Override values" header for all single-item edits
+        if len(self.items) == 1:
+            self.addLine()
+            self.addSectionHeader(_("Override values"))
+        self.addIconEntry()
         self.addColorEntries()
         self.addFontEntry()
-        self.addIconEntry()
+        self.addEffectiveSection()
+        # Update derived values now that all widgets exist
+        if len(self.items) == 1:
+            self._updateDerivedValues()
+
+    def addSectionHeader(self, title, sourceLabel=None):
+        """Add a bold section header spanning columns 0-1, optional label in column 2."""
+        header = wx.StaticText(self, label=title)
+        header.SetFont(header.GetFont().Bold())
+        flag = wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT
+        self._sizer.Add(
+            header,
+            self._position.next(2),
+            span=(1, 2),
+            flag=flag,
+            border=self._borderWidth,
+        )
+        if sourceLabel:
+            source = wx.StaticText(self, label=sourceLabel)
+            source.SetFont(source.GetFont().Bold())
+            self._sizer.Add(
+                source,
+                self._position.next(1),
+                span=(1, 1),
+                flag=flag,
+                border=self._borderWidth,
+            )
+        else:
+            self._sizer.Add((0, 0), self._position.next(1), span=(1, 1))
+
+    def addCalculatedSection(self):
+        """Add read-only display of derived appearance values.
+
+        Layout: 3 columns - Label, Control, Source
+        - Tasks: derived from category/parent/status
+        - Categories: derived from parent category
+        - Notes: derived from parent note (or System Theme)
+        - Efforts/Attachments: always System Theme (no inheritance)
+        """
+        if len(self.items) != 1:
+            return
+        item = self.items[0]
+
+        self.addSectionHeader(_("Derived values"), _("Source"))
+        entryFlags = [
+            wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,  # Label
+            wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,  # Control
+            wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,  # Source
+        ]
+
+        # Icon - panel with both bitmap and "N/A" text (show one or the other)
+        def rejectNav(evt):
+            evt.GetEventObject().Navigate(evt.GetDirection())
+
+        def rejectFocus(evt):
+            forward = not wx.GetKeyState(wx.WXK_SHIFT)
+            wx.CallAfter(evt.GetEventObject().Navigate, forward)
+
+        self._derivedIconPanel = wx.Panel(self, style=0)
+        self._derivedIconPanel.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._derivedIconPanel.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        iconSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self._derivedIconDisplay = wx.StaticBitmap(self._derivedIconPanel)
+        self._derivedIconDisplay.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._derivedIconDisplay.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        self._derivedIconName = wx.StaticText(self._derivedIconPanel, label="")
+        self._derivedIconName.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._derivedIconName.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        self._derivedIconNA = wx.StaticText(
+            self._derivedIconPanel, label=_("N/A")
+        )
+        self._derivedIconNA.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._derivedIconNA.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        self._derivedIconNA.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        iconSizer.Add(self._derivedIconDisplay, 0, wx.ALIGN_CENTER_VERTICAL)
+        iconSizer.Add(
+            self._derivedIconName, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5
+        )
+        iconSizer.Add(self._derivedIconNA, 0, wx.ALIGN_CENTER_VERTICAL)
+        self._derivedIconPanel.SetSizer(iconSizer)
+        self._derivedIconSource = wx.StaticText(self, label="")
+        self._derivedIconSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Icon"),
+            self._derivedIconPanel,
+            self._derivedIconSource,
+            flags=entryFlags,
+        )
+
+        # Foreground
+        self._derivedFgPicker = widgets.ColourPickerCtrl(
+            self, colour=wx.BLACK, readOnly=True
+        )
+        self._derivedFgSource = wx.StaticText(self, label="")
+        self._derivedFgSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Foreground"),
+            self._derivedFgPicker,
+            self._derivedFgSource,
+            flags=entryFlags,
+        )
+
+        # Background
+        self._derivedBgPicker = widgets.ColourPickerCtrl(
+            self, colour=wx.WHITE, readOnly=True
+        )
+        self._derivedBgSource = wx.StaticText(self, label="")
+        self._derivedBgSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Background"),
+            self._derivedBgPicker,
+            self._derivedBgSource,
+            flags=entryFlags,
+        )
+
+        # Font
+        defaultFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self._derivedFontPicker = widgets.FontPickerCtrl(
+            self, font=defaultFont, colour=(0, 0, 0, 255), readOnly=True
+        )
+        self._derivedFontSource = wx.StaticText(self, label="")
+        self._derivedFontSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Font"),
+            self._derivedFontPicker,
+            self._derivedFontSource,
+            flags=entryFlags,
+        )
+
+        # Note: _updateDerivedValues() is called at end of addEntries() after all widgets exist
+
+        # Subscribe to SSOT derived change events for automatic updates
+        for eventType in (
+            item.derivedFgColorChangedEventType(),
+            item.derivedBgColorChangedEventType(),
+            item.derivedIconChangedEventType(),
+            item.derivedFontChangedEventType(),
+        ):
+            self.registerObserver(
+                self._onDerivedAppearanceChanged,
+                eventType=eventType,
+                eventSource=item,
+            )
+
+    def _onDerivedAppearanceChanged(self, event):
+        """Update derived display when SSOT appearance changes."""
+        self._updateDerivedValues()
+
+    def _updateDerivedValues(self):
+        """Refresh the derived icon and color displays (pre-override values).
+
+        Unified display logic for all item types. Always shows pickers with
+        system theme colors as fallback. No N/A, no hiding.
+        """
+        if len(self.items) != 1:
+            return
+        # Guard: only update if derived display widgets exist
+        if not hasattr(self, "_derivedIconDisplay"):
+            return
+
+        # Get derived values based on item type
+        (
+            iconValue,
+            iconSource,
+            fgValue,
+            fgSource,
+            bgValue,
+            bgSource,
+            fontValue,
+            fontSource,
+        ) = self._getDerivedValuesForItem(self.items[0])
+
+        # Display derived values (unified for all item types)
+        self._displayDerivedValues(
+            iconValue,
+            iconSource,
+            fgValue,
+            fgSource,
+            bgValue,
+            bgSource,
+            fontValue,
+            fontSource,
+        )
+
+    def _getDerivedValuesForItem(self, item):
+        """Get derived appearance values from SSOT accessors.
+
+        Returns: (iconValue, iconSource, fgValue, fgSource, bgValue, bgSource, fontValue, fontSource)
+
+        Uses separate derivedXxx() and derivedXxxSource() accessors.
+        """
+        # Get derived values and sources using separate accessors
+        iconActual = item.derivedIcon()
+        iconSource = item.derivedIconSource()
+        fgActual = item.derivedFgColor()
+        fgSource = item.derivedFgColorSource()
+        bgActual = item.derivedBgColor()
+        bgSource = item.derivedBgColorSource()
+        fontActual = item.derivedFont()
+        fontSource = item.derivedFontSource()
+
+        # Get defaults for fallback
+        iconDefault = (
+            item.effectiveIconDefault()
+            if hasattr(item, "effectiveIconDefault")
+            else ""
+        )
+        fgDefault = (
+            item.effectiveFgColorDefault()
+            if hasattr(item, "effectiveFgColorDefault")
+            else base.SYSTEM_FG_COLOR
+        )
+        bgDefault = (
+            item.effectiveBgColorDefault()
+            if hasattr(item, "effectiveBgColorDefault")
+            else base.SYSTEM_BG_COLOR
+        )
+        fontDefault = (
+            item.effectiveFontDefault()
+            if hasattr(item, "effectiveFontDefault")
+            else base.SYSTEM_FONT
+        )
+
+        # Resolve to wx values: use actual if set, otherwise default
+        iconValue = iconActual if iconActual else iconDefault
+        fgValue = resolve_color(fgActual if fgActual else fgDefault)
+        bgValue = resolve_color(bgActual if bgActual else bgDefault)
+        fontValue = resolve_font(fontActual if fontActual else fontDefault)
+
+        return (
+            iconValue,
+            iconSource,
+            fgValue,
+            fgSource,
+            bgValue,
+            bgSource,
+            fontValue,
+            fontSource,
+        )
+
+    def _displayDerivedValues(
+        self,
+        iconValue,
+        iconSource,
+        fgValue,
+        fgSource,
+        bgValue,
+        bgSource,
+        fontValue,
+        fontSource,
+    ):
+        """Display derived values in the UI.
+
+        Domain SSOT methods (derivedXxx) return:
+        - Actual value + source when inherited from parent
+        - Symbolic constant (e.g., base.SYSTEM_FG_COLOR) + "System Theme" when no parent
+
+        This method uses resolve_color/resolve_font helpers to convert
+        symbolic constants to actual wx values. No fallback logic here -
+        domain is the single source of truth.
+
+        Icons are special: no system theme exists, so empty icon shows "N/A".
+        """
+        # --- Icon ---
+        # Icons have no system theme - show "N/A" when no inherited value
+        if iconValue:
+            bitmap = wx.ArtProvider.GetBitmap(iconValue, wx.ART_MENU, (16, 16))
+            self._derivedIconDisplay.SetBitmap(bitmap)
+            self._derivedIconDisplay.Show()
+            # Look up icon name from artprovider metadata
+            iconData = artprovider.chooseableItems.get(iconValue, {})
+            iconName = iconData.get("name", iconValue)
+            self._derivedIconName.SetLabel(iconName)
+            self._derivedIconName.Show()
+            self._derivedIconNA.Hide()
+            self._derivedIconSource.SetLabel(
+                iconSource or _("Initializing...")
+            )
+        else:
+            self._derivedIconDisplay.Hide()
+            self._derivedIconName.Hide()
+            self._derivedIconNA.Show()
+            self._derivedIconSource.SetLabel(_("N/A"))
+        self._derivedIconPanel.Layout()
+
+        # --- Foreground Color ---
+        # fgValue is either a color tuple or base.SYSTEM_FG_COLOR constant
+        # fgSource is either "[Category] Name" or "System Theme"
+        derivedFgColour = resolve_color(fgValue)
+        self._derivedFgPicker.SetColour(derivedFgColour)
+        self._derivedFgPicker.Show()
+        self._derivedFgSource.SetLabel(fgSource or _("Initializing..."))
+
+        # --- Background Color ---
+        # bgValue is either a color tuple or base.SYSTEM_BG_COLOR constant
+        # bgSource is either "[Category] Name" or "System Theme"
+        derivedBgColour = resolve_color(bgValue)
+        self._derivedBgPicker.SetColour(derivedBgColour)
+        self._derivedBgPicker.Show()
+        self._derivedBgSource.SetLabel(bgSource or _("Initializing..."))
+
+        # --- Font ---
+        # fontValue is either a wx.Font or base.SYSTEM_FONT constant
+        # fontSource is either "[Category] Name" or "System Theme"
+        derivedFont = resolve_font(fontValue)
+        self._derivedFontPicker.SetSelectedFont(derivedFont)
+        self._derivedFontPicker.Show()
+        self._derivedFontSource.SetLabel(fontSource or _("Initializing..."))
+
+        # Update font picker demo colors to match derived colors
+        self._derivedFontPicker.SetSelectedColour(derivedFgColour)
+        self._derivedFontPicker.SetSelectedBgColour(derivedBgColour)
+
+        # Note: override entries now track effective values, not derived
+        # (updated in _updateEffectiveValues)
 
     def addColorEntries(self):
         self.addColorEntry(_("Foreground color"), "foreground", wx.BLACK)
@@ -913,7 +1487,9 @@ class TaskAppearancePage(Page):
         )
         colorEntry = entry.ColorEntry(self, currentColor, defaultColor)
         setattr(self, "_%sColorEntry" % colorType, colorEntry)
-        commandClass = getattr(command, "Edit%sColorCommand" % colorType.capitalize())
+        commandClass = getattr(
+            command, "Edit%sColorCommand" % colorType.capitalize()
+        )
         colorSync = attributesync.AttributeSync(
             "%sColor" % colorType,
             colorEntry,
@@ -930,8 +1506,50 @@ class TaskAppearancePage(Page):
     def addFontEntry(self):
         # pylint: disable=W0201,E1101
         currentFont = self.items[0].font() if len(self.items) == 1 else None
-        currentColor = self._foregroundColorEntry.GetValue()  # d'où ça vient ?
-        self._fontEntry = entry.FontEntry(self, currentFont, currentColor)
+        # currentColor = self._foregroundColorEntry.GetValue()  # d'où ça vient ?
+        # Use override color if set, otherwise use effective/inherited color
+        # Tasks and Categories have effectiveFgColor() (SSOT)
+        # Notes/Efforts/Attachments use foregroundColor(recursive=True)
+        overrideFgColor = self._foregroundColorEntry.GetValue()
+        overrideBgColor = self._backgroundColorEntry.GetValue()
+        # self._fontEntry = entry.FontEntry(self, currentFont, currentColor)
+        if len(self.items) == 1:
+            item = self.items[0]
+            if hasattr(item, "effectiveFgColor"):
+                # Tasks and Categories use SSOT effective methods
+                currentColor = (
+                    overrideFgColor
+                    if overrideFgColor
+                    else item.effectiveFgColor()
+                )
+                currentBgColor = (
+                    overrideBgColor
+                    if overrideBgColor
+                    else item.effectiveBgColor()
+                )
+            else:
+                # Notes inherit from parent notes, Efforts/Attachments have no inheritance
+                currentColor = (
+                    overrideFgColor
+                    if overrideFgColor
+                    else item.foregroundColor(recursive=True)
+                )
+                currentBgColor = (
+                    overrideBgColor
+                    if overrideBgColor
+                    else item.backgroundColor(recursive=True)
+                )
+        else:
+            currentColor = overrideFgColor
+            currentBgColor = overrideBgColor
+        # Convert to wx.Colour using generic resolve helper (handles tuples and symbolic constants)
+        currentColor = resolve_color(currentColor) if currentColor else None
+        currentBgColor = (
+            resolve_color(currentBgColor) if currentBgColor else None
+        )
+        self._fontEntry = entry.FontEntry(
+            self, currentFont, currentColor, currentBgColor
+        )
         self._fontSync = attributesync.AttributeSync(
             "font",
             self._fontEntry,
@@ -951,12 +1569,242 @@ class TaskAppearancePage(Page):
             self.items[0].appearanceChangedEventType(),
         )
         # self.addEntry(_("Font"), self._fontEntry, flags=[None, wx.ALL])
-        self.addEntry(_("Font"), self._fontEntry, flags=[wx.ALIGN_RIGHT, wx.ALL])
+        self.addEntry(
+            _("Font"), self._fontEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+        )
+
+    def addEffectiveSection(self):
+        """Add read-only display of effective/final appearance values.
+
+        Layout: 3 columns - Label, Control, Source
+        - Tasks/Categories: have effectiveXxx() SSOT methods
+        - Notes: effective = override or parent (recursive lookup)
+        - Attachments: effective = override or System Theme
+        """
+        if len(self.items) != 1:
+            return
+        item = self.items[0]
+
+        self.addLine()
+        self.addSectionHeader(_("Effective values"), _("Source"))
+        entryFlags = [
+            wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,  # Label
+            wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,  # Control
+            wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,  # Source
+        ]
+
+        # Icon - panel with bitmap and "N/A" text (show one or the other)
+        def rejectNav(evt):
+            evt.GetEventObject().Navigate(evt.GetDirection())
+
+        def rejectFocus(evt):
+            forward = not wx.GetKeyState(wx.WXK_SHIFT)
+            wx.CallAfter(evt.GetEventObject().Navigate, forward)
+
+        self._effectiveIconPanel = wx.Panel(self, style=0)
+        self._effectiveIconPanel.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._effectiveIconPanel.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        iconSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self._effectiveIconDisplay = wx.StaticBitmap(self._effectiveIconPanel)
+        self._effectiveIconDisplay.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._effectiveIconDisplay.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        self._effectiveIconName = wx.StaticText(
+            self._effectiveIconPanel, label=""
+        )
+        self._effectiveIconName.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._effectiveIconName.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        self._effectiveIconNA = wx.StaticText(
+            self._effectiveIconPanel, label=_("N/A")
+        )
+        self._effectiveIconNA.Bind(wx.EVT_NAVIGATION_KEY, rejectNav)
+        self._effectiveIconNA.Bind(wx.EVT_SET_FOCUS, rejectFocus)
+        self._effectiveIconNA.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        iconSizer.Add(self._effectiveIconDisplay, 0, wx.ALIGN_CENTER_VERTICAL)
+        iconSizer.Add(
+            self._effectiveIconName, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5
+        )
+        iconSizer.Add(self._effectiveIconNA, 0, wx.ALIGN_CENTER_VERTICAL)
+        self._effectiveIconPanel.SetSizer(iconSizer)
+        self._effectiveIconSource = wx.StaticText(self, label="")
+        self._effectiveIconSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Icon"),
+            self._effectiveIconPanel,
+            self._effectiveIconSource,
+            flags=entryFlags,
+        )
+
+        # Foreground - read-only color picker with source
+        self._effectiveFgPicker = widgets.ColourPickerCtrl(
+            self, colour=wx.BLACK, readOnly=True
+        )
+        self._effectiveFgSource = wx.StaticText(self, label="")
+        self._effectiveFgSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Foreground"),
+            self._effectiveFgPicker,
+            self._effectiveFgSource,
+            flags=entryFlags,
+        )
+
+        # Background - read-only color picker with source
+        self._effectiveBgPicker = widgets.ColourPickerCtrl(
+            self, colour=wx.WHITE, readOnly=True
+        )
+        self._effectiveBgSource = wx.StaticText(self, label="")
+        self._effectiveBgSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Background"),
+            self._effectiveBgPicker,
+            self._effectiveBgSource,
+            flags=entryFlags,
+        )
+
+        # Font - read-only font picker with source
+        defaultFont = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self._effectiveFontPicker = widgets.FontPickerCtrl(
+            self,
+            font=defaultFont,
+            colour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT),
+            bgColour=wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW),
+            readOnly=True,
+        )
+        self._effectiveFontSource = wx.StaticText(self, label="")
+        self._effectiveFontSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+        self.addEntry(
+            _("Font"),
+            self._effectiveFontPicker,
+            self._effectiveFontSource,
+            flags=entryFlags,
+        )
+
+        # Initial update
+        self._updateEffectiveValues()
+
+        # Subscribe to SSOT effective change events for automatic updates
+        for eventType in (
+            item.effectiveFgColorChangedEventType(),
+            item.effectiveBgColorChangedEventType(),
+            item.effectiveIconChangedEventType(),
+            item.effectiveFontChangedEventType(),
+        ):
+            self.registerObserver(
+                self._onEffectiveAppearanceChanged,
+                eventType=eventType,
+                eventSource=item,
+            )
+
+    def _onEffectiveAppearanceChanged(self, event):
+        self._updateEffectiveValues()
+        self._updateFontDemoColors()
+
+    def _updateEffectiveValues(self):
+        """Refresh the effective appearance display from item's effective fields.
+
+        All domain objects (Task, Category, Note, Attachment) use the same SSOT
+        accessor pattern: effectiveXxx(), effectiveXxxSource(), and effectiveXxxDefault()
+        (except icon which has no default).
+        """
+        if len(self.items) != 1:
+            return
+        if not hasattr(self, "_effectiveIconDisplay"):
+            return
+        item = self.items[0]
+
+        # --- Icon ---
+        iconActual = item.effectiveIcon()
+        iconSource = item.effectiveIconSource()
+        # Icons have no system default - use empty string if no value
+        iconValue = iconActual if iconActual else ""
+        if iconValue:
+            bitmap = wx.ArtProvider.GetBitmap(iconValue, wx.ART_MENU, (16, 16))
+            self._effectiveIconDisplay.SetBitmap(bitmap)
+            self._effectiveIconDisplay.Show()
+            # Look up icon name from artprovider metadata
+            iconData = artprovider.chooseableItems.get(iconValue, {})
+            iconName = iconData.get("name", iconValue)
+            self._effectiveIconName.SetLabel(iconName)
+            self._effectiveIconName.Show()
+            self._effectiveIconNA.Hide()
+            self._effectiveIconSource.SetLabel(
+                iconSource or _("Initializing...")
+            )
+        else:
+            self._effectiveIconDisplay.Hide()
+            self._effectiveIconName.Hide()
+            self._effectiveIconNA.Show()
+            self._effectiveIconSource.SetLabel(_("N/A"))
+        self._effectiveIconPanel.Layout()
+
+        # --- Foreground Color ---
+        fgActual = item.effectiveFgColor()
+        fgDefault = item.effectiveFgColorDefault()
+        fgSource = item.effectiveFgColorSource()
+        effectiveFgColour = resolve_color(fgActual if fgActual else fgDefault)
+        self._effectiveFgPicker.SetColour(effectiveFgColour)
+        self._effectiveFgSource.SetLabel(fgSource or _("Initializing..."))
+
+        # --- Background Color ---
+        bgActual = item.effectiveBgColor()
+        bgDefault = item.effectiveBgColorDefault()
+        bgSource = item.effectiveBgColorSource()
+        effectiveBgColour = resolve_color(bgActual if bgActual else bgDefault)
+        self._effectiveBgPicker.SetColour(effectiveBgColour)
+        self._effectiveBgSource.SetLabel(bgSource or _("Initializing..."))
+
+        # --- Font ---
+        fontActual = item.effectiveFont()
+        fontDefault = item.effectiveFontDefault()
+        fontSource = item.effectiveFontSource()
+        self._effectiveFontPicker.SetSelectedFont(
+            resolve_font(fontActual if fontActual else fontDefault)
+        )
+        self._effectiveFontSource.SetLabel(fontSource or _("Initializing..."))
+
+        # Update font picker demo colors
+        self._effectiveFontPicker.SetSelectedColour(effectiveFgColour)
+        self._effectiveFontPicker.SetSelectedBgColour(effectiveBgColour)
+
+        # Update override entries to track effective values
+        # (shown when override checkbox is unchecked; always for colors on font picker)
+        effectiveFont = resolve_font(fontActual if fontActual else fontDefault)
+        if hasattr(self, "_foregroundColorEntry"):
+            self._foregroundColorEntry.setEffectiveColor(effectiveFgColour)
+        if hasattr(self, "_backgroundColorEntry"):
+            self._backgroundColorEntry.setEffectiveColor(effectiveBgColour)
+        if hasattr(self, "_fontEntry"):
+            self._fontEntry.setEffectiveFont(effectiveFont)
+
+    def _updateFontDemoColors(self):
+        if len(self.items) != 1:
+            return
+        item = self.items[0]
+        self._fontEntry.SetColor(
+            resolve_color(
+                item.effectiveFgColor() or item.effectiveFgColorDefault()
+            )
+        )
+        self._fontEntry.SetBgColor(
+            resolve_color(
+                item.effectiveBgColor() or item.effectiveBgColorDefault()
+            )
+        )
 
     def addIconEntry(self):
         # pylint: disable=W0201,E1101
         currentIcon = self.items[0].icon() if len(self.items) == 1 else ""
         self._iconEntry = entry.IconEntry(self, currentIcon)
+        # TODO ? Recopier le debug logging for Priority categories
         self._iconSync = attributesync.AttributeSync(
             "icon",
             self._iconEntry,
@@ -967,13 +1815,18 @@ class TaskAppearancePage(Page):
             self.items[0].appearanceChangedEventType(),
         )
         # self.addEntry(_("Icon"), self._iconEntry, flags=[None, wx.ALL])
-        self.addEntry(_("Icon"), self._iconEntry, flags=[wx.ALIGN_RIGHT, wx.ALL])
+        self.addEntry(
+            _("Icon"), self._iconEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+        )
 
     def entries(self):
         # return dict(firstEntry=self._foregroundColorEntry)  # pylint: disable=E1101
         if self._foregroundColorEntry:
             return dict(firstEntry=self._foregroundColorEntry)
         return dict()
+
+    def close(self):
+        super().close()
 
 
 class DatesPage(Page):
@@ -986,11 +1839,15 @@ class DatesPage(Page):
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition des dates.
     """
+
     pageName = "dates"
     pageTitle = _("Dates")
     pageIcon = "calendar_icon"
+    columns = 3  # label, datetime row, rest
 
-    def __init__(self, theTask, parent, settings, items_are_new, *args, **kwargs):
+    def __init__(
+        self, theTask, parent, settings, items_are_new, *args, **kwargs
+    ):
         self._actualStartDateTimeEntry = None
         self._completionDateTimeEntry = None
         self._dueDateTimeEntry = None
@@ -1003,9 +1860,37 @@ class DatesPage(Page):
         self._duration = None
         self.__items_are_new = items_are_new
         super().__init__(theTask, parent, *args, **kwargs)
-        pub.subscribe(self.__onChoicesConfigChanged, "settings.feature.sdtcspans")
+        pub.subscribe(
+            self.__onChoicesConfigChanged, "settings.feature.sdtcspans"
+        )
         # Ajouter les champs d'entrée :
         self.addEntries()
+
+    def close(self):
+        if len(self.items) == 1 and hasattr(self, "_statusLabel"):
+            try:
+                pub.unsubscribe(
+                    self._onStatusMayHaveChanged,
+                    self.items[0].statusChangedEventType(),
+                )
+            except Exception:
+                pass
+        if len(self.items) == 1:
+            try:
+                pub.unsubscribe(
+                    self._onDomainPlannedDurationModeChanged,
+                    self.items[0].plannedDurationModeChangedEventType(),
+                )
+            except Exception:
+                pass
+            try:
+                pub.unsubscribe(
+                    self.__onTaskDurationDomainChanged,
+                    self.items[0].plannedDurationChangedEventType(),
+                )
+            except Exception:
+                pass
+        super().close()
 
     def __onChoicesConfigChanged(self, value=""):
         self._dueDateTimeEntry.LoadChoices(value)
@@ -1013,33 +1898,161 @@ class DatesPage(Page):
     def __onTimeChoicesChange(self, event):
         self.__settings.settext("feature", "sdtcspans", event.GetValue())
 
+    def __onPlannedStartChanged(self, value):
+        """AttributeSync callback for planned start date changes."""
+        self._currentPlannedStartDateTime = value
+        self.__onPlannedStartDateTimeChanged(value)
+
     def __onPlannedStartDateTimeChanged(self, value):
+        """Called when planned start date changes - update based on mode."""
+        # if hasattr(self, '_currentPlannedDurationMode'):
+        #     self.__syncTaskState(sourceField='start')
         self._dueDateTimeEntry.SetRelativeChoicesStart(
             None if value == date.DateTime() else value
         )
+
+    def __onDueDateChanged(self, value):
+        """AttributeSync callback for due date changes."""
+        self._currentDueDateTime = value
+        self.__onDueDateTimeChanged(value)
+
+    def __onDueDateTimeChanged(self, value):
+        """Called when due date changes - update based on mode."""
+        if hasattr(self, "_currentPlannedDurationMode"):
+            self.__syncTaskState(sourceField="due")
+
+    def _onDomainPlannedDurationModeChanged(self, newValue, sender):
+        """Layer 2: Domain plannedDurationMode changed externally."""
+        if sender not in self.items:
+            return
+        self._currentPlannedDurationMode = newValue
+        self.__updateDurationModeDropdown()
+        self.__syncTaskState()
+
+    def __onPlannedDurationSyncCallback(self, value):
+        """AttributeSync callback: duration committed or changed externally."""
+        self.__syncTaskState(sourceField="duration")
+
+    def __onTaskDurationDomainChanged(self, newValue, sender):
+        """Domain duration changed — update preset dropdown to match."""
+        if sender in self.items:
+            self.__updatePresetSelection()
 
     def addEntries(self):
         """
         Ajoute les champs d'entrée pour éditer les dates associées à la tâche.
         """
+        self.addStatusEntry()
+        self.addLine()
         self.addDateEntries()
         self.addLine()
         self.addReminderEntry()
         self.addLine()
         self.addRecurrenceEntry()
 
-    def addDateEntries(self):
+    def addStatusEntry(self):
+        """Add a read-only status display showing icon, color, and status text."""
+        if len(self.items) != 1:
+            return  # Only show for single task editing
+
+        # Create panel that doesn't accept keyboard focus (skipped in tab order)
+        class NoFocusPanel(wx.Panel):
+            def AcceptsFocusFromKeyboard(self):
+                return False
+
+        self._statusPanel = NoFocusPanel(self)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self._statusIcon = wx.StaticBitmap(self._statusPanel)
+        sizer.Add(self._statusIcon, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+
+        self._statusLabel = wx.StaticText(self._statusPanel, label="")
+        sizer.Add(self._statusLabel, 0, wx.ALIGN_CENTER_VERTICAL)
+
+        self._statusPanel.SetSizer(sizer)
+
+        # Source explanation (gray text)
+        self._statusSource = wx.StaticText(self, label="")
+        self._statusSource.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
+
+        # 3 controls: label + panel + source
+        self.addEntry(
+            _("Status"),
+            self._statusPanel,
+            self._statusSource,
+            flags=[
+                None,
+                wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,
+                wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_LEFT,
+            ],
+        )
+
+        # Initial display
+        self._updateStatusDisplay()
+
+        # Subscribe to status change event (fired by computeStoredStatus when status changes)
+        pub.subscribe(
+            self._onStatusMayHaveChanged,
+            self.items[0].statusChangedEventType(),
+        )
+
+    def _onStatusMayHaveChanged(self, newValue, sender):
+        if sender == self.items[0] or sender is None:
+            self._updateStatusDisplay()
+
+    def _updateStatusDisplay(self):
+        if not hasattr(self, "_statusLabel"):
+            return
+        theTask = self.items[0]
+        # Use centralized computedStatus(explain=True) for status and source
+        taskStatus, statusSource = theTask.computedStatus(explain=True)
+
+        # Update icon
+        icon_name = taskStatus.getBitmap(self.__settings)
+        bitmap = wx.ArtProvider.GetBitmap(icon_name, wx.ART_MENU, (16, 16))
+        if bitmap.IsOk():
+            self._statusIcon.SetBitmap(bitmap)
+
+        # Update text and foreground color only (no background painting)
+        statusText = (
+            taskStatus.pluralLabel.replace(" tasks", "")
+            .replace("tasks", "")
+            .strip()
+        )
+        self._statusLabel.SetLabel(statusText)
+        self._statusLabel.SetForegroundColour(theTask.statusFgColor())
+
+        # Update source explanation
+        if hasattr(self, "_statusSource"):
+            self._statusSource.SetLabel(statusSource or _("Initializing..."))
+            self._statusSource.InvalidateBestSize()
+
+        # Relayout panel and parent to accommodate new text sizes
+        self._statusLabel.InvalidateBestSize()
+        self._statusPanel.Layout()
+        self._statusPanel.Fit()
+        self.Layout()
+
+    def addDateEntries(self):  # TODO ? Recopier la nouvelle version !
         self.addDateEntry(_("Planned start date"), "plannedStartDateTime")
         self.addDateEntry(_("Due date"), "dueDateTime")
+        # # Create panel for planned date section with table layout
+        # self._addPlannedDateSection()
         self.addLine()
         self.addDateEntry(_("Actual start date"), "actualStartDateTime")
         self.addDateEntry(_("Completion date"), "completionDateTime")
+        # self._addActualStartDateEntry()
+        # self._addCompletionDateEntry()
 
         start = self._plannedStartDateTimeEntry.GetValue()
         self._dueDateTimeEntry.SetRelativeChoicesStart(
             start=None if start == date.DateTime() else start
         )
-        self._dueDateTimeEntry.LoadChoices(self.__settings.get("feature", "sdtcspans"))
+        self._dueDateTimeEntry.LoadChoices(
+            self.__settings.get("feature", "sdtcspans")
+        )
         # sdtc.EVT_TIME_CHOICES_CHANGE(self._dueDateTimeEntry, self.__onTimeChoicesChange)
         self._dueDateTimeEntry.Bind(
             sdtc.EVT_TIME_CHOICES_CHANGE, self.__onTimeChoicesChange
@@ -1052,7 +2065,7 @@ class DatesPage(Page):
         Args :
             label : L'étiquette de l'entrée de date.
             taskMethodName : Le nom de la méthode utilisée pour obtenir la date de la tâche.
-    """
+        """
         TaskMethodName = taskMethodName[0].capitalize() + taskMethodName[1:]
         dateTime = (
             getattr(self.items[0], taskMethodName)()
@@ -1061,7 +2074,9 @@ class DatesPage(Page):
         )
         setattr(self, "_current%s" % TaskMethodName, dateTime)
         suggestedDateTimeMethodName = "suggested" + TaskMethodName
-        suggestedDateTime = getattr(self.items[0], suggestedDateTimeMethodName)()
+        suggestedDateTime = getattr(
+            self.items[0], suggestedDateTimeMethodName
+        )()
         dateTimeEntry = entry.DateTimeEntry(
             self,
             self.__settings,
@@ -1072,7 +2087,9 @@ class DatesPage(Page):
         )
         setattr(self, "_%sEntry" % taskMethodName, dateTimeEntry)
         commandClass = getattr(command, "Edit%sCommand" % TaskMethodName)
-        eventType = getattr(self.items[0], "%sChangedEventType" % taskMethodName)()
+        eventType = getattr(
+            self.items[0], "%sChangedEventType" % taskMethodName
+        )()
         keep_delta = self.__keep_delta(taskMethodName)
         datetimeSync = attributesync.AttributeSync(
             taskMethodName,
@@ -1095,17 +2112,23 @@ class DatesPage(Page):
     def __keep_delta(self, taskMethodName):
         datesTied = self.__settings.get("view", "datestied")
         return (
-            datesTied == "startdue" and taskMethodName == "plannedStartDateTime"
+            datesTied == "startdue"
+            and taskMethodName == "plannedStartDateTime"
         ) or (datesTied == "duestart" and taskMethodName == "dueDateTime")
 
     def addReminderEntry(self):
         # pylint: disable=W0201
         reminderDateTime = (
-            self.items[0].reminder() if len(self.items) == 1 else date.DateTime()
+            self.items[0].reminder()
+            if len(self.items) == 1
+            else date.DateTime()
         )
         suggestedDateTime = self.items[0].suggestedReminderDateTime()
         self._reminderDateTimeEntry = entry.DateTimeEntry(
-            self, self.__settings, reminderDateTime, suggestedDateTime=suggestedDateTime
+            self,
+            self.__settings,
+            reminderDateTime,
+            suggestedDateTime=suggestedDateTime,
         )
         self._reminderDateTimeSync = attributesync.AttributeSync(
             "reminder",
@@ -1125,7 +2148,9 @@ class DatesPage(Page):
     def addRecurrenceEntry(self):
         # pylint: disable=W0201
         currentRecurrence = (
-            self.items[0].recurrence() if len(self.items) == 1 else date.Recurrence()
+            self.items[0].recurrence()
+            if len(self.items) == 1
+            else date.Recurrence()
         )
         self._recurrenceEntry = entry.RecurrenceEntry(
             self, currentRecurrence, self.__settings
@@ -1140,11 +2165,14 @@ class DatesPage(Page):
             self.items[0].recurrenceChangedEventType(),
         )
         self.addEntry(
-            _("Recurrence"), self._recurrenceEntry, flags=[wx.ALIGN_RIGHT, wx.EXPAND]
+            _("Recurrence"),
+            self._recurrenceEntry,
+            flags=[wx.ALIGN_RIGHT, wx.EXPAND],
         )
 
     def entries(self):
         # pylint: disable=E1101
+        # For DateTimeComboCtrl controls, return the date control as the focusable widget
         return dict(
             firstEntry=self._plannedStartDateTimeEntry,
             plannedStartDateTime=self._plannedStartDateTimeEntry,
@@ -1156,6 +2184,18 @@ class DatesPage(Page):
             recurrence=self._recurrenceEntry,
         )
 
+    def close(self):
+        """Clean up resources when dialog closes."""
+        # Unsubscribe from pubsub topics
+        try:
+            pub.unsubscribe(
+                self.__onPresetsConfigChanged,
+                "settings.feature.task_duration_presets",
+            )
+        except Exception:
+            pass
+        super().close()
+
 
 class ProgressPage(Page):
     """
@@ -1166,6 +2206,7 @@ class ProgressPage(Page):
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition de la progression.
     """
+
     pageName = "progress"
     pageTitle = _("Progress")
     pageIcon = "progress"
@@ -1216,7 +2257,7 @@ class ProgressPage(Page):
     def averagePercentageComplete(items):
         return (
             sum([item.percentageComplete() for item in items])
-            // float(len(items))  # with // ?
+            // float(len(items))  # with // ? yes
             if items
             else 0
         )
@@ -1233,7 +2274,9 @@ class ProgressPage(Page):
             if len(self.items) == 1
             else None
         )
-        self._shouldMarkCompletedEntry = entry.ChoiceEntry(self, choices, currentChoice)
+        self._shouldMarkCompletedEntry = entry.ChoiceEntry(
+            self, choices, currentChoice
+        )
         self._shouldMarkCompletedSync = attributesync.AttributeSync(
             "shouldMarkCompletedWhenAllChildrenCompleted",
             self._shouldMarkCompletedEntry,
@@ -1266,6 +2309,7 @@ class BudgetPage(Page):
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition du budget.
     """
+
     pageName = "budget"
     pageTitle = _("Budget")
     pageIcon = "calculator_icon"
@@ -1306,7 +2350,9 @@ class BudgetPage(Page):
     def addBudgetEntry(self):
         # pylint: disable=W0201,W0212
         currentBudget = (
-            self.items[0].budget() if len(self.items) == 1 else date.TimeDelta()
+            self.items[0].budget()
+            if len(self.items) == 1
+            else date.TimeDelta()
         )
         self._budgetEntry = entry.TimeDeltaEntry(self, currentBudget)
         self._budgetSync = attributesync.AttributeSync(
@@ -1319,7 +2365,9 @@ class BudgetPage(Page):
             self.items[0].budgetChangedEventType(),
         )
         # self.addEntry(_("Budget"), self._budgetEntry, flags=[None, wx.ALL])
-        self.addEntry(_("Budget"), self._budgetEntry, flags=[wx.ALIGN_RIGHT, wx.ALL])
+        self.addEntry(
+            _("Budget"), self._budgetEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+        )
 
     def addTimeSpentEntry(self):
         assert len(self.items) == 1
@@ -1329,7 +2377,9 @@ class BudgetPage(Page):
         )
         # self.addEntry(_("Time spent"), self._timeSpentEntry, flags=[None, wx.ALL])
         self.addEntry(
-            _("Time spent"), self._timeSpentEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+            _("Time spent"),
+            self._timeSpentEntry,
+            flags=[wx.ALIGN_RIGHT, wx.ALL],
         )
         pub.subscribe(
             self.onTimeSpentChanged, self.items[0].timeSpentChangedEventType()
@@ -1349,10 +2399,13 @@ class BudgetPage(Page):
         )
         # self.addEntry(_("Budget left"), self._budgetLeftEntry, flags=[None, wx.ALL])
         self.addEntry(
-            _("Budget left"), self._budgetLeftEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+            _("Budget left"),
+            self._budgetLeftEntry,
+            flags=[wx.ALIGN_RIGHT, wx.ALL],
         )
         pub.subscribe(
-            self.onBudgetLeftChanged, self.items[0].budgetLeftChangedEventType()
+            self.onBudgetLeftChanged,
+            self.items[0].budgetLeftChangedEventType(),
         )
 
     def onBudgetLeftChanged(self, newValue, sender):  # pylint: disable=W0613
@@ -1369,7 +2422,9 @@ class BudgetPage(Page):
 
     def addHourlyFeeEntry(self):
         # pylint: disable=W0201,W0212
-        currentHourlyFee = self.items[0].hourlyFee() if len(self.items) == 1 else 0
+        currentHourlyFee = (
+            self.items[0].hourlyFee() if len(self.items) == 1 else 0
+        )
         self._hourlyFeeEntry = entry.AmountEntry(self, currentHourlyFee)
         self._hourlyFeeSync = attributesync.AttributeSync(
             "hourlyFee",
@@ -1382,12 +2437,16 @@ class BudgetPage(Page):
         )
         # self.addEntry(_("Hourly fee"), self._hourlyFeeEntry, flags=[None, wx.ALL])
         self.addEntry(
-            _("Hourly fee"), self._hourlyFeeEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+            _("Hourly fee"),
+            self._hourlyFeeEntry,
+            flags=[wx.ALIGN_RIGHT, wx.ALL],
         )
 
     def addFixedFeeEntry(self):
         # pylint: disable=W0201,W0212
-        currentFixedFee = self.items[0].fixedFee() if len(self.items) == 1 else 0
+        currentFixedFee = (
+            self.items[0].fixedFee() if len(self.items) == 1 else 0
+        )
         self._fixedFeeEntry = entry.AmountEntry(self, currentFixedFee)
         self._fixedFeeSync = attributesync.AttributeSync(
             "fixedFee",
@@ -1411,8 +2470,12 @@ class BudgetPage(Page):
         )  # pylint: disable=W0201
         # Instance attribute _revenueEntry defined outside __init__
         # self.addEntry(_("Revenue"), self._revenueEntry, flags=[None, wx.ALL])
-        self.addEntry(_("Revenue"), self._revenueEntry, flags=[wx.ALIGN_RIGHT, wx.ALL])
-        pub.subscribe(self.onRevenueChanged, self.items[0].revenueChangedEventType())
+        self.addEntry(
+            _("Revenue"), self._revenueEntry, flags=[wx.ALIGN_RIGHT, wx.ALL]
+        )
+        pub.subscribe(
+            self.onRevenueChanged, self.items[0].revenueChangedEventType()
+        )
 
     def onRevenueChanged(self, newValue, sender):
         if sender == self.items[0]:
@@ -1430,7 +2493,9 @@ class BudgetPage(Page):
     def onTrackingChanged(self, newValue, sender):
         if newValue:
             if sender in self.items:
-                date.Scheduler().schedule_interval(self.onEverySecond, seconds=1)
+                date.Scheduler().schedule_interval(
+                    self.onEverySecond, seconds=1
+                )
         else:
             # We might need to keep tracking the clock if the user was tracking this
             # task with multiple effort records simultaneously
@@ -1462,7 +2527,14 @@ class PageWithViewer(Page):
     columns = 1
 
     def __init__(
-        self, items, parent, taskFile, settings, settingsSection, *args, **kwargs
+        self,
+        items,
+        parent,
+        taskFile,
+        settings,
+        settingsSection,
+        *args,
+        **kwargs,
     ):
         self.__taskFile = taskFile
         self.__settings = settings
@@ -1483,8 +2555,10 @@ class PageWithViewer(Page):
         Ajoute les champs d'entrée pour l'édition de 4 pages
         (Catégories, Effort, Notes et Prérequis) consacré à une tâche.
         """
-        if not hasattr(self, 'items'):
-            log.warning("addEntries appelé trop tôt, items pas encore initialisé.")
+        if not hasattr(self, "items"):
+            log.warning(
+                "addEntries appelé trop tôt, items pas encore initialisé."
+            )
             return
         self.viewer = self.createViewer(
             self.__taskFile, self.__settings, self.__settingsSection
@@ -1500,6 +2574,8 @@ class PageWithViewer(Page):
 
     def close(self):
         # I guess this happens because of CallAfter in context of #1437...
+        # Clean up the viewer immediately now that the SearchCtrl timer
+        # cleanup is properly implemented (see PYTHON3_MIGRATION_NOTES.md)
         if hasattr(self, "viewer"):
             self.viewer.detach()
             # Don't Notify the viewer about any changes anymore, it's about
@@ -1522,12 +2598,24 @@ class EffortPage(PageWithViewer):
         addEntries (self) : Ajoute les champs d'entrée pour l'édition de l'effort.
                             Lancé dans PageWithViewer.
     """
+
     pageName = "effort"
     pageTitle = _("Effort")
     pageIcon = "clock_icon"
 
-    def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
-        super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
+    def __init__(
+        self,
+        items,
+        parent,
+        taskFile,
+        settings,
+        settingsSection,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            items, parent, taskFile, settings, settingsSection, *args, **kwargs
+        )
         self.addEntries()
 
     def createViewer(self, taskFile, settings, settingsSection):
@@ -1558,15 +2646,28 @@ class LocalCategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
     # (most likely due to a circular import)
     def __init__(self, items, *args, **kwargs):
         self.__items = items
+        # Track original category state for each item to support tri-state "no change"
+        self.__originalCategories = {
+            item: set(item.categories()) for item in items
+        }
         super().__init__(*args, **kwargs)
         for item in self.domainObjectsToView():
             item.expand(context=self.settingsSection(), notify=False)
 
     def getIsItemChecked(self, category):  # pylint: disable=W0621
-        for item in self.__items:
-            if category in item.categories():
-                return True
-        return False
+        # for item in self.__items:
+        #     if category in item.categories():
+        #         return True
+        # return False
+        items_with_category = sum(
+            1 for item in self.__items if category in item.categories()
+        )
+        if items_with_category == 0:
+            return False  # No items have category
+        elif items_with_category == len(self.__items):
+            return True  # All items have category
+        else:
+            return None  # Mixed state
 
     def onCheck(self, event, final):
         """Ici, nous gardons une trace des éléments cochés par l'utilisateur afin que ces éléments
@@ -1576,7 +2677,32 @@ class LocalCategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
             category = self.widget.GetItemPyData(
                 event.GetItem()
             )  # TODO: try GetItemData
-            command.ToggleCategoryCommand(None, self.__items, category=category).do()
+            command.ToggleCategoryCommand(
+                None, self.__items, category=category
+            ).do()
+
+    def checkAllCategories(self):
+        """Assign all categories to the items being edited."""
+        for cat in self.presentation():
+            for item in self.__items:
+                if cat not in item.categories():
+                    item.addCategory(cat)
+        self.widget.refreshAllCheckStates()
+
+    def uncheckAllCategories(self):
+        """Remove all categories from the items being edited."""
+        for cat in self.presentation():
+            for item in self.__items:
+                if cat in item.categories():
+                    item.removeCategory(cat)
+        self.widget.refreshAllCheckStates()
+
+    def createActionToolBarUICommands(self):
+        """UI commands for check/uncheck all in the edit task categories tab."""
+        return (
+            uicommand.CategoryCheckAll(viewer=self),
+            uicommand.CategoryUncheckAll(viewer=self),
+        )
 
     def createCategoryPopupMenu(self, localOnly=True):  # pylint: disable=W0221
         # def createCategoryPopupMenu(self):  # pylint: disable=W0221
@@ -1614,6 +2740,7 @@ class CategoriesPage(PageWithViewer):
         entries (self) :
             Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur de catégories (si affiché).
     """
+
     # Constantes :
     # Nom interne de la page ("categories") :
     pageName = "categories"
@@ -1643,6 +2770,7 @@ class CategoriesPage(PageWithViewer):
     def createViewer(self, taskFile, settings, settingsSection):
         """Crée le visualiseur de catégories associé à l'objet."""
         assert len(self.items) == 1
+        # for item in self.items:  # TODO : à essayer.
         item = self.items[0]
         for eventType in (
             item.categoryAddedEventType(),
@@ -1665,10 +2793,14 @@ class CategoriesPage(PageWithViewer):
         self.viewer.refreshItems(*list(event.values()))
 
     def entries(self):
-        """Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur de catégories (si affiché)."""
+        """Renvoie un dictionnaire contenant les éléments d'entrée de la page,
+        y compris le visualiseur de catégories (si affiché)."""
+        # Always include "categories" key so setFocus() can find this page
+        # before it's realized. The actual viewer is used if available.
         if self.__realized and hasattr(self, "viewer"):
             return dict(firstEntry=self.viewer, categories=self.viewer)
-        return dict()
+        # return dict()
+        return dict(firstEntry=self, categories=self)
 
 
 class LocalAttachmentViewer(AttachmentViewer):  # pylint: disable=W0223
@@ -1704,15 +2836,16 @@ class LocalAttachmentViewer(AttachmentViewer):  # pylint: disable=W0223
         sont spécifiques aux opérations sur les pièces jointes locales
         et sont redéfinies dans cette classe.
     """
+
     # AttributeError: partially initialized module 'taskcoachlib.gui.viewer'
     # has no attribute 'AttachmentViewer' (most likely due to a circular import)
     def __init__(self, *args, **kwargs):
         # L'objet propriétaire des pièces jointes (par exemple, une tâche) :
         self.attachmentOwner = kwargs.pop("owner")
-        attachments = attachment.AttachmentList(self.attachmentOwner.attachments())
-        super(LocalAttachmentViewer, self).__init__(
-            attachmentsToShow=attachments, *args, **kwargs
+        attachments = attachment.AttachmentList(
+            self.attachmentOwner.attachments()
         )
+        super().__init__(attachmentsToShow=attachments, *args, **kwargs)
 
     def newItemCommand(self, *args, **kwargs):
         """Crée une commande pour ajouter une nouvelle pièce jointe à l'objet propriétaire."""
@@ -1732,28 +2865,39 @@ class LocalAttachmentViewer(AttachmentViewer):  # pylint: disable=W0223
             None, [self.attachmentOwner], attachments=self.curselection()
         )
 
+    def pasteItemCommand(self):
+        """Paste attachments from clipboard to this task's attachments."""
+        from taskcoachlib.command.clipboard import Clipboard
+
+        items, source = Clipboard().get()
+        copies = [item.copy() for item in items]
+        return command.AddAttachmentCommand(
+            None, [self.attachmentOwner], attachments=copies
+        )
+
 
 class AttachmentsPage(PageWithViewer):
     """
-     Page d'édition des pièces jointes d'un objet.
+    Page d'édition des pièces jointes d'un objet.
 
-     Cette classe hérite de `PageWithViewer` et gère l'affichage et l'édition des pièces jointes associées à un objet.
+    Cette classe hérite de `PageWithViewer` et gère l'affichage et l'édition des pièces jointes associées à un objet.
 
-     Attributs :
-         pageName (str) : Nom interne de la page ("attachments").
-         pageTitle (str) : Titre affiché à l'utilisateur ("Attachments").
-         pageIcon (str) : Nom de l'icône associée à la page ("paperclip_icon").
+    Attributs :
+        pageName (str) : Nom interne de la page ("attachments").
+        pageTitle (str) : Titre affiché à l'utilisateur ("Attachments").
+        pageIcon (str) : Nom de l'icône associée à la page ("paperclip_icon").
 
-     Méthodes :
-         createViewer (self, taskFile, settings, settingsSection) :
-             Crée un visualiseur d'attachements local pour l'objet.
+    Méthodes :
+        createViewer (self, taskFile, settings, settingsSection) :
+            Crée un visualiseur d'attachements local pour l'objet.
 
-         onAttachmentsChanged (self, event) :
-             Rafraîchit le visualiseur d'attachements lorsque la liste des pièces jointes change.
+        onAttachmentsChanged (self, event) :
+            Rafraîchit le visualiseur d'attachements lorsque la liste des pièces jointes change.
 
-         entries (self) :
-             Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur d'attachements.
-     """
+        entries (self) :
+            Renvoie un dictionnaire contenant les éléments d'entrée de la page, y compris le visualiseur d'attachements.
+    """
+
     # Attributs :
     # Nom interne de la page ("attachments") :
     pageName = "attachments"
@@ -1762,8 +2906,19 @@ class AttachmentsPage(PageWithViewer):
     # Nom de l'icône associée à la page ("paperclip_icon") :
     pageIcon = "paperclip_icon"
 
-    def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
-        super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
+    def __init__(
+        self,
+        items,
+        parent,
+        taskFile,
+        settings,
+        settingsSection,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            items, parent, taskFile, settings, settingsSection, *args, **kwargs
+        )
         self.addEntries()
 
     def createViewer(self, taskFile, settings, settingsSection):
@@ -1772,7 +2927,8 @@ class AttachmentsPage(PageWithViewer):
         Cette méthode crée un LocalAttachmentViewer pour afficher
         et gérer les pièces jointes de l'objet.
         Elle s'assure également d'observer les changements
-        dans la liste des pièces jointes afin de mettre à jour le visualiseur."""
+        dans la liste des pièces jointes afin de mettre à jour le visualiseur.
+        """
         assert len(self.items) == 1
         item = self.items[0]
         self.registerObserver(
@@ -1803,7 +2959,8 @@ class AttachmentsPage(PageWithViewer):
 
         Cette méthode renvoie un dictionnaire contenant les éléments d'entrée de la page,
         y compris le visualiseur d'attachements,
-        qui sera utilisé pour l'affichage dans la boîte de dialogue d'édition."""
+        qui sera utilisé pour l'affichage dans la boîte de dialogue d'édition.
+        """
         if hasattr(self, "viewer"):
             return dict(firstEntry=self.viewer, attachments=self.viewer)
         return dict()
@@ -1844,6 +3001,7 @@ class LocalNoteViewer(BaseNoteViewer):  # pylint: disable=W0223
     la suppression et la création de sous-notes.
     Ces commandes sont probablement utilisées pour exécuter les actions correspondantes au sein de l'application.
     """
+
     # from taskcoachlib.gui.viewer
     def __init__(self, *args, **kwargs):
         # L'objet propriétaire des notes (par exemple, une tâche) :
@@ -1865,6 +3023,57 @@ class LocalNoteViewer(BaseNoteViewer):  # pylint: disable=W0223
         """Crée une commande pour supprimer les notes sélectionnées."""
         return command.RemoveNoteCommand(
             None, [self.__note_owner], notes=self.curselection()
+        )
+
+    def _expandNoteAndChildren(self, aNote):
+        """Recursively expand a note and all its children in this viewer."""
+        context = self.settingsSection()
+        aNote.expand(True, context=context, notify=False)
+        for child in aNote.children():
+            self._expandNoteAndChildren(child)
+
+    def pasteItemCommand(self):
+        """Paste notes from clipboard to this task's notes as top-level notes.
+
+        Clears parent reference so notes always become top-level, even if
+        copied from a nested location.
+        """
+        from taskcoachlib.command.clipboard import Clipboard
+
+        items, source = Clipboard().get()
+        copies = [item.copy() for item in items]
+        # Clear parent so notes become top-level (even if source was nested)
+        # and expand all pasted notes so children are visible
+        for n in copies:
+            n.setParent(None)
+            self._expandNoteAndChildren(n)
+        return command.AddNoteCommand(None, [self.__note_owner], notes=copies)
+
+    def pasteAsSubItemCommand(self):
+        """Paste notes as subnotes of the selected note.
+
+        Uses AddSubNoteCommand which properly adds notes as children only,
+        not to the owner's notes list (which would cause duplicates).
+        """
+        selected = self.curselection()
+        if not selected:
+            return None
+        parent_note = selected[0]
+        from taskcoachlib.command.clipboard import Clipboard
+
+        items, source = Clipboard().get()
+        copies = [item.copy() for item in items]
+        # Clear parent references - AddSubNoteCommand will set correct parent via addChild
+        # and expand all pasted notes so children are visible
+        for n in copies:
+            n.setParent(None)
+            self._expandNoteAndChildren(n)
+        # Also expand the parent note so the pasted subnotes are visible
+        parent_note.expand(True, context=self.settingsSection(), notify=False)
+        # Repeat parent_note for each copy so zip in AddSubNoteCommand pairs correctly
+        parents = [parent_note] * len(copies)
+        return command.AddSubNoteCommand(
+            None, parents, owner=self.__note_owner, notes=copies
         )
 
 
@@ -1906,6 +3115,7 @@ class NotesPage(PageWithViewer):
     les éléments d'entrée de la page, y compris le visualiseur de notes,
     qui sera utilisé pour l'affichage dans la boîte de dialogue d'édition.
     """
+
     # Attributs :
     # Nom interne de la page ("notes") :
     pageName = "notes"
@@ -1914,8 +3124,19 @@ class NotesPage(PageWithViewer):
     # Nom de l'icône associée à la page ("note_icon") :
     pageIcon = "note_icon"
 
-    def __init__(self, items, parent, taskFile, settings, settingsSection, *args, **kwargs):
-        super().__init__(items, parent, taskFile, settings, settingsSection, *args, **kwargs)
+    def __init__(
+        self,
+        items,
+        parent,
+        taskFile,
+        settings,
+        settingsSection,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            items, parent, taskFile, settings, settingsSection, *args, **kwargs
+        )
         self.addEntries()
 
     def createViewer(self, taskFile, settings, settingsSection):
@@ -1984,6 +3205,7 @@ class LocalPrerequisiteViewer(CheckableTaskViewer):  # pylint: disable=W0223
 
     Gestion des modifications de vérification : la méthode onCheck est déclenchée lorsqu'un utilisateur coche ou décoche une tâche. Il crée et exécute une TogglePrerequisiteCommand pour mettre à jour les prérequis de la tâche.
     """
+
     # from taskcoachlib.gui.viewer
     def __init__(self, items, *args, **kwargs):
         # La liste des tâches dont on gère les prérequis.
@@ -2000,7 +3222,9 @@ class LocalPrerequisiteViewer(CheckableTaskViewer):  # pylint: disable=W0223
 
     def onCheck(self, event, final):
         """Gère l'événement de sélection/désélection d'une tâche en tant que prérequis."""
-        item = self.widget.GetItemPyData(event.GetItem())  # TODO: test with GetItemData
+        item = self.widget.GetItemPyData(
+            event.GetItem()
+        )  # TODO: test with GetItemData
         is_checked = event.GetItem().IsChecked()
         if is_checked != self.getIsItemChecked(item):
             checked, unchecked = ([item], []) if is_checked else ([], [item])
@@ -2021,6 +3245,7 @@ class PrerequisitesPage(PageWithViewer):
     Méthodes :
         addEntries (self) : Ajoute les champs d'entrée pour l'édition des prérequis.
     """
+
     pageName = "prerequisites"
     pageTitle = _("Prerequisites")
     pageIcon = "trafficlight_icon"
@@ -2031,8 +3256,8 @@ class PrerequisitesPage(PageWithViewer):
         # # Ajoute les champs d'entrée :
         # self.addEntries()
 
-    # def addEntries(self):
-    #     pass
+    def addEntries(self):
+        pass
 
     # def addEntries(self):
     #     """
@@ -2062,7 +3287,8 @@ class PrerequisitesPage(PageWithViewer):
     def createViewer(self, taskFile, settings, settingsSection):
         assert len(self.items) == 1
         pub.subscribe(
-            self.onPrerequisitesChanged, self.items[0].prerequisitesChangedEventType()
+            self.onPrerequisitesChanged,
+            self.items[0].prerequisitesChangedEventType(),
         )
         return LocalPrerequisiteViewer(
             self.items,
@@ -2085,6 +3311,589 @@ class PrerequisitesPage(PageWithViewer):
                 dependencies=self.viewer,
             )
         return dict()
+
+
+class PathPage(Page):
+    # class PathPage(ScrolledPage):
+    """Page that displays the hierarchical path (nesting) of the current object.
+
+    The path is built only when the tab is selected (lazy loading).
+    It subscribes to ALL modification events to catch any change that might
+    affect the path, and rebuilds when the tab is visible.
+    """
+
+    pageName = "path"
+    pageTitle = _("Path")
+    pageIcon = "arrow_down_right"
+    columns = 1
+
+    def __init__(self, items, parent, taskFile, *args, **kwargs):
+        self._taskFile = taskFile
+        self._pathPanel = None
+        self._pathSizer = None
+        self._subscribed = False
+        self._realized = False
+        self._iconWidgets = (
+            {}
+        )  # Dict of object -> StaticBitmap for icon updates
+        self._iconSubscribed = False
+        super().__init__(items, parent, *args, **kwargs)
+
+    def addEntries(self):
+        """Create the container panel (content built lazily in selected())."""
+        self._pathPanel = wx.Panel(self)
+        self._pathSizer = wx.BoxSizer(wx.VERTICAL)
+        self._pathPanel.SetSizer(self._pathSizer)
+        self.addEntry(self._pathPanel, growable=True, flags=[wx.EXPAND])
+
+    def selected(self):
+        """Called when this tab is selected. Build/rebuild the path display."""
+        if not self._realized:
+            self._realized = True
+            self._subscribeToChanges()
+        self._rebuildPathDisplay()
+
+    def _subscribeToChanges(self):
+        """Subscribe to all modification events that could affect the path."""
+        if self._subscribed:
+            return
+        self._subscribed = True
+
+        # Subscribe to effective icon changes for individual icon updates
+        self._ensureIconSubscription()
+
+        from taskcoachlib.domain import (
+            task,
+            category,
+            note,
+            attachment,
+            effort,
+        )
+
+        # Subscribe to parent pubsub topics (pubsub uses hierarchical topics)
+        # This catches all child topic messages (e.g., pubsub.task covers
+        # pubsub.task.subject, pubsub.task.dependencies, etc.)
+        pubsub_parent_topics = [
+            "pubsub.task",
+            "pubsub.category",
+            "pubsub.note",
+            "pubsub.attachment",
+        ]
+        for topic in pubsub_parent_topics:
+            pub.subscribe(self._onAnyChange, topic)
+
+        # Subscribe to deprecated event types via patterns.Publisher
+        all_event_types = (
+            task.Task.modificationEventTypes()
+            + category.Category.modificationEventTypes()
+            + note.Note.modificationEventTypes()
+            + effort.Effort.modificationEventTypes()
+            + attachment.FileAttachment.modificationEventTypes()
+            + attachment.URIAttachment.modificationEventTypes()
+            + attachment.MailAttachment.modificationEventTypes()
+        )
+
+        for eventType in all_event_types:
+            if not eventType.startswith("pubsub"):
+                patterns.Publisher().registerObserver(
+                    self._onAnyChange,
+                    eventType=eventType,
+                )
+
+    def _onAnyChange(self, event=None, **kwargs):
+        """Called when any domain object changes. Rebuild if visible."""
+        if self._realized and self._pathPanel:
+            try:
+                if self._pathPanel.IsShownOnScreen():
+                    wx.CallAfter(self._rebuildPathDisplay)
+            except RuntimeError:
+                pass  # Window destroyed
+
+    def _rebuildPathDisplay(self):
+        """Rebuild the path display with all sections."""
+        if not self._pathPanel or not self._pathSizer:
+            return
+        try:
+            self._pathPanel.GetName()  # Check if still valid
+        except RuntimeError:
+            return
+
+        # Unsubscribe existing icon handlers before clearing
+        self._unsubscribeIconUpdates()
+
+        # Clear existing content
+        self._pathSizer.Clear(True)
+
+        # Only show sections for single item
+        if len(self.items) != 1:
+            label = wx.StaticText(
+                self._pathPanel, label=_("Path is only shown for single items")
+            )
+            self._pathSizer.Add(label, 0, wx.EXPAND)
+            self._pathPanel.Layout()
+            return
+
+        item = self.items[0]
+
+        # Section: Path
+        self._buildPathSection(item)
+
+        # Section: Categories (Tasks and Notes only)
+        from taskcoachlib.domain import task as task_module, note
+
+        if isinstance(item, (task_module.Task, note.Note)):
+            self._buildCategoriesSection(item)
+
+        # Section: Prerequisites (Tasks only)
+        if isinstance(item, task_module.Task):
+            self._buildPrerequisitesSection(item)
+
+        # Section: Dependants (Tasks only)
+        if isinstance(item, task_module.Task):
+            self._buildDependantsSection(item)
+
+        self._pathPanel.Layout()
+        self.Layout()
+        self.SetupScrolling(scroll_x=True, scroll_y=True)
+
+    # -- Section builders --------------------------------------------------
+
+    def _buildPathSection(self, item):
+        """Build the Path section: header + hierarchical path display."""
+        self._addSectionHeader(_("Path"))
+        path_objects = self._buildPathObjects(item)
+
+        if not path_objects:
+            label = wx.StaticText(
+                self._pathPanel, label=_("This item has no parent objects")
+            )
+            self._pathSizer.Add(label, 0, wx.EXPAND | wx.LEFT, 5)
+            return
+
+        for index, obj in enumerate(path_objects):
+            obj_type, icon_name = self._getTypeInfo(obj)
+            subject = obj.subject()
+
+            item_panel = wx.Panel(self._pathPanel)
+            item_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+            # Add indentation based on depth
+            if index > 0:
+                indent = wx.Panel(item_panel, size=(index * 20, 1))
+                item_sizer.Add(indent, 0)
+                arrow_bitmap = wx.ArtProvider.GetBitmap(
+                    "arrow_down_right", wx.ART_MENU, (16, 16)
+                )
+                if arrow_bitmap.IsOk():
+                    arrow = wx.StaticBitmap(item_panel, bitmap=arrow_bitmap)
+                    item_sizer.Add(
+                        arrow, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+                    )
+
+            # Add type icon if available
+            if icon_name:
+                bitmap = wx.ArtProvider.GetBitmap(
+                    icon_name, wx.ART_MENU, (16, 16)
+                )
+                if bitmap.IsOk():
+                    icon = wx.StaticBitmap(item_panel, bitmap=bitmap)
+                    item_sizer.Add(
+                        icon, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+                    )
+                    self._subscribeIconToObject(obj, icon)
+
+            label_text = "[%s] %s" % (obj_type, subject)
+            label = wx.StaticText(item_panel, label=label_text)
+
+            # Make current item bold
+            if index == len(path_objects) - 1:
+                font = label.GetFont()
+                font.SetWeight(wx.FONTWEIGHT_BOLD)
+                label.SetFont(font)
+
+            item_sizer.Add(label, 1, wx.ALIGN_CENTER_VERTICAL)
+            item_panel.SetSizer(item_sizer)
+            self._pathSizer.Add(item_panel, 0, wx.EXPAND | wx.ALL, 2)
+
+    def _buildCategoriesSection(self, item):
+        """Build the Categories section: separator, header, category list."""
+        self._addSectionSeparator()
+        self._addSectionHeader(_("Categories"))
+        categories = sorted(item.categories(), key=lambda c: c.subject())
+        if not categories:
+            self._addNoneLabel()
+            return
+        for cat in categories:
+            # Build breadcrumb path: "Parent > Child > Grandchild"
+            ancestors = cat.ancestors()
+            if ancestors:
+                display = " > ".join(a.subject() for a in ancestors)
+                display += " > " + cat.subject()
+            else:
+                display = cat.subject()
+            self._addItemRow(cat, display_text=display)
+
+    def _buildPrerequisitesSection(self, item):
+        """Build the Prerequisites section: separator, header, task list."""
+        self._addSectionSeparator()
+        self._addSectionHeader(_("Prerequisites"))
+        prerequisites = sorted(item.prerequisites(), key=lambda t: t.subject())
+        if not prerequisites:
+            self._addNoneLabel()
+            return
+        for prereq in prerequisites:
+            self._addItemRow(prereq)
+
+    def _buildDependantsSection(self, item):
+        """Build the Dependants section: separator, header, task list."""
+        self._addSectionSeparator()
+        self._addSectionHeader(_("Dependants"))
+        dependants = sorted(item.dependencies(), key=lambda t: t.subject())
+        if not dependants:
+            self._addNoneLabel()
+            return
+        for dep in dependants:
+            self._addItemRow(dep)
+
+    # -- Shared helpers ----------------------------------------------------
+
+    def _addSectionSeparator(self):
+        """Add a horizontal line separator to the path panel."""
+        line = wx.StaticLine(self._pathPanel)
+        self._pathSizer.Add(line, 0, wx.EXPAND | wx.TOP | wx.BOTTOM, 8)
+
+    def _addSectionHeader(self, title):
+        """Add a bold section header to the path panel."""
+        header = wx.StaticText(self._pathPanel, label=title)
+        font = header.GetFont()
+        font.SetWeight(wx.FONTWEIGHT_BOLD)
+        header.SetFont(font)
+        self._pathSizer.Add(header, 0, wx.EXPAND | wx.BOTTOM, 4)
+
+    def _addNoneLabel(self):
+        """Add a '(none)' label for empty sections."""
+        label = wx.StaticText(self._pathPanel, label=_("(none)"))
+        self._pathSizer.Add(label, 0, wx.LEFT, 20)
+
+    def _addItemRow(self, obj, display_text=None):
+        """Add an item row with icon and label to the path panel."""
+        obj_type, icon_name = self._getTypeInfo(obj)
+        item_panel = wx.Panel(self._pathPanel)
+        item_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Add type icon if available
+        if icon_name:
+            bitmap = wx.ArtProvider.GetBitmap(icon_name, wx.ART_MENU, (16, 16))
+            if bitmap.IsOk():
+                icon = wx.StaticBitmap(item_panel, bitmap=bitmap)
+                item_sizer.Add(icon, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+                self._subscribeIconToObject(obj, icon)
+
+        label_text = display_text or ("[%s] %s" % (obj_type, obj.subject()))
+        label = wx.StaticText(item_panel, label=label_text)
+        item_sizer.Add(label, 1, wx.ALIGN_CENTER_VERTICAL)
+
+        item_panel.SetSizer(item_sizer)
+        self._pathSizer.Add(item_panel, 0, wx.EXPAND | wx.ALL, 2)
+
+    def _subscribeIconToObject(self, obj, bitmap):
+        """Register a StaticBitmap for updates when object's effective icon changes."""
+        if not hasattr(obj, "effectiveIconChangedEventType"):
+            return
+        self._iconWidgets[id(obj)] = (obj, bitmap)
+
+    def _ensureIconSubscription(self):
+        """Subscribe to effective icon changes (once per rebuild)."""
+        if self._iconSubscribed:
+            return
+        self._iconSubscribed = True
+        self.registerObserver(
+            self._onEffectiveIconChanged, eventType="pubsub.effective.icon"
+        )
+
+    def _onEffectiveIconChanged(self, event):
+        """Handle effective icon changes - update only the matching icon widget."""
+        for source in event.sources():
+            obj_id = id(source)
+            if obj_id in self._iconWidgets:
+                obj, bitmap = self._iconWidgets[obj_id]
+                try:
+                    _, icon_name = self._getTypeInfo(obj)
+                    if icon_name:
+                        new_bitmap = wx.ArtProvider.GetBitmap(
+                            icon_name, wx.ART_MENU, (16, 16)
+                        )
+                        if new_bitmap.IsOk():
+                            bitmap.SetBitmap(new_bitmap)
+                            bitmap.Refresh()
+                except RuntimeError:
+                    pass  # Widget destroyed
+
+    def _unsubscribeIconUpdates(self):
+        """Clear icon widget tracking (subscription cleaned up on page close)."""
+        self._iconWidgets = {}
+
+    def _buildPathObjects(self, item):
+        """Build the path from root to current item.
+
+        Returns a list of actual objects for display.
+        """
+        path = []
+
+        # Find owner for notes and attachments
+        owner = self._findOwner(item)
+        if owner:
+            owner_path = self._buildPathObjects(owner)
+            path.extend(owner_path)
+
+        # Add ancestors for composite objects
+        if hasattr(item, "ancestors"):
+            path.extend(item.ancestors())
+
+        # Add current item
+        path.append(item)
+        return path
+
+    def close(self):
+        """Clean up observers when the page is closed."""
+        # Unsubscribe icon-specific handlers
+        self._unsubscribeIconUpdates()
+
+        if self._subscribed:
+            from taskcoachlib.domain import (
+                task,
+                category,
+                note,
+                attachment,
+                effort,
+            )
+
+            all_event_types = (
+                task.Task.modificationEventTypes()
+                + category.Category.modificationEventTypes()
+                + note.Note.modificationEventTypes()
+                + effort.Effort.modificationEventTypes()
+                + attachment.FileAttachment.modificationEventTypes()
+                + attachment.URIAttachment.modificationEventTypes()
+                + attachment.MailAttachment.modificationEventTypes()
+            )
+            for eventType in all_event_types:
+                if eventType.startswith("pubsub"):
+                    try:
+                        pub.unsubscribe(self._onAnyChange, eventType)
+                    except Exception:
+                        pass
+            patterns.Publisher().removeObserver(self._onAnyChange)
+        super().close()
+
+    def _getTypeInfo(self, obj):
+        """Get the type name and effective icon for an object."""
+        from taskcoachlib.domain import task as task_module
+        from taskcoachlib.domain import category, note, attachment, effort
+
+        if isinstance(obj, task_module.Task):
+            return (_("Task"), obj.effectiveIcon())
+        elif isinstance(obj, category.Category):
+            return (_("Category"), obj.effectiveIcon())
+        elif isinstance(obj, note.Note):
+            return (_("Note"), obj.effectiveIcon())
+        elif isinstance(obj, attachment.Attachment):
+            return (_("Attachment"), obj.effectiveIcon())
+        elif isinstance(obj, effort.Effort):
+            return (_("Effort"), "clock_icon")
+        else:
+            return (_("Item"), None)
+
+    def _findOwner(self, item):
+        """Find the immediate owner of a note or attachment.
+
+        Notes can be owned by: tasks, categories, attachments, or other notes (parent)
+        Attachments can be owned by: tasks, categories, or notes
+        Efforts are owned by their task
+
+        For notes with a parent note, returns None (ancestors() handles the hierarchy).
+        For root-level notes, finds the task/category/attachment that owns it.
+        """
+        from taskcoachlib.domain import note, attachment, effort
+
+        # Efforts have a task() method that returns their owner
+        if isinstance(item, effort.Effort):
+            return item.task()
+
+        if not isinstance(item, (note.Note, attachment.Attachment)):
+            return None
+
+        # For notes with a parent note, the parent relationship is handled by ancestors()
+        # But we still need to find the owner of the ROOT note in the hierarchy
+        if isinstance(item, note.Note) and item.parent():
+            # Get the root note (the one without a parent)
+            root_note = item
+            while root_note.parent():
+                root_note = root_note.parent()
+            # Find owner of root note
+            return self._findNoteOwner(root_note)
+
+        # For root-level notes
+        if isinstance(item, note.Note):
+            return self._findNoteOwner(item)
+
+        # For attachments
+        return self._findAttachmentOwner(item)
+
+    def _findNoteOwner(self, target_note):
+        """Find the owner of a root-level note (task, category, or attachment)."""
+        # Check tasks
+        for t in self._taskFile.tasks():
+            if target_note in t.notes(recursive=False):
+                return t
+
+        # Check categories
+        for c in self._taskFile.categories():
+            if target_note in c.notes(recursive=False):
+                return c
+
+        # Check all attachments (they can own notes too)
+        # This requires searching through all attachments in the system
+        owner = self._findNoteOwnerInAttachments(target_note)
+        if owner:
+            return owner
+
+        return None
+
+    def _findNoteOwnerInAttachments(self, target_note):
+        """Search for a note's owner among all attachments in the system."""
+        # We need to search ALL attachments, including deeply nested ones
+        # Attachments can be owned by tasks, categories, notes, and notes owned by attachments...
+
+        visited = set()
+        attachments_to_check = []
+
+        # Collect all "root" attachments from tasks and categories
+        for t in self._taskFile.tasks():
+            attachments_to_check.extend(t.attachments())
+        for c in self._taskFile.categories():
+            attachments_to_check.extend(c.attachments())
+
+        # Also from global notes and their children
+        for n in self._taskFile.notes():
+            attachments_to_check.extend(n.attachments())
+            for child in n.children(recursive=True):
+                attachments_to_check.extend(child.attachments())
+
+        # From task notes
+        for t in self._taskFile.tasks():
+            for n in t.notes(recursive=True):
+                attachments_to_check.extend(n.attachments())
+
+        # From category notes
+        for c in self._taskFile.categories():
+            for n in c.notes(recursive=True):
+                attachments_to_check.extend(n.attachments())
+
+        # Now search through all attachments, including their nested notes' attachments
+        while attachments_to_check:
+            att = attachments_to_check.pop()
+            att_id = att.id()
+            if att_id in visited:
+                continue
+            visited.add(att_id)
+
+            # Check if this attachment owns our target note
+            if hasattr(att, "notes"):
+                if target_note in att.notes(recursive=False):
+                    return att
+                # Add attachments from this attachment's notes to search
+                for n in att.notes(recursive=True):
+                    attachments_to_check.extend(n.attachments())
+
+        return None
+
+    def _findAttachmentOwner(self, target_attachment):
+        """Find the owner of an attachment (task, category, or note)."""
+        # Check tasks
+        for t in self._taskFile.tasks():
+            if target_attachment in t.attachments():
+                return t
+
+        # Check categories
+        for c in self._taskFile.categories():
+            if target_attachment in c.attachments():
+                return c
+
+        # Check all notes (including deeply nested ones)
+        owner = self._findAttachmentOwnerInNotes(target_attachment)
+        if owner:
+            return owner
+
+        return None
+
+    def _findAttachmentOwnerInNotes(self, target_attachment):
+        """Search for an attachment's owner among all notes in the system."""
+        visited = set()
+        notes_to_check = []
+
+        # Collect all "root" notes from tasks and categories
+        for t in self._taskFile.tasks():
+            notes_to_check.extend(t.notes(recursive=True))
+        for c in self._taskFile.categories():
+            notes_to_check.extend(c.notes(recursive=True))
+
+        # Global notes
+        for n in self._taskFile.notes():
+            notes_to_check.append(n)
+            notes_to_check.extend(n.children(recursive=True))
+
+        # Now we also need to check notes owned by attachments
+        # First, collect all attachments from tasks, categories, and notes
+        attachments_checked = set()
+        attachments_to_check = []
+        for t in self._taskFile.tasks():
+            attachments_to_check.extend(t.attachments())
+        for c in self._taskFile.categories():
+            attachments_to_check.extend(c.attachments())
+        # Also from global notes
+        for n in self._taskFile.notes():
+            attachments_to_check.extend(n.attachments())
+            for child in n.children(recursive=True):
+                attachments_to_check.extend(child.attachments())
+
+        # Search notes, and also add notes from attachments
+        while notes_to_check or attachments_to_check:
+            # Process notes
+            while notes_to_check:
+                n = notes_to_check.pop()
+                note_id = n.id()
+                if note_id in visited:
+                    continue
+                visited.add(note_id)
+
+                # Check if this note owns our target attachment
+                if target_attachment in n.attachments():
+                    return n
+
+                # Add this note's attachments to check for more notes
+                for att in n.attachments():
+                    if att.id() not in attachments_checked:
+                        attachments_to_check.append(att)
+
+            # Process attachments to find more notes
+            while attachments_to_check:
+                att = attachments_to_check.pop()
+                att_id = att.id()
+                if att_id in attachments_checked:
+                    continue
+                attachments_checked.add(att_id)
+
+                # Add notes from this attachment
+                if hasattr(att, "notes"):
+                    for n in att.notes(recursive=True):
+                        if n.id() not in visited:
+                            notes_to_check.append(n)
+
+        return None
+
+    def entries(self):
+        return dict(firstEntry=self, path=self)
 
 
 class EditBook(widgets.Notebook):
@@ -2122,6 +3931,7 @@ class EditBook(widgets.Notebook):
         __create_settings_section : crée un nouvelle section de paramètres si elle n'existe pas.
         close_edit_book : ferme l'éditeur et enregistre la mise en page actuelle.
     """
+
     allPageNames = ["subclass responsibility"]
     domainObject = "subclass responsibility"
 
@@ -2130,7 +3940,9 @@ class EditBook(widgets.Notebook):
         Initialise l'éditeur avec les objets à éditer.
         """
         # --- LOG 1 : À l'entrée de __init__ de Page ---
-        log.debug(f"--- EditBook.__init__ Début de la boucle de création de pages ---")
+        log.debug(
+            f"--- EditBook.__init__ Début de la boucle de création de pages ---"
+        )
         log.debug(f"  parent (reçu par EditBook): {parent}")
         log.debug(f"  items (reçu par EditBook): {items}")
         log.debug(f"  taskFile (reçus par EditBook): {taskFile}")
@@ -2165,11 +3977,12 @@ class EditBook(widgets.Notebook):
         for page_name in page_names:
             page = self.createPage(page_name, task_file, items_are_new)
             self.AddPage(page, page.pageTitle, page.pageIcon)
-        width, height = self.__get_minimum_page_size()
-        self.SetMinSize((width, self.GetHeightForPageHeight(height)))
+        # # DISABLED: SetMinSize was locking entire notebook to max page size
+        # width, height = self.__get_minimum_page_size()
+        # self.SetMinSize((width, self.GetHeightForPageHeight(height)))
 
     def onPageChanged(self, event):
-        """Gère les événements de changement de page, en s'assurant que la page active est correctement initialisée. """
+        """Gère les événements de changement de page, en s'assurant que la page active est correctement initialisée."""
         self.GetPage(
             event.Selection
         ).selected()  # Unresolved attribute reference 'Selection' for class 'Event'->events
@@ -2179,21 +3992,21 @@ class EditBook(widgets.Notebook):
             wx.GetTopLevelParent(self).Raise()
 
     def getPage(self, page_name):
-        """getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index. """
+        """getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index."""
         index = self.getPageIndex(page_name)
         if index is not None:
             return self[index]
         return None
 
     def getPageIndex(self, page_name):
-        """getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index. """
+        """getPage et getPageIndex : Méthodes d'assistance pour récupérer une page par son nom ou son index."""
         for index in range(self.GetPageCount()):
             if page_name == self[index].pageName:
                 return index
         return None
 
     def __get_minimum_page_size(self):
-        """Calcule la taille minimale de l'éditeur en fonction de la taille de ses pages. """
+        """Calcule la taille minimale de l'éditeur en fonction de la taille de ses pages."""
         min_widths, min_heights = [], []
         for page in self:
             min_width, min_height = page.GetMinSize()
@@ -2202,7 +4015,7 @@ class EditBook(widgets.Notebook):
         return max(min_widths), max(min_heights)
 
     def __pages_to_create(self):
-        """Détermine quelles pages doivent être incluses dans l'éditeur en fonction du type d'objet et du mode d'édition. """
+        """Détermine quelles pages doivent être incluses dans l'éditeur en fonction du type d'objet et du mode d'édition."""
         return [
             page_name
             for page_name in self.allPageNames
@@ -2210,7 +4023,7 @@ class EditBook(widgets.Notebook):
         ]
 
     def __should_create_page(self, page_name):
-        """ Vérifie si une page spécifique doit être créé en fonction du type d'objet et du mode d'édition. """
+        """Vérifie si une page spécifique doit être créé en fonction du type d'objet et du mode d'édition."""
         return (
             self.__page_supports_mass_editing(page_name)
             if len(self.items) > 1
@@ -2221,10 +4034,17 @@ class EditBook(widgets.Notebook):
     def __page_supports_mass_editing(page_name):
         """Indique si la page_module prend en charge la modification de plusieurs éléments
         à la fois."""
-        return page_name in ("subject", "dates", "progress", "budget", "appearance")
+        return page_name in (
+            "subject",
+            "dates",
+            "progress",
+            "budget",
+            "appearance",
+            "categories",
+        )
 
     def createPage(self, page_name, task_file, items_are_new):
-        """Crée la page appropriée en fonction du nom de la page et du type d'objet. """
+        """Crée la page appropriée en fonction du nom de la page et du type d'objet."""
         # TODO : changer la méthode. sans les if serait plus rapide ! utiliser plutôt with for!
         log.debug("EditBook.createPage : avec :")
         log.debug(f" page_name={page_name}")
@@ -2277,14 +4097,19 @@ class EditBook(widgets.Notebook):
                 self,
                 task_file,
                 self.settings,
-                settingsSection="attachmentviewerin%seditor" % self.domainObject,
+                settingsSection="attachmentviewerin%seditor"
+                % self.domainObject,
             )
         elif page_name == "appearance":
             return TaskAppearancePage(self.items, self)
+        elif page_name == "path":
+            return PathPage(self.items, self, task_file)
 
     def create_subject_page(self):
-        """Créer la page sujet pour modifier le titre de l'objet. """
-        log.debug("EditBook.create_subject_page: retourne une instance de SubjectPage avec les arguments :")
+        """Créer la page sujet pour modifier le titre de l'objet."""
+        log.debug(
+            "EditBook.create_subject_page: retourne une instance de SubjectPage avec les arguments :"
+        )
         log.debug(f"self.items={self.items}")
         log.debug(f"self={self}")
         log.debug(f"self.settings={self.settings}")
@@ -2294,10 +4119,13 @@ class EditBook(widgets.Notebook):
         """Définit le focus sur un contrôle spécifique sur une page spécifique.
 
         Sélectionnez la bonne page de l'éditeur et le contrôle correct sur une page
-        en fonction de la colonne sur laquelle l'utilisateur a double-cliqué."""
+        en fonction de la colonne sur laquelle l'utilisateur a double-cliqué.
+        """
         page = 0
         for page_index in range(self.GetPageCount()):
-            if columnName in self[page_index].entries():  # Unresolved attribute reference 'entries' for class 'Window'
+            if (
+                columnName in self[page_index].entries()
+            ):  # Unresolved attribute reference 'entries' for class 'Window'
                 page = page_index
                 break
         self.SetSelection(page)
@@ -2305,7 +4133,7 @@ class EditBook(widgets.Notebook):
 
     def isDisplayingItemOrChildOfItem(self, targetItem):
         """Vérifie si un élément donné est en cours de modification
-        ou si l'un de ses enfants est en cours de modification. """
+        ou si l'un de ses enfants est en cours de modification."""
         ancestors = []
         for item in self.items:
             ancestors.extend(item.ancestors())
@@ -2325,7 +4153,9 @@ class EditBook(widgets.Notebook):
         perspective = self.perspective()
         if perspective:
             try:
-                self.LoadPerspective(perspective)
+                # TODO : DISABLED: LoadPerspective was restoring stale AuiNotebook perspective with broken sizing
+                # self.LoadPerspective(perspective)
+                pass
             except Exception:  # pylint: disable=W0702  finally not except
                 pass
         if items_are_new:
@@ -2359,7 +4189,9 @@ class EditBook(widgets.Notebook):
         Cela permet différentes perspectives, par ex. éditeurs à élément unique et
         éditeurs à éléments multiples.
         """
-        page_names = [self[index].pageName for index in range(self.GetPageCount())]
+        page_names = [
+            self[index].pageName for index in range(self.GetPageCount())
+        ]
         section = self.settings_section()
         self.settings.settext(section, "perspective", self.SavePerspective())
         self.settings.setlist(section, "pages", page_names)
@@ -2372,6 +4204,10 @@ class EditBook(widgets.Notebook):
         section = self.__settings_section_name()
         if not self.settings.has_section(section):
             self.__create_settings_section(section)
+        else:
+            # Ensure parent_offset exists for backward compatibility with old sections
+            if not self.settings.has_option(section, "parent_offset"):
+                self.settings.init(section, "parent_offset", "(-1, -1)")
         return section
 
     def __settings_section_name(self):
@@ -2395,6 +4231,7 @@ class EditBook(widgets.Notebook):
                 pages=str(self.__pages_to_create()),
                 size="(-1, -1)",
                 position="(-1, -1)",
+                parent_offset="(-1, -1)",  # Offset from parent window for multi-monitor support
                 maximized="False",
             ).items()
         ):
@@ -2409,7 +4246,8 @@ class EditBook(widgets.Notebook):
         Cette méthode est appelée lors de la fermeture de la fenêtre d'édition.
         """
         for page in self:
-            page.Close()
+            # page.Close()
+            page.close()
         self.__save_perspective()
 
 
@@ -2429,6 +4267,7 @@ class TaskEditBook(EditBook):
         - Pièces jointes
         - Apparence
     """
+
     allPageNames = [
         "subject",
         "dates",
@@ -2440,6 +4279,7 @@ class TaskEditBook(EditBook):
         "notes",
         "attachments",
         "appearance",
+        "path",
     ]
     domainObject = "task"
 
@@ -2450,7 +4290,9 @@ class TaskEditBook(EditBook):
         Returns :
             Une instance de TaskSubjectPage avec self.items, self, et self.settings.
         """
-        log.debug("TaskEditBook.create_subject_page: retourne une instance de TaskSubjectPage avec les arguments :")
+        log.debug(
+            "TaskEditBook.create_subject_page: retourne une instance de TaskSubjectPage avec les arguments :"
+        )
         log.debug(f"self.items={self.items}")
         log.debug(f"self={self}")
         log.debug(f"self.settings={self.settings}")
@@ -2467,7 +4309,9 @@ class CategoryEditBook(EditBook):
         - Pièces jointes
         - Apparence
     """
-    allPageNames = ["subject", "notes", "attachments", "appearance"]
+
+    # allPageNames = ["subject", "notes", "attachments", "appearance"]
+    allPageNames = ["subject", "notes", "attachments", "appearance", "path"]
     domainObject = "category"
 
     def create_subject_page(self):
@@ -2484,7 +4328,15 @@ class NoteEditBook(EditBook):
         - Pièces jointes
         - Apparence
     """
-    allPageNames = ["subject", "categories", "attachments", "appearance"]
+
+    # allPageNames = ["subject", "categories", "attachments", "appearance"]
+    allPageNames = [
+        "subject",
+        "categories",
+        "attachments",
+        "appearance",
+        "path",
+    ]
     domainObject = "note"
 
 
@@ -2499,7 +4351,9 @@ class AttachmentEditBook(EditBook):
 
     Cette classe redéfinie la méthode `isDisplayingItemOrChildOfItem` pour s'assurer que seules les pièces jointes directement sélectionnées sont prises en compte.
     """
-    allPageNames = ["subject", "notes", "appearance"]
+
+    # allPageNames = ["subject", "notes", "appearance"]
+    allPageNames = ["subject", "notes", "appearance", "path"]
     domainObject = "attachment"
 
     def create_subject_page(self):
@@ -2551,11 +4405,19 @@ class EffortEditBook(Page):
         Cette classe fournit une interface conviviale pour modifier les détails de l'effort,
         y compris la sélection des tâches, le suivi du temps et l'édition de la description.
     """
+
     domainObject = "effort"
-    columns = 3
+    columns = 3  # Label, DateTime row, Button/Rest (matches DatesPage)
 
     def __init__(
-        self, parent, efforts, taskFile, settings, items_are_new, *args, **kwargs
+        self,
+        parent,
+        efforts,
+        taskFile,
+        settings,
+        items_are_new,
+        *args,
+        **kwargs,
     ):  # pylint: disable=W0613
         """Initialise l'éditeur avec les efforts et le fichier de tâches donnés."""
         self._descriptionSync = None
@@ -2564,7 +4426,11 @@ class EffortEditBook(Page):
         task_list = taskFile.tasks()
         self._taskList = task.TaskList(task_list)
         self._taskList.extend(
-            [effort.task() for effort in efforts if effort.task() not in task_list]
+            [
+                effort.task()
+                for effort in efforts
+                if effort.task() not in task_list
+            ]
         )
         self._settings = settings
         self._taskFile = taskFile
@@ -2610,7 +4476,9 @@ class EffortEditBook(Page):
         panel = wx.Panel(self)
         current_task = self.items[0].task()
         self._taskEntry = entry.TaskEntry(
-            panel, rootTasks=self._taskList.rootItems(), selectedTask=current_task
+            panel,
+            rootTasks=self._taskList.rootItems(),
+            selectedTask=current_task,
         )
         self._taskSync = attributesync.AttributeSync(
             "task",
@@ -2633,7 +4501,9 @@ class EffortEditBook(Page):
         )
 
         panel_sizer.Add((3, -1))
-        panel_sizer.Add(edit_task_button, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL)
+        panel_sizer.Add(
+            edit_task_button, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL
+        )
         panel.SetSizerAndFit(panel_sizer)
         self.addEntry(_("Task"), panel, flags=[None, wx.ALL | wx.EXPAND])
 
@@ -2645,7 +4515,7 @@ class EffortEditBook(Page):
 
     def __add_start_and_stop_entries(self):
         # pylint: disable=W0201,W0142
-        """Ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif. """
+        """Ajoute les entrées d'heure de début et d'arrêt, y compris les options de temps relatif."""
         date_time_entry_kw_args = dict(showSeconds=True)
         flags = [
             None,
@@ -2661,7 +4531,7 @@ class EffortEditBook(Page):
             current_start_date_time,
             noneAllowed=False,
             showRelative=True,
-            **date_time_entry_kw_args
+            **date_time_entry_kw_args,
         )
         wx.CallAfter(self._startDateTimeEntry.HideRelativeButton)
         self._startDateTimeSync = attributesync.AttributeSync(
@@ -2674,8 +4544,12 @@ class EffortEditBook(Page):
             self.items[0].startChangedEventType(),
             callback=self.__onStartDateTimeChanged,
         )
-        self._startDateTimeEntry.Bind(entry.EVT_DATETIMEENTRY, self.onDateTimeChanged)
-        start_from_last_effort_button = self.__create_start_from_last_effort_button()
+        self._startDateTimeEntry.Bind(
+            entry.EVT_DATETIMEENTRY, self.onDateTimeChanged
+        )
+        start_from_last_effort_button = (
+            self.__create_start_from_last_effort_button()
+        )
         self.addEntry(
             _("Start"),
             self._startDateTimeEntry,
@@ -2696,7 +4570,7 @@ class EffortEditBook(Page):
                 (_("Day(s)"), 24 * 3600),
                 (_("Week(s)"), 7 * 24 * 3600),
             ],
-            **date_time_entry_kw_args
+            **date_time_entry_kw_args,
         )
         self._stopDateTimeSync = attributesync.AttributeSync(
             "getStop",
@@ -2713,14 +4587,18 @@ class EffortEditBook(Page):
         )
         stop_now_button = self.__create_stop_now_button()
         self._invalidPeriodMessage = self.__create_invalid_period_message()
-        self.addEntry(_("Stop"), self._stopDateTimeEntry, stop_now_button, flags=flags)
+        self.addEntry(
+            _("Stop"), self._stopDateTimeEntry, stop_now_button, flags=flags
+        )
         self.__onStartDateTimeChanged(current_start_date_time)
         self._stopDateTimeEntry.LoadChoices(
             self._settings.get("feature", "sdtcspans_effort")
         )
         # sdtc.EVT_TIME_CHOICES_CHANGE(self._stopDateTimeEntry, self.__onChoicesChanged)
         # self._stopDateTimeEntry.Bind(wx.adv.EVT_TIME_CHANGED, self.__onChoicesChanged)
-        self._stopDateTimeEntry.Bind(sdtc.EVT_TIME_CHOICES_CHANGE, self.__onChoicesChanged)  # TODO : à vérifier
+        self._stopDateTimeEntry.Bind(
+            sdtc.EVT_TIME_CHOICES_CHANGE, self.__onChoicesChanged
+        )  # TODO : à vérifier
 
         self.addEntry("", self._invalidPeriodMessage)
 
@@ -2744,6 +4622,7 @@ class EffortEditBook(Page):
         font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         font.SetWeight(wx.FONTWEIGHT_BOLD)
         text.SetFont(font)
+        text.SetForegroundColour(wx.RED)
         return text
 
     def onStartFromLastEffort(self, event):  # pylint: disable=W0613
@@ -2790,7 +4669,8 @@ class EffortEditBook(Page):
         sont antérieures à la date et à l'heure de fin."""
         try:
             return (
-                self._startDateTimeEntry.GetValue() < self._stopDateTimeEntry.GetValue()
+                self._startDateTimeEntry.GetValue()
+                < self._stopDateTimeEntry.GetValue()
             )
         except AttributeError:
             return True  # Entries not created yet
@@ -2799,19 +4679,26 @@ class EffortEditBook(Page):
         """Ouvre l'éditeur de tâches pour la tâche sélectionnée."""
         task_to_edit = self._taskEntry.GetValue()
         TaskEditor(
-            None, [task_to_edit], self._settings, self._taskFile.tasks(), self._taskFile
+            None,
+            [task_to_edit],
+            self._settings,
+            self._taskFile.tasks(),
+            self._taskFile,
         ).Show()
 
     def addDescriptionEntry(self):
         # pylint: disable=W0201
         """Ajoute l'entrée de description."""
+
         def combined_description(items):
             distinctDescriptions = set(item.description() for item in items)
             if len(distinctDescriptions) == 1 and distinctDescriptions.pop():
                 return items[0].description()
             lines = ["[%s]" % _("Edit to change all descriptions")]
             # lines = [f"[{_('Edit to change all descriptions')}]"]
-            lines.extend(item.description() for item in items if item.description())
+            lines.extend(
+                item.description() for item in items if item.description()
+            )
             return "\n\n".join(lines)
 
         current_description = (
@@ -2819,7 +4706,9 @@ class EffortEditBook(Page):
             if len(self.items) == 1
             else combined_description(self.items)
         )
-        self._descriptionEntry = widgets.MultiLineTextCtrl(self, current_description)
+        self._descriptionEntry = widgets.MultiLineTextCtrl(
+            self, current_description, settings=self._settings
+        )
         native_info_string = self._settings.get("editor", "descriptionfont")
         # font = wx.FontFromNativeInfoString(native_info_string) if native_info_string else None
         font = wx.Font(native_info_string) if native_info_string else None
@@ -2910,6 +4799,7 @@ class Editor(BalloonTipManager, widgets.Dialog):
     Cette classe fournit un cadre flexible et personnalisable pour modifier différents types d'objets dans Task Coach,
     garantissant une expérience utilisateur cohérente dans différents scénarios d'édition.
     """
+
     # Gestion du 'wx.Timer' pour macOS
     # EditBookClass = (
     #     lambda *args: "Subclass responsibility"
@@ -2921,8 +4811,11 @@ class Editor(BalloonTipManager, widgets.Dialog):
 
     singular_title = "Subclass responsibility %s"
     plural_title = "Subclass responsibility"
+    item_type_plural = "Items"
 
-    def __init__(self, parent, items, settings, container, task_file, *args, **kwargs):
+    def __init__(
+        self, parent, items, settings, container, task_file, *args, **kwargs
+    ):
         """Initialise l'éditeur avec les éléments, les paramètres et le fichier de tâches donnés.
         Il configure également les gestionnaires d'événements et crée les commandes de l'interface utilisateur.
         """
@@ -2936,8 +4829,12 @@ class Editor(BalloonTipManager, widgets.Dialog):
             parent, self.__title(), buttonTypes=wx.ID_CLOSE, *args, **kwargs
         )
         if not column_name:
-            if self._interior.perspective() and hasattr(self._interior, "GetSelection"):
-                column_name = self._interior[self._interior.GetSelection()].pageName
+            if self._interior.perspective() and hasattr(
+                self._interior, "GetSelection"
+            ):
+                column_name = self._interior[
+                    self._interior.GetSelection()
+                ].pageName
             else:
                 column_name = "subject"
         if column_name:
@@ -2956,6 +4853,11 @@ class Editor(BalloonTipManager, widgets.Dialog):
             )
         self.Bind(wx.EVT_CLOSE, self.on_close_editor)
 
+        # Note: We intentionally do NOT freeze viewers while the dialog is open.
+        # Updates should propagate immediately so other windows stay in sync.
+        # Controls fire EVT_VALUE_CHANGED on blur (user edits) and from
+        # programmatic setters — AttributeSync commits immediately.
+
         if operating_system.isMac():
             # Sigh. On OS X, if you open an editor, switch back to the main window, open
             # another editor, then hit Escape twice, the second editor disappears without any
@@ -2967,7 +4869,8 @@ class Editor(BalloonTipManager, widgets.Dialog):
             # id_ = wx.ID_ANY  # lequel utiliser ?
             self.__timer = wx.Timer(self, id_)
             # wx.EVT_TIMER(self, id_, self.__on_timer)
-            self.Bind(wx.EVT_TIMER, id_, self.__on_timer)
+            # self.Bind(wx.EVT_TIMER, id_, self.__on_timer)
+            self.Bind(wx.EVT_TIMER, self.__on_timer, id=id_)
             self.__timer.Start(1000, False)
         else:
             self.__timer = None
@@ -2985,8 +4888,12 @@ class Editor(BalloonTipManager, widgets.Dialog):
         self.CentreOnParent()
         self.__create_ui_commands()
         self.__dimensions_tracker = (
-            windowdimensionstracker.WindowSizeAndPositionTracker(
-                self, settings, self._interior.settings_section()
+            # windowdimensionstracker.WindowSizeAndPositionTracker(
+            windowdimensionstracker.WindowGeometryTracker(
+                self,
+                settings,
+                self._interior.settings_section(),
+                parent=parent,
             )
         )
 
@@ -3003,14 +4910,29 @@ class Editor(BalloonTipManager, widgets.Dialog):
         #  pour le moment, comme DELETE
         self.__new_effort_id = IdProvider.get()
         # self.__new_effort_id = wx.ID_ANY
+        self.__next_tab_id = IdProvider.get()
+        self.__prev_tab_id = IdProvider.get()
         table = wx.AcceleratorTable(
             [
                 (wx.ACCEL_CMD, ord("Z"), wx.ID_UNDO),
                 (wx.ACCEL_CMD, ord("Y"), wx.ID_REDO),
                 (wx.ACCEL_CMD, ord("E"), self.__new_effort_id),
+                (wx.ACCEL_CTRL, wx.WXK_TAB, self.__next_tab_id),
+                (
+                    wx.ACCEL_CTRL | wx.ACCEL_SHIFT,
+                    wx.WXK_TAB,
+                    self.__prev_tab_id,
+                ),
             ]
         )
         self._interior.SetAcceleratorTable(table)
+        # Bind tab navigation commands
+        self._interior.Bind(
+            wx.EVT_MENU, self.__on_next_tab, id=self.__next_tab_id
+        )
+        self._interior.Bind(
+            wx.EVT_MENU, self.__on_prev_tab, id=self.__prev_tab_id
+        )
         # pylint: disable=W0201
         self.__undo_command = uicommand.EditUndo()
         self.__redo_command = uicommand.EditRedo()
@@ -3026,6 +4948,14 @@ class Editor(BalloonTipManager, widgets.Dialog):
         self.__redo_command.bind(self._interior, wx.ID_REDO)
         self.__new_effort_command.bind(self._interior, self.__new_effort_id)
 
+    def __on_next_tab(self, event):
+        """Handle Ctrl+Tab to move to next tab."""
+        self._interior.AdvanceSelectionForward()
+
+    def __on_prev_tab(self, event):
+        """Handle Ctrl+Shift+Tab to move to previous tab."""
+        self._interior.AdvanceSelectionBackward()
+
     def createInterior(self):
         return self.EditBookClass(
             self._panel,
@@ -3037,6 +4967,8 @@ class Editor(BalloonTipManager, widgets.Dialog):
 
     def on_close_editor(self, event):
         event.Skip()
+        # Save dialog position/size before closing
+        self.__dimensions_tracker.save()
         self._interior.close_edit_book()
         patterns.Publisher().removeObserver(self.on_item_removed)
         patterns.Publisher().removeObserver(self.on_subject_changed)
@@ -3045,8 +4977,15 @@ class Editor(BalloonTipManager, widgets.Dialog):
         if operating_system.isMac():
             self._interior.SetFocusIgnoringChildren()
         if self.__timer is not None:
-            IdProvider.put(id_=self.__timer.GetId())  # Libérer l'identifiant, self = self ou IdProvider ?
-        IdProvider.put(id_=self.__new_effort_id)  # Libérer l'identifiant,  self = self ou IdProvider ?
+            self.__timer.Stop()
+            IdProvider.put(
+                id_=self.__timer.GetId()
+            )  # Libérer l'identifiant, self = self ou IdProvider ?
+        IdProvider.put(
+            id_=self.__new_effort_id
+        )  # Libérer l'identifiant,  self = self ou IdProvider ?
+        IdProvider.put(self.__next_tab_id)
+        IdProvider.put(self.__prev_tab_id)
         self.Destroy()
 
     # Nouvelle fonction conseillée par chatGPT
@@ -3068,7 +5007,9 @@ class Editor(BalloonTipManager, widgets.Dialog):
         de l'élément concerné et fermez tout l'éditeur s'il ne reste plus d'onglets
         ."""
         if self:  # Prevent _wxPyDeadObject TypeError
-            self.__call_after(self.__close_if_item_is_deleted, list(event.values()))
+            self.__call_after(
+                self.__close_if_item_is_deleted, list(event.values())
+            )
 
     def __close_if_item_is_deleted(self, items):
         for item in items:
@@ -3077,7 +5018,8 @@ class Editor(BalloonTipManager, widgets.Dialog):
             #     and not item in self._taskFile
             # ):  # PEP 8: E713 test for membership should be 'not in'
             if (
-                self._interior.isDisplayingItemOrChildOfItem(item) in self._taskFile
+                self._interior.isDisplayingItemOrChildOfItem(item)
+                in self._taskFile
                 and item not in self._taskFile
             ):
                 self.Close()
