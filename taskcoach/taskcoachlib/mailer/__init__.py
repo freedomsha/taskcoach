@@ -25,6 +25,7 @@ import tempfile
 import email
 import email.header
 import urllib.parse
+
 # from taskcoachlib.thirdparty import chardet
 import chardet
 from taskcoachlib.tools import openfile
@@ -35,15 +36,19 @@ from taskcoachlib import operating_system
 
 def readMail(filename, readContent=True):
     """Lit un email depuis un fichier et retourne son contenu."""
-    if isinstance(filename, str):  # Si fd est un chemin de fichier, on ouvre en binaire
+    if isinstance(
+        filename, str
+    ):  # Si fd est un chemin de fichier, on ouvre en binaire
         with open(filename, "rb") as f:
-            message = email.message_from_bytes(f.read())  # ✅ Utilise `message_from_bytes`
+            message = email.message_from_bytes(
+                f.read()
+            )  # ✅ Utilise `message_from_bytes`
     else:  # Sinon, fd est déjà un objet fichier
         with file(filename, "r") as fd:  # str or bytes ?
             # with open(filename, 'r') as fd: # ✅ Lecture binaire
             message = email.message_from_file(fd)
     subject = getSubject(message)
-    content = getContent(message) if readContent else ''
+    content = getContent(message) if readContent else ""
     return subject, content
 
 
@@ -65,7 +70,11 @@ def getSubject(message):
     #     )
     try:
         return " ".join(
-            (part[0].decode(part[1]) if isinstance(part[0], bytes) else part[0])
+            (
+                part[0].decode(part[1])
+                if isinstance(part[0], bytes)
+                else part[0]
+            )
             for part in email.header.decode_header(subject)
         )
     except UnicodeDecodeError:
@@ -78,7 +87,11 @@ def getSubject(message):
         #     return subject.decode(encoding)
         # except:
         #     return repr(subject)
-        encoding = message.get_content_charset() or message.get("Content-Transfer-Encoding") or "utf-8"
+        encoding = (
+            message.get_content_charset()
+            or message.get("Content-Transfer-Encoding")
+            or "utf-8"
+        )
         try:
             return subject.decode(encoding)
         except Exception:
@@ -112,7 +125,7 @@ def getContent(message):
 
 # def openMailWithOutlook(filename):
 #     id_ = None
-#     for line in file(filename, "r"):
+#     for line in open(filename, "r"):
 #         if line.startswith("X-Outlook-ID:"):
 #             id_ = line[13:].strip()
 #             break
@@ -133,8 +146,10 @@ def openMail(filename):
     if os.name == "nt":
         # Find out if Outlook is the so-called 'default' mailer.
         import winreg  # pylint: disable=F0401
-        key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT,
-                             r"mailto\shell\open\command")
+
+        key = winreg.OpenKey(
+            winreg.HKEY_CLASSES_ROOT, r"mailto\shell\open\command"
+        )
         try:
             value, type_ = winreg.QueryValueEx(key, "")
             # if type_ in [winreg.REG_SZ, winreg.REG_EXPAND_SZ]:
