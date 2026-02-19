@@ -25,22 +25,30 @@ Ce fichier définit la vue des pièces jointes (AttachmentViewer).
 import os
 import wx
 
-from taskcoachlib import command, widgets  # besoin de Column, VirtualListCtrl, AssignImageList, SetColumnWidth
+from taskcoachlib import (
+    command,
+    widgets,
+)  # besoin de Column, VirtualListCtrl, AssignImageList, SetColumnWidth
 from taskcoachlib.domain import attachment
+
 # from taskcoachlib.domain.attachment import attachment, sorter
 # from taskcoachlib.domain.attachment import *
 from taskcoachlib.i18n import _
 from taskcoachlib.gui import dialog, uicommand
 import taskcoachlib.gui.menu
+
 # from taskcoachlib.gui.menu import *
 from taskcoachlib.gui.viewer import base, mixin
 
 
-class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
-                       base.SortableViewerWithColumns,
-                       mixin.SortableViewerForAttachmentsMixin,
-                       mixin.SearchableViewerMixin, mixin.NoteColumnMixin,
-                       base.ListViewer):
+class AttachmentViewer(
+    mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
+    base.SortableViewerWithColumns,
+    mixin.SortableViewerForAttachmentsMixin,
+    mixin.SearchableViewerMixin,
+    mixin.NoteColumnMixin,
+    base.ListViewer,
+):
     """
     Vue des pièces jointes dans Task Coach.
 
@@ -53,7 +61,22 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
     # SorterClass = sorter.AttachmentSorter  # don't exist; Ne semble pas exister dans le code actuel noqa: F405
     # SorterClass = taskcoachlib.domain.attachment.AttachmentSorter
     SorterClass = attachment.AttachmentSorter
-    viewerImages = base.ListViewer.viewerImages + ["fileopen", "fileopen_red"]
+    defaultTitle = _("Attachments")
+    coreObjectType = "attachments"
+    viewerImages = base.ListViewer.viewerImages + [
+        "fileopen",
+        "fileopen_red",
+        "folder_blue_icon",
+    ]
+
+    # Map type_ values to human-readable names
+    TYPE_NAMES = {
+        "file": _("File"),
+        "folder": _("Folder"),
+        "uri": _("Link"),
+        "mail": _("Email"),
+        "unknown": _("Unknown"),
+    }
 
     def __init__(self, *args, **kwargs):
         """
@@ -64,7 +87,7 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             **kwargs : Arguments nommés et spécifiques, comme les pièces jointes à afficher.
         """
         self.attachments = kwargs.pop("attachmentsToShow")
-        kwargs.setdefault("settingssection", "attachmentviewer")
+        kwargs.setdefault("settingsSection", "attachmentViewer")
         super().__init__(*args, **kwargs)
 
     def _addAttachments(self, attachments, item, **itemDialogKwargs):
@@ -77,7 +100,9 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             **itemDialogKwargs : Arguments supplémentaires pour la boîte de dialogue d'ajout.
         """
         # Don't try to add attachments to attachments.
-        print(f"viewer.attachment.AttachmentViewer._addAttachments : 📌 [DEBUG] Ajout des attachements : {attachments} dans self={self}")
+        print(
+            f"viewer.attachment.AttachmentViewer._addAttachments : 📌 [DEBUG] Ajout des attachements : {attachments} dans self={self}"
+        )
         super()._addAttachments(attachments, None, **itemDialogKwargs)
 
     def domainObjectsToView(self):
@@ -107,9 +132,12 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
 
         Returns :
             (bool) : True si la sélection est une instance de la classe spécifiée.
-                """
+        """
         return class_ == attachment.Attachment
         # return isinstance(class_, attachment.Attachment)
+
+    def getSupportedPasteTypes(self):
+        return (attachment.Attachment,)
 
     def createWidget(self):
         """
@@ -127,10 +155,16 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         self._columns = self._createColumns()
 
         # Création du Treeview
-        widget = widgets.VirtualListCtrl(self, self.columns(), self.onSelect,
-                                         uicommand.Edit(viewer=self),
-                                         itemPopupMenu, columnPopupMenu,
-                                         resizeableColumn=1, **self.widgetCreationKeywordArguments())
+        widget = widgets.VirtualListCtrl(
+            self,
+            self.columns(),
+            self.onSelect,
+            uicommand.Edit(viewer=self),
+            itemPopupMenu,
+            columnPopupMenu,
+            resizeableColumn=1,
+            **self.widgetCreationKeywordArguments(),
+        )
         widget.SetColumnWidth(0, 150)
         widget.AssignImageList(imageList, wx.IMAGE_LIST_SMALL)
         return widget
@@ -151,6 +185,7 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
                 width=self.getColumnWidth("type"),
                 imageIndicesCallback=self.typeImageIndices,
                 renderCallback=lambda item: "",
+                # renderCallback=self.getTypeName,
                 resizeCallback=self.onResizeColumn,
             ),
             widgets.Column(
@@ -187,7 +222,7 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             ),
             widgets.Column(
                 "notes",
-                "",
+                _("Notes"),
                 attachment.FileAttachment.notesChangedEventType(),  # pylint: disable=E1101
                 attachment.URIAttachment.notesChangedEventType(),  # pylint: disable=E1101
                 attachment.MailAttachment.notesChangedEventType(),  # pylint: disable=E1101
@@ -223,7 +258,20 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
                     helpText=_("Sort by last modification date"),
                 ),
                 resizeCallback=self.onResizeColumn,
-                *attachment.Attachment.modificationEventTypes()
+                *attachment.Attachment.modificationEventTypes(),
+            ),
+            widgets.Column(
+                "id",
+                _("ID"),
+                width=self.getColumnWidth("id"),
+                renderCallback=lambda item: item.id(),
+                sortCallback=uicommand.ViewerSortByCommand(
+                    viewer=self,
+                    value="id",
+                    menuText=_("&ID"),
+                    helpText=_("Sort by ID"),
+                ),
+                resizeCallback=self.onResizeColumn,
             ),
         ]
 
@@ -235,33 +283,40 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             (list) : Liste des commandes pour les colonnes.
         """
         return [
-            uicommand.ToggleAutoColumnResizing(viewer=self,
-                                               settings=self.settings),
+            uicommand.ToggleAutoColumnResizing(
+                viewer=self, settings=self.settings
+            ),
             None,
             uicommand.ViewColumn(
                 menuText=_("&Description"),
                 helpText=_("Show/hide description column"),
                 setting="description",
-                viewer=self
+                viewer=self,
             ),
             uicommand.ViewColumn(
                 menuText=_("&Notes"),
                 helpText=_("Show/hide notes column"),
                 setting="notes",
-                viewer=self
+                viewer=self,
             ),
             uicommand.ViewColumn(
                 menuText=_("&Creation date"),
                 helpText=_("Show/hide creation date column"),
                 setting="creationDateTime",
-                viewer=self
+                viewer=self,
             ),
             uicommand.ViewColumn(
                 menuText=_("&Modification date"),
                 helpText=_("Show/hide last modification date column"),
                 setting="modificationDateTime",
-                viewer=self
-            )
+                viewer=self,
+            ),
+            uicommand.ViewColumn(
+                menuText=_("&ID"),
+                helpText=_("Show/hide ID column"),
+                setting="id",
+                viewer=self,
+            ),
         ]
 
     def createCreationToolBarUICommands(self):
@@ -271,10 +326,13 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         Returns :
             (tuple) : Les commandes de création.
         """
-        return (uicommand.AttachmentNew(attachments=self.presentation(),
-                                        settings=self.settings,
-                                        viewer=self),) + \
-            super().createCreationToolBarUICommands()
+        return (
+            uicommand.AttachmentNew(
+                attachments=self.presentation(),
+                settings=self.settings,
+                viewer=self,
+            ),
+        ) + super().createCreationToolBarUICommands()
 
     def createActionToolBarUICommands(self):
         """
@@ -283,11 +341,17 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         Returns :
             (tuple) : Les commandes d'action.
         """
-        return (uicommand.AttachmentOpen(attachments=attachment.AttachmentList(),
-                                         viewer=self, settings=self.settings),) + \
-            super().createActionToolBarUICommands()
+        return (
+            uicommand.AttachmentOpen(
+                attachments=attachment.AttachmentList(),
+                viewer=self,
+                settings=self.settings,
+            ),
+        ) + super().createActionToolBarUICommands()
 
-    def typeImageIndices(self, anAttachment, exists=os.path.exists):  # pylint: disable=W0613
+    def typeImageIndices(
+        self, anAttachment, exists=os.path.exists
+    ):  # pylint: disable=W0613
         """
         Retourne les indices des images associées à un type de pièce jointe.
 
@@ -304,6 +368,9 @@ class AttachmentViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
                 index = self.imageIndex["fileopen"]
             else:
                 index = self.imageIndex["fileopen_red"]
+        elif self._isFolderUri(anAttachment):
+            # Folder URI - use folder icon
+            index = self.imageIndex["folder_blue_icon"]
         else:
             try:
                 index = self.imageIndex[

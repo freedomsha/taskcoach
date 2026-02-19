@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from taskcoachlib import command, widgets, domain
 from taskcoachlib.domain import note
 from taskcoachlib.gui import uicommand, dialog
+
 # from taskcoachlib.gui.menu import *
 import taskcoachlib.gui.menu
 from taskcoachlib.i18n import _
@@ -32,16 +33,20 @@ from taskcoachlib.gui.viewer import inplace_editor
 import wx
 
 
-class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
-                     mixin.SearchableViewerMixin,
-                     mixin.SortableViewerForNotesMixin,
-                     mixin.AttachmentColumnMixin,
-                     base.CategorizableViewerMixin,
-                     base.WithAttachmentsViewerMixin,
-                     base.SortableViewerWithColumns, base.TreeViewer):
+class BaseNoteViewer(
+    mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
+    mixin.SearchableViewerMixin,
+    mixin.SortableViewerForNotesMixin,
+    mixin.AttachmentColumnMixin,
+    base.CategorizableViewerMixin,
+    base.WithAttachmentsViewerMixin,
+    base.SortableViewerWithColumns,
+    base.TreeViewer,
+):
     SorterClass = note.NoteSorter
     defaultTitle = _("Notes")
     defaultBitmap = "note_icon"
+    coreObjectType = "notes"
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("settingsSection", "noteviewer")
@@ -56,27 +61,40 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             )
 
     def domainObjectsToView(self):
-        return self.taskFile.notes() if self.notesToShow is None else self.notesToShow
+        return (
+            self.taskFile.notes()
+            if self.notesToShow is None
+            else self.notesToShow
+        )
 
     def curselectionIsInstanceOf(self, class_):
         return class_ == note.Note
+
+    def getSupportedPasteTypes(self):
+        return (note.Note,)
 
     def createWidget(self):
         imageList = self.createImageList()  # Has side-effects
         self._columns = self._createColumns()
         # itemPopupMenu = taskcoachlib.gui.menu.NotePopupMenu(self.parent, self.settings,
-        itemPopupMenu = taskcoachlib.gui.menu.NotePopupMenu(self.parent, self.settings,
-                                                            self.taskFile.categories(), self)
+        itemPopupMenu = taskcoachlib.gui.menu.NotePopupMenu(
+            self.parent, self.settings, self.taskFile.categories(), self
+        )
         # columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
-        widget = widgets.TreeListCtrl(self, self.columns(), self.onSelect,
-                                      uicommand.Edit(viewer=self),
-                                      uicommand.NoteDragAndDrop(viewer=self, notes=self.presentation()),
-                                      itemPopupMenu, columnPopupMenu,
-                                      resizeableColumn=1 if self.hasOrderingColumn() else 0,
-                                      validateDrag=self.validateDrag,
-                                      **self.widgetCreationKeywordArguments())
+        widget = widgets.TreeListCtrl(
+            self,
+            self.columns(),
+            self.onSelect,
+            uicommand.Edit(viewer=self),
+            uicommand.NoteDragAndDrop(viewer=self, notes=self.presentation()),
+            itemPopupMenu,
+            columnPopupMenu,
+            resizeableColumn=1 if self.hasOrderingColumn() else 0,
+            validateDrag=self.validateDrag,
+            **self.widgetCreationKeywordArguments()
+        )
         if self.hasOrderingColumn():
             widget.SetMainColumn(1)
         widget.AssignImageList(imageList)  # pylint: disable=E1101
@@ -87,15 +105,18 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         return domain.base.DeletedFilter(notes)
 
     def createCreationToolBarUICommands(self):
-        return (uicommand.NoteNew(notes=self.presentation(),
-                                  settings=self.settings, viewer=self),
-                uicommand.NewSubItem(viewer=self),) + \
-            super().createCreationToolBarUICommands()
+        return (
+            uicommand.NoteNew(
+                notes=self.presentation(), settings=self.settings, viewer=self
+            ),
+            uicommand.NewSubItem(viewer=self),
+        ) + super().createCreationToolBarUICommands()
 
     def createColumnUICommands(self):
         return [
-            uicommand.ToggleAutoColumnResizing(viewer=self,
-                                               settings=self.settings),
+            uicommand.ToggleAutoColumnResizing(
+                viewer=self, settings=self.settings
+            ),
             None,
             uicommand.ViewColumn(
                 menuText=_("&Manual ordering"),
@@ -131,6 +152,12 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
                 menuText=_("&Modification date"),
                 helpText=_("Show/hide last modification date column"),
                 setting="modificationDateTime",
+                viewer=self,
+            ),
+            uicommand.ViewColumn(
+                menuText=_("&ID"),
+                helpText=_("Show/hide ID column"),
+                setting="id",
                 viewer=self,
             ),
         ]
@@ -185,7 +212,7 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         )
         attachmentsColumn = widgets.Column(
             "attachments",
-            "",
+            _("Attachments"),
             note.Note.attachmentsChangedEventType(),  # pylint: disable=E1101
             width=self.getColumnWidth("attachments"),
             alignment=wx.LIST_FORMAT_LEFT,
@@ -237,6 +264,19 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             ),
             *note.Note.modificationEventTypes()
         )
+        idColumn = widgets.Column(
+            "id",
+            _("ID"),
+            width=self.getColumnWidth("id"),
+            resizeCallback=self.onResizeColumn,
+            renderCallback=lambda note: note.id(),
+            sortCallback=uicommand.ViewerSortByCommand(
+                viewer=self,
+                value="id",
+                menuText=_("&ID"),
+                helpText=_("Sort notes by ID"),
+            ),
+        )
         return [
             orderingColumn,
             subjectColumn,
@@ -245,6 +285,7 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
             categoriesColumn,
             creationDateTimeColumn,
             modificationDateTimeColumn,
+            idColumn,
         ]
 
     def isShowingNotes(self):
@@ -285,5 +326,7 @@ class BaseNoteViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
         return command.NewSubNoteCommand
 
 
-class NoteViewer(mixin.FilterableViewerForCategorizablesMixin, BaseNoteViewer):  # pylint: disable=W0223
+class NoteViewer(
+    mixin.FilterableViewerForCategorizablesMixin, BaseNoteViewer
+):  # pylint: disable=W0223
     pass

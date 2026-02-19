@@ -30,11 +30,11 @@ log = logging.getLogger(__name__)  # Initialise le logger pour ce module.
 
 
 def viewerTypes():
-    """ Return the available viewer types, using the names as used in the
-        settings.
+    """Return the available viewer types, using the names as used in the
+    settings.
 
-        Renvoie les types de visionneuses disponibles, en utilisant les noms utilisés dans les paramètres.
-        """
+    Renvoie les types de visionneuses disponibles, en utilisant les noms utilisés dans les paramètres.
+    """
     types = [
         "timelineviewer",
         "squaretaskviewer",
@@ -57,10 +57,10 @@ def viewerTypes():
 
 
 class addViewers(object):  # pylint: disable=C0103, R0903
-    """ addViewers est une classe se faisant passer pour une méthode.
+    """addViewers est une classe se faisant passer pour une méthode.
 
-        C'est une classe car cela facilite la répartition du travail
-        entre différentes méthodes utilisant les mêmes variables d'instance.
+    C'est une classe car cela facilite la répartition du travail
+    entre différentes méthodes utilisant les mêmes variables d'instance.
     """
 
     floating = False  # Start viewers floating? Not when restoring layout
@@ -68,12 +68,15 @@ class addViewers(object):  # pylint: disable=C0103, R0903
     def __init__(self, viewer_container, task_file, settings):
         self.__viewer_container = viewer_container
         self.__settings = settings
-        self.__viewer_init_args = (viewer_container.containerWidget, task_file,
-                                   settings)
+        self.__viewer_init_args = (
+            viewer_container.containerWidget,
+            task_file,
+            settings,
+        )
         self.__add_all_viewers()
 
     def __add_all_viewers(self):
-        """ Open viewers as saved previously in the settings.
+        """Open viewers as saved previously in the settings.
 
         Ouvrez les visionneuses telles qu'elles ont été enregistrées précédemment dans les paramètres.
         """
@@ -100,10 +103,12 @@ class addViewers(object):  # pylint: disable=C0103, R0903
         """
         number_of_viewers_to_add = self._number_of_viewers_to_add(viewer_class)
         for _ in range(number_of_viewers_to_add):
-            viewer_instance = viewer_class(*self.__viewer_init_args,
-                                           **self._viewer_kwargs(viewer_class))
-            self.__viewer_container.addViewer(viewer_instance,
-                                              floating=self.floating)
+            viewer_instance = viewer_class(
+                *self.__viewer_init_args, **self._viewer_kwargs(viewer_class)
+            )
+            self.__viewer_container.addViewer(
+                viewer_instance, floating=self.floating
+            )
 
     def _number_of_viewers_to_add(self, viewer_class):
         """
@@ -121,22 +126,26 @@ class addViewers(object):  # pylint: disable=C0103, R0903
 
         Renvoie les arguments de mot-clé à transmettre à l'initialiseur du visualiseur.
         """
-        return dict(viewerContainer=self.__viewer_container) if issubclass(viewer_class,
-                                                                           effort.EffortViewerForSelectedTasks) \
+        return (
+            dict(viewerContainer=self.__viewer_container)
+            if issubclass(viewer_class, effort.EffortViewerForSelectedTasks)
             else dict()
+        )
 
 
 class addOneViewer(addViewers):  # pylint: disable=C0103, R0903
-    """ addOneViewer is a class masquerading as a method to add one viewer
-        of a specified viewer class.
+    """addOneViewer is a class masquerading as a method to add one viewer
+    of a specified viewer class.
 
-        addOneViewer est une classe se faisant passer pour une méthode
-        permettant d'ajouter une visionneuse d'une classe de visionneuse spécifiée.
-        """
+    addOneViewer est une classe se faisant passer pour une méthode
+    permettant d'ajouter une visionneuse d'une classe de visionneuse spécifiée.
+    """
 
     floating = True  # Start viewer floating? Yes when opening a new viewer
 
-    def __init__(self, viewer_container, task_file, settings, viewer_class, **kwargs):
+    def __init__(
+        self, viewer_container, task_file, settings, viewer_class, **kwargs
+    ):
         self.__viewer_class = viewer_class
         self.__kwargs = kwargs
         super().__init__(viewer_container, task_file, settings)

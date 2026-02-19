@@ -75,33 +75,42 @@ import wx
 from taskcoachlib import command, widgets
 from taskcoachlib.domain import category
 from taskcoachlib.i18n import _
+
 # from taskcoachlib.gui import uicommand, dialog, menu
 from taskcoachlib.gui.uicommand import uicommand
 from taskcoachlib.gui import dialog
+
 # from taskcoachlib.gui.dialog.editor import CategoryEditor  # circular import
 import taskcoachlib.gui.menu
+
 # from taskcoachlib.gui.menu import *
 from taskcoachlib.gui.viewer import base
 from taskcoachlib.gui.viewer import mixin
 from taskcoachlib.gui.viewer import inplace_editor
 
 
-class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
-                         mixin.FilterableViewerMixin,
-                         mixin.SortableViewerForCategoriesMixin,
-                         mixin.SearchableViewerMixin,
-                         base.WithAttachmentsViewerMixin,
-                         mixin.NoteColumnMixin, mixin.AttachmentColumnMixin,
-                         base.SortableViewerWithColumns, base.TreeViewer):
+class BaseCategoryViewer(
+    mixin.AttachmentDropTargetMixin,  # pylint: disable=W0223
+    mixin.FilterableViewerMixin,
+    mixin.SortableViewerForCategoriesMixin,
+    mixin.SearchableViewerMixin,
+    base.WithAttachmentsViewerMixin,
+    mixin.NoteColumnMixin,
+    mixin.AttachmentColumnMixin,
+    base.SortableViewerWithColumns,
+    base.TreeViewer,
+):
     """
     Classe de base pour la vue des catégories.
 
     Cette classe gère l'affichage et l'interaction avec les catégories dans une vue arborescente,
     y compris la gestion des pièces jointes, des filtres, et du tri.
     """
+
     SorterClass = category.CategorySorter
     defaultTitle = _("Categories")
     defaultBitmap = "folder_blue_arrow_icon"
+    coreObjectType = "categories"
 
     def __init__(self, *args, **kwargs):
         """
@@ -115,12 +124,15 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         # il ne trouvait pas de category_viewer
         kwargs.setdefault("settingsSection", "categoryviewer")
         super().__init__(*args, **kwargs)
-        for eventType in [category.Category.subjectChangedEventType(),
-                          category.Category.appearanceChangedEventType(),
-                          category.Category.exclusiveSubcategoriesChangedEventType(),
-                          category.Category.filterChangedEventType()]:
-            self.registerObserver(self.onAttributeChanged_Deprecated,
-                                  eventType)
+        for eventType in [
+            category.Category.subjectChangedEventType(),
+            category.Category.appearanceChangedEventType(),
+            category.Category.exclusiveSubcategoriesChangedEventType(),
+            category.Category.filterChangedEventType(),
+        ]:
+            self.registerObserver(
+                self.onAttributeChanged_Deprecated, eventType
+            )
 
     def domainObjectsToView(self):
         """
@@ -155,14 +167,21 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         itemPopupMenu = self.createCategoryPopupMenu()
         columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
-        widget = widgets.CheckTreeCtrl(self, self._columns,
-                                       self.onSelect, self.onCheck,
-                                       uicommand.Edit(viewer=self),
-                                       uicommand.CategoryDragAndDrop(viewer=self, categories=self.presentation()),
-                                       itemPopupMenu, columnPopupMenu,
-                                       resizeableColumn=1 if self.hasOrderingColumn() else 0,
-                                       validateDrag=self.validateDrag,
-                                       **self.widgetCreationKeywordArguments())
+        widget = widgets.CheckTreeCtrl(
+            self,
+            self._columns,
+            self.onSelect,
+            self.onCheck,
+            uicommand.Edit(viewer=self),
+            uicommand.CategoryDragAndDrop(
+                viewer=self, categories=self.presentation()
+            ),
+            itemPopupMenu,
+            columnPopupMenu,
+            resizeableColumn=1 if self.hasOrderingColumn() else 0,
+            validateDrag=self.validateDrag,
+            **self.widgetCreationKeywordArguments()
+        )
         if self.hasOrderingColumn():
             widget.SetMainColumn(1)
         widget.AssignImageList(imageList)  # pylint: disable=E1101
@@ -178,8 +197,9 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         Returns :
             (wx.Menu) : Le menu contextuel pour les catégories.
         """
-        return taskcoachlib.gui.menu.CategoryPopupMenu(self.parent, self.settings, self.taskFile,
-                                                       self, localOnly)
+        return taskcoachlib.gui.menu.CategoryPopupMenu(
+            self.parent, self.settings, self.taskFile, self, localOnly
+        )
 
     def _createColumns(self):
         """
@@ -190,7 +210,8 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         """
         # pylint: disable=W0142,E1101
         kwargs = dict(resizeCallback=self.onResizeColumn)
-        columns = [widgets.Column(
+        columns = [
+            widgets.Column(
                 "ordering",
                 "",
                 category.Category.orderingChangedEventType(),
@@ -199,8 +220,9 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 ),
                 imageIndicesCallback=self.orderingImageIndices,
                 renderCallback=lambda category: "",
-                width=self.getColumnWidth("ordering")
-            ), widgets.Column(
+                width=self.getColumnWidth("ordering"),
+            ),
+            widgets.Column(
                 "subject",
                 _("Subject"),
                 category.Category.subjectChangedEventType(),
@@ -212,7 +234,8 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 editCallback=self.onEditSubject,
                 editControl=inplace_editor.SubjectCtrl,
                 **kwargs
-            ), widgets.Column(
+            ),
+            widgets.Column(
                 "description",
                 _("Description"),
                 category.Category.descriptionChangedEventType(),
@@ -224,7 +247,8 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 editCallback=self.onEditDescription,
                 editControl=inplace_editor.DescriptionCtrl,
                 **kwargs
-            ), widgets.Column(
+            ),
+            widgets.Column(
                 "attachments",
                 "",
                 category.Category.attachmentsChangedEventType(),  # pylint: disable=E1101
@@ -234,10 +258,11 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 headerImageIndex=self.imageIndex["paperclip_icon"],
                 renderCallback=lambda category: "",
                 **kwargs
-            # )]
-            # columns.append(
-            # widgets.Column(
-            ), widgets.Column(
+                # )]
+                # columns.append(
+                # widgets.Column(
+            ),
+            widgets.Column(
                 "notes",
                 "",
                 category.Category.notesChangedEventType(),  # pylint: disable=E1101
@@ -272,7 +297,20 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 ),
                 *category.Category.modificationEventTypes(),
                 **kwargs
-            )]
+            ),
+            # )
+            # columns.append(
+            widgets.Column(
+                "id",
+                _("ID"),
+                width=self.getColumnWidth("id"),
+                renderCallback=lambda category: category.id(),
+                sortCallback=uicommand.ViewerSortByCommand(
+                    viewer=self, value="id"
+                ),
+                **kwargs
+            ),
+        ]
         return columns
 
     def createCreationToolBarUICommands(self):
@@ -282,9 +320,24 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         Returns :
             (tuple) : Les commandes de création.
         """
-        return (uicommand.CategoryNew(categories=self.presentation(),
-                                      settings=self.settings),
-                uicommand.NewSubItem(viewer=self))
+        return (
+            uicommand.CategoryNew(
+                categories=self.presentation(), settings=self.settings
+            ),
+            uicommand.NewSubItem(viewer=self),
+        )
+
+    def checkAllCategories(self):
+        """Set all categories to filtered (checked) state."""
+        for cat in self.presentation():
+            cat.setFiltered(True)
+        self.refresh()
+
+    def uncheckAllCategories(self):
+        """Set all categories to unfiltered (unchecked) state."""
+        for cat in self.presentation():
+            cat.setFiltered(False)
+        self.refresh()
 
     def createColumnUICommands(self):
         """
@@ -294,7 +347,9 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
             (list) : Liste des commandes pour les colonnes.
         """
         commands = [
-            uicommand.ToggleAutoColumnResizing(viewer=self, settings=self.settings),
+            uicommand.ToggleAutoColumnResizing(
+                viewer=self, settings=self.settings
+            ),
             None,
             uicommand.ViewColumn(
                 menuText=_("&Manual ordering"),
@@ -320,7 +375,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 menuText=_("&Notes"),
                 helpText=_("Show/hide notes column"),
                 setting="notes",
-                viewer=self
+                viewer=self,
             )
         )
         commands.append(
@@ -328,7 +383,7 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
                 menuText=_("&Creation date"),
                 helpText=_("Show/hide creation date column"),
                 setting="creationDateTime",
-                viewer=self
+                viewer=self,
             )
         )
         commands.append(
@@ -371,6 +426,14 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         #     setting="modificationDateTime",
         #     viewer=self,
         # )]
+        commands.append(
+            uicommand.ViewColumn(
+                menuText=_("&ID"),
+                helpText=_("Show/hide ID column"),
+                setting="id",
+                viewer=self,
+            )
+        )
         return commands
 
     def onAttributeChanged(self, newValue, sender):
@@ -390,7 +453,10 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
         Args :
             event : L'événement.
         """
-        if category.Category.exclusiveSubcategoriesChangedEventType() in event.types():
+        if (
+            category.Category.exclusiveSubcategoriesChangedEventType()
+            in event.types()
+        ):
             # We need to refresh the children of the changed item as well
             # because they have to use radio buttons instead of checkboxes, or
             # vice versa:
@@ -460,7 +526,9 @@ class BaseCategoryViewer(mixin.AttachmentDropTargetMixin,  # pylint: disable=W02
             (tuple) : Messages de statut.
         """
         status1 = _("Categories: %d selected, %d total") % (
-            len(self.curselection()), len(self.presentation()))
+            len(self.curselection()),
+            len(self.presentation()),
+        )
         filteredCategories = self.presentation().filteredCategories()
         status2 = _("Status: %d filtered") % len(filteredCategories)
         return status1, status2
@@ -521,7 +589,9 @@ class CategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
         # print('taskcoachlib.gui.viewer.category.CategoryViewer')
         # CategoryViewer._instance_count = 0
         super().__init__(*args, **kwargs)
-        self.filterUICommand.setChoice(self.settings.getboolean("view", "categoryfiltermatchall"))
+        self.filterUICommand.setChoice(
+            self.settings.getboolean("view", "categoryfiltermatchall")
+        )
 
     def createModeToolBarUICommands(self):
         """
@@ -532,7 +602,8 @@ class CategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
         """
         # pylint: disable=W0201
         self.filterUICommand = uicommand.CategoryViewerFilterChoice(
-            settings=self.settings)
+            settings=self.settings
+        )
         # return super().createModeToolBarUICommands() + self.filterUICommand
         # TypeError: can only concatenate tuple (not "CategoryViewerFilterChoice") to tuple
         # Exception ignored in atexit callback: <built-in function _wxPyCleanup>
