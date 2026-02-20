@@ -692,6 +692,9 @@ class MainWindow(
         # in class 'AuiManagedFrameWithDynamicCenterPane'
         # addPane vient de tclib/widgets/frame.py AuiManagedFrameWithDynamicCenterPane
         # Debug: ClientToScreen cannot work when toplevel window is not shown
+        if operating_system.isWayland():
+            floating = False
+
         # if self.Show() is True:
         name = page.settingsSection()
         super().addPane(page, caption, name, floating=floating)
@@ -827,6 +830,15 @@ class MainWindow(
                 style=wx.OK | wx.ICON_ERROR,
             )
             self.manager.LoadPerspective("")
+
+        # Sur Wayland, forcer tous les panneaux flottants à s'ancrer
+        # pour éviter qu'ils ne soient bloqués ou invisibles.
+        if operating_system.isWayland():
+            # Sur Wayland, forcer tous les panneaux flottants à s'ancrer
+            # pour éviter qu'ils ne soient bloqués ou invisibles.
+            for pane in self.manager.GetAllPanes():
+                if pane.IsFloating():
+                    pane.Dock()
 
         # S'assure que tous les panneaux sont visibles et actualise leurs titres
         for pane in self.manager.GetAllPanes():

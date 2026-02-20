@@ -139,30 +139,38 @@ class ViewerContainer(object):
         self.containerWidget.manager.ClosePane(pane)
 
     def __getattr__(self, attribute):
-        """Transférez les attributs inconnus au visualiseur actif ou au premier visualiseur
-            s'il n'y a pas de visualiseur actif.
+        """Transférez les attributs inconnus au visualiseur actif
+        ou au premier visualiseur
+        s'il n'y a pas de visualiseur actif.
 
         Prend en compte le stockage spécial d'attributs dans wxPython Phoenix.
         """
         # return getattr(self.activeViewer() or self.viewers[0], attribute)
 
+        # Trouvez le visualiseur actif ou le premier visualiseur s'il n'y a pas de visualiseur actif.
         viewer = self.activeViewer() or (
             self.viewers[0] if self.viewers else None
         )
+        # Si aucun visualiseur n'est disponible, soulevez une exception d'attribut.
         if viewer is None:
             raise AttributeError(
                 f"'ViewerContainer' object has no attribute '{attribute}'"
             )
         # Pour les objets hérités de wx.PyEvent ou wx.PyCommandEvent sous Phoenix
         # Il est certainement possible d'utiliser la méthode curselectionIsInstanceOf de BaseCategoryViewer !
+        # Cependant, pour éviter de devoir importer BaseCategoryViewer ici,
+        # nous vérifions simplement si le visualiseur a une méthode _getAttrDict,
+        # qui est utilisée par les classes d'événements wx.PyEvent et wx.PyCommandEvent pour stocker leurs attributs.
         if hasattr(viewer, "_getAttrDict"):
             d = viewer._getAttrDict()
             if attribute in d:
+                # retourne l'attribut à partir du dictionnaire d'attributs de wxPython Phoenix
                 log.info(
                     f"ViewerContainer.__getattr__ retourne l'attribut {d[attribute]} de _getAttrDict !"
                 )
                 return d[attribute]
         # Fallback classique
+        # retourne l'attribut à partir du visualiseur lui-même
         return getattr(viewer, attribute)
         # # Pour obtenir le log :
         # attr_to_ret = getattr(viewer, attribute)
@@ -193,10 +201,23 @@ class ViewerContainer(object):
 
     def activateViewer(self, viewer_to_activate):
         """Active (sélectionne) la visionneuse spécifiée."""
+        # Assurez-vous que la visionneuse à activer est visible, sinon AUI ne l'activera pas.
         self.containerWidget.manager.ActivatePane(viewer_to_activate)
+        # Si la visionneuse à activer est une page de carnet, assurez-vous que le carnet affiche cette page.
         paneInfo = self.containerWidget.manager.GetPane(viewer_to_activate)
         if paneInfo.IsNotebookPage():
+            # Si la page n'est pas déjà active, activez-la.
             self.containerWidget.manager.ShowPane(viewer_to_activate, True)
+            # Obtenez une référence au carnet contenant la page à activer.
+            notebook = aui.GetNotebookRoot(
+                self.containerWidget.manager.GetAllPanes(),
+                paneInfo.notebook_id,
+            )
+            if notebook.window.GetCurrentPage() != viewer_to_activate:
+                notebook.window.SetSelection(
+                    notebook.window.GetPageIndex(viewer_to_activate)
+                )
+        # Assurez-vous que la visionneuse à activer a le focus, sinon les raccourcis clavier ne fonctionneront pas.
         self.sendViewerStatusEvent()
 
     def __del__(self):
@@ -221,8 +242,21 @@ class ViewerContainer(object):
         pub.sendMessage("viewer.status")
 
     def __ensure_active_viewer_has_focus(self):
+        """
+        Assurez-vous que la visionneuse active a le focus.
+
+        Returns :
+            None
+        """
+        # TODO : méthode à revoir pour éviter les problèmes de focus sur Mac OS X Tiger et les problèmes de performance sur d'autres plateformes.
+        # ou peut-être même supprimer complètement cette méthode,
+        # car elle est principalement destinée à résoudre un problème de focus spécifique à Mac OS X Tiger qui pourrait ne plus être pertinent aujourd'hui.
+        # ou vérifier où est utilisée cette méthode et voir si elle est vraiment nécessaire,
+        # ou si nous pouvons simplement nous assurer que les visionneuses prennent le focus lorsqu'elles sont activées.
+        # Si aucune visionneuse n'est active, ne faites rien.
         if not self.activeViewer():
             return
+        # Vérifiez si la visionneuse active a déjà le focus. Si c'est le cas, ne faites rien.
         window = wx.Window.FindFocus()
         if operating_system.isMacOsXTiger_OrOlder() and window is None:
             # Si SearchCtrl a le focus sur Mac OS X Tiger,
@@ -231,11 +265,16 @@ class ViewerContainer(object):
             # ce qui rendrait impossible pour l'utilisateur de saisir
             # le contrôle de recherche.
             return
+        # Parcourez la hiérarchie des fenêtres à partir de la fenêtre actuellement focalisée
+        # pour voir si nous atteignons la visionneuse active.
+        # Si c'est le cas, ne faites rien.
         while window:
             if window == self.activeViewer():
                 break
             window = window.GetParent()
         else:
+            # Si nous avons parcouru toute la hiérarchie
+            # sans trouver la visionneuse active, donnez-lui le focus.
             wx.LogDebug(
                 "ViwerContainer.__ensure_active_viewer_has_focus : Appel de CallAfter."
             )
