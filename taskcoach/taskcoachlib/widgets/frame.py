@@ -66,7 +66,24 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
         agwStyle = (
             aui.AUI_MGR_DEFAULT | aui.AUI_MGR_ALLOW_ACTIVE_PANE
         )  # Style de base avec panneau actif autorisé
-        if not operating_system.isWindows():
+        # --- MODIFICATION POUR WAYLAND ---
+        if operating_system.isWayland():
+            # Utiliser des guides rectangulaires simples sous Wayland
+            # car les fenêtres transparentes (TRANSPARENT_HINT) posent problème.
+            # On retire le style par défaut qui inclut souvent TRANSPARENT_HINT
+            # et on force RECTANGLE_HINT.
+
+            # Note: AUI_MGR_DEFAULT inclut AUI_MGR_TRANSPARENT_HINT.
+            # On doit le retirer explicitement.
+            agwStyle &= ~aui.AUI_MGR_TRANSPARENT_HINT
+            agwStyle |= aui.AUI_MGR_RECTANGLE_HINT
+            # Ou essayer AUI_MGR_VENETIAN_BLINDS_HINT si RECTANGLE ne marche pas
+            # agwStyle |= aui.AUI_MGR_VENETIAN_BLINDS_HINT
+        # ---------------------------------
+        if (
+            not operating_system.isWindows()
+            or not operating_system.isWayland()
+        ):
             # With this style on Windows, you can't dock back floating frames
             # Sur Windows, ce style empêche le redockage des fenêtres flottantes, donc on l'active ailleurs
             agwStyle |= aui.AUI_MGR_USE_NATIVE_MINIFRAMES

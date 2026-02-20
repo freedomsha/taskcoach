@@ -153,9 +153,9 @@ class Menu(
         Args :
             menuItem (wx.MenuItem) : L'élément de menu à supprimer.
         """
-        log.info(
-            f"Menu.DestroyItem supprime {menuItem} de {self.__class__.__name__}"
-        )
+        # log.info(
+        #     f"Menu.DestroyItem supprime {menuItem} de {self.__class__.__name__}"
+        # )
         # Supprime un élément de menu et tente de délier les événements associés
         # (wx.EVT_MENU, wx.EVT_UPDATE_UI) de self._window.
         # Si self._window n'est pas la fenêtre à laquelle
@@ -181,9 +181,9 @@ class Menu(
         IdProvider.put(
             menuItem_id
         )  # Libérer l'identifiant. Incorrect call arguments option. Parameter 'id_' unfilled
-        log.info(
-            f"Menu.DestroyItem : {menuItem} supprimé de {self.__class__.__name__} !"
-        )
+        # log.info(
+        #     f"Menu.DestroyItem : {menuItem} supprimé de {self.__class__.__name__} !"
+        # )
 
     def clearMenu(self):
         """Remove all menu items.
@@ -1036,6 +1036,11 @@ class ViewMenu(Menu):
             ViewViewerMenu(mainwindow, settings, viewerContainer, taskFile),
             "viewnewviewer",
         )
+        self.appendMenu(
+            _("&Move viewer"),
+            MoveViewerMenu(mainwindow, viewerContainer),
+            "moveviewer",
+        )
         activateNextViewer = uicommand.ActivateViewer(
             viewer=viewerContainer,
             menuText=_("&Activate next viewer\tCtrl+PgDn"),
@@ -1210,6 +1215,25 @@ class ViewViewerMenu(Menu):
         except ImportError:
             pass
         self.appendUICommands(*viewViewerCommands)
+
+
+class MoveViewerMenu(Menu):
+    def __init__(self, mainwindow, viewerContainer):
+        log.info("Création du menu Move Viewer.")
+        super().__init__(mainwindow)
+        self.appendUICommands(
+            uicommand.MoveViewerLeft(viewer=viewerContainer),
+            uicommand.MoveViewerRight(viewer=viewerContainer),
+            uicommand.MoveViewerTop(viewer=viewerContainer),
+            uicommand.MoveViewerBottom(viewer=viewerContainer),
+            None,
+            uicommand.MoveViewerLeftOuter(viewer=viewerContainer),
+            uicommand.MoveViewerRightOuter(viewer=viewerContainer),
+            uicommand.MoveViewerTopOuter(viewer=viewerContainer),
+            uicommand.MoveViewerBottomOuter(viewer=viewerContainer),
+            None,
+            uicommand.MoveViewerCenter(viewer=viewerContainer),
+        )
 
 
 class ViewTreeOptionsMenu(Menu):

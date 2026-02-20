@@ -33,6 +33,7 @@ import logging
 import wx
 import re
 import operator
+import wx.lib.agw.aui as aui
 
 from functools import reduce
 
@@ -4469,7 +4470,7 @@ class EffortStop(EffortListCommand, TaskListCommand, ViewerCommand):
         return self.resumeHelpText if paused else self.defaultHelpText
 
     def anyStoppedEfforts(self):
-        """Cette méthode indique s'il y a eu des efforts arrêtés précédemment."""
+        """Cette méthode indique s'il y a des efforts arrêtés précédemment."""
         return bool(self.effortList.maxDateTime())
 
     def anyTrackedEfforts(self):
@@ -5064,7 +5065,7 @@ class DialogCommand(base_uicommand.UICommand):
         Affiche une boîte de dialogue HTML avec les paramètres stockés.
 
         Args :
-            event : L'événement déclenchant la commande (peut être None).
+            event : L'événement déclencheur la commande (peut être None).
         """
         self.closed = False
         # pylint: disable=W0201
@@ -6044,7 +6045,7 @@ class CategoryViewerFilterChoice(
     Elle utilise un contrôle de choix pour sélectionner le mode de filtrage souhaité.
 
     **Attributs :**
-    - `choiceLabels` : Liste des labels pour les différentes options de filtrage.
+    - `choiceLabels` : Liste des labels pour les différentes options d'filtrage.
     - `choiceData` : Liste des valeurs booléennes correspondantes aux options de filtrage.
 
     **Méthodes :**
@@ -6723,3 +6724,141 @@ class ConsolidateEffortsPerTask(
         """Active ou désactive la case à cocher."""
         if self.checkboxCtrl is not None:
             self.checkboxCtrl.Enable(enable)
+
+
+class MoveViewerCommand(ViewerCommand):
+    """
+    Commande pour déplacer la visionneuse active vers une nouvelle position d'ancrage.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.direction = kwargs.pop("direction")
+        self.layer = kwargs.pop("layer", 0)
+        super().__init__(*args, **kwargs)
+
+    def doCommand(self, event):
+        viewer = self.viewer.activeViewer()
+        if viewer:
+            # On doit accéder au manager AUI via la fenêtre principale
+            manager = self.mainWindow().manager
+            pane = manager.GetPane(viewer)
+            if pane.IsOk():
+                pane.Dock().Direction(self.direction).Layer(
+                    self.layer
+                ).Position(0)
+                manager.Update()
+
+    def enabled(self, event):
+        return self.viewer.activeViewer() is not None
+
+
+class MoveViewerLeft(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_LEFT
+        super().__init__(
+            menuText=_("Move viewer &Left"),
+            helpText=_("Dock the current viewer to the left"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerRight(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_RIGHT
+        super().__init__(
+            menuText=_("Move viewer &Right"),
+            helpText=_("Dock the current viewer to the right"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerTop(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_TOP
+        super().__init__(
+            menuText=_("Move viewer &Top"),
+            helpText=_("Dock the current viewer to the top"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerBottom(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_BOTTOM
+        super().__init__(
+            menuText=_("Move viewer &Bottom"),
+            helpText=_("Dock the current viewer to the bottom"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerLeftOuter(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_LEFT
+        kwargs["layer"] = 1
+        super().__init__(
+            menuText=_("Move viewer &Left (Outer)"),
+            helpText=_("Dock the current viewer to the far left"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerRightOuter(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_RIGHT
+        kwargs["layer"] = 1
+        super().__init__(
+            menuText=_("Move viewer &Right (Outer)"),
+            helpText=_("Dock the current viewer to the far right"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerTopOuter(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_TOP
+        kwargs["layer"] = 1
+        super().__init__(
+            menuText=_("Move viewer &Top (Outer)"),
+            helpText=_("Dock the current viewer to the far top"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerBottomOuter(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_BOTTOM
+        kwargs["layer"] = 1
+        super().__init__(
+            menuText=_("Move viewer &Bottom (Outer)"),
+            helpText=_("Dock the current viewer to the far bottom"),
+            *args,
+            **kwargs,
+        )
+
+
+class MoveViewerCenter(MoveViewerCommand):
+    def __init__(self, *args, **kwargs):
+        kwargs["direction"] = aui.AUI_DOCK_CENTER
+        super().__init__(
+            menuText=_("Move viewer &Center"),
+            helpText=_("Dock the current viewer to the center"),
+            *args,
+            **kwargs,
+        )
+
+    def doCommand(self, event):
+        viewer = self.viewer.activeViewer()
+        if viewer:
+            manager = self.mainWindow().manager
+            pane = manager.GetPane(viewer)
+            if pane.IsOk():
+                pane.CenterPane()
+                manager.Update()
