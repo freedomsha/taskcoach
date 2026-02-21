@@ -751,6 +751,8 @@ class RootNode(object):
         return ""
 
     def children(self, recursive=False):
+        # Attention : la méthode children est appelée fréquemment pour obtenir les tâches à afficher.
+        # mais children est aussi une méthode python standard pour les arbres, et elle est utilisée par les visualiseurs d'arbres pour obtenir les enfants d'un nœud.
         """
         Retourne les tâches enfants.
 
@@ -2960,9 +2962,14 @@ class TaskViewer(
         """If the viewer is in tree mode, return the real root items. If the
         viewer is in list mode, return all items."""
         return (
+            # Si tree mode, on retourne les items racines de la présentation, qui sont les vrais items racines
             super().getRootItems()
             if self.isTreeViewer()
+            # Si list mode, on retourne les items racines de la présentation, qui sont tous les items (car en list mode, tous les items sont des racines)
             else self.presentation()
+            # else self.presentation().rootItems()
+            # else self.presentation().allItems(recursive=True)
+            # else self.presentation().getRootItems()  # ?
         )
 
     def getItemParent(self, item):
