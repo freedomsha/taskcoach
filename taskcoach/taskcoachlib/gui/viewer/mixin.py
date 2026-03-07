@@ -241,6 +241,7 @@ class FilterableViewerForCategorizablesMixin(FilterableViewerMixin):
 class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
     def createFilter(self, taskList):
         taskList = super().createFilter(taskList)
+        # task.filter.ViewFilter filtre les tâches en fonction des options (statuts cachés, tâches composites cachées).
         return task.filter.ViewFilter(
             taskList, treeMode=self.isTreeViewer(), **self.viewFilterOptions()
         )

@@ -441,7 +441,8 @@ class ToolBar(_Toolbar, uicommandcontainer.UICommandContainerMixin):
     def getToolIdByCommand(self, commandName):
         # Tracer la récupération d’un ID :
         log.debug(
-            "Recherche de l'ID d'outil pour la commande '%s'", commandName
+            "ToolBar.getToolIdCommand : Recherche de l'ID d'outil pour la commande '%s'",
+            commandName,
         )
 
         if commandName == "EditToolBarPerspective":
@@ -769,9 +770,9 @@ class MainToolBar(ToolBar):
         Args :
             event (wx.SizeEvent) : L'événement de redimensionnement.
         """
-        log.debug(
-            "MainToolBar._OnSize : appelé pour remettre la ToolBar à la taille de la fenêtre."
-        )
+        # log.debug(
+        #     "MainToolBar._OnSize : appelé pour remettre la ToolBar à la taille de la fenêtre."
+        # )
         event.Skip()
         current_size = self.GetSize()
         # if self._is_resizing:

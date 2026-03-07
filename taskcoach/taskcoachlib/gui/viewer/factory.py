@@ -103,6 +103,13 @@ class addViewers(object):  # pylint: disable=C0103, R0903
         """
         number_of_viewers_to_add = self._number_of_viewers_to_add(viewer_class)
         for _ in range(number_of_viewers_to_add):
+            log.debug(
+                "addViewers.__add_viewers : Adding viewer of class %s",
+                viewer_class,
+            )
+            log.warning(
+                f"addViewers.__add_viewers : viewer_instance = {viewer_class.__name__}({self.__viewer_init_args}, {self._viewer_kwargs(viewer_class)})"
+            )
             viewer_instance = viewer_class(
                 *self.__viewer_init_args, **self._viewer_kwargs(viewer_class)
             )

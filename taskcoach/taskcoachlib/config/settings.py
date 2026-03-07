@@ -695,7 +695,12 @@ class Settings(CachingConfigParser):
         """
         if self.set(section, option, str(value)):
             # pub.sendMessage("settings.%s.%s" % (section, option), value=value)
-            pub.sendMessage(f"settings.{section}.{option}", value=value)
+            pub.sendMessage(
+                "settings.%s.%s" % (section, option),
+                value=value,
+                event=f"{section}.{option}",
+            )
+            # pub.sendMessage(f"settings.{section}.{option}", value=value)
 
     setvalue = settuple = setlist = setdict = setint = setboolean
 

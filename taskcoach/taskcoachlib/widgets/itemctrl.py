@@ -102,14 +102,30 @@ class _CtrlWithItemsMixin(object):
             return item != wx.NOT_FOUND  # for ListCtrl
 
     def _objectBelongingTo(self, item):
+        """
+        Retourne l'objet associé à un élément.
+
+        Args:
+            item: L'élément dont on veut récupérer l'objet associé.
+
+        Returns :
+            L'objet associé à l'élément, ou `None` si l'élément n'est pas valide ou n'a pas d'objet associé.
+        """
         if not self._itemIsOk(item):
             return None
         try:
-            return self.GetItemPyData(
-                item
-            )  # TreeListCtrl  TODO: essayer GetItemData
+            # return self.GetItemPyData(
+            #     item
+            # )  # TreeListCtrl  TODO: essayer GetItemData
+            item_data = self.GetItemPyData(item)  # ListCtrl
+            log.debug(
+                f"_CtrlWithItemsMixin._objectBelongingTo : Récupération de l'objet associé à l'élément {item} : {item_data}"
+            )
+            return item_data if item_data is not None else None
         except AttributeError:
-            return self.getItemWithIndex(item)  # ListCtrl
+            item_data = self.getItemWithIndex(item)  # ListCtrl
+            # return self.getItemWithIndex(item)  # ListCtrl
+            return item_data if item_data is not None else None
 
     def SelectItem(self, item, *args, **kwargs):
         """
@@ -685,6 +701,12 @@ class Column(object):
     def __eq__(self, other):
         return self.name() == other.name()
 
+    # # TODO : Faut-il ajouter une méthode __hash__ pour que les instances de Column soient hashables ?
+    # # Cela pourrait être nécessaire si nous voulons les utiliser comme clés
+    # # dans des dictionnaires ou les stocker dans des ensembles. Par exemple :
+    # def __hash__(self):
+    #     return hash(self.name())
+
 
 class _BaseCtrlWithColumnsMixin(object):
     """Une classe de base pour tous les contrôles avec des colonnes. Notez que cette classe et
@@ -703,7 +725,10 @@ class _BaseCtrlWithColumnsMixin(object):
         # ont le même en-tête. C'est une liste de tuples (index, colonne).
         self.__indexMap = []
         self._setColumns()
-        log.debug("_BaseCtrlWithColumnsMixin initialisé !")
+        log.debug(
+            "_BaseCtrlWithColumnsMixin initialisé avec les colonnes : %s",
+            self.__allColumns,
+        )
 
     def _setColumns(self):
         for columnIndex, column in enumerate(self.__allColumns):
@@ -820,8 +845,11 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
                     f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {columnIndex} de la colonne {column} visible si toutes les colonnes sont visibles."
                 )
                 return columnIndex
+        # log.debug(
+        #     f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {self.GetColumnCount()} de la colonne {column} !"
+        # )
         log.debug(
-            f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {self.GetColumnCount()} de la colonne {column} !"
+            f"_CtrlWithHideableColumnsMixin._getColumnIndex : la colonne {column} n'est pas visible, renvoie l'index {self._getColumnIndex(column)} !"
         )
         return self.GetColumnCount()  # Column header not found
 

@@ -786,7 +786,7 @@ class XMLReader(object):  # nouvelle classe
 
         # Extraire la version du fichier si présente
         tskversion = 1  # Valeur par défaut
-        match = re.search(r'tskversion=[\'"](\d+)[\'"]', first_line)
+        match = re.search(rb'tskversion=[\'"](\d+)[\'"]', first_line)
         log.info(f"XMLReader.read : Récupère la version du fichier = {match}")
         if match:
             tskversion = int(match.group(1))
@@ -1019,7 +1019,7 @@ class XMLReader(object):  # nouvelle classe
             f"XMLReader.__has_broken_lines : Type de self.__fd: {type(self.__fd)}"
         )  # <class '_io.BufferedReader'>
         has_broken_lines = (
-            "><spds><sources><TaskCoach-\n" in self.__fd.read()
+            b"><spds><sources><TaskCoach-\n" in self.__fd.read()
         )  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
         # content = self.__fd.read()
         # if isinstance(content, bytes):

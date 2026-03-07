@@ -465,7 +465,8 @@ class MainWindow(
         """
         log.info("MainWindow : Vérification de l'utilisation de XFCE4.")
         if operating_system.isGTK():
-            mon = application.Application().sessionMonitor
+            # mon = application.Application().sessionMonitor
+            mon = wx.GetApp().sessionMonitor
             if (
                 mon is not None
                 and self.settings.getboolean("feature", "usesm2")
@@ -1098,7 +1099,10 @@ class MainWindow(
         try:
             # Simplifier la logique
             # Vérifier les paramètres de l'application. :
-            should_quit = application.Application().quitApplication()
+            should_quit = (
+                application.Application().quitApplication()
+            )  # Assure que l'appel pour quitter se fait sur le bon objet.
+            # should_quit = wx.GetApp().quitApplication()
             # should_hide = event.CanVeto() and self.settings.getboolean("window", "hidewhenclosed")
             should_hide = self.settings.getboolean("window", "hidewhenclosed")
 

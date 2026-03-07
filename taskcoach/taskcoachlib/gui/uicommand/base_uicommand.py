@@ -207,9 +207,9 @@ class UICommand(object):
         #     (par exemple, dans une sous-classe comme UICheckCommand).
         # Sauf qu'il retourne -1. !
 
-        log.debug(
-            f"UICommand.addToMenu a enregistré le sous-menu {type(self).__name__} dans le menu {type(menu).__name__} avec les valeurs d'ID={self.id}, text={self.menuText}, help={self.helpText} et kind={self.kind}"
-        )
+        # log.debug(
+        #     f"UICommand.addToMenu a enregistré le sous-menu {type(self).__name__} dans le menu {type(menu).__name__} avec les valeurs d'ID={self.id}, text={self.menuText}, help={self.helpText} et kind={self.kind}"
+        # )
 
         # Les arguments importants ici sont :
         #     menu : Le menu parent auquel l'élément est ajouté.
@@ -240,18 +240,18 @@ class UICommand(object):
         self.addBitmapToMenuItem(menuItem)
         # L'élément de menu est ajouté à la fin du menu ou à une position spécifiée.
         if position is None:
-            log.debug(
-                f"UICommand.addToMenu : Ajoute l'élément menuItem={type(menuItem).__name__} {type(self).__name__} dans le menu={type(menu).__name__}."
-            )
+            # log.debug(
+            #     f"UICommand.addToMenu : Ajoute l'élément menuItem={type(menuItem).__name__} {type(self).__name__} dans le menu={type(menu).__name__}."
+            # )
             menu.AppendItem(
                 menuItem
             )  # wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
             # AppendItem est dans customTreeCtrl
             # menu.Append(menuItem)
         else:
-            log.debug(
-                f"UICommand.addToMenu : Ajoute l'élément {type(menuItem).__name__} {type(self).__name__} dans le menu {type(menu).__name__}(position={position})."
-            )
+            # log.debug(
+            #     f"UICommand.addToMenu : Ajoute l'élément {type(menuItem).__name__} {type(self).__name__} dans le menu {type(menu).__name__}(position={position})."
+            # )
             menu.InsertItem(position, menuItem)  # TODO: choisir entre les deux
             # menu.Insert(position, menuItem)
         # Liaison des événements :
@@ -339,9 +339,9 @@ class UICommand(object):
         # C'est ici que `UICommand` appelle directement `toolbar.AddTool()`.
         # Les arguments `shortHelp` et `longHelp` sont explicitement passés.
         # toolbar.AddTool(tool_id=self.id,  # ne fonctionne pas !
-        log.debug(
-            "UICommand.appendToToolBar utilise le mot-clé toolId pour AddTool."
-        )
+        # log.debug(
+        #     "UICommand.appendToToolBar utilise le mot-clé toolId pour AddTool."
+        # )
         toolbar.AddTool(
             tool_id=self.id,
             label="",

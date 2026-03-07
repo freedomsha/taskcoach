@@ -37,6 +37,9 @@ taskcoach.py est le point d'entrée principal. Il :
 import logging
 import logging.handlers
 
+# et pour la gestion de la date et de l'heure dans les noms de fichiers de log
+from datetime import datetime
+
 from taskcoachlib.config.arguments import CURRENT_GUI
 
 # Créer un enregistreur de niveau module
@@ -45,6 +48,9 @@ log = logging.getLogger(__name__)
 
 def namer(name):
     return name + ".txt"
+    # Avec la date et l'heure :
+    # return name + "_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
+    # return name + "_" + datetime.now().strftime("%Y-%m-%d_%H-%M") + ".txt"
 
 
 def rotator(source, dest):
@@ -85,8 +91,12 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 #  config, domain, filesystem, gui, help, i18n, iphone, mailer, meta, notify, patterns,
 #  persistence, powermgt, speak, syncml, thirdparty, tools, widgets, workaround)
 
+filename_dated = "taskcoach_" + datetime.now().strftime("%Y%m%d%H%M") + ".log"
 rh = logging.handlers.RotatingFileHandler(
-    "taskcoach.log", maxBytes=1024000, backupCount=50
+    # "taskcoach.log", maxBytes=1024000, backupCount=50
+    filename_dated,
+    maxBytes=1024000,
+    backupCount=50,
 )
 rh.rotator = rotator
 rh.namer = namer

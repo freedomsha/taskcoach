@@ -667,7 +667,9 @@ class Publisher(object, metaclass=singleton.Singleton):
         for eventTypeAndSource in eventTypesAndSources:
             for observer in self.__observers.get(eventTypeAndSource, set()):
                 # for observer in self.__observers.get(eventTypeAndSource, dict()):
-                observers.setdefault(observer, set()).add(eventTypeAndSource)
+                observers.setdefault(observer, set()).add(
+                    eventTypeAndSource
+                )  # dict() a setdefault ! pas set().
                 # observers.setdefault(observer, []).append(eventTypeAndSource)
         for (
             observer,

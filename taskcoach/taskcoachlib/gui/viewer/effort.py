@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from builtins import zip
+import logging
 from taskcoachlib import command, widgets, domain, render
 from taskcoachlib.domain.effort import (
     BaseCompositeEffort,
@@ -51,6 +52,8 @@ from taskcoachlib.gui.viewer import base
 from taskcoachlib.gui.viewer import mixin
 from taskcoachlib.gui.viewer import refresher
 import wx
+
+log = logging.getLogger(__name__)
 
 
 class EffortViewer(
@@ -729,6 +732,9 @@ class EffortViewer(
         )
         status2 = (
             _("Status: %d tracking") % self.presentation().nrBeingTracked()
+        )
+        log.debug(
+            f"EffortViewer.statusMessages : status1= {status1}, status2= {status2}"
         )
         return status1, status2
 

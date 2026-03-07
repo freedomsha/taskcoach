@@ -20,6 +20,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+# Dans TaskCoach original :
+#
+# Le widget ne doit jamais appeler directement les objets domaine
+# Il doit uniquement passer par :
+# self.__adapter.children(parent)
+# Et le viewer doit uniquement passer par :
+# self.presentation()
+# voir : self.presentation().observable(recursive=True).children(parent)
+
 # Il serait préférable de remplacer wx.ListCtrl par wx.DataViewCtrl
 # (qui est plus moderne et puissant pour les données structurées).
 # from __future__ import division
@@ -136,6 +145,9 @@ class TaskViewerStatusMessages(object):
 
     def __init__(self, viewer):
         super().__init__()
+        log.debug(
+            "TaskViewerStatusMessages.__init__ : récupération du viewer et de la présentation."
+        )
         self.__viewer = viewer
         self.__presentation = viewer.presentation()
 
@@ -207,6 +219,17 @@ class BaseTaskViewer(
         super().__init__(*args, **kwargs)
         self.statusMessages = TaskViewerStatusMessages(self)
         self.__registerForAppearanceChanges()
+        self.registerObserver(
+            self.onDomainObjectAdded,
+            # eventType=task.Task.addEventType(),
+            eventType=task.Task.addChildEventType(),
+        )
+
+        self.registerObserver(
+            self.onDomainObjectRemoved,
+            # eventType=task.Task.removeEventType(),
+            eventType=task.Task.removeChildEventType(),
+        )
         log.debug("BaseTaskViewer : Appel de CallAfter.")
         wx.CallAfter(self.__DisplayBalloon)
         log.debug(
@@ -256,6 +279,9 @@ class BaseTaskViewer(
         Returns :
 
         """
+        log.debug(
+            "BaseTaskViewer.__registerForAppearanceChanges : Enregistrement des observateurs pour les changements d'apparence."
+        )
         # Zones de préoccupation potentielles dans BaseTaskViewer :
         #
         # La méthode __registerForAppearanceChanges peut valoir la peine
@@ -297,7 +323,11 @@ class BaseTaskViewer(
         pub.subscribe(
             self.onAttributeChanged, task.Task.prerequisitesChangedEventType()
         )
+        log.debug(
+            "BaseTaskViewer : Enregistrement des observateurs pour les changements d'apparence. Appel de refresh."
+        )
         pub.subscribe(self.refresh, "powermgt.on")
+        wx.CallAfter(self.refresh)  # Ne change rien !
 
     def detach(self):
         """
@@ -331,12 +361,21 @@ class BaseTaskViewer(
         Returns :
 
         """
+        log.debug(
+            "BaseTaskViewer.onAppearanceSettingChange : Changement de paramètre d'apparence détecté, rafraîchissement du visualiseur."
+        )
         # Rafraîchir les éléments affichés dans la visionneuse :
         if self:
+            log.debug(
+                "BaseTaskViewer.onAppearanceSettingChange : Appel de wx.CallAfter pour rafraîchir le visualiseur."
+            )
             wx.CallAfter(
                 self.refresh
             )  # Let domain objects update appearance first
         # Show/hide status in toolbar may change too
+        log.debug(
+            "BaseTaskViewer.onAppearanceSettingChange : Mise à jour de la perspective de la barre d'outil."
+        )
         self.toolbar.loadPerspective(self.toolbar.perspective(), cache=False)
 
     def domainObjectsToView(self):
@@ -346,7 +385,32 @@ class BaseTaskViewer(
         Returns :
             BaseTaskViewer.taskFile.tasks() :
         """
-        return self.taskFile.tasks()
+        # return self.taskFile.tasks()
+        to_return = self.taskFile.tasks()
+        log.debug(
+            f"BaseTaskViewer.domainObjectsToView : Nombre total d'objets dans la TaskList : {len(to_return)}"
+        )
+
+        # Task Coach utilise souvent des filtres ou des hiérarchies.
+        # Vérifions les tâches à la racine ou toutes les tâches.
+        for i, t in enumerate(to_return):
+            log.info(f"Tâche {i}: {t.subject()} (ID: {t.id()})")
+
+        if len(to_return) == 0:
+            log.warning(
+                "BaseTaskViewer.domainObjectsToView : ALERTE : Aucune tâche n'est présente dans le modèle après le chargement."
+            )
+        log.debug(
+            f"BaseTaskViewer.domainObjectsToView : Retourne les tâches à visualiser : self.taskFile.tasks()={to_return}."
+        )
+
+        return to_return
+
+    def onDomainObjectAdded(self, event):
+        self.refresh()
+
+    def onDomainObjectRemoved(self, event):
+        self.refresh()
 
     def isShowingTasks(self):
         return True
@@ -366,6 +430,9 @@ class BaseTaskViewer(
         Returns :
             Une méthode super de la création de filtre sur les tâches supprimées.
         """
+        log.debug(
+            "BaseTaskViewer.createFilter : Création d'un filtre pour les tâches supprimées."
+        )
         # Il est peu probable que la méthode createFilter
         # provoquent des blocages de l’interface utilisateur,
         # car elle gère le filtrage des données.
@@ -389,6 +456,9 @@ class BaseTaskViewer(
         #
         # Make this overridable for viewers where the widget does not show all
         # items in the presentation, i.e. the widget does filtering on its own.
+        log.debug(
+            f"BaseTaskViewer.nrOfVisibleTasks : Calcul du nombre de tâches visibles."
+        )
         return len(self.presentation())
 
 
@@ -438,7 +508,9 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
             self.minuteRefresher = refresher.MinuteRefresher(self)
         else:
             self.secondRefresher = self.minuteRefresher = None
-        log.debug("BaseTaskTreeViewer initialisé !")
+        log.debug(
+            "BaseTaskTreeViewer initialisé avec rafraîchissement automatique."
+        )
 
     def detach(self):
         """
@@ -531,6 +603,9 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         if self.__shouldPresetReminderDateTime():
             kwargs["reminder"] = task.Task.suggestedReminderDateTime()
         # pylint: disable=W0142
+        log.debug(
+            f"BaseTaskTreeViewer.newSubItemCommand : Création d'une nouvelle commande de sous-tâche avec les paramètres suivants : {kwargs}"
+        )
         return self.newSubItemCommandClass()(
             self.presentation(), self.curselection(), **kwargs
         )
@@ -561,6 +636,9 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         )
 
     def deleteItemCommand(self):
+        log.debug(
+            "BaseTaskTreeViewer.deleteItemCommand : Création d'une commande de suppression de tâche."
+        )
         return command.DeleteTaskCommand(
             self.presentation(),
             self.curselection(),
@@ -613,6 +691,9 @@ class BaseTaskTreeViewer(BaseTaskViewer):  # pylint: disable=W0223
         Returns :
 
         """
+        log.debug(
+            "BaseTaskTreeViewer.createCreationToolBarUICommands : Création des commandes de la barre d'outil de création."
+        )
         return (
             uicommand.TaskNew(
                 taskList=self.presentation(), settings=self.settings
@@ -1173,6 +1254,9 @@ class SquareTaskViewer(BaseTaskTreeViewer):
     def createWidget(self):
         itemPopupMenu = self.createTaskPopupMenu()
         self._popupMenus.append(itemPopupMenu)
+        log.debug(
+            f"SquareTaskViewer.createWidget : Création du widget SquareMap avec rootNode={SquareMapRootNode(self.presentation())}."
+        )
         return widgets.SquareMap(
             self,
             SquareMapRootNode(self.presentation()),
@@ -1208,6 +1292,7 @@ class SquareTaskViewer(BaseTaskTreeViewer):
         self.orderBy(value)
 
     def orderBy(self, choice):
+        """Trie les tâches selon le critère choisi (budget, temps, etc.)."""
         if choice == self.__orderBy:
             return
         oldChoice = self.__orderBy
@@ -1248,6 +1333,9 @@ class SquareTaskViewer(BaseTaskTreeViewer):
         else:
             self.__transformTaskAttribute = lambda x: x
             self.__zero = 0
+        log.debug(
+            f"SquareTaskViewer.orderBy : Changement du critère de tri de {oldChoice} à {choice}. Appel de refresh:"
+        )
         self.refresh()
 
     # def curselection(self):
@@ -1258,6 +1346,9 @@ class SquareTaskViewer(BaseTaskTreeViewer):
         return self.widget.curselection()
 
     def nrOfVisibleTasks(self):
+        log.debug(
+            f"SquareTaskViewer.nrOfVisibleTasks : Calcul du nombre de tâches visibles avec orderBy={self.__orderBy}."
+        )
         return len(
             [
                 eachTask
@@ -1798,6 +1889,9 @@ class CalendarViewer(
         - Affichage du moment présent
         - Couleur de surbrillance
         """
+        log.debug(
+            "CalendarViewer.reconfig : Application de la configuration utilisateur à la vue."
+        )
         self.widget.Freeze()
         try:
             self.widget.SetPeriodCount(
@@ -1853,7 +1947,8 @@ class CalendarViewer(
                 color_tuple = self.settings.getvalue(section, "other_month_bg")
                 self.widget.SetOtherMonthColor(wx.Colour(*color_tuple))
 
-            self.widget.RefreshAllItems(0)
+            # self.widget.RefreshAllItems(0)
+            self.widget.scheduleRefresh(0)
         finally:
             self.widget.Thaw()
 
@@ -1938,8 +2033,22 @@ class TaskViewer(
         log.debug(
             "TaskViewer.__init__ : Initialisation, Création du Visualiseur de tâches standard."
         )
+        # logging.debug(
+        #     "Avec le Nombre de tâches dans le modèle: %s",
+        #     len(self.presentation()),
+        # )  # fait planter si self.presentation() n'est pas encore défini, mais on veut voir ce qui se passe
+        # Règle de priorité pour settingsSection : si elle est déjà définie dans kwargs, on la garde, sinon on la définit à "taskviewer".
         kwargs.setdefault("settingsSection", "taskviewer")
+        # Appel du constructeur de la classe parente pour initialiser les fonctionnalités de base du visualiseur.
         super().__init__(*args, **kwargs)
+        log.info("MODEL IN VIEWER: %s", id(self.taskFile))
+        log.warning("TaskViewer.presentation id = %s", id(self.presentation()))
+        log.warning("TaskViewer.taskFile id = %s", id(self.taskFile))
+        log.warning("TaskFile.tasks id = %s", id(self.taskFile.tasks()))
+        logging.debug(
+            "Nombre de tâches dans le modèle: %s", len(self.presentation())
+        )
+        # log.info("TaskViewer collection reçue: %s", self.domainObjects())  # AttributeError: 'TaskViewer' object has no attribute 'domainObjects'
         if self.isVisibleColumnByName("timeLeft"):
             self.minuteRefresher.startClock()
         pub.subscribe(
@@ -1947,6 +2056,11 @@ class TaskViewer(
             "settings.%s.treemode" % self.settingsSection(),
         )
         log.debug("TaskViewer.__init__ initialisé !")
+        log.info("Visible columns TaskViewer: %s.", self.visibleColumns())
+        log.debug(
+            "TaskViewer.__init__ : fin d'initialisation avec Presentation objects: %s",
+            list(self.presentation()),
+        )
 
     def activate(self):
         """
@@ -1955,6 +2069,7 @@ class TaskViewer(
         Returns :
 
         """
+        log.debug("TaskViewer.activate : Activation du visualiseur de tâches.")
         if hasattr(wx.GetTopLevelParent(self), "AddBalloonTip"):
             wx.GetTopLevelParent(
                 self
@@ -1969,6 +2084,9 @@ class TaskViewer(
                 from this column to sort them arbitrarily."""
                 ),
             )
+        log.debug(
+            "TaskViewer.activate : Visualiseur de tâches activé et info-bulle affichée si possible."
+        )
 
     def isTreeViewer(self):
         """
@@ -1982,17 +2100,32 @@ class TaskViewer(
         # when initializing, the presentation might not be created yet. So in
         # that case we get an AttributeError and we use the settings.
         try:
+            log.debug(
+                f"TaskViewer.isTreeViewer : Demande à la présentation si le mode est arborescence. self.presentation()={self.presentation()}."
+            )
             return self.presentation().treeMode()
         except AttributeError:
+            log.debug(
+                f"TaskViewer.isTreeViewer : La présentation n'est pas encore créée, utilisation des paramètres. self.settings={self.settings}."
+            )
             return self.settings.getboolean(self.settingsSection(), "treemode")
 
     def showColumn(self, column, show=True, *args, **kwargs):
+        log.debug(
+            "TaskViewer.showColumn : showColumn appelé pour la colonne '%s' avec show=%s.",
+            column.name(),
+            show,
+        )
         if column.name() == "timeLeft":
             if show:
                 self.minuteRefresher.startClock()
             else:
                 self.minuteRefresher.stopClock()
         super().showColumn(column, show, *args, **kwargs)
+        log.debug(
+            "TaskViewer.showColumn : showColumn terminé pour la colonne '%s'.",
+            column.name(),
+        )
 
     def curselectionIsInstanceOf(self, class_):
         """
@@ -2016,13 +2149,19 @@ class TaskViewer(
         log.debug(
             f"TaskViewer.createWidget : Crée le widget de l'arborescence des tâches avec des menus contextuels. self={self.__class__.__name__}. "
         )
+        # Création de la liste d'images utilisée par le widget (icônes des tâches, etc.). A des effets de bord car elle enregistre les indices d'icônes dans self.imageIndex.
         imageList = self.createImageList()  # Has side-effects
         # log.debug(f"TaskViewer.createWidget : Arrêt après cela : ")
+        # Création des colonnes du visualiseur, avec leurs callbacks de rendu, d'édition, etc.
         self._columns = self._createColumns()
+        # Création des menus contextuels pour les éléments et les colonnes du widget.
         itemPopupMenu = self.createTaskPopupMenu()
+        # Création du menu contextuel pour les colonnes, avec des options de tri, de masquage, etc.
         columnPopupMenu = self.createColumnPopupMenu()
+        # Enregistrement des menus contextuels pour une gestion ultérieure (par exemple, pour les mettre à jour ou les détruire).
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
         log.debug("TaskViewer.createWidget : definit le widget TreeListCtrl.")
+        # Création du widget principal de l'arborescence des tâches, en lui passant les colonnes, les callbacks de sélection, d'édition, de glisser-déposer, et les menus contextuels.
         widget = widgets.TreeListCtrl(
             self,
             self.columns(),
@@ -2037,8 +2176,14 @@ class TaskViewer(
             validateDrag=self.validateDrag,
             **self.widgetCreationKeywordArguments(),
         )
-        log.debug("TaskViewer.createWidget: ?")
+        log.debug(
+            "TaskViewer.createWidget: Widget TreeListCtrl créé, configuration de l'imageList et du MainColumn."
+        )
+        logging.debug("Widget créé: %s", type(widget))
         # SetMainColumn is a HypertreeList function!
+        # Si le visualiseur a une colonne d'ordonnancement (pour le tri manuel),
+        # on la définit comme colonne principale du widget,
+        # ce qui permet d'afficher les icônes de tri et de gérer le redimensionnement.
         if self.hasOrderingColumn():
             widget.SetMainColumn(
                 1
@@ -2046,7 +2191,10 @@ class TaskViewer(
         widget.AssignImageList(imageList)  # pylint: disable=E1101
         widget.Bind(wx.EVT_TREE_BEGIN_LABEL_EDIT, self.onBeginEdit)
         widget.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.onEndEdit)
-        log.debug("TaskViewer.createWidget retourne widget.")
+        log.debug(
+            f"TaskViewer.createWidget retourne widget avec {len(self.presentation())} tâches."
+        )
+        # wx.CallAfter(self.refresh)
         return widget
 
     def onBeginEdit(self, event):
@@ -2961,16 +3109,26 @@ class TaskViewer(
     def getRootItems(self):
         """If the viewer is in tree mode, return the real root items. If the
         viewer is in list mode, return all items."""
-        return (
-            # Si tree mode, on retourne les items racines de la présentation, qui sont les vrais items racines
+        log.debug(
+            f"TaskViewer.getRootItems : self.presentation() = {self.presentation()}"
+        )
+        # return (
+        #     # Si tree mode, on retourne les items racines de la présentation, qui sont les vrais items racines
+        #     super().getRootItems()
+        #     if self.isTreeViewer()
+        #     # Si list mode, on retourne les items racines de la présentation, qui sont tous les items (car en list mode, tous les items sont des racines)
+        #     else self.presentation()
+        #     # else self.presentation().rootItems()
+        #     # else self.presentation().allItems(recursive=True)
+        #     # else self.presentation().getRootItems()  # ?
+        # )
+        rootItems_to_return = (
             super().getRootItems()
             if self.isTreeViewer()
-            # Si list mode, on retourne les items racines de la présentation, qui sont tous les items (car en list mode, tous les items sont des racines)
             else self.presentation()
-            # else self.presentation().rootItems()
-            # else self.presentation().allItems(recursive=True)
-            # else self.presentation().getRootItems()  # ?
         )
+        log.debug(f"TaskViewer.getRootItems : Retourne {rootItems_to_return}.")
+        return rootItems_to_return
 
     def getItemParent(self, item):
         return super().getItemParent(item) if self.isTreeViewer() else None
@@ -2979,11 +3137,24 @@ class TaskViewer(
         self, item=None
     ):  # TODO : le mot children est utilisé dans tkinter pour les fenêtre !
         """Retourne les enfants d'un élément selon le mode arbre/liste."""
-        return (
+        log.debug(
+            f"TaskViewer.children : item={item}, self.isTreeViewer()={self.isTreeViewer()}"
+        )
+        # return (
+        #     super().children(item)
+        #     if (self.isTreeViewer() or item is None)
+        #     else []
+        # )
+        result = (
             super().children(item)
             if (self.isTreeViewer() or item is None)
             else []
         )
+        log.debug(f"TaskViewer.children(item={item}) retourne {result}")
+        return result
+
+    # def getItemText(self, task):
+    #     return task.subject()
 
 
 class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
@@ -3007,6 +3178,9 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
         itemPopupMenu = self.createTaskPopupMenu()
         columnPopupMenu = self.createColumnPopupMenu()
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
+        log.debug(
+            f"CheckableTaskViewer.createWidget : self.columns() = {self.columns()}"
+        )
         widget = widgets.CheckTreeCtrl(
             self,
             self.columns(),
@@ -3082,6 +3256,9 @@ class TaskStatsViewer(BaseTaskViewer):  # pylint: disable=W0223
         return ()
 
     def createCreationToolBarUICommands(self):
+        log.debug(
+            f"TaskStatsViewer.createCreationToolBarUICommands : self.presentation() = {self.presentation()}"
+        )
         return (
             uicommand.TaskNew(
                 taskList=self.presentation(), settings=self.settings
@@ -3123,6 +3300,9 @@ class TaskStatsViewer(BaseTaskViewer):  # pylint: disable=W0223
         self.widget.Refresh()
 
     def refreshParts(self):
+        log.debug(
+            f"TaskStatsViewer.refreshParts : self.presentation() = {self.presentation()}"
+        )
         series = self.widget._series  # pylint: disable=W0212
         tasks = self.presentation()
         total = len(tasks)
@@ -3285,6 +3465,9 @@ else:
                         ),
                     )
 
+            log.debug(
+                f"TaskInterdepsViewer.form_depend_graph : self.presentation() = {self.presentation()}"
+            )
             for task in self.presentation():
                 if task.prerequisites():
                     addVertex(task)
@@ -3379,12 +3562,16 @@ else:
             for thread-safe GUI updates. This maintains the same async behavior
             without requiring the Twisted reactor.
             """
+            log.debug(
+                f"TaskInterdepsViewer._refresh : Starting refresh. _needsUpdate={self._needsUpdate}, _updating={self._updating}"
+            )
             bitmap = None
             while self._needsUpdate:
                 # Compute this in main thread because of concurrent access issues
                 graph, visual_style = self.form_depend_graph()
                 self._needsUpdate = False  # Any new refresh starting here should trigger a new iteration
 
+                # Only proceed with plotting if there are edges to display
                 if graph.get_edgelist():
                     self._updating = True
                     # Use ThreadPoolExecutor for background thread execution
@@ -3404,6 +3591,11 @@ else:
                             igraph.plot(
                                 graph, self.graphFile.name, **visual_style
                             )
+                        except Exception as e:
+                            logging.error(
+                                f"Erreur lors du rendu des tâches: {e}"
+                            )
+                            raise
                         finally:
                             self._updating = False
                         return True
@@ -3432,15 +3624,25 @@ else:
 
                     future = executor.submit(do_plot)
                     future.add_done_callback(on_plot_complete)
+                    log.debug(
+                        f"TaskInterdepsViewer._refresh : Plotting in background thread, returning to main thread for GUI update."
+                    )
                     return  # Exit and let callback handle completion
+                # Sinon, pas de graph à afficher, on peut directement finir le rafraîchissement
                 else:
                     bitmap = wx.NullBitmap
+                    log.debug(
+                        f"TaskInterdepsViewer._refresh : No edges to display, skipping plotting."
+                    )
                     self._finish_refresh(bitmap)
                     return
 
         def _finish_refresh(self, bitmap):
             """Complete the refresh by updating the GUI with the new bitmap."""
             # Only update graphics once all refreshes have been "collapsed"
+            log.debug(
+                f"TaskInterdepsViewer._finish_refresh : Updating graph with bitmap={bitmap}"
+            )
             graph_png_bm = wx.StaticBitmap(
                 self.scrolled_panel, wx.ID_ANY, bitmap
             )

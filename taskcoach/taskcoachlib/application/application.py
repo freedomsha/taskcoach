@@ -316,8 +316,7 @@ class wxApp(wx.App):
         # from taskcoachlib.meta.debug import log_step
 
         log.debug(
-            "Unhandled exception in MainLoop: %s",
-            traceback.format_exc()
+            "Unhandled exception in MainLoop: %s", traceback.format_exc()
         )
         return True
 
@@ -371,6 +370,8 @@ class Application(object, metaclass=patterns.Singleton):
         Elle configure divers aspects de l'application, notamment la langue, le correcteur orthographique,
         la gestion des signaux et la création d'icônes de barre des tâches."""
         # ... (initialisation des attributs d'instance)
+        # log.critical("🔥 Application.__init__() APPELÉE")
+        # traceback.print_stack()
         # nouveaux Attributs d'instance :
         #   # Défini dans start
         self.__message_checker = None
@@ -814,13 +815,15 @@ class Application(object, metaclass=patterns.Singleton):
             loadSettings (bool, optional): Charger les paramètres de l'application. Defaults to True.
             loadTaskFile (bool, optional): Charger le fichier de tâches. Defaults to True.
         """
+        # log.critical("⚠️ Application.init() APPELÉE")
+        # traceback.print_stack()
         log.info(
             "Application.init: Initialisation des composants de l'application."
         )
 
         # try:
         # Attributs d'instance:
-        self.__init_config(loadSettings)
+        # self.__init_config(loadSettings)  # Recréation de self.settings déjà appelé dans __init__. -> erreur
         self.__init_language()
         #  Fournir aux objets de domaine pertinents un accès aux paramètres :
         # log.info("Application.init: Fournir aux objets de domaine pertinents un accès aux paramètres :")
@@ -848,17 +851,33 @@ class Application(object, metaclass=patterns.Singleton):
         )  # = True puis l560
         splash = gui.SplashScreen() if show_splash_screen else None
         # pylint: disable=W0201
-        self.taskFile = persistence.LockedTaskFile(
+        # 1. Création taskFile
+        self.taskFile = persistence.taskfile.LockedTaskFile(
             # poll=not self.settings.getboolean("file", "nopoll")
             poll=self.settings.getboolean("file", "fspoll")
         )  # Application.taskFile puis passe à l160 flush . Pourquoi ? Parce que persistence.LockedTaskFile plante.
-
+        # log.debug(
+        #     f"Application.init: persistence.LockedTaskFile créé avec poll={self.taskFile.poll}."
+        # )  # Crée un problème et arrête net le programme ! Pourquoi ? Parce que persistence.LockedTaskFile plante car il est vide.
+        log.debug(
+            f"Application.init: le fichier à ouvrir est self.taskfile = {self.taskFile}."
+        )
         self.__auto_saver = persistence.AutoSaver(self.settings)
         self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
         self.__auto_backup = persistence.AutoBackup(self.settings)
-        self.iocontroller = gui.IOController(
+        # 2. Création IOController
+        self.iocontroller = gui.iocontroller.IOController(
             self.taskFile, self.displayMessage, self.settings, splash
         )
+        log.warning(
+            "Application.init:  id(self.taskFile) : %s", id(self.taskFile)
+        )
+        # log.warning("Real taskfile id:", id(application.taskFile))
+        log.warning(
+            "Application.init: Nb tâches viewer: %s",
+            len(self.taskFile.tasks()),
+        )
+        # log.warning("Nb tâches réel:", len(application.taskFile.tasks()))
 
         # wx-2-Création d'une instance de la fenêtre Principale (objet de gui.mainwindow.MainWindow, wx.Frame):
         # ligne qui devrait être la première dans OnInit (ou en tout cas juste après self.__wx_app = wxApp() dans __init__):
@@ -866,6 +885,14 @@ class Application(object, metaclass=patterns.Singleton):
         self.mainwindow = gui.mainwindow.MainWindow(
             self.iocontroller, self.taskFile, self.settings, splash=splash
         )  # A Frame is a top-level window.
+        log.info("Application.init: TASKS: %s", len(self.taskFile.tasks()))
+        log.info(
+            "Application.init: VIEWER: %s",
+            len(self.mainwindow.viewer.presentation()),
+        )
+        # self.mainwindow.refresh()  # Fait planter !
+        # for viewer in self.mainwindow.viewer.viewers():
+        #     viewer.refresh()
         # log.info(f"Application : self.mainwindow.winId = {self.mainwindow.winId}")
         # Après il devrait y avoir self.mainwindow.Show(true) !(Voir start())
 
@@ -875,23 +902,59 @@ class Application(object, metaclass=patterns.Singleton):
         # Notre classe dérivée de WXApp normale, comme d'habitude (même avec wx.lib.agw.aui).
         self.__wx_app.SetTopWindow(self.mainwindow)
         # Ensuite : frame.Show()
+        log.critical("Application taskFile id: %s", id(self.taskFile))
+        log.critical(
+            "MainWindow taskFile id: %s", id(self.mainwindow.taskFile)
+        )
+        # log.critical(
+        #     "IOController taskFile id: %s", id(self.iocontroller.taskFile)
+        # )  # fait planter ! Pourquoi ? Parce que persistence.LockedTaskFile plante car il est vide.
+        log.critical("IOController dict: %s", self.iocontroller.__dict__)
+
+        log.info("Application.init : loadTaskFile est coché ?")
+        # # Si loadTaskFile est configuré sur True ouvrir le fichier de self._args avec openAfterStart:
+        # if loadTaskFile and self._args:
+        #     log.info(
+        #         f"Oui, Application.init ouvre un fichier grâce à _args={self._args} et self.__early_lock_result={self.__early_lock_result}."
+        #     )
+        #     # self.iocontroller.openAfterStart(self._args)
+        #     self.iocontroller.openAfterStart(
+        #         self._args, self.__early_lock_result
+        #     )
+        # else:
+        #     log.info("Non, Application.init n'ouvre pas de fichier.")
+        if loadTaskFile:
+            if self._args:
+                log.info(
+                    f"Application.init : Ouverture du fichier depuis args : {self._args}."
+                )
+                self.iocontroller.openAfterStart(
+                    self._args, self.__early_lock_result
+                )
+            else:
+                lastfile = self.settings.get("file", "lastfile")
+                # if lastfile and os.path.exists(lastfile):
+                if lastfile:
+                    log.info(
+                        "Ouverture automatique du dernier fichier : %s",
+                        lastfile,
+                    )
+                    self.iocontroller.openAfterStart(
+                        [lastfile], self.__early_lock_result
+                    )
+                else:
+                    log.info("Aucun fichier à ouvrir au démarrage.")
+
+        log.warning("Application.taskFile id = %s", id(self.taskFile))
+        log.warning(
+            "Application.taskFile.tasks id = %s", id(self.taskFile.tasks())
+        )
 
         self.__init_spell_checking()  # Attention changements
         if not self.settings.getboolean("file", "inifileloaded"):
             self.__close_splash(splash)
             self.__warn_user_that_ini_file_was_not_loaded()
-        log.info("Application.init : loadTaskFile est coché ?")
-        # Si loadTaskFile est configuré sur True ouvrir le fichier de self._args avec openAfterStart:
-        if loadTaskFile:
-            log.info(
-                f"Oui, Application.init ouvre un fichier grâce à _args={self._args}."
-            )
-            # self.iocontroller.openAfterStart(self._args)
-            self.iocontroller.openAfterStart(
-                self._args, self.__early_lock_result
-            )
-        else:
-            log.info("Non, Application.init n'ouvre pas de fichier.")
+
         self.__register_signal_handlers()  # Est-elle bien implémentée ?
         self.__create_mutex()
         self.__create_task_bar_icon()
@@ -924,12 +987,24 @@ class Application(object, metaclass=patterns.Singleton):
 
         # Get filename from args or last file
         if self._args:
+            log.debug(
+                f"Application.__check_file_lock_early : Checking lock for file from args: {self._args[0]}"
+            )
             filename = self._args[0]
         else:
             filename = self.settings.get("file", "lastfile")
+            log.debug(
+                f"Application.__check_file_lock_early : Checking lock for last file: {filename}"
+            )
+        log.debug(
+            f"Application.__check_file_lock_early : filename to check for lock: {filename}"
+        )
 
         if not filename or not os.path.exists(filename):
             self.__early_lock_result = None
+            log.debug(
+                "Application.__check_file_lock_early : No file to check for lock."
+            )
             return
 
         # Try to check if file is locked
@@ -939,11 +1014,14 @@ class Application(object, metaclass=patterns.Singleton):
 
             lock = fasteners.InterProcessLock(lock_file_path)
             acquired = lock.acquire(blocking=False)
+            log.debug(
+                f"Application.__check_file_lock_early : Lock file path: {lock_file_path}, acquired: {acquired}"
+            )
             if acquired:
                 # Not locked - release and proceed normally
                 lock.release()
                 self.__early_lock_result = "ok"
-                return
+                # return
             else:
                 # File is locked - show dialog BEFORE main window
                 result = wx.MessageBox(
@@ -963,9 +1041,18 @@ Break the lock?""") % filename,
                 else:
                     # User said No - don't open file, start with empty/new
                     self.__early_lock_result = "skip"
+            log.debug(
+                f"Application.__check_file_lock_early : User chose to {'break' if self.__early_lock_result == 'break' else 'skip'} the lock."
+            )
         except Exception:
             # Lock check failed (e.g., network drive) - proceed normally
             self.__early_lock_result = "ok"
+            log.debug(
+                f"Application.__check_file_lock_early : Lock check failed with exception, proceeding with result: {self.__early_lock_result}"
+            )
+        log.debug(
+            f"Application.__check_file_lock_early : Final early lock result: {self.__early_lock_result}"
+        )
 
     def __init_config(self, load_settings):
         """Fonction-méthode d'initialisation de la configuration.
@@ -1244,7 +1331,29 @@ Break the lock?""") % filename,
             import ctypes
             from taskcoachlib import meta
 
-            ctypes.windll.kernel32.CreateMutexA(None, False, meta.filename)
+            # # ctypes.windll.kernel32.CreateMutexA(None, False, meta.filename)
+            # ctypes.windll.kernel32.CreateMutexW(
+            #     None, False, meta.filename
+            # )  # Use CreateMutexW for Unicode support
+            try:
+                # Try to open existing mutex to check if another instance is running
+                mutex = ctypes.windll.kernel32.OpenMutexW(
+                    0x1F0001, False, meta.filename
+                )  # Use OpenMutexW for Unicode support
+                if mutex:
+                    ctypes.windll.kernel32.CloseHandle(mutex)
+                    log.debug(
+                        "Application.__create_mutex : Mutex already exists, another instance is running."
+                    )
+                else:
+                    log.debug(
+                        "Application.__create_mutex : No existing mutex, creating new one."
+                    )
+            except Exception as e:
+                log.error(
+                    "Application.__create_mutex : Error checking/creating mutex: %s",
+                    str(e),
+                )
 
     def __create_task_bar_icon(self):
         """Fonction-Méthode pour créer une icône avec menu dans la barre de tâche."""

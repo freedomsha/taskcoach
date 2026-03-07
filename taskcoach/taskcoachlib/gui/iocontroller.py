@@ -27,6 +27,7 @@ import logging  # not used, log.Error replaced by wx.logError
 import os
 import sys
 import traceback
+from pubsub import pub
 
 # import wx
 from taskcoachlib import meta, persistence, patterns, operating_system
@@ -59,6 +60,7 @@ if gui_name == "wx":
     flag2 = wx.FD_OPEN
     flag3 = wx.FD_SAVE
     style1 = wx.OK | wx.ICON_ERROR
+    style2 = wx.ICON_ERROR
 elif gui_name == "tk":
     import tkinter
     from tkinter import filedialog, messagebox
@@ -66,12 +68,15 @@ elif gui_name == "tk":
     from taskcoachlib.guitk.dialog.backupmanagertk import BackupManagerDialog
 
     messagebox_used = tkinter.messagebox
-    callAfter_used = tkinter.Misc.after_idle
+    callAfter_used = (
+        tkinter.Misc.after_idle
+    )  # Méthode non liée, incompatible avec l'appel effectué L.305/312
     file_selector = tkinter.filedialog.Open
     flag1 = tkinter.YES
     flag2 = tkinter.YES
     flag3 = tkinter.YES
     style1 = tkinter.YES | tkinter.NO
+    style2 = tkinter.NO
 
 
 class IOController(object):
@@ -134,9 +139,11 @@ class IOController(object):
             "wildcard": _("Todo.txt files (*.txt)|*.txt|All files (*.*)|*"),
         }
         self.__errorMessageOptions = dict(
-            caption=_("%s file error") % meta.name, style=wx.ICON_ERROR
+            # caption=_("%s file error") % meta.name, style=wx.ICON_ERROR
+            caption=_("%s file error") % meta.name,
+            style=style2,
         )
-        # log.info("IOController initialisé.")
+        # log.info("IOController initialisé avec les attributs.")
 
     # Ces fonctions sont des méthodes d'accès aux données du fichier de tâches (TaskFile).
     # Elles permettent de récupérer ou de modifier des informations sur la synchronisation,
@@ -174,7 +181,15 @@ class IOController(object):
         Returns :
             (bool) : True si le fichier de tâches a été modifié sur le disque depuis la dernière ouverture, False sinon.
         """
-        return self.__taskFile.changedOnDisk()
+        log.info(
+            "IOController.changedOnDisk : Vérifie si le fichier de tâches a été modifié sur le disque depuis la dernière ouverture."
+        )
+        # return self.__taskFile.changedOnDisk()
+        to_return = self.__taskFile.changedOnDisk()
+        log.info(
+            f"IOController.changedOnDisk : Résultat de la vérification : {to_return}"
+        )
+        return to_return
 
     def hasDeletedItems(self):
         """Renvoie s'il y a des tâches ou des notes supprimées dans le fichier de tâches.
@@ -199,6 +214,11 @@ class IOController(object):
         self.__taskFile.notes().removeItems(
             [note for note in self.__taskFile.notes() if note.isDeleted()]
         )
+
+    @property
+    def taskFile(self):
+        """Retourne le fichier de tâches associé à ce contrôleur."""
+        return self.__taskFile
 
     # La suite. Ces fonctions sont des méthodes de la classe IOController qui
     # gèrent l'ouverture, la sauvegarde et la fusion de fichiers de tâches.
@@ -242,18 +262,27 @@ class IOController(object):
             " ou le dernier fichier ouvert par l'utilisateur, ou aucun fichier du tout."
         )
         if commandLineArgs:
+            log.info(
+                f"IOController.openAfterStart : commandLineArgs={commandLineArgs}"
+            )
             # Si un argument de ligne de commande est présent, on considère
             # que c'est le nom du fichier à ouvrir.
             if isinstance(commandLineArgs, str):
-                filename = commandLineArgs[0]
+                filename = commandLineArgs[
+                    0
+                ]  # ← BUG : prend le 1er caractère !? pas le 1er élément !
                 log.info(
                     f"IOController.openAfterStart : Enregistre le str {commandLineArgs[0]} comme nom de fichier."
                 )
             else:
                 try:
-                    filename = commandLineArgs[0].decode(
-                        sys.getfilesystemencoding()
-                    )
+                    # filename = commandLineArgs[0].decode(
+                    #     sys.getfilesystemencoding()
+                    # )  # 'str' object has no attribute 'decode'
+                    # # En Python 2, les arguments de ligne de commande étaient des bytes.
+                    # # En Python 3, sys.argv (et donc vos commandLineArgs) sont déjà des objets str (Unicode).
+                    # # Appeler .decode() sur une str provoque l'erreur que vous voyez.
+                    filename = commandLineArgs[0]
                     log.info(
                         f"IOController.openAfterStart : Enregistre {filename} comme nom de fichier."
                     )
@@ -286,7 +315,8 @@ class IOController(object):
         else:
             # Sinon, on récupère le nom du dernier fichier ouvert par
             # l'utilisateur à partir des paramètres de configuration.
-            filename = self.__settings.get("file", "lastfile")
+            # filename = self.__settings.get("file", "lastfile")
+            filename = self.__settings.lastFile()
             log.info(
                 f"IOController.openAfterStart : Récupère le dernier fichier ouvert {filename} comme nom de fichier."
             )
@@ -300,19 +330,41 @@ class IOController(object):
             )
             # If early lock check was done, use its result
             if earlyLockResult == "break":
-                # User already confirmed breaking the lock
-                # wx.CallAfter(self.open, filename, breakLock=True)
-                callAfter_used(self.open, filename, breakLock=True)
+                # # User already confirmed breaking the lock
+                # # wx.CallAfter(self.open, filename, breakLock=True)
+                # callAfter_used(
+                #     self.open, filename, breakLock=True
+                # )  # Risque de bug avec tkinter
+                self.open(filename)
             elif earlyLockResult == "skip":
                 # User chose not to break lock - start with no file (fresh)
                 pass
             else:
                 # Normal case - open file (will check lock again if needed)
                 # wx.CallAfter(self.open, filename)
-                callAfter_used(self.open, filename)
+                self.open(filename)  # pour test, éviter bug avec tkinter :
+                # callAfter_used(self.open, filename)
             log.info(
                 "IOController.openAfterStart : Appelle CallAfter réussi. Terminé."
             )
+        # log.warning("TaskViewer model id:", id(self.__taskFile))
+        log.warning(
+            f"IOController.openAfterStart : TaskViewer model id(self.__taskFile): {id(self.__taskFile)}"
+        )
+        log.warning(
+            f"IOController.openAfterStart : Real taskfile id(filename): {id(filename)}"
+        )
+        # log.warning("Real taskfile id:", id(application.taskFile))
+        # log.warning("Nb tâches viewer:", len(self.__taskFile.tasks()))
+        log.warning(
+            "IOController.openAfterStart : Nb tâches : %s",
+            len(self.__taskFile.tasks()),
+        )
+        # log.warning(
+        #     "IOController.openAfterStart : Nb tâches réel:",
+        #     len(filename.tasks()),
+        # )
+        # log.warning("Nb tâches réel:", len(application.taskFile.tasks()))
 
     # def open(self, filename=None, showerror=wx.MessageBox,
     def open(
@@ -347,6 +399,9 @@ class IOController(object):
         log.info(
             f"IOController.open : Ouverture du fichier {filename}, fileExists={fileExists}, breakLock={breakLock}, lock={lock}"
         )
+        log.critical(
+            "IOController taskFile id (open): %s", id(self.__taskFile)
+        )
         if self.__taskFile.needSave():
             log.info(
                 f"IOController.open : {self.__taskFile} a besoin d'être sauvegardé."
@@ -368,7 +423,18 @@ class IOController(object):
         # TODO: code à remplacer (trop complexe):
         if fileExists(filename):
             log.info(f"IOCOntroller.open : {filename} existe !")
-            self.__closeUnconditionally()  # Ferme la tâche actuelle.
+            # self.__closeUnconditionally()  # Ferme la tâche actuelle. bug conceptuel avec close() trop violent !
+            # # bug conceptuel
+            # #
+            # # On ne doit PAS appeler close() avant load()
+            # # si on recharge dans la même instance.
+            # #
+            # # Dans TaskCoach original :
+            # # soit on crée un nouveau TaskFile
+            # # soit on ferme complètement l’ancien
+            # # mais on ne mélange pas les deux
+            # Remplacer par :
+            self.__taskFile.clear()
             self.__addRecentFile(
                 filename
             )  # Ajoute le nom de fichier "fileName" à la liste des fichiers récents.
@@ -385,6 +451,12 @@ class IOController(object):
                     self.__taskFile.load(
                         filename, lock=lock, breakLock=breakLock
                     )
+                    log.debug(
+                        "IOController.open : DEBUG NB TASKS: %s",
+                        len(self.__taskFile.tasks()),
+                    )
+                    pub.sendMessage("taskfile.changed")
+                    # self.mainwindow.onFileOpen()
                 except Exception:  # pas finally sinon tout s'arrête.
                     # Need to Destroy splash screen first because it may
                     # interfere with dialogs we show later on Mac OS X
@@ -432,6 +504,22 @@ class IOController(object):
             else:
                 showerror(errorMessage, **self.__errorMessageOptions)
             self.__removeRecentFile(filename)
+
+        log.warning(
+            "IOController.open : TaskViewer model id: %s", id(self.__taskFile)
+        )
+        # log.warning("Real taskfile id:", id(application.taskFile))
+        log.warning(
+            "IOController.open : Real taskfile name : %s",
+            self.__taskFile.filename(),
+        )
+        log.warning(
+            "IOController.open : Nb tâches : %s", len(self.__taskFile.tasks())
+        )
+        # log.warning("Nb tâches réel:", len(application.taskFile.tasks()))
+        # log.warning(
+        #     "IOController.open : Nb tâches réel:", len(self.__taskFile.tasks())
+        # )
         # TODO: Essayer de remplacer par: (revoir la logique)
         # if file_exists(filename):
         #         try:
@@ -641,7 +729,13 @@ class IOController(object):
         fileExists=os.path.exists,
     ):
         """La méthode permet de sauvegarder une sélection de tâches dans un nouveau fichier."""
+        log.debug(
+            f"IOController.saveselection : Sauvegarde une sélection de tâches {tasks} dans un nouveau fichier {filename}."
+        )
         if not filename:
+            log.debug(
+                f"IOController.saveselection : le fichier n'existe pas, demande à l'utilisateur de sélectionner un fichier."
+            )
             filename = self.__askUserForFile(
                 _("Save selection"),
                 self.__tskFileSaveDialogOpts,
@@ -650,6 +744,9 @@ class IOController(object):
                 fileExists=fileExists,
             )
             if not filename:
+                log.debug(
+                    "IOController.saveselection : Aucun fichier sélectionné, annule la sauvegarde."
+                )
                 return False  # User didn't enter a filename, cancel save
         selectionFile = self._createSelectionFile(tasks, TaskFileClass)
         if self._saveSave(selectionFile, showerror, filename):
@@ -829,7 +926,8 @@ class IOController(object):
         writerClass,
         viewer,
         selectionOnly,
-        openfile=codecs.open,
+        # openfile=codecs.open,
+        openfile=open,
         showerror=wx.MessageBox,
         filename=None,
         fileExists=os.path.exists,
@@ -913,7 +1011,8 @@ class IOController(object):
         selectionOnly=False,
         separateCSS=False,
         columns=None,
-        openfile=codecs.open,
+        # openfile=codecs.open,
+        openfile=open,
         # showerror=wx.MessageBox, filename=None,
         showerror=messagebox_used,
         filename=None,
@@ -1485,6 +1584,9 @@ class IOController(object):
 
         La mémoire est nettoyée avec la fonction "gc.collect()".
         """
+        log.debug(
+            "IOController.__closeUnconditionally : Ferme la tâche en cours d'édition sans condition."
+        )
         self.__messageCallback(_("Closed %s") % self.__taskFile.filename())
         self.__taskFile.close()
         patterns.CommandHistory().clear()
