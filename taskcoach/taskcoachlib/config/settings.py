@@ -695,10 +695,12 @@ class Settings(CachingConfigParser):
         """
         if self.set(section, option, str(value)):
             # pub.sendMessage("settings.%s.%s" % (section, option), value=value)
-            pub.sendMessage(
+            topic = f"settings.{section}.{option}"
+            pub.sendMessage(  # Attention à la signature de pub.sendMessage, elle peut varier selon la version de pypubsub utilisée.
                 "settings.%s.%s" % (section, option),
-                value=value,
-                event=f"{section}.{option}",
+                # value=value,
+                # event=f"{section}.{option}",
+                event=topic,
             )
             # pub.sendMessage(f"settings.{section}.{option}", value=value)
 

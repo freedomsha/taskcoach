@@ -33,6 +33,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #         Ajouter des tests unitaires qui couvrent les cas "wx présent", "tk present", "ni l'un ni l'autre",
 #         Remonter le shim dans un endroit plus global (par ex. taskcoachlib.ui.backend est déjà un bon emplacement), et mettre à jour d'autres modules qui importent wx directement pour utiliser ce backend. Souhaitez-vous que je fournisse le patch complet (tous les contenus de reader.py replacés) et des tests d'exécution pour vérifier le comportement avec tkinter ?
 
+# Problème : Le code ouvre des fichiers sans toujours vérifier
+# si le fichier existe ou s'il est accessible en lecture/écriture.
+# Solution : Ajoutez des vérifications pour s'assurer que les fichiers existent
+# et sont accessibles avant de les ouvrir.
+# Problème : Le code ne gère pas explicitement les encodages de fichiers,
+# ce qui peut poser problème avec des fichiers XML contenant des caractères non-ASCII.
+# Solution : Spécifiez explicitement l'encodage lors de l'ouverture des fichiers
+# (par exemple, open(file, encoding='utf-8')).
+# Quelques points pourraient être améliorés :
+#    Passage de os.path à pathlib.
+#    Remplacement de eval par ast.literal_eval.
+#    Gestion plus sûre des fichiers temporaires avec des context managers.
+#    Gestion explicite de l’encodage lors de l’ouverture des fichiers (certains TODO le signalent).
+
+# En Python 3, la distinction est stricte :
+# bytes pour les données brutes (comme ce qui est stocké sur le disque)
+# et str pour le texte (Unicode).
+# Pour le XML, il est généralement recommandé de travailler en bytes (mode binaire rb)
+# et de laisser le parseur XML (lxml ou ElementTree)
+# gérer l'encodage détecté dans l'en-tête du fichier (<?xml version="1.0" encoding="..."?>).
+# Si on ouvre en mode texte, Python décode le fichier avant que le parseur XML ne le voie,
+# ce qui peut parfois causer des conflits d'encodage.
+# Cependant, comme le code existant de TaskCoach est vaste
+# et ouvre parfois des fichiers en mode texte et parfois en mode binaire,
+# la stratégie la plus robuste pour XMLReader est effectivement de gérer les deux situations.
+
+# Concernant votre excellente question : "Faut-il utiliser du string ou du bytes ?"
+# Pour des fichiers comme XML, il est plus robuste d'utiliser le mode binaire (rb, wb).
+# La raison est que le fichier XML contient lui-même sa déclaration d'encodage (ex: encoding="utf-8").
+# En lisant le fichier en binaire, on laisse le parser XML (lxml ici) gérer le décodage, ce qui est plus fiable.
+# Lire en mode texte ("r") peut causer des erreurs si l'encodage du système de fichiers est différent de celui du fichier.
+
 # from future import standard_library
 #
 # standard_library.install_aliases()
@@ -92,20 +124,6 @@ from taskcoachlib.thirdparty.deltaTime import nlTimeExpression
 from taskcoachlib.guitk.backend import wx
 
 log = logging.getLogger(__name__)
-
-# Problème : Le code ouvre des fichiers sans toujours vérifier
-# si le fichier existe ou s'il est accessible en lecture/écriture.
-# Solution : Ajoutez des vérifications pour s'assurer que les fichiers existent
-# et sont accessibles avant de les ouvrir.
-# Problème : Le code ne gère pas explicitement les encodages de fichiers,
-# ce qui peut poser problème avec des fichiers XML contenant des caractères non-ASCII.
-# Solution : Spécifiez explicitement l'encodage lors de l'ouverture des fichiers
-# (par exemple, open(file, encoding='utf-8')).
-# Quelques points pourraient être améliorés :
-#    Passage de os.path à pathlib.
-#    Remplacement de eval par ast.literal_eval.
-#    Gestion plus sûre des fichiers temporaires avec des context managers.
-#    Gestion explicite de l’encodage lors de l’ouverture des fichiers (certains TODO le signalent).
 
 
 # TODO : safe_eval_date_expr ne devrait pas être ici !
@@ -740,7 +758,7 @@ class XMLReader(object):  # nouvelle classe
         if isinstance(
             self.__fd, (io.StringIO, io.BytesIO)
         ):  # Et si TextIOWrapper ?
-            # if isinstance(self.__fd, (io.StringIO, io.BytesIO, io.TextIOWrapper)):
+            # if isinstance(self.__fd, (io.StringIO, io.BytesIO, io.TextIOWrapper)):  # ?
             # if isinstance(self.__fd, (io.BytesIO)):
             if self.__fd.readable():
                 contenu = (
@@ -781,12 +799,17 @@ class XMLReader(object):  # nouvelle classe
 
         # Lire la première ligne du fichier pour récupérer l'instruction de traitement
         self.__fd.seek(0)  # Revenir au début du fichier
-        first_line = self.__fd.readline().strip()
+        first_line = (
+            self.__fd.readline().strip()
+        )  # Ici, first_line peut être str ou bytes. Si c'est str, re.search avec un pattern bytes (rb'...') va échouer ou lever une erreur.
         # print(f"XMLReader.read : Première ligne de self.__fd = {first_line}")
 
         # Extraire la version du fichier si présente
         tskversion = 1  # Valeur par défaut
-        match = re.search(rb'tskversion=[\'"](\d+)[\'"]', first_line)
+        if isinstance(first_line, str):
+            match = re.search(r'tskversion=[\'"](\d+)[\'"]', first_line)
+        else:
+            match = re.search(rb'tskversion=[\'"](\d+)[\'"]', first_line)
         log.info(f"XMLReader.read : Récupère la version du fichier = {match}")
         if match:
             tskversion = int(match.group(1))
@@ -1018,16 +1041,24 @@ class XMLReader(object):  # nouvelle classe
         log.warning(
             f"XMLReader.__has_broken_lines : Type de self.__fd: {type(self.__fd)}"
         )  # <class '_io.BufferedReader'>
-        has_broken_lines = (
-            b"><spds><sources><TaskCoach-\n" in self.__fd.read()
-        )  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
-        # content = self.__fd.read()
-        # if isinstance(content, bytes):
-        #     return b'><spds><sources><TaskCoach-\n' in content
-        # else:
-        #     return "><spds><sources><TaskCoach-\n" in content
+        # has_broken_lines = (
+        #     b"><spds><sources><TaskCoach-\n" in self.__fd.read()
+        # )  # TODO : Est-ce que le 'b' est indispensable ? Sinon le retirer !
+        # Pour corriger cela, il faut adapter __has_broken_lines
+        # pour gérer à la fois les modes texte et binaire,
+        # ou s'assurer que la recherche correspond au type de contenu.
+        content = self.__fd.read()
+        self.__fd.seek(
+            0
+        )  # Remettre le pointeur du fichier au début après la lecture
+        if isinstance(content, bytes):
+            # return b'><spds><sources><TaskCoach-\n' in content
+            has_broken_lines = b"><spds><sources><TaskCoach-\n" in content
+        else:
+            # return "><spds><sources><TaskCoach-\n" in content
+            has_broken_lines = "><spds><sources><TaskCoach-\n" in content
         # has_broken_lines = "><spds><sources><TaskCoach-\n" in self.__fd.read().decode(encoding="utf-8")
-        self.__fd.seek(0)
+        # self.__fd.seek(0)
         # print(f"XMLReader.__has_broken_lines : has_broken_lines = {has_broken_lines}")
         return has_broken_lines
 
@@ -1042,9 +1073,33 @@ class XMLReader(object):  # nouvelle classe
         # Enregistre le fichier d'origine dans __origFd
         self.__origFd = self.__fd  # pylint: disable=W0201
         # content = self.__fd.read()
+
+        # Déterminer si on est en mode binaire ou texte
+        is_binary = False
+        try:
+            if "b" in self.__fd.mode:
+                is_binary = True
+        except AttributeError:
+            # Si pas d'attribut mode, on essaie de lire un peu
+            chunk = self.__fd.read(10)
+            self.__fd.seek(0)
+            if isinstance(chunk, bytes):
+                is_binary = True
+
         # Utilise __fd comme mémoire buffer :
-        self.__fd = io.StringIO()
-        # self.__fd = io.BytesIO()  # TODO : ?
+        # self.__fd = io.StringIO()  # Si le contenu est du texte
+        # self.__fd = io.BytesIO()
+        if is_binary:
+            self.__fd = io.BytesIO()
+            pattern_end = b"<TaskCoach-\n"
+            pattern_end_close = b"</TaskCoach-\n"
+            empty = b""
+        else:
+            self.__fd = io.StringIO()
+            pattern_end = "<TaskCoach-\n"
+            pattern_end_close = "</TaskCoach-\n"
+            empty = ""
+
         # Donne le nom d'origine à __fd mémoire buffer :
         self.__fd.name = self.__origFd.name
         # Enregistre chaque ligne du fichier d'origine dans lines :
@@ -1052,11 +1107,12 @@ class XMLReader(object):  # nouvelle classe
         # Pour chaque numéro de ligne index :
         for index in range(len(lines)):
             # Si la ligne finit par :
-            # if lines[index].endswith(b"<TaskCoach-\n") or lines[index].endswith(
-            #     b"</TaskCoach-\n"
-            # ):
-            if lines[index].endswith("<TaskCoach-\n") or lines[index].endswith(
-                "</TaskCoach-\n"
+            # # if lines[index].endswith("<TaskCoach-\n") or lines[index].endswith("</TaskCoach-\n"):
+            # if lines[index].endswith(b"<TaskCoach-\n") or lines[
+            #     index
+            # ].endswith(b"</TaskCoach-\n"):
+            if lines[index].endswith(pattern_end) or lines[index].endswith(
+                pattern_end_close
             ):
                 lines[index] = lines[index][:-1]  # Remove newline
                 lines[index + 1] = lines[index + 1][:-1]  # Remove newline
@@ -1065,8 +1121,9 @@ class XMLReader(object):  # nouvelle classe
         # else:
         #     content = content.replace("><spds><sources><TaskCoach-\n", "")
         # Ré-écrire le résultat dans __fd
-        self.__fd.write("".join(lines))
+        # self.__fd.write("".join(lines))
         # self.__fd.write(b"".join(lines))
+        self.__fd.write(empty.join(lines))
         # Retourne la tête de lecture/écriture au début :
         self.__fd.seek(0)
         # lgo.debug(f"XMLReader.__fix_broken_lines : self.__fd après changement = {self.__fd.read()}")
@@ -2209,7 +2266,7 @@ class XMLReader(object):  # nouvelle classe
         """Parse an effort record from the node.
 
         * Parse un enregistrement d'effort individuel à partir du nœud.
-        * Récupère et analyse les attributs `start`, `stop` et `description`.
+        * Récupère et parse les attributs `start`, `stop` et `description`.
         * Gère l'attribut `status` (présent à partir de la version 22) et l'attribut `id` (présent à partir de la version 29).
         * Crée et retourne une instance de `effort.Effort`.
         * L'attribut `task` est initialisé à `None` et sera défini ultérieurement pour éviter des envois d'événements indésirables.

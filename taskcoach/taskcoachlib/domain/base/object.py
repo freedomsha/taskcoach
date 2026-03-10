@@ -758,6 +758,67 @@ class Object(SynchronizedObject):
         )  # ID unique
         # self.__id = local_kwargs.pop("id", str(uuid.uuid1()))  # ID unique, TODO : à essayer
 
+        # Derived SSOT fields (value + source for each appearance type)
+        self.__derivedFgColorValue = Attribute(
+            None, self, self._onDerivedFgColorChanged
+        )
+        self.__derivedFgColorSource = Attribute(
+            None, self, self._onDerivedFgColorChanged
+        )
+        self.__derivedBgColorValue = Attribute(
+            None, self, self._onDerivedBgColorChanged
+        )
+        self.__derivedBgColorSource = Attribute(
+            None, self, self._onDerivedBgColorChanged
+        )
+        self.__derivedIconValue = Attribute(
+            None, self, self._onDerivedIconChanged
+        )
+        self.__derivedIconSource = Attribute(
+            None, self, self._onDerivedIconChanged
+        )
+        self.__derivedFontValue = Attribute(
+            None, self, self._onDerivedFontChanged
+        )
+        self.__derivedFontSource = Attribute(
+            None, self, self._onDerivedFontChanged
+        )
+
+        # Effective SSOT fields (value + source + default for colors/font, value + source for icon)
+        self.__effectiveFgColorValue = Attribute(
+            None, self, self._onEffectiveFgColorChanged
+        )
+        self.__effectiveFgColorSource = Attribute(
+            None, self, self._onEffectiveFgColorChanged
+        )
+        self.__effectiveFgColorDefault = Attribute(
+            None, self, self._onEffectiveFgColorChanged
+        )
+        self.__effectiveBgColorValue = Attribute(
+            None, self, self._onEffectiveBgColorChanged
+        )
+        self.__effectiveBgColorSource = Attribute(
+            None, self, self._onEffectiveBgColorChanged
+        )
+        self.__effectiveBgColorDefault = Attribute(
+            None, self, self._onEffectiveBgColorChanged
+        )
+        self.__effectiveIconValue = Attribute(
+            None, self, self._onEffectiveIconChanged
+        )
+        self.__effectiveIconSource = Attribute(
+            None, self, self._onEffectiveIconChanged
+        )
+        self.__effectiveFontValue = Attribute(
+            None, self, self._onEffectiveFontChanged
+        )
+        self.__effectiveFontSource = Attribute(
+            None, self, self._onEffectiveFontChanged
+        )
+        self.__effectiveFontDefault = Attribute(
+            None, self, self._onEffectiveFontChanged
+        )
+
         # Initialisation du parent
         # super().__init__(*args, **kwargs)  # Appelle le constructeur de la classe parente
         # super().__init__()  # à vérifier sinon revenir à la définition précédente

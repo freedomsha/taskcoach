@@ -1632,7 +1632,7 @@ class EditPreferences(settings_uicommand.SettingsCommand):
             settings=self.settings,
             taskFile=self.mainWindow().taskFile,
         )
-        editor.Show(show=show)
+        editor.Show(show)
 
 
 class EditSyncPreferences(IOCommand):
@@ -1670,7 +1670,7 @@ class EditSyncPreferences(IOCommand):
             iocontroller=self.iocontroller,
             title=_("SyncML preferences"),
         )
-        editor.Show(show=show)
+        editor.Show(show)
 
 
 class EditToolBarPerspective(settings_uicommand.SettingsCommand):
@@ -3115,7 +3115,10 @@ class TaskNewFromTemplate(TaskNew):
         # file -> open !!!? import io.open
         # return persistence.TemplateXMLReader(open(self.__filename, "rU")).read()
         return persistence.TemplateXMLReader(
-            open(self.__filename, "r", encoding="utf-8", newline=None)
+            # open(self.__filename, "r", encoding="utf-8", newline=None)
+            # # Le fichier est ouvert en mode texte ("r" avec encoding="utf-8").
+            # # C'est pourquoi XMLReader reçoit un TextIOWrapper et que self.__fd.read() retourne une str.
+            open(self.__filename, "rb")
         ).read()
 
     def doCommand(self, event, show=True):  # pylint: disable=W0221
@@ -3749,8 +3752,7 @@ class ToggleCategory(
     """
     Commande d'interface utilisateur pour activer/désactiver une catégorie pour les éléments sélectionnés.
 
-    Cette classe hérite de `mixin_uicommand.NeedsSelectedCategorizableMixin` et `ViewerCommand`.
-    Elle permet d'activer ou de désactiver une catégorie spécifique pour les éléments sélectionnés
+    Cette classe permet d'activer ou de désactiver une catégorie spécifique pour les éléments sélectionnés
     dans la vue courante.
 
     La commande gère les catégories mutuellement exclusives, mais en raison de limitations de wxPython,
@@ -3786,6 +3788,9 @@ class ToggleCategory(
         )
 
     def doCommand(self, event):
+        """
+        Exécute la commande pour activer ou désactiver le filtrage sur la catégorie spécifiée.
+        """
         check = command.ToggleCategoryCommand(
             category=self.category, items=self.viewer.curselection()
         )
@@ -4854,7 +4859,7 @@ class AddAttachment(
             **kwargs : Arguments supplémentaires passés au constructeur parent.
         """
         super().__init__(
-            menuText=_("&Add attachment...\tShift-Ctrl-A"),
+            menuText=_("&Add attachment...\tShift+Ctrl+A"),
             helpText=help.addAttachment,
             bitmap="paperclip_icon",
             *args,
@@ -5065,7 +5070,7 @@ class DialogCommand(base_uicommand.UICommand):
         Affiche une boîte de dialogue HTML avec les paramètres stockés.
 
         Args :
-            event : L'événement déclencheur la commande (peut être None).
+            event : L'événement déclenchant la commande (peut être None).
         """
         self.closed = False
         # pylint: disable=W0201

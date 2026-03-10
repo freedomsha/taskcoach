@@ -1824,6 +1824,9 @@ class CategoryPopupMenu(Menu):
         # log.info("Initialisation du menu contextuel : %s", self.__class__.__name__)
 
         super().__init__(mainwindow)
+        log.debug(
+            "CategoryPopupMenu : Récupération des catégories, tâches et notes pour le menu."
+        )
         categories = categoryViewer.presentation()
         tasks = taskFile.tasks()
         notes = taskFile.notes()

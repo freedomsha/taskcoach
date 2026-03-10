@@ -946,15 +946,21 @@ class ChangesXMLWriter(object):
         # # L'erreur AttributeError: 'bytes' object has no attribute 'encode'. Did you mean: 'decode'? indique que vous essayez d'encoder un objet qui est déjà de type bytes. Cela se produit à la ligne 813 du fichier persistence/xml/writer.py 1 2.
         # # Cela suggère que tree_str est de type bytes au lieu de str à ce moment-là.
         # Cependant, cette modification pourrait ne pas être suffisante, car elle ne prend pas en compte le mode d'ouverture du fichier (self.__fd).
-        if isinstance(self.__fd, io.TextIOWrapper):
-            # tree_str = tree_str.decode('utf-8')
-            # self.__fd.write(tree_str)
-            # Cette modification décode tree_str en utilisant l'encodage UTF-8 seulement si self.__fd est un fichier texte.
-            self.__fd.write(tree_str.decode("utf-8"))
-        else:
-            self.__fd.write(tree_str)
+        # if isinstance(self.__fd, io.TextIOWrapper):
+        #     # tree_str = tree_str.decode('utf-8')
+        #     # self.__fd.write(tree_str)
+        #     # Cette modification décode tree_str en utilisant l'encodage UTF-8 seulement si self.__fd est un fichier texte.
+        #     self.__fd.write(tree_str.decode("utf-8"))
+        # else:
+        #     self.__fd.write(tree_str)
         # Cette modification vérifie si le fichier a été ouvert en mode texte ou binaire. Si c'est un fichier texte, alors on décode tree_str avant d'écrire. Sinon, on écrit directement les bytes.
         # De plus, il est important de vérifier le mode d'ouverture du fichier dans taskfile.py. Il faut s'assurer que les fichiers .delta sont ouverts en mode texte ("w") avec l'encodage UTF-8 lors de l'écriture des changements.
+        try:
+            # Essayer d'écrire des bytes directement (cas binaire)
+            self.__fd.write(tree_str)
+        except TypeError:
+            # Si ça échoue (attendu str, reçu bytes), alors décoder et écrire
+            self.__fd.write(tree_str.decode("utf-8"))
 
         log.info(
             f"ChangesXMLWriter.write : Tentative de lecture du fichier {self.__fd.name} :"

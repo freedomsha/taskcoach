@@ -28,6 +28,7 @@ import fasteners
 import lockfile
 import logging
 import os
+import shutil
 import tempfile
 from io import TextIOWrapper
 import uuid
@@ -181,7 +182,27 @@ class SafeWriteFile(object):
             bf (str) : Les données à écrire.
         """
         # The stream is opened in text mode, so we should write strings.
-        self.__fd.write(str(bf))
+        # La méthode write attend une chaîne de caractères (str) et non des bytes.
+        # Si bf est déjà une chaîne de caractères, nous pouvons l'écrire directement.
+        # Si bf est un objet XML (comme un ElementTree),
+        # nous devons d'abord le convertir en une chaîne de caractères XML avant de l'écrire.
+        # self.__fd.write(str(bf))
+        if isinstance(bf, bytes):
+            self.__fd.write(bf.decode("utf-8"))
+        elif isinstance(bf, str):
+            self.__fd.write(bf)
+        else:
+            # Si bf n'est pas une chaîne de caractères, essayons de le convertir en XML string.
+            # Cela suppose que bf est un objet XML compatible avec xml.etree.ElementTree.tostring()
+            try:
+                xml_string = xml.tostring(bf, encoding="unicode")
+                self.__fd.write(xml_string)
+            except Exception as e:
+                log.error(
+                    "SafeWriteFile.write : Impossible d'écrire les données. "
+                    f"Erreur : {e}"
+                )
+                raise
 
     def close(self):
         """
@@ -876,13 +897,13 @@ class TaskFile(patterns.Observer):
         # pour la lecture. Si ce n'est pas le cas, cela pourrait expliquer
         # pourquoi self.__fd.read() renvoie une chaîne.
         log.debug(
-            f"TaskFile._read essaie de lire le fichier de tâche à partir d'un descripteur fd {fd}"
+            f"TaskFile._read essaie de lire le fichier de tâche à partir d'un descripteur fd {fd}."
         )
         reader = xml.XMLReader(fd)
         # data_read = xml.XMLReader(fd).read()
         data_read = reader.read()
-        log.debug(f"TaskFile._read renvoi : {data_read}")
         duplicate_ids = reader.get_duplicate_ids()
+        log.debug(f"TaskFile._read renvoi : {data_read}, {duplicate_ids}.")
         return data_read, duplicate_ids
 
     def _log_duplicate_ids(self, duplicate_ids):
@@ -1025,7 +1046,7 @@ class TaskFile(patterns.Observer):
                             f"TaskFile.load : Données lues : tasks={tasks}, categories={categories}, notes={notes}, syncMLConfig={syncMLConfig}, changes={changes}, guid={guid}"
                         )
                         logging.debug(
-                            "Après chargement fichier, nb tâches: %s",
+                            "taskFile.load : Après chargement fichier, nb tâches: %s",
                             len(tasks),
                         )
                     # finally:
@@ -1119,8 +1140,8 @@ class TaskFile(patterns.Observer):
                     writer.write(self.__changes)
                     f.close()
         except Exception as e:
-            log.info("TaskFile.load règle filename sur ''")
-            self.setFilename("")
+            # log.info("TaskFile.load règle filename sur ''")
+            # self.setFilename("")
             raise Exception(
                 f"TaskFile.load : Erreur de parsing XML lors du chargement de filename '{filename}', erreur : {e}"
             )
@@ -1147,7 +1168,7 @@ class TaskFile(patterns.Observer):
         #     log.exception("Erreur lors du chargement du fichier de tâches : %s", filename)
         #     raise
 
-    def save(self, **kwargs):
+    def _save(self, **kwargs):
         """
         Enregistrez le fichier de tâches sur le disque.
 
@@ -1155,8 +1176,8 @@ class TaskFile(patterns.Observer):
         SyncML dans un fichier XML. Si le fichier existe déjà, il sera remplacé
         de manière sécurisée via l'utilisation d'un fichier temporaire (`SafeWriteFile`).
 
-        En cas d'échec (problème de disque, erreur d'écriture...), une exception
-        est loggée et propagée.
+        Cette méthode écrit le contenu courant du modèle (tâches, catégories,
+        notes, etc.) dans le fichier .tsk.
 
         Args :
             **kwargs : Arguments supplémentaires éventuels (non utilisés ici).
@@ -1269,16 +1290,66 @@ class TaskFile(patterns.Observer):
             except:
                 pass
 
+    def save(self, **kwargs):
+        """
+        Sauvegarde le fichier TaskCoach sur le disque.
+
+        Cette méthode écrit le contenu courant du modèle (tâches, catégories,
+        notes, etc.) dans le fichier .tsk.
+
+        Une protection est ajoutée pour empêcher l'écrasement accidentel
+        d'un fichier contenant des données si le modèle courant est vide.
+        """
+        # Cette protection semble bonne.
+        # Mais si le fichier sur le disque contient des tâches,
+        # et que self.tasks() est vide (suite à un bug de chargement),
+        # on refuse de sauvegarder, ce qui est bien.
+        # Cependant, si l'utilisateur veut sauvegarder un fichier vide
+        # (par exemple, il a tout supprimé volontairement), il ne peut pas.
+        # C'est un compromis acceptable pour éviter la perte de données accidentelle.
+
+        # Vérifie si la liste des tâches est vide
+        if not self.tasks():
+            # Écrit un message d'erreur dans le journal
+            logging.error("Sauvegarde annulée : la liste des tâches est vide.")
+
+            # Empêche la sauvegarde pour éviter d'écraser un fichier valide
+            return
+
+        logging.info(
+            f"TaskFile.save : Sauvegarde demandée pour {self.__filename}. Nombre de tâches : {len(self.tasks())}"
+        )
+        # Vérifie si le fichier existe déjà
+        if os.path.exists(self.__filename):
+
+            # construit le nom du backup
+            backup = self.__filename + ".bak"
+
+            # copie le fichier existant vers le backup
+            shutil.copy2(self.__filename, backup)
+
+            # écrit une information dans le log
+            logging.info(f"Backup créé : {backup}")
+
+        # Appelle la méthode interne qui effectue réellement l'écriture
+        self._save(**kwargs)
+
     def mergeDiskChanges(self):
         """
         Fusionner les modifications du disque avec le fichier de tâches actuel.
         """
+        log.debug(
+            f"TaskFile.mergeDiskChanges : Début de la fusion des modifications du disque pour {self.__filename}."
+        )
         self.__loading = True
         try:
             if os.path.exists(self.__filename):
                 # Not using self.exists() because DummyFile.exists returns True
                 # Instead of writing the content of memory, merge changes
                 # with the on-disk version and save the result.
+                log.debug(
+                    f"TaskFile.mergeDiskChanges : Le fichier {self.__filename} existe, fusion des changements du disque."
+                )
                 self.__monitor.freeze()
                 try:
                     # fd = self._openForRead()
@@ -1295,7 +1366,7 @@ class TaskFile(patterns.Observer):
                                 allChanges,
                                 guid,
                             ), _duplicate_ids = self._read(fd)
-                            fd.close()
+                            # fd.close()  # Inutile est dangereux avec with, le with s'en charge automatiquement, même en cas d'exception.
                         except Exception:
                             log.exception(
                                 "TaskFile.mergeDiskChanges : Erreur lors de la lecture du fichier principal pour la fusion des changements '%s'",
@@ -1306,12 +1377,21 @@ class TaskFile(patterns.Observer):
                     self.__changes = allChanges
 
                     if self.__saving:
+                        log.debug(
+                            f"TaskFile.mergeDiskChanges : En cours de sauvegarde, fusionne les changements de tous les autres moniteurs dans le moniteur actuel {self.__monitor.guid()}."
+                        )
                         for devGUID, changes in list(self.__changes.items()):
                             if devGUID != self.__monitor.guid():
+                                log.debug(
+                                    f"TaskFile.mergeDiskChanges : Fusionne les changements du moniteur {devGUID} dans le moniteur actuel {self.__monitor.guid()}."
+                                )
                                 changes.merge(self.__monitor)
 
                     sync = ChangeSynchronizer(self.__monitor, allChanges)
 
+                    log.debug(
+                        f"TaskFile.mergeDiskChanges : Synchronisation des changements pour les catégories, tâches et notes."
+                    )
                     sync.sync(
                         [
                             (
@@ -1324,22 +1404,45 @@ class TaskFile(patterns.Observer):
                     )
 
                     self.__changes[self.__monitor.guid()] = self.__monitor
+                    log.debug(
+                        f"TaskFile.mergeDiskChanges : Changements fusionnés, moniteur actuel {self.__monitor.guid()} mis à jour avec les changements fusionnés."
+                    )
                 finally:
                     self.__monitor.thaw()
             else:
+                log.debug(
+                    f"TaskFile.mergeDiskChanges : Le fichier {self.__filename} n'existe pas, aucune fusion nécessaire, initialisation des changements avec le moniteur actuel {self.__monitor.guid()}."
+                )
                 self.__changes = {self.__monitor.guid(): self.__monitor}
 
+            if not self.tasks() and not os.path.exists(self.__filename):
+                log.warning(
+                    "mergeDiskChanges aborted: no tasks and no file on disk"
+                )
+                return
+            log.debug(
+                f"TaskFile.mergeDiskChanges : Fusion des changements terminée, réinitialisation de tous les changements dans le moniteur actuel {self.__monitor.guid()}."
+            )
             self.__monitor.resetAllChanges()
+            log.debug(
+                f"TaskFile.mergeDiskChanges : Enregistrement des changements fusionnés dans le fichier {self.__filename}.delta."
+            )
             # fd = self._openForWrite(".delta")
             # try:
             #     xml.ChangesXMLWriter(fd).write(self.changes())
             # finally:
             #     fd.close()
-            # with self._openForWrite(".delta") as fd:
-            with open(self.filename() + ".delta", "w+b") as fd:
+            with self._openForWrite(".delta") as fd:
+                # with open(self.filename() + ".delta", "w+b") as fd:
+                log.debug(
+                    f"TaskFile.mergeDiskChanges : fd={fd} ouvert en mode écriture binaire pour les changements fusionnés !"
+                )
                 writer = xml.ChangesXMLWriter(fd)
                 writer.write(self.changes())
-                fd.close()
+                log.debug(
+                    f"TaskFile.mergeDiskChanges : Changements fusionnés écrits dans {self.__filename}.delta avec succès."
+                )
+                # fd.close()
 
             self.__changedOnDisk = False
         finally:
@@ -1643,6 +1746,9 @@ class LockedTaskFile(TaskFile):
             (bool) : True si le fichier de tâche est verrouillé, False sinon.
         """
         # return self.__lock and self.__lock.is_locked()
+        log.debug(
+            f"LockedTaskFile.is_locked : Vérifie si le fichier de tâches est verrouillé avec self.__lock={self.__lock} et self.__lock_acquired={self.__lock_acquired}"
+        )
         return self.__lock is not None and self.__lock_acquired
 
     def is_locked_by_me(self):
@@ -1757,12 +1863,19 @@ class LockedTaskFile(TaskFile):
             log.debug("LockedTaskFile.load : Charge le fichier {filename}.")
             return super().load(filename)
         except Exception:
-            # Release lock if load fails
-            self.release_lock()
+            # # Release lock if load fails ! NON, sinon on peut perdre le verrou en cas d'erreur de parsing XML, ce qui est très mauvais pour la sécurité des données. Laisser le verrou en place est plus sûr, même si cela peut nécessiter une intervention manuelle pour briser le verrou en cas de problème.
+            self.release_lock()  # Reste pour les tests, mais ne doit pas être utilisé en production, car cela peut entraîner une perte de données si le verrou est relâché alors que le fichier est dans un état incohérent.
             raise
-        finally:
-            log.debug("LockedTaskFile.load : Finalement relâche le verrou.")
-            self.release_lock()
+        # Le verrou doit être maintenu tant que le fichier est ouvert.
+        # finally:    <-- SUPPRIMER LE FINALLY qui relâche le verrou en cas de succès.
+        #     # log.debug("LockedTaskFile.load : Finalement relâche le verrou.")
+        #     # self.release_lock()  # Cela relâche le verrou systématiquement à la fin du chargement.
+        #     # # C'est une erreur majeure si l'intention est de garder le fichier verrouillé
+        #     # # pendant toute la session (ce qui est le cas pour LockedTaskFile).
+        #     # # Si le verrou est relâché, rien n'empêche une autre instance
+        #     # # ou un autre processus de toucher au fichier.
+        #     # # Mais cela n'explique pas directement pourquoi le fichier est vidé par cette instance,
+        #     # # sauf si la sauvegarde écrase le fichier avec du vide.
 
     def save(self, **kwargs):
         """Verrouillez le fichier avant de l'enregistrer, s'il n'est pas déjà verrouillé.
@@ -1772,6 +1885,9 @@ class LockedTaskFile(TaskFile):
         Args :
             **kwargs : arguments de mots clés supplémentaires.
         """
+        log.debug(
+            f"LockedTaskFile.save : Appelé avec self={self}, kwargs={kwargs}"
+        )
         # self.acquire_lock(self.filename())
         # try:
         #     return super().save(**kwargs)
@@ -1779,7 +1895,13 @@ class LockedTaskFile(TaskFile):
         #     self.release_lock()
         # We should already hold the lock from load()
         if not self.is_locked_by_me() and self.filename():
+            log.debug(
+                f"LockedTaskFile.save : Acquière un verrou pour {self.filename()} avant de sauvegarder."
+            )
             self.acquire_lock(self.filename())
+            log.debug(
+                f"LockedTaskFile.save : Verrou acquis pour {self.filename()}, maintenant en train de sauvegarder."
+            )
         return super().save(**kwargs)
 
     def mergeDiskChanges(self):

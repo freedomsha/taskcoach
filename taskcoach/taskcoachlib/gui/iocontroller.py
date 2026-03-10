@@ -268,9 +268,10 @@ class IOController(object):
             # Si un argument de ligne de commande est présent, on considère
             # que c'est le nom du fichier à ouvrir.
             if isinstance(commandLineArgs, str):
-                filename = commandLineArgs[
-                    0
-                ]  # ← BUG : prend le 1er caractère !? pas le 1er élément !
+                # filename = commandLineArgs[
+                #     0
+                # ]  # ← BUG : prend le 1er caractère !? pas le 1er élément ! C'est faux car cela peut essayer d'ouvrir "/" au lieu de "/home/user/file.tsk" par exemple.
+                filename = commandLineArgs
                 log.info(
                     f"IOController.openAfterStart : Enregistre le str {commandLineArgs[0]} comme nom de fichier."
                 )
@@ -434,7 +435,7 @@ class IOController(object):
             # # soit on ferme complètement l’ancien
             # # mais on ne mélange pas les deux
             # Remplacer par :
-            self.__taskFile.clear()
+            # self.__taskFile.clear()  # Vide le fichier de tâches actuel sans le fermer complètement.
             self.__addRecentFile(
                 filename
             )  # Ajoute le nom de fichier "fileName" à la liste des fichiers récents.
@@ -448,9 +449,11 @@ class IOController(object):
                     log.debug(
                         f"IOController.open : Test de l'ouverture de {filename}."
                     )
-                    self.__taskFile.load(
+                    self.__taskFile.load(  # Si load échoue (lève une exception), le bloc except capture l'erreur.
                         filename, lock=lock, breakLock=breakLock
                     )
+                    # Si load réussit, le code continue à s'exécuter normalement.
+                    # Si load échoue après avoir commencé à modifier l'état interne de TaskFile (par exemple après self.clear()), l'objet TaskFile peut se retrouver dans un état incohérent (vide ou partiellement rempli). Cela peut expliquer pourquoi self.__taskFile.tasks() est vide après une tentative d'ouverture échouée.
                     log.debug(
                         "IOController.open : DEBUG NB TASKS: %s",
                         len(self.__taskFile.tasks()),
