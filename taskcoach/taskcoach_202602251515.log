@@ -1,0 +1,237 @@
+2026-02-25 15:15:35,231 [INFO] __main__: ****************************************************************
+2026-02-25 15:15:35,231 [INFO] __main__: *               Démarrage de Task Coach                          *
+2026-02-25 15:15:35,231 [INFO] __main__: ****************************************************************
+2026-02-25 15:15:35,231 [INFO] __main__: Environnement non frozen détecté (mode développement)
+2026-02-25 15:15:35,231 [INFO] __main__: Lancement du programme Task Coach via taskcoach.py et les arguments d'ArgumentParser.
+2026-02-25 15:15:35,379 [INFO] taskcoachlib.application: application avec wx
+2026-02-25 15:15:35,600 [DEBUG] taskcoachlib.filesystem: filesystem : _system=Linux
+2026-02-25 15:15:35,974 [INFO] __main__: Arguments analysés : options={'profile': False, 'skipstart': False, 'inifile': None, 'language': None, 'pofile': None, 'gui_name': 'wx'}, args=[]
+2026-02-25 15:15:35,974 [DEBUG] taskcoachlib.config.settings: --- Settings.__init__ entrée ---
+2026-02-25 15:15:35,974 [DEBUG] taskcoachlib.config.settings:   load: True
+2026-02-25 15:15:35,974 [DEBUG] taskcoachlib.config.settings:   iniFile (reçu par Settings): None
+2026-02-25 15:15:35,974 [DEBUG] taskcoachlib.config.settings:   *args (reçus par Settings): ()
+2026-02-25 15:15:35,974 [DEBUG] taskcoachlib.config.settings:   **kwargs (reçus par Settings): {}
+2026-02-25 15:15:35,976 [INFO] taskcoachlib.config.settings: Settings.__init__ avec wx.
+2026-02-25 15:15:35,979 [INFO] taskcoachlib.config.settings: Settings.__init__ terminé avec succès !
+2026-02-25 15:15:36,035 [INFO] taskcoachlib.application.application: Application.init: Initialisation des composants de l'application.
+2026-02-25 15:15:36,036 [DEBUG] taskcoachlib.config.settings: --- Settings.__init__ entrée ---
+2026-02-25 15:15:36,036 [DEBUG] taskcoachlib.config.settings:   load: True
+2026-02-25 15:15:36,036 [DEBUG] taskcoachlib.config.settings:   iniFile (reçu par Settings): None
+2026-02-25 15:15:36,036 [DEBUG] taskcoachlib.config.settings:   *args (reçus par Settings): ()
+2026-02-25 15:15:36,036 [DEBUG] taskcoachlib.config.settings:   **kwargs (reçus par Settings): {}
+2026-02-25 15:15:36,037 [INFO] taskcoachlib.config.settings: Settings.__init__ avec wx.
+2026-02-25 15:15:36,040 [INFO] taskcoachlib.config.settings: Settings.__init__ terminé avec succès !
+2026-02-25 15:15:36,040 [DEBUG] taskcoachlib.application.application: Application.__check_file_lock_early : Checking lock for last file: /home/sylvain/Documents/TaskCoach/Test.tsk
+2026-02-25 15:15:36,040 [DEBUG] taskcoachlib.application.application: Application.__check_file_lock_early : filename to check for lock: /home/sylvain/Documents/TaskCoach/Test.tsk
+2026-02-25 15:15:36,041 [DEBUG] taskcoachlib.application.application: Application.__check_file_lock_early : Lock file path: /home/sylvain/Documents/TaskCoach/Test.tsk.lock, acquired: True
+2026-02-25 15:15:36,048 [INFO] taskcoachlib.persistence.taskfile: Initialisation de TaskFile avec des arguments : (), {'poll': None}
+2026-02-25 15:15:36,049 [DEBUG] taskcoachlib.filesystem.fs_inotify: FilesystemNotifier.__init__ : initialisation du notificateur utilisant inotify
+2026-02-25 15:15:36,117 [DEBUG] taskcoachlib.filesystem.fs_inotify: FilesystemNotifier initialisé !
+2026-02-25 15:15:36,124 [INFO] taskcoachlib.persistence.taskfile: TaskFile : TaskFile initialisé avec filename='', guid='d4f24793-74d7-48fb-abd2-ffb3b297b474' et syncMLConfig='None'.
+2026-02-25 15:15:36,124 [INFO] taskcoachlib.persistence.taskfile: TaskFile : Tâche de base initialisée : 
+2026-02-25 15:15:36,125 [INFO] taskcoachlib.persistence.taskfile: TaskFile : Tâches initiales : TaskList()
+2026-02-25 15:15:36,125 [INFO] taskcoachlib.persistence.taskfile: TaskFile : Notes initiales : NoteContainer()
+2026-02-25 15:15:36,125 [INFO] taskcoachlib.persistence.taskfile: TaskFile initialisé.
+2026-02-25 15:15:36,125 [DEBUG] taskcoachlib.application.application: Application.init: le fichier à ouvrir est self.taskfile = .
+2026-02-25 15:15:36,136 [INFO] taskcoachlib.application.application: Application.init: Initialisation de la fenêtre principale.
+2026-02-25 15:15:36,136 [INFO] taskcoachlib.gui.mainwindow: Début d'initialisation de MainWindow
+2026-02-25 15:15:36,141 [INFO] taskcoachlib.gui.mainwindow: MainWindow : self.GetId() id=-31962
+2026-02-25 15:15:36,142 [DEBUG] taskcoachlib.gui.windowdimensionstracker: Running on Wayland - window positioning blocked by compositor
+2026-02-25 15:15:36,142 [DEBUG] taskcoachlib.gui.windowdimensionstracker: LOAD: pos=(0, 0) size=(900, 500) maximized=True
+2026-02-25 15:15:36,142 [DEBUG] taskcoachlib.gui.windowdimensionstracker: _validate_geometry: checking pos=(0, 0) size=(900, 500) against 1 monitors
+2026-02-25 15:15:36,143 [DEBUG] taskcoachlib.gui.windowdimensionstracker: Monitor 0: geometry=1920x1080 work_area=1920x1080
+2026-02-25 15:15:36,143 [DEBUG] taskcoachlib.gui.windowdimensionstracker:   Geometry valid for monitor 0
+2026-02-25 15:15:36,144 [DEBUG] taskcoachlib.gui.windowdimensionstracker: Set desired: pos=(0, 0) size=(900, 500) maximized=True
+2026-02-25 15:15:36,144 [DEBUG] taskcoachlib.gui.windowdimensionstracker: _log_position_tick: ready=False
+2026-02-25 15:15:36,144 [DEBUG] taskcoachlib.gui.windowdimensionstracker: POS_LOG [0.00s]: pos=(0, 0) size=(900, 500) max=False
+2026-02-25 15:15:36,144 [DEBUG] taskcoachlib.gui.windowdimensionstracker: _log_position_tick: scheduled next tick in 50ms
+2026-02-25 15:15:36,145 [INFO] taskcoachlib.gui.mainwindow: MainWindow : Initialisation de WindowDimensionsTracker pour la gestion de la taille et de la position de la fenêtre.
+2026-02-25 15:15:36,145 [INFO] taskcoachlib.gui.mainwindow: MainWindow : Création et initialisation des composants de la fenêtre :
+2026-02-25 15:15:36,145 [DEBUG] taskcoachlib.gui.mainwindow: MainWindow._create_window_components : création du conteneur pour les visionneuses.
+2026-02-25 15:15:36,146 [DEBUG] taskcoachlib.gui.mainwindow: MainWindow._create_viewer_container : utilise viewer.container.ViewerContainer pour créer le conteneur de visionneuses.
+2026-02-25 15:15:36,146 [DEBUG] taskcoachlib.gui.mainwindow: MainWindow._create_viewer_container : conteneur de visionneuses créé !
+2026-02-25 15:15:36,146 [DEBUG] taskcoachlib.gui.mainwindow: MainWindow._create_window_components : Lance une classe-méthode pour ajouter des viewers.
+2026-02-25 15:15:36,146 [DEBUG] taskcoachlib.gui.viewer.factory: addViewers.__add_viewers : Adding viewer of class <class 'taskcoachlib.gui.viewer.task.TaskViewer'>
+2026-02-25 15:15:36,146 [WARNING] taskcoachlib.gui.viewer.factory: addViewers.__add_viewers : viewer_instance = TaskViewer((<taskcoachlib.gui.mainwindow.MainWindow object at 0x7fbcda788320>, <taskcoachlib.persistence.taskfile.LockedTaskFile object at 0x7fbd080d38c0>, <taskcoachlib.config.settings.Settings object at 0x7fbcddfb82d0>), {})
+2026-02-25 15:15:36,146 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.__init__ : Initialisation, Création du Visualiseur de tâches standard.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.mixin: ManualOrderingMixin.__init__ : initialisation de l'ordre manuel.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.mixin: ManualOrderingMixin.__init__ : ajoute 'sort' à la liste des icones visibles pour le tri manuel.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.mixin: SortableViewerMixin.__init__ : initialisation d'une visionneuse triable.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.base: ViewerWithColumns : Initialisation Création de la visionneuse avec des colonnes.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.task: BaseTaskTreeViewer : Création du Visualiseur de tâches sous forme d'arborescence avec rafraîchissement automatique.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.task: BaseTaskViewer : Création du Visualiseur de base pour les tâches.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.mixin: FilterableViewerMixin.__init__ : initialisation d'une visionneuse filtrable.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer : Initialisation avec args=(<taskcoachlib.gui.mainwindow.MainWindow object at 0x7fbcda788320>, <taskcoachlib.persistence.taskfile.LockedTaskFile object at 0x7fbd080d38c0>, <taskcoachlib.config.settings.Settings object at 0x7fbcddfb82d0>) et kwargs={'instanceNumber': 0, 'settingsSection': 'taskviewer'}.
+2026-02-25 15:15:36,147 [DEBUG] taskcoachlib.gui.viewer.base: Viewer : Initialisation d'une nouvelle visionneuse self=TaskViewer.
+2026-02-25 15:15:36,148 [DEBUG] taskcoachlib.gui.viewer.base: Viewer : parent=MainWindow
+2026-02-25 15:15:36,148 [DEBUG] taskcoachlib.gui.viewer.task: BaseTaskViewer.domainObjectsToView : Retourne les tâches à visualiser : self.taskFile.tasks()=TaskList().
+2026-02-25 15:15:36,148 [DEBUG] taskcoachlib.domain.base.filter: Filter.treeMode : renvoie le mode d'arborescence actuel de DeletedFilter: False.
+2026-02-25 15:15:36,149 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : La présentation n'est pas encore créée, utilisation des paramètres. self.settings=<taskcoachlib.config.settings.Settings object at 0x7fbcddfb82d0>.
+2026-02-25 15:15:36,149 [DEBUG] taskcoachlib.domain.base.filter: Filter.treeMode : renvoie le mode d'arborescence actuel de CategoryFilter: True.
+2026-02-25 15:15:36,149 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : La présentation n'est pas encore créée, utilisation des paramètres. self.settings=<taskcoachlib.config.settings.Settings object at 0x7fbcddfb82d0>.
+2026-02-25 15:15:36,151 [DEBUG] taskcoachlib.domain.base.filter: Filter.treeMode : renvoie le mode d'arborescence actuel de ViewFilter: True.
+2026-02-25 15:15:36,151 [DEBUG] taskcoachlib.domain.base.filter: Filter.treeMode : renvoie le mode d'arborescence actuel de ViewFilter: True.
+2026-02-25 15:15:36,151 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : La présentation n'est pas encore créée, utilisation des paramètres. self.settings=<taskcoachlib.config.settings.Settings object at 0x7fbcddfb82d0>.
+2026-02-25 15:15:36,152 [DEBUG] taskcoachlib.domain.base.filter: Filter.treeMode : renvoie le mode d'arborescence actuel de SearchFilter: True.
+2026-02-25 15:15:36,152 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : La présentation n'est pas encore créée, utilisation des paramètres. self.settings=<taskcoachlib.config.settings.Settings object at 0x7fbcddfb82d0>.
+2026-02-25 15:15:36,153 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.createWidget : Crée le widget de l'arborescence des tâches avec des menus contextuels. self=TaskViewer. 
+2026-02-25 15:15:36,172 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer._createColumns retourne columns [<taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda7597f0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6a990>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b4d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b750>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b890>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b9d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bb10>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bc50>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bd90>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bed0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638050>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638190>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6382d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638410>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638550>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638690>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6387d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638910>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638a50>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638b90>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638cd0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638e10>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638f50>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639090>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6391d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639310>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639450>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639590>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6396d0>].
+2026-02-25 15:15:36,172 [DEBUG] taskcoachlib.gui.viewer.task: BaseTaskTreeViewer.createTaskPopupMenu : Création du menu contextuel.
+2026-02-25 15:15:36,172 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,172 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,172 [INFO] taskcoachlib.gui.menu: TaskPopupMenu : Création du menu Popup de Tâche.
+2026-02-25 15:15:36,172 [INFO] taskcoachlib.gui.menu: Menu : Création du menu de base. Initialisation du menu contextuel : TaskPopupMenu
+2026-02-25 15:15:36,173 [DEBUG] taskcoachlib.gui.menu: Menu : self._window=<taskcoachlib.gui.mainwindow.MainWindow object at 0x7fbcda788320>
+2026-02-25 15:15:36,173 [INFO] taskcoachlib.gui.menu: Menu : window est une instance valide de wx.Window.
+2026-02-25 15:15:36,173 [INFO] taskcoachlib.gui.menu: Menu : Fin d'Initialisation de Menu ! (self est TaskPopupMenu, window est MainWindow)
+2026-02-25 15:15:36,173 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EditCut au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,174 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EditCut object at 0x7fbcda759940>, self.uniqueName=EditCut bitmapName=cut, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,175 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EditCopy au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,175 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EditCopy object at 0x7fbcda759a90>, self.uniqueName=EditCopy bitmapName=copy, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,175 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EditPaste au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,175 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EditPaste object at 0x7fbcda759be0>, self.uniqueName=EditPaste bitmapName=paste, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,176 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EditPasteAsSubItem au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,176 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EditPasteAsSubItem object at 0x7fbcda759d30>, self.uniqueName=EditPasteAsSubItem bitmapName=pasteintotask, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,190 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter Edit au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,190 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.Edit object at 0x7fbcda759e80>, self.uniqueName=Edit bitmapName=edit, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,191 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter Delete au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,192 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.Delete object at 0x7fbcda759fd0>, self.uniqueName=Delete bitmapName=delete, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,192 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter AddAttachment au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,193 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.AddAttachment object at 0x7fbcda75a120>, self.uniqueName=AddAttachment bitmapName=paperclip_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,193 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter OpenAllAttachments au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,193 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.OpenAllAttachments object at 0x7fbcda75a270>, self.uniqueName=OpenAllAttachments bitmapName=paperclip_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,194 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter AddNote au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,194 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.AddNote object at 0x7fbcda75a3c0>, self.uniqueName=AddNote bitmapName=note_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,195 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter OpenAllNotes au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,195 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.OpenAllNotes object at 0x7fbcda75a510>, self.uniqueName=OpenAllNotes bitmapName=edit, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,196 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter Mail au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,196 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.Mail object at 0x7fbcda75a660>, self.uniqueName=Mail bitmapName=envelope_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,197 [DEBUG] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !
+2026-02-25 15:15:36,197 [INFO] taskcoachlib.gui.menu: Création du menu Toggle Catégorie.
+2026-02-25 15:15:36,197 [INFO] taskcoachlib.gui.menu: DynamicMenu : Création du menu Dynamique. Initialisation du menu contextuel : ToggleCategoryMenu
+2026-02-25 15:15:36,197 [INFO] taskcoachlib.gui.menu: Menu : Création du menu de base. Initialisation du menu contextuel : ToggleCategoryMenu
+2026-02-25 15:15:36,198 [DEBUG] taskcoachlib.gui.menu: Menu : self._window=<taskcoachlib.gui.mainwindow.MainWindow object at 0x7fbcda788320>
+2026-02-25 15:15:36,198 [INFO] taskcoachlib.gui.menu: Menu : window est une instance valide de wx.Window.
+2026-02-25 15:15:36,198 [INFO] taskcoachlib.gui.menu: Menu : Fin d'Initialisation de Menu ! (self est ToggleCategoryMenu, window est MainWindow)
+2026-02-25 15:15:36,198 [INFO] taskcoachlib.gui.menu: DynamicMenu : menu Dynamique ToggleCategoryMenu créé.
+2026-02-25 15:15:36,199 [INFO] taskcoachlib.gui.menu: Toggle Catégorie initialisé.
+2026-02-25 15:15:36,199 [DEBUG] taskcoachlib.gui.menu: Menu.appendMenu : Ajout du sous-menu MenuItem à self=TaskPopupMenu.
+2026-02-25 15:15:36,200 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskMarkInactive au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,201 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMarkInactive object at 0x7fbcda75a7b0>, self.uniqueName=TaskMarkInactive bitmapName=led_grey_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,202 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskMarkActive au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,202 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMarkActive object at 0x7fbcda75aa50>, self.uniqueName=TaskMarkActive bitmapName=led_blue_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,203 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskMarkCompleted au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,203 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMarkCompleted object at 0x7fbcda75aba0>, self.uniqueName=TaskMarkCompleted bitmapName=checkmark_green_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,204 [DEBUG] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !
+2026-02-25 15:15:36,205 [INFO] taskcoachlib.gui.menu: Création du menu Priorité de Tâche.
+2026-02-25 15:15:36,205 [INFO] taskcoachlib.gui.menu: Menu : Création du menu de base. Initialisation du menu contextuel : TaskPriorityMenu
+2026-02-25 15:15:36,206 [DEBUG] taskcoachlib.gui.menu: Menu : self._window=<taskcoachlib.gui.mainwindow.MainWindow object at 0x7fbcda788320>
+2026-02-25 15:15:36,206 [INFO] taskcoachlib.gui.menu: Menu : window est une instance valide de wx.Window.
+2026-02-25 15:15:36,206 [INFO] taskcoachlib.gui.menu: Menu : Fin d'Initialisation de Menu ! (self est TaskPriorityMenu, window est MainWindow)
+2026-02-25 15:15:36,207 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskIncPriority au menu TaskPriorityMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,207 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskIncPriority object at 0x7fbcda75acf0>, self.uniqueName=TaskIncPriority bitmapName=incpriority, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,208 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskDecPriority au menu TaskPriorityMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,209 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskDecPriority object at 0x7fbcda75ae40>, self.uniqueName=TaskDecPriority bitmapName=decpriority, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,210 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskMaxPriority au menu TaskPriorityMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,210 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMaxPriority object at 0x7fbcda75af90>, self.uniqueName=TaskMaxPriority bitmapName=maxpriority, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,211 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskMinPriority au menu TaskPriorityMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,211 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMinPriority object at 0x7fbcda75b0e0>, self.uniqueName=TaskMinPriority bitmapName=minpriority, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,212 [DEBUG] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !
+2026-02-25 15:15:36,212 [DEBUG] taskcoachlib.gui.menu: Menu.appendMenu : Ajout du sous-menu MenuItem à self=TaskPopupMenu.
+2026-02-25 15:15:36,217 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EffortNew au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,217 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EffortNew object at 0x7fbcda75b230>, self.uniqueName=EffortNew bitmapName=new, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,218 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EffortStart au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,218 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EffortStart object at 0x7fbcda75b380>, self.uniqueName=EffortStart bitmapName=clock_icon, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,219 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter EffortStop au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,220 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter TaskNew au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,220 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskNew object at 0x7fbcda75b770>, self.uniqueName=TaskNew bitmapName=new, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,220 [DEBUG] taskcoachlib.gui.menu: Menu.appendUICommand Essaie d'ajouter NewSubItem au menu TaskPopupMenu dans la classe wxFrame MainWindow winId=-31962
+2026-02-25 15:15:36,221 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.NewSubItem object at 0x7fbcda75b8c0>, self.uniqueName=NewSubItem bitmapName=newsub, bitmapType=b'wxART_MENU_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,222 [DEBUG] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !
+2026-02-25 15:15:36,222 [INFO] taskcoachlib.gui.menu: TaskPopupMenu : Terminé - Menu Popup de Tâche créé !
+2026-02-25 15:15:36,222 [INFO] taskcoachlib.gui.menu: Création du menu Popup Colonne.
+2026-02-25 15:15:36,222 [INFO] taskcoachlib.gui.menu: Menu : Création du menu de base. Initialisation du menu contextuel : ColumnPopupMenu
+2026-02-25 15:15:36,223 [DEBUG] taskcoachlib.gui.menu: Menu : self._window=<taskcoachlib.gui.viewer.task.TaskViewer object at 0x7fbcda6075c0>
+2026-02-25 15:15:36,223 [INFO] taskcoachlib.gui.menu: Menu : window est une instance valide de wx.Window.
+2026-02-25 15:15:36,223 [INFO] taskcoachlib.gui.menu: Menu : Fin d'Initialisation de Menu ! (self est ColumnPopupMenu, window est TaskViewer)
+2026-02-25 15:15:36,223 [DEBUG] taskcoachlib.gui.menu: ColumnPopupMenu : Appel de CallAfter.
+2026-02-25 15:15:36,227 [DEBUG] taskcoachlib.gui.menu: ColumnPopupMenu : CallAfter passé avec succès. Menu Popup Colonne terminé !
+2026-02-25 15:15:36,228 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.createWidget : definit le widget TreeListCtrl.
+2026-02-25 15:15:36,228 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,228 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,229 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.__init__ : initialisation du contrôle de liste en arbre.
+2026-02-25 15:15:36,229 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.__init__ : parent=<taskcoachlib.gui.viewer.task.TaskViewer object at 0x7fbcda6075c0>, self.__adapter=<taskcoachlib.gui.viewer.task.TaskViewer object at 0x7fbcda6075c0>
+2026-02-25 15:15:36,229 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.__init__ : avant super().
+2026-02-25 15:15:36,229 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithItemPopupMenuMixin.__init__ : Initialisation du menu contextuel sur les éléments.
+2026-02-25 15:15:36,229 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithAutoResizedColumnsMixin.__init__ : initialisation.
+2026-02-25 15:15:36,230 [DEBUG] taskcoachlib.widgets.autowidth: AutoColumnWidthMixin.__init__ : initialisation du Mixin pour ajouter un redimensionnement automatique des colonnes dans un contrôle.
+2026-02-25 15:15:36,230 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithSortableColumnsMixin.__init__ : Initialisation des ajouts des indicateurs de tri.
+2026-02-25 15:15:36,230 [DEBUG] taskcoachlib.widgets.itemctrl: _BaseCtrlWithColumnsMixin.__init__ : initialisation de tous les contrôles avec des colonnes.
+2026-02-25 15:15:36,230 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithColumnPopupMenuMixin.__init__ : initialisation  pour activer un menu contextuel sur les en-têtes de colonnes.
+2026-02-25 15:15:36,230 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithDropTargetMixin.__init__ : initialise le mixin qui permet aux contrôles d'accepter des fichiers déposés.
+2026-02-25 15:15:36,231 [DEBUG] taskcoachlib.widgets.itemctrl: CtrlWithToolTipMixin.__init__ : initialise le contrôle qui a une info-bulle différente pour chaque élément.
+2026-02-25 15:15:36,231 [DEBUG] taskcoachlib.widgets.tooltip: ToolTipMixin.__init__ : avant super args=(<taskcoachlib.gui.viewer.task.TaskViewer object at 0x7fbcda6075c0>,), kwargs={'style': 1074003968, 'agwStyle': 10917, 'validateDrag': <bound method ViewerWithColumns.validateDrag of <taskcoachlib.gui.viewer.task.TaskViewer object at 0x7fbcda6075c0>>}
+2026-02-25 15:15:36,231 [DEBUG] taskcoachlib.widgets.treectrl: HyperTreeList.__init__ : initialisation d'HyperTreeList.
+2026-02-25 15:15:36,231 [DEBUG] taskcoachlib.widgets.draganddrop: TreeCtrlDragAndDropMixin.__init__ : initialisation du drag and drop dans l'arborescence.
+2026-02-25 15:15:36,231 [DEBUG] taskcoachlib.widgets.draganddrop: TreeHelperMixin.__init__ : Initialisation ! Rien à faire !
+2026-02-25 15:15:36,465 [DEBUG] taskcoachlib.widgets.tooltip: ToolTipMixin initialisé !
+2026-02-25 15:15:36,465 [DEBUG] taskcoachlib.widgets.itemctrl: CtrlWithToolTipMixin initialisé !
+2026-02-25 15:15:36,466 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithDropTargetMixin initialisé !
+2026-02-25 15:15:36,466 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithColumnPopupMenuMixin initialisé !
+2026-02-25 15:15:36,467 [DEBUG] taskcoachlib.widgets.itemctrl: _BaseCtrlWithColumnsMixin initialisé avec les colonnes : [<taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda7597f0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6a990>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b4d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b750>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b890>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6b9d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bb10>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bc50>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bd90>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcdab6bed0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638050>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638190>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6382d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638410>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638550>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638690>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6387d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638910>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638a50>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638b90>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638cd0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638e10>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda638f50>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639090>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6391d0>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639310>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639450>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda639590>, <taskcoachlib.widgets.itemctrl.Column object at 0x7fbcda6396d0>]
+2026-02-25 15:15:36,468 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithSortableColumnsMixin initialisé ! Ajout des indicateurs de tri !
+2026-02-25 15:15:36,468 [DEBUG] taskcoachlib.widgets.autowidth: AutoColumnWidthMixin initialisé !
+2026-02-25 15:15:36,468 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithAutoResizedColumnsMixin initialisé !
+2026-02-25 15:15:36,468 [DEBUG] taskcoachlib.widgets.itemctrl: _CtrlWithItemPopupMenuMixin initialisé !
+2026-02-25 15:15:36,468 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.__init__ : après super()
+2026-02-25 15:15:36,468 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.createWidget: Widget TreeListCtrl créé, configuration de l'imageList et du MainColumn.
+2026-02-25 15:15:36,478 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.createWidget retourne widget.
+2026-02-25 15:15:36,479 [DEBUG] taskcoachlib.gui.toolbar: Initialisation de ToolBar dans la fenêtre parent : TaskViewer, taille : (16, 16)
+2026-02-25 15:15:36,479 [DEBUG] taskcoachlib.gui.toolbar: ToolBar.loadPerspective : Chargement de la perspective de la barre d'outils : TaskNew,NewSubItem,TaskNewFromTemplateButton,Separator,Edit,Delete,Separator,TaskMarkInactive,TaskMarkActive,TaskMarkCompleted,Separator,EffortStart,EffortStop,Separator,Spacer,ViewerHideTasks_completed,ViewerHideTasks_inactive,ResetFilter,TaskViewerTreeOrListChoice,Search
+2026-02-25 15:15:36,480 [DEBUG] taskcoachlib.gui.toolbar: ToolBar.Clear : Nettoyage de la barre d'outils existante (Clear)
+2026-02-25 15:15:36,480 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,480 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,481 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,481 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,484 [DEBUG] taskcoachlib.gui.toolbar: ToolBar.loadPerspective : Ajout du bouton de personnalisation de la barre d'outils
+2026-02-25 15:15:36,484 [DEBUG] taskcoachlib.gui.toolbar: ToolBar.loadPerspective : Commandes filtrées : ['<taskcoachlib.gui.uicommand.uicommand.TaskNew object at 0x7fbcda63a990>', '<taskcoachlib.gui.uicommand.uicommand.NewSubItem object at 0x7fbcda63aad0>', '<taskcoachlib.gui.uicommand.uicommand.TaskNewFromTemplateButton object at 0x7fbcda65c6e0>', 'None', '<taskcoachlib.gui.uicommand.uicommand.Edit object at 0x7fbcda63ac10>', '<taskcoachlib.gui.uicommand.uicommand.Delete object at 0x7fbcda63ad50>', 'None', '<taskcoachlib.gui.uicommand.uicommand.TaskMarkInactive object at 0x7fbcda63afd0>', '<taskcoachlib.gui.uicommand.uicommand.TaskMarkActive object at 0x7fbcda63b110>', '<taskcoachlib.gui.uicommand.uicommand.TaskMarkCompleted object at 0x7fbcda63b250>', 'None', '<taskcoachlib.gui.uicommand.uicommand.EffortStart object at 0x7fbcda63b390>', '<taskcoachlib.gui.uicommand.uicommand.EffortStop object at 0x7fbcda63b4d0>', 'None', '1', '<taskcoachlib.gui.uicommand.uicommand.ViewerHideTasks object at 0x7fbcda719b50>', '<taskcoachlib.gui.uicommand.uicommand.ViewerHideTasks object at 0x7fbcda65c980>', '<taskcoachlib.gui.uicommand.uicommand.ResetFilter object at 0x7fbcda65c590>', '<taskcoachlib.gui.uicommand.uicommand.TaskViewerTreeOrListChoice object at 0x7fbcda65c830>', '<taskcoachlib.gui.uicommand.uicommand.Search object at 0x7fbcda65c440>', '<taskcoachlib.gui.uicommand.uicommand.EditToolBarPerspective object at 0x7fbcda65cec0>']
+2026-02-25 15:15:36,485 [WARNING] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands : l'attribut _window est manquant, cela peut causer une erreur.
+2026-02-25 15:15:36,485 [WARNING] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands : Attribution : self._window=<wx.lib.agw.hypertreelist.TreeListMainWindow object at 0x7fbcda64f5c0>.
+2026-02-25 15:15:36,485 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskNew object at 0x7fbcda63a990>, self.uniqueName=TaskNew bitmapName=new, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,485 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.NewSubItem object at 0x7fbcda63aad0>, self.uniqueName=NewSubItem bitmapName=newsub, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,485 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskNewFromTemplateButton object at 0x7fbcda65c6e0>, self.uniqueName=TaskNewFromTemplateButton bitmapName=newtmpl, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,486 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.Edit object at 0x7fbcda63ac10>, self.uniqueName=Edit bitmapName=edit, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,486 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.Delete object at 0x7fbcda63ad50>, self.uniqueName=Delete bitmapName=delete, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,486 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMarkInactive object at 0x7fbcda63afd0>, self.uniqueName=TaskMarkInactive bitmapName=led_grey_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,486 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMarkActive object at 0x7fbcda63b110>, self.uniqueName=TaskMarkActive bitmapName=led_blue_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,486 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.TaskMarkCompleted object at 0x7fbcda63b250>, self.uniqueName=TaskMarkCompleted bitmapName=checkmark_green_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,487 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EffortStart object at 0x7fbcda63b390>, self.uniqueName=EffortStart bitmapName=clock_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,487 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EffortStop object at 0x7fbcda63b4d0>, self.uniqueName=EffortStop bitmapName=clock_resume_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,487 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.ViewerHideTasks object at 0x7fbcda719b50>, self.uniqueName=ViewerHideTasks_completed bitmapName=checkmark_green_icon+cross_red_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,488 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.ViewerHideTasks object at 0x7fbcda65c980>, self.uniqueName=ViewerHideTasks_inactive bitmapName=led_grey_icon+cross_red_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,489 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.ResetFilter object at 0x7fbcda65c590>, self.uniqueName=ResetFilter bitmapName=viewalltasks, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,494 [DEBUG] taskcoachlib.widgets.tooltip: ToolTipMixin.__init__ : avant super args=(<taskcoachlib.gui.toolbar.ToolBar object at 0x7fbcda667a40>,), kwargs={'style': 1024}
+2026-02-25 15:15:36,499 [DEBUG] taskcoachlib.widgets.tooltip: ToolTipMixin initialisé !
+2026-02-25 15:15:36,502 [DEBUG] taskcoachlib.gui.uicommand.base_uicommand: UICommand.__getBitmap() appelé avec self=<taskcoachlib.gui.uicommand.uicommand.EditToolBarPerspective object at 0x7fbcda65cec0>, self.uniqueName=EditToolBarPerspective bitmapName=cogwheel_icon, bitmapType=b'wxART_TOOLBAR_C' et bitmapSize=(16, 16)
+2026-02-25 15:15:36,502 [DEBUG] taskcoachlib.gui.uicommand.uicommandcontainer: UICommandContainerMixin.appendUICommands a terminé d'ajouter les uiCommands !
+2026-02-25 15:15:36,504 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.initLayout : Initialisation de la mise en page de la visionneuse TaskViewer title:Tasks.
+2026-02-25 15:15:36,504 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.initLayout : initLayout de TaskViewer terminé, taille: (20, 20)
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,505 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-02-25 15:15:36,506 [DEBUG] taskcoachlib.gui.viewer.base: Viewer : Appel de CallAfter.
+2026-02-25 15:15:36,507 [DEBUG] taskcoachlib.gui.viewer.base: Viewer : CallAfter passé avec succès.
+2026-02-25 15:15:36,507 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.__init__ : La nouvelle visionneuse self=TaskViewer est initialisée !
+2026-02-25 15:15:36,507 [INFO] taskcoachlib.gui.viewer.base: TreeViewer : Liaison des événements d'expansion.
+2026-02-25 15:15:36,507 [INFO] taskcoachlib.gui.viewer.base: TreeViewer : Liaison des événements de collapse.
+2026-02-25 15:15:36,507 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer : Initialisé !
+2026-02-25 15:15:36,507 [DEBUG] taskcoachlib.gui.viewer.mixin: FilterableViewerMixin initialisé !
+2026-02-25 15:15:36,507 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-02-25 15:15:36,507 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).

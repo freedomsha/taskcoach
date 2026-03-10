@@ -1,0 +1,34 @@
+2026-02-23 19:15:01,925 [INFO] __main__: ****************************************************************
+2026-02-23 19:15:01,925 [INFO] __main__: *               Démarrage de Task Coach                          *
+2026-02-23 19:15:01,925 [INFO] __main__: ****************************************************************
+2026-02-23 19:15:01,925 [INFO] __main__: Environnement non frozen détecté (mode développement)
+2026-02-23 19:15:01,925 [INFO] __main__: Lancement du programme Task Coach via taskcoach.py et les arguments d'ArgumentParser.
+2026-02-23 19:15:02,069 [INFO] taskcoachlib.application: application avec wx
+2026-02-23 19:15:02,427 [DEBUG] taskcoachlib.filesystem: filesystem : _system=Linux
+2026-02-23 19:15:02,886 [INFO] __main__: Arguments analysés : options={'profile': False, 'skipstart': False, 'inifile': None, 'language': None, 'pofile': None, 'gui_name': 'wx'}, args=[]
+2026-02-23 19:15:02,886 [DEBUG] taskcoachlib.config.settings: --- Settings.__init__ entrée ---
+2026-02-23 19:15:02,886 [DEBUG] taskcoachlib.config.settings:   load: True
+2026-02-23 19:15:02,886 [DEBUG] taskcoachlib.config.settings:   iniFile (reçu par Settings): None
+2026-02-23 19:15:02,886 [DEBUG] taskcoachlib.config.settings:   *args (reçus par Settings): ()
+2026-02-23 19:15:02,886 [DEBUG] taskcoachlib.config.settings:   **kwargs (reçus par Settings): {}
+2026-02-23 19:15:02,888 [INFO] taskcoachlib.config.settings: Settings.__init__ avec wx.
+2026-02-23 19:15:02,892 [INFO] taskcoachlib.config.settings: Settings.__init__ terminé avec succès !
+2026-02-23 19:15:02,962 [INFO] taskcoachlib.application.application: Application.init: Initialisation des composants de l'application.
+2026-02-23 19:15:02,962 [DEBUG] taskcoachlib.config.settings: --- Settings.__init__ entrée ---
+2026-02-23 19:15:02,962 [DEBUG] taskcoachlib.config.settings:   load: True
+2026-02-23 19:15:02,962 [DEBUG] taskcoachlib.config.settings:   iniFile (reçu par Settings): None
+2026-02-23 19:15:02,962 [DEBUG] taskcoachlib.config.settings:   *args (reçus par Settings): ()
+2026-02-23 19:15:02,962 [DEBUG] taskcoachlib.config.settings:   **kwargs (reçus par Settings): {}
+2026-02-23 19:15:02,964 [INFO] taskcoachlib.config.settings: Settings.__init__ avec wx.
+2026-02-23 19:15:02,967 [INFO] taskcoachlib.config.settings: Settings.__init__ terminé avec succès !
+2026-02-23 19:15:02,968 [DEBUG] taskcoachlib.application.application: Application.__check_file_lock_early : Checking lock for last file: 
+2026-02-23 19:15:02,968 [DEBUG] taskcoachlib.application.application: Application.__check_file_lock_early : filename to check for lock: 
+2026-02-23 19:15:02,968 [DEBUG] taskcoachlib.application.application: Application.__check_file_lock_early : No file to check for lock.
+2026-02-23 19:15:02,978 [INFO] taskcoachlib.persistence.taskfile: Initialisation de TaskFile avec des arguments : (), {'poll': None}
+2026-02-23 19:15:02,980 [DEBUG] taskcoachlib.filesystem.fs_inotify: FilesystemNotifier.__init__ : initialisation du notificateur utilisant inotify
+2026-02-23 19:15:03,075 [DEBUG] taskcoachlib.filesystem.fs_inotify: FilesystemNotifier initialisé !
+2026-02-23 19:15:03,079 [INFO] taskcoachlib.persistence.taskfile: TaskFile : TaskFile initialisé avec filename='', guid='ec362c27-00e2-4476-b107-189b4288d5a6' et syncMLConfig='None'.
+2026-02-23 19:15:03,079 [INFO] taskcoachlib.persistence.taskfile: TaskFile : Tâche de base initialisée : 
+2026-02-23 19:15:03,079 [INFO] taskcoachlib.persistence.taskfile: TaskFile : Tâches initiales : TaskList()
+2026-02-23 19:15:03,079 [INFO] taskcoachlib.persistence.taskfile: TaskFile : Notes initiales : NoteContainer()
+2026-02-23 19:15:03,080 [INFO] taskcoachlib.persistence.taskfile: TaskFile initialisé.

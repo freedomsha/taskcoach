@@ -1,0 +1,265 @@
+2026-03-05 21:50:18,183 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bcd1c0>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bcd370>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bce450>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,187 [DEBUG] taskcoachlib.gui.menu: New task...	INSERT comparé à Start tracking effort
+2026-03-05 21:50:18,187 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bcd370>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bce450>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bcdd90>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,187 [DEBUG] taskcoachlib.gui.menu: New task from template comparé à Start tracking effort
+2026-03-05 21:50:18,187 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13b62570>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bcdd90>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bcd1c0>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,187 [DEBUG] taskcoachlib.gui.menu:  comparé à Start tracking effort
+2026-03-05 21:50:18,187 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bcdd90>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bcd1c0>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bce450>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,188 [DEBUG] taskcoachlib.gui.menu: New effort...	Ctrl+E comparé à Start tracking effort
+2026-03-05 21:50:18,188 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bcd1c0>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bce450>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bcd370>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,188 [DEBUG] taskcoachlib.gui.menu: New category...	Ctrl-G comparé à Start tracking effort
+2026-03-05 21:50:18,188 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bce450>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bcd370>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bcdd90>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,188 [DEBUG] taskcoachlib.gui.menu: New note...	Ctrl-J comparé à Start tracking effort
+2026-03-05 21:50:18,188 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bcdd90>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13b62570>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bcd1c0>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,188 [DEBUG] taskcoachlib.gui.menu:  comparé à Start tracking effort
+2026-03-05 21:50:18,188 [INFO] taskcoachlib.gui.menu: DynamicMenu.myId : item=MenuItem  dans MenuItemList: [<wx._core.MenuItem object at 0x7f0f1bdaa9f0>, <wx._core.MenuItem object at 0x7f0f1bdaaba0>, <wx._core.MenuItem object at 0x7f0f13bcdd90>, <wx._core.MenuItem object at 0x7f0f1bdaab10>, <wx._core.MenuItem object at 0x7f0f1bdaac30>, <wx._core.MenuItem object at 0x7f0f1bdaacc0>, <wx._core.MenuItem object at 0x7f0f13bcd1c0>, <wx._core.MenuItem object at 0x7f0f1bdab020>, <wx._core.MenuItem object at 0x7f0f1bdab380>, <wx._core.MenuItem object at 0x7f0f13bcd370>, <wx._core.MenuItem object at 0x7f0f1bdab410>, <wx._core.MenuItem object at 0x7f0f1bdab5c0>]
+2026-03-05 21:50:18,188 [DEBUG] taskcoachlib.gui.menu: Start tracking effort comparé à Start tracking effort
+2026-03-05 21:50:18,188 [DEBUG] taskcoachlib.gui.menu: DynamicMenu.updateMenuItemInParentMenu : Activation de l'ID=491 dans le menu parent <class 'taskcoachlib.gui.menu.TaskBarMenu'>.
+2026-03-05 21:50:18,189 [DEBUG] taskcoachlib.patterns.observer: Publisher.notifyObservers : observers={MethodProxy(<bound method DynamicMenu.onUpdateMenu_Deprecated of <taskcoachlib.gui.menu.StartEffortForTaskMenu object at 0x7f0f1bdaad50>>): {("<class 'taskcoachlib.domain.base.filter.DeletedFilter'>.remove", <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter()))}} et observers.items=dict_items([(MethodProxy(<bound method DynamicMenu.onUpdateMenu_Deprecated of <taskcoachlib.gui.menu.StartEffortForTaskMenu object at 0x7f0f1bdaad50>>), {("<class 'taskcoachlib.domain.base.filter.DeletedFilter'>.remove", <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter()))})]) sont définis !
+2026-03-05 21:50:18,189 [DEBUG] taskcoachlib.patterns.observer: Publisher.notifyObservers : observers={MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.SelectedItemsFilter'>(SelectedItemsFilter())>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method TaskBarIcon.onTaskListChanged of <taskcoachlib.gui.taskbaricon.TaskBarIcon object at 0x7f0f1bdaa8d0>>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method TaskFile.onDomainObjectAddedOrRemoved of <taskcoachlib.persistence.taskfile.LockedTaskFile object at 0x7f0f441bfb60>>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method CollectionDecorator.onRemoveItem of <class 'taskcoachlib.domain.effort.effortlist.EffortList'>(EffortList())>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method ReminderController.onRemoveTask of <taskcoachlib.gui.remindercontroller.ReminderController object at 0x7f0f13b1d7f0>>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}, MethodProxy(<bound method ChangeMonitor.onObjectRemoved of <taskcoachlib.changes.monitor.ChangeMonitor object at 0x7f0f4410c050>>): {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}} et observers.items=dict_items([(MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.SelectedItemsFilter'>(SelectedItemsFilter())>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method TaskBarIcon.onTaskListChanged of <taskcoachlib.gui.taskbaricon.TaskBarIcon object at 0x7f0f1bdaa8d0>>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method TaskFile.onDomainObjectAddedOrRemoved of <taskcoachlib.persistence.taskfile.LockedTaskFile object at 0x7f0f441bfb60>>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method CollectionDecorator.onRemoveItem of <class 'taskcoachlib.domain.effort.effortlist.EffortList'>(EffortList())>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method ReminderController.onRemoveTask of <taskcoachlib.gui.remindercontroller.ReminderController object at 0x7f0f13b1d7f0>>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method Filter.onRemoveItem of <class 'taskcoachlib.domain.base.filter.DeletedFilter'>(DeletedFilter())>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())}), (MethodProxy(<bound method ChangeMonitor.onObjectRemoved of <taskcoachlib.changes.monitor.ChangeMonitor object at 0x7f0f4410c050>>), {("<class 'taskcoachlib.domain.task.tasklist.TaskList'>.remove", TaskList())})]) sont définis !
+2026-03-05 21:50:18,190 [INFO] taskcoachlib.persistence.taskfile: TaskFile.markClean : Marque le fichier de tâches comme propre (n'ayant pas besoin d'être enregistré).
+2026-03-05 21:50:18,190 [DEBUG] taskcoachlib.persistence.taskfile: Vérification de l'état 'dirty' : False
+2026-03-05 21:50:18,191 [DEBUG] taskcoachlib.persistence.taskfile: TaskFile.close terminé avec succès.
+2026-03-05 21:50:18,299 [DEBUG] taskcoachlib.gui.windowdimensionstracker: SAVE: pos=(0, 0) size=(1753, 744) maximized=True
+2026-03-05 21:50:18,302 [INFO] taskcoachlib.persistence.taskfile: TaskFile.stop() appelé.
+2026-03-05 21:50:18,302 [INFO] taskcoachlib.application.application: Avant suppression de l'icône barre de tâches
+2026-03-05 21:50:18,303 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,304 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,304 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,304 [INFO] taskcoachlib.application.application: Avant appel à mainwindow.OnQuit
+2026-03-05 21:50:18,344 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.__doRefresh : exécution du rafraîchissement planifié.
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.RefreshAllItems : Nouvelle racine créée : <wx.lib.agw.hypertreelist.TreeListItem object at 0x7f0f13ba1310>
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.RefreshAllItems : root_item après vérification=<wx.lib.agw.hypertreelist.TreeListItem object at 0x7f0f13ba1310>
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : ajout de l'objet None à l'interface grace à self.__adapter=<taskcoachlib.gui.viewer.task.TaskViewer object at 0x7f0f13b62720>.
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.gui.viewer.task: BaseTaskViewer.domainObjectsToView : Nombre total d'objets dans la TaskList : 0
+2026-03-05 21:50:18,345 [WARNING] taskcoachlib.gui.viewer.task: BaseTaskViewer.domainObjectsToView : ALERTE : Aucune tâche n'est présente dans le modèle après le chargement.
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.gui.viewer.task: BaseTaskViewer.domainObjectsToView : Retourne les tâches à visualiser : self.taskFile.tasks()=TaskList().
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : Adapter root objects: TaskList()
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,345 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : Demande à la présentation si le mode est arborescence. self.presentation()=Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.children : item=None, self.isTreeViewer()=True
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : Demande à la présentation si le mode est arborescence. self.presentation()=Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Récupération des enfants pour le parent None dans TaskViewer.
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PRESENTATION IDS: []
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PARENT CHILD IDS: N/A
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,346 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : mode arborescence actuel du filtre presentation.treeMode() = True pour presentation Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : parent est None, retourne les éléments racines de la présentation Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Retourne les Enfants de None dans TaskViewer : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.children(item=None) retourne Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([]))
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : Children of root: Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([]))
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : parent_item IsOk: True
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : Demande à la présentation si le mode est arborescence. self.presentation()=Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.children : item=None, self.isTreeViewer()=True
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,347 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.isTreeViewer : Demande à la présentation si le mode est arborescence. self.presentation()=Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Récupération des enfants pour le parent None dans TaskViewer.
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PRESENTATION IDS: []
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PARENT CHILD IDS: N/A
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,348 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : mode arborescence actuel du filtre presentation.treeMode() = True pour presentation Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : parent est None, retourne les éléments racines de la présentation Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Retourne les Enfants de None dans TaskViewer : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.gui.viewer.task: TaskViewer.children(item=None) retourne Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([]))
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : Children returned: []
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.widgets.treectrl: Tree count after build: 1
+2026-03-05 21:50:18,349 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.__doRefresh : exécution du rafraîchissement planifié.
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.RefreshAllItems : Nouvelle racine créée : <wx.lib.agw.hypertreelist.TreeListItem object at 0x7f0f44122ad0>
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl.RefreshAllItems : root_item après vérification=<wx.lib.agw.hypertreelist.TreeListItem object at 0x7f0f44122ad0>
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : ajout de l'objet None à l'interface grace à self.__adapter=<taskcoachlib.gui.viewer.category.CategoryViewer object at 0x7f0f1c419e20>.
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : Adapter root objects: CategoryList()
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Récupération des enfants pour le parent None dans CategoryViewer.
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de CategoryViewer avec 0 éléments.
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PRESENTATION IDS: []
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PARENT CHILD IDS: N/A
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,350 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de CategoryViewer avec 0 éléments.
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : mode arborescence actuel du filtre presentation.treeMode() = True pour presentation CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : parent est None, retourne les éléments racines de la présentation CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Retourne les Enfants de None dans CategoryViewer : CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : Children of root: CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([]))
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : parent_item IsOk: True
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Récupération des enfants pour le parent None dans CategoryViewer.
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de CategoryViewer avec 0 éléments.
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PRESENTATION IDS: []
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : PARENT CHILD IDS: N/A
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,351 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de CategoryViewer avec 0 éléments.
+2026-03-05 21:50:18,352 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,352 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : mode arborescence actuel du filtre presentation.treeMode() = True pour presentation CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,352 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : parent est None, retourne les éléments racines de la présentation CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,352 [DEBUG] taskcoachlib.gui.viewer.base: TreeViewer.children : Retourne les Enfants de None dans CategoryViewer : CategorySorter(<class 'taskcoachlib.domain.category.sorter.CategorySorter'>([])).
+2026-03-05 21:50:18,352 [DEBUG] taskcoachlib.widgets.treectrl: TreeListCtrl._addObjectRecursively : Children returned: []
+2026-03-05 21:50:18,352 [DEBUG] taskcoachlib.widgets.treectrl: Tree count after build: 1
+2026-03-05 21:50:18,354 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,354 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,354 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,395 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,395 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,396 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,473 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,473 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,473 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,523 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,523 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,523 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,587 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,587 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,587 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,647 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,647 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,648 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,698 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,698 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,698 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,718 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,718 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,718 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,734 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,734 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,734 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,748 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,749 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,749 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,770 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,770 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,770 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,789 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,789 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,789 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,931 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,932 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,932 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,954 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,954 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,954 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,971 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,971 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,971 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:18,989 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:18,989 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:18,990 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,027 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,027 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,028 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,032 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,032 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,032 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,065 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,065 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,066 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,071 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,071 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,071 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,100 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,101 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,101 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,125 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,125 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,125 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,155 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,156 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,156 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,191 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,191 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,191 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,223 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,223 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,223 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,245 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,245 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,245 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,279 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,279 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,279 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,310 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,310 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,310 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,336 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,336 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,336 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,359 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,360 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,360 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:19,734 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:19,735 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:19,735 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:20,425 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:20,425 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:20,425 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:20,443 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:20,444 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:20,444 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:20,452 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:20,452 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:20,453 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:20,470 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:20,470 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:20,470 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:20,504 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : DEBUG presentation taskfile: 139703543921504
+2026-03-05 21:50:20,504 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Retour de la présentation de TaskViewer avec 0 éléments.
+2026-03-05 21:50:20,504 [DEBUG] taskcoachlib.gui.viewer.base: Viewer.presentation : Les éléments de la présentation sont : Sorter(<class 'taskcoachlib.domain.task.sorter.Sorter'>([])).
+2026-03-05 21:50:20,607 [INFO] taskcoachlib.gui.mainwindow: MainWindow.setShutdownInProgress : Le processus d'arrêt de l'application est en cours. Plus aucune action durant cette phase !
+2026-03-05 21:50:20,608 [INFO] taskcoachlib.gui.mainwindow: mainWindow.onClose : Fermeture de la fenêtre par l'utilisateur.
+2026-03-05 21:50:20,608 [INFO] taskcoachlib.application.application: Application.quitApplication : Début de la Fermeture de l'application
+2026-03-05 21:50:20,608 [DEBUG] taskcoachlib.gui.mainwindow: MainWindow.onCLose : Fermeture des éditeurs
+2026-03-05 21:50:20,608 [INFO] taskcoachlib.gui.mainwindow: MainWindow.closeEditors : Fermeture de tous les éditeurs ouverts dans la fenêtre principale.
+2026-03-05 21:50:20,608 [DEBUG] taskcoachlib.gui.mainwindow: MainWindow.onClose : Quitter avec event.Skip()
+2026-03-05 21:50:20,608 [INFO] taskcoachlib.persistence.taskfile: TaskFile.stop() appelé.
+2026-03-05 21:50:20,608 [INFO] taskcoachlib.gui.mainwindow: MainWindow.closeEditors : Fermeture de tous les éditeurs ouverts dans la fenêtre principale.
+2026-03-05 21:50:20,609 [INFO] taskcoachlib.gui.mainwindow: MainWindow.onCLose : Fenêtre fermée par l'utilisateur
+2026-03-05 21:50:20,609 [INFO] taskcoachlib.application.application: Avant appel sys.exit()
+2026-03-05 21:50:20,609 [INFO] taskcoachlib.application.application: Fenêtre principale détruite, appel de sys.exit()
+2026-03-05 21:50:20,609 [INFO] taskcoachlib.application.application: Threads actifs avant sys.exit(): [<_MainThread(MainThread, started 139704156986304)>]
+2026-03-05 21:50:20,609 [DEBUG] taskcoachlib.application.application: Thread: MainThread, Daemon: False, Class: <class 'threading._MainThread'>
+2026-03-05 21:50:20,611 [DEBUG] taskcoachlib.application.application: Stack for thread MainThread:
+  File "/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoach.py", line 305, in <module>
+    start()
+  File "/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoach.py", line 298, in start
+    app.start()
+  File "/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/application/application.py", line 743, in start
+    self.__wx_app.MainLoop()
+  File "/home/sylvain/Téléchargements/src/task-coach-git/venv/lib/python3.14/site-packages/wx/core.py", line 2254, in MainLoop
+    rv = wx.PyApp.MainLoop(self)
+  File "/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/gui/mainwindow.py", line 1103, in onClose
+    application.Application().quitApplication()
+  File "/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/application/application.py", line 1727, in quitApplication
+    stack = _stack_for_thread(t, frames)
+2026-03-05 21:50:20,611 [DEBUG] taskcoachlib.application.application: Application.quitApplication : Essaie de quitter proprement l'application avec sys.exit().

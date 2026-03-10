@@ -1,0 +1,7 @@
+2026-03-07 09:36:40,137 [INFO] __main__: ****************************************************************
+2026-03-07 09:36:40,138 [INFO] __main__: *               Démarrage de Task Coach                          *
+2026-03-07 09:36:40,138 [INFO] __main__: ****************************************************************
+2026-03-07 09:36:40,138 [INFO] __main__: Environnement non frozen détecté (mode développement)
+2026-03-07 09:36:40,138 [INFO] __main__: Lancement du programme Task Coach via taskcoach.py et les arguments d'ArgumentParser.
+2026-03-07 09:36:40,271 [INFO] taskcoachlib.application: application avec wx
+2026-03-07 09:36:40,513 [DEBUG] taskcoachlib.filesystem: filesystem : _system=Linux
