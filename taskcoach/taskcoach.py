@@ -90,6 +90,22 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 # TODO : Faire un tri selon les dossiers name importants (application, changes, command,
 #  config, domain, filesystem, gui, help, i18n, iphone, mailer, meta, notify, patterns,
 #  persistence, powermgt, speak, syncml, thirdparty, tools, widgets, workaround)
+# logging.getLogger("__main__").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.application").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.filesystem").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.config.settings").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.application.application").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.persistence.taskfile").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.gui.mainwindow").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.gui.menu").setLevel(logging.WARNING)
+logging.getLogger("taskcoachlib.gui.uicommand.settings_uicommand").setLevel(
+    logging.INFO
+)
+logging.getLogger("taskcoachlib.gui.toolbar").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.widgets.treectrl").setLevel(logging.INFO)
+# logging.getLogger("taskcoachlib.widgets.itemctrl").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.widgets.autowidth").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.widgets.tooltip").setLevel(logging.INFO)
 
 filename_dated = "taskcoach_" + datetime.now().strftime("%Y%m%d%H%M") + ".log"
 rh = logging.handlers.RotatingFileHandler(

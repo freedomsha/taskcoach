@@ -2071,19 +2071,24 @@ class TaskViewer(
         """
         log.debug("TaskViewer.activate : Activation du visualiseur de tâches.")
         if hasattr(wx.GetTopLevelParent(self), "AddBalloonTip"):
-            wx.GetTopLevelParent(
-                self
-            ).AddBalloonTip(  # Unresolved attribute reference 'AddBalloonTip' for class 'Window'
-                self.settings,
-                "manualordering",
-                self.widget,
-                title=_("Manual ordering"),
-                getRect=lambda: wx.Rect(0, 0, 28, 16),
-                message=_(
-                    """Show the "Manual ordering" column, then drag and drop items 
-                from this column to sort them arbitrarily."""
-                ),
-            )
+            try:
+                wx.GetTopLevelParent(
+                    self
+                ).AddBalloonTip(  # Unresolved attribute reference 'AddBalloonTip' for class 'Window'
+                    self.settings,
+                    "manualordering",
+                    self.widget,
+                    title=_("Manual ordering"),
+                    getRect=lambda: wx.Rect(0, 0, 28, 16),
+                    message=_(
+                        """Show the "Manual ordering" column, then drag and drop items 
+                    from this column to sort them arbitrarily."""
+                    ),
+                )
+            except Exception as e:
+                log.error(
+                    f"TaskViewer.activate: erreur durant l'activation du visualiseur {self.__class__.__name__} et de l'affichage de l'info_bulle : {e}."
+                )
         log.debug(
             "TaskViewer.activate : Visualiseur de tâches activé et info-bulle affichée si possible."
         )
@@ -3210,6 +3215,7 @@ class CheckableTaskViewer(TaskViewer):  # pylint: disable=W0223
     def getItemParentHasExclusiveChildren(
         self, task
     ):  # pylint: disable=W0613,W0621
+        # Ces deux méthodes (getItemParentHasExclusiveChildren et getIsItemChecked) sont des méthodes du viewer/adaptateur, pas du widget. Toutes les fois que CheckTreeCtrl doit interroger le viewer pour l'état d'un objet, il doit passer par self._TreeListCtrl__adapter.
         return False
 
 

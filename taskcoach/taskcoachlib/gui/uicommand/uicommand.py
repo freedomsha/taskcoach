@@ -2485,7 +2485,8 @@ class Edit(mixin_uicommand.NeedsSelectionMixin, ViewerCommand):
             **kwargs,
         )
 
-    def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
+    # def doCommand(self, event, show: bool = True):  # pylint: disable=W0221
+    def doCommand(self, event, show=True):  # pylint: disable=W0221
         """
         Exécute la commande pour ouvrir un éditeur d'éléments ou accepter les modifications d'un champ de texte.
 
@@ -5459,7 +5460,7 @@ class ReportBug(URLCommand):
     """
 
     def __init__(self, *args, **kwargs):
-        """Initialiser la commande avec le texte du menu,
+        """Initialise la commande avec le texte du menu,
         l'aide contextuelle et l'icône appropriés."""
         super().__init__(
             menuText=_("Report a &bug..."),
@@ -5896,7 +5897,7 @@ class EffortViewerAggregationChoice(
 
     def appendToToolBar(self, *args, **kwargs):
         """Ajoute le contrôle de choix à la barre d'outils
-        et initialise la sélection en fonction des paramètres enregistrés."""
+        et initialise la sélection en fonction du paramètre enregistré."""
         super().appendToToolBar(*args, **kwargs)
         self.setChoice(
             self.settings.gettext(self.viewer.settingsSection(), "aggregation")
@@ -5983,7 +5984,7 @@ class TaskViewerTreeOrListChoice(
 
     def appendToToolBar(self, *args, **kwargs):
         """Ajoute le contrôle de choix à la barre d'outils
-        et initialise la sélection en fonction des paramètres enregistrés."""
+        et initialise la sélection en fonction du paramètre enregistré."""
         super().appendToToolBar(*args, **kwargs)
         self.setChoice(
             self.settings.getboolean(self.viewer.settingsSection(), "treemode")
@@ -6625,7 +6626,7 @@ class AlwaysRoundUp(settings_uicommand.UICheckCommand, ViewerCommand):
 
     def onCheck(self, event):
         """Enregistre l'état de l'arrondi au supérieur dans les paramètres de l'application."""
-        self.setSetting(event.IsChecked())
+        self.setSetting(self._isMenuItemChecked(event))
 
     def doCommand(self, event):
         """Enregistre l'état de l'arrondi au supérieur dans les paramètres de l'application."""

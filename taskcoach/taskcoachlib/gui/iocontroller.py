@@ -833,6 +833,8 @@ class IOController(object):
 
     # def importTemplate(self, showerror=wx.MessageBox):
     def importTemplate(self, showerror=messagebox_used):
+        #  Définir la fonction "importTemplate" avec un paramètre
+        #  "showerror" qui est une fonction de boîte de dialogue d'erreur.
         """Cette fonction permet d'importer un modèle de tâche à partir d'un fichier.
 
         Voici une explication ligne par ligne :
@@ -854,6 +856,9 @@ class IOController(object):
             crée un message d'erreur avec le nom du fichier et la raison de l'exception,
             puis affiche la boîte de dialogue d'erreur en utilisant la fonction "showerror" passée en paramètre.
         """
+        # Demander à l'utilisateur de sélectionner un fichier à importer
+        # en utilisant la fonction "__askUserForFile"
+        # qui est définie ailleurs dans le code.
         filename = self.__askUserForFile(
             _("Import template"),
             fileDialogOpts={
@@ -862,13 +867,24 @@ class IOController(object):
                 % meta.name,
             },
         )
+        # Si l'utilisateur sélectionne un fichier,
+        # créer une instance de la classe "TemplateList"
+        # qui est définie ailleurs dans le code
+        # et qui représente une liste de modèles de tâches.
         if filename:
             templates = persistence.TemplateList(
                 self.__settings.pathToTemplatesDir()
             )
+            # Essayer de copier le modèle de tâche sélectionné
+            # dans le répertoire des modèles de tâches
+            # en utilisant la méthode "copyTemplate" de la classe "TemplateList".
             try:
                 templates.copyTemplate(filename)
             except Exception as reason:  # pylint: disable=W0703
+                # Si une exception est levée pendant la copie,
+                # créer un message d'erreur avec le nom du fichier et la raison de l'exception,
+                # puis affiche la boîte de dialogue d'erreur
+                # en utilisant la fonction "showerror" passée en paramètre.
                 # errorMessage = _('Cannot import template %s\n%s') % (filename, reason)
                 errorMessage = _("Cannot import template %s\n%s") % (
                     filename,

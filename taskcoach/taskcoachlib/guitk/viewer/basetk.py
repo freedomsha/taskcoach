@@ -92,6 +92,7 @@
 import logging
 from typing import Any, Callable, Dict, List, Optional, Set, Type
 import tkinter as tk
+
 # import tkinter.ttk as ttk
 from tkinter import ttk, PhotoImage
 from abc import ABC, abstractmethod
@@ -105,7 +106,9 @@ from taskcoachlib.guitk.viewer import mixintk  # Import relatif
 from taskcoachlib.widgetstk import itemctrltk
 from taskcoachlib.widgetstk.tooltiptk import ToolTip
 
-from taskcoachlib.help.balloontipstk import BalloonTipManager  # contient AddBalloonTip
+from taskcoachlib.help.balloontipstk import (
+    BalloonTipManager,
+)  # contient AddBalloonTip
 
 log = logging.getLogger(__name__)
 
@@ -128,6 +131,7 @@ log = logging.getLogger(__name__)
 # CategoryViewer.createWidget crée le TreeListCtrl après avoir créé les colonnes.
 # ✅ L’ordre est donc logique : les colonnes sont créées avant le TreeListCtrl.
 
+
 # class Viewer(ttk.Frame, patterns.Observer, ABC):
 class Viewer(ttk.Frame, patterns.Observer):
     """
@@ -144,6 +148,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         defaultBitmap (str) : L'icône par défaut pour la visionneuse.
         viewerImages (list) : Les images utilisées pour afficher les objets de la visionneuse.
     """
+
     defaultTitle = "Subclass responsibility"
     defaultBitmap = "Subclass responsibility"
     # Les images seront gérées par un ArtProvider adapté à Tkinter
@@ -160,7 +165,9 @@ class Viewer(ttk.Frame, patterns.Observer):
             *args : Arguments supplémentaires.
             **kwargs : Arguments nommés supplémentaires.
         """
-        log.debug(f"Viewer.__init__ : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}.")
+        log.debug(
+            f"Viewer.__init__ : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}."
+        )
         ttk.Frame.__init__(self, parent)  # Initialisation de ttk.Frame
         # ttk.Frame.__init__(self, parent, *args, **kwargs)  # Initialisation de ttk.Frame
         # init du Frame avant ou après l'Observer ?  Après.
@@ -204,8 +211,12 @@ class Viewer(ttk.Frame, patterns.Observer):
         # Initialiser les widgets à None. Ils seront créés dans initLayout.
         self._sizer = None
         self.toolbar = None
-        log.debug(f"Viewer.__init__ : crée le widget {self} avec parent={parent}.")
-        self.widget = self.createWidget(parent)  # Crée le widget pour afficher les objets.(Taskviewer,...)
+        log.debug(
+            f"Viewer.__init__ : crée le widget {self} avec parent={parent}."
+        )
+        self.widget = self.createWidget(
+            parent
+        )  # Crée le widget pour afficher les objets.(Taskviewer,...)
 
         # self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
         self.widget.grid(row=2, column=2, sticky="news")
@@ -234,9 +245,13 @@ class Viewer(ttk.Frame, patterns.Observer):
 
         # Tooltips (à adapter si ToolTipMixin est utilisé)
         # if isinstance(self.widget, ToolTipMixin):  # si widget est une instance de ToolTipMixin
-        if isinstance(self.widget, ToolTip):  # si widget est une instance de ToolTipMixin
+        if isinstance(
+            self.widget, ToolTip
+        ):  # si widget est une instance de ToolTipMixin
             # Informer l'utilisateur
-            pub.subscribe(self.onShowTooltipsChanged, "settings.view.descriptionpopups")
+            pub.subscribe(
+                self.onShowTooltipsChanged, "settings.view.descriptionpopups"
+            )
             # Régler les infos du widget
             self.widget.SetToolTipsEnabled(
                 settings.getboolean("view", "descriptionpopups")
@@ -244,24 +259,37 @@ class Viewer(ttk.Frame, patterns.Observer):
 
         # tk.callAfter(self.__DisplayBalloon)  # Utilisation de tk.callAfter
         self.after(0, self.__DisplayBalloon)  # Utilisation de tk.after
-        log.debug(f"Viewer.__init__ : La nouvelle visionneuse self={self.__class__.__name__} est initialisée !")
+        log.debug(
+            f"Viewer.__init__ : La nouvelle visionneuse self={self.__class__.__name__} est initialisée !"
+        )
 
     def __DisplayBalloon(self):
         """Affiche une info-bulle pour informer l'utilisateur que la barre d'outils est personnalisable."""
         # AuiFloatingFrame is instantiated from framemanager, we can't derive it from BalloonTipManager
-        if self.toolbar.winfo_ismapped() and hasattr(self.winfo_toplevel(), "AddBalloonTip"):  # Tests avec winfo
+        if self.toolbar.winfo_ismapped() and hasattr(
+            self.winfo_toplevel(), "AddBalloonTip"
+        ):  # Tests avec winfo
             self.winfo_toplevel().AddBalloonTip(  # Utilisation de self.winfo_toplevel()
                 self.settings,
                 "customizabletoolbars",
                 self.toolbar,
                 title=_("Toolbars are customizable"),
-                getRect=lambda: (0, 0, 28, 16),  # Rect factice, car on ne peut pas vraiment obtenir la position du Tool
-                message=_( """Click on the gear icon on the right to add buttons and rearrange them.""" )
+                getRect=lambda: (
+                    0,
+                    0,
+                    28,
+                    16,
+                ),  # Rect factice, car on ne peut pas vraiment obtenir la position du Tool
+                message=_(
+                    """Click on the gear icon on the right to add buttons and rearrange them."""
+                ),
             )
 
     def onShowTooltipsChanged(self, value):
         """Gère le changement de l'état des info-bulles."""
-        self.widget.ToolTipsEnabled(value)  # A adapter si ToolTipMixin est utilisé
+        self.widget.ToolTipsEnabled(
+            value
+        )  # A adapter si ToolTipMixin est utilisé
         # pass  # Enlever ? TODO
 
     def onBeginIO(self, taskFile):
@@ -317,18 +345,15 @@ class Viewer(ttk.Frame, patterns.Observer):
         self.removeObserver(self.onPresentationChanged)
         self.registerObserver(
             self.onPresentationChanged,
-
-            eventType=self.presentation().addItemEventType(), eventSource=self.presentation()
+            eventType=self.presentation().addItemEventType(),
+            eventSource=self.presentation(),
         )
         self.registerObserver(
             self.onPresentationChanged,
             eventType=self.presentation().removeItemEventType(),
-            eventSource=self.presentation()
+            eventSource=self.presentation(),
         )
-        self.registerObserver(
-            self.onNewItem,
-            eventType="newitem"
-        )
+        self.registerObserver(self.onNewItem, eventType="newitem")
         # # Les observateurs sont gérés par la classe Observer, pas besoin de les recréer
         # pass
 
@@ -352,7 +377,7 @@ class Viewer(ttk.Frame, patterns.Observer):
 
         for popupMenu in self._popupMenus:
             if popupMenu:
-                popupMenu.clearMenu() # A adapter si la classe menu est conservée
+                popupMenu.clearMenu()  # A adapter si la classe menu est conservée
                 popupMenu.Destroy()
                 # pass
         pub.unsubscribe(self.onBeginIO, "taskfile.aboutToRead")
@@ -369,7 +394,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         # for menu in self._popupMenus:
         #     menu.destroy()
 
-#         self.destroy() # Détruit le Frame Tkinter
+    #         self.destroy() # Détruit le Frame Tkinter
 
     def viewerStatusEventType(self):
         """Retourne le type d'événement à utiliser pour les mises à jour de statut."""
@@ -384,12 +409,19 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def title(self):
         """Retourne le titre actuel de la visionneuse."""
-        return self.settings.get(self.settingsSection(), "title") or self.defaultTitle
+        return (
+            self.settings.get(self.settingsSection(), "title")
+            or self.defaultTitle
+        )
 
     def setTitle(self, the_title):
         """Modifie le titre de la visionneuse."""
-        titleToSaveInSettings = "" if the_title == self.defaultTitle else the_title
-        self.settings.set(self.settingsSection(), "title", titleToSaveInSettings)
+        titleToSaveInSettings = (
+            "" if the_title == self.defaultTitle else the_title
+        )
+        self.settings.set(
+            self.settingsSection(), "title", titleToSaveInSettings
+        )
         # self.parent.setPaneTitle(self, title) # setPaneTitle is for frame ! not window. SetLabel or SetName for window !
         # self.parent.manager.Update() # L'affichage
 
@@ -414,16 +446,22 @@ class Viewer(ttk.Frame, patterns.Observer):
         Crée _sizer, toolbar, et widget dans la bonne hiérarchie.
         !!! TRES IMPORTANT !!!
         """
-        log.debug(f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}.")
+        log.debug(
+            f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}."
+        )
         # 1. Créer le sizer principal, enfant de 'self'
         self._sizer = tk.Frame(self)  # Utilisation de Frame pour le sizer
         # self._sizer.pack(side="top", fill="both", expand=True)  # Gérez votre layout avec pack, grid ou place
-        self._sizer.grid(row=0, column=0, sticky="news")  # Utilisation de grid pour le layout
+        self._sizer.grid(
+            row=0, column=0, sticky="news"
+        )  # Utilisation de grid pour le layout
 
         # 2. Créer la barre d'outils, enfant de 'self._sizer'
         # self.toolbar = toolbarttk.ToolBar(self._sizer, self.settings, (16, 16))
         # CHANGEMENT : On passe 'self._sizer' comme parent, et 'self' (le Viewer) comme window
-        self.toolbar = toolbarttk.ToolBar(self._sizer, self, self.settings, (16, 16))
+        self.toolbar = toolbarttk.ToolBar(
+            self._sizer, self, self.settings, (16, 16)
+        )
         # ToolBar sera créé à l'intérieur de self._sizer, mais
         # il communiquera avec self (le Viewer) pour obtenir les informations dont il a besoin.
         #
@@ -436,7 +474,9 @@ class Viewer(ttk.Frame, patterns.Observer):
         # self.toolbar.pack(in_=self._sizer, fill=tk.X, expand=False)  # Remplissage horizontal, pas d'expansion verticale
         # # self.toolbar.pack(fill=tk.X, expand=False, pady=5)
         # self.toolbar.pack(fill=tk.X, expand=False, side=tk.TOP)
-        self.toolbar.grid(row=0, column=0, sticky="new")  # Positionnement en haut
+        self.toolbar.grid(
+            row=0, column=0, sticky="new"
+        )  # Positionnement en haut
 
         # 3. Créer le widget principal, enfant de 'self._sizer'
         #    On passe self._sizer comme parent à la méthode createWidget
@@ -466,7 +506,9 @@ class Viewer(ttk.Frame, patterns.Observer):
         # Tentative de configuration du background avec gestion d'erreur
         try:
             # self.widget.configure(background="#f0f0f0")  # Couleur par défaut (à adapter)
-            self.widget.config(background="#f0f0f0")  # Couleur par défaut (à adapter)
+            self.widget.config(
+                background="#f0f0f0"
+            )  # Couleur par défaut (à adapter)
         except tk.TclError:
             # Pour les widgets ttk, utiliser le système de style
             if isinstance(self.widget, ttk.Widget):
@@ -479,7 +521,9 @@ class Viewer(ttk.Frame, patterns.Observer):
                 except tk.TclError:
                     # Certains widgets ttk ne supportent même pas les styles personnalisés
                     pass
-        log.debug(f"Viewer.initLayout : initLayout de {self.__class__.__name__} terminé.")
+        log.debug(
+            f"Viewer.initLayout : initLayout de {self.__class__.__name__} terminé."
+        )
 
     # @abstractmethod  # Laisser @abstractmethod si ABC est utilisé
     # def createWidget(self, *args):
@@ -531,12 +575,18 @@ class Viewer(ttk.Frame, patterns.Observer):
             image = artprovidertk.getIcon(image_name, size)
             if image:
                 imageList.append(image)
-                self.imageIndex[image_name] = image_index  # Mapper le nom à l'index généré
+                self.imageIndex[image_name] = (
+                    image_index  # Mapper le nom à l'index généré
+                )
             else:
                 # Gérer les cas où l'icône n'est pas trouvée (pour ne pas casser l'index)
-                log.warning(f"Image {image_name} non trouvée dans ArtProvider.")
+                log.warning(
+                    f"Image {image_name} non trouvée dans ArtProvider."
+                )
         # return images
-        log.debug(f"Viewer.createImageList : Liste d'image créée : {imageList}")
+        log.debug(
+            f"Viewer.createImageList : Liste d'image créée : {imageList}"
+        )
         return imageList
 
     def getWidget(self):
@@ -550,12 +600,14 @@ class Viewer(ttk.Frame, patterns.Observer):
     def createSorter(self, collection):
         """Crée un trieur pour organiser la présentation.
 
-        Cette méthode peut être remplacée pour décorer la présentation avec un trieur."""
+        Cette méthode peut être remplacée pour décorer la présentation avec un trieur.
+        """
         return collection
 
     def createFilter(self, collection):
         """Crée un filtre pour organiser la présentation.
-        Cette méthode peut être remplacée pour décorer la présentation avec un trieur."""
+        Cette méthode peut être remplacée pour décorer la présentation avec un trieur.
+        """
         return collection
 
     def onAttributeChanged(self, newValue, sender):
@@ -569,7 +621,13 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def onNewItem(self, event):
         """Sélectionne un nouvel élément ajouté à la présentation."""
-        self.select([item for item in list(event.values()) if item in self.presentation()])
+        self.select(
+            [
+                item
+                for item in list(event.values())
+                if item in self.presentation()
+            ]
+        )
 
     def onPresentationChanged(self, event):
         """
@@ -578,6 +636,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         Chaque fois que notre présentation est modifiée (éléments ajoutés,
         éléments supprimés), la visionneuse se rafraîchit.
         """
+
         def itemsRemoved():
             return event.type() == self.presentation().removeItemEventType()
 
@@ -607,7 +666,9 @@ class Viewer(ttk.Frame, patterns.Observer):
         #     tk.callAfter(self.updateSelection) # Assurez-vous que tous les événements Tk sont gérés
         # except RuntimeError:
         #     pass
-        self.after(0, self.updateSelection)  # Assurez-vous que tous les événements Tk sont gérés
+        self.after(
+            0, self.updateSelection
+        )  # Assurez-vous que tous les événements Tk sont gérés
 
     def updateSelection(self, sendViewerStatusEvent=True):
         """Met à jour la sélection actuelle."""
@@ -621,20 +682,22 @@ class Viewer(ttk.Frame, patterns.Observer):
         # else:
         #     newSelection = self.widget.curselection()  # A adapter en fonction du type de widget
         try:
-            if hasattr(self.widget, 'curselection'):
+            if hasattr(self.widget, "curselection"):
                 # Pour les widgets qui supportent curselection (Treeview, Listbox, etc.)
                 newSelection = self.widget.curselection()
-            elif hasattr(self, '_Taskviewer__tree'):
+            elif hasattr(self, "_Taskviewer__tree"):
                 # Pour Taskviewer:  utiliser le Treeview interne
                 newSelection = self._Taskviewer__tree.selection()
-            elif hasattr(self, '__tree'):
+            elif hasattr(self, "__tree"):
                 # Généralisé pour d'autres viewers
                 newSelection = self.__tree.selection()
             else:
                 # Fallback:  pas de widget à sélectionner
                 newSelection = []
         except AttributeError as e:
-            log.warning(f"updateSelection:  Impossible d'obtenir la sélection:  {e}")
+            log.warning(
+                f"updateSelection:  Impossible d'obtenir la sélection:  {e}"
+            )
             newSelection = []
 
         if newSelection != self.__curselection:
@@ -673,13 +736,14 @@ class Viewer(ttk.Frame, patterns.Observer):
             # ✅ FIX:  Ne pas appeler RefreshAllItems si c'est un Frame simple
             # Vérifier si le widget a la méthode RefreshAllItems (TreeListCtrl)
             # Sinon, c'est un Frame simple - appeler _refresh_tasks() si disponible
-            if hasattr(self. widget, 'RefreshAllItems'):
+            if hasattr(self.widget, "RefreshAllItems"):
                 # Pour les widgets personnalisés (TreeListCtrl, etc.)
-                self.widget.RefreshAllItems(len(self.presentation()))
-            elif hasattr(self, '_refresh_tasks'):
+                # self.widget.RefreshAllItems(len(self.presentation()))
+                self.widget.scheduleRefresh(len(self.presentation()))
+            elif hasattr(self, "_refresh_tasks"):
                 # Pour les viewers Tkinter qui implémentent _refresh_tasks
                 self._refresh_tasks()
-            elif hasattr(self, 'refresh_items'):
+            elif hasattr(self, "refresh_items"):
                 # Fallback sur refresh_items
                 self.refresh_items()
             # Sinon, ne rien faire (le widget simple ne nécessite pas de refresh)
@@ -692,9 +756,9 @@ class Viewer(ttk.Frame, patterns.Observer):
             # # Cette méthode devra être implémentée dans les sous-classes
             # self.widget.RefreshItems(*items)  # A adapter en fonction du widget
             # ✅ FIX:  Vérifier avant d'appeler RefreshItems
-            if hasattr(self.widget, 'RefreshItems'):
+            if hasattr(self.widget, "RefreshItems"):
                 self.widget.RefreshItems(*items)
-            elif hasattr(self, 'refresh_items'):
+            elif hasattr(self, "refresh_items"):
                 self.refresh_items(*items)
             # Sinon, ne rien faire
             # pass
@@ -758,7 +822,9 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def presentation(self):
         """Retourne les objets de domaine que cette visionneuse affiche actuellement."""
-        log.debug(f"Viewer.presentation : renvoie les objets de domaine que la visionneuse {self.__class__.__name__} affiche actuellement : {self.__presentation}.")
+        log.debug(
+            f"Viewer.presentation : renvoie les objets de domaine que la visionneuse {self.__class__.__name__} affiche actuellement : {self.__presentation}."
+        )
         return self.__presentation
         # if hasattr(self, '__presentation'):
         #     return self.__presentation
@@ -838,7 +904,9 @@ class Viewer(ttk.Frame, patterns.Observer):
         """Retourne la section de paramètres de la visionneuse précédente de cette classe."""
         previousSectionNumber = self.__instanceNumber - 1
         while previousSectionNumber > 0:
-            previousSection = self.__settingsSection + str(previousSectionNumber)
+            previousSection = self.__settingsSection + str(
+                previousSectionNumber
+            )
             if self.settings.has_section(previousSection):
                 return previousSection
             previousSectionNumber -= 1
@@ -915,41 +983,42 @@ class Viewer(ttk.Frame, patterns.Observer):
             creationToolBarUICommands,
             editToolBarUICommands,
             actionToolBarUICommands,
-            modeToolBarUICommands
+            modeToolBarUICommands,
         )
         creationSeparator = separator(
             creationToolBarUICommands,
             editToolBarUICommands,
             actionToolBarUICommands,
-            modeToolBarUICommands
+            modeToolBarUICommands,
         )
         editSeparator = separator(
             editToolBarUICommands,
             actionToolBarUICommands,
-            modeToolBarUICommands
+            modeToolBarUICommands,
         )
         actionSeparator = separator(
-            actionToolBarUICommands,
-            modeToolBarUICommands
+            actionToolBarUICommands, modeToolBarUICommands
         )
 
         return (
-                clipboardToolBarUICommands
-                + clipboardSeparator
-                + creationToolBarUICommands
-                + creationSeparator
-                + editToolBarUICommands
-                + editSeparator
-                + actionToolBarUICommands
-                + actionSeparator
-                + modeToolBarUICommands
+            clipboardToolBarUICommands
+            + clipboardSeparator
+            + creationToolBarUICommands
+            + creationSeparator
+            + editToolBarUICommands
+            + editSeparator
+            + actionToolBarUICommands
+            + actionSeparator
+            + modeToolBarUICommands
         )
 
     def getToolBarPerspective(self):
         return self.settings.get(self.settingsSection(), "toolbarperspective")
 
     def saveToolBarPerspective(self, perspective):
-        self.settings.set(self.settingsSection(), "toolbarperspective", perspective)
+        self.settings.set(
+            self.settingsSection(), "toolbarperspective", perspective
+        )
 
     def createClipboardToolBarUICommands(self):
         """UI commands for manipulating the clipboard (cut, copy, paste)."""
@@ -993,7 +1062,9 @@ class Viewer(ttk.Frame, patterns.Observer):
         # editCommand.bind(self, wx.ID_EDIT)
         # self.deleteUICommand.bind(self, wx.ID_DELETE)
         self.bind("<Return>", lambda event: editCommand.doCommand())
-        self.bind("<Control-Delete>", lambda event: self.deleteUICommand.doCommand())
+        self.bind(
+            "<Control-Delete>", lambda event: self.deleteUICommand.doCommand()
+        )
 
         return editCommand, self.deleteUICommand
 
@@ -1022,7 +1093,9 @@ class Viewer(ttk.Frame, patterns.Observer):
             newSubItemCommand.items, bitmap, items_are_new=True
         )
 
-    def editItemDialog(self, items, bitmap, columnName="", items_are_new=False):
+    def editItemDialog(
+        self, items, bitmap, columnName="", items_are_new=False
+    ):
         """Ouvre la fenêtre d'édition pour un item."""
         Editor = self.itemEditorClass()
         # return Editor(wx.GetTopLevelParent(self), items, self.settings, self.presentation(), self.taskFile,
@@ -1035,7 +1108,7 @@ class Viewer(ttk.Frame, patterns.Observer):
             self.taskFile,
             bitmap=bitmap,
             columnName=columnName,
-            items_are_new=items_are_new
+            items_are_new=items_are_new,
         )
 
     def itemEditorClass(self):
@@ -1091,16 +1164,25 @@ class CategorizableViewerMixin(object):
             (
                 "folder_blue_arrow_icon",
                 (
-                    [", ".join(sorted([cat.subject() for cat in item.categories()]))]
+                    [
+                        ", ".join(
+                            sorted(
+                                [cat.subject() for cat in item.categories()]
+                            )
+                        )
+                    ]
                     if item.categories()
                     else []
                 ),
             )
-        ] + super().getItemTooltipData(item)  # It's a mixin.
+        ] + super().getItemTooltipData(
+            item
+        )  # It's a mixin.
 
 
 class WithAttachmentsViewerMixin(object):
     """Mixin class for viewers with attachments."""
+
     def getItemTooltipData(self, item):
         """Retourne les données de l'info-bulle pour un élément."""
         return [
@@ -1180,6 +1262,7 @@ class ListViewer(Viewer):
         """
         # return None
         return f"Tâche : {domain_object['task']}"
+
     # Si une seule de ces méthodes manque → l’affichage est incomplet ou vide.
 
     def getIndexOfItem(self, item):
@@ -1214,7 +1297,9 @@ class TreeViewer(Viewer):
     """
 
     def __init__(self, *args, **kwargs):
-        log.debug("TreeViewer : Initialisation du visualiseur en arborescence.")
+        log.debug(
+            "TreeViewer : Initialisation du visualiseur en arborescence."
+        )
         self.__selectionIndex = 0
         super().__init__(*args, **kwargs)
 
@@ -1230,7 +1315,9 @@ class TreeViewer(Viewer):
         self.widget.bind("<<TreeviewClose>>", self.onItemCollapsed)
         #  "<<TreeviewSelect>>" : la sélection à été modifiée.
         # self.widget.bind("<<TreeviewSelect>>", self.select)  # TODO : à essayer !
-        self.widget.bind("<<TreeviewSelect>>", self.onSelect)  # TODO : à essayer !
+        self.widget.bind(
+            "<<TreeviewSelect>>", self.onSelect
+        )  # TODO : à essayer !
         log.debug("TreeViewer : Initialisé !")
 
     def onItemExpanded(self, event):
@@ -1265,12 +1352,16 @@ class TreeViewer(Viewer):
 
     def isAnyItemExpandable(self):
         """Vérifie si un élément est expansible."""
-        return self.widget.isAnyItemExpandable()  # TODO : Normalement Adapté pour Tkinter
+        return (
+            self.widget.isAnyItemExpandable()
+        )  # TODO : Normalement Adapté pour Tkinter
         # return False
 
     def isAnyItemCollapsable(self):
         """Vérifie si un élément est collapsable."""
-        return self.widget.isAnyItemCollapsable()  # TODO : Normalement Adapté pour Tkinter
+        return (
+            self.widget.isAnyItemCollapsable()
+        )  # TODO : Normalement Adapté pour Tkinter
         # return False
 
     def isTreeViewer(self):
@@ -1294,13 +1385,19 @@ class TreeViewer(Viewer):
     def selectNextItemsAfterRemoval(self, removedItems):
         """Sélectionne les éléments suivants après la suppression."""
         parents = [self.getItemParent(item) for item in removedItems]
-        parents = [parent for parent in parents if parent in self.presentation()]
+        parents = [
+            parent for parent in parents if parent in self.presentation()
+        ]
         parent = parents[0] if parents else None
         # siblings = self.get_domain_children(parent)
-        log.debug(f"TreeViewer.selectNextItemsAfterRemoval : parent={parent}, self={self.__class__.__name__}, self.__dict__={self.__dict__}, siblings={self.children}")
+        log.debug(
+            f"TreeViewer.selectNextItemsAfterRemoval : parent={parent}, self={self.__class__.__name__}, self.__dict__={self.__dict__}, siblings={self.children}"
+        )
         # siblings = self.children(parent)  # TypeError: 'dict' object is not callable
         # sibling_list = self.children(parent)  # TypeError: 'dict' object is not callable
-        sibling_list = self.get_tree_children(parent)  # TypeError: 'dict' object is not callable
+        sibling_list = self.get_tree_children(
+            parent
+        )  # TypeError: 'dict' object is not callable
         newSelection = (
             # siblings[min(len(siblings) - 1, self.__selectionIndex)]
             sibling_list[min(len(sibling_list) - 1, self.__selectionIndex)]
@@ -1316,10 +1413,14 @@ class TreeViewer(Viewer):
         super().updateSelection(*args, **kwargs)
         curselection = self.curselection()
         if curselection:
-            siblings = self.get_tree_children(self.getItemParent(curselection[0]))
+            siblings = self.get_tree_children(
+                self.getItemParent(curselection[0])
+            )
             # siblings = self.children(self.getItemParent(curselection[0]))
             self.__selectionIndex = (
-                siblings.index(curselection[0]) if curselection[0] in siblings else 0
+                siblings.index(curselection[0])
+                if curselection[0] in siblings
+                else 0
             )
         else:
             self.__selectionIndex = 0
@@ -1330,9 +1431,12 @@ class TreeViewer(Viewer):
         Yields :
             Chaque élément visible et ses enfants.
         """
+
         def yieldItemsAndChildren(items):
             """Itère de manière récursive sur les éléments et leurs enfants."""
-            sortedItems = [item for item in self.presentation() if item in items]
+            sortedItems = [
+                item for item in self.presentation() if item in items
+            ]
             for item in sortedItems:
                 yield item
                 the_children = self.get_tree_children(item)
@@ -1364,7 +1468,11 @@ class TreeViewer(Viewer):
             # children = parent.get_domain_children()
             the_children = parent.get_tree_children()
             if the_children:
-                return [child for child in self.presentation() if child in the_children]
+                return [
+                    child
+                    for child in self.presentation()
+                    if child in the_children
+                ]
             else:
                 return []
         else:
@@ -1380,7 +1488,9 @@ class ViewerWithColumns(Viewer):
 
     def __init__(self, *args, **kwargs):
         """Initialise la visionneuse avec des colonnes."""
-        log.debug(f"ViewerWithColumns.__init__ : Initialisation Création de la visionneuse avec des colonnes.")
+        log.debug(
+            f"ViewerWithColumns.__init__ : Initialisation Création de la visionneuse avec des colonnes."
+        )
         self.__initDone = False
         self._columns = []
         self.__visibleColumns = []
@@ -1424,20 +1534,30 @@ class ViewerWithColumns(Viewer):
             # for column in self.columns:
             self.initColumn(column)
         if self.hasOrderingColumn():
-            self.widget.SetResizeColumn(1)  # TODO : Normalement adapté pour Tkinter
+            self.widget.SetResizeColumn(
+                1
+            )  # TODO : Normalement adapté pour Tkinter
             # de AutoColumnWidthMixin ! Le resize est automatique dans tkinter !
-            self.widget.SetMainColumn(1)  # TODO : Normalement adapté pour Tkinter
+            self.widget.SetMainColumn(
+                1
+            )  # TODO : Normalement adapté pour Tkinter
             pass
 
     def initColumn(self, column):
         """Initialise une colonne et détermine si elle doit être visible."""
-        if column.name() in self.settings.getlist(self.settingsSection(), "columnsalwaysvisible"):
+        if column.name() in self.settings.getlist(
+            self.settingsSection(), "columnsalwaysvisible"
+        ):
             show = True
         else:
-            show = column.name() in self.settings.getlist(self.settingsSection(), "columns")
+            show = column.name() in self.settings.getlist(
+                self.settingsSection(), "columns"
+            )
             # self.widget.showColumn(column, show=show)  # Adapter pour Tkinter
         if show:
-            log.debug(f"ViewerWithColumns.initColumn : ajoute la colonne {type(column).__name__} aux colonnes visibles : {self.__visibleColumns}")
+            log.debug(
+                f"ViewerWithColumns.initColumn : ajoute la colonne {type(column).__name__} aux colonnes visibles : {self.__visibleColumns}"
+            )
             self.__visibleColumns.append(column)
             self.__startObserving(column.eventTypes())
 
@@ -1446,7 +1566,9 @@ class ViewerWithColumns(Viewer):
         for column in self.hideableColumns():
             if columnName == column.name():
                 isVisibleColumn = self.isVisibleColumn(column)
-                if (show and not isVisibleColumn) or (not show and isVisibleColumn):
+                if (show and not isVisibleColumn) or (
+                    not show and isVisibleColumn
+                ):
                     self.showColumn(column, show)
                 break
 
@@ -1462,9 +1584,13 @@ class ViewerWithColumns(Viewer):
         # Remplace les commentaires # A adapter pour Tkinter
         # par le code Tkinter pour afficher ou masquer les colonnes.
         if column.name() == "ordering":
-            self.widget.SetResizeColumn(1 if show else 0)  # TODO : Normalement adapté pour Tkinter
+            self.widget.SetResizeColumn(
+                1 if show else 0
+            )  # TODO : Normalement adapté pour Tkinter
             # de AutoColumnWidthMixin ! Le resize est automatique dans tkinter !
-            self.widget.SetMainColumn(1 if show else 0) # TODO : Normalement adapté pour Tkinter
+            self.widget.SetMainColumn(
+                1 if show else 0
+            )  # TODO : Normalement adapté pour Tkinter
             # SetMainColumn vient de hypertreelist !
             # Sets the HyperTreeList main column (i.e. the position of the underlying CustomTreeCtrl.
             pass  # A adapter !
@@ -1479,7 +1605,9 @@ class ViewerWithColumns(Viewer):
         else:
             self.__visibleColumns.remove(column)
             self.__stopObserving(column.eventTypes())
-            self.widget.showColumn(column, show)  # TODO : Normalement adapter pour Tkinter
+            self.widget.showColumn(
+                column, show
+            )  # TODO : Normalement adapter pour Tkinter
         self.settings.set(
             self.settingsSection(),
             "columns",
@@ -1487,7 +1615,8 @@ class ViewerWithColumns(Viewer):
             str([column.name() for column in self.__visibleColumns]),
         )  # TODO :  Adapter column.name() pour Tkinter -> column.id ?
         if refresh:
-            self.widget.RefreshAllItems(len(self.presentation()))
+            # self.widget.RefreshAllItems(len(self.presentation()))
+            self.widget.scheduleRefresh(len(self.presentation()))
             # self.refresh()  # Utiliser refresh pour la mise à jour
             # self.widget.update()
 
@@ -1529,7 +1658,9 @@ class ViewerWithColumns(Viewer):
         Returns:
             (bool): True si la colonne est visible, sinon False.
         """
-        return columnName in [column.name() for column in self.__visibleColumns]
+        return columnName in [
+            column.name() for column in self.__visibleColumns
+        ]
 
     def isVisibleColumn(self, column):
         """
@@ -1554,7 +1685,9 @@ class ViewerWithColumns(Viewer):
         # return self.__visibleColumns
         # Retourne une liste des colonnes visibles du widget.
         # La colonne Subject reste toujours visible.
-        return [itemctrltk.Column("subject", _("Subject"))]  # TODO : la classe Column est normalement adaptée maintenant !
+        return [
+            itemctrltk.Column("subject", _("Subject"))
+        ]  # TODO : la classe Column est normalement adaptée maintenant !
 
     def hideableColumns(self):
         """
@@ -1567,7 +1700,7 @@ class ViewerWithColumns(Viewer):
             column
             for column in self._columns
             if column.name()
-               not in self.settings.getlist(
+            not in self.settings.getlist(
                 self.settingsSection(), "columnsalwaysvisible"
             )
         ]
@@ -1589,7 +1722,9 @@ class ViewerWithColumns(Viewer):
         Returns:
             (int): La largeur de la colonne.
         """
-        columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
+        columnWidths = self.settings.getdict(
+            self.settingsSection(), "columnwidths"
+        )
         defaultWidth = 28 if columnName == "ordering" else 100
         return columnWidths.get(columnName, defaultWidth)
 
@@ -1601,9 +1736,13 @@ class ViewerWithColumns(Viewer):
             column: La colonne redimensionnée.
             width (int): La nouvelle largeur de la colonne.
         """
-        columnWidths = self.settings.getdict(self.settingsSection(), "columnwidths")
+        columnWidths = self.settings.getdict(
+            self.settingsSection(), "columnwidths"
+        )
         columnWidths[column.name()] = width
-        self.settings.setdict(self.settingsSection(), "columnwidths", columnWidths)
+        self.settings.setdict(
+            self.settingsSection(), "columnwidths", columnWidths
+        )
 
     def validateDrag(self, dropItem, dragItems, columnIndex):
         """
@@ -1619,7 +1758,10 @@ class ViewerWithColumns(Viewer):
         """
         # return None  # TODO : A adapter
         log.debug(f"ViewerWithColumns.validateDrag est appelé.")
-        if columnIndex == -1 or self.visibleColumns()[columnIndex].name() != "ordering":
+        if (
+            columnIndex == -1
+            or self.visibleColumns()[columnIndex].name() != "ordering"
+        ):
             return None  # Normal behavior
 
         # Ordering
@@ -1826,7 +1968,9 @@ class ViewerWithColumns(Viewer):
         Returns:
             (str): La date et l'heure de création de l'élément.
         """
-        return render.dateTime(item.creationDateTime(), humanReadable=humanReadable)
+        return render.dateTime(
+            item.creationDateTime(), humanReadable=humanReadable
+        )
 
     @staticmethod
     def renderModificationDateTime(item, humanReadable=True):
@@ -1861,7 +2005,9 @@ class ViewerWithColumns(Viewer):
         )
 
 
-class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
+class SortableViewerWithColumns(
+    mixintk.SortableViewerMixin, ViewerWithColumns
+):
     """
     Classe SortableViewerWithColumns, héritant de ViewerWithColumns et du mixin SortableViewerMixin.
     """
@@ -1875,7 +2021,9 @@ class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
         """
         super().initColumn(column)
         if self.isSortedBy(column.name()):
-            log.debug(f"SortableViewerWithColumns.initColumns : sur self.widget={self.widget}.")
+            log.debug(
+                f"SortableViewerWithColumns.initColumns : sur self.widget={self.widget}."
+            )
             # self.widget.showSortColumn(column)  # TODO : Normalement adapté pour Tkinter
             # Actuellement 02/12/2025 showSortColumn Ne fonctionne pas !
             pass
@@ -1910,8 +2058,12 @@ class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
         """
         for column in self.columns():
             if self.isSortedBy(column.name()):
-                log.debug(f"SortableViewerWithColumns.showSortColumn : sur self.widget={self.widget}.")
-                self.widget.showSortColumn(column)  # TODO : Normalement adapté pour Tkinter
+                log.debug(
+                    f"SortableViewerWithColumns.showSortColumn : sur self.widget={self.widget}."
+                )
+                self.widget.showSortColumn(
+                    column
+                )  # TODO : Normalement adapté pour Tkinter
                 break
 
     def showSortOrder(self):
@@ -1928,7 +2080,11 @@ class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
         Returns :
             (str) : Le nom de l'icône pour indiquer le tri ascendant ou descendant.
         """
-        return "arrow_up_icon" if self.isSortOrderAscending() else "arrow_down_icon"
+        return (
+            "arrow_up_icon"
+            if self.isSortOrderAscending()
+            else "arrow_down_icon"
+        )
 
 
 # Explications et adaptations nécessaires :
@@ -1953,7 +2109,7 @@ class SortableViewerWithColumns(mixintk.SortableViewerMixin, ViewerWithColumns):
 # Assure-toi que les icônes spécifiées dans defaultBitmap existent dans ton catalogue d'icônes.
 
 # Démonstration et tests
-if __name__ == '__main__':
+if __name__ == "__main__":
     # import tkinter as tk
     # from tkinter import ttk
     # from taskcoachlib.guitk import artprovidertk
@@ -1979,7 +2135,9 @@ if __name__ == '__main__':
 
     # Fonction pour ajouter un viewer au Notebook
     def ajouter_viewer(viewer_class, nom_onglet):
-        viewer = viewer_class(notebook, taskFile, settings, settingsSection="viewer_demo")
+        viewer = viewer_class(
+            notebook, taskFile, settings, settingsSection="viewer_demo"
+        )
         notebook.add(viewer, text=nom_onglet)
         return viewer
 
@@ -1993,11 +2151,13 @@ if __name__ == '__main__':
             super().__init__(*args, **kwargs)
             # Ajoute un widget exemple pour la démonstration
             # self.widget existe déjà grâce à super().__init__()
-            label = ttk.Label(self.widget, text="Ceci est un ListViewer de démonstration")
+            label = ttk.Label(
+                self.widget, text="Ceci est un ListViewer de démonstration"
+            )
             label.pack(padx=10, pady=10)
 
         # def createWidget(self):
-        def createWidget(self, parent): # CHANGEMENT: Ajout de 'parent'
+        def createWidget(self, parent):  # CHANGEMENT: Ajout de 'parent'
             # Crée un widget (par exemple, un Treeview ou une Listbox)
             # self.widget = tk.Listbox(self)
             # self.widget = tk.Frame(self)  # Remplace par le widget approprié -> Ancien code
@@ -2009,7 +2169,11 @@ if __name__ == '__main__':
 
         def domainObjectsToView(self):
             # Retourne une liste d'objets à afficher
-            return ["Objet 1", "Objet 2", "Objet 3"]  # Remplace par tes données
+            return [
+                "Objet 1",
+                "Objet 2",
+                "Objet 3",
+            ]  # Remplace par tes données
 
         def isTreeViewer(self):
             return False
@@ -2036,7 +2200,7 @@ if __name__ == '__main__':
             return []
 
         def bitmap(self):
-            return "book_icon" # À remplacer par une icône valide
+            return "book_icon"  # À remplacer par une icône valide
 
         def itemEditorClass(self):
             pass
@@ -2048,6 +2212,7 @@ if __name__ == '__main__':
             pass
 
             # Exemple d'utilisation avec un TreeViewer (à adapter)
+
     class MonTreeViewer(TreeViewer):
         defaultTitle = "Mon Tree Viewer"
         defaultBitmap = "folder_blue_icon"  # Remplace par une icône valide

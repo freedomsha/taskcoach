@@ -756,6 +756,7 @@ class Object(SynchronizedObject):
         self.__id = local_kwargs.pop(
             "id", None or str(uuid.uuid1())
         )  # ID unique
+        log.debug(f"Object.__init__() : id reçu: {self.__id}.")
         # self.__id = local_kwargs.pop("id", str(uuid.uuid1()))  # ID unique, TODO : à essayer
 
         # Derived SSOT fields (value + source for each appearance type)
@@ -822,6 +823,8 @@ class Object(SynchronizedObject):
         # Initialisation du parent
         # super().__init__(*args, **kwargs)  # Appelle le constructeur de la classe parente
         # super().__init__()  # à vérifier sinon revenir à la définition précédente
+        # Transmet les arguments uniquement si le parent **n'est pas `object`**
+        # Test de sécurité : on ne transmet que si `super()` n'est pas `object`
         if type(self).__mro__[1] is not object:
             try:
                 super().__init__(*args, **kwargs)
@@ -1849,12 +1852,16 @@ class CompositeObject(
         parent = kwargs.pop("parent", None)
 
         log.debug(
-            f"CompositeObject.__init__() → kwargs avant Object: {kwargs}"
+            f"CompositeObject.__init__() → kwargs avant Object.__init__ : {kwargs}"
         )
+        log.debug(
+            f"CompositeObject.__init__() : children : {children}, parent : {parent}"
+        )
+
         # Initialisation de la logique Object (subject, description, etc.)
         Object.__init__(self, *args, **kwargs)
         log.debug(
-            f"CompositeObject.__init__() → kwargs après Object: {kwargs}"
+            f"CompositeObject.__init__() → kwargs après Object avant Composite: {kwargs}"
         )
 
         # Initialisation manuelle de Composite

@@ -67,7 +67,23 @@ class SearchableViewerMixin(object):
         return True
 
     def createFilter(self, presentation):
+        """
+        Crée le filtre appliqué.
+
+        Args
+        ----
+        presentation : iterable
+            presentation du modèle.
+
+        Returns
+        -------
+
+            Filtre appliqué au viewer.
+        """
         representation = super().createFilter(presentation)
+        log.debug(
+            f"SearchableViewerMixin.createFilter : {len(list(representation))} reçues"
+        )
         return base.SearchFilter(representation, **self.searchOptions())
 
     def searchOptions(self):
@@ -230,6 +246,9 @@ class FilterableViewerForCategorizablesMixin(FilterableViewerMixin):
         filterOnlyWhenAllCategoriesMatch = self.settings.getboolean(
             "view", "categoryfiltermatchall"
         )
+        log.debug(
+            f"FilterableViewerForCategorizablesMixin.createFilter : {len(list(items))} items reçues"
+        )
         return category.filter.CategoryFilter(
             items,
             categories=self.taskFile.categories(),
@@ -242,6 +261,9 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
     def createFilter(self, taskList):
         taskList = super().createFilter(taskList)
         # task.filter.ViewFilter filtre les tâches en fonction des options (statuts cachés, tâches composites cachées).
+        log.debug(
+            f"FilterableViewerForTasksMixin.createFilter : {len(list(taskList))} tâches reçues"
+        )
         return task.filter.ViewFilter(
             taskList, treeMode=self.isTreeViewer(), **self.viewFilterOptions()
         )

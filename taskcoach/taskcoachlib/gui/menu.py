@@ -505,9 +505,9 @@ class DynamicMenu(Menu):
         for item in self._parentMenu.MenuItems:
 
             log.info(
-                f"DynamicMenu.myId : item={type(item).__name__}  dans {self._parentMenu.MenuItems}"
+                f"DynamicMenu.myId : pour item={type(item).__name__}  dans les {len(self._parentMenu.MenuItems)} éléments de {type(self._parentMenu.MenuItems)}"
             )
-            log.debug(
+            log.info(
                 f"{self.__GetLabelText(item.GetItemLabel())} comparé à {self._labelInParentMenu}"
             )
             # if self.__GetLabelText(item.GetText()) == self._labelInParentMenu:

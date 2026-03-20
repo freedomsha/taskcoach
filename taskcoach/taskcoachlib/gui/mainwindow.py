@@ -864,7 +864,7 @@ class MainWindow(
         Vérifie si le nombre de visionneuses dans la perspective actuelle de la fenêtre diffère de celui sauvegardé dans les paramètres.
 
         Returns :
-            (bool) : True si le nombre de visionneuses diffère, sinon False.
+            (bool) : True si le nombre de visionneuses est différent, sinon False.
         """
         perspective = self.settings.get("view", "perspective")
         perspective_viewer_count = perspective.count("name=%s" % viewer_type)

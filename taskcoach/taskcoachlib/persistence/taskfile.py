@@ -324,7 +324,7 @@ class TaskFile(patterns.Observer):
         self.__needSave = self.__loading = False
         # log.info("TaskFile : self.__needSave = self.__loading = False")
         self.__tasks = task.TaskList()  # La liste de tâches.
-        log.info(f"TaskFile : self.__tasks = {self.__tasks}")
+        # log.info(f"TaskFile : self.__tasks = {self.__tasks}")
         self.__categories = category.CategoryList()  # La liste des catégories.
         # log.info(f"TaskFile : self.__categories = {self.__categories}")
         self.__notes = note.NoteContainer()  # La liste des notes.
@@ -413,8 +413,12 @@ class TaskFile(patterns.Observer):
             f"TaskFile : TaskFile initialisé avec filename='{self.__filename}', guid='{self.__guid}' et syncMLConfig='{self.__syncMLConfig}'."
         )
         log.info("TaskFile : Tâche de base initialisée : %s", self)
-        log.info("TaskFile : Tâches initiales : %s", self.tasks())
-        log.info("TaskFile : Notes initiales : %s", self.notes())
+        # log.info("TaskFile : Tâches initiales : %s", self.tasks())
+        log.info("TaskFile : Tâches initiales : %s", self.__tasks)
+        log.info("TaskFile : Catégories initiales : %s", self.__categories)
+        # log.info("TaskFile : Notes initiales : %s", self.notes())
+        log.info("TaskFile : Notes initiales : %s", self.__notes)
+        log.info("TaskFile : Efforts initiaux : %s", self.__efforts)
         log.info("TaskFile initialisé.")
 
     def __str__(self):
@@ -904,6 +908,21 @@ class TaskFile(patterns.Observer):
         data_read = reader.read()
         duplicate_ids = reader.get_duplicate_ids()
         log.debug(f"TaskFile._read renvoi : {data_read}, {duplicate_ids}.")
+        tasks, categories, notes, syncMLConfig, changes, efforts = data_read
+        log.debug("TaskFile._read renvoi : DEBUG LECTURE XML")
+        log.debug(f"  tâches lues      : {len(tasks)}")
+        log.debug(f"  catégories lues  : {len(categories)}")
+        log.debug(f"  notes lues       : {len(notes)}")
+        log.debug(f"  efforts lus      : {len(efforts)}")
+
+        # # Le viewer est créé avant que les catégories soient chargées, donc il affiche une liste vide.
+        # # Dans ce cas il faut appeler :
+        # self.refresh()  # après le chargement du fichier dans taskfile.py. Sauf que refresh() n'existe pas !
+
+        for c in categories[:5]:
+            log.debug(
+                f"  CAT id={c.id()} subject={c.subject()} parent={c.parent()}"
+            )
         return data_read, duplicate_ids
 
     def _log_duplicate_ids(self, duplicate_ids):
@@ -1045,7 +1064,7 @@ class TaskFile(patterns.Observer):
                         log.debug(
                             f"TaskFile.load : Données lues : tasks={tasks}, categories={categories}, notes={notes}, syncMLConfig={syncMLConfig}, changes={changes}, guid={guid}"
                         )
-                        logging.debug(
+                        log.debug(
                             "taskFile.load : Après chargement fichier, nb tâches: %s",
                             len(tasks),
                         )
@@ -1079,7 +1098,19 @@ class TaskFile(patterns.Observer):
             self.__monitor.reset()
             self.__changes = changes
             self.__changes[self.__monitor.guid()] = self.__monitor
-            self.categories().extend(categories)
+            # self.categories().extend(categories)  # <- seulement les racines
+            # Version corrigée pour ne passer que les catégories sans parent :
+            root_categories = [c for c in categories if c.parent() is None]
+            self.categories().extend(root_categories)
+            # Cela empêche l'injection à plat des sous-catégories dans la CategoryList,
+            # qui doivent être accessibles uniquement via la hiérarchie de leur parent.
+            log.debug(
+                f"TaskFile.load : Après extend : self.categories()={self.categories()}"
+            )
+            for cat in self.categories():
+                log.debug(
+                    f"TaskFile.load : AFTER EXTEND: {cat.subject()} parent={cat.parent()}"
+                )
             # Protection contre les erreurs d'observateurs lors de l'ajout
             try:
                 self.tasks().extend(tasks)
@@ -1091,7 +1122,13 @@ class TaskFile(patterns.Observer):
                 )
                 # raise
             log.debug(
-                f"TaskFile.load : Après extension, tasks={self.tasks()}, categories={self.categories()}, notes={self.notes()}"
+                f"TaskFile.load : Après extension, {len(self.tasks())} tasks={self.tasks()}, {len(self.categories())} categories={self.categories()}, {len(self.notes())} notes={self.notes()}"
+            )
+            log.debug(
+                f"TaskFile.load : DEBUG categories internes: {len(self.__categories)}"
+            )
+            log.debug(
+                f"TaskFile.load : DEBUG categories viewer: {len(self.categories())}"
             )
 
             def registerOtherObjects(objects):

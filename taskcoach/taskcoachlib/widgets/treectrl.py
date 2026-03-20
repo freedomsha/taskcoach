@@ -67,6 +67,36 @@ class BaseHyperTreeList(hypertreelist.HyperTreeList):
         by calling AdjustMyScrollbars() after the base OnSize handler runs.
         """
         event.Skip()  # Let base class handle layout first
+        # Il faut décommenter ce qui suit et l'adapter:
+        # # Si on a des items à afficher mais que l'arbre est vide, rafraîchir
+        # if self.__adapter and len(list(self.__adapter.presentation())) > 0:
+        #     wx.CallAfter(self.__doRefresh)
+        # Mais attention — il ne faut pas appeler self.__doRefresh (qui n'existe plus),
+        # mais self.scheduleRefresh.
+        # Et il faut contourner le flag __refresh_scheduled en le réinitialisant d'abord.
+        # Voici la correction :
+        # Forcer un refresh si le widget a des données à afficher
+        # (cas du redimensionnement après initialisation en petite taille)
+        # # if self.__adapter and len(list(self.__adapter.presentation())) > 0:
+        if (
+            hasattr(self, "_TreeListCtrl__adapter")
+            and self._TreeListCtrl__adapter
+            and len(list(self._TreeListCtrl__adapter.presentation())) > 0
+        ):
+            # adapter = self.getAdapter() if hasattr(self, 'getAdapter') else None
+            # if adapter and len(list(adapter.presentation())) > 0:
+            log.debug(
+                f"BaseHyperTreeList.__onSize : force le rafraîchissement."
+            )
+            # # self.__refresh_scheduled = (
+            # #     False  # réinitialiser le flag (!!! nom manglé !!!)
+            # # )
+            # # Réinitialiser le flag pour forcer le refresh
+            # if hasattr(self, "_TreeListCtrl__refresh_scheduled"):
+            #     self._TreeListCtrl__refresh_scheduled = False
+            # self.scheduleRefresh()
+            # Remplacé par la ligne suivante :
+            self.forceRefresh()  # Le flag bloquait le rafraîchissement !
         # Schedule scrollbar adjustment after the layout is complete
         wx.CallAfter(self.__safeAdjustScrollbars)
 
@@ -464,7 +494,13 @@ class TreeListCtrl(
         return self.__adapter.getItemTooltipData(item)
 
     def getItemCTType(self, item):  # pylint: disable=W0613
+        log.debug(
+            f"TreeListCtrl.getItemCTTType : retourne self.ct_type : {self.ct_type}."
+        )
         return self.ct_type
+
+    def getAdapter(self):
+        return self.__adapter
 
     def curselection(self):
         # return [self.GetItemPyData(item) for item in self.GetSelections()]
@@ -646,54 +682,70 @@ class TreeListCtrl(
         - recrée la racine
         - reconstruit l'arbre via l'adaptateur
         """
-
+        log.debug(
+            f"TreeListCtrl.RefreshAllItems : début du rafraîchissement de tous les éléments."
+        )
         # Supprime tous les éléments existants du contrôle
-        self.DeleteAllItems()  # vide complètement le TreeCtrl
+        self.DeleteAllItems()  # vide complètement le TreeCtrl, self._root devient invalide !
 
+        log.debug(
+            f"TreeListCtrl.RefreshAllItems : suppression de ses enfants."
+        )
         # Crée un nouvel item racine
         root_item = self.AddRoot(
             ""
         )  # crée une racine vide utilisée comme conteneur interne
 
+        # Met à jour self._root avec la nouvelle racine (l'ancienne a été supprimée par DeleteAllItems)
+        self._root = root_item
+
         # Log pour vérifier que la racine existe
         log.debug(
-            "TreeListCtrl.RefreshAllItems : Nouvelle racine créée : %s",
-            root_item,
+            f"TreeListCtrl.RefreshAllItems : Nouvelle racine créée : root_item={root_item}, self._root={self._root}"
         )
 
         # Vérifie que la racine est valide
-        if not root_item.IsOk():  # teste si l'objet TreeItem est valide
+        if (
+            not root_item.IsOk() and not self._root.IsOk()
+        ):  # teste si l'objet TreeItem est valide
             raise RuntimeError("La racine du TreeListCtrl est invalide")
-
-        log.debug(
-            "TreeListCtrl.RefreshAllItems : root_item après vérification=%s",
-            root_item,
-        )
 
         # Peuple récursivement l'arbre avec les objets du modèle
         self._addObjectRecursively(
-            root_item,  # item graphique parent
+            # root_item,  # item graphique parent
+            self._root,  # item graphique parent
             None,  # objet métier parent (None = racine)
         )
-        log.debug("Tree count after build: %s", self.GetCount())
+        log.debug(
+            f"TreeListCtrl.RefreshAllItems : Tree count after build: {self.GetCount()}"
+        )
 
-        # IMPORTANT : force l'expansion de la racine
-        # Sinon les enfants ne sont pas visibles si TR_HIDE_ROOT est utilisé
-        # root_item.Expand()
-        self.Expand(
-            root_item
-        )  # Parce que TreeListItem ne gère pas toujours bien l'expansion directe.
-        # Vérifie si la racine est cachée avant de tenter une expansion
-        style = self.GetWindowStyle()
-
-        # Si la racine est visible
-        if not (style & wx.TR_HIDE_ROOT):
-
-            # On peut étendre la racine
-            self.Expand(self._root)
+        # # # IMPORTANT : force l'expansion de la racine
+        # # # Sinon les enfants ne sont pas visibles si TR_HIDE_ROOT est utilisé
+        # # # root_item.Expand()
+        # # self.Expand(
+        # #     root_item
+        # # )  # Parce que TreeListItem ne gère pas toujours bien l'expansion directe.
+        # # Vérifie si la racine est cachée avant de tenter une expansion
+        # style = self.GetWindowStyle()
+        #
+        # # Si la racine est visible
+        # if not (style & wx.TR_HIDE_ROOT):
+        #     log.debug(
+        #         f"TreeListCtrl.RefreshAllItems : la racine est visible, on peut l'étendre."
+        #     )
+        #     # On peut étendre la racine
+        #     self.Expand(self._root)
+        #     # self.Expand(root_item)
+        # else:
+        #     log.debug(f"TreeListCtrl.RefreshAllItems : la racine est cachée.")
+        # PAS d'appel à self.Expand(root_item) — la racine est cachée dans HyperTreeList
+        # Les enfants sont directement visibles via _addObjectRecursively
+        # Expand n'est ni nécessaire ni compatible.
 
         # Rafraîchit l'affichage du contrôle
         self.Refresh()
+        log.debug(f"TreeListCtrl.RefreshAllItems : fin du rafraîchissement !")
 
     def __safeExpand(self, item):
         """Safely expand an item, guarding against deleted C++ objects."""
@@ -741,7 +793,7 @@ class TreeListCtrl(
         # 3. On rafraîchit les éléments correspondants aux objets de domaine donnés.
         self._refreshTargetObjects(self.GetRootItem(), *objects)
         log.debug(
-            f"TreeListCtrl.RefreshItems : rafraîchissement terminé pour les objets {objects}."
+            f"TreeListCtrl.RefreshItems : rafraîchissement terminé pour les objets {objects} !"
         )
 
     def _refreshTargetObjects(self, parent_item, *target_objects):
@@ -799,6 +851,9 @@ class TreeListCtrl(
         Returns:
             None
         """
+        log.debug(
+            f"TreeListCtrl._addObjectRecursively : début du peuplement de l'interface. self={self}, parent_item={parent_item}, parent_object={parent_object}."
+        )
         if parent_item is None or not parent_item.IsOk():
             parent_item = self._root
             log.debug(
@@ -856,7 +911,13 @@ class TreeListCtrl(
             # dans _refreshObjectMinimally pour s'assurer que les cases à cocher s'affichent.
             # On récupère le type de case à cocher (0=rien, 1=checkbox, 2=radio)
             # Récupère le type de case à cocher pour cet objet
+            log.debug(
+                f"TreeListCtrl._addObjectRecursively : récupère le ct_type du child_object {child_object}."
+            )
             ct_type = self.getItemCTType(child_object)
+            log.debug(
+                f"TreeListCtrl._addObjectRecursively : Ajoute l'ItemType ct_type={ct_type} à la liste des aspect rafraîchis."
+            )
 
             # Création de l'item dans l'arbre sans texte initial
             child_item = self.AppendItem(  # Unresolved attribute reference 'AppendItem' for class 'TreeListCtrl'
@@ -873,6 +934,7 @@ class TreeListCtrl(
                 # setImage=-1,
                 data=child_object,  # associe l'objet métier à l'item
             )
+            # Attention, 'TreeListItem' object is not iterable
             # child_item = self.AppendItem(
             #     parent_item,
             #     "VISIBLE TEST",
@@ -890,7 +952,7 @@ class TreeListCtrl(
             for column_index, value in enumerate(column_values):
                 # Définit le texte dans la colonne correspondante
                 # self.SetItemText(child_item, value, col)
-                self.SetItemText(
+                self.SetItemText(  # Unresolved attribute reference 'SetItemText' for class 'TreeListCtrl'
                     child_item,  # item à modifier
                     str(value),  # texte affiché
                     column_index,  # numéro de colonne
@@ -900,8 +962,8 @@ class TreeListCtrl(
                 # • Dans _refreshObjectMinimally : J'ai ajouté "ItemType" à la liste des aspects à rafraîchir. Comme _addObjectRecursively appelle cette méthode juste après la création de l'item, cela garantit que _refreshItemType sera appelé, configurant ainsi correctement les cases à cocher (checkboxes) pour chaque tâche.
                 # Ces modifications devraient rendre vos tâches visibles avec leurs cases à cocher correctes. Relancez l'application et vérifiez le TaskViewer.
                 log.debug(
-                    f"TreeListCtrl._addObjectRecursively : item ajouté dans {self.__class__.__name__} pour l'objet {child_object} avec item {child_item}."
-                )
+                    f"TreeListCtrl._addObjectRecursively : L'item {child_item.__class__.__name__} {child_item} de value {str(value)} pour l'objet {child_object} est ajouté dans la colonne {column_index} de l'interface {self.__class__.__name__}."
+                )  # Attention, 'TreeListItem' object child_item is not iterable, list() ne fonctionne pas dessus.
             log.debug("COLUMN VALUES: %s", column_values)
             self._refreshObjectMinimally(child_item, child_object)
             expanded = self.__adapter.getItemExpanded(child_object)
@@ -915,11 +977,18 @@ class TreeListCtrl(
                 # (self.Expand(childItem)) to prevent lots of events
                 # (EVT_TREE_ITEM_EXPANDING/EXPANDED) being sent
                 child_item.Expand()
+            else:
+                log.debug(
+                    f"TreeListCtrl._addObjectRecursively : child_item {child_item} n'est pas expansé, pas de récursivité de ses enfants."
+                )
             # # Important : ne jamais descendre récursivement en mode flat.
             # else:
             #     self.SetItemHasChildren(
             #         child_item, self.__adapter.children(child_object)
             #     )
+        log.debug(
+            f"TreeListCtrl._addObjectRecursively : fin du peuplement de l'interface !"
+        )
 
     def _refreshObjectMinimally(self, *args, **kwargs):
         self.__refresh_aspects(
@@ -935,9 +1004,22 @@ class TreeListCtrl(
             refresh_aspect(domain_object, *args, **kwargs)
 
     def _refreshItemType(self, item, domain_object, check=False):
+        """
+        Rafraîchit le
+
+        Args:
+            item:
+            domain_object:
+            check:
+
+        Returns:
+
+        """
+        log.debug(f"TreeListCtrl._refreshItemType : début.")
         ct_type = self.getItemCTType(domain_object)
         if not check or (check and ct_type != self.GetItemType(item)):
             self.SetItemType(item, ct_type)
+        log.debug(f"TreeListCtrl._refreshItemType : terminé !")
 
     def _refreshColumns(self, item, domain_object, check=False):
         for column_index in range(self.GetColumnCount()):
@@ -996,31 +1078,73 @@ class TreeListCtrl(
             item.SetHilight(select)
 
     def scheduleRefresh(self, count=0):
-        """Programme un rafraîchissement différé pour éviter les appels multiples."""
+        """Programme un rafraîchissement différé pour éviter les multiples appels à RefreshAllItems()."""
+        log.debug(
+            f"TreeListCtrl.scheduleRefresh : début du rafraîchissement différé."
+        )
         if self.__refresh_scheduled:
-            return
+            log.debug(f"TreeListCtrl.scheduleRefresh : déjà planifié !")
+            return  # ← RETOUR IMMÉDIAT si déjà planifié
         self.__refresh_scheduled = True
 
-        def doRefresh():
-            # Protection contre la destruction de l'objet
-            # if not self:
-            try:
-                if not self:
-                    return
-            except RuntimeError:
-                # L'objet C++ a été supprimé
-                return
-            self.__refresh_scheduled = False
-            log.debug(
-                f"TreeListCtrl.__doRefresh : exécution du rafraîchissement planifié."
-            )
-            # self.RefreshAllItems(count)  # Faux, RefreshAllItems() ne prend aucun argument.
-            self.RefreshAllItems()
+        # def doRefresh():
+        #     # C'est la seule correction nécessaire :
+        #     # remettre __refresh_scheduled = False dans tous les chemins de sortie de doRefresh,
+        #     # pas seulement dans le chemin nominal.
+        #
+        #     # Protection contre la destruction de l'objet
+        #     # if not self:
+        #     try:
+        #         if not self:
+        #             log.debug(f"TreeListCtrl.doRefresh : objet déjà supprimé.")
+        #             # solution :
+        #             self.__refresh_scheduled = (
+        #                 False  # ← remettre le flag même en cas d'abort
+        #             )
+        #             return
+        #     except RuntimeError:
+        #         # L'objet C++ a été supprimé
+        #         log.warning(
+        #             f"TreeListCtrl.doRefresh : erreur de suppression de l'objet déjà supprimé."
+        #         )
+        #         self.__refresh_scheduled = False  # ← idem
+        #         return
+        #     self.__refresh_scheduled = False
+        #     log.debug(
+        #         f"TreeListCtrl.doRefresh : exécution du rafraîchissement planifié."
+        #     )
+        #     # self.RefreshAllItems(count)  # Faux, RefreshAllItems() ne prend aucun argument.
+        #     self.RefreshAllItems()
+        #     # Le problème est le suivant :
+        #     # lors du thaw, refresh() est appelé 3 fois (on le voit dans le log :
+        #     # 3 × "Rafraîchissement de la visionneuse CategoryViewer avec 8 éléments").
+        #     # La première appelle scheduleRefresh qui pose __refresh_scheduled = True.
+        #     # Les 2 suivantes retournent immédiatement car le flag est déjà posé.
+        #     # Puis doRefresh s'exécute via wx.CallAfter — mais à ce moment
+        #     # le widget est encore à 20×20 pixels,
+        #     # donc RefreshAllItems s'exécute mais le widget n'est pas encore dans sa taille finale.
+        #     # Quand la fenêtre s'agrandit après, aucun nouveau refresh n'est planifié.
 
         # # Important : ici after doit être celui de ton widget Tkinter.
         # self.after(1, doRefresh)
         # Utilisation de wx.CallAfter pour wxPython
-        wx.CallAfter(doRefresh)
+        # wx.CallAfter(doRefresh)
+        log.debug(
+            "TreeListCtrl.doRefresh : exécution du rafraîchissement planifié."
+        )
+        self.__refresh_scheduled = False
+        self.RefreshAllItems()
+        log.debug(
+            f"TreeListCtrl.scheduleRefresh : fin du rafraîchissement planifié différé !"
+        )
+
+    def forceRefresh(self):
+        """Force un refresh même si un refresh est déjà planifié."""
+        log.debug(f"TreeListCtrl.forceRefresh : début du rafraîchissement.")
+        self.__refresh_scheduled = False
+        self.scheduleRefresh()
+        # self.RefreshAllItems()
+        log.debug(f"TreeListCtrl.forceRefresh : fin du rafraîchissement !")
 
     # Event handlers
 
@@ -1236,6 +1360,10 @@ class TreeListCtrl(
 
 
 class CheckTreeCtrl(TreeListCtrl):
+    """
+    Contrôle des listes en arbre avec bouton de vérification.
+    """
+
     def __init__(
         self,
         parent,
@@ -1272,14 +1400,42 @@ class CheckTreeCtrl(TreeListCtrl):
         """Use radio buttons (ct_type == 2) when the object has "exclusive"
         children, meaning that only one child can be checked at a time. Use
         check boxes (ct_type == 1) otherwise."""
-        if self.getIsItemCheckable(domain_object):
-            return (
+        # if self.getIsItemCheckable(domain_object):  # Erreur, cette méthode est dans la version tkinter !
+        #     return (
+        #         2
+        #         if self.getItemParentHasExclusiveChildren(domain_object)
+        #         else 1
+        #     )
+        # else:
+        #     return 0
+        if domain_object:
+            # return (
+            #     2
+            #     if self.getItemParentHasExclusiveChildren(domain_object)  # 'CheckTreeCtrl' object has no attribute 'getItemParentHasExclusiveChildren'
+            #
+            #     else 1
+            # )
+            to_return = (
                 2
-                if self.getItemParentHasExclusiveChildren(domain_object)
+                # # if self.__adapter.getItemParentHasExclusiveChildren(
+                # #     domain_object
+                # # )  # 'CheckTreeCtrl' object has no attribute '_CheckTreeCtrl__adapter'
+                # if self.getAdapter().getItemParentHasExclusiveChildren(
+                #     domain_object
+                # )
+                if self._TreeListCtrl__adapter.getItemParentHasExclusiveChildren(
+                    domain_object
+                )  # Renvoie à CheckableTaskViewer.getItemParentHasExclusiveChildren
+                # Ces deux méthodes (getItemParentHasExclusiveChildren et getIsItemChecked)
+                # sont des méthodes du viewer/adaptateur, pas du widget.
+                # Toutes les fois que CheckTreeCtrl doit interroger le viewer
+                # pour l'état d'un objet, il doit passer par self._TreeListCtrl__adapter.
                 else 1
             )
         else:
-            return 0
+            to_return = 0
+        log.debug(f"CheckTreeCtrl.getItemCTType : retourne {to_return}.")
+        return to_return
 
     def CheckItem(self, item, checked=True):
         """Override CheckItem to allow unchecking radio items.
@@ -1357,9 +1513,16 @@ class CheckTreeCtrl(TreeListCtrl):
         self._refreshCheckState(item, domain_object)
 
     def _refreshCheckState(self, item, domain_object):
-        # Use CheckItem2 so no events get sent:
-        # self.CheckItem2(item, self.getIsItemChecked(domain_object))
-        checked = self.getIsItemChecked(domain_object)
+        # # Use CheckItem2 so no events get sent:
+        # # self.CheckItem2(item, self.getIsItemChecked(domain_object))
+        # checked = self.getIsItemChecked(domain_object)
+        checked = self._TreeListCtrl__adapter.getIsItemChecked(
+            domain_object
+        )  # Renvoie à LocalCategoryViewer dans editor.py.
+        # Ces deux méthodes (getItemParentHasExclusiveChildren et getIsItemChecked)
+        # sont des méthodes du viewer/adaptateur, pas du widget.
+        # Toutes les fois que CheckTreeCtrl doit interroger le viewer pour l'état d'un objet,
+        # il doit passer par self._TreeListCtrl__adapter.
         if checked is None:
             # Mixed state - enable 3-state and set undetermined
             item.Set3State(True)

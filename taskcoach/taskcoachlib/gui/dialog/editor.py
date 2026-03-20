@@ -3220,6 +3220,9 @@ class LocalPrerequisiteViewer(CheckableTaskViewer):  # pylint: disable=W0223
 
     def getIsItemCheckable(self, item):
         """Détermine si une tâche donnée peut être sélectionnée comme prérequis."""
+        log.debug(
+            f"LocalPrerequisiteViewer.getIsItemCheckable(item={item}): retourne {item not in self.__items}"
+        )
         return item not in self.__items
 
     def onCheck(self, event, final):

@@ -71,6 +71,7 @@ qui définissent les vues arborescentes des catégories dans Task Coach.
 # from future import standard_library
 
 # standard_library.install_aliases()
+import logging
 import wx
 from taskcoachlib import command, widgets
 from taskcoachlib.domain import category
@@ -87,6 +88,8 @@ import taskcoachlib.gui.menu
 from taskcoachlib.gui.viewer import base
 from taskcoachlib.gui.viewer import mixin
 from taskcoachlib.gui.viewer import inplace_editor
+
+log = logging.getLogger(__name__)
 
 
 class BaseCategoryViewer(
@@ -133,15 +136,29 @@ class BaseCategoryViewer(
             self.registerObserver(
                 self.onAttributeChanged_Deprecated, eventType
             )
+        log.debug(
+            "BaseCategoryViewer : DEBUG presentation au démarrage : %d",
+            len(self.presentation()),
+        )
 
     def domainObjectsToView(self):
         """
         Retourne les objets de domaine à afficher dans la vue.
 
+        Retourne les catégories racines à afficher dans le viewer.
+
         Returns :
-            (list) : Liste des catégories à afficher.
+            (list) : Liste des catégories racines à afficher.
         """
-        return self.taskFile.categories()
+        log.debug(
+            f"BaseCategoryViewer.domainObjectsToView : retourne {self.taskFile.categories()}"
+        )
+        # return self.taskFile.categories()  # Peut renvoyer dict_values ou un itérateur-générateur qui peut s'effacer et casser les viewer wx !
+        # list() protège contre les itérateurs.
+        # return list(self.taskFile.categories())
+        return (
+            self.taskFile.categories()
+        )  # déjà correct — CategoryList gère la hiérarchie
 
     def curselectionIsInstanceOf(self, class_):
         """
@@ -162,11 +179,18 @@ class BaseCategoryViewer(
         Returns :
             widget (wx.CheckTreeCtrl) : Le widget CheckTreeCtrl utilisé pour afficher les catégories.
         """
+        log.warning(
+            "BaseCategoryViewer.createWidget : CREATION DU WIDGET CATEGORYVIEWER avec ses categories dans taskFile : %s ***************",
+            [cat.subject() for cat in self.taskFile.categories()],
+        )
         imageList = self.createImageList()  # Has side-effects
         self._columns = self._createColumns()
         itemPopupMenu = self.createCategoryPopupMenu()
         columnPopupMenu = taskcoachlib.gui.menu.ColumnPopupMenu(self)
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
+        log.debug(
+            f"BaseCategoryViewer.createWidget :  : {len(self.taskFile.categories())}"
+        )
         widget = widgets.CheckTreeCtrl(
             self,
             self._columns,
@@ -180,7 +204,7 @@ class BaseCategoryViewer(
             columnPopupMenu,
             resizeableColumn=1 if self.hasOrderingColumn() else 0,
             validateDrag=self.validateDrag,
-            **self.widgetCreationKeywordArguments()
+            **self.widgetCreationKeywordArguments(),
         )
         if self.hasOrderingColumn():
             widget.SetMainColumn(1)
@@ -233,7 +257,7 @@ class BaseCategoryViewer(
                 width=self.getColumnWidth("subject"),
                 editCallback=self.onEditSubject,
                 editControl=inplace_editor.SubjectCtrl,
-                **kwargs
+                **kwargs,
             ),
             widgets.Column(
                 "description",
@@ -246,7 +270,7 @@ class BaseCategoryViewer(
                 width=self.getColumnWidth("description"),
                 editCallback=self.onEditDescription,
                 editControl=inplace_editor.DescriptionCtrl,
-                **kwargs
+                **kwargs,
             ),
             widgets.Column(
                 "attachments",
@@ -257,7 +281,7 @@ class BaseCategoryViewer(
                 imageIndicesCallback=self.attachmentImageIndices,
                 headerImageIndex=self.imageIndex["paperclip_icon"],
                 renderCallback=lambda category: "",
-                **kwargs
+                **kwargs,
                 # )]
                 # columns.append(
                 # widgets.Column(
@@ -271,7 +295,7 @@ class BaseCategoryViewer(
                 imageIndicesCallback=self.noteImageIndices,
                 headerImageIndex=self.imageIndex["note_icon"],
                 renderCallback=lambda category: "",
-                **kwargs
+                **kwargs,
             ),
             # )
             # columns.append(
@@ -283,7 +307,7 @@ class BaseCategoryViewer(
                 sortCallback=uicommand.ViewerSortByCommand(
                     viewer=self, value="creationDateTime"
                 ),
-                **kwargs
+                **kwargs,
             ),
             # )
             # columns.append(
@@ -296,7 +320,7 @@ class BaseCategoryViewer(
                     viewer=self, value="modificationDateTime"
                 ),
                 *category.Category.modificationEventTypes(),
-                **kwargs
+                **kwargs,
             ),
             # )
             # columns.append(
@@ -308,7 +332,7 @@ class BaseCategoryViewer(
                 sortCallback=uicommand.ViewerSortByCommand(
                     viewer=self, value="id"
                 ),
-                **kwargs
+                **kwargs,
             ),
         ]
         return columns
@@ -495,6 +519,10 @@ class BaseCategoryViewer(
             return item.isFiltered()
         return False
 
+    def getIsItemCheckable(self, item):
+        """Retourne True — toutes les catégories peuvent être cochées."""
+        return True
+
     # @staticmethod
     def getItemParentHasExclusiveChildren(self, item):
         """
@@ -571,7 +599,20 @@ class BaseCategoryViewer(
         """
         return command.DeleteCategoryCommand
 
-
+# MRO de CategoryViewer (Python C3 linearization) :
+#
+# CategoryViewer
+# BaseCategoryViewer
+# AttachmentDropTargetMixin
+# FilterableViewerMixin
+# SortableViewerForCategoriesMixin → ManualOrderingMixin, SortableViewerMixin
+# SearchableViewerMixin
+# WithAttachmentsViewerMixin
+# NoteColumnMixin
+# AttachmentColumnMixin
+# SortableViewerWithColumns → SortableViewerMixin, ViewerWithColumns
+# TreeViewer
+# Viewer → wx.Panel, patterns.Observer
 class CategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
     """
     Vue des catégories, héritant de BaseCategoryViewer.
@@ -592,6 +633,14 @@ class CategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
         self.filterUICommand.setChoice(
             self.settings.getboolean("view", "categoryfiltermatchall")
         )
+        log.debug(
+            "CategoryViewer : CATEGORIES DANS TASKFILE :",
+            len(self.taskFile.categories()),
+        )
+        log.debug(
+            "CategoryViewer : CATEGORIES DANS DOMAIN :",
+            len(self.domainObjectsToView()),
+        )
 
     def createModeToolBarUICommands(self):
         """
@@ -608,3 +657,12 @@ class CategoryViewer(BaseCategoryViewer):  # pylint: disable=W0223
         # TypeError: can only concatenate tuple (not "CategoryViewerFilterChoice") to tuple
         # Exception ignored in atexit callback: <built-in function _wxPyCleanup>
         return super().createModeToolBarUICommands() + (self.filterUICommand,)
+
+    def refresh(self):
+        log.debug(
+            f"CategoryViewer.refresh : DEBUG refresh CategoryViewer : {len(self.taskFile.categories()):d} catégories."
+        )
+        super().refresh()
+        log.debug(
+            f"CategoryViewer.refresh : rafraîchissement du CategoryViewer terminé !"
+        )

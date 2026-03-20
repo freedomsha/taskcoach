@@ -851,7 +851,7 @@ class Application(object, metaclass=patterns.Singleton):
         )  # = True puis l560
         splash = gui.SplashScreen() if show_splash_screen else None
         # pylint: disable=W0201
-        # 1. Création taskFile
+        # 1. Création du taskFile
         self.taskFile = persistence.taskfile.LockedTaskFile(
             # poll=not self.settings.getboolean("file", "nopoll")
             poll=self.settings.getboolean("file", "fspoll")
@@ -860,7 +860,7 @@ class Application(object, metaclass=patterns.Singleton):
         #     f"Application.init: persistence.LockedTaskFile créé avec poll={self.taskFile.poll}."
         # )  # Crée un problème et arrête net le programme ! Pourquoi ? Parce que persistence.LockedTaskFile plante car il est vide.
         log.debug(
-            f"Application.init: le fichier à ouvrir est self.taskfile = {self.taskFile}."
+            f"Application.init: le fichier à ouvrir est self.taskfile = {self.taskFile.lastFilename()}."
         )
         self.__auto_saver = persistence.AutoSaver(self.settings)
         self.__auto_exporter = persistence.AutoImporterExporter(self.settings)

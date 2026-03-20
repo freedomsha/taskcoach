@@ -842,14 +842,14 @@ class _CtrlWithHideableColumnsMixin(_BaseCtrlWithColumnsMixin):
                 >= columnIndexWhenAllColumnsVisible
             ):
                 log.debug(
-                    f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {columnIndex} de la colonne {column} visible si toutes les colonnes sont visibles."
+                    f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {columnIndex} de la colonne {column.name()} visible si toutes les colonnes sont visibles."
                 )
                 return columnIndex
         # log.debug(
         #     f"_CtrlWithHideableColumnsMixin._getColumnIndex : renvoie l'index {self.GetColumnCount()} de la colonne {column} !"
         # )
         log.debug(
-            f"_CtrlWithHideableColumnsMixin._getColumnIndex : la colonne {column} n'est pas visible, renvoie l'index {self._getColumnIndex(column)} !"
+            f"_CtrlWithHideableColumnsMixin._getColumnIndex : la colonne {column.name()} n'est pas visible, renvoie l'index {self._getColumnIndex(column)} !"
         )
         return self.GetColumnCount()  # Column header not found
 

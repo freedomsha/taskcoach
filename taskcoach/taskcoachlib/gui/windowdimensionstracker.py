@@ -454,7 +454,7 @@ class WindowGeometryTracker:
         # Reset confirmed flags so ready check can proceed
         self.position_confirmed = True
         self.size_confirmed = True
-        log.debug(f"  State cleared: pos=None size=None maximized=False")
+        log.debug(f"State cleared: pos=None size=None maximized=False")
 
     def save(self):
         """Save current state to settings file."""

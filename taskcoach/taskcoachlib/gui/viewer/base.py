@@ -93,25 +93,39 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     coreObjectType = None
     viewerImages = artprovider.itemImages
 
+    # Les objectifs de cette version :
+    # supprimer la double création de la présentation
+    # éviter les KeyError sur les kwargs
+    # garantir que Filter → Sorter → Viewer reste correctement connecté
+    # éviter les bugs lors du freeze/thaw pendant les I/O
+    # rendre le code plus lisible pour la maintenance
     def __init__(self, parent, taskFile, settings, *args, **kwargs):
         """
         Initialise une nouvelle visionneuse.
 
+        Cette méthode crée l'interface graphique du viewer et construit
+        la chaîne de présentation des données :
+
+            domaine -> filtre -> tri -> viewer
+
         Args :
             parent (wx.Window) : La fenêtre parente de la visionneuse.
-            taskFile (TaskFile) : Le fichier de tâches à visualiser.
-            settings (Settings) : Les paramètres de l'application.
+            taskFile (TaskFile) : Le fichier de tâches à visualiser. Modèle contenant les objets du domaine.
+            settings (Settings) : Les paramètres de configuration de l'application.
             *args : Arguments supplémentaires.
             **kwargs : Arguments nommés supplémentaires.
         """
+        # journalisation pour tracer la création du viewer
         log.info(
             f"DEBUG Viewer.__init__ appelé {id(self)}, taskFile:, {id(taskFile)}"
-        )
-        log.debug(
-            f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}."
-        )
+        )  # écrit dans le log l'identifiant du viewer et du modèle
+        # initialisation du système d'observateur
         patterns.Observer.__init__(self)
-        log.debug(f"Viewer : parent={parent.__class__.__name__}")
+        # journalisation du type de parent
+        log.debug(
+            f"Viewer : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__}, parent={parent.__class__.__name__}."
+        )  # écrit le type de la fenêtre parente
+        # initialisation du widget wxPython
         super().__init__(
             parent, -1
         )  # Pourquoi -1 ? Pour définir l'Id automatiquement.
@@ -119,36 +133,56 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         # new_id = wx.ID_ANY
         # super().__init__(parent, new_id)
         # print('le mro de gui.viewer.base.Viewer est ', Viewer.__mro__)
-        self.parent = parent  # window or frame ?
-        self.taskFile = taskFile
-        self.settings = settings
-        self.__settingsSection = kwargs.pop("settingsSection")
-        self.__freezeCount = 0
+
+        # mémorisation de la fenêtre parente
+        self.parent = parent  # conserve la référence vers la fenêtre parente
+        # mémorisation du modèle
+        self.taskFile = (
+            taskFile  # stocke le fichier de tâches utilisé par le viewer
+        )
+        # mémorisation des paramètres
+        self.settings = settings  # stocke l'objet de configuration
+        # récupération de la section de configuration
+        self.__settingsSection = kwargs.pop(
+            "settingsSection"
+        )  # extrait la section settings associée à ce viewer
+        # compteur de gel des événements
+        self.__freezeCount = 0  # nombre de freeze actifs
         # Track items changed during bulk operations
-        self.__pendingRefreshItems = set()
+        # ensemble des items à rafraîchir après opérations groupées
+        self.__pendingRefreshItems = set()  # stocke les objets à rafraîchir
         # The how maniest of this viewer type are we? Used for settings
         # Le quel plus grand nombre de ce type de visualiseur avons-nous? Utilisé pour les paramètres
+        # récupération du numéro d'instance du viewer
         self.__instanceNumber = kwargs.pop(
-            "instanceNumber"
-        )  # KeyError: 'instanceNumber'
-        # self.__instanceNumber = kwargs.pop("instanceNumber", 0)
+            # "instanceNumber"
+            "instanceNumber",
+            0,
+        )  # KeyError: 'instanceNumber', le "0" évite KeyError si absent
+        # indique si ce viewer utilise une section de settings séparée
         self.__use_separate_settings_section = kwargs.pop(
             "use_separate_settings_section", True
-        )
-        # Selection cache:
-        self.__curselection = []
+        )  # True par défaut
+        # cache de sélection
+        self.__curselection = []  # stocke les objets actuellement sélectionnés
         # Indicateur pour que nous n'informions pas les observateurs pendant que nous sélectionnons tous les éléments
-        self.__selectingAllItems = False
+        # indicateur pour éviter les notifications pendant selectAll
+        self.__selectingAllItems = (
+            False  # bloque les notifications pendant sélection massive
+        )
         # Menus contextuels que nous devons détruire avant de fermer le visualiseur pour empêcher
         # les fuites de mémoire :
-        self._popupMenus = []  # Menus contextuels
+        # liste des menus popup à détruire à la fermeture
+        self._popupMenus = (
+            []
+        )  # Menus contextuels, empêche les fuites mémoire wx
         log.debug(
             f"Viewer.__ini__ : avant création de la présentation DEBUG domainObjectsToView: {len(self.domainObjectsToView())}"
         )
-        # Que présentons-nous:
-        self.__presentation = self.createSorter(
-            self.createFilter(self.domainObjectsToView())
-        )
+        # # Que présentons-nous:
+        # self.__presentation = self.createSorter(
+        #     self.createFilter(self.domainObjectsToView())
+        # )
         #     Viewer est un Observer.
         #     Il stocke une référence à self.__presentation.
         #     Cette __presentation est passée via les kwargs à l'initialisation.
@@ -179,22 +213,59 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         #     essaie d'accéder à parent sur ce None juste
         #     avant que le NoneType ne cause l'erreur sur thaw().
         #     Mais la cause sous-jacente est bien self.observable() étant None.
-        filtered = self.createFilter(self.domainObjectsToView())
+        # Création de la collection filtrée
+        # journalisation avant création de la présentation
+        domain_objects = (
+            self.domainObjectsToView()
+        )  # récupère les objets du modèle
         log.debug(
-            f"Viewer.__init__ : après présentation DEBUG after filter: {len(filtered)}"
-        )
-        sorted_ = self.createSorter(filtered)
-        log.debug(f"Viewer.__init__ : DEBUG after sorter: {len(sorted_)}")
+            f"Viewer.__init__ : objets domaine initiaux = {len(domain_objects)}"
+        )  # écrit le nombre d'objets du modèle
+
+        # ------------------------------
+        # Création de la chaîne modèle
+        # ------------------------------
+
+        # création du filtre appliqué aux objets
+        filtered_collection = self.createFilter(
+            self.domainObjectsToView()
+        )  # construit la collection filtrée
+        log.debug(
+            f"Viewer.__init__ : après filtre : {len(filtered_collection)}"
+        )  # journalise le nombre d'objets filtrés
+        # sorted_ = self.createSorter(filtered)
+        # création du tri appliqué à la collection filtrée
+        self.__presentation = self.createSorter(
+            filtered_collection
+        )  # crée la collection triée utilisée par le viewer
+        # log.debug(f"Viewer.__init__ : DEBUG after sorter: {len(sorted_)}")
+        log.debug(
+            f"Viewer.__init__ : présentation créée avec {len(self.__presentation)} objets."
+        )  # journalise la taille de la présentation
+
+        # ------------------------------
+        # Création du widget graphique
+        # ------------------------------
+
+        # création du contrôle wx affichant les données
         # Le widget utilisé pour présenter la présentation:
-        self.widget = self.createWidget()
+        self.widget = self.createWidget()  # construit le widget graphique
         # log.error(f"VIEWER : Ici, s'arrête après cela ? : {self.widget} présente la présentation.")
+        # définit la couleur de fond
         self.widget.SetBackgroundColour(
             wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW)
-        )
-        self.toolbar = toolbar.ToolBar(self, settings, (16, 16))
-        self.initLayout()
-        self.registerPresentationObservers()
-        self.refresh()
+        )  # applique la couleur système
+        # création de la barre d'outils du viewer
+        self.toolbar = toolbar.ToolBar(
+            self, settings, (16, 16)
+        )  # initialise la toolbar
+        # création de la mise en page
+        self.initLayout()  # construit le layout du viewer
+        # enregistrement des observateurs de la présentation
+        self.registerPresentationObservers()  # écoute les changements du modèle
+        # self.widget.Refresh()  # Manquait pour afficher les catégories
+        # rafraîchissement initial de l'affichage
+        self.refresh()  # met à jour l'interface
 
         pub.subscribe(self.onBeginIO, "taskfile.aboutToRead")
         pub.subscribe(self.onBeginIO, "taskfile.aboutToClear")
@@ -218,13 +289,13 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
                 settings.getboolean("view", "descriptionpopups")
             )
 
-        # self.refresh()
         log.debug("Viewer.__init__ : Appel de CallAfter.")
         wx.CallAfter(self.__DisplayBalloon)
         log.debug("Viewer.__init__ : CallAfter passé avec succès.")
+        # journalisation de fin d'initialisation
         log.debug(
-            f"Viewer.__init__ : La nouvelle visionneuse self={self.__class__.__name__} est initialisée !"
-        )
+            f"Viewer.__init__ : Nouvelle visionneuse self={self.__class__.__name__} initialisée !"
+        )  # indique que l'initialisation est terminée
 
     def __DisplayBalloon(self):
         """Affiche une info-bulle pour informer l'utilisateur que la barre d'outils est personnalisable."""
@@ -272,10 +343,11 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     def onBeginIO(self, taskFile):
         """Débute les opérations de lecture/écriture dans le fichier de tâches."""
         log.debug(
-            f"Viewer.onBeginIO : Appel de freeze pour {self.__class__.__name__}, self.__freezeCount={self.__freezeCount}."
+            f"Viewer.onBeginIO : Appel de __presentation.freeze pour {self.__class__.__name__}, self.__freezeCount={self.__freezeCount}."
         )
         self.__freezeCount += 1
         self.__presentation.freeze()
+        log.debug(f"Viewer.onBeginIO : Freeze terminé !")
 
     def onEndIO(
         self, taskFile
@@ -285,20 +357,30 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
         log.debug(
             f"Viewer.onEndIO : Appel de thaw pour {self.__class__.__name__}, self.__freezeCount={self.__freezeCount}."
         )
-        # Voici l'appel initial de la traceback de thaw():
-        self.__presentation.thaw()  # TypeError: UltimateListCtrl.Append() got an unexpected keyword argument 'data'
+        # # Voici l'appel initial de la traceback de thaw():
+        # self.__presentation.thaw()  # TypeError: UltimateListCtrl.Append() got an unexpected keyword argument 'data'
+        try:
+            self.__presentation.thaw()
+        except (AttributeError, RuntimeError) as e:
+            log.warning(
+                f"Viewer.onEndIO : ERREUR, thaw() ignoré pour {self.__class__.__name__} : {e}"
+            )
         if self.__freezeCount == 0:
             # 🔥 Recréer la presentation après chargement
             log.warning(
                 f"Viewer.onEndIO : Recréation de la présentation pour {self.__class__.__name__} après thaw."
             )
+            # Supprimer la recréation — elle cause des bugs:
             # self.__presentation = self.createSorter(
             #     self.createFilter(self.domainObjectsToView())
             # )  # Recréation de self.__presentation ! DANGER ! Nous devons recréer la présentation après le chargement pour refléter les nouvelles données du fichier de tâches. Cependant, cela peut entraîner des problèmes si d'autres parties du code conservent des références à l'ancienne présentation. Nous devons nous assurer que toutes les références à l'ancienne présentation sont mises à jour ou que nous utilisons une approche qui ne nécessite pas de recréer la présentation.
+            # Non, pas besoin, self.__presentation.thaw() s'en occupe déjà.
             log.debug(
                 f"Viewer.onEndIO : Appel de refresh pour {self.__class__.__name__} après thaw, self.__freezeCount={self.__freezeCount}."
             )
             self.refresh()
+            # wx.CallLater(100, self.refresh)  # 100ms pour laisser le layout se faire
+        log.debug(f"Viewer.onEndIO : thaw terminé !")
 
     def onBeginBulkOperation(self):
         """Freeze viewer and presentation to batch updates during bulk operations."""
@@ -703,7 +785,12 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
 
         Returns :
         """
-        self.widget.Thaw()
+        # self.widget.Thaw()
+        # Ne PAS appeler super().thaw() ici — évite la boucle dans CollectionDecorator
+        try:
+            self.widget.Thaw()
+        except RuntimeError:
+            pass  # widget détruit
 
     # def refresh(self):
     def refresh(self, *args, **kwargs):
@@ -712,22 +799,24 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             f"Viewer.refresh : Appel de refresh pour {self.__class__.__name__} !"
         )
         log.debug(
-            f"DEBUG refresh - tasks in model: {len(self.taskFile.tasks())}"
+            f"Viewer.refresh - tasks in model: {len(self.taskFile.tasks())}"
         )
-        log.debug(f"DEBUG refresh - self.taskFile id : {id(self.taskFile)}")
+        log.debug(f"Viewer.refresh - self.taskFile id : {id(self.taskFile)}")
         # !!! Important : self.presentation() est une collection décorée (ex: Sorter) qui observe la collection de base (ex: self.taskFile.tasks()).
         # Si self.presentation() n'observe pas correctement la collection de base, ou si la collection de base n'est pas correctement initialisée, alors self.presentation() peut être vide ou ne pas refléter les éléments attendus, ce qui entraînera un rafraîchissement avec 0 éléments.
         # Par conséquent, il est crucial de vérifier que self.presentation() est correctement initialisée et observe la collection de base avant d'appeler refresh(), sinon nous risquons de rafraîchir la visionneuse avec une présentation vide.
         # Si les IDs sont différents → 💥 on a gagné. Le bug est confirmé : self.presentation() n'observe pas correctement la collection de base, ou la collection de base n'est pas correctement initialisée, ce qui entraîne un rafraîchissement avec 0 éléments.
-        log.debug(f"DEBUG id taskFile.tasks(): {id(self.taskFile.tasks())}")
         log.debug(
-            f"DEBUG id __presentation.observable(): {id(self.__presentation.observable())}"
+            f"Viewer.refresh : DEBUG id taskFile.tasks(): {id(self.taskFile.tasks())}"
+        )
+        log.debug(
+            f"Viewer.refresh : DEBUG id __presentation.observable(): {id(self.__presentation.observable())}"
         )
         # Si les IDs diffèrent, ce n'est pas forcément un bug, cela peut être dû à la création d'une nouvelle présentation (ex: self.__presentation = self.createSorter(self.createFilter(self.domainObjectsToView())) dans onEndIO) qui observe une nouvelle collection de base. Cependant, si la nouvelle présentation n'observe pas correctement la collection de base, ou si la collection de base n'est pas correctement initialisée, alors nous risquons toujours d'avoir une présentation vide. Il est donc important de vérifier que la nouvelle présentation est correctement initialisée et observe la collection de base avant d'appeler refresh() après un chargement.
         # Cela peut être normal : presentation.observable() est le Filter
         # pas la TaskList directement.
         log.debug(
-            f"DEBUG id presentation.observable(): {id(self.presentation().observable())}"
+            f"Viewer.refresh DEBUG id presentation.observable(): {id(self.presentation().observable())}"
         )
         if self and not self.__freezeCount:
             count = len(self.presentation())
@@ -747,12 +836,22 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
             # Utiliser scheduleRefresh seulement si le widget le supporte (ex: TreeListCtrl)
             # Sinon utiliser RefreshAllItems (ex: VirtualListCtrl pour EffortViewer)
             if hasattr(self.widget, "scheduleRefresh"):
+                log.debug(
+                    f"Viewer.refresh : Appel de scheduleRefresh pour {self.__class__.__name__} avec count={count}."
+                )
                 self.widget.scheduleRefresh(count)
             else:
+                log.debug(
+                    f"Viewer.refresh : Appel de RefreshAllItems pour {self.__class__.__name__} avec count={count}."
+                )
                 self.widget.RefreshAllItems(count)
 
+        log.debug(f"Viewer.refresh : Refresh du widget {self.widget}.")
         self.widget.Refresh()
         self.widget.Update()
+        log.debug(
+            f"Viewer.refresh : Fin de refresh pour {self.__class__.__name__} !"
+        )
 
     # def scheduleRefresh(self):
     #     if getattr(self, "_refreshScheduled", False):
@@ -857,17 +956,18 @@ class Viewer(wx.Panel, patterns.Observer, metaclass=PreViewer):
     # ET PAS directement parent.children().
     def presentation(self):
         """Renvoie les objets de domaine que cette visionneuse affiche actuellement."""
-        log.debug(
-            f"Viewer.presentation : DEBUG presentation taskfile: {id(self.taskFile)}"
-        )
+        # log.warning("Viewer.presentation : méthode appelée régulièrement et risque de polluer le log.")
+        # log.debug(
+        #     f"Viewer.presentation : DEBUG presentation taskfile: {id(self.taskFile)}"
+        # )
         # return self.__presentation
         to_return = self.__presentation
-        log.debug(
-            f"Viewer.presentation : Retour de la présentation de {self.__class__.__name__} avec {len(to_return)} éléments."
-        )
-        log.debug(
-            f"Viewer.presentation : Les éléments de la présentation sont : {to_return}."
-        )
+        # log.debug(
+        #     f"Viewer.presentation : Retour de la présentation de {self.__class__.__name__} avec {len(to_return)} éléments."
+        # )
+        # log.debug(
+        #     f"Viewer.presentation : Les éléments de la présentation sont : {to_return}."
+        # )
         return to_return
 
     def setPresentation(self, presentation):
@@ -1348,19 +1448,19 @@ class TreeViewer(Viewer):  # pylint: disable=W0223
             **kwargs : Arguments nommés pour l'initialisation.
         """
         log.debug(
-            f"TreeViewer : Initialisation avec args={args} et kwargs={kwargs}."
+            f"TreeViewer : Initialisation de {self.__class__.__name__} avec args={args} et kwargs={kwargs}."
         )
         # Initialisation de la sélection et des paramètres spécifiques à TreeViewer
         self.__selectionIndex = 0
         super().__init__(*args, **kwargs)
         # Liaison des événements d'expansion et de collapse
-        log.info(f"TreeViewer : Liaison des événements d'expansion.")
+        # log.info(f"TreeViewer : Liaison des événements d'expansion.")
         # self.widget.bind(wx.EVT_TREE_ITEM_EXPANDED, self.onItemExpanded)
         self.widget.Bind(wx.EVT_TREE_ITEM_EXPANDED, self.onItemExpanded)
-        log.info(f"TreeViewer : Liaison des événements de collapse.")
+        # log.info(f"TreeViewer : Liaison des événements de collapse.")
         # self.widget.bind(wx.EVT_TREE_ITEM_COLLAPSED, self.onItemCollapsed)
         self.widget.Bind(wx.EVT_TREE_ITEM_COLLAPSED, self.onItemCollapsed)
-        log.debug("TreeViewer : Initialisé !")
+        log.debug(f"TreeViewer : {self.__class__.__name__} Initialisé !")
 
     def onItemExpanded(self, event):
         """Gère l'événement d'expansion d'un élément."""
@@ -1749,7 +1849,7 @@ class ViewerWithColumns(
             **kwargs : Arguments nommés supplémentaires pour l'initialisation.
         """
         log.debug(
-            f"ViewerWithColumns : Initialisation Création de la visionneuse avec des colonnes."
+            f"ViewerWithColumns : Initialisation Création de la visionneuse {self.__class__.__name__} avec des colonnes."
         )
         # Indique si l'initialisation est terminée.
         self.__initDone = False
@@ -1764,9 +1864,9 @@ class ViewerWithColumns(
         self.__initDone = True
         # refresh permet d'afficher les listes des tâches et catégories dans les colonnes.
         self.refresh()
-        log.debug("ViewerWithColumns initialisé !")
+        # log.debug("ViewerWithColumns initialisé !")
         log.debug(
-            f"ViewerWithColumns : Colonnes disponibles : {self._columns}. Colonnes visibles : {self.__visibleColumns}."
+            f"ViewerWithColumns initialisé ! : Colonnes disponibles : {self._columns}. Colonnes visibles : {self.__visibleColumns}."
         )
 
     def hasHideableColumns(self):
@@ -1818,8 +1918,15 @@ class ViewerWithColumns(
             *args : Arguments supplémentaires pour la méthode de rafraîchissement.
             **kwargs : Arguments nommés supplémentaires.
         """
+        log.debug(
+            f"ViewerWithColumns.refresh : Rafraichissement de la vue si l'initialisation est terminée."
+        )
         if self and self.__initDone:
+            log.debug(
+                f"ViewerWithColumns.refresh : Rafraichissement de la vue."
+            )
             super().refresh(*args, **kwargs)
+        log.debug(f"ViewerWithColumns.refresh : Rafraichissement terminé !")
 
     def initColumns(self):
         """
@@ -2136,12 +2243,14 @@ class ViewerWithColumns(
         if column is None:
             column = 1 if self.hasOrderingColumn() else 0
         column = self.visibleColumns()[column]
+        # log.debug(
+        #     "ViewerWithColumns.getItemText : Visible columns: %s",
+        #     self.visibleColumns(),
+        # )
         log.debug(
-            "ViewerWithColumns.getItemText : Visible columns: %s",
+            "ViewerWithColumns.getItemText : Column index demandé: %s des colonnes visibles %s",
+            column,
             self.visibleColumns(),
-        )
-        log.debug(
-            "ViewerWithColumns.getItemText : Column index demandé: %s", column
         )
         log.debug("ViewerWithColumns.getItemText : Item: %s", item)
         return column.render(item)
@@ -2393,28 +2502,28 @@ class SortableViewerWithColumns(
         Args:
             column: La colonne à initialiser.
         """
-        log.debug(
-            "SortableViewerWithColumns.initColumn Initialise une colonne."
-        )
+        # log.debug(
+        #     "SortableViewerWithColumns.initColumn Initialise une colonne."
+        # )
         super().initColumn(column)
-        log.debug(
-            f"SortableViewerWithColumns.initColumn : Vérifie si la colonne {column.name()} est utilisée pour le tri."
-        )
+        # log.debug(
+        #     f"SortableViewerWithColumns.initColumn : Vérifie si la colonne {column.name()} est utilisée pour le tri."
+        # )
         if self.isSortedBy(column.name()):
-            log.debug(
-                f"SortableViewerWithColumns.initColumn : La colonne {column.name()} est utilisée pour le tri. Affiche l'icône de tri."
-            )
+            # log.debug(
+            #     f"SortableViewerWithColumns.initColumn : La colonne {column.name()} est utilisée pour le tri. Affiche l'icône de tri."
+            # )
             self.widget.showSortColumn(column)
-            log.debug(
-                f"SortableViewerWithColumns.initColumn : Affiche l'ordre de tri pour la colonne {column.name()}."
-            )
+            # log.debug(
+            #     f"SortableViewerWithColumns.initColumn : Affiche l'ordre de tri pour la colonne {column.name()}."
+            # )
             self.showSortOrder()
             log.debug(
                 f"SortableViewerWithColumns.initColumn : La colonne {column.name()} est maintenant visible avec l'icône de tri."
             )
-        log.debug(
-            f"SortableViewerWithColumns.initColumn : Colonnes visibles après initialisation de la colonne {column.name()}."
-        )
+        # log.debug(
+        #     f"SortableViewerWithColumns.initColumn : Colonnes visibles après initialisation de la colonne {column.name()}."
+        # )
 
     def setSortOrderAscending(self, *args, **kwargs):  # pylint: disable=W0221
         """

@@ -39,7 +39,9 @@ class CategorizableCompositeObject(base.CompositeObject):
             self.addCategoryEvent,
             self.removeCategoryEvent,
         )
-        log.debug("CategorizableCompositeObject : méthode super:")
+        log.debug(
+            f"CategorizableCompositeObject : méthode super avec args={args} et kwargs={kwargs}."
+        )
         super().__init__(*args, **kwargs)
         log.debug("CategorizableCompositeObject : Initialisé.")
 

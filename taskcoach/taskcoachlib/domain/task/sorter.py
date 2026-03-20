@@ -77,7 +77,7 @@ class Sorter(base.TreeSorter):
         # self.reset() to be called.
 
     def createSortKeyFunction(self, sortKey):
-        log.debug(f"Creating sort key function with sortKey {sortKey}.")
+        # log.debug(f"Creating sort key function with sortKey {sortKey}.")
         statusSortKey = self.__createStatusSortKey()
         regularSortKey = super().createSortKeyFunction(sortKey)
         return lambda the_task: statusSortKey(the_task) + [
@@ -85,9 +85,9 @@ class Sorter(base.TreeSorter):
         ]
 
     def __createStatusSortKey(self):
-        log.debug(
-            "Creating status sort key function with sortByTaskStatusFirst "
-        )
+        # log.debug(
+        #     "Creating status sort key function with sortByTaskStatusFirst "
+        # )
         if self.__sortByTaskStatusFirst:
             if self.isAscending():
                 return lambda the_task: [
@@ -103,7 +103,7 @@ class Sorter(base.TreeSorter):
             return lambda the_task: []
 
     def _registerObserverForAttribute(self, attribute):
-        log.debug(f"Registering observer for attribute {attribute}.")
+        # log.debug(f"Registering observer for attribute {attribute}.")
         # Sorter is always observing task dates and prerequisites because
         # sorting by status depends on those attributes. Hence we don't need
         # to subscribe to these attributes when they become the sort key.
@@ -111,7 +111,7 @@ class Sorter(base.TreeSorter):
             super()._registerObserverForAttribute(attribute)
 
     def _removeObserverForAttribute(self, attribute):
-        log.debug(f"Removing observer for attribute {attribute}.")
+        # log.debug(f"Removing observer for attribute {attribute}.")
         # See comment at _registerObserverForAttribute.
         if attribute not in self.TaskStatusAttributes:
             super()._removeObserverForAttribute(attribute)

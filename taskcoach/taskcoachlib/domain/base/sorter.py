@@ -217,8 +217,14 @@ class TreeSorter(Sorter):
 
     def rootItems(self):
         """Return the root items, i.e. items without a parent."""
+        log.debug(
+            f"TreeSorter.rootItems : self.__rootItems={self.__rootItems}."
+        )
         if self.__rootItems is None:
             self.__rootItems = [item for item in self if item.parent() is None]
+        log.debug(
+            f"TreeSorter.rootItems : retourne self.__rootItems : {self.__rootItems}."
+        )
         return self.__rootItems
 
     def __invalidateRootItemCache(self):

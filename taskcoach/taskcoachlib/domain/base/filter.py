@@ -61,9 +61,11 @@ class Filter(patterns.SetDecorator):
         """
         Dégèle le filtre, réactivant le filtrage après un gel.
         """
+        log.debug("Filter.thaw : degèle le filtre.")
         super().thaw()  # Boucle entre ici et patterns.observer.CollectionDecorator.thaw
         if not self.isFrozen():
             self.reset()
+        log.debug("Filter.thaw : filtre dégelé !")
 
     def setTreeMode(self, treeMode):
         """
@@ -99,19 +101,34 @@ class Filter(patterns.SetDecorator):
         Args :
             event : Un objet d'événement facultatif à passer aux gestionnaires d'événements.
         """
+        log.debug(
+            f"Filter.reset : réinitialisation du filtre pour self={self.__class__.__name__}, event={event}."
+        )
         if self.isFrozen():
+            log.debug(
+                f"Filter.reset : self={self.__class__.__name__} est Gelé !."
+            )
             return
 
         filteredItems = set(self.filterItems(self.observable()))
+        log.debug(f"Filter.reset : l'attribut filteredItems={filteredItems}")
         if self.treeMode():
+            log.debug(
+                f"Filter.reset : remet à jour filteredItems car self.treeMode est {self.treeMode()}"
+            )
             for item in filteredItems.copy():
-                filteredItems.update(set(item.ancestors()))
+                log.debug(f"Filter.reset : pour item={item}")
+                filteredItems.update(set(item.ancestors()))  # Erreur !
+                log.debug(f"filteredItems devient {filteredItems}.")
+        log.debug(f"Filter.reset : filteredItems est devenu {filteredItems}.")
         self.removeItemsFromSelf(
             [item for item in self if item not in filteredItems], event=event
         )
         self.extendSelf(
             [item for item in filteredItems if item not in self], event=event
         )
+        log.debug(f"Filter.reset : self est devenu {self}.")
+        log.debug("Filter.reset : filtre réinitialisé !")
 
     def getFilterForced(self):
         """Return items that were added as ancestors, not directly matched.
@@ -163,7 +180,10 @@ class Filter(patterns.SetDecorator):
 
         Return : Une liste d'éléments qui n'ont pas de parent.
         """
-        return [item for item in self if item.parent() is None]
+        rootItems_to_return = [item for item in self if item.parent() is None]
+        log.debug(f"Filter.rootItems : renvoie {rootItems_to_return}")
+        # return [item for item in self if item.parent() is None]
+        return rootItems_to_return
 
     def onAddItem(self, event):
         """

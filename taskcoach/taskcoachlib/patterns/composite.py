@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 from . import observer
-import weakref
+
+# import weakref  # Devient inutile, parent est devenu une référence forte
 
 log = logging.getLogger(__name__)
 
@@ -42,10 +43,25 @@ class Composite(object):
         """
         log.debug("Composite : Initialisation.")
         super().__init__()
-        self.__parent = parent if parent is None else weakref.ref(parent)
+        # self.__parent = parent if parent is None else weakref.ref(parent)
+        # Ne réinitialiser __parent que si pas déjà défini par un setParent précédent
+        if (
+            not hasattr(self, "_Composite__parent")
+            or self._Composite__parent is None
+        ):
+            # self.__parent = parent if parent is None else weakref.ref(parent)
+            self.__parent = parent
         self.__children = children or []
+        log.debug(
+            f"Composite : self.__parent = {self.__parent} et self.__children = {self.__children}."
+        )
+
         for child in self.__children:
+            log.debug(
+                f"Composite : Ajout de l'enfant {child.id()} à {self.id()}"
+            )
             child.setParent(self)
+        log.debug("Composite : Initialisé.")
 
     def __getstate__(self):
         """
@@ -69,12 +85,17 @@ class Composite(object):
             state (dict) : L'état du composite.
         """
         log.debug(f"Composite.__setstate__ : state : {state}.")
-        self.__parent = (
-            None if state["parent"] is None else weakref.ref(state["parent"])
-        )
+        # self.__parent = (
+        #     None if state["parent"] is None else weakref.ref(state["parent"])
+        # )
+        self.__parent = state[
+            "parent"
+        ]  # Référence forte (suppression des weakrefs)
         log.debug(f"Composite.__setstate__ : self.__parent = {self.__parent}")
         self.__children = state["children"]
-        log.debug(f"Composite.__setstate__ : self.__children = {self.__children}")
+        log.debug(
+            f"Composite.__setstate__ : self.__children = {self.__children}"
+        )
 
     def __getcopystate__(self):
         """
@@ -104,7 +125,8 @@ class Composite(object):
         Renvoie :
             (Composite) : Le composite parent.
         """
-        return None if self.__parent is None else self.__parent()
+        # return None if self.__parent is None else self.__parent()
+        return self.__parent  # Référence forte (suppression des weakrefs)
 
     def ancestors(self):
         """
@@ -132,7 +154,8 @@ class Composite(object):
         Args :
             parent (Composite) : Le composite parent en référence faible.
         """
-        self.__parent = None if parent is None else weakref.ref(parent)
+        # self.__parent = None if parent is None else weakref.ref(parent)
+        self.__parent = parent  # Référence forte (suppression des weakrefs)
 
     def children(self, recursive=False) -> list | None:
         """
@@ -232,7 +255,9 @@ class ObservableComposite(Composite):
             state (dict) : L'état du composite.
             event (Event | None) : (facultatif) L'événement à notifier.
         """
-        log.debug(f"ObservableComposite.__setstate__ : pour state {state} et event {event}")
+        log.debug(
+            f"ObservableComposite.__setstate__ : pour state {state} et event {event}"
+        )
         # Anciens enfants :
         oldChildren = set(self.children())
         # Récupère l'état en mettant à jour l'état de l'objet composite :
@@ -398,7 +423,7 @@ class CompositeCollection(object):
         compositesAndAllChildren = set(composites)
         for composite in composites:
             compositesAndAllChildren |= set(composite.children(recursive=True))
-        return list(compositesAndAllChildren)
+        return compositesAndAllChildren
 
     def _addCompositesToParent(self, composites, event):
         """
@@ -488,9 +513,11 @@ class CompositeCollection(object):
 
 class CompositeSet(CompositeCollection, observer.ObservableSet):
     """Un ensemble d'objets composites observables."""
+
     pass
 
 
 class CompositeList(CompositeCollection, observer.ObservableList):
     """Une liste d'objets composites observables."""
+
     pass
