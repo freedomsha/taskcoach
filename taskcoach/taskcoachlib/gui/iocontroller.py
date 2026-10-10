@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import codecs
 import gc
 
-# import lockfile
+import lockfile
 import logging  # not used, log.Error replaced by wx.logError
 import os
 import sys
@@ -33,7 +33,7 @@ from pubsub import pub
 from taskcoachlib import meta, persistence, patterns, operating_system
 from taskcoachlib.application import gui_name
 from taskcoachlib.i18n import _
-from taskcoachlib.thirdparty import lockfile
+# from taskcoachlib.thirdparty import lockfile
 from taskcoachlib.widgets import GetPassword
 from taskcoachlib.workarounds import ExceptionAsUnicode
 

@@ -248,14 +248,14 @@ class Settings(CachingConfigParser):
         self.migrateConfigurationFiles()
         self.gui_used = gui_used
         if self.gui_used == "wx":
-            log.info("Settings.__init__ avec wx.")
+            log.info("Settings.__init__ avec wx plutôt que tkinter.")
             import wx  # TODO : Trouver le moyen d'implémenter wx sans wx.App ou créer un autre fichier wxsettings.
 
             # self.wx = None  # wx quand ce sera corrigé !
             self.wx = wx  # wx quand ce sera corrigé !
             self.MessageboxUsed = self.wx.MessageBox
         elif self.gui_used == "tk":
-            log.info("Serttings.__init__ avec tkinter.")
+            log.info("Settings.__init__ avec tkinter plutôt que wx.")
             self.MessageboxUsed = messagebox.showerror
         # Ensure errorMessage is initialized
         errorMessage = None
@@ -359,12 +359,18 @@ class Settings(CachingConfigParser):
         """
         Initialisez les paramètres avec les valeurs par défaut.
         """
+        log.info(
+            "Settings.initializeWithDefaults : Initialisation des paramètres avec les valeurs par défaut."
+        )
         for section in self.sections():
             self.remove_section(section)
         for section, settings in list(defaults.defaults.items()):
             self.add_section(section)
             for key, value in list(settings.items()):
                 # Don't Notify observers while we are initializing
+                log.info(
+                    f"Settings.initializeWithDefaults : Initialisation de la section '{section}', paramètre '{key}' avec la valeur par défaut '{value}'."
+                )
                 super().set(section, key, value)
 
     def setLoadStatus(self, message):
@@ -524,6 +530,7 @@ class Settings(CachingConfigParser):
             return defaultSection.get(option)
         except KeyError as e:
             if e.args[0] == defaultSectionKey:
+                # Si la section n'existe pas, lever une exception NoSectionError
                 raise configparser.NoSectionError(defaultSectionKey)
             else:
                 raise configparser.NoOptionError(option, defaultSectionKey)
@@ -579,6 +586,9 @@ class Settings(CachingConfigParser):
             La valeur result corrigée.
         """
         original = result
+        log.debug(
+            f"Settings._fixValuesFromOldIniFiles : Corrige result={result}"
+        )
         # À partir de la version 1.1.0, les propriétés de date des tâches (startDate,
         # dueDate et CompletionDate) sont des datetimes :
         taskDateColumns = ("startDate", "dueDate", "completionDate")
@@ -618,8 +628,30 @@ class Settings(CachingConfigParser):
             try:
                 # columnWidthMap = eval(result)
                 columnWidthMap = ast.literal_eval(result)
-            except SyntaxError:
-                columnWidthMap = dict()
+                # Elle tente d'évaluer la chaîne de caractères comme une expression Python, ce qui échoue avec une erreur.
+                # ValueError: malformed node or string on line 1: Call(func=Name(id='dict', ctx=Load()), args=[], keywords=[keyword(arg='subject', value=Constant(value=10, kind=None))])
+            # except SyntaxError:
+            except (SyntaxError, ValueError) as e:
+                log.error(
+                    f"Settings._fixValuesFromOldIniFiles : Error occurred while evaluating columnwidths : {e}"
+                )
+                # columnWidthMap = dict()
+                # Si la chaîne ressemble à "dict(subject=10)", on l'analyse manuellement
+                if result.startswith("dict(") and result.endswith(")"):
+                    # Extraire les arguments entre parenthèses
+                    args_str = result[5:-1]
+                    # Analyser les arguments pour créer un dictionnaire
+                    columnWidthMap = {}
+                    for arg in args_str.split(","):
+                        if "=" in arg:
+                            key, value = arg.split("=", 1)
+                            columnWidthMap[key.strip()] = int(value.strip())
+                    log.debug(
+                        f"Settings._fixValuesFromOldIniFiles : columnWidthMap={columnWidthMap}"
+                    )
+                #     return columnWidthMap
+                # else:
+                #     return {}
             for column, width in list(columnWidthMap.items()):
                 if column in taskDateColumns:
                     column += "Time"
@@ -697,12 +729,15 @@ class Settings(CachingConfigParser):
             # pub.sendMessage("settings.%s.%s" % (section, option), value=value)
             topic = f"settings.{section}.{option}"
             pub.sendMessage(  # Attention à la signature de pub.sendMessage, elle peut varier selon la version de pypubsub utilisée.
-                "settings.%s.%s" % (section, option),
+                # "settings.%s.%s" % (section, option),
+                # # event=f"{section}.{option}",
+                # event=topic,
+                topic,
                 # value=value,
-                # event=f"{section}.{option}",
-                event=topic,
+                value=value,
             )
             # pub.sendMessage(f"settings.{section}.{option}", value=value)
+            # pubsub.core.topicargspec.SenderMissingReqdMsgDataError: Some required args missing in call to sendMessage('settings.effortviewer.round', event): value
 
     setvalue = settuple = setlist = setdict = setint = setboolean
 
@@ -886,7 +921,8 @@ class Settings(CachingConfigParser):
     # def save(
     #     self, showerror=wx.MessageBox, file=open
     # ):  # pylint: disable=W0622
-    def save(self, file=open):  # pylint: disable=W0622
+    # def save(self, file=open):  # pylint: disable=W0622
+    def save(self, showerror=None, file=open):  # pylint: disable=W0622
         """
         Enregistrez les paramètres dans un fichier.
 
@@ -1034,12 +1070,21 @@ class Settings(CachingConfigParser):
             str: The path to the configuration directory.
         """
         if self.__iniFileSpecifiedOnCommandLine:
+            log.info(
+                f"Settings.path : Retourne le chemin du fichier .ini spécifié sur la ligne de commande. self.pathToIniFileSpecifiedOnCommandLine()={self.pathToIniFileSpecifiedOnCommandLine()}"
+            )
             return self.pathToIniFileSpecifiedOnCommandLine()
         elif forceProgramDir or self.getboolean(
             "file", "saveinifileinprogramdir"
         ):
+            log.info(
+                f"Settings.path : Retourne le chemin du répertoire du programme. self.pathToProgramDir()={self.pathToProgramDir()}"
+            )
             return self.pathToProgramDir()
         else:
+            log.info(
+                f"Settings.path : Retourne le chemin du répertoire de configuration. self.pathToConfigDir(environ)={self.pathToConfigDir(environ)}"
+            )
             return self.pathToConfigDir(environ)
 
     @staticmethod
@@ -1169,10 +1214,21 @@ class Settings(CachingConfigParser):
         Returns :
             str : Le chemin d'accès au répertoire du programme.
         """
+        log.info(
+            "Settings.pathToProgramDir : Détermine le chemin du répertoire du programme."
+        )
         # path = sys.argv[0]
         path = os.path.abspath(sys.argv[0])
+        log.info(
+            f"Settings.pathToProgramDir : Chemin absolu du programme : path={path}"
+        )
         if not os.path.isdir(path):
             path = os.path.dirname(path)
+            log.info(
+                f"Settings.pathToProgramDir : path n'est pas un répertoire, prend le répertoire parent : path={path}"
+            )
+        # Normaliser le chemin pour éviter les problèmes de chemin absolu local
+        path = os.path.normpath(path)
         return path
 
     def pathToConfigDir(self, environ):

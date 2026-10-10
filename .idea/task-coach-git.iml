@@ -17,9 +17,10 @@
       <excludeFolder url="file://$MODULE_DIR$/taskcoach/thirdparty/python-ntlm-old" />
       <excludeFolder url="file://$MODULE_DIR$/taskcoach/buildbot/slaves/WinXPSP3" />
       <excludeFolder url="file://$MODULE_DIR$/taskcoach/tests-py2" />
+      <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludePattern pattern="*.bak" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.13 (task-coach-git)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.14 (task-coach-git) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

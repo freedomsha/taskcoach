@@ -45,11 +45,12 @@ import calendar
 from taskcoachlib import (
     operating_system,
     patterns,
-    persistencetk,
+    # persistencetk,
     operating_system,
     meta,
     i18n,
 )
+from taskcoachlib.persistence import taskfile
 from taskcoachlib.i18n import _
 from taskcoachlib.config.settings import Settings
 from taskcoachlib.domain import date
@@ -198,7 +199,9 @@ class TkinterApplication(
 
         self.initTwisted()
         # self.registerApp()
-        self.init(**kwargs)
+        self.init(
+            **kwargs
+        )  # 1er appel à init ! Le suivant est dans taskcoach.py.
 
         # Remplacement de l'initialisation du sessionMonitor
         if operating_system.isGTK():
@@ -259,9 +262,13 @@ class TkinterApplication(
         """
         # Remplacer les vérificateurs de version et de messages
         if self.settings.getboolean("version", "notify"):
-            print("Vérificateur de version démarré (maquette)")
+            log.debug(
+                "TkinterApplication.start : !!! Vérificateur de version démarré (maquette)"
+            )
         if self.settings.getboolean("view", "developermessages"):
-            print("Vérificateur de messages de développeur démarré (maquette)")
+            log.debug(
+                "TkinterApplication.start : !!! Vérificateur de messages de développeur démarré (maquette)"
+            )
 
         self.__copy_default_templates()
         # self.mainwindow.show()  # On suppose que la classe MainWindow a une méthode show() (tk.lift())
@@ -283,7 +290,9 @@ class TkinterApplication(
         # Pour que le programme fonctionne correctement, vous ne devez pas appeler self.init(**kwargs) dans start(), car la méthode __init__() est un constructeur qui n'est appelé qu'une seule fois lorsque l'objet est créé. L'appeler à nouveau serait incorrect.
         #
         # La solution consiste à s'assurer que les lignes qui créent et positionnent le MainWindow sont bien placées à l'intérieur de la méthode start(), comme dans l'exemple que je vous ai donné précédemment.
-        log.info("Lancement de l'application Tkinter...")
+        log.info(
+            "TkinterApplication.start : !!! Lancement de l'application Tkinter..."
+        )
 
         # # Crée la fenêtre principale
         # self.mainwindow = mainwindowtk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings)
@@ -318,10 +327,18 @@ class TkinterApplication(
     def __copy_default_templates(self):
         """Copier les modèles par défaut"""
         # Logique de la copie des modèles (maquettée)
-        print("Modèles par défaut copiés (maquette)")
+        log.debug(
+            "TkinterApplication.__copy_default_templates : !!! Modèles par défaut copiés (maquette)"
+        )
 
     def init(self, loadSettings=True, loadTaskFile=True):
         """Initialise l'application."""
+        if hasattr(
+            self, "_init_called"
+        ):  # ← Vérifie si init() a déjà été appelé
+            return
+        self._init_called = True  # ← Marque init() comme appelé
+
         # Initialisation des réglages
         self.__init_config(loadSettings)
         self.__init_language()
@@ -352,9 +369,9 @@ class TkinterApplication(
         splash = guitk.SplashScreen(self.root) if show_splash_screen else None
 
         # self.taskFile = persistencetk.LockedTaskFile(poll=not self.settings.getboolean('file', 'nopoll'))
-        self.taskFile = persistencetk.LockedTaskFile(
+        self.taskFile = taskfile.LockedTaskFile(
             parent=self.root,
-            poll=not self.settings.getboolean("file", "nopoll"),
+            poll=not self.settings.getboolean("file", "-nopoll"),
         )
         # self.__auto_saver = persistence.AutoSaver(self.settings)
         # self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
@@ -402,7 +419,7 @@ class TkinterApplication(
         # app = self.mainwindow = guitk.MainWindow(self.root, self.iocontroller, self.taskFile, self.settings)
         self.mainwindow = guitk.mainwindowtk.MainWindow(
             self.root, self.iocontroller, self.taskFile, self.settings
-        )
+        )  # TODO : Attention, il y a un double appel de init (1 dans __init__, le suivant dans taskcoach.py), risque de double ouverture de mainwindow !
         # app.pack(fill=tk.BOTH, expand=True)
         # self.mainwindow.pack(fill=tk.BOTH, expand=True)
         self.mainwindow.grid(row=0, column=0, sticky="news")
@@ -449,12 +466,12 @@ class TkinterApplication(
         self.root.after_idle(lambda: self.__close_splash(splash))
         self.root.after_idle(self.__show_tips)
 
-    def __init_config(self, load_settings) -> None:
+    def __init_config(self, load_settings: bool) -> None:
         """
         Initialisation des réglages.
 
         Args:
-            load_settings:
+            load_settings (bool) : Valeur pour choisir de charger les paramètres à partir d'un fichier
 
         Attributes:
             self.settings (Settings) : Objet paramètres
@@ -463,6 +480,9 @@ class TkinterApplication(
             None
         """
         ini_file = self._options.inifile if self._options else None
+        log.info(
+            f"TkinterApplication.__init_config : Chargement des paramètres depuis {ini_file if ini_file else 'le fichier par défaut'} : {load_settings}"
+        )
         self.settings = Settings(load_settings, ini_file, "tk")
         # self.settings.load()  # AttributeError: 'Settings' object has no attribute 'load'
         log.info("init_config : passé avec succès !")
@@ -518,7 +538,7 @@ class TkinterApplication(
         # La création d'une icône dans la barre des tâches n'est pas une fonctionnalité native de tkinter.
         # Des bibliothèques tierces comme 'pystray' seraient nécessaires.
         if self.__can_create_task_bar_icon():
-            print(
+            log.debug(
                 "Icône de la barre des tâches non créée car elle n'est pas prise en charge par tkinter."
             )
         self.taskBarIcon = None

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Contrôle de l'arborescence pour Tkinter.
 Basé sur le treectrl.py original de TaskCoach.
 """
+
 # Voici une version du code qui utilise itemctrl.py et draganddrop.py pour
 # créer un Treeview avec des fonctionnalités de glisser-déposer. Le code est auto-suffisant et bien commenté pour que vous puissiez comprendre chaque section. Il gère les actions de glisser-déposer et met à jour l'affichage de l'arborescence en conséquence.
 #
@@ -311,11 +312,17 @@ from typing import List, Any, Callable, Sequence, Optional  # types utilitaires
 # Assurez-vous d'avoir les versions converties de ces modules.
 # Les importations relatives peuvent être nécessaires selon la structure de votre projet.
 from taskcoachlib.guitk import artprovidertk
+
 # from .itemctrl import *
 # from taskcoachlib.widgetstk import draganddroptk, itemctrltk
 from taskcoachlib.widgetstk import itemctrltk
 from taskcoachlib.widgetstk.draganddroptk import TreeCtrlDragAndDropMixin
-from taskcoachlib.widgetstk.itemctrltk import Column, CtrlWithItemsMixin, CtrlWithColumnsMixin
+from taskcoachlib.widgetstk.itemctrltk import (
+    Column,
+    CtrlWithItemsMixin,
+    CtrlWithColumnsMixin,
+)
+
 # from .draganddrop import *
 from taskcoachlib.widgetstk import tooltiptk
 
@@ -342,11 +349,12 @@ class SimpleTreeItem:  # Voir itemctrltk.py pour une version plus complète
     Classe pour représenter un élément dans l'arborescence.
     Remplace la structure de données complexe du treectrl.py original.
     """
+
     def __init__(self, name: str, parent: Any = None):
         """Initialise un élément de l'arborescence."""
         self.name = name
         self.parent = parent
-        self.children: List['SimpleTreeItem'] = []
+        self.children: List["SimpleTreeItem"] = []
         # self.get_tree_children: List['SimpleTreeItem'] = []
 
     def __repr__(self) -> str:
@@ -354,10 +362,13 @@ class SimpleTreeItem:  # Voir itemctrltk.py pour une version plus complète
         return f"SimpleTreeItem(name='{self.name}')"
 
 
-class TreeCtrl(ttk.Treeview):  # Remplace HyperTreeList et CustomTreeCtrl de wxPython
+class TreeCtrl(
+    ttk.Treeview
+):  # Remplace HyperTreeList et CustomTreeCtrl de wxPython
     """
     Une version de TreeCtrl pour Tkinter avec glisser-déposer.
     """
+
     # TreeCtrl.__init__(self, parent, columns=column_names, show='tree headings',
     #                   displaycolumns=displaycolumns, *args, **kwargs) de TreeListCtrl.
     def __init__(self, parent: tk.Widget, **kwargs):
@@ -388,7 +399,9 @@ class TreeCtrl(ttk.Treeview):  # Remplace HyperTreeList et CustomTreeCtrl de wxP
             drop_item_id = self.identify_row(event.y)
             if drop_item_id and drop_item_id != self.dragged_item_id:
                 # Ajoute une indication visuelle pour le glisser-déposer
-                self.tk.call(self._w, "move", self.dragged_item_id, drop_item_id, "end")
+                self.tk.call(
+                    self._w, "move", self.dragged_item_id, drop_item_id, "end"
+                )
             else:
                 # Gère le cas où l'on glisse vers un espace vide
                 self.tk.call(self._w, "move", self.dragged_item_id, "", "end")
@@ -416,11 +429,13 @@ class TreeCtrl(ttk.Treeview):  # Remplace HyperTreeList et CustomTreeCtrl de wxP
         après une opération de glisser-déposer.
         """
         # Dans un vrai projet, vous mettriez à jour vos listes de données.
-        print("La structure de l'arborescence a été mise à jour.")
+        log.debug("La structure de l'arborescence a été mise à jour.")
         items = self.get_children()
         for item_id in items:
             parent_id = self.parent(item_id)
-            print(f"Élément : {self.item(item_id)['text']}, Parent : {self.item(parent_id)['text'] if parent_id else 'Racine'}")
+            log.debug(
+                f"Élément : {self.item(item_id)['text']}, Parent : {self.item(parent_id)['text'] if parent_id else 'Racine'}"
+            )
 
 
 # class TreeListCtrl(itemctrltk.CtrlWithItemsMixin, itemctrltk.CtrlWithColumnsMixin, itemctrltk.CtrlWithToolTipMixin, ttk.Treeview):
@@ -437,7 +452,7 @@ class TreeListCtrl(
     CtrlWithColumnsMixin,
     TreeCtrlDragAndDropMixin,
     # TreeCtrl,  # ttk.Treeview
-    ttk.Treeview
+    ttk.Treeview,
 ):
     """
     Implémentation d'un TreeListCtrl pour Tkinter, équivalent à la version wxPython.
@@ -447,15 +462,25 @@ class TreeListCtrl(
     Équivalent Tkinter de wx.lib.agw.hypertreelist.HyperTreeList
     Combine ttk.Treeview avec des mixins pour fonctionnalités avancées.
     """
+
     ct_type = 0
 
     # def __init__(self, parent: tk.Widget, columns: List, selectCommand: Callable, editCommand: Callable,
     #              dragAndDropCommand: Callable, itemPopupMenu: Any = None, columnPopupMenu: Any = None,
     #              *args, **kwargs):
-    def __init__(self, parent: tk.Widget, adapter: Any, columns: List[Column],
-                 selectCommand: Callable = None, editCommand: Callable = None,
-                 dragAndDropCommand: Callable = None, itemPopupMenu: tk.Menu = None,
-                 columnPopupMenu: tk.Menu = None, *args, **kwargs):
+    def __init__(
+        self,
+        parent: tk.Widget,
+        adapter: Any,
+        columns: List[Column],
+        selectCommand: Callable = None,
+        editCommand: Callable = None,
+        dragAndDropCommand: Callable = None,
+        itemPopupMenu: tk.Menu = None,
+        columnPopupMenu: tk.Menu = None,
+        *args,
+        **kwargs,
+    ):
         # def __init__(self, parent: tk.Widget, adapter: Any, columns: List,
         #              dragAndDropCommand: Callable, itemPopupMenu: Any = None,
         #              columnPopupMenu: Any = None, *args, **kwargs):
@@ -473,7 +498,9 @@ class TreeListCtrl(
             columnPopupMenu : Menu contextuel des en-têtes de colonne.
         """
         # Initialisation de la classe de base ttk.Treeview
-        log.debug(f"Initialisation de TreeListCtrl avec {len(columns)} colonnes.")
+        log.debug(
+            f"Initialisation de TreeListCtrl avec {len(columns)} colonnes."
+        )
         # Seuls les arguments reconnus par ttk.Treeview lui sont passés.
         # print("TreeListCtrl mro=", self.__mro__)
         # log.debug(f"TreeListCtrl : {len(columns)} colonnes sont arrivées : {columns}.")  # TypeError: object of type 'method' has no len()
@@ -488,17 +515,13 @@ class TreeListCtrl(
         # être passés à ttk.Treeview
 
         # L'argument qui cause votre crash actuel
-        self.resizeableColumn = kwargs.pop('resizeableColumn', None)
+        self.resizeableColumn = kwargs.pop("resizeableColumn", None)
 
         # L'argument qui causera le PROCHAIN crash (vu dans tasktk.py)
-        self.validateDragCallback = kwargs.pop('validateDrag', None)
+        self.validateDragCallback = kwargs.pop("validateDrag", None)
 
         # Nettoyage préventif d'autres arguments potentiels
-        kwargs.pop('settingsSection', None)
-
-        # Gestion spécifique des colonnes visibles pour l'init
-        # On conserve la liste complète des objets colonnes pour usage interne
-        self._columns = columns
+        kwargs.pop("settingsSection", None)
 
         # # Extraire les colonnes
         # # Extraction des noms et colonnes visibles
@@ -508,30 +531,28 @@ class TreeListCtrl(
         # On prépare les identifiants pour le Treeview
         # Note : On suppose que 'columns' contient des objets Column avec une méthode name()
         # Si c'est parfois des strings, il faudra adapter.
-        log.debug(f"TreeListCtrl: Tentative de récupération de toutes les colonnes column_ids avec columns.name().")
-        try:
-            column_ids = [c.name() for c in columns]
-            log.debug(f"TreeListCtrl: Réussi column_ids={column_ids}.")
-        except AttributeError:
-            # Fallback si ce sont déjà des strings (pour le débogage)
-            column_ids = [str(c) for c in columns]
-            log.debug(f"TreeListCtrl: Erreur column_ids={column_ids} avec str(columns).")
-        # # Récupérer _visible_columns de kwargs si présent, sinon initialiser avec une liste vide
-        # self._visible_columns = kwargs.pop('_visible_columns', [])
-        # displaycolumns = [c._name for c in columns if c.is_shown()]
-        # displaycolumns = [c.name for c in columns if c.is_shown()]
-        # Filtrer les colonnes visibles
-        # self.display_columns = [c for c in columns if c.is_shown()]
-        self.display_columns = [c for c in columns if c.is_shown()]
-        log.debug(f"TreeListCtrl : Les colonnes visibles sont self.display_columns={self.display_columns}.")
+        # #0 is the hierarchy column built into ttk.Treeview, not a data column.
+        column_ids = [c.name() for c in columns if c.name() != "#0"]
+        self.display_columns = [
+            c for c in columns if c.name() != "#0" and c.is_shown()
+        ]
+        log.debug(
+            f"TreeListCtrl : Les colonnes visibles sont self.display_columns={self.display_columns}."
+        )
         # display_columns = [c for c in columns if hasattr(c, 'is_shown') and c.is_shown()]
         # Ça te garantit que les identifiants utilisés par le Treeview
         # sont bien strictement ceux fournis par Column.name().
 
         # Extraire les identifiants de colonnes
-        # column_ids = [col.identifier() for col in self.display_columns]
-        display_column_ids = [c.name() for c in self.display_columns] if self.display_columns else '#all'
-        log.debug(f"TreeListCtrl : La liste des identifiants des colonnes visibles sont display_column_ids={display_column_ids}.")
+        # display_column_ids = (
+        #     [c.name() for c in self.display_columns]
+        #     if self.display_columns
+        #     else "#all"
+        # )
+        display_column_ids = [c.name() for c in self.display_columns]
+        log.debug(
+            f"TreeListCtrl : La liste des identifiants des colonnes visibles sont display_column_ids={display_column_ids}."
+        )
 
         # # # Appelez le constructeur de la classe parente
         # # Initialisation de ttk.Treeview en premier
@@ -550,8 +571,16 @@ class TreeListCtrl(
         # TreeCtrl.__init__(self, parent, columns=column_ids, show="tree headings", **kwargs)
         # --- 2. INITIALISATION DU WIDGET PARENT (CRITIQUE) ---
         # C'est ici que 'self' devient un widget Tkinter valide avec un '_w'
-        ttk.Treeview.__init__(self, parent, columns=column_ids, show="tree headings",
-                              displaycolumns=display_column_ids, *args, **kwargs)
+        ttk.Treeview.__init__(
+            self,
+            parent,
+            columns=column_ids,
+            show="tree headings",
+            displaycolumns=display_column_ids,
+            *args,
+            **kwargs,
+        )
+        self.column("#0", width=24, minwidth=24, stretch=False)
 
         # --- 3. ALIAS DE COMPATIBILITÉ ---
         # Astuce : Comme le reste de votre code utilise "self.tree", on fait pointer
@@ -619,10 +648,20 @@ class TreeListCtrl(
         # --- 5. INITIALISATION DES MIXINS ---
         # Maintenant que 'self' est un widget valide, les mixins peuvent faire des bind()
         # itemctrltk.CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
-        CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu,
-                                    selectCommand=selectCommand, editCommand=editCommand)
+        CtrlWithItemsMixin.__init__(
+            self,
+            parent,
+            itemPopupMenu=itemPopupMenu,
+            selectCommand=selectCommand,
+            editCommand=editCommand,
+        )
         # CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
-        CtrlWithColumnsMixin.__init__(self, parent, columns=columns, columnPopupMenu=columnPopupMenu)
+        CtrlWithColumnsMixin.__init__(
+            self, parent, columns=columns, columnPopupMenu=columnPopupMenu
+        )
+        # Gestion spécifique des colonnes visibles pour l'init
+        # On conserve la liste complète des objets colonnes pour usage interne
+        self._columns = columns
         # self._init_columns_mixin(columns, columnPopupMenu)
         # itemctrltk.CtrlWithColumnsMixin.__init__(self, parent, columns=columns, columnPopupMenu=columnPopupMenu)
         # # TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
@@ -630,7 +669,9 @@ class TreeListCtrl(
         # TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
         # AttributeError: 'TreeListCtrl' object has no attribute 'tk'
         # # Correction : appeler l'initialisation du mixin après l'initialisation de ttk.Treeview
-        TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
+        TreeCtrlDragAndDropMixin.__init__(
+            self, parent, dragAndDropCommand=dragAndDropCommand
+        )
         # itemctrltk.CtrlWithToolTipMixin.__init__(self, parent)
 
         # # Initialisation de ttk.Treeview  # Non, pas après les mixins
@@ -729,7 +770,9 @@ class TreeListCtrl(
         # WARNING:root:Image non trouvée dans le catalogue pour l'ID: Check mark et la taille: (16, 16) (Clé de recherche: Check mark16x16)
         # self.checked_image = artprovidertk.IconProvider.getIcon("Check mark")
         # TypeError: IconProvider.getIcon() missing 1 required positional argument: 'iconTitle'
-        self.checked_image = artprovidertk.getIcon("checkmark_green_icon")  # TODO: artprovidertk à revoir si nécessaire !
+        self.checked_image = artprovidertk.getIcon(
+            "checkmark_green_icon"
+        )  # TODO: artprovidertk à revoir si nécessaire !
         # self.unchecked_image = artprovidertk.getIcon("Box")
         # WARNING:root:Image non trouvée dans le catalogue pour l'ID: Box et la taille: (16, 16) (Clé de recherche: Box16x16)
         # self.unchecked_image = artprovidertk.IconProvider.getIcon("Box")
@@ -739,13 +782,13 @@ class TreeListCtrl(
         # --- CORRECTION 2 : Appel de l'initialisation retardée des info-bulles ---
         # Post-initialisation des tooltips si disponible
         # Maintenant, self est un widget Tkinter avec l'attribut self._w
-        if hasattr(self, '_post_init_tooltip'):
+        if hasattr(self, "_post_init_tooltip"):
             self._post_init_tooltip()
 
         # Application des colonnes en attente
         # applique immédiatement les colonnes qui étaient en attente (si nécessaire)
         # self._apply_pending_columns()  # applique la configuration des colonnes
-        if hasattr(self, '_apply_pending_columns'):
+        if hasattr(self, "_apply_pending_columns"):
             self._apply_pending_columns()
 
         # # Liaison/Association des événements Tkinter
@@ -768,11 +811,14 @@ class TreeListCtrl(
 
     def insert(self, parent, index, iid=None, **kwargs):
         """Délègue l'appel à ttk.Treeview.insert."""
-        return self.insert(parent, index, iid=iid, **kwargs)
+        # return self.insert(parent, index, iid=iid, **kwargs)  # boucle infini !
+        # TreeListCtrl hérite directement de ttk.treeview
+        return super().insert(parent, index, iid=iid, **kwargs)
 
     def delete(self, *items):
         """Délègue l'appel à ttk.Treeview.delete."""
-        return self.delete(*items)
+        # return self.delete(*items)
+        return super().delete(*items)
 
     def pack(self, **kwargs):
         """Délègue l'appel à ttk.Treeview.pack."""
@@ -782,7 +828,9 @@ class TreeListCtrl(
     def grid(self, **kwargs):
         """Délègue l'appel à ttk.Treeview.grid."""
         # return self.grid(**kwargs)  # RecursionError: maximum recursion depth exceeded
-        return super().grid(**kwargs)  # _tkinter.TclError: cannot use geometry manager grid inside .!mainwindow.!taskviewer which already has slaves managed by pack
+        return super().grid(
+            **kwargs
+        )  # _tkinter.TclError: cannot use geometry manager grid inside .!mainwindow.!taskviewer which already has slaves managed by pack
 
     def bind(self, sequence=None, func=None, add=None):
         """Délègue l'appel à ttk.Treeview.bind."""
@@ -808,33 +856,55 @@ class TreeListCtrl(
         """Configure les en-têtes et propriétés des colonnes."""
         # for col in self._columns:
         for col in self.display_columns:
-            log.debug(f"TreeListCtrl._configure_columns : Configuration de la colonne '{col.name()}' avec header '{col.header()}' et width {col.width}.")
+            log.debug(
+                f"TreeListCtrl._configure_columns : Configuration de la colonne '{col.name()}' avec header '{col.header()}' et width {col.width}."
+            )
             # col_id = col.identifier()
             col_name = col.name()
             self.heading(
                 col_name,
                 text=col.header(),
-                anchor='w',
-                command=lambda c=col_name: self.sort_by(c)
+                anchor="w",
+                command=lambda c=col_name: self.sort_by(c),
             )
-            log.debug(f"TreeListCtrl._configure_column : Heading configuré pour la colonne '{col_name}': {self.heading(col_name)}")
-            self.tree.column(col_name, width=col.width, minwidth=50, stretch=True)
+            log.debug(
+                f"TreeListCtrl._configure_column : Heading configuré pour la colonne '{col_name}': {self.heading(col_name)}"
+            )
+            self.tree.column(  # super()?
+                col_name, width=col.width, minwidth=50, stretch=True
+            )
 
     def debug_columns(self):
         """Affiche dans les logs la configuration des colonnes du TreeListCtrl."""
         # Parcourt la liste d'objets Column associée
-        for col in self._columns:  # Liste passée au constructeur du TreeListCtrl
-            print(f"[DEBUG] Column object={col!r} name()={col.name()} header={col.header()}")  # Affiche l'objet, son nom interne, et son en-tête textuel
+        for (
+            col
+        ) in self._columns:  # Liste passée au constructeur du TreeListCtrl
+            log.debug(
+                f"[DEBUG] Column object={col!r} name()={col.name()} header={col.header()}"
+            )  # Affiche l'objet, son nom interne, et son en-tête textuel
 
         # Affiche les colonnes vues par ttk.Treeview
-        print(f"[DEBUG] Treeview columns = {self['columns']}")  # Affiche la liste des identifiants de colonnes définis dans le Treeview
-        print(f"[DEBUG] Treeview displaycolumns = {self['displaycolumns']}")  # Affiche la liste des colonnes actuellement visibles
+        log.debug(
+            f"[DEBUG] Treeview columns = {self['columns']}"
+        )  # Affiche la liste des identifiants de colonnes définis dans le Treeview
+        log.debug(
+            f"[DEBUG] Treeview displaycolumns = {self['displaycolumns']}"
+        )  # Affiche la liste des colonnes actuellement visibles
 
         # Vérifie que chaque identifiant de colonne correspond à un Column
-        valid_names = {col.name() for col in self._columns}  # Construit un set des noms internes de toutes les colonnes
-        for col_id in self['columns']:  # Parcourt tous les identifiants déclarés dans le Treeview
-            if col_id not in valid_names:  # Vérifie si l'identifiant n'existe pas dans les colonnes déclarées
-                print(f"[ERREUR] Colonne Treeview '{col_id}' ne correspond à aucun Column")  # Message d'erreur pour nom incohérent
+        valid_names = {
+            col.name() for col in self._columns
+        }  # Construit un set des noms internes de toutes les colonnes
+        for col_id in self[
+            "columns"
+        ]:  # Parcourt tous les identifiants déclarés dans le Treeview
+            if (
+                col_id not in valid_names
+            ):  # Vérifie si l'identifiant n'existe pas dans les colonnes déclarées
+                log.debug(
+                    f"[ERREUR] Colonne Treeview '{col_id}' ne correspond à aucun Column"
+                )  # Message d'erreur pour nom incohérent
 
     def _bind_events(self):
         """Lie les gestionnaires d'événements."""
@@ -863,9 +933,9 @@ class TreeListCtrl(
 
         # Redimensionnement
         # self.bind('<Configure>', self.on_resize)
-        self.bind('<Configure>', self._on_autowidth_resize)
+        self.bind("<Configure>", self._on_autowidth_resize)
 
-        # ========================================================================
+    # ========================================================================
     # MÉTHODES D'ACCÈS À L'ADAPTER
     # ========================================================================
 
@@ -889,11 +959,19 @@ class TreeListCtrl(
 
     def _init_columns_mixin(self, columns, columnPopupMenu):
         """Initialise les fonctionnalités du mixin CtrlWithColumnsMixin"""
-        log.debug(f"TreeListCtrl._init_columns_mixin : initialisation avec columns={columns} et columnPopupMenu={columnPopupMenu}.")
-        self.__columnPopupMenu = columnPopupMenu  # Stocke le menu contextuel des colonnes
+        log.debug(
+            f"TreeListCtrl._init_columns_mixin : initialisation avec columns={columns} et columnPopupMenu={columnPopupMenu}."
+        )
+        self.__columnPopupMenu = (
+            columnPopupMenu  # Stocke le menu contextuel des colonnes
+        )
         self._all_columns = columns  # Mémorise toutes les colonnes disponibles
-        self._visible_columns = [col.name() for col in columns if col.is_shown()]  # Liste des noms de colonnes visibles
-        log.debug(f"TreeListCtrl._init_columns_mixin : Les {len(self._visible_columns)} colonnes visibles sont {self._visible_columns}.")
+        self._visible_columns = [
+            col.name() for col in columns if col.is_shown()
+        ]  # Liste des noms de colonnes visibles
+        log.debug(
+            f"TreeListCtrl._init_columns_mixin : Les {len(self._visible_columns)} colonnes visibles sont {self._visible_columns}."
+        )
         # self.sort_column = None  # Aucune colonne triée au départ
         # self.sort_reverse = False  # Tri ascendant par défaut
         #
@@ -983,7 +1061,9 @@ class TreeListCtrl(
     def sort_by(self, col_name: str):
         """Trie les éléments du Treeview par colonne."""
         # data = [(self.set(item, col), item) for item in self.get_children('')]
-        data = [(self.set(item, col_name), item) for item in self.get_children('')]
+        data = [
+            (self.set(item, col_name), item) for item in self.get_children("")
+        ]
 
         # if col == self.sort_column:
         #     self.sort_reverse = not self.sort_reverse
@@ -996,7 +1076,7 @@ class TreeListCtrl(
         data.sort()
 
         for index, (val, item) in enumerate(data):
-            self.move(item, '', index)
+            self.move(item, "", index)
 
     # Tu as deux endroits qui gèrent les colonnes :
     #
@@ -1038,8 +1118,8 @@ class TreeListCtrl(
         #     print(f"Tri actuel : colonne '{self.sort_column}' ({sort_order})")
         # else:
         #     print("Aucun tri actuel.")
-        if hasattr(self, 'sort_column') and self.sort_column:
-            order = "↑" if not getattr(self, 'sort_reverse', False) else "↓"
+        if hasattr(self, "sort_column") and self.sort_column:
+            order = "↑" if not getattr(self, "sort_reverse", False) else "↓"
             log.debug(f"Tri: {self.sort_column} {order}")
 
         # # Vérifier que la colonne triée est bien visible :
@@ -1052,21 +1132,23 @@ class TreeListCtrl(
     # def showColumn(self, column_name, show=True):
     def showColumn(self, column_name: str, show: bool = True):
         """Affiche ou cache une colonne."""
-        visible = list(self['displaycolumns'])
+        visible = list(self["displaycolumns"])
 
         # if show and column_name not in self._visible_columns:
         if show and column_name not in visible:
             # self._visible_columns.append(column_name)
             # self._visible_columns.sort(key=lambda x: [c.name() for c in self._all_columns].index(x))
             visible.append(column_name)
-            visible.sort(key=lambda x: [c.name() for c in self._columns].index(x))
+            visible.sort(
+                key=lambda x: [c.name() for c in self._columns].index(x)
+            )
         # elif not show and column_name in self._visible_columns:
         elif not show and column_name in visible:
             # self._visible_columns.remove(column_name)
             visible.remove(column_name)
 
         # self['displaycolumns'] = self._visible_columns
-        self['displaycolumns'] = visible
+        self["displaycolumns"] = visible
 
     # # === Méthodes du mixin TreeCtrlDragAndDropMixin ===
     # def on_start_drag(self, event):
@@ -1161,11 +1243,15 @@ class TreeListCtrl(
         # La colonne #0 (l'arborescence) est spéciale et n'est pas dans la liste des colonnes
         # Identifier la colonne cliquée
         col_id = self.identify_column(event.x)
-        if col_id == '#0':  # Le clic est sur la première colonne (l'arborescence)
+        if (
+            col_id == "#0"
+        ):  # Le clic est sur la première colonne (l'arborescence)
             # box_x = x + self.column("#0", width=None) - self.column("#0", stretch=None) # Calculer la position x de la case à cocher
             # On vérifie si le clic est sur la zone de la case à cocher
-            tree_width = self.column('#0', width=None)
-            image_width = 16  # Largeur approximative de l'image de la case à cocher
+            tree_width = self.column("#0", width=None)
+            image_width = (
+                16  # Largeur approximative de l'image de la case à cocher
+            )
             # if event.x > box_x: # Le clic est sur la case à cocher (approximativement)
             #     self.CheckItem(item_id, not self.IsItemChecked(item_id))
             # else:
@@ -1196,7 +1282,7 @@ class TreeListCtrl(
             x, y, w, h = bbox
             col_id = self.identify_column(event.x)
 
-            if col_id == '#0':  # Colonne de l'arborescence
+            if col_id == "#0":  # Colonne de l'arborescence
                 image_width = 16
                 if 0 <= event.x - x <= image_width:
                     # Clic sur la case à cocher
@@ -1210,7 +1296,7 @@ class TreeListCtrl(
     # def __on_double_click(self, event):
     # def on_double_click(self, event):
     def _on_double_click(self, event):
-        """ Gère l'événement de double-clic pour l'édition de label. """
+        """Gère l'événement de double-clic pour l'édition de label."""
         item_id = self.identify_row(event.y)
         # if item_id:
         #     self.editCommand(item_id)
@@ -1222,7 +1308,7 @@ class TreeListCtrl(
     # def on_right_click(self, event):
     def _on_right_click(self, event):
         """Gère le clic droit pour le menu contextuel.
-        Affiche le menu contextuel de l'élément. """
+        Affiche le menu contextuel de l'élément."""
         item_id = self.identify_row(event.y)
         if item_id:
             self.selection_set(item_id)
@@ -1253,7 +1339,7 @@ class TreeListCtrl(
     # ========================================================================
 
     def CheckItem(self, item: str, check: bool = True):
-        """ Coche ou décoche l'élément donné.
+        """Coche ou décoche l'élément donné.
         Gère la logique des cases exclusives (radio) et non-exclusives (checkbox).
         """
         if self.__checking:
@@ -1264,17 +1350,17 @@ class TreeListCtrl(
         try:
             # Mise à jour des tags de l'élément pour indiquer l'état de la case à cocher
             # current_state = self.item(item, "tags")
-            tags_list = list(self.item(item, 'tags'))
+            tags_list = list(self.item(item, "tags"))
             # if check and 'checked' not in current_state:
             #     self.item(item, tags=('checked',))
             # elif not check and 'checked' in current_state:
             #     self.item(item, tags=())
             if check:
-                if 'checked' not in tags_list:
-                    tags_list.append('checked')
+                if "checked" not in tags_list:
+                    tags_list.append("checked")
             else:
-                if 'checked' in tags_list:
-                    tags_list.remove('checked')
+                if "checked" in tags_list:
+                    tags_list.remove("checked")
             self.item(item, tags=tags_list)
 
             # Logique de propagation
@@ -1311,8 +1397,8 @@ class TreeListCtrl(
         # self.checkCommand(event, final=True)
 
     def IsItemChecked(self, item: str) -> bool:
-        """ Vérifie si un élément est coché. """
-        return 'checked' in self.item(item, "tags")
+        """Vérifie si un élément est coché."""
+        return "checked" in self.item(item, "tags")
 
     def GetItemType(self, item):
         """
@@ -1323,11 +1409,11 @@ class TreeListCtrl(
         """
         # Dans ce cas, nous stockons le type dans les tags pour la démonstration
         # À adapter à votre modèle de données réel
-        tags = self.item(item, 'tags')
+        tags = self.item(item, "tags")
         # TODO : utiliser case !?
-        if 'type_checkbox' in tags:
+        if "type_checkbox" in tags:
             return 1
-        if 'type_exclusive_checkbox' in tags:
+        if "type_exclusive_checkbox" in tags:
             return 2
         return 0
 
@@ -1347,7 +1433,17 @@ class TreeListCtrl(
     # pour récupérer les données associées à l'item,
     # qui est l'équivalent de self.GetItemPyData(item) dans wxPython.
     def curselection(self) -> List[Any]:
-        """Retourne la liste des objets de domaine associés aux éléments sélectionnés."""
+        """Retourne la liste des objets de domaine associés aux éléments sélectionnés.
+
+        Treeview.selection()
+            → identifiants des lignes Treeview
+
+        _objectBelongingTo(item)
+            → objet métier associé à la ligne
+
+        TreeListCtrl.curselection()
+            → objets Task sélectionnés
+        """
         # return [self.GetItemPyData(item) for item in self.GetSelections()]
         # wx.lib.agw.ultimatelistctrl.UltimateListCtrl.GetItemPyData
         # return [self.GetItemPyData(item) for item in self.GetSelections()]
@@ -1355,11 +1451,11 @@ class TreeListCtrl(
         # return [self._item_to_object[item] for item in self.selection()]
 
     def GetSelections(self) -> tuple:
-        """ Renvoie une liste des éléments sélectionnés. """
+        """Renvoie une liste des éléments sélectionnés."""
         return self.selection()
 
     def clear_selection(self):
-        """ Désélectionne tous les éléments. """
+        """Désélectionne tous les éléments."""
         # self.selection_remove(self.selection())
         for item in self.selection():
             self.selection_remove(item)
@@ -1378,7 +1474,7 @@ class TreeListCtrl(
             self.selection_add(item)
 
     def select_all(self):
-        """ Sélectionne tous les éléments de l'arborescence. """
+        """Sélectionne tous les éléments de l'arborescence."""
         # all_items = self.GetChildren(recursively=True)
         # self.selection_set(all_items)
         for item in self.get_children():
@@ -1424,7 +1520,9 @@ class TreeListCtrl(
         # ]
         for i in range(count):
             item = self.__adapter.getItemWithIndex(i)
-            values = [self.getItemText(item, j) for j in range(len(self['columns']))]
+            values = [
+                self.getItemText(item, j) for j in range(len(self["columns"]))
+            ]
             self.insert("", tk.END, values=values, tags=item)
         #
         # # Reconstruire l'arborescence
@@ -1437,13 +1535,19 @@ class TreeListCtrl(
         # for item in self.__selection:
         #     self.selection_add(item)
 
-    def _addObjectRecursively(self, parent_item: str, parent_object: Any = None):
+    def _addObjectRecursively(
+        self, parent_item: str, parent_object: Any = None
+    ):
         """Ajoute récursivement des objets à l'arborescence du Treeview."""
         # Devrait faire référence à la méthode viewer.task.RootNode.get_domain_children !
         # au lieu de tkinter.Misc.get_domain_children !
-        print("TreeListCtrl._addObjectRecursively : self.__adapter est de type ", type(self.__adapter))
+        log.debug(
+            f"TreeListCtrl._addObjectRecursively : self.__adapter est de type {type(self.__adapter)}."
+        )
         # for child_object in self.__adapter.get_domain_children(parent_object):  # 'dict' object is not callable !
-        for child_object in self.__adapter.children(parent_object):  # 'dict' object is not callable !
+        for child_object in self.__adapter.children(
+            parent_object
+        ):  # 'dict' object is not callable !
             # LIGNE CORRIGÉE : Utiliser la méthode renommée 'get_domain_children' pour récupérer les objets de domaine.
             # for child_object in self.__adapter.get_domain_children(parent_object):
             # child_item = self.AppendItem(parent_item, '',
@@ -1460,12 +1564,17 @@ class TreeListCtrl(
             ]
 
             # Insertion de l'élément
+            main_text = self.__adapter.getItemText(child_object, 0)
             child_item = self.insert(
                 parent_item,
                 tk.END,
-                text="",
+                # # text="",  # Problème : le texte de la première colonne est géré par les valeurs, pas par 'text'. Tu insères chaque ligne avec un texte vide.
+                # # # Cela casse l'affichage de la première colonne, qui est censée afficher le texte de l'item. En Tkinter, le texte de la première colonne doit être passé via 'text', et les autres colonnes via 'values'.
+                # text=column_values[0] if column_values else "",
+                text=main_text,
                 values=column_values,
-                tags=self.getItemCTType(child_object)
+                # values=column_values[1:],  # si colonne 0 est utilisée pour le tree
+                tags=self.getItemCTType(child_object),
             )
 
             # Rafraîchissement minimal
@@ -1486,31 +1595,35 @@ class TreeListCtrl(
                 # si l'élément a des enfants dans le modèle de données.
                 # L'appel à children(child_object) dans le modèle de données détermine
                 # si un "+" doit être affiché.
-                if self.__adapter.children(child_object):  # Utiliser le nouveau nom ici aussi
-                    self.insert(child_item, tk.END, text='')
+                if self.__adapter.children(
+                    child_object
+                ):  # Utiliser le nouveau nom ici aussi
+                    self.insert(child_item, tk.END, text="")
 
     def _refreshObjectMinimally(self, item: str, domain_object: Any):
         """Rafraîchit les aspects minimaux d'un objet (colonnes, couleurs, police, sélection)."""
         self.__refresh_aspects(
-            ("Columns", "Colors", "Font", "Selection"),
-            item, domain_object
+            ("Columns", "Colors", "Font", "Selection"), item, domain_object
         )
 
-    def _refreshObjectCompletely(self, item: str, domain_object: Any = None, *args):
+    def _refreshObjectCompletely(
+        self, item: str, domain_object: Any = None, *args
+    ):
         """Rafraîchit complètement un objet."""
         self.__refresh_aspects(
             ("ItemType", "Columns", "Font", "Colors", "Selection"),
             item,
             domain_object,
             check=True,
-            *args
+            *args,
         )
         # TODO : Rafraîchir la vue
         # if isinstance(self.GetMainWindow(), customtree.CustomTreeCtrl):  # Semble plutôt être une instance de _CtrlWithDropTargetMixin
         #     self.GetMainWindow().RefreshLine(item)  # Seule customtreectrl a une méthode RefreshLine.
 
-    def __refresh_aspects(self, aspects: tuple, item: str,
-                          domain_object: Any, *args, **kwargs):
+    def __refresh_aspects(
+        self, aspects: tuple, item: str, domain_object: Any, *args, **kwargs
+    ):
         """Rafraîchit des aspects spécifiques d'un élément."""
         for aspect in aspects:
             method_name = f"_refresh{aspect}"
@@ -1526,30 +1639,52 @@ class TreeListCtrl(
         for item in items:
             if self.exists(item):
                 self._refreshObjectMinimally(item, None)
+
+    def scheduleRefresh(self, count=0):
+        """Programme un rafraîchissement différé pour éviter les appels multiples."""
+        if self.__refresh_scheduled:
+            return
+        self.__refresh_scheduled = True
+
+        def doRefresh():
+            # Protection contre la destruction de l'objet
+            if not self:
+                return
+            self.__refresh_scheduled = False
+            log.debug(
+                f"TreeListCtrl.__doRefresh : exécution du rafraîchissement planifié."
+            )
+            self.RefreshAllItems(count)
+
+        # Utilisation de wx.CallAfter pour wxPython
+        self.after(1, doRefresh)
+
     # ========================================================================
     # UTILITAIRES
     # ========================================================================
 
     def isAnyItemExpandable(self) -> bool:
-        """ Vérifie si un élément est déployable. """
+        """Vérifie si un élément est déployable."""
         for item in self.get_children():
             # if self.item(item, 'open') == 0:
-            if not self.item(item, 'open'):
+            if not self.item(item, "open"):
                 return True
         return False
 
     def isAnyItemCollapsable(self):
-        """ Vérifie si un élément est réductible. """
+        """Vérifie si un élément est réductible."""
         for item in self.get_children():
             if self.get_children(item):
                 return True
         return False
 
     def GetItemCount(self) -> int:
-        """ Renvoie le nombre total d'éléments. """
+        """Renvoie le nombre total d'éléments."""
         return len(self.GetChildren(recursively=True))
 
-    def GetItemChildren(self, item: str = None, recursively: bool = False) -> List[str]:
+    def GetItemChildren(
+        self, item: str = None, recursively: bool = False
+    ) -> List[str]:
         """
         Renvoie la liste des enfants d'un élément.
         Surcharge la méthode du mixin pour la compatibilité.
@@ -1565,23 +1700,28 @@ class TreeListCtrl(
             queue.extend(self.get_children(child))
         return children
 
-    def GetChildren(self, item: str = None, recursively: bool = False) -> List[str]:
-        """ Alias pour GetItemChildren pour la compatibilité avec l'original. """
+    def GetChildren(
+        self, item: str = None, recursively: bool = False
+    ) -> List[str]:
+        """Alias pour GetItemChildren pour la compatibilité avec l'original."""
         return self.GetItemChildren(item, recursively)
 
     def GetRootItem(self) -> Optional[str]:
-        """ Renvoie le premier élément de niveau racine. """
+        """Renvoie le premier élément de niveau racine."""
         # return self.get_children()[0] if self.get_children() else None
         children = self.get_children()
         return children[0] if children else None
 
     def IsLabelBeingEdited(self) -> bool:
-        """ Indique si le label est en cours d'édition. """
+        """Indique si le label est en cours d'édition."""
         return self._edit_widget is not None
 
     def StopEditing(self):
-        """ Arrête l'édition du label. """
+        """Arrête l'édition du label."""
         if self._edit_widget:
+            log.debug(
+                f"TreeListCtrl.StopEditing : Arrêt et destruction du widget {self._edit_widget}."
+            )
             self._edit_widget.destroy()
             self._edit_widget = None
 
@@ -1589,7 +1729,9 @@ class TreeListCtrl(
     # GLISSER-DÉPOSER
     # ========================================================================
 
-    def OnDrop(self, drop_item: str, dragged_items: List[str], part: str, column: int):
+    def OnDrop(
+        self, drop_item: str, dragged_items: List[str], part: str, column: int
+    ):
         """
         Cette méthode doit être surchargée dans la classe dérivée.
         Gère le dépôt (drop) d'éléments dans l'arborescence.
@@ -1599,7 +1741,9 @@ class TreeListCtrl(
             dragged_items: Items glissés
             part: Position ("above", "below", "on")
         """
-        log.debug(f"OnDrop : Éléments glissés: {len(dragged_items)} items sur {drop_item} à la position ({part}).")
+        log.debug(
+            f"OnDrop : Éléments glissés: {len(dragged_items)} items sur {drop_item} à la position ({part})."
+        )
         if not dragged_items:
             return  # Rien à faire
 
@@ -1645,18 +1789,26 @@ class TreeListCtrl(
         Reconstruit la structure de données sous-jacente
         (après une opération de glisser-déposer).
         """
-        log.debug("Reconstruction du modèle de données. La structure de l'arborescence a été mise à jour.")
+        log.debug(
+            "Reconstruction du modèle de données. La structure de l'arborescence a été mise à jour."
+        )
         items = self.get_children("")
         for item_id in items:
             parent_id = self.parent(item_id)
-            item_text = self.item(item_id, 'text')
-            parent_text = self.item(parent_id, 'text') if parent_id else 'Racine'
-            log.debug(f"TreeListCtrl: Élément/Item : {item_text}, Parent : {parent_text}")
+            item_text = self.item(item_id, "text")
+            parent_text = (
+                self.item(parent_id, "text") if parent_id else "Racine"
+            )
+            log.debug(
+                f"TreeListCtrl: Élément/Item : {item_text}, Parent : {parent_text}"
+            )
 
             # Traiter récursivement les enfants
             self._print_children(item_id, 1)
 
-    def move_items(self, dragged_objects: List[Any], drop_object: Any, part: int):
+    def move_items(
+        self, dragged_objects: List[Any], drop_object: Any, part: int
+    ):
         """
         Déplace les éléments dans le modèle de données.
         Cette méthode doit être implémentée en fonction de la structure de données
@@ -1671,16 +1823,20 @@ class TreeListCtrl(
         # Exemple:
         # for obj in dragged_objects:
         #     obj.parent = drop_object
-        raise NotImplementedError("Implémenter la logique de déplacement des éléments dans le modèle de données.")
+        raise NotImplementedError(
+            "Implémenter la logique de déplacement des éléments dans le modèle de données."
+        )
 
     def _print_children(self, parent_item: str, level: int):
         """Méthode helper pour imprimer la hiérarchie des enfants.
 
         Affiche récursivement la hiérarchie des enfants."""
         for child in self.get_children(parent_item):
-            child_text = self.item(child, 'text')
+            child_text = self.item(child, "text")
             indent = "  " * level
-            log.debug(f"TreeListCtrl._print_children : {indent}-> {child_text}")
+            log.debug(
+                f"TreeListCtrl._print_children : {indent}-> {child_text}"
+            )
             self._print_children(child, level + 1)
 
     def hasColumnImages(self, column):
@@ -1721,18 +1877,25 @@ class CheckTreeCtrl(TreeListCtrl):
     TreeListCtrl avec support des cases à cocher et radio buttons.
     Équivalent de wx CustomTreeCtrl avec CT_AUTO_CHECK_CHILD.
     """
+
     # # def __init__(self, parent: tk.Widget, columns: List, selectCommand: Callable, checkCommand: Callable,
     # #              editCommand: Callable, dragAndDropCommand: Callable, itemPopupMenu: Any = None,
     # #              *args, **kwargs):
     # def __init__(self, parent: tk.Widget, adapter: Any, columns: List, selectCommand: Callable, checkCommand: Callable,
     #              editCommand: Callable, dragAndDropCommand: Callable, itemPopupMenu: Any = None,
     #              *args, **kwargs):
-    def __init__(self, parent: tk.Widget, adapter: Any, columns: List[Column],
-                 checkCommand: Callable = None,
-                 dragAndDropCommand: Callable = None,
-                 # itemPopupMenu: Any = None,
-                 itemPopupMenu: tk.Menu = None,
-                 *args, **kwargs):
+    def __init__(
+        self,
+        parent: tk.Widget,
+        adapter: Any,
+        columns: List[Column],
+        checkCommand: Callable = None,
+        dragAndDropCommand: Callable = None,
+        # itemPopupMenu: Any = None,
+        itemPopupMenu: tk.Menu = None,
+        *args,
+        **kwargs,
+    ):
         """
         Initialise CheckTreeCtrl.
 
@@ -1776,10 +1939,13 @@ class CheckTreeCtrl(TreeListCtrl):
         #                  selectCommand, editCommand, dragAndDropCommand,
         #                  itemPopupMenu, *args, **kwargs)
         super().__init__(
-            parent, adapter, columns,  # <-- CORRECTION 2 (passer l'adapter)
+            parent,
+            adapter,
+            columns,  # <-- CORRECTION 2 (passer l'adapter)
             dragAndDropCommand=dragAndDropCommand,
             itemPopupMenu=itemPopupMenu,
-            *args, **kwargs
+            *args,
+            **kwargs,
         )
 
         # Le binding de <Button-1> de la classe parente est onItemLeftClick
@@ -1807,7 +1973,7 @@ class CheckTreeCtrl(TreeListCtrl):
         # immédiatement si la hiérarchie d'héritage est complexe.
         # On définit une fonction d'initialisation des événements
         def rebind_events():
-            if hasattr(self, '_w'):
+            if hasattr(self, "_w"):
                 self.unbind("<Button-1>")
                 self.bind("<Button-1>", self.onMouseLeftDown)
 
@@ -1818,11 +1984,15 @@ class CheckTreeCtrl(TreeListCtrl):
         # l'objet Python existe, mais il n'est connecté à aucune instance réelle de Tkinter.
 
     def getItemCTType(self, domain_object: Any) -> int:
-        """ Utilise la logique originale pour déterminer le type de case à cocher.
+        """Utilise la logique originale pour déterminer le type de case à cocher.
 
         Détermine le type de case à cocher pour un objet."""
         if self.getIsItemCheckable(domain_object):
-            return 2 if self.getItemParentHasExclusiveChildren(domain_object) else 1
+            return (
+                2
+                if self.getItemParentHasExclusiveChildren(domain_object)
+                else 1
+            )
         # else:
         return 0
 
@@ -1860,7 +2030,11 @@ class CheckTreeCtrl(TreeListCtrl):
 
                     # 3. Coche le parent non-radio si c'est applicable
                     # parent = self.parent(item)  # Doublon avec 1.
-                    if parent and self.GetItemType(parent) > 0 and self.GetItemType(parent) != 2:
+                    if (
+                        parent
+                        and self.GetItemType(parent) > 0
+                        and self.GetItemType(parent) != 2
+                    ):
                         super().CheckItem(parent, True)
 
                 else:
@@ -1877,10 +2051,14 @@ class CheckTreeCtrl(TreeListCtrl):
                 if item_type == 1 and not checked:
                     # Si un parent non-exclusif est décoché, ses enfants radio doivent être décochés
                     for child in self.get_children(item):
-                        if self.GetItemType(child) == 2 and self.IsItemChecked(child):
+                        if self.GetItemType(child) == 2 and self.IsItemChecked(
+                            child
+                        ):
                             # Décocher l'enfant radio et tous ses descendants
                             self.CheckItem(child, False)
-                            for grandchild in self.GetItemChildren(child, recursively=True):
+                            for grandchild in self.GetItemChildren(
+                                child, recursively=True
+                            ):
                                 super().CheckItem(grandchild, False)
         finally:
             self.__checking = False
@@ -1900,7 +2078,9 @@ class CheckTreeCtrl(TreeListCtrl):
         item_id = self.identify_row(event.y)
         if not item_id:
             # return self.onItemLeftClick(event)
-            return self.on_left_click(event)  # TODO : vérifier qu'il s'agit de la bonne méthode !
+            return self.on_left_click(
+                event
+            )  # TODO : vérifier qu'il s'agit de la bonne méthode !
 
         # 1. Vérification si le clic est sur l'icône de vérification (case)
         # x_start, y_start, w, h = self.bbox(item_id)
@@ -1910,17 +2090,17 @@ class CheckTreeCtrl(TreeListCtrl):
         if bbox:
             x_start, y_start, w, h = bbox
             image_width = 16
-            is_on_check_icon = (
-                self.GetItemType(item_id) > 0 and
-                (0 <= event.x - x_start <= image_width)
+            is_on_check_icon = self.GetItemType(item_id) > 0 and (
+                0 <= event.x - x_start <= image_width
             )
 
             # Décochage spécial pour radio buttons
             if (
-                    item_id
-                    and self.GetItemType(item_id) == 2       # C'est un bouton radio (exclusive)
-                    and is_on_check_icon                     # Le clic est sur l'icône
-                    and self.IsItemChecked(item_id)          # Il est déjà coché
+                item_id
+                and self.GetItemType(item_id)
+                == 2  # C'est un bouton radio (exclusive)
+                and is_on_check_icon  # Le clic est sur l'icône
+                and self.IsItemChecked(item_id)  # Il est déjà coché
             ):
                 # Clic sur un radio button déjà coché: on le force à se décocher
                 self.__uncheck_item_recursively(item_id)
@@ -1931,7 +2111,7 @@ class CheckTreeCtrl(TreeListCtrl):
         return self._on_left_click(event)
 
     def __uncheck_item_recursively(self, item_id: str):
-        """ Décoche récursivement un élément et ses enfants (pour le radio-décochage forcé). """
+        """Décoche récursivement un élément et ses enfants (pour le radio-décochage forcé)."""
         if self.GetItemType(item_id) > 0:
             # On appelle CheckItem qui gère la commande finale
             self.CheckItem(item_id, checked=False)
@@ -1940,17 +2120,19 @@ class CheckTreeCtrl(TreeListCtrl):
         for child_id in self.get_children(item_id):
             self.__uncheck_item_recursively(child_id)
 
-    def _refreshObjectCompletely(self, item: str, domain_object: Any = None, *args):
+    def _refreshObjectCompletely(
+        self, item: str, domain_object: Any = None, *args
+    ):
         """Rafraîchit complètement un objet incluant l'état de case."""
         # La méthode n'est pas nativement dans TreeListCtrl, mais dans ses mixins
-        if hasattr(super(), '_refreshObjectCompletely'):
+        if hasattr(super(), "_refreshObjectCompletely"):
             super()._refreshObjectCompletely(item, domain_object, *args)
 
         self._refreshCheckState(item, domain_object)
 
     def _refreshObjectMinimally(self, item: str, domain_object: Any):
         """Rafraîchit minimalement un objet incluant l'état de case."""
-        if hasattr(super(), '_refreshObjectMinimally'):
+        if hasattr(super(), "_refreshObjectMinimally"):
             super()._refreshObjectMinimally(item, domain_object)
         self._refreshCheckState(item, domain_object)
 
@@ -1961,25 +2143,25 @@ class CheckTreeCtrl(TreeListCtrl):
         # 1. Mise à jour de l'état de l'élément (checked/unchecked) et du type (1/2)
         is_checked = self.getIsItemChecked(domain_object)
         item_type = self.getItemCTType(domain_object)
-        tags_list = list(self.item(item, 'tags'))
+        tags_list = list(self.item(item, "tags"))
 
         # Mise à jour du tag 'checked'
-        if is_checked and 'checked' not in tags_list:
-            tags_list.append('checked')
-        elif not is_checked and 'checked' in tags_list:
-            tags_list.remove('checked')
+        if is_checked and "checked" not in tags_list:
+            tags_list.append("checked")
+        elif not is_checked and "checked" in tags_list:
+            tags_list.remove("checked")
 
         # Mise à jour des tags de type (checkbox ou exclusive_checkbox)
-        if item_type == 1 and 'type_checkbox' not in tags_list:
-            tags_list.extend(['type_checkbox'])
-        elif item_type == 2 and 'type_exclusive_checkbox' not in tags_list:
-            tags_list.extend(['type_exclusive_checkbox'])
+        if item_type == 1 and "type_checkbox" not in tags_list:
+            tags_list.extend(["type_checkbox"])
+        elif item_type == 2 and "type_exclusive_checkbox" not in tags_list:
+            tags_list.extend(["type_exclusive_checkbox"])
 
         # Nettoyage des tags non pertinents
-        if item_type != 1 and 'type_checkbox' in tags_list:
-            tags_list.remove('type_checkbox')
-        if item_type != 2 and 'type_exclusive_checkbox' in tags_list:
-            tags_list.remove('type_exclusive_checkbox')
+        if item_type != 1 and "type_checkbox" in tags_list:
+            tags_list.remove("type_checkbox")
+        if item_type != 2 and "type_exclusive_checkbox" in tags_list:
+            tags_list.remove("type_exclusive_checkbox")
 
         self.item(item, tags=tags_list)
 
@@ -1992,11 +2174,12 @@ class CheckTreeCtrl(TreeListCtrl):
 # EXEMPLE D'UTILISATION
 # ============================================================================
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Configuration du logging pour voir ce qui se passe
     logging.basicConfig(level=logging.DEBUG)
 
     from tkinter import Menu
+
     try:
         from itemctrltk import Column
     except ImportError:
@@ -2019,6 +2202,7 @@ if __name__ == '__main__':
 
     class SimpleAdapter:
         """Adaptateur simple pour démonstration."""
+
         def __init__(self):
             self.data = []  # Liste d'objets métier fictifs
 
@@ -2026,13 +2210,13 @@ if __name__ == '__main__':
             return self.data[index] if index < len(self.data) else None
 
         def getItemText(self, obj, col_index):
-            return str(obj.get('values', [''])[col_index]) if obj else ''
+            return str(obj.get("values", [""])[col_index]) if obj else ""
 
         def children(self, obj):
-            return obj.get('children', []) if obj else self.data
+            return obj.get("children", []) if obj else self.data
 
         def getItemExpanded(self, obj):
-            return obj.get('expanded', False) if obj else False
+            return obj.get("expanded", False) if obj else False
 
         def getItemTooltipData(self, obj):
             return ""
@@ -2058,9 +2242,9 @@ if __name__ == '__main__':
         # qui gèrent l'absence de ces méthodes, donc ce n'est pas bloquant,
         # mais c'est mieux pour la compréhension.
 
-
     class Application(tk.Tk):
         """Application de démonstration."""
+
         def __init__(self):
             super().__init__()
             self.title("TreeCtrl Tkinter - Démonstration TaskCoach")
@@ -2072,90 +2256,104 @@ if __name__ == '__main__':
             self.adapter = SimpleAdapter()
 
             # Définir les colonnes
-            columns = [
-                Column('task_name', 'Tâche', 'Tâche', width=200, is_shown=True),
-                Column('due_date', 'Date d’échéance', "Date d'échéance", width=120, is_shown=True),
-                Column('priority', 'Priorité', 'Priorité', width=80, is_shown=True),
+            # Keep the task subject in a regular data column; Treeview's
+            # built-in #0 column is reserved for the hierarchy.
+            self.columns = [
+                Column(
+                    "subject",
+                    "Sujet",
+                    width=300,
+                    renderCallback=lambda task: task["subject"],
+                    # is_shown=True,
+                ),
+                Column(
+                    "due_date",
+                    "Date d’échéance",
+                    width=120,
+                    renderCallback=lambda task: task["due_date"],
+                    # is_shown=True,
+                ),
+                Column(
+                    "priority",
+                    "Priorité",
+                    width=100,
+                    renderCallback=lambda task: task["priority"],
+                    # is_shown=True,
+                ),
             ]
 
             # Créer des menus contextuels de test
             item_menu = Menu(self, tearoff=0)
-            item_menu.add_command(label="Modifier")
-            item_menu.add_command(label="Supprimer")
+            item_menu.add_command(label="Modifier", command=self.on_edit_menu)
+            item_menu.add_command(
+                label="Supprimer", command=self.on_delete_menu
+            )
             item_menu.add_separator()
-            item_menu.add_command(label="Propriétés", command=self.on_properties)
+            item_menu.add_command(
+                label="Propriétés", command=self.on_properties
+            )
 
             column_menu = Menu(self, tearoff=0)
-            column_menu.add_command(label="Trier ascendant", command=self.on_sort_asc)
-            column_menu.add_command(label="Trier descendant", command=self.on_sort_desc)
+            column_menu.add_command(
+                label="Trier ascendant", command=self.on_sort_asc
+            )
+            column_menu.add_command(
+                label="Trier descendant", command=self.on_sort_desc
+            )
             column_menu.add_separator()
-            column_menu.add_command(label="Cacher la colonne")
-
-            # self.config(menu=item_menu)
-            # self.config(menu=column_menu)
-
-            # # Création du conteneur TreeListCtrl
-            # frame = ttk.Frame(self, padding=10)
-            # frame.pack(fill=tk.BOTH, expand=True)
-            # Instanciation
-            # Note: CheckTreeCtrl hérite de TreeListCtrl, donc il profitera des corrections
+            column_menu.add_command(
+                label="Cacher la colonne", command=self.on_hide_column
+            )
 
             # Scrollbars
             vsb = ttk.Scrollbar(self, orient="vertical")
             hsb = ttk.Scrollbar(self, orient="horizontal")
 
-            # # Crée une instance de TreeCtrl, TreeListCtrl ou CheckTreeCtrl
-            # # self.tree = TreeCtrl(self)
-            # self.tree = TreeListCtrl(
-            #     self,
-            #     self,
-            #     columns=columns,
-            #     selectCommand=self.on_select,
-            #     editCommand=self.on_edit,
-            #     dragAndDropCommand=self.on_drag_and_drop,
-            #     itemPopupMenu=item_menu,
-            #     columnPopupMenu=column_menu
-            # )
-            # self.tree.pack(fill=tk.BOTH, expand=True)
-            # self.tree = CheckTreeCtrl(
-            tree = CheckTreeCtrl(
-                self,              # Parent widget
-                self.adapter,       # Adapter
-                columns=columns,    # Colonnes
+            self.tree = CheckTreeCtrl(
+                self,  # Parent widget
+                self.adapter,  # Adapter
+                columns=self.columns,  # Colonnes
                 checkCommand=self.on_check,
                 dragAndDropCommand=self.on_drag_drop,
                 itemPopupMenu=item_menu,
+                columnPopupMenu=column_menu,
                 # Configuration du scroll via kwargs supportés par ttk.Treeview
                 yscrollcommand=vsb.set,
-                xscrollcommand=hsb.set
+                xscrollcommand=hsb.set,
             )
 
             # Liaison des scrollbars au treeview
-            vsb.config(command=tree.yview)
-            # hsb.config(command=self.tree.xscroll)  # AttributeError: 'CheckTreeCtrl' object has no attribute 'xscroll'
-            # Erreur de frappe : la méthode correcte est xview
-            hsb.config(command=tree.xview)
+            vsb.config(command=self.tree.yview)
+            hsb.config(command=self.tree.xview)
 
             # Layout avec grid
-            tree.grid(row=0, column=0, sticky='nsew')
-            vsb.grid(row=0, column=1, sticky='ns')
-            hsb.grid(row=1, column=0, sticky='ew')
+            self.tree.grid(row=0, column=0, sticky="nsew")
+            vsb.grid(row=0, column=1, sticky="ns")
+            hsb.grid(row=1, column=0, sticky="ew")
 
             self.grid_rowconfigure(0, weight=1)
             self.grid_columnconfigure(0, weight=1)
 
             # Barre de boutons
             button_frame = ttk.Frame(self)
-            button_frame.pack(fill=tk.X, padx=10, pady=5)
+            button_frame.grid(
+                row=2, column=0, columnspan=2, sticky="ew", padx=10, pady=5
+            )
 
-            ttk.Button(button_frame, text="Ajouter",
-                       command=self.on_add).pack(side=tk.LEFT, padx=2)
-            ttk.Button(button_frame, text="Supprimer",
-                       command=self.on_delete).pack(side=tk.LEFT, padx=2)
-            ttk.Button(button_frame, text="Développer tout",
-                       command=self.on_expand_all).pack(side=tk.LEFT, padx=2)
-            ttk.Button(button_frame, text="Réduire tout",
-                       command=self.on_collapse_all).pack(side=tk.LEFT, padx=2)
+            ttk.Button(button_frame, text="Ajouter", command=self.on_add).pack(
+                side=tk.LEFT, padx=2
+            )
+            ttk.Button(
+                button_frame, text="Supprimer", command=self.on_delete
+            ).pack(side=tk.LEFT, padx=2)
+            ttk.Button(
+                button_frame,
+                text="Développer tout",
+                command=self.on_expand_all,
+            ).pack(side=tk.LEFT, padx=2)
+            ttk.Button(
+                button_frame, text="Réduire tout", command=self.on_collapse_all
+            ).pack(side=tk.LEFT, padx=2)
 
             # Peuplement initial
             self.populate_tree()
@@ -2163,95 +2361,129 @@ if __name__ == '__main__':
         def populate_tree(self):
             """Ajoute des éléments de test à l'arborescence."""
             # Note: Ceci peuple le widget visuel, pas l'adaptateur.
-            # Dans une vraie app, on remplirait l'adaptateur puis on appellerait RefreshAllItems.
-            # Élément parent
-            # parent1_id = self.tree.insert("", "end", text="Projet A - Migration TaskCoach")
-            parent1 = self.insert("", "end", text="Projet A - Migration TaskCoach",
-                                          values=("2025-03-01", "Haute"),
-                                          tags=('type_checkbox',))
+            parent1 = self.insert_task(
+                "",
+                "Projet A - Migration TaskCoach",
+                "2025-03-01",
+                "Haute",
+                tags=("type_checkbox",),
+            )
 
-            # # Enfants du parent 1
-            # self.tree.insert(parent1_id, "end", text="Rédiger le rapport")
-            # self.tree.insert(parent1_id, "end", text="Réaliser la présentation")
-            task1 = self.insert(parent1, "end", text="Convertir itemctrl.py",
-                                     values=("2025-02-01", "Haute"),
-                                     tags=('type_checkbox', 'checked'))
+            self.insert_task(
+                parent1,
+                "Convertir itemctrl.py",
+                "2025-02-01",
+                "Haute",
+                tags=("type_checkbox", "checked"),
+            )
 
-            task2 = self.insert(parent1, "end", text="Convertir treectrl.py",
-                                     values=("2025-02-15", "Haute"),
-                                     tags=('type_checkbox',))
+            self.insert_task(
+                parent1,
+                "Convertir treectrl.py",
+                "2025-02-15",
+                "Haute",
+                tags=("type_checkbox",),
+            )
 
-            task3 = self.insert(parent1, "end", text="Tests d'intégration",
-                                     values=("2025-02-28", "Moyenne"),
-                                     tags=('type_checkbox',))
+            self.insert_task(
+                parent1,
+                "Tests d'intégration",
+                "2025-02-28",
+                "Moyenne",
+                tags=("type_checkbox",),
+            )
 
             # Élément parent 2 avec une case à cocher exclusive - Projet B avec statut exclusif
-            # parent2_id = self.tree.insert("", "end", text="Tâches du projet B")
-            # parent2 = self.tree.insert("", "end", text="Statut du projet", values=("", ""), tags=('type_exclusive_checkbox',))
-            parent2 = self.insert("", "end", text="Projet B - Documentation",
-                                       values=("2025-04-01", "Moyenne"),
-                                       tags=('type_checkbox',))
+            parent2 = self.insert_task(
+                "",
+                "Projet B - Documentation",
+                "2025-04-01",
+                "Moyenne",
+                tags=("type_checkbox",),
+            )
 
-            # # # Enfants du parent 2
-            # # child1 = self.tree.insert(parent2_id, "end", text="Coder le module 1")
-            # # self.tree.insert(parent2_id, "end", text="Coder le module 2")
-            #
-            # # Enfants du parent 2 (exclusifs)
-            # self.tree.insert(parent2, "end", text="En cours",
-            #                  values=("", ""), tags=('type_exclusive_checkbox', 'checked'))
-            # self.tree.insert(parent2, "end", text="Terminé",
-            #                  values=("", ""), tags=('type_exclusive_checkbox',))
-            status_parent = self.insert(parent2, "end", text="Statut",
-                                             values=("", ""),
-                                             tags=())
+            status_parent = self.insert_task(
+                parent2, "Statut", "", "", tags=()
+            )
 
-            self.insert(status_parent, "end", text="En cours",
-                             values=("", ""),
-                             tags=('type_exclusive_checkbox', 'checked'))
+            self.insert_task(
+                status_parent,
+                "En cours",
+                "",
+                "",
+                tags=("type_exclusive_checkbox", "checked"),
+            )
 
-            self.insert(status_parent, "end", text="En attente",
-                             values=("", ""),
-                             tags=('type_exclusive_checkbox',))
+            self.insert_task(
+                status_parent,
+                "En attente",
+                "",
+                "",
+                tags=("type_exclusive_checkbox",),
+            )
 
-            self.insert(status_parent, "end", text="Terminé",
-                             values=("", ""),
-                             tags=('type_exclusive_checkbox',))
-
-            # # Sous-enfant
-            # self.tree.insert(child1, "end", text="Tester le module")
+            self.insert_task(
+                status_parent,
+                "Terminé",
+                "",
+                "",
+                tags=("type_exclusive_checkbox",),
+            )
 
             # Projet C
-            parent3 = self.insert("", "end", text="Projet C - Maintenance",
-                                       values=("2025-12-31", "Basse"),
-                                       tags=('type_checkbox',))
+            parent3 = self.insert_task(
+                "",
+                "Projet C - Maintenance",
+                "2025-12-31",
+                "Basse",
+                tags=("type_checkbox",),
+            )
 
-            self.insert(parent3, "end", text="Corriger bugs mineurs",
-                             values=("2025-06-01", "Basse"),
-                             tags=('type_checkbox',))
+            self.insert_task(
+                parent3,
+                "Corriger bugs mineurs",
+                "2025-06-01",
+                "Basse",
+                tags=("type_checkbox",),
+            )
+
+        def insert_task(self, parent, subject, due_date, priority, tags=()):
+            """Insert a demo task by rendering values through each Column."""
+            task = {
+                "subject": subject,
+                "due_date": due_date,
+                "priority": priority,
+            }
+            values = [column.render(task) for column in self.columns]
+            return self.tree.insert(
+                parent, "end", text="", values=values, tags=tags
+            )
+
+        def task_subject(self, item_id):
+            """Return the subject stored in the subject data column."""
+            return self.tree.set(item_id, "subject")
 
         def on_select(self, event):
-            """ Gère la sélection d'un élément. """
-            item_id = self.identify_row(event.y)
+            """Gère la sélection d'un élément."""
+            item_id = self.tree.identify_row(event.y)
             if item_id:
-                print(f"Élément sélectionné : {self.item(item_id, 'text')}")
+                print(f"Élément sélectionné : {self.task_subject(item_id)}")
 
         def on_edit(self, item_id):
-            """ Gère l'édition du label d'un élément. """
-            print(f"Édition de l'élément : {self.item(item_id, 'text')}")
+            """Gère l'édition du label d'un élément."""
+            print(f"Édition de l'élément : {self.task_subject(item_id)}")
             # L'implémentation de l'édition réelle se trouve dans le mixin ou dans la classe principale
 
         def on_check(self, item, checked, final=True):
             """Callback lors du cochage."""
             if final:
-                # print(f"Check: {self.tree.item(item, 'text')} -> {checked}")
-                text = self.item(item, 'text')
+                text = self.task_subject(item)
                 state = "cochée" if checked else "décochée"
                 print(f"Tâche '{text}' {state}")
 
         def on_drag_and_drop(self, event):
-            """ Gère l'action de glisser-déposer. """
+            """Gère l'action de glisser-déposer."""
             print("Action de glisser-déposer terminée.")
-            # self.tree.rebuild_data_model()
 
         def on_drag_drop(self, event):
             """Callback après glisser-déposer."""
@@ -2259,9 +2491,9 @@ if __name__ == '__main__':
 
         def on_edit_menu(self):
             """Éditer l'élément sélectionné."""
-            selection = self.selection()
+            selection = self.tree.selection()
             if selection:
-                print(f"Édition de: {self.item(selection[0], 'text')}")
+                print(f"Édition de: {self.task_subject(selection[0])}")
 
         def on_delete_menu(self):
             """Supprimer l'élément sélectionné."""
@@ -2272,11 +2504,11 @@ if __name__ == '__main__':
             selection = self.tree.selection()
             if selection:
                 item = selection[0]
-                print(f"\nPropriétés de '{self.item(item, 'text')}':")
-                print(f"  Valeurs: {self.item(item, 'values')}")
-                print(f"  Tags: {self.item(item, 'tags')}")
-                print(f"  Coché: {self.IsItemChecked(item)}")
-                print(f"  Type: {self.GetItemType(item)}")
+                print(f"\nPropriétés de '{self.task_subject(item)}':")
+                print(f"  Valeurs: {self.tree.item(item, 'values')}")
+                print(f"  Tags: {self.tree.item(item, 'tags')}")
+                print(f"  Coché: {self.tree.IsItemChecked(item)}")
+                print(f"  Type: {self.tree.GetItemType(item)}")
 
         def on_sort_asc(self):
             """Tri ascendant."""
@@ -2292,45 +2524,48 @@ if __name__ == '__main__':
 
         def on_add(self):
             """Ajouter un nouvel élément."""
-            selection = self.selection()
+            selection = self.tree.selection()
             parent = selection[0] if selection else ""
 
-            new_item = self.insert(
-                parent, "end",
-                text="Nouvelle tâche",
-                values=("", "Normale"),
-                tags=('type_checkbox',)
+            new_item = self.insert_task(
+                parent,
+                "Nouvelle tâche",
+                "",
+                "Normale",
+                tags=("type_checkbox",),
             )
-            self.selection_set(new_item)
-            self.see(new_item)
+            self.tree.selection_set(new_item)
+            self.tree.see(new_item)
             print("Nouvelle tâche ajoutée")
 
         def on_delete(self):
             """Supprimer les éléments sélectionnés."""
-            selection = self.selection()
+            selection = self.tree.selection()
             for item in selection:
-                text = self.item(item, 'text')
-                self.delete(item)
+                text = self.task_subject(item)
+                self.tree.delete(item)
                 print(f"Tâche '{text}' supprimée")
 
         def on_expand_all(self):
             """Développer tous les éléments."""
+
             def expand_recursive(item):
-                self.item(item, open=True)
-                for child in self.get_children(item):
+                self.tree.item(item, open=True)
+                for child in self.tree.get_children(item):
                     expand_recursive(child)
 
-            for item in self.get_children():
+            for item in self.tree.get_children():
                 expand_recursive(item)
 
         def on_collapse_all(self):
             """Réduire tous les éléments."""
+
             def collapse_recursive(item):
                 self.tree.item(item, open=False)
-                for child in self.get_children(item):
+                for child in self.tree.get_children(item):
                     collapse_recursive(child)
 
-            for item in self.get_children():
+            for item in self.tree.get_children():
                 collapse_recursive(item)
 
     # Lancement de l'application
