@@ -53,7 +53,7 @@ Comprendre comment une modification arrive sur le disque est crucial :
     Persistance : Lors du save(), TaskFile parcourt ces changements pour mettre à jour le XML.
 """
 
-from config import GUI_NAME
+from taskcoachlib.config import GUI_NAME
 
 # 3. Points clés à surveiller lors de la lecture
 #
