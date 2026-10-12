@@ -38,3 +38,14 @@ __pycache__
 *.delta
 .aider*
 .env
+
+# Logs
+*.log
+.logs/*.log
+!.logs/.gitkeep
+
+# Fichiers temporaires d'édition
+*.bak
+*.ToUpdate
+*.swp
+*.swo

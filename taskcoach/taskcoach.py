@@ -246,19 +246,19 @@ def start():
     et démarre/lance la boucle principale. Il gère également le profilage si l'option --profile
     est spécifiée.
     """
-    # Correctif pour wxPython 4+ (Phoenix)
-    # L'erreur "assert traits failed" survient car la configuration tente d'accéder
-    # aux chemins système (wx.StandardPaths) avant que l'application wx ne soit créée.
-    try:
-        import wx
-
-        if wx.GetApp() is None:
-            _dummy_app = wx.App(False)
-    except ImportError:
-        pass
+    # # Correctif pour wxPython 4+ (Phoenix)
+    # # L'erreur "assert traits failed" survient car la configuration tente d'accéder
+    # # aux chemins système (wx.StandardPaths) avant que l'application wx ne soit créée.
+    # try:
+    #     import wx
+    #
+    #     if wx.GetApp() is None:
+    #         _dummy_app = wx.App(False)
+    # except ImportError:
+    #     pass
 
     # pylint: disable=W0404
-    from taskcoachlib import application
+    # from taskcoachlib import application
     from taskcoachlib import config
 
     # from taskcoachlib.config import arguments
@@ -305,13 +305,18 @@ def start():
         args,
     )
 
-    # Définir le GUI global (pour tous les modules)
+    # Définir le GUI global (pour tous les modules) AVANT tout import d'application
     from taskcoachlib.config.arguments import set_gui
 
     set_gui(options.gui_name)
 
+    log.info(f"taskcoach.start : GUI sélectionné : {options.gui_name}")
+
     app = None
+    # NOW import l'application appropriée (et seulement celle-là)
     if options.gui_name == "wx":
+        from taskcoachlib import application
+        from taskcoachlib.application.application import Application
         # Lancement de l'initialisation de l'application version wxPython:
         log.debug("start : Lancement de la version wxPython.")
         app = application.application.Application(
@@ -319,6 +324,8 @@ def start():
         )  # définition de la variable app comme application avec options et args
         # app = application.Application(tcargs)
     elif options.gui_name == "tk":
+        from taskcoachlib import application
+        from taskcoachlib.application.tkapplication import TkinterApplication
         # Lancement de l'initialisation de l'application version tkinter:
         log.debug("start : Lancement de la version tkinter.")
         app = application.tkapplication.TkinterApplication(options, args)
@@ -333,6 +340,7 @@ def start():
     elif options.gui_name == "tk":
         # TkinterApplication.__init__ effectue déjà l'initialisation
         # Ne pas appeler init() une seconde fois si le constructeur l'a déjà fait
+        # TODO : Peut-être Créer l'instance init de l'application tkinter ?!
         pass
 
     if options.profile:

@@ -1,1 +1,33 @@
+# Build & distributions
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs & temporaires
+*.log
+*.bak
+*.ToUpdate
+*.swp
+*.swo
+*~
+
+# IDE & outils
 .aider*
+.idea/
+.vscode/
+*.sublime-*
+.DS_Store
+
+# Environnement
+.env
+.env.local
+venv/
+env/
+
+# Caches
+.cache/
+.pytest_cache/
+*.pickle
