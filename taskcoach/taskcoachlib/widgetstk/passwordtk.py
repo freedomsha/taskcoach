@@ -27,9 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # J'ai converti le fichier password.py pour Tkinter. Les points clés de la conversion sont :
 #
-#     Remplacement des dialogues wxPython : J'ai utilisé tkinter.simpledialog.askstring pour demander un mot de passe à l'utilisateur, ce qui est l'équivalent le plus proche de wx.GetPasswordFromUser.
+#     Remplacement des dialogues wxPython : J'ai utilisé tkinter.simpledialog.askstring pour demander un mot de passe à l'utilisateur, ce qui est l'équivalent le plus proche de wx.GetPasswordFr[...]
 #
-#     Simplification du stockage : La gestion du keyring (trousseau d'accès) a été commentée, car c'est une dépendance externe non standard. À la place, le code utilise un simple dictionnaire en mémoire pour le cache des mots de passe. C'est une solution plus simple pour cet environnement.
+#     Simplification du stockage : La gestion du keyring (trousseau d'accès) a été commentée, car c'est une dépendance externe non standard. À la place, le code utilise un simple dictionnair[...]
 #
 #     Logique de cache : La fonction _GetCachedPassword a été réimplémentée pour gérer la logique de réinitialisation et de stockage du mot de passe dans le cache en mémoire.
 #
@@ -127,4 +127,3 @@ if __name__ == '__main__':
     # sont modales et bloquent le programme.
 
     root.destroy()
-
