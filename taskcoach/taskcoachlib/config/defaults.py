@@ -19,8 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from builtins import str
-import wx  # TODO : a changer pour la compatibilité avec tkinter
+# import wx
 from taskcoachlib import meta
+
+# Orientation d'impression (1 = Portrait, 2 = Paysage)
+# Valeurs standard universelles compatibles wx (wx.PORTRAIT = 1, wx.LANDSCAPE = 2) et Tkinter
+PORTRAIT = 1
+LANDSCAPE = 2
+
 
 defaults = {
     "balloontips": {
@@ -561,6 +567,7 @@ defaults = {
     "version": {
         "python": "",  # Filled in by the Settings class when saving the settings
         "wxpython": "",  # Idem
+        "tkinter": "",  # Idem
         "pythonfrozen": "",  # Idem
         "current": meta.data.version,
         "notified": meta.data.version,
@@ -605,9 +612,8 @@ defaults = {
         "margin_bottom": "0",
         "margin_right": "0",
         "paper_id": "0",
-        "orientation": str(
-            wx.PORTRAIT
-        ),  # TODO : A changer pour le rendre compatible tk ! side="top" ou sticky="n"
+        # "orientation": str(wx.PORTRAIT),
+        "orientation": str(PORTRAIT),  # 1 = Portrait, 2 = Landscape
     },
     "export": {
         "html_selectiononly": "False",
