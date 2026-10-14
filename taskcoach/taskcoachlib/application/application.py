@@ -123,6 +123,7 @@ from taskcoachlib import patterns, operating_system, workarounds
 
 # nouveau :
 from taskcoachlib.i18n import _
+from taskcoachlib.application.interface import ApplicationInterface
 from taskcoachlib.config import Settings
 from taskcoachlib import gui, persistence
 
@@ -345,7 +346,7 @@ class wxApp(wx.App):
 # class Application(object):
 #     __metaclass__ = patterns.Singleton
 # class Application(metaclass=patterns.Singleton):
-class Application(object, metaclass=patterns.Singleton):
+class Application(object, metaclass=patterns.Singleton, ApplicationInterface):
     """Classe principale de l'application TaskCoach.
 
     Gère le lancement et l'arrêt de l'application,
