@@ -18,7 +18,20 @@
       <excludeFolder url="file://$MODULE_DIR$/taskcoach/buildbot/slaves/WinXPSP3" />
       <excludeFolder url="file://$MODULE_DIR$/taskcoach/tests-py2" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/Pipfile.lock" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/appmap-20250503.log" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/appmap.log" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/classes_demo_A-taskcoach.dot" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/classes_demo_Amy-taskcoach.dot" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/classes_demo_bmy-taskcoach.dot" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/classes_demo_bmy-taskcoach.png" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/classes_demo_o-taskcoach.png" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/taskcoach.log" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/taskcoach_202608261034.log" />
+      <excludeFolder url="file://$MODULE_DIR$/taskcoach/taskcoachlib/gui/iocontroller.py.ToUpdate" />
       <excludePattern pattern="*.bak" />
+      <excludePattern pattern="*.log" />
+      <excludePattern pattern="*.lock" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.14 (task-coach-git) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

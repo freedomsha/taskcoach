@@ -25,6 +25,11 @@ n'ont pas d'équivalent direct dans tkinter et ont été supprimées ou
 #
 # Faire hériter TkinterApplication de tk.Tk (le principe d'héritage) pourrait sembler plus simple au premier abord, mais cela lierait de manière rigide votre logique d'application à un type de widget spécifique, ce qui est généralement considéré comme un couplage serré et peut compliquer la maintenance future.
 
+# 12/10/2026
+# Pas d'import wx nulle part
+# Les wx.GetApp() doivent être remplacés par TkinterDnD.Tk() ou équivalent
+# Les wx.CallAfter doivent être remplacés par self.root.after_idle()
+
 import logging
 import os
 import sys
@@ -52,6 +57,7 @@ from taskcoachlib import (
 )
 from taskcoachlib.persistence import taskfile
 from taskcoachlib.i18n import _
+from taskcoachlib.application.interface import ApplicationInterface
 from taskcoachlib.config.settings import Settings
 from taskcoachlib.domain import date
 from taskcoachlib import guitk
@@ -122,7 +128,7 @@ class RedirectedOutput:
 
 # class TkinterApplication:
 class TkinterApplication(
-    metaclass=patterns.Singleton
+    metaclass=patterns.Singleton, ApplicationInterface
 ):  # Utilise la métaclasse Singleton
     """
     Classe principale de l'application utilisant Tkinter.
@@ -367,6 +373,7 @@ class TkinterApplication(
 
         guitk.init()
         show_splash_screen = self.settings.getboolean("window", "splash")
+        # Après (ok, mais à vérifier que guitk.SplashScreen n'importe pas wx) :
         splash = guitk.SplashScreen(self.root) if show_splash_screen else None
 
         # self.taskFile = persistencetk.LockedTaskFile(poll=not self.settings.getboolean('file', 'nopoll'))
