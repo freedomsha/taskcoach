@@ -20,6 +20,7 @@ import logging
 
 # gui_used ?
 from taskcoachlib.config.arguments import get_gui
+from taskcoachlib.application.interface import ApplicationInterface
 
 log = logging.getLogger(__name__)
 gui_name = get_gui()

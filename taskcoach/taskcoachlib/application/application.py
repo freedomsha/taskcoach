@@ -345,8 +345,8 @@ class wxApp(wx.App):
 
 # class Application(object):
 #     __metaclass__ = patterns.Singleton
-# class Application(metaclass=patterns.Singleton):
-class Application(object, metaclass=patterns.Singleton, ApplicationInterface):
+# class Application(object, metaclass=patterns.Singleton):
+class Application(ApplicationInterface, metaclass=patterns.Singleton):
     """Classe principale de l'application TaskCoach.
 
     Gère le lancement et l'arrêt de l'application,

@@ -15,14 +15,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+from abc import ABCMeta
 import logging
 
 log = logging.getLogger(__name__)
 
 
-class Singleton(type):
-    """Métaclasse Singleton. À utiliser en définissant la métaclasse d'une classe Singleton,
+# class Singleton(type):
+class Singleton(ABCMeta):
+    """Métaclasse Singleton compatible ABCMeta. À utiliser en définissant la métaclasse d'une classe Singleton,
     par exemple : class ThereCanBeOnlyOne(metaclass=Singleton).
+    Prend en charge l'héritage de classes abstraites (ABC) sans conflit de métaclasse.
     """
 
     def __call__(class_, *args, **kwargs):
@@ -50,6 +53,8 @@ class Singleton(type):
         qu'ils puissent commencer avec une table rase."""
         if class_.hasInstance():
             del class_.instance
+
+    delete_instance = deleteInstance
 
     # def hasInstance(class_) -> bool:
     def hasInstance(class_):

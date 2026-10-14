@@ -126,9 +126,9 @@ class RedirectedOutput:
             )
 
 
-# class TkinterApplication:
+# class TkinterApplication(metaclass=patterns.Singleton):
 class TkinterApplication(
-    metaclass=patterns.Singleton, ApplicationInterface
+    ApplicationInterface, metaclass=patterns.Singleton
 ):  # Utilise la métaclasse Singleton
     """
     Classe principale de l'application utilisant Tkinter.
