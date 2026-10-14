@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # futurize ajoute 1 ligne :
 # from builtins import map
+import locale
 import os
-import wx
+# import wx
 import sys
 import platform
 
@@ -38,35 +39,110 @@ def isWindows():
 
 
 def isGTK():
+    """
+    Compatibilité historique avec le code existant.
+
+    GTK désigne ici les systèmes Unix/Linux qui étaient auparavant
+    identifiés par wxPython avec le préfixe __WXGTK__.
+    """
     return isPlatform("GTK")
 
 
 def isWayland():
     """Detect if running on Wayland display server.
 
+    Détecte si l'application fonctionne sous Wayland.
+
     Note: AUI floating windows are broken on Wayland due to protocol
     limitations. See docs/AUI_WAYLAND_ISSUES.md for details.
     """
     return (
-        os.environ.get("XDG_SESSION_TYPE") == "wayland"
+        # os.environ.get("XDG_SESSION_TYPE") == "wayland"
+        os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland"
         or os.environ.get("WAYLAND_DISPLAY") is not None
     )
 
 
-def isPlatform(threeLetterPlatformAbbreviation, wxPlatform=wx.Platform):
-    return "__WX%s__" % threeLetterPlatformAbbreviation == wxPlatform
+# def isPlatform(threeLetterPlatformAbbreviation, wxPlatform=wx.Platform):
+#     return "__WX%s__" % threeLetterPlatformAbbreviation == wxPlatform
+def isPlatform(threeLetterPlatformAbbreviation, platform_name=None):
+    """
+    Compatible avec l'ancienne API basée sur wx.Platform.
+
+    Les valeurs historiques utilisées par Task Coach sont notamment :
+
+    - MSW pour Windows
+    - MAC pour macOS
+    - GTK pour Linux et les autres systèmes Unix graphiques
+    """
+    if platform_name is None:
+        platform_name = _platformName()
+
+    expected_platform = {
+        "MSW": "MSW",
+        "MAC": "MAC",
+        "GTK": "GTK",
+    }.get(threeLetterPlatformAbbreviation)
+
+    return expected_platform == platform_name
 
 
+def _platformName():
+    """Retourne le nom de plateforme utilisé par Task Coach."""
+    system = platform.system()
+
+    if system == "Windows":
+        return "MSW"
+
+    if system == "Darwin":
+        return "MAC"
+
+    if system == "Linux":
+        return "GTK"
+
+    # Les systèmes Unix non Linux sont rapprochés du comportement GTK
+    # utilisé historiquement par wxPython.
+    if system in ("FreeBSD", "OpenBSD", "NetBSD", "Unix"):
+        return "GTK"
+
+    return system
+
+
+# def isWindows7_OrNewer():  # pragma: no cover
+#     if isWindows():
+#         major, minor = sys.getwindowsversion()[:2]  # pylint: disable=E1101
+#         return (major, minor) >= (6, 1)
+#     else:
+#         return False
 def isWindows7_OrNewer():  # pragma: no cover
-    if isWindows():
-        major, minor = sys.getwindowsversion()[:2]  # pylint: disable=E1101
-        return (major, minor) >= (6, 1)
-    else:
+    if not isWindows():
         return False
 
+    version = sys.getwindowsversion()
+    major, minor = version[:2]
+    return (major, minor) >= (6, 1)
 
+
+# def _platformVersion():
+#     return tuple(map(int, platform.release().split(".")))
 def _platformVersion():
-    return tuple(map(int, platform.release().split(".")))
+    """
+    Retourne la version de la plateforme sous forme de tuple d'entiers.
+
+    Les éléments non numériques sont ignorés. Cela évite une erreur avec
+    certaines versions retournées par platform.release().
+    """
+    version = []
+
+    for part in platform.release().split("."):
+        digits = "".join(character for character in part if character.isdigit())
+
+        if digits:
+            version.append(int(digits))
+        else:
+            break
+
+    return tuple(version)
 
 
 def isMacOsXLion_OrNewer():  # pragma: no cover
@@ -101,17 +177,29 @@ def isMacOsXMavericks_OrNewer():  # pragma no cover
         return False
 
 
+# def defaultEncodingName():
+#     return wx.Locale.GetSystemEncodingName() or "utf-8"
 def defaultEncodingName():
-    return wx.Locale.GetSystemEncodingName() or "utf-8"
+    """
+    Retourne l'encodage système sans dépendre de wxPython.
+    """
+    encoding = locale.getpreferredencoding(False)
+    return encoding or "utf-8"
 
 
-def decodeSystemString(s):
-    if isinstance(s, str):
-        return s
+# def decodeSystemString(s):
+def decodeSystemString(value):
+    # if isinstance(s, str):
+    #     return s
+    if isinstance(value, str):
+        return value
     encoding = defaultEncodingName()
     # Python does not define the windows_XXX aliases for every code page...
-    if encoding.startswith("windows-"):
+    # Python ne fournit pas toujours directement les alias windows-XXX.
+    # if encoding.startswith("windows-"):
+    if encoding.lower().startswith("windows-"):
         encoding = "cp" + encoding[8:]
     if not encoding:
         encoding = "utf-8"
-    return s.decode(encoding, "ignore")
+    # return s.decode(encoding, "ignore")
+    return value.decode(encoding, "ignore")
