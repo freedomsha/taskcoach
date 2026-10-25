@@ -310,6 +310,12 @@ class Viewer(ttk.Frame, patterns.Observer):
         self.__presentation.thaw()
         if self.__freezeCount == 0:
             self.refresh()
+        log.debug(
+            "Viewer.onEndIO : taskFile filename=%r, tasks=%d, categories=%d",
+            taskFile.filename(),
+            len(taskFile.tasks()),
+            len(taskFile.categories()),
+        )
 
     def activate(self):
         """Active la visionneuse, lui donnant le focus."""
@@ -768,6 +774,24 @@ class Viewer(ttk.Frame, patterns.Observer):
             f"Viewer.refresh : rafraichit les éléments affichés dans la visionneuse {self}."
         )
         if self and not self.__freezeCount:
+            # Le TaskFile peut avoir été chargé après la création du viewer.
+            # Il faut donc reconstruire la présentation à partir des données
+            # actuelles avant de rafraîchir le widget.
+            # new_presentation = self.createSorter(
+            #     self.domainObjectsToView()
+            # )
+            new_presentation = self.createSorter(
+                self.createFilter(
+                    self.domainObjectsToView()
+                )
+            )
+            self.setPresentation(new_presentation)
+
+            log.debug(
+                "Viewer.refresh : nouvelle présentation=%r, nombre=%d",
+                new_presentation,
+                len(new_presentation),
+            )
             # # Cette méthode devra être implémentée dans les sous-classes
             # # en fonction du widget (Listbox, Treeview)
             # self.widget.RefreshAllItems(len(self.presentation()))  # A adapter en fonction du widget
@@ -775,8 +799,11 @@ class Viewer(ttk.Frame, patterns.Observer):
             # Vérifier si le widget a la méthode RefreshAllItems (TreeListCtrl)
             # Sinon, c'est un Frame simple - appeler _refresh_tasks() si disponible
             if hasattr(self.widget, "RefreshAllItems"):
-                # Pour les widgets personnalisés (TreeListCtrl, etc.)
-                # self.widget.RefreshAllItems(len(self.presentation()))
+                # # Pour les widgets personnalisés (TreeListCtrl, etc.)
+                self.widget.RefreshAllItems(len(self.presentation()))
+                # self.widget.scheduleRefresh()
+            elif hasattr(self.widget, "scheduleRefresh"):
+                # self.widget.scheduleRefresh()
                 self.widget.scheduleRefresh(len(self.presentation()))
             elif hasattr(self, "_refresh_tasks"):
                 # Pour les viewers Tkinter qui implémentent _refresh_tasks
