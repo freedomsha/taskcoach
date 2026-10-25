@@ -155,10 +155,21 @@ class BaseCategoryViewer(
     def domainObjectsToView(self):
         """
         Retourne les objets de domaine à afficher dans la vue.
+
         Returns :
             (list) : Liste des catégories à afficher.
         """
-        return self.taskFile.categories()
+        # return self.taskFile.categories()
+        categories = self.taskFile.categories()
+
+        log.debug(
+            "BaseCategoryviewer.doaminObjectsToView : taskFile=%r, categories=%r, count=%d",
+            self.taskFile,
+            categories,
+            len(categories),
+        )
+
+        return categories
 
     def curselectionIsInstanceOf(self, class_):
         """
@@ -223,21 +234,37 @@ class BaseCategoryViewer(
         log.debug(f"BaseCategoryViewer.createWidget : Création du widget BaseCategoryViewer dans self={self.__class__.__name__} avec parent={parent}.")
         # imageList = self.createImageList()  # À adapter pour Tkinter
         self._columns = self.createColumns()
-        log.debug(f"BaseCategoryViewer.createWidget : colonnes créées ={self._columns}.")
+        log.debug(f"BaseCategoryViewer.createWidget : colonnes créées = {self._columns}.")
         itemPopupMenu = self.createCategoryPopupMenu()
-        columnPopupMenu = taskcoachlib.guitk.menutk.ColumnPopupMenu(self, parent)
+        columnPopupMenu = taskcoachlib.guitk.menutk.ColumnPopupMenu(
+            self,
+            # parent,
+            self.winfo_toplevel()  # La méthode createWidget reçoit bien un parent,
+            # mais ce parent est utilisé pour créer le widget visuel,
+            # pas pour représenter la fenêtre principale.
+            # Le fichier utilise actuellement ce même argument
+            # comme parent_mainwindow, ce qui est incorrect.
+        )
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
 
         # # Création du Treeview avec des colonnes
         # widget = ttk.Treeview(self, columns=[col.name for col in self._columns], show="tree headings")
 
+        categories = self.presentation()
+
+        log.debug(
+            "Categoryviewer.createWidget : presentation=%r, count=%d",
+            categories,
+            len(categories),
+        )
         # Création du TreeListCtrl
+        # Le premier argument doit être le parent Tkinter du widget.
+        # Le deuxième doit être l’adaptateur métier.
         # widget = widgetstk.treectrltk.CheckTreeCtrl(
         widget = widgetstk.treectrltk.TreeListCtrl(  # Sauf que ce n'est pas un TreeListCtrl qu'il faut !? Si !
-            self,  # self ou parent ?
-            # parent,
-            # self,  # adapter ?
+            # self,  # self ou parent ?
             parent,
+            self,  # adapter ?
             # self.adapter, # passer l'adapter ici'
             # parent=self,
             # adapter= ,
@@ -247,7 +274,8 @@ class BaseCategoryViewer(
             # editCommand=self.onEdit,
             editCommand=uicommand.Edit(viewer=self),
             dragAndDropCommand=uicommand.CategoryDragAndDrop(
-                viewer=self, categories=self.presentation()
+                viewer=self,
+                categories=self.presentation(),
             ),
             itemPopupMenu=itemPopupMenu,
             columnPopupMenu=columnPopupMenu,
@@ -268,7 +296,11 @@ class BaseCategoryViewer(
         # widget.AssignImageList(imageList)  # À adapter pour Tkinter
         # pylint: disable=E1101
         # self.widget.pack(expand=True, fill="both")
-        widget.pack(expand=True, fill="both")
+        # widget.pack(expand=True, fill="both")
+        # Le widget est placé par Viewer.initLayout() avec grid().
+        # Ne pas utiliser pack() ici.
+        # Le fichier basetk.py crée le widget avec self._sizer comme parent,
+        # puis utilise grid pour le placer dans ce parent.
 
         widget.bind("<ButtonRelease-1>", self.onSelect)  # Binding pour la selection (clic gauche)
         widget.bind("<Double-Button-1>", uicommand.Edit(viewer=self))  # Binding pour l'édition (double clic)
@@ -280,24 +312,33 @@ class BaseCategoryViewer(
     def createCategoryPopupMenu(self, localOnly=False):
         """
         Crée et retourne le menu contextuel pour les catégories.
+
         Args :
             localOnly (bool) : (optional) Indique si le menu est local seulement. Par défaut à False.
         Returns :
             (tk.Menu) : Le menu contextuel pour les catégories.
         """
+        # # # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+        # # #     self.parent, self.settings, self.taskFile, self, localOnly
+        # # # )  # il manque self, self.parent à la place de parent mais quoi mettre ?
         # # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
-        # #     self.parent, self.settings, self.taskFile, self, localOnly
-        # # )  # il manque self, self.parent à la place de parent mais quoi mettre ?
+        # #     self.parent, self, self.settings, self.taskFile,  localOnly
+        # # )  # En modifiant l'appel à CategoryPopupMenu,
+        # # # on s'assure que l'objet de type CategoryViewer est bien passé à CategoryPopupMenu.
         # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
-        #     self.parent, self, self.settings, self.taskFile,  localOnly
-        # )  # En modifiant l'appel à CategoryPopupMenu,
-        # # on s'assure que l'objet de type CategoryViewer est bien passé à CategoryPopupMenu.
-        return taskcoachlib.guitk.menutk.CategoryPopupMenu(
-            self, self.parent, self.settings, self.taskFile, self, localOnly
-        )
-        # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
-        #     parent=self.parent, parent_window=self, settings=self.settings, taskFile=self.taskFile, categoryViewer=self, localOnly=localOnly
+        #     self, self.parent, self.settings, self.taskFile, self, localOnly
         # )
+        # # return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+        # #     parent=self.parent, parent_window=self, settings=self.settings, taskFile=self.taskFile, categoryViewer=self, localOnly=localOnly
+        # # )
+        return taskcoachlib.guitk.menutk.CategoryPopupMenu(
+            self,  # reste le parent direct du menu contextuel
+            self.winfo_toplevel(),  # fournit la vraie fenêtre Tkinter principale, ViewerContainer n'est plus utilisé comme parent_window.
+            self.settings,
+            self.taskFile,
+            self,
+            localOnly,
+        )
 
     def createColumns(self):
         """
@@ -465,6 +506,7 @@ class BaseCategoryViewer(
     def onAttributeChanged(self, newValue, sender):
         """
         Gère les événements de changement d'attribut.
+
         Args :
             newValue : La nouvelle valeur de l'attribut.
             sender : L'objet qui a envoyé l'événement.
@@ -554,6 +596,7 @@ class BaseCategoryViewer(
     def itemEditorClass(self):
         """
         Retourne la classe de l'éditeur d'éléments.
+
         Returns :
             (type) : Classe de l'éditeur d'éléments.
         """
@@ -622,3 +665,11 @@ class Categoryviewer(BaseCategoryViewer):  # pylint: disable=W0223
         # TypeError: can only concatenate tuple (not "CategoryViewerFilterChoice") to tuple
         # Exception ignored in atexit callback: <built-in function _wxPyCleanup>
         return super().createModeToolBarUICommands() + (self.filterUICommand,)
+
+    def refresh(self):
+        super().refresh()
+        log.debug(
+            "Categoryviewer.refresh : Après refresh CategoryViewer : presentation=%r, count=%d",
+            Categoryviewer.presentation(self),
+            len(Categoryviewer.presentation(self)),
+        )
