@@ -41,7 +41,11 @@ class TabTextCtrl(ttk.Entry):
     def _notebook(self):
         if hasattr(self._owner, "GetParent"):
             return self._owner.GetParent()
-        return self._owner.winfo_toplevel() if isinstance(self._owner, tk.Misc) else getattr(self._owner, "master", self._owner)
+        return (
+            self._owner.winfo_toplevel()
+            if isinstance(self._owner, tk.Misc)
+            else getattr(self._owner, "master", self._owner)
+        )
 
     def AcceptChanges(self):
         value = self.get()
@@ -50,7 +54,9 @@ class TabTextCtrl(ttk.Entry):
             if hasattr(notebook, "OnRenameCancelled"):
                 notebook.OnRenameCancelled(self._pageIndex)
             return True
-        if hasattr(notebook, "OnRenameAccept") and not notebook.OnRenameAccept(self._pageIndex, value):
+        if hasattr(notebook, "OnRenameAccept") and not notebook.OnRenameAccept(
+            self._pageIndex, value
+        ):
             return False
         if hasattr(notebook, "SetPageText"):
             notebook.SetPageText(self._pageIndex, value)
@@ -141,18 +147,42 @@ class CommandNotebookEvent:
         self.page = None
         self._commandInt = 0
 
-    def SetSelection(self, value): self.selection = value; self._commandInt = value
-    def GetSelection(self): return self.selection
-    def SetOldSelection(self, value): self.old_selection = value
-    def GetOldSelection(self): return self.old_selection
-    def SetDragSource(self, value): self.drag_source = value
-    def GetDragSource(self): return self.drag_source
-    def SetDispatched(self, value): self.dispatched = value
-    def GetDispatched(self): return self.dispatched
-    def IsEditCancelled(self): return self.editCancelled
-    def SetEditCanceled(self, value=True): self.editCancelled = value
-    def GetLabel(self): return self.label
-    def SetLabel(self, value): self.label = value
+    def SetSelection(self, value):
+        self.selection = value
+        self._commandInt = value
+
+    def GetSelection(self):
+        return self.selection
+
+    def SetOldSelection(self, value):
+        self.old_selection = value
+
+    def GetOldSelection(self):
+        return self.old_selection
+
+    def SetDragSource(self, value):
+        self.drag_source = value
+
+    def GetDragSource(self):
+        return self.drag_source
+
+    def SetDispatched(self, value):
+        self.dispatched = value
+
+    def GetDispatched(self):
+        return self.dispatched
+
+    def IsEditCancelled(self):
+        return self.editCancelled
+
+    def SetEditCanceled(self, value=True):
+        self.editCancelled = value
+
+    def GetLabel(self):
+        return self.label
+
+    def SetLabel(self, value):
+        self.label = value
 
 
 class AuiNotebookEvent:
@@ -162,10 +192,17 @@ class AuiNotebookEvent:
         self.event_type = command_type
         self.win_id = win_id
 
-    def GetNotifyEvent(self): return self.notify_event
-    def IsAllowed(self): return self.allowed
-    def Veto(self): self.allowed = False
-    def Allow(self): self.allowed = True
+    def GetNotifyEvent(self):
+        return self.notify_event
+
+    def IsAllowed(self):
+        return self.allowed
+
+    def Veto(self):
+        self.allowed = False
+
+    def Allow(self):
+        self.allowed = True
 
 
 class TabNavigatorProps:
@@ -194,10 +231,12 @@ class TabNavigatorWindow(tk.Toplevel):
         self.title("Select tab")
         self.resizable(False, False)
 
-        self.tree = ttk.Treeview(self, columns=("caption",), show="headings", selectmode="browse", height=12)
+        self.tree = ttk.Treeview(
+            self, columns=("caption",), show="headings", selectmode="browse", height=12
+        )
         self.tree.heading("caption", text="Tab")
         self.tree.column("caption", width=260, anchor="w")
-        self.tree.pack(fill="both", expand=True, padx=8, pady=8)
+        self.tree.pack(fill="both", expand=True, padx=8, pady=8)  # à changer en grid !?
         self.tree.bind("<Double-1>", self.OnItemSelected)
         self.tree.bind("<Return>", self.OnItemSelected)
         self.bind("<Escape>", self.CloseDialog)

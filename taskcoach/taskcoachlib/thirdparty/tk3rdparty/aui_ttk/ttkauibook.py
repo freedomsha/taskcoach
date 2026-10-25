@@ -29,7 +29,7 @@ import json
 import tkinter as tk
 from tkinter import ttk
 
-from .tkauibook_aux import AuiNotebookPage, AuiNotebookEvent
+from .ttkauibook_aux import AuiNotebookPage, AuiNotebookEvent
 from .aui_tk_constants import *
 
 
@@ -94,7 +94,7 @@ class AuiNotebook(ttk.Frame):
         self._manager = None
         self._navigatorIcon = None
         self._notebook = ttk.Notebook(self)
-        self._notebook.pack(fill="both", expand=True)
+        self._notebook.pack(fill="both", expand=True)  # à changer en grid ?
         self._notebook.bind("<<NotebookTabChanged>>", self._OnTtkTabChanged)
         self._notebook.bind("<Button-1>", self._OnTabPress, add="+")
         self._notebook.bind("<ButtonRelease-1>", self._OnTabRelease, add="+")
@@ -226,9 +226,13 @@ class AuiNotebook(ttk.Frame):
         info.control = control or page
         info.tooltip = tooltip
         self._pages.insert(page_idx, info)
-        self._notebook.insert(page_idx, page, text=caption)
+        # self._notebook.insert(page_idx, page, text=caption)
         # ttk.Notebook ne fournit pas de tooltip natif. La valeur reste
         # disponible via GetPageTooltip, comme dans l'API AUI.
+        if not self._notebook.tabs():
+            self._notebook.add(page, text=caption)
+        else:
+            self._notebook.insert(page_idx, page, text=caption)
         if not getattr(info, "enabled", True):
             self._notebook.tab(page, state="disabled")
         if getattr(info, "hidden", False):

@@ -298,9 +298,9 @@ class AuiFloatingFrame(tk.Toplevel):
         Returns:
             Une instance de AuiPaneInfo contenant les attributs copiés.
         """
-        from . import tkframemanager_auimanager
+        from . import ttkframemanager_auimanager
         # pass
-        contained_pane = tkframemanager_auimanager.AuiPaneInfo()
+        contained_pane = ttkframemanager_auimanager.AuiPaneInfo()
 
         return contained_pane
 

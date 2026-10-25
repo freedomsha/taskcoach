@@ -328,14 +328,14 @@ from .aui_tk_constants import *
 from .aui_tk_utilities import *
 from .tkframemanager_elements import *
 from .tkframemanager_floating import *
-from .tkframemanager_auimanager import *
-from .tkframemanager import *
+from .ttkframemanager_auimanager import *
+# from .tkframemanager import *
 from .tkauibar_art import *
 from .tkauibar_event_item import *
 from .tkauitoolbar import *
-from .tkauibook_aux import *
-from .tkauibook_tabs import *
-from .tkauibook import *
+from .ttkauibook_aux import *
+from .ttkauibook_tabs import *
+from .ttkauibook import *
 from .tktabart import *
 from .tkdockart import *
-from .tktabmdi import *
+from .ttktabmdi import *

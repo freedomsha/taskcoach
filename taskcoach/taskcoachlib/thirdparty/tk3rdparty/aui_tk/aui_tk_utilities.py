@@ -32,38 +32,104 @@ import tkinter as tk
 # from tkinter import ttk
 
 try:
-    from PIL import Image, ImageDraw, ImageGrab, ImageTk, ImageEnhance
+    from PIL import Image, ImageDraw, ImageGrab, ImageTk, ImageEnhance, ImageColor
 except ImportError:  # PIL est nécessaire seulement pour les fonctions bitmap
-    Image = ImageDraw = ImageGrab = ImageTk = ImageEnhance = None
+    Image = ImageDraw = ImageGrab = ImageTk = ImageEnhance = ImageColor = None
 from .aui_tk_constants import *
 
 
 def _rgb(value):
+    """
+    Convert a color representation to an RGB tuple (red, green, blue).
+
+    Supports hex strings (e.g. '#fff', '#ffffff'), color names (e.g. 'white'),
+    wx.Colour-like objects (with Red(), Green(), Blue()), and RGB/RGBA tuples/lists.
+
+    :param value: The color value to convert.
+    :type value: str or tuple or list or wx.Colour
+    :return: An (R, G, B) tuple with integer values in 0..255.
+    :rtype: tuple[int, int, int]
+    :raises TypeError: If the color type is unsupported or cannot be parsed.
+    """
     if isinstance(value, str):
-        value = value.lstrip("#")
-        if len(value) == 3:
-            value = "".join(ch * 2 for ch in value)
-        return tuple(int(value[i: i + 2], 16) for i in (0, 2, 4))
-    if hasattr(value, "Red"):
-        return value.Red(), value.Green(), value.Blue()
+        v = value.strip()
+        if v.startswith("#"):
+            v = v.lstrip("#")
+            if len(v) == 3:
+                v = "".join(ch * 2 for ch in v)
+            if len(v) == 6:
+                try:
+                    return tuple(int(v[i:i + 2], 16) for i in (0, 2, 4))
+                except ValueError:
+                    pass
+        if ImageColor is not None:
+            try:
+                return ImageColor.getrgb(v)[:3]
+            except ValueError:
+                pass
+        named_colors = {
+            "white": (255, 255, 255),
+            "black": (0, 0, 0),
+            "red": (255, 0, 0),
+            "green": (0, 255, 0),
+            "blue": (0, 0, 255),
+            "gray": (128, 128, 128),
+            "grey": (128, 128, 128),
+            "lightgray": (211, 211, 211),
+            "lightgrey": (211, 211, 211),
+            "darkgray": (169, 169, 169),
+            "darkgrey": (169, 169, 169),
+        }
+        if v.lower() in named_colors:
+            return named_colors[v.lower()]
+        try:
+            root = getattr(tk, "_default_root", None)
+            if root is not None:
+                r, g, b = root.winfo_rgb(v)
+                return r >> 8, g >> 8, b >> 8
+        except (tk.TclError, AttributeError):
+            pass
+        if len(v) == 6:
+            try:
+                return tuple(int(v[i:i + 2], 16) for i in (0, 2, 4))
+            except ValueError:
+                pass
+    red_fn = getattr(value, "Red", None)
+    green_fn = getattr(value, "Green", None)
+    blue_fn = getattr(value, "Blue", None)
+    if callable(red_fn) and callable(green_fn) and callable(blue_fn):
+        return red_fn(), green_fn(), blue_fn()
     if isinstance(value, (tuple, list)):
-        return tuple(value[:3])
+        return tuple(int(x) for x in value[:3])
     raise TypeError(f"Couleur non prise en charge: {value!r}")
 
 
 def _colour(rgb):
+    """
+    Convert an RGB sequence into a hex color string.
+
+    :param rgb: An iterable of at least 3 numeric color components (red, green, blue).
+    :type rgb: tuple or list
+    :return: A hex color string in the format '#rrggbb'.
+    :rtype: str
+    """
     r, g, b = [max(0, min(255, int(x))) for x in rgb[:3]]
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
 def BlendColour(fg, bg, alpha):
     """
-    Blends the two colour component `fg` and `bg` into one colour component, adding
+    Blends the two colour component fg and bg into one colour component, adding
     an optional alpha channel.
 
-    :param `fg`: the first colour component;
-    :param `bg`: the second colour component;
-    :param integer `alpha`: an optional transparency value.
+    :param fg: The first colour component.
+    :type fg: int or float
+    :param bg: The second colour component.
+    :type bg: int or float
+    :param alpha: An optional transparency value.
+    :type alpha: float
+    :return: The blended colour component value.
+    :rtype: float
     """
     # result = bg + (alpha*(fg - bg))
     #
@@ -73,18 +139,22 @@ def BlendColour(fg, bg, alpha):
     #     result = 255
     #
     # return result
-    return bg + alpha * (fg - bg)
+    return max(0.0, min(255.0, bg + alpha * (fg - bg)))
 
 
 def StepColour(c, ialpha):
     """
-    Darken/lighten the input colour `c`.
+    Darken/lighten the input colour c.
 
-    :param `c`: a colour to darken/lighten;
-    :param integer `ialpha`: a transparency value.
+    :param c: A colour to darken/lighten.
+    :type c: str or tuple or list or wx.Colour
+    :param ialpha: A transparency value (0 = black, 100 = unchanged, 200 = white).
+    :type ialpha: int
+    :return: The adjusted colour as a hex string.
+    :rtype: str
     """
 
-    if ialpha == 100:
+    if ialpha == 100 and isinstance(c, str) and c.startswith("#"):
         return c
 
     # r, g, b, a = c.Red(), c.Green(), c.Blue(), c.Alpha()
@@ -128,9 +198,12 @@ def StepColour(c, ialpha):
 
 def LightContrastColour(c):
     """
-    Creates a new, lighter colour based on the input colour `c`.
+    Creates a new, lighter colour based on the input colour c.
 
-    :param `c`: the input colour to analyze.
+    :param c: The input colour to analyze.
+    :type c: str or tuple or list or wx.Colour
+    :return: A lighter contrast colour as a hex string.
+    :rtype: str
     """
     # amount = 120
     #
@@ -146,12 +219,14 @@ def LightContrastColour(c):
 
 def ChopText(dc, text, max_size):
     """
-    Chops the input `text` if its size does not fit in `max_size`, by cutting the
+    Chops the input text if its size does not fit in max_size, by cutting the
     text and adding ellipsis at the end.
 
-    :param `dc`: a :class:`wx.DC` device context;
-    :param string `text`: the text to chop;
-    :param integer `max_size`: the maximum size in which the text should fit.
+    :param dc: A device context, Canvas, or font used to measure text extent.
+    :param str text: The text to chop.
+    :param int max_size: The maximum size in which the text should fit.
+    :return: The chopped text with ellipsis, or the original text.
+    :rtype: str
     """
 
     # # first check if the text fits with no problems
@@ -172,7 +247,20 @@ def ChopText(dc, text, max_size):
     #
     #     if x < max_size:
     #         break
-    measure = lambda s: dc.measure(s) if hasattr(dc, "measure") else dc.winfo_pixels(s)
+    def measure(s):
+        if hasattr(dc, "measure"):
+            return dc.measure(s)
+        if hasattr(dc, "GetTextExtent"):
+            return dc.GetTextExtent(s)[0]
+        f = getattr(dc, "font", getattr(dc, "_font", None))
+        try:
+            import tkinter.font as tkfont
+            if f is not None:
+                return tkfont.Font(font=f).measure(s)
+            return tkfont.nametofont("TkDefaultFont").measure(s)
+        except Exception:
+            return len(s) * 8
+
     if measure(text) <= max_size:
         return text
 
@@ -188,11 +276,14 @@ def BitmapFromBits(bits, w, h, colour):
     """
     A utility function that creates a masked bitmap from raw bits (XBM format).
 
-    :param string `bits`: the raw bits of the bitmap;
-    :param integer `w`: the bitmap width;
-    :param integer `h`: the bitmap height;
-    :param `colour`: the colour which will replace all white pixels in the
-     raw bitmap.
+    :param bits: The raw bits of the bitmap.
+    :type bits: bytes or list[int] or str
+    :param int w: The bitmap width.
+    :param int h: The bitmap height.
+    :param colour: The colour which will replace all set pixels in the raw bitmap.
+    :type colour: str or tuple or list or wx.Colour
+    :return: An ImageTk.PhotoImage or PIL.Image representing the bitmap.
+    :rtype: ImageTk.PhotoImage or PIL.Image.Image
     """
     # img = wx.Bitmap(bits, w, h).ConvertToImage()
     # img.Replace(0, 0, 0, 123, 123, 123)
@@ -201,7 +292,7 @@ def BitmapFromBits(bits, w, h, colour):
     # return wx.Bitmap(img)
     if Image is None:
         raise ImportError("Pillow est nécessaire pour BitmapFromBits")
-    data = bytes(bits)
+    data = bits.encode("latin1") if isinstance(bits, str) else bytes(bits)
     image = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     pix = image.load()
     r, g, b = _rgb(colour)
@@ -210,15 +301,22 @@ def BitmapFromBits(bits, w, h, colour):
             byte = data[(y * ((w + 7) // 8)) + x // 8]
             if byte & (1 << (x % 8)):
                 pix[x, y] = (r, g, b, 255)
-    return ImageTk.PhotoImage(image)
+    if ImageTk is not None:
+        try:
+            return ImageTk.PhotoImage(image)
+        except (RuntimeError, tk.TclError, AttributeError):
+            pass
+    return image
 
 
 def IndentPressedBitmap(rect, button_state):
     """
-    Indents the input rectangle `rect` based on the value of `button_state`.
+    Indents the input rectangle rect based on the value of button_state.
 
-    :param `rect`: the button bitmap rectangle;
-    :param integer `button_state`: the button state.
+    :param rect: The button bitmap rectangle (object with x, y or sequence).
+    :type rect: wx.Rect or tuple or list
+    :param int button_state: The button state (e.g. AUI_BUTTON_STATE_PRESSED).
+    :return: The indented rectangle.
     """
     # if button_state == AUI_BUTTON_STATE_PRESSED:
     #     rect.x += 1
@@ -238,6 +336,11 @@ def GetBaseColour(widget=None):
     """
     Returns the face shading colour on push buttons/backgrounds,
     mimicking as closely as possible the platform UI colours.
+
+    :param widget: An optional Tkinter widget to inspect for background colour.
+    :type widget: tkinter.Widget or None
+    :return: A hex colour string representing the base face shading colour.
+    :rtype: str
     """
     #
     # base_colour = wx.SystemSettings.GetColour(wx.SYS_COLOUR_3DFACE)
@@ -254,7 +357,12 @@ def GetBaseColour(widget=None):
     if widget is not None:
         try:
             value = widget.cget("background")
-        except tk.TclError:
+        except (tk.TclError, AttributeError):
+            value = "#d9d9d9"
+    elif tk._default_root is not None:
+        try:
+            value = tk._default_root.cget("background")
+        except (tk.TclError, AttributeError):
             value = "#d9d9d9"
     else:
         value = "#d9d9d9"
@@ -263,13 +371,22 @@ def GetBaseColour(widget=None):
 
 def MakeDisabledBitmap(bitmap):
     """
-    Convert the given image (in place) to a grayed-out version, appropriate for a 'disabled' appearance.
+    Convert the given image to a grayed-out version, appropriate for a 'disabled' appearance.
 
-    :param `bitmap`: the bitmap to gray-out.
+    :param bitmap: The bitmap or PIL Image to gray-out.
+    :type bitmap: PIL.Image.Image or ImageTk.PhotoImage
+    :return: A desaturated/grayed-out PIL Image.
+    :rtype: PIL.Image.Image
     """
     #
     # return bitmap.ConvertToDisabled()
-    if Image is None:
+    if Image is None or ImageEnhance is None:
+        return bitmap
+    if hasattr(bitmap, "GetImage"):
+        bitmap = bitmap.GetImage()
+    elif hasattr(bitmap, "_image"):
+        bitmap = bitmap._image
+    if not hasattr(bitmap, "convert"):
         return bitmap
     image = bitmap.copy() if hasattr(bitmap, "copy") else bitmap
     return ImageEnhance.Color(image).enhance(0).convert("RGBA")
@@ -277,23 +394,33 @@ def MakeDisabledBitmap(bitmap):
 
 def Clip(a, b, c):
     """
-    Clips the value in `a` based on the extremes `b` and `c`.
+    Clips the value in a based on the extremes b and c.
 
-    :param `a`: the value to analyze;
-    :param `b`: a minimum value;
-    :param `c`: a maximum value.
+    :param a: The value to analyze.
+    :type a: int or float
+    :param b: A minimum value.
+    :type b: int or float
+    :param c: A maximum value.
+    :type c: int or float
+    :return: The clipped value between min(b, c) and max(b, c).
+    :rtype: int or float
     """
     #
     # return ((a < b and [b]) or [(a > c and [c] or [a])[0]])[0]
-    return max(b, min(c, a))
+    low, high = (b, c) if b <= c else (c, b)
+    return max(low, min(high, a))
 
 
 def LightColour(colour, percent):
     """
-    Brighten input `colour` by `percent`.
+    Brighten input colour by percent.
 
-    :param `colour`: the colour to be brightened;
-    :param integer `percent`: brightening percentage.
+    :param colour: The colour to be brightened.
+    :type colour: str or tuple or list or wx.Colour
+    :param percent: Brightening percentage (0 to 100).
+    :type percent: int or float
+    :return: The brightened colour as a hex string.
+    :rtype: str
     """
     #
     # end_colour = wx.WHITE
@@ -312,7 +439,7 @@ def LightColour(colour, percent):
     # a = colour.Alpha()
     # return wx.Colour(int(r), int(g), int(b), int(a))
     r, g, b = _rgb(colour)
-    factor = max(0, percent) / 100.0
+    factor = max(0.0, float(percent)) / 100.0
     return _colour(
         (r + (255 - r) * factor, g + (255 - g) * factor, b + (255 - b) * factor)
     )
@@ -320,9 +447,10 @@ def LightColour(colour, percent):
 
 def PaneCreateStippleBitmap():
     """
-    Creates a stipple bitmap to be used in a :class:`wx.Brush`.
+    Creates a stipple bitmap to be used for sash resize hints.
 
-    This is used to draw sash resize hints.
+    :return: A 2x2 PIL Image containing the stipple pattern.
+    :rtype: PIL.Image.Image
     """
     #
     # data = [0, 0, 0, 192, 192, 192, 192, 192, 192, 0, 0, 0]
@@ -344,11 +472,15 @@ def PaneCreateStippleBitmap():
 
 def DrawMACCloseButton(colour, backColour=None, size=16):
     """
-    Draws the wxMAC tab close button using :class:`GraphicsContext`.
+    Draws the wxMAC tab close button using PIL.
 
-    :param `colour`: the colour to use to draw the circle;
-    :param `backColour`: the optional background colour for the circle.
-    :param integer `size`: the size of the button.
+    :param colour: The colour to use to draw the circle.
+    :type colour: str or tuple or list or wx.Colour
+    :param backColour: The optional background colour for the cross lines.
+    :type backColour: str or tuple or list or wx.Colour or None
+    :param int size: The size of the button in pixels (default 16).
+    :return: A PIL Image containing the rendered close button.
+    :rtype: PIL.Image.Image
     """
     #
     # bmp = wx.Bitmap.FromRGBA(16, 16)
@@ -385,22 +517,28 @@ def DrawMACCloseButton(colour, backColour=None, size=16):
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(image)
     d.ellipse((1, 1, size - 2, size - 2), fill=_rgb(colour) + (255,))
+    cross_colour = _rgb(backColour if backColour is not None else "white") + (255,)
     d.line(
-        (4, 4, size - 6, size - 6), fill=_rgb(backColour or "white") + (255,), width=2
+        (4, 4, size - 6, size - 6), fill=cross_colour, width=2
     )
     d.line(
-        (4, size - 6, size - 6, 4), fill=_rgb(backColour or "white") + (255,), width=2
+        (4, size - 6, size - 6, 4), fill=cross_colour, width=2
     )
     return image
 
 
 def DarkenBitmap(bmp, caption_colour, new_colour):
     """
-    Darkens the input bitmap on wxMAC using the input colour.
+    Darkens the input bitmap using the input colour.
 
-    :param `bmp`: the bitmap to be manipulated;
-    :param `caption_colour`: the colour of the pane caption;
-    :param `new_colour`: the colour used to darken the bitmap.
+    :param bmp: The bitmap to be manipulated.
+    :type bmp: PIL.Image.Image
+    :param caption_colour: The colour of the pane caption.
+    :type caption_colour: str or tuple or list or wx.Colour
+    :param new_colour: The colour used to darken the bitmap.
+    :type new_colour: str or tuple or list or wx.Colour
+    :return: The darkened PIL Image.
+    :rtype: PIL.Image.Image
     """
     #
     # image = bmp.ConvertToImage()
@@ -413,15 +551,19 @@ def DarkenBitmap(bmp, caption_colour, new_colour):
         raise ImportError("Pillow est nécessaire pour DarkenBitmap")
     cr, cg, cb = _rgb(caption_colour)
     nr, ng, nb = _rgb(new_colour)
+    if hasattr(bmp, "GetImage"):
+        bmp = bmp.GetImage()
+    elif hasattr(bmp, "_image"):
+        bmp = bmp._image
     image = bmp.convert("RGBA")
     px = image.load()
     for y in range(image.height):
         for x in range(image.width):
             r, g, b, a = px[x, y]
             px[x, y] = (
-                int(r * cr / max(nr, 1)),
-                int(g * cg / max(ng, 1)),
-                int(b * cb / max(nb, 1)),
+                min(255, int(r * cr / max(nr, 1))),
+                min(255, int(g * cg / max(ng, 1))),
+                min(255, int(b * cb / max(nb, 1))),
                 a,
             )
     return image
@@ -433,11 +575,17 @@ def DrawGradientRectangle(
     """
     Draws a gradient-shaded rectangle.
 
-    :param `dc`: a :class:`tk.Canvas` device context;
-    :param `rect`: the rectangle in which to draw the gradient;
-    :param `start_colour`: the first colour of the gradient;
-    :param `end_colour`: the second colour of the gradient;
-    :param integer `direction`: the gradient direction (horizontal or vertical).
+    :param dc: A Tkinter Canvas (:class:`tkinter.Canvas`) or device context on which to draw.
+    :type dc: tkinter.Canvas
+    :param rect: The rectangle in which to draw the gradient (tuple (x, y, w, h) or object with x, y, width, height).
+    :type rect: tuple or list or wx.Rect
+    :param start_colour: The first colour of the gradient.
+    :type start_colour: str or tuple or list or wx.Colour
+    :param end_colour: The second colour of the gradient.
+    :type end_colour: str or tuple or list or wx.Colour
+    :param int direction: The gradient direction (AUI_GRADIENT_HORIZONTAL or AUI_GRADIENT_VERTICAL).
+    :param int offset: Optional offset for the gradient drawing (default 0).
+    :param int length: Optional length for the gradient drawing (default 0).
     """
     #
     # if direction == AUI_GRADIENT_VERTICAL:
@@ -454,10 +602,16 @@ def DrawGradientRectangle(
     for i in range(max(1, count)):
         t = i / max(1, count - 1)
         color = _colour((sr + (er - sr) * t, sg + (eg - sg) * t, sb + (eb - sb) * t))
-        if vertical:
-            tk.Canvas.create_line(dc, x, y + i, x + w, y + i, fill=color)
+        if hasattr(dc, "create_line"):
+            if vertical:
+                dc.create_line(x, y + i, x + w, y + i, fill=color)
+            else:
+                dc.create_line(x + i, y, x + i, y + h, fill=color)
         else:
-            tk.Canvas.create_line(dc, x + i, y, x + i, y + h, fill=color)
+            if vertical:
+                tk.Canvas.create_line(dc, x, y + i, x + w, y + i, fill=color)
+            else:
+                tk.Canvas.create_line(dc, x + i, y, x + i, y + h, fill=color)
 
 
 def FindFocusDescendant(ancestor):
@@ -465,7 +619,10 @@ def FindFocusDescendant(ancestor):
     Find a window with the focus, that is also a descendant of the given window.
     This is used to determine the window to initially send commands to.
 
-    :param `ancestor`: the window to check for ancestry.
+    :param ancestor: The window (:class:`tkinter.Misc` or :class:`tkinter.Widget`) to check for ancestry.
+    :type ancestor: tkinter.Misc
+    :return: The focused descendant window, or None if focus is not in ancestor.
+    :rtype: tkinter.Widget or None
     """
     #
     # # Process events starting with the window with the focus, if any.
@@ -485,13 +642,14 @@ def FindFocusDescendant(ancestor):
     #
     # return focusWin
     try:
-        win = ancestor.focus_get()
-    except tk.TclError:
+        focus_win = ancestor.focus_get()
+    except (tk.TclError, AttributeError):
         return None
+    win = focus_win
     while win is not None:
         if win == ancestor:
-            return win
-        win = win.master
+            return focus_win
+        win = getattr(win, "master", None)
     return None
 
 
@@ -499,8 +657,11 @@ def GetLabelSize(dc, label, vertical):
     """
     Returns the :class:`~wx.lib.agw.aui.auibar.AuiToolBar` item label size.
 
-    :param string `label`: the toolbar tool label;
-    :param bool `vertical`: whether the toolbar tool orientation is vertical or not.
+    :param dc: A font (:class:`tkinter.font.Font`) or Canvas / DC used to measure text.
+    :param str label: The toolbar tool label.
+    :param bool vertical: Whether the toolbar tool orientation is vertical or not.
+    :return: A tuple of (width, height) in pixels.
+    :rtype: tuple[int, int]
     """
     #
     # text_width = text_height = 0
@@ -517,8 +678,20 @@ def GetLabelSize(dc, label, vertical):
     #     text_width = tmp
     #
     # return wx.Size(text_width, text_height)
-    width = dc.measure(label) if label.strip() else 0
-    height = dc.metrics("linespace")
+    if hasattr(dc, "measure"):
+        width = dc.measure(label) if label.strip() else 0
+        height = dc.metrics("linespace") if hasattr(dc, "metrics") else 16
+    elif hasattr(dc, "GetTextExtent"):
+        width, height = dc.GetTextExtent(label) if label.strip() else (0, 0)
+    else:
+        try:
+            import tkinter.font as tkfont
+            font = tkfont.nametofont("TkDefaultFont")
+            width = font.measure(label) if label.strip() else 0
+            height = font.metrics("linespace")
+        except Exception:
+            width = len(label) * 8 if label.strip() else 0
+            height = 16
     return (height, width) if vertical else (width, height)
 
 
@@ -543,10 +716,10 @@ class TabDragImage:
 
         For internal use: do not call it in your code!
 
-        :param `notebook`: an instance of :class:`AuiNotebook`;
-        :param `page`: the dragged :class:`AuiNotebookPage` page;
-        :param integer `button_state`: the state of the close button on the tab;
-        :param `tabArt`: an instance of :class:`AuiDefaultTabArt` or one of its derivations.
+        :param notebook: An instance of :class:`AuiNotebook`.
+        :param page: The dragged :class:`AuiNotebookPage` page.
+        :param int button_state: The state of the close button on the tab.
+        :param tabArt: An instance of :class:`AuiDefaultTabArt` or one of its derivations.
         """
         #
         # self._backgroundColour = wx.Colour("pink")
@@ -557,10 +730,11 @@ class TabDragImage:
         """
         Actually creates the drag and drop bitmap.
 
-        :param `notebook`: an instance of :class:`AuiNotebook`;
-        :param `page`: the dragged :class:`AuiNotebookPage` page;
-        :param integer `button_state`: the state of the close button on the tab;
-        :param `tabArt`: an instance of :class:`AuiDefaultTabArt` or one of its derivations.
+        :param notebook: An instance of :class:`AuiNotebook`.
+        :param page: The dragged :class:`AuiNotebookPage` page.
+        :param int button_state: The state of the close button on the tab.
+        :param tabArt: An instance of :class:`AuiDefaultTabArt` or one of its derivations.
+        :return: The created drag bitmap or PIL Image.
         """
         #
         # control = page.control
@@ -624,10 +798,21 @@ class TabDragImage:
         return getattr(page, "bitmap", None)
 
     def Show(self, x, y):
+        """
+        Shows the drag image at the specified screen position.
+
+        :param int x: The x coordinate on the screen.
+        :param int y: The y coordinate on the screen.
+        :return: The bitmap if available, or None.
+        """
         if hasattr(self._bitmap, "tk"):
             return self._bitmap
+        return None
 
     def Hide(self):
+        """
+        Hides the drag image.
+        """
         pass
 
 
@@ -635,9 +820,11 @@ def GetDockingImage(direction, useAero, center):
     """
     Returns the correct name of the docking bitmap depending on the input parameters.
 
-    :param bool `useAero`: whether :class:`AuiManager` is using
-     Aero-style or Whidbey-style docking images or not;
-    :param bool `center`: whether we are looking for the center diamond-shaped bitmap or not.
+    :param int direction: The pane docking direction (e.g. AUI_DOCK_TOP, AUI_DOCK_LEFT, etc.).
+    :param int useAero: Docking guide style (0 = default, 1 = Aero, 2 = Whidbey).
+    :param bool center: Whether we are looking for the center diamond-shaped bitmap or not.
+    :return: A tuple (bmp_unfocus, bmp_focus) containing the unfocused and focused bitmaps.
+    :rtype: tuple
     """
 
     # suffix = (center and [""] or ["_single"])[0]
@@ -666,24 +853,28 @@ def GetDockingImage(direction, useAero, center):
     # else:
     #     bmp_unfocus = eval("%stab%s"%(prefix, suffix)).GetBitmap()
     #     bmp_focus = eval("%stab_focus%s"%(prefix, suffix)).GetBitmap()
-    names = {
-        AUI_DOCK_TOP: f"{prefix}up{suffix}",
-        AUI_DOCK_BOTTOM: f"{prefix}down{suffix}",
-        AUI_DOCK_LEFT: f"{prefix}left{suffix}",
-        AUI_DOCK_RIGHT: f"{prefix}right{suffix}",
-        None: f"{prefix}tab{suffix}",
+    base_names = {
+        AUI_DOCK_TOP: "up",
+        AUI_DOCK_BOTTOM: "down",
+        AUI_DOCK_LEFT: "left",
+        AUI_DOCK_RIGHT: "right",
     }
-    name = names.get(direction, names[None])
+    base = base_names.get(direction, "tab")
+    name = f"{prefix}{base}{suffix}"
+    focus_name = f"{prefix}{base}_focus{suffix}"
     #
     # return bmp_unfocus, bmp_focus
-    return globals().get(name), globals().get(name + "_focus")
+    return globals().get(name), globals().get(focus_name)
 
 
 def TakeScreenShot(rect):
     """
-    Takes a screenshot of the screen at given position and size (`rect`).
+    Takes a screenshot of the screen at given position and size (rect).
 
-    :param `rect`: the screen rectangle for which we want to take a screenshot.
+    :param rect: The screen rectangle for which we want to take a screenshot (object with x, y, width, height or sequence).
+    :type rect: tuple or list or wx.Rect
+    :return: A PIL Image containing the screenshot.
+    :rtype: PIL.Image.Image
     """
     #
     # # Create a DC for the whole screen area
@@ -720,17 +911,20 @@ def TakeScreenShot(rect):
     if ImageGrab is None:
         raise ImportError("Pillow est nécessaire pour TakeScreenShot")
     x, y, w, h = (
-        (rect.x, rect.y, rect.width, rect.height) if hasattr(rect, "x") else rect
+        (rect.x, rect.y, rect.width, rect.height) if hasattr(rect, "x") else tuple(rect[:4])
     )
     return ImageGrab.grab((x, y, x + w, y + h))
 
 
 def RescaleScreenShot(bmp, thumbnail_size=200):
     """
-    Rescales a bitmap to be `thumbnail_size` pixels wide (or tall) at maximum.
+    Rescales a bitmap to be thumbnail_size pixels wide (or tall) at maximum.
 
-    :param `bmp`: the bitmap to rescale;
-    :param integer `thumbnail_size`: the maximum size of every page thumbnail.
+    :param bmp: The bitmap or PIL Image to rescale.
+    :type bmp: PIL.Image.Image
+    :param int thumbnail_size: The maximum size of every page thumbnail (default 200).
+    :return: A PIL Image rescaled with a drop shadow border.
+    :rtype: PIL.Image.Image
     """
     #
     # bmpW, bmpH = bmp.GetWidth(), bmp.GetHeight()
@@ -775,7 +969,11 @@ def RescaleScreenShot(bmp, thumbnail_size=200):
     # return otherBmp
     if Image is None:
         raise ImportError("Pillow est nécessaire pour RescaleScreenShot")
-    image = bmp.copy()
+    if hasattr(bmp, "GetImage"):
+        bmp = bmp.GetImage()
+    elif hasattr(bmp, "_image"):
+        bmp = bmp._image
+    image = bmp.copy() if hasattr(bmp, "copy") else bmp
     image.thumbnail((thumbnail_size, thumbnail_size), Image.Resampling.LANCZOS)
     out = Image.new("RGBA", (image.width + 5, image.height + 5), "white")
     d = ImageDraw.Draw(out)
@@ -793,9 +991,13 @@ def GetSlidingPoints(rect, size, direction):
     """
     Returns the point at which the sliding in and out of a minimized pane begins.
 
-    :param `rect`: the :class:`AuiToolBar` tool screen rectangle;
-    :param `size`: the pane window size;
-    :param integer `direction`: the pane docking direction.
+    :param rect: The :class:`AuiToolBar` tool screen rectangle (tuple or object with x, y, width, height).
+    :type rect: tuple or list or wx.Rect
+    :param size: The pane window size (tuple (w, h) or size object).
+    :type size: tuple or list or wx.Size
+    :param int direction: The pane docking direction.
+    :return: A tuple of (startX, startY, stopX, stopY).
+    :rtype: tuple[int, int, int, int]
     """
     #
     # if direction == AUI_DOCK_LEFT:
@@ -818,23 +1020,29 @@ def GetSlidingPoints(rect, size, direction):
     #
     # return startX, startY, stopX, stopY
     x, y, w, h = (
-        (rect.x, rect.y, rect.width, rect.height) if hasattr(rect, "x") else rect
+        (rect.x, rect.y, rect.width, rect.height) if hasattr(rect, "x") else tuple(rect[:4])
     )
-    sx, sy = {
+    size_w = size.x if hasattr(size, "x") else (size.width if hasattr(size, "width") else size[0])
+    size_h = size.y if hasattr(size, "y") else (size.height if hasattr(size, "height") else size[1])
+    coords = {
         AUI_DOCK_LEFT: (x + w + 2, y),
         AUI_DOCK_TOP: (x, y + h + 2),
-        AUI_DOCK_RIGHT: (x - size[0] - 2, y),
-        AUI_DOCK_BOTTOM: (x, y - size[1] - 2),
-    }[direction]
-    return sx, sy, size[0] + 4, size[0] + 4
+        AUI_DOCK_RIGHT: (x - size_w - 2, y),
+        AUI_DOCK_BOTTOM: (x, y - size_h - 2),
+    }
+    if direction not in coords:
+        raise ValueError(f"Direction de dock invalide: {direction}")
+    sx, sy = coords[direction]
+    return sx, sy, size_w + 4, size_h + 4
 
 
 def CopyAttributes(newArt, oldArt):
     """
     Copies pens, brushes, colours and fonts from the old tab art to the new one.
 
-    :param `newArt`: the new instance of :class:``;
-    :param `oldArt`: the old instance of :class:``.
+    :param newArt: The new tab art instance (e.g. :class:`AuiDefaultTabArt`).
+    :param oldArt: The old tab art instance to copy attributes from.
+    :return: The new tab art instance with copied attributes.
     """
     # :param `newArt`: the new instance of :class:`~wx.lib.agw.aui.tabart.AuiDefaultTabArt`;
     # :param `oldArt`: the old instance of :class:`~wx.lib.agw.aui.tabart.AuiDefaultTabArt`.

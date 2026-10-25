@@ -53,6 +53,7 @@ class PyEmbeddedImageTk:
             self.GetPhotoImage()  # Cela chargera aussi l'image PIL
         return self._image_pil
 
+
 # ------------------------- #
 # - AuiNotebook Constants - #
 # ------------------------- #

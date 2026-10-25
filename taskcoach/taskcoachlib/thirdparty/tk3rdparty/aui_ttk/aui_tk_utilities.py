@@ -29,7 +29,7 @@ __date__ = "31 March 2009"
 
 # import wx
 import tkinter as tk
-# from tkinter import ttk
+from tkinter import ttk
 
 try:
     from PIL import Image, ImageDraw, ImageGrab, ImageTk, ImageEnhance, ImageColor

@@ -285,16 +285,57 @@ Latest Revision: Andrea Gavana @ 07 Mar 2012, 21.00 GMT
 Version 1.3.
 
 """
+# Ce que ttk aurait simplifié :
+#
+# ttk.Notebook gère nativement l'affichage et la sélection d'onglets
+#  (add, insert, select, hide, forget, options text/image/state,
+#  événement <<NotebookTabChanged>>, parcours clavier via enable_traversal).
+#  Pour un carnet basique, c'est du code en moins par rapport à notre AuiNotebook maison.
+# ttk.Panedwindow fournit des sashes déplaçables à la souris nativement :
+#  c'est un vrai gain, car nos sashes sont encore des crochets simplifiés dans le gestionnaire.
+# L'apparence nativement alignée sur le thème du système
+#  (le but affiché de ttk : séparer comportement et apparence).
+#
+# Ce que ttk ne couvre pas (et c'est le cœur du portage AUI) :
+#
+# L'API documentée de ttk.Notebook n'a aucune méthode de glisser/déposer d'onglets,
+#  de déplacement d'onglet à la souris, de fractionnement (tab split)
+#  ni d'onglets détachables, alors que ton aui_tk_constants.py définit
+#  AUI_NB_TAB_MOVE, AUI_NB_TAB_SPLIT, AUI_NB_TAB_EXTERNAL_MOVE, AUI_NB_TAB_FLOAT :
+#  il faudrait réécrire tout cela à la main par-dessus ttk.
+# Pas de boutons de fermeture sur les onglets, pas d'art d'onglet personnalisé
+#  (nos dégradés, nos légendes dessinées, nos boutons de panneau).
+# Les options bg, fg et la plupart des options de style n'existent plus
+#  sur les widgets ttk (la documentation est explicite :
+#  il faut passer par ttk.Style),
+#  ce qui complique justement notre dessin Canvas sur les panneaux.
+#
+# Ma recommandation concrète : hybride.
+#  Garder l'architecture actuelle (widgets tk + Canvas pour l'art AUI + pack
+#  pour l'amarrage), qui vient d'être validée par 127 tests,
+#  et introduire ttk sélectivement là où il apporte quelque chose :
+#  ttk.Panedwindow pour la couche sash du gestionnaire,
+#  et les widgets feuilles (boutons, champs) dans les panneaux pour l'apparence.
+#  Une bascule complète vers ttk forcerait à réécrire la couche de rendu
+#  pour un bénéfice essentiellement cosmétique,
+#  en perdant au passage le contrôle du dessin que l'AUI exige.
 
 __author__ = "Andrea Gavana <andrea.gavana@gmail.com>"
 __date__ = "31 March 2009"
 
 
-from .aui_constants import *
-from .aui_utilities import *
-from .framemanager import *
-from .auibar import *
-from .auibook import *
-from .tabart import *
-from .dockart import *
-from .tabmdi import *
+from .aui_tk_constants import *
+from .aui_tk_utilities import *
+from .tkframemanager_elements import *
+from .tkframemanager_floating import *
+from .tkframemanager_auimanager import *
+from .tkframemanager import *
+from .tkauibar_art import *
+from .tkauibar_event_item import *
+from .tkauitoolbar import *
+from .tkauibook_aux import *
+from .tkauibook_tabs import *
+from .tkauibook import *
+from .tktabart import *
+from .tkdockart import *
+from .tktabmdi import *

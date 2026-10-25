@@ -14,9 +14,44 @@ __date__ = "31 March 2009"
 # import wx
 # import tkinter as tk
 import platform
+import base64
+from io import BytesIO
+from PIL import Image, ImageTk
 
 # from wx.lib.embeddedimage import PyEmbeddedImage
-from taskcoachlib.guitk.icons import PyEmbeddedImageTk
+# from taskcoachlib.guitk.icons import PyEmbeddedImageTk
+
+
+class PyEmbeddedImageTk:
+    """
+    Simule PyEmbeddedImage de wxPython mais pour Tkinter,
+    en décodant les données base64 et en créant un PhotoImage.
+    """
+    def __init__(self, data_base64):
+        self.data_base64 = data_base64
+        self._photo_image = None
+        self._image_pil = None
+
+    def GetPhotoImage(self):
+        """
+        Retourne l'objet PhotoImage de Tkinter.
+        Charge l'image à partir des données base64 si ce n'est pas déjà fait.
+        """
+        if self._photo_image is None:
+            decoded_data = base64.b64decode(self.data_base64)
+            # Utilise BytesIO pour lire les données comme un fichier
+            img_stream = BytesIO(decoded_data)
+            self._image_pil = Image.open(img_stream)
+            self._photo_image = ImageTk.PhotoImage(self._image_pil)
+        return self._photo_image
+
+    def GetImage(self):
+        """
+        Retourne l'objet Image PIL.
+        """
+        if self._image_pil is None:
+            self.GetPhotoImage()  # Cela chargera aussi l'image PIL
+        return self._image_pil
 
 # ------------------------- #
 # - AuiNotebook Constants - #
@@ -2641,13 +2676,13 @@ AUI_TBTOOL_VERT_COUNTERCLOCKWISE = 2  # rotation of 90 on the left
 # - AuiMDI* Constants - #
 # --------------------- #
 
-wxWINDOWCLOSE = 4001
+tkWINDOWCLOSE = 4001
 """ Identifier for the AuiMDI "close window" menu. """
-wxWINDOWCLOSEALL = 4002
+tkWINDOWCLOSEALL = 4002
 """ Identifier for the AuiMDI "close all windows" menu. """
-wxWINDOWNEXT = 4003
+tkWINDOWNEXT = 4003
 """ Identifier for the AuiMDI "next window" menu. """
-wxWINDOWPREV = 4004
+tkWINDOWPREV = 4004
 """ Identifier for the AuiMDI "previous window" menu. """
 
 # ----------------------------- #
