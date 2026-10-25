@@ -8,9 +8,12 @@ Basé sur le fichier factory.py original de Task Coach.
 # car il gère l'instanciation de différents types de vues
 # (TaskViewer, NoteViewer, etc.) de manière dynamique.
 # La principale adaptation pour cette version Tkinter consiste à
-# s'assurer que les classes addViewers et addOneViewer utilisent les bons objets de conteneur de vues (viewerContainer) et les classes de vues converties.
+# s'assurer que les classes addViewers et addOneViewer
+# utilisent les bons objets de conteneur de vues (viewerContainer
+# ) et les classes de vues converties.
 #
-# J'ai inclus des classes de simulation pour tous les modules et classes de vues (task, effort, category, note, ViewerContainer) afin que le fichier soit autonome et puisse être exécuté pour démontrer son fonctionnement.
+# J'ai inclus des classes de simulation pour tous les modules et classes de vues
+# (task, effort, category, note, ViewerContainer) afin que le fichier soit autonome et puisse être exécuté pour démontrer son fonctionnement.
 import logging
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -218,7 +221,7 @@ class addViewers:
         #     self._add_viewer(task.TaskInterdepsViewer)
         # self._add_viewer(efforttk.Effortviewer)
         # self._add_viewer(effort.EffortViewerForSelectedTasks)
-        # self._add_viewer(categorytk.Categoryviewer)
+        self._add_viewer(categorytk.Categoryviewer)
         # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
         #
         # # viewer_classes: List[Type[Viewer]] = [task.Taskviewer, category.Categoryviewer, effort.Effortviewer, note.Noteviewer]
