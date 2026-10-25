@@ -392,5 +392,11 @@ def assert_valid_parent_window(parent_window, owner):
         raise AssertionError(
             f"{owner.__class__.__name__} : parent_window invalide "
             f"({type(parent_window)}). "
-            "Types acceptés : tk.Tk, tk.Toplevel, tk.Frame, tk.LabelFrame, tk.Menu."
+            # "Types acceptés : tk.Tk, tk.Toplevel, tk.Frame, tk.LabelFrame, tk.Menu."
+            "Types acceptés : tk.Tk, tk.Toplevel, tkinterdnd2.TkinterDnD.Tk."
         )
+    # Il ne faut pas ajouter ViewerContainer aux types acceptés,
+    # car ViewerContainer n’est pas une fenêtre Tkinter.
+    # L’ajouter masquerait l’erreur de construction
+    # et permettrait à un objet applicatif de circuler
+    # comme s’il s’agissait d’un widget.
