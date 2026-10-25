@@ -2098,6 +2098,13 @@ class TaskFile(patterns.Observer):
                 f"TaskFile.load :    Tâche {task} -> Catégories : {task.categories()}"
             )
 
+        log.debug(
+            "Après TaskFile.load : filename=%r, tasks=%d, categories=%d",
+            self.filename(),
+            len(self.tasks()),
+            len(self.categories()),
+        )
+
     # Après chaque sauvegarde : appeler markClean(),
     # pas seulement self._needSave = False
     # sinon les changements restent dans le monitor.
