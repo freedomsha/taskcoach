@@ -196,7 +196,7 @@ class Menu(uicommandcontainertk.UICommandContainerMixin, tk.Menu):
         self.__parent = parent  # Stockez la référence au parent direct
         self.__window = parent_mainwindow  # Stockez la référence à la fenêtre principale comme dans la version wxPython
         # self.__window = parent_mainwindow or parent.winfo_toplevel()
-        if self.__window is None and parent is not None:
+        if self.__window is None and parent is not None:  # Mécanisme de repli en retard mais à ne pas utiliser donc reste ici
             self.__window = parent.winfo_toplevel()
 
         if self.__window is None:

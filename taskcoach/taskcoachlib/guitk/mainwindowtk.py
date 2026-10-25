@@ -336,7 +336,7 @@ from taskcoachlib.guitk.dialog.editor import Editor
 
 # from taskcoachlib.gui.iphone import IPhoneSyncFrame
 from taskcoachlib.guitk.viewer import factorytk, containertk
-from taskcoachlib.widgetstk import frametk
+from taskcoachlib.widgetstk import framettk
 from taskcoachlib.i18n import _
 
 # from taskcoachlib.powermgt import PowerStateMixin # Pas de PowerStateMixin direct dans tkinter
@@ -381,11 +381,12 @@ log = logging.getLogger(__name__)
 
 # class MainWindow(tk.Frame):  # Hérite de tk.Frame
 class MainWindow(
-    tk.LabelFrame, widgetstk.frametk.TtkManagedFrame
+    # tk.LabelFrame, widgetstk.frametk.TtkManagedFrame
+    tk.LabelFrame, widgetstk.framettk.AuiManagedFrameWithDynamicCenterPane
 ):  # Hérite de tk.Frame
     #     PowerStateMixin, BalloonTipManager, widgets.AuiManagedFrameWithDynamicCenterPane
     # ):
-    # TODO : convertir AuiManagedFrameWithDynamicCenterPane pour tkinter !
+    # Convertir AuiManagedFrameWithDynamicCenterPane pour tkinter ! Fait le 24/10/2026
     """
     Classe représentant le cadre/frame principale de Task Coach pour Tkinter.
     """
@@ -496,7 +497,7 @@ class MainWindow(
 
         # Disposition des éléments ! Peut-être les mettre dans _create_window_components() ou __init_window_components() pour éviter des unresolved ou créer une méthode propre !
         self.toolbar_frame.grid(
-            row=0, column=0, sticky="ew"
+            row=0, column=0, sticky="new"
         )  # TODO : A revoir où mettre cette ligne !
         self.viewer_container.grid(row=1, column=0, sticky="nsew")
         self.status_bar.grid(row=2, column=0, sticky="ew")
@@ -1256,16 +1257,26 @@ class MainWindow(
         # - Leur taille, position, etc. (si applicable)
         log.debug("MainWindow.__save_perspective: Sauvegarde la perspective.")
         # # Logique spécifique à AUI/wxPython à réimplémenter pour Tkinter.
-        # Récupérer la liste des viewers ouverts
-        viewer_types = [
-            viewer.__class__.__name__ for viewer in self.viewer.viewers
-        ]  # AttributeError: 'MainWindow' object has no attribute 'viewer' quand on quitte
-        # viewer_types = [viewer.__class__.__name__ for viewer in self.viewer_container._viewers]
+        # # Récupérer la liste des viewers ouverts
+        # viewer_types = [
+        #     viewer.__class__.__name__ for viewer in self.viewer.viewers
+        # ]  # AttributeError: 'MainWindow' object has no attribute 'viewer' quand on quitte
+        viewer_types = [viewer.__class__.__name__ for viewer in self.viewer_container.viewers]
 
-        # Récupérer le viewer actif
+        # # Récupérer le viewer actif
+        # # current_viewer_type = (
+        # #     self.viewer.current_viewer.__class__.__name__
+        # #     if self.viewer.current_viewer
+        # #     else None
+        # # )
+        # current_viewer_type = (
+        #     self.viewer_container.current_viewer.__class__.__name__
+        #     if self.viewer_container.current_viewer
+        #     else None
+        # )
         current_viewer_type = (
-            self.viewer.current_viewer.__class__.__name__
-            if self.viewer.current_viewer
+            self.viewer_container.activeViewer().__class__.__name__
+            if self.viewer_container.activeViewer()
             else None
         )
 
