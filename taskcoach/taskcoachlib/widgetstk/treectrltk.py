@@ -669,6 +669,8 @@ class TreeListCtrl(
         self.dragged_items = []
         self.drag_data = []
         self.drop_position = None
+        self._item_to_object: dict = {}
+        self._object_to_item: dict = {}
 
         # self.tree["columns"] = columns  # Déclare explicitement les colonnes
         # self["columns"] = column_ids  # Déclare explicitement les colonnes
@@ -1026,6 +1028,8 @@ class TreeListCtrl(
         self.drag_data_type = ""
         self.drop_target = None
         self.drop_position = None
+        self._item_to_object: dict = {}
+        self._object_to_item: dict = {}
         self.dragAndDropCommand = dragAndDropCommand
 
     def bindEventHandlers(self):
@@ -1234,6 +1238,8 @@ class TreeListCtrl(
     #         self.config(cursor="")
     #         self.drop_target = None
     #         self.drop_position = None
+        self._item_to_object: dict = {}
+        self._object_to_item: dict = {}
     #
     # def on_end_drag(self, event):
     #     self.config(cursor="")
@@ -1541,30 +1547,114 @@ class TreeListCtrl(
     # tk.END : Une ancre qui désigne la fin d'un texte
     # self.get_children() : Retourne la liste des enfants de l'élément parent donné.
     # self.selection_add(item): Sélectionne un élément.
-    # def RefreshAllItems(self, count=0):
+    def _getChildrenOf(self, domain_object=None):
+        """Récupère les enfants d'un objet métier (ou les racines si None)."""
+        if domain_object is None:
+            if hasattr(self.__adapter, "getRootItems"):
+                return list(self.__adapter.getRootItems())
+            elif hasattr(self.__adapter, "rootItems"):
+                return list(self.__adapter.rootItems())
+            elif hasattr(self.__adapter, "presentation"):
+                return list(self.__adapter.presentation().rootItems())
+            return []
+
+        if hasattr(self.__adapter, "get_domain_children"):
+            return list(self.__adapter.get_domain_children(domain_object))
+        elif hasattr(self.__adapter, "get_tree_children"):
+            return list(self.__adapter.get_tree_children(domain_object))
+        elif hasattr(domain_object, "children"):
+            children = domain_object.children()
+            if hasattr(self.__adapter, "presentation"):
+                pres = self.__adapter.presentation()
+                return [c for c in pres if c in children]
+            return list(children)
+        return []
+
+    def _renderColumnValues(self, domain_object):
+        """Récupère les valeurs de texte pour chaque colonne de données (hors #0)."""
+        data_columns = [col for col in self._columns if col.name() != "#0"]
+        return [col.render(domain_object) if hasattr(col, "render") else "" for col in data_columns]
+
     def RefreshAllItems(self, count: int = 0):
-        """Rafraîchit tous les éléments du Treeview."""
+        """Rafraîchit tous les éléments du Treeview.
+
+        Reconstruit entièrement le contenu du TreeListCtrl.
+        """
+        log.debug(
+            "TreeListCtrl.RefreshAllItems : début, count=%d, adapter=%r",
+            count,
+            self.__adapter,
+        )
         # # Geler l'affichage
         # self.StopEditing()
         # self.__selection = self.curselection()
 
-        # Supprimer tous les éléments
+        # Supprimer tous les éléments existants
         for item in self.get_children():
             self.delete(item)
+        if hasattr(self, "_item_to_object"):
+            self._item_to_object.clear()
+        if hasattr(self, "_object_to_item"):
+            self._object_to_item.clear()
 
-        # Reconstruction
-        # self.__columns_with_images = [
-        #     index
-        #     for index in range(len(self._columns))  # TODO : La gestion des images est en cours de développement
-        #     # if self.__adapter.hasColumnImages(index)
-        # ]
-        for i in range(count):
-            item = self.__adapter.getItemWithIndex(i)
-            values = [
-                self.getItemText(item, j) for j in range(len(self["columns"]))
-            ]
-            self.insert("", tk.END, values=values, tags=item)
-        #
+        root_items = self._getChildrenOf(None)
+
+        log.debug(
+            "TreeListCtrl.RefreshAllItems : éléments racine=%r, count=%d",
+            root_items,
+            len(root_items),
+        )
+
+        for domain_object in root_items:
+            column_values = self._renderColumnValues(domain_object)
+
+            tree_item = self.insert(
+                "",
+                tk.END,
+                text="",
+                values=column_values,
+                tags=(str(self.getItemCTType(domain_object)),),
+            )
+
+            self._setObjectForItem(tree_item, domain_object)
+            if hasattr(self, "_object_to_item"):
+                self._object_to_item[domain_object] = tree_item
+
+            self._refreshObjectMinimally(
+                tree_item,
+                domain_object,
+            )
+
+            expanded = False
+            if hasattr(self.__adapter, "getItemExpanded"):
+                expanded = self.__adapter.getItemExpanded(domain_object)
+            elif hasattr(domain_object, "isExpanded"):
+                expanded = domain_object.isExpanded()
+
+            # # Reconstruction
+            # # self.__columns_with_images = [
+            # #     index
+            # #     for index in range(len(self._columns))  # TODO : La gestion des images est en cours de développement
+            # #     # if self.__adapter.hasColumnImages(index)
+            # # ]
+            # for i in range(count):
+            #     item = self.__adapter.getItemWithIndex(i)
+            #     values = [
+            #         self.getItemText(item, j) for j in range(len(self["columns"]))
+            #     ]
+            #     self.insert
+            children = self._getChildrenOf(domain_object)
+            if expanded:
+                self._addObjectRecursively(
+                    tree_item,
+                    domain_object,
+                )
+            elif children:
+                self.insert(
+                    tree_item,
+                    tk.END,
+                    text="",
+                )
         # # Reconstruire l'arborescence
         # root_item = self.GetRootItem()
         # if not root_item:
@@ -1574,6 +1664,10 @@ class TreeListCtrl(
         # # Restaurer la sélection
         # for item in self.__selection:
         #     self.selection_add(item)
+        log.debug(
+            "TreeListCtrl.RefreshAllItems : fin, lignes racines=%d",
+            len(self.get_children()),
+        )
 
     def _addObjectRecursively(
         self, parent_item: str, parent_object: Any = None
@@ -1585,9 +1679,12 @@ class TreeListCtrl(
             f"TreeListCtrl._addObjectRecursively : self.__adapter est de type {type(self.__adapter)}."
         )
         # for child_object in self.__adapter.get_domain_children(parent_object):  # 'dict' object is not callable !
-        for child_object in self.__adapter.children(
-            parent_object
-        ):  # 'dict' object is not callable !
+        children = self._getChildrenOf(parent_object)
+
+        # for child_object in self.__adapter.children(
+        #         parent_object
+        # ):  # 'dict' object is not callable !
+        for child_object in children:
             # LIGNE CORRIGÉE : Utiliser la méthode renommée 'get_domain_children' pour récupérer les objets de domaine.
             # for child_object in self.__adapter.get_domain_children(parent_object):
             # child_item = self.AppendItem(parent_item, '',
@@ -1598,47 +1695,54 @@ class TreeListCtrl(
             # Correction : la méthode insert du Treeview attend des valeurs pour le paramètre 'values'.
             # On utilise une liste des textes de colonnes, et on stocke l'objet lui-même dans 'tags' (ou 'data' qui n'est pas standard Tkinter, mais simulé).
             # Récupération des valeurs de colonnes
-            column_values = [
-                self.__adapter.getItemText(child_object, i)
-                for i in range(len(self._columns))
-            ]
+            # column_values = [
+            #     self.__adapter.getItemText(child_object, i)
+            #     for i in range(len(self._columns))
+            # ]
+            column_values = self._renderColumnValues(child_object)
 
-            # Insertion de l'élément
-            main_text = self.__adapter.getItemText(child_object, 0)
+            # # Insertion de l'élément
+            # main_text = self.__adapter.getItemText(child_object, 0)
             child_item = self.insert(
                 parent_item,
                 tk.END,
-                # # text="",  # Problème : le texte de la première colonne est géré par les valeurs, pas par 'text'. Tu insères chaque ligne avec un texte vide.
-                # # # Cela casse l'affichage de la première colonne, qui est censée afficher le texte de l'item. En Tkinter, le texte de la première colonne doit être passé via 'text', et les autres colonnes via 'values'.
-                # text=column_values[0] if column_values else "",
-                text=main_text,
+                text="",
                 values=column_values,
-                # values=column_values[1:],  # si colonne 0 est utilisée pour le tree
-                tags=self.getItemCTType(child_object),
+                tags=(str(self.getItemCTType(child_object)),),
             )
+
+            self._setObjectForItem(child_item, child_object)
+            if hasattr(self, "_object_to_item"):
+                self._object_to_item[child_object] = child_item
 
             # Rafraîchissement minimal
             self._refreshObjectMinimally(child_item, child_object)
 
             # Gestion de l'expansion
-            expanded = self.__adapter.getItemExpanded(child_object)
+            expanded = False
+            if hasattr(self.__adapter, "getItemExpanded"):
+                expanded = self.__adapter.getItemExpanded(child_object)
+            elif hasattr(child_object, "isExpanded"):
+                expanded = child_object.isExpanded()
+
+            child_children = self._getChildrenOf(child_object)
             if expanded:
                 self._addObjectRecursively(child_item, child_object)
-                # Call Expand on the item instead of on the tree
+            # Call Expand on the item instead of on the tree
             # (self.Expand(childItem)) to prevent lots of events
             # (EVT_TREE_ITEM_EXPANDING/EXPANDED) being sent
             # child_item.Expand()
-            else:
+            elif child_children:
                 # self.SetItemHasChildren(child_item, self.__adapter.get_domain_children(child_object))
                 # self.insert(child_item, tk.END, text='')
                 # Ajouter un élément factice pour permettre l'expansion
                 # si l'élément a des enfants dans le modèle de données.
                 # L'appel à children(child_object) dans le modèle de données détermine
                 # si un "+" doit être affiché.
-                if self.__adapter.children(
-                    child_object
-                ):  # Utiliser le nouveau nom ici aussi
-                    self.insert(child_item, tk.END, text="")
+                # if self.__adapter.children(
+                #         child_object
+                # ):  # Utiliser le nouveau nom ici aussi
+                self.insert(child_item, tk.END, text="")
 
     def _refreshObjectMinimally(self, item: str, domain_object: Any):
         """Rafraîchit les aspects minimaux d'un objet (colonnes, couleurs, police, sélection)."""
@@ -1682,7 +1786,8 @@ class TreeListCtrl(
 
     def scheduleRefresh(self, count=0):
         """Programme un rafraîchissement différé pour éviter les appels multiples."""
-        if self.__refresh_scheduled:
+        # if self.__refresh_scheduled:
+        if hasattr(self, "__refresh_scheduled") and self.__refresh_scheduled:
             return
         self.__refresh_scheduled = True
 
@@ -1929,10 +2034,12 @@ class CheckTreeCtrl(TreeListCtrl):
         parent: tk.Widget,
         adapter: Any,
         columns: List[Column],
+        selectCommand: Callable = None,
         checkCommand: Callable = None,
+        editCommand: Callable = None,
         dragAndDropCommand: Callable = None,
-        # itemPopupMenu: Any = None,
         itemPopupMenu: tk.Menu = None,
+        columnPopupMenu: tk.Menu = None,
         *args,
         **kwargs,
     ):
@@ -1943,9 +2050,12 @@ class CheckTreeCtrl(TreeListCtrl):
             parent: Widget parent
             adapter: Adaptateur de données
             columns: Liste de colonnes
+            selectCommand: Callback appelé lors de la sélection
             checkCommand: Callback appelé lors du cochage
+            editCommand: Callback appelé lors de l'édition
             dragAndDropCommand: Callback glisser-déposer
-            itemPopupMenu: Menu contextuel
+            itemPopupMenu: Menu contextuel des items
+            columnPopupMenu: Menu contextuel des colonnes
         """
 
         self.__checking = False
@@ -1972,8 +2082,8 @@ class CheckTreeCtrl(TreeListCtrl):
             adapter, "getItemParentHasExclusiveChildren", lambda item: False
         )
 
-        # Initialisation de la classe de base TreeListCtrl
         # Initialisation de la classe parente
+        # # Initialisation de la classe de base TreeListCtrl
         # super().__init__(parent, columns,
         # super().__init__(parent, adapter, columns,  # <-- CORRECTION 2 (passer l'adapter)
         #                  selectCommand, editCommand, dragAndDropCommand,
@@ -1981,9 +2091,12 @@ class CheckTreeCtrl(TreeListCtrl):
         super().__init__(
             parent,
             adapter,
-            columns,  # <-- CORRECTION 2 (passer l'adapter)
+            columns,
+            selectCommand=selectCommand,
+            editCommand=editCommand,
             dragAndDropCommand=dragAndDropCommand,
             itemPopupMenu=itemPopupMenu,
+            columnPopupMenu=columnPopupMenu,
             *args,
             **kwargs,
         )

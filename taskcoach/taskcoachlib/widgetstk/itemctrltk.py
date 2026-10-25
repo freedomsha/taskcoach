@@ -921,6 +921,7 @@ class CtrlWithToolTipMixin(
 # class CtrlWithItemsMixin(_CtrlWithItemPopupMenuMixin, _CtrlWithDropTargetMixin, CtrlWithToolTipMixin):
 # class CtrlWithItemsMixin(CtrlWithToolTipMixin, _CtrlWithItemPopupMenuMixin, _CtrlWithDropTargetMixin):
 class CtrlWithItemsMixin(
+    # _CtrlWithItemsMixin, _CtrlWithItemPopupMenuMixin, _CtrlWithDropTargetMixin
     _CtrlWithItemPopupMenuMixin, _CtrlWithDropTargetMixin
 ):
     """
