@@ -836,8 +836,26 @@ class TreeListCtrl(
         # Liaison des événements
         self._bind_events()
 
+        # Logs temporaires :
+        log.debug(
+            "TreeListCtrl bindtags : %s",
+            self.bindtags(),
+        )
+        log.debug(
+            "TreeListCtrl Button-1 : %s",
+            self.bind("<Button-1>"),
+        )
+        log.debug(
+            "TreeListCtrl ButtonPress-1 : %s",
+            self.bind("<ButtonPress-1>"),
+        )
+        log.debug(
+            "TreeListCtrl TreeviewOpen : %s",
+            self.bind("<<TreeviewOpen>>"),
+        )
+
         # self.debug_columns()
-        log.debug("TreeListCtrl initialisé avec succès.")
+        log.debug("TreeListCtrl initialisé avec succès !")
 
     def heading(self, col_id, **kwargs):
         """Délègue l'appel à ttk.Treeview.heading."""
@@ -947,6 +965,102 @@ class TreeListCtrl(
                     f"[ERREUR] Colonne Treeview '{col_id}' ne correspond à aucun Column"
                 )  # Message d'erreur pour nom incohérent
 
+    def _debug_tree_state(self, event=None):
+        # for item in self.get_children(""):
+        #     log.warning(
+        #         "TREE STATE : item=%r, text=%r, open=%r, children=%r",
+        #         item,
+        #         self.item(item, "text"),
+        #         self.item(item, "open"),
+        #         self.get_children(item),
+        #     )
+        item_id = self.focus()
+
+        log.warning(
+            "TREE STATE après clic : focus=%r, open=%r, children=%r",
+            item_id,
+            self.item(item_id, "open") if item_id else None,
+            self.get_children(item_id) if item_id else None,
+        )
+
+        if item_id:
+            log.warning(
+                "TREE STATE : sélection=%r, parent=%r",
+                self.selection(),
+                self.parent(item_id),
+            )
+
+    def _debug_tree_state_for_item(self, item_id):
+        log.warning(
+            "TREE STATE for item : item=%r, open=%r, children=%r",
+            item_id,
+            self.item(item_id, "open"),
+            self.get_children(item_id),
+        )
+
+    def _debug_native_tree_click(self, event):
+        log.warning(
+            "TREEVIEW CLASS CLICK : widget=%r, region=%r, element=%r",
+            event.widget,
+            self.identify_region(event.x, event.y),
+            self.identify_element(event.x, event.y),
+        )
+
+    def _debug_force_open(self, event=None):
+        item_id = self.focus()
+
+        if not item_id:
+            log.warning("FORCE OPEN : aucun élément ayant le focus")
+            return
+
+        log.warning(
+            "FORCE OPEN AVANT : item=%r, open=%r, children=%r",
+            item_id,
+            self.item(item_id, "open"),
+            self.get_children(item_id),
+        )
+
+        self.item(item_id, open=True)
+
+        log.warning(
+            "FORCE OPEN APRÈS : item=%r, open=%r, children=%r",
+            item_id,
+            self.item(item_id, "open"),
+            self.get_children(item_id),
+        )
+
+    def _debug_populate_children(self, item_id):
+        domain_object = self._item_to_object.get(item_id)
+
+        log.warning(
+            "POPULATE : item=%r, objet=%r, enfants actuels=%r",
+            item_id,
+            domain_object,
+            self.get_children(item_id),
+        )
+
+        if domain_object is None:
+            log.error("POPULATE : aucun objet métier associé à %r", item_id)
+            return
+
+        children = self._getChildrenOf(domain_object)
+
+        log.warning(
+            "POPULATE : enfants métier de %r = %r",
+            domain_object,
+            children,
+        )
+
+        for child_id in self.get_children(item_id):
+            self.delete(child_id)
+
+        self._addObjectRecursively(item_id, domain_object)
+
+        log.warning(
+            "POPULATE APRÈS : enfants affichés=%r",
+            self.get_children(item_id),
+        )
+
     def _bind_events(self):
         """Lie les gestionnaires d'événements."""
         # # TODO : peut-être les lier dans les viewers !
@@ -963,9 +1077,18 @@ class TreeListCtrl(
         self.bind("<Button-1>", self._on_left_click)
         self.bind("<Double-1>", self._on_double_click)
         self.bind("<Double-3>", self._on_right_click)
+        # liaison temporaire :
+        self.bind_class(
+            "Treeview",
+            "<Button-1>",
+            self._debug_native_tree_click,
+            add="+",
+        )
         # Liaison des événements
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         self.tree.bind("<Button-3>", self.show_context_menu)
+        self.bind("<<TreeviewOpen>>", self._on_treeview_open)
+        self.bind("<<TreeviewColse>>", self._on_treeview_close)
 
         # Événements de glisser-déposer (depuis le mixin)
         self.bind("<ButtonPress-1>", self.on_start_drag)
@@ -975,6 +1098,10 @@ class TreeListCtrl(
         # Redimensionnement
         # self.bind('<Configure>', self.on_resize)
         self.bind("<Configure>", self._on_autowidth_resize)
+        log.warning(
+            "TreeListCtrl : liaisons TreeviewOpen et TreeviewClose installées sur %r",
+            self,
+        )
 
     # ========================================================================
     # MÉTHODES D'ACCÈS À L'ADAPTER
@@ -1309,6 +1436,7 @@ class TreeListCtrl(
 
     def on_left_click(self, event):
         """Gère le clic gauche de la souris."""
+        log.info("TreeListCtrl.on_left_click : enclenché !")
         item_id = self.identify_row(event.y)
         if item_id:
             self.selection_set(item_id)
@@ -1317,8 +1445,10 @@ class TreeListCtrl(
 
     def _on_left_click(self, event):
         """Gère le clic gauche (sélection et cases à cocher)."""
+        log.info("TreeListCtrl._on_left_click : Bouton-1 a été enclenché !")
         item_id = self.identify_row(event.y)
         if not item_id:
+            self.after(200, self._debug_tree_state)
             return
 
         # Vérifier si on clique sur une case à cocher
@@ -1332,11 +1462,14 @@ class TreeListCtrl(
                 if 0 <= event.x - x <= image_width:
                     # Clic sur la case à cocher
                     self.CheckItem(item_id, not self.IsItemChecked(item_id))
+                    self.after(200, self._debug_tree_state)
                     return
 
         # Sélection normale
         if self.selectCommand:
             self.selectCommand(event)
+
+        self.after(200, self._debug_tree_state)
 
     # def __on_double_click(self, event):
     # def on_double_click(self, event):
@@ -1548,27 +1681,98 @@ class TreeListCtrl(
     # self.get_children() : Retourne la liste des enfants de l'élément parent donné.
     # self.selection_add(item): Sélectionne un élément.
     def _getChildrenOf(self, domain_object=None):
-        """Récupère les enfants d'un objet métier (ou les racines si None)."""
+        """Récupère les enfants d'un objet métier (ou les racines si None).
+
+        Args:
+            domain_object :
+        """
+        log.info(f"TreeListCtrl._getChildrenOf : récupère les enfants de domain_object={domain_object}.")
         if domain_object is None:
             if hasattr(self.__adapter, "getRootItems"):
-                return list(self.__adapter.getRootItems())
+                # return list(self.__adapter.getRootItems())
+                log.info("TreeListCtrl._getChildrenOf : retourne list(self.__adapter.getRootItems())")
+                list_to_return = list(self.__adapter.getRootItems())
             elif hasattr(self.__adapter, "rootItems"):
-                return list(self.__adapter.rootItems())
+                log.info("TreeListCtrl._getChildrenOf : retourne list(self.__adapter.rootItems())", )
+                # return list(self.__adapter.rootItems())
+                list_to_return = list(self.__adapter.rootItems())
             elif hasattr(self.__adapter, "presentation"):
-                return list(self.__adapter.presentation().rootItems())
-            return []
+                log.info("TreeListCtrl._getChildrenOf : retourne list(self.__adapter.presentation().rootItems())")
+                # return list(self.__adapter.presentation().rootItems())
+                list_to_return = list(self.__adapter.presentation().rootItems())
+            else:
+                log.info("TreeListCtrl._getChildrenOf : retourne une liste vide.")
+                # return []
+                list_to_return = []
+            log.info("TreeListCtrl._getChildrenOf : retourne %s !", list_to_return)
+            return list_to_return
 
-        if hasattr(self.__adapter, "get_domain_children"):
-            return list(self.__adapter.get_domain_children(domain_object))
-        elif hasattr(self.__adapter, "get_tree_children"):
-            return list(self.__adapter.get_tree_children(domain_object))
-        elif hasattr(domain_object, "children"):
+        # if hasattr(self.__adapter, "get_domain_children"):
+        #     # return list(self.__adapter.get_domain_children(domain_object))
+        #     list_to_return = list(self.__adapter.get_domain_children(domain_object))
+        # elif hasattr(self.__adapter, "get_tree_children"):
+        #     # return list(self.__adapter.get_tree_children(domain_object))
+        #     list_to_return = list(self.__adapter.get_tree_children(domain_object))
+        # elif hasattr(domain_object, "children"):
+        #     children = domain_object.children()
+        #     if hasattr(self.__adapter, "presentation"):
+        #         pres = self.__adapter.presentation()
+        #         # return [c for c in pres if c in children]
+        #         list_to_return = [c for c in pres if c in children]
+        #     # return list(children)
+        #     list_to_return = list(children)
+        # else:
+        #     # return []
+        #     list_to_return = []
+
+        # Récupération des enfants d'un objet métier.
+        # Pourquoi cet ordre ?
+        # - Category.children() fournit les sous-catégories de l'objet métier.
+        # - Le filtrage par présentation conserve uniquement les enfants appartenant à la vue actuelle, si c'est bien le comportement voulu pour ce visualiseur.
+        # - Les méthodes de l'adaptateur restent disponibles pour les objets qui n'exposent pas directement children().
+        # Attention : ce filtrage par présentation peut masquer des enfants si la présentation ne contient pas tous les descendants. Si ton objectif est d'afficher toutes les sous-catégories, même lorsqu'elles ne sont pas elles-mêmes des éléments racines de la présentation, il faudra vérifier le fonctionnement exact de CategorySorter avant de conserver ce filtrage.
+        # Les catégories disposent de children(), mais pas nécessairement
+        # de get_tree_children().
+        if hasattr(domain_object, "children"):
             children = domain_object.children()
+
+            # Si une présentation existe, ne conserver que les enfants
+            # présents dans celle-ci.
             if hasattr(self.__adapter, "presentation"):
-                pres = self.__adapter.presentation()
-                return [c for c in pres if c in children]
-            return list(children)
-        return []
+                presentation = self.__adapter.presentation()
+                # return [child for child in children if child in presentation]
+                list_to_return = [child for child in children if child in presentation]
+                log.info("TreeListCtrl._getChildrenOf : retourne une presentation.")
+            else:
+                # return list(children)
+                list_to_return = list(children)
+                log.info("TreeListCtrl._getChildrenOf : retourne une liste d'enfants.")
+
+        # Utiliser les méthodes de l'adaptateur uniquement si l'objet
+        # métier ne fournit pas directement ses enfants.
+        elif hasattr(self.__adapter, "get_domain_children"):
+            # return list(
+            #     self.__adapter.get_domain_children(domain_object)
+            # )
+            list_to_return = list(
+                self.__adapter.get_domain_children(domain_object)
+            )
+            log.info("TreeListCtrl._getChildrenOf : retourne une liste de domaines d'enfants.")
+
+        elif hasattr(self.__adapter, "get_tree_children"):
+            # return list(
+            #     self.__adapter.get_tree_children(domain_object)
+            # )
+            list_to_return = list(
+                self.__adapter.get_tree_children(domain_object)
+            )
+            log.info("TreeListCtrl._getChildrenOf : retourne une liste d'arbres enfants.")
+        else:
+            log.info("TreeListCtrl._getChildrenOf : retourne une liste vide.")
+            # return []
+            list_to_return = []
+
+        return list_to_return
 
     def _renderColumnValues(self, domain_object):
         """Récupère les valeurs de texte pour chaque colonne de données (hors #0)."""
@@ -1599,15 +1803,35 @@ class TreeListCtrl(
 
         root_items = self._getChildrenOf(None)
 
-        log.debug(
-            "TreeListCtrl.RefreshAllItems : éléments racine=%r, count=%d",
+        log.info(
+            "TreeListCtrl.RefreshAllItems DEBUG : racines=%r, nombre=%d",
             root_items,
             len(root_items),
         )
 
         for domain_object in root_items:
+            children = self._getChildrenOf(domain_object)
+
+            if children:
+                log.info(
+                    "TreeListCtrl.RefreshAllItems DEBUG : catégorie=%r, développée=%r, enfants=%r",
+                    domain_object,
+                    (
+                        self.__adapter.getItemExpanded(domain_object)
+                        if hasattr(self.__adapter, "getItemExpanded")
+                        else (
+                            domain_object.isExpanded()
+                            if hasattr(domain_object, "isExpanded")
+                            else None
+                        )
+                    ),
+                    children,
+                )
+
+        for domain_object in root_items:
             column_values = self._renderColumnValues(domain_object)
 
+            # Simule un élément pour avoir le "+" de l'arbre
             tree_item = self.insert(
                 "",
                 tk.END,
@@ -1681,6 +1905,8 @@ class TreeListCtrl(
         # for child_object in self.__adapter.get_domain_children(parent_object):  # 'dict' object is not callable !
         children = self._getChildrenOf(parent_object)
 
+        log.info("TreeListCtrl._addObjectRecursively DEBUG : parent=%r, enfants=%r", parent_object, children)
+
         # for child_object in self.__adapter.children(
         #         parent_object
         # ):  # 'dict' object is not callable !
@@ -1703,6 +1929,7 @@ class TreeListCtrl(
 
             # # Insertion de l'élément
             # main_text = self.__adapter.getItemText(child_object, 0)
+            # TODO : il y a peut-être une erreur !?
             child_item = self.insert(
                 parent_item,
                 tk.END,
@@ -1804,6 +2031,67 @@ class TreeListCtrl(
         # Utilisation de wx.CallAfter pour wxPython
         self.after(1, doRefresh)
 
+    def _on_treeview_open(self, event=None):
+        """Remplace les enfants factices par les vrais enfants du modèle."""
+        log.warning(
+            "TreeListCtrl._on_treeview_open : événement TreeviewOpen reçu, focus=%r, widget=%r",
+            self.focus(),
+            event.widget if event else None,
+        )
+
+        item_id = self.focus()
+        if not item_id:
+            return
+
+        # Récupérer l'objet métier associé à l'élément Treeview.
+        # Elle retrouve la catégorie via _item_to_object, initialisé par _setObjectForItem().
+        domain_object = self._item_to_object.get(item_id)
+        if domain_object is None:
+            log.warning(
+                "TreeListCtrl._on_treeview_open : "
+                "aucun objet métier associé à %r",
+                item_id,
+            )
+            return
+
+        # Récupérer les enfants réels.
+        children = self._getChildrenOf(domain_object)
+        if not children:
+            return
+
+        # Si les vrais enfants sont déjà présents, ne rien reconstruire.
+        existing_children = self.get_children(item_id)
+        if (
+                existing_children
+                and all(
+            child in self._item_to_object
+            for child in existing_children
+        )
+        ):
+            return
+
+        # Supprimer les lignes factices.
+        for child_id in existing_children:
+            self.delete(child_id)
+            self._item_to_object.pop(child_id, None)
+
+        # Insérer les vrais enfants.
+        self._addObjectRecursively(item_id, domain_object)
+
+        log.info(
+            "TreeListCtrl._on_treeview_open : Ouverture : item=%r, objet=%r, enfants existants=%r, enfants métier=%r",
+            item_id,
+            domain_object,
+            self.get_children(item_id),
+            children,
+        )
+
+    def _on_treeview_close(self, event=None):
+        log.warning(
+            "TreeListCtrl._on_treeview_close : événement TreeviewClose reçu, focus=%r",
+            self.focus(),
+        )
+
     # ========================================================================
     # UTILITAIRES
     # ========================================================================
@@ -1834,6 +2122,7 @@ class TreeListCtrl(
         Renvoie la liste des enfants d'un élément.
         Surcharge la méthode du mixin pour la compatibilité.
         """
+        log.info("TreeListCtrl.GetItemChildren : récupère la liste des enfants de %s de façon récursive(%s).", item, recursively)
         if not recursively:
             return self.get_children(item)
         # else:
@@ -1843,6 +2132,7 @@ class TreeListCtrl(
             child = queue.pop(0)
             children.append(child)
             queue.extend(self.get_children(child))
+        log.info("TreeListCtrl.GetItemChildren : renvoie %s !", children)
         return children
 
     def GetChildren(
@@ -1853,9 +2143,13 @@ class TreeListCtrl(
 
     def GetRootItem(self) -> Optional[str]:
         """Renvoie le premier élément de niveau racine."""
+        log.info("TreeListCtrl.GetRootItem : renvoie le 1er élément de la racine.")
         # return self.get_children()[0] if self.get_children() else None
         children = self.get_children()
-        return children[0] if children else None
+        # return children[0] if children else None
+        children_to_return = children[0] if children else None
+        log.info("TreeListCtrl.GetRootItem : %s !", children_to_return)
+        return children_to_return
 
     def IsLabelBeingEdited(self) -> bool:
         """Indique si le label est en cours d'édition."""
@@ -2126,6 +2420,7 @@ class CheckTreeCtrl(TreeListCtrl):
         # immédiatement si la hiérarchie d'héritage est complexe.
         # On définit une fonction d'initialisation des événements
         def rebind_events():
+            log.info("CheckTreeCtrl.rebind_events : appel de rebind_events !")
             if hasattr(self, "_w"):
                 self.unbind("<Button-1>")
                 self.bind("<Button-1>", self.onMouseLeftDown)
@@ -2228,12 +2523,13 @@ class CheckTreeCtrl(TreeListCtrl):
         Surcharge la gestion du clic gauche pour autoriser le décochage d'un bouton radio
         déjà sélectionné, ce que le comportement par défaut d'une case à cocher n'autorise pas.
         """
+        log.info("CheckTreeCtrl.onMouseLeftDown : événement Bouton-1 reçu, focus=%r, widget=%r", self.focus(), event.widget if event else None,)
         item_id = self.identify_row(event.y)
         if not item_id:
             # return self.onItemLeftClick(event)
             return self.on_left_click(
                 event
-            )  # TODO : vérifier qu'il s'agit de la bonne méthode !
+            )  # TODO : vérifier qu'il s'agit de la bonne méthode car on_left_click ne ertourne rien !
 
         # 1. Vérification si le clic est sur l'icône de vérification (case)
         # x_start, y_start, w, h = self.bbox(item_id)
