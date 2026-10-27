@@ -303,15 +303,41 @@ class Viewer(ttk.Frame, patterns.Observer):
         #     self.widget.freeze()
 
     def onEndIO(self, taskFile):
-        """Termine les opérations de lecture/écriture dans le fichier de tâches."""
+        """
+        Termine les opérations de lecture/écriture dans le fichier de tâches
+         et diagnostique le rafraîchissement.
+
+        Args:
+            taskFile: Fichier de tâches dont l'opération vient de se terminer.
+        """
+        # Journalise l'identité du fichier et les collections réellement chargées.
+        log.info(
+            "Viewer.onEndIO AVANT thaw : viewer=%s, taskFile=%s, "
+            "tasks=%d, categories=%d, freezeCount=%d",
+            self.__class__.__name__,
+            id(taskFile),
+            len(taskFile.tasks()),
+            len(taskFile.categories()),
+            self.__freezeCount,
+        )
+
+        # Diminue le compteur de suspension des mises à jour.
         self.__freezeCount -= 1
+
+        # Réactive les notifications différées de la présentation.
         # if hasattr(self.widget, 'thaw'):
         #     self.widget.thaw()
         self.__presentation.thaw()
+
+        # Rafraîchit la vue lorsque toutes les opérations imbriquées sont terminées.
         if self.__freezeCount == 0:
             self.refresh()
-        log.debug(
-            "Viewer.onEndIO : taskFile filename=%r, tasks=%d, categories=%d",
+
+        # Journalise les données disponibles après le rafraîchissement.
+        log.info(
+            "Viewer.onEndIO APRES refresh : viewer=%s, taskFile %s filename=%r, tasks=%d, categories=%d",
+            self.__class__.__name__,
+            id(taskFile),
             taskFile.filename(),
             len(taskFile.tasks()),
             len(taskFile.categories()),
@@ -682,6 +708,7 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def onSelect(self, event=None):
         """Gère la sélection d'éléments et les changements de sélection."""
+        log.info("Viewer.onSelect : event=%r lance la sélection d'éléments.", event)
         # if self.__selectingAllItems:
         #     return
         # if self.destroy() or self.__selectingAllItems:  # destroy() détruisait la fenêtre TaskViewer !
@@ -706,7 +733,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         # Sinon, chercher le Treeview enfant
         # self.widget.curselection() dépendra du widget utilisé
         log.info(
-            f"Viewer.updateSelection : met à jour la sélection dans self.widget={self.widget}"
+            f"Viewer.updateSelection : met à jour la sélection dans self.widget={self.widget}."
         )
         # Vérifie que le widget existe et est valide
         if (
@@ -746,6 +773,10 @@ class Viewer(ttk.Frame, patterns.Observer):
             if sendViewerStatusEvent:
                 self.sendViewerStatusEvent()
 
+        # # self.widget._debug_force_open()
+        # self.widget._debug_populate_children("I007")
+        # self.widget.item("I007", open=True)
+
     def freeze(self):
         """Gèle la fenêtre.
 
@@ -770,8 +801,14 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def refresh(self, *args, **kwargs):
         """Rafraîchit les éléments affichés dans la visionneuse."""
+        # Journalise les objets disponibles dans la présentation.
         log.info(
             f"Viewer.refresh : rafraichit les éléments affichés dans la visionneuse {self}."
+        )
+        log.info(
+            "Viewer.refresh DEBUG : viewer=%s, presentation=%s",
+            self.__class__.__name__,
+            self.presentation(),
         )
         if self and not self.__freezeCount:
             # Le TaskFile peut avoir été chargé après la création du viewer.
@@ -811,7 +848,13 @@ class Viewer(ttk.Frame, patterns.Observer):
             elif hasattr(self, "refresh_items"):
                 # Fallback sur refresh_items
                 self.refresh_items()
-            log.info(f"Viewer.refresh : rafraichissement de {self} temriné !")
+            # Journalise ensuite l'état du widget Tkinter.
+            log.info(
+                "Viewer.refresh DEBUG : viewer=%s, widget=%s",
+                self.__class__.__name__,
+                getattr(self, "widget", None),
+            )
+            log.info(f"Viewer.refresh : rafraichissement de {self} terminé !")
             # Sinon, ne rien faire (le widget simple ne nécessite pas de refresh)
             # pass
 
@@ -1536,9 +1579,11 @@ class TreeViewer(Viewer):
     # def children(self, parent=None):
     def get_tree_children(self, parent=None):
         """Retourne les enfants d'un élément donné."""
+        log.info("TreeViewer.get_tree_children : Retourne les enfants de parent=%s :", parent)
         if parent:
             # children = parent.get_domain_children()
-            the_children = parent.get_tree_children()
+            # the_children = parent.get_tree_children()  # 'Category' object has no attribute 'get_tree_children'
+            the_children = parent.get_tree_children()  # TODO : à remplacer par ?
             if the_children:
                 return [
                     child

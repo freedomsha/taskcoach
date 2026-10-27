@@ -706,6 +706,9 @@ class _CtrlWithDropTargetMixin(
             # (Ceci est une mesure de dernier recours pour éviter le crash)
             return self.parent
 
+    # def OnDrop(
+    #     self, drop_item: str, dragged_items: List[str], part: str, column: int
+    # ):  # = version TreeListCtrl
     def OnDrop(self, drop_item, dragged_items, part):
         """Gère le drop d'éléments dans l'arborescence."""
         print(
