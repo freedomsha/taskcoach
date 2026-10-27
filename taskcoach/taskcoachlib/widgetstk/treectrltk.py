@@ -671,6 +671,8 @@ class TreeListCtrl(
         self.drop_position = None
         self._item_to_object: dict = {}
         self._object_to_item: dict = {}
+        self.__refresh_scheduled = False
+        self.__refreshing = False
 
         # self.tree["columns"] = columns  # Déclare explicitement les colonnes
         # self["columns"] = column_ids  # Déclare explicitement les colonnes
@@ -904,7 +906,8 @@ class TreeListCtrl(
 
     def yview(self, *args):
         """Délègue l'appel à ttk.Treeview.yview."""
-        return self.tree.yview(*args)
+        # return self.tree.yview(*args)
+        return super().yview(*args)
 
     def configure(self, **kwargs):
         """Délègue l'appel à ttk.Treeview.configure."""
@@ -965,104 +968,108 @@ class TreeListCtrl(
                     f"[ERREUR] Colonne Treeview '{col_id}' ne correspond à aucun Column"
                 )  # Message d'erreur pour nom incohérent
 
-    def _debug_tree_state(self, event=None):
-        # for item in self.get_children(""):
-        #     log.warning(
-        #         "TREE STATE : item=%r, text=%r, open=%r, children=%r",
-        #         item,
-        #         self.item(item, "text"),
-        #         self.item(item, "open"),
-        #         self.get_children(item),
-        #     )
-        item_id = self.focus()
-
-        log.warning(
-            "TREE STATE après clic : focus=%r, open=%r, children=%r",
-            item_id,
-            self.item(item_id, "open") if item_id else None,
-            self.get_children(item_id) if item_id else None,
-        )
-
-        if item_id:
-            log.warning(
-                "TREE STATE : sélection=%r, parent=%r",
-                self.selection(),
-                self.parent(item_id),
-            )
-
-    def _debug_tree_state_for_item(self, item_id):
-        log.warning(
-            "TREE STATE for item : item=%r, open=%r, children=%r",
-            item_id,
-            self.item(item_id, "open"),
-            self.get_children(item_id),
-        )
-
-    def _debug_native_tree_click(self, event):
-        log.warning(
-            "TREEVIEW CLASS CLICK : widget=%r, region=%r, element=%r",
-            event.widget,
-            self.identify_region(event.x, event.y),
-            self.identify_element(event.x, event.y),
-        )
-
-    def _debug_force_open(self, event=None):
-        item_id = self.focus()
-
-        if not item_id:
-            log.warning("FORCE OPEN : aucun élément ayant le focus")
-            return
-
-        log.warning(
-            "FORCE OPEN AVANT : item=%r, open=%r, children=%r",
-            item_id,
-            self.item(item_id, "open"),
-            self.get_children(item_id),
-        )
-
-        self.item(item_id, open=True)
-
-        log.warning(
-            "FORCE OPEN APRÈS : item=%r, open=%r, children=%r",
-            item_id,
-            self.item(item_id, "open"),
-            self.get_children(item_id),
-        )
-
-    def _debug_populate_children(self, item_id):
-        domain_object = self._item_to_object.get(item_id)
-
-        log.warning(
-            "POPULATE : item=%r, objet=%r, enfants actuels=%r",
-            item_id,
-            domain_object,
-            self.get_children(item_id),
-        )
-
-        if domain_object is None:
-            log.error("POPULATE : aucun objet métier associé à %r", item_id)
-            return
-
-        children = self._getChildrenOf(domain_object)
-
-        log.warning(
-            "POPULATE : enfants métier de %r = %r",
-            domain_object,
-            children,
-        )
-
-        for child_id in self.get_children(item_id):
-            self.delete(child_id)
-
-        self._addObjectRecursively(item_id, domain_object)
-
-        log.warning(
-            "POPULATE APRÈS : enfants affichés=%r",
-            self.get_children(item_id),
-        )
+    # # A retirer : jusqu'a _bind_events()
+    # def _debug_tree_state(self, event=None):
+    #     # for item in self.get_children(""):
+    #     #     log.warning(
+    #     #         "TREE STATE : item=%r, text=%r, open=%r, children=%r",
+    #     #         item,
+    #     #         self.item(item, "text"),
+    #     #         self.item(item, "open"),
+    #     #         self.get_children(item),
+    #     #     )
+    #     item_id = self.focus()
+    #
+    #     log.warning(
+    #         "TREE STATE après clic : focus=%r, open=%r, children=%r",
+    #         item_id,
+    #         self.item(item_id, "open") if item_id else None,
+    #         self.get_children(item_id) if item_id else None,
+    #     )
+    #
+    #     if item_id:
+    #         log.warning(
+    #             "TREE STATE : sélection=%r, parent=%r",
+    #             self.selection(),
+    #             self.parent(item_id),
+    #         )
+    #
+    # def _debug_tree_state_for_item(self, item_id):
+    #     log.warning(
+    #         "TREE STATE for item : item=%r, open=%r, children=%r",
+    #         item_id,
+    #         self.item(item_id, "open"),
+    #         self.get_children(item_id),
+    #     )
+    #
+    # def _debug_native_tree_click(self, event):
+    #     log.warning(
+    #         "TREEVIEW CLASS CLICK : widget=%r, region=%r, element=%r",
+    #         event.widget,
+    #         self.identify_region(event.x, event.y),
+    #         self.identify_element(event.x, event.y),
+    #     )
+    #
+    # def _debug_force_open(self, event=None):
+    #     item_id = self.focus()
+    #
+    #     if not item_id:
+    #         log.warning("FORCE OPEN : aucun élément ayant le focus")
+    #         return
+    #
+    #     log.warning(
+    #         "FORCE OPEN AVANT : item=%r, open=%r, children=%r",
+    #         item_id,
+    #         self.item(item_id, "open"),
+    #         self.get_children(item_id),
+    #     )
+    #
+    #     self.item(item_id, open=True)
+    #
+    #     log.warning(
+    #         "FORCE OPEN APRÈS : item=%r, open=%r, children=%r",
+    #         item_id,
+    #         self.item(item_id, "open"),
+    #         self.get_children(item_id),
+    #     )
+    #
+    # def _debug_populate_children(self, item_id):
+    #     domain_object = self._item_to_object.get(item_id)
+    #
+    #     log.warning(
+    #         "POPULATE : item=%r, objet=%r, enfants actuels=%r",
+    #         item_id,
+    #         domain_object,
+    #         self.get_children(item_id),
+    #     )
+    #
+    #     if domain_object is None:
+    #         log.error("POPULATE : aucun objet métier associé à %r", item_id)
+    #         return
+    #
+    #     children = self._getChildrenOf(domain_object)
+    #
+    #     log.warning(
+    #         "POPULATE : enfants métier de %r = %r",
+    #         domain_object,
+    #         children,
+    #     )
+    #
+    #     for child_id in self.get_children(item_id):
+    #         self.delete(child_id)
+    #
+    #     self._addObjectRecursively(item_id, domain_object)
+    #
+    #     log.warning(
+    #         "POPULATE APRÈS : enfants affichés=%r",
+    #         self.get_children(item_id),
+    #     )
 
     def _bind_events(self):
-        """Lie les gestionnaires d'événements."""
+        """Lie les gestionnaires d'événements.
+
+        Associe les événements Tkinter aux gestionnaires du contrôle.
+        """
         # # TODO : peut-être les lier dans les viewers !
         # self.bind("<Button-1>", self.__on_item_check_or_activate)
         # # self.bind("<Double-1>", self.__on_double_click)
@@ -1078,26 +1085,35 @@ class TreeListCtrl(
         self.bind("<Double-1>", self._on_double_click)
         self.bind("<Double-3>", self._on_right_click)
         # liaison temporaire :
-        self.bind_class(
-            "Treeview",
-            "<Button-1>",
-            self._debug_native_tree_click,
-            add="+",
-        )
+        # self.bind_class(
+        #     "Treeview",
+        #     "<Button-1>",
+        #     self._debug_native_tree_click,
+        #     add="+",
+        # )
         # Liaison des événements
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         self.tree.bind("<Button-3>", self.show_context_menu)
-        self.bind("<<TreeviewOpen>>", self._on_treeview_open)
-        self.bind("<<TreeviewColse>>", self._on_treeview_close)
+        # # Les événements virtuels restent le chemin principal. Le traitement
+        # # après relâchement couvre aussi les thèmes Tk qui ne les émettent pas
+        # # de façon fiable lors d'un clic sur l'indicateur d'ouverture.
+        # self.bind("<<TreeviewOpen>>", self._on_treeview_open)
+        # self.bind("<<TreeviewClose>>", self._on_treeview_close)
+        # self.bind("<ButtonRelease-1>", self._populate_open_item_after_release, add="+")
+        # self.bind("<KeyRelease>", self._populate_focused_open_item, add="+")
 
         # Événements de glisser-déposer (depuis le mixin)
-        self.bind("<ButtonPress-1>", self.on_start_drag)
-        self.bind("<B1-Motion>", self.on_dragging)
-        self.bind("<ButtonRelease-1>", self.on_end_drag)
+        # self.bind("<ButtonPress-1>", self.on_start_drag)
+        self.bind("<ButtonPress-1>", self.on_start_drag, add="+")
+        # self.bind("<B1-Motion>", self.on_dragging)
+        self.bind("<B1-Motion>", self.on_dragging, add="+")
+        # self.bind("<ButtonRelease-1>", self.on_end_drag)
+        self.bind("<ButtonRelease-1>", self.on_end_drag, add="+")
 
         # Redimensionnement
         # self.bind('<Configure>', self.on_resize)
-        self.bind("<Configure>", self._on_autowidth_resize)
+        # self.bind("<Configure>", self._on_autowidth_resize)
+        self.bind("<Configure>", self._on_autowidth_resize, add="+")
         log.warning(
             "TreeListCtrl : liaisons TreeviewOpen et TreeviewClose installées sur %r",
             self,
@@ -1448,7 +1464,7 @@ class TreeListCtrl(
         log.info("TreeListCtrl._on_left_click : Bouton-1 a été enclenché !")
         item_id = self.identify_row(event.y)
         if not item_id:
-            self.after(200, self._debug_tree_state)
+            # self.after(200, self._debug_tree_state)
             return
 
         # Vérifier si on clique sur une case à cocher
@@ -1460,16 +1476,20 @@ class TreeListCtrl(
             if col_id == "#0":  # Colonne de l'arborescence
                 image_width = 16
                 if 0 <= event.x - x <= image_width:
-                    # Clic sur la case à cocher
-                    self.CheckItem(item_id, not self.IsItemChecked(item_id))
-                    self.after(200, self._debug_tree_state)
-                    return
+                    # # Clic sur la case à cocher
+                    # self.CheckItem(item_id, not self.IsItemChecked(item_id))
+                    # # self.after(200, self._debug_tree_state)
+                    # return
+                    # Ne traiter la zone de la case que pour un item cochable.
+                    if self.GetItemType(item_id) > 0:
+                        self.CheckItem(item_id, not self.IsItemChecked(item_id))
+                        return "break"
 
         # Sélection normale
         if self.selectCommand:
             self.selectCommand(event)
 
-        self.after(200, self._debug_tree_state)
+        # self.after(200, self._debug_tree_state)
 
     # def __on_double_click(self, event):
     # def on_double_click(self, event):
@@ -1498,11 +1518,15 @@ class TreeListCtrl(
             #     self.__itemPopupMenu.post(event.x_root, event.y_root)
 
     def on_select(self, event):
-        """Gère la sélection d'un élément."""
-        if self.selectCommand:
-            # self.selectCommand(event)
-            selected_items = self.tree.selection()
-            self.selectCommand(selected_items)
+        # TODO : à vérifier ! peut-être revenir.
+        # """Gère la sélection d'un élément."""
+        # if self.selectCommand:
+        #     # self.selectCommand(event)
+        #     selected_items = self.tree.selection()
+        #     self.selectCommand(selected_items)
+        """Notifie le viewer, comme le gestionnaire wxPython onSelect."""
+        if not self.__refreshing and self.selectCommand:
+            self.selectCommand()
 
     def onItemActivated(self, event):
         """Gère l'activation d'un élément (double-clic)."""
@@ -1779,10 +1803,43 @@ class TreeListCtrl(
         data_columns = [col for col in self._columns if col.name() != "#0"]
         return [col.render(domain_object) if hasattr(col, "render") else "" for col in data_columns]
 
+    # _PLACEHOLDER_TAG = "__tree_placeholder__"
+    #
+    # def _item_is_placeholder(self, item_id: str) -> bool:
+    #     """Indique si un item est une ligne factice utilisée pour afficher le chevron."""
+    #     return (
+    #         item_id not in self._item_to_object
+    #         and self._PLACEHOLDER_TAG in self.item(item_id, "tags")
+    #     )
+    #
+    # def _insert_placeholder(self, parent_item: str) -> None:
+    #     """Ajoute une seule ligne factice si le parent a des enfants non chargés."""
+    #     if not self.get_children(parent_item):
+    #         self.insert(
+    #             parent_item,
+    #             tk.END,
+    #             text="",
+    #             tags=(self._PLACEHOLDER_TAG,),
+    #         )
+
+    def _get_item_expanded(self, domain_object: Any) -> bool:
+        """Lit et retourne l'état d'expansion demandé et mémorisé par l'adaptateur pour l'objet métier."""
+        if hasattr(self.__adapter, "getItemExpanded"):
+            return bool(self.__adapter.getItemExpanded(domain_object))
+        if hasattr(domain_object, "isExpanded"):
+            return bool(domain_object.isExpanded())
+        return False
+
     def RefreshAllItems(self, count: int = 0):
         """Rafraîchit tous les éléments du Treeview.
 
         Reconstruit entièrement le contenu du TreeListCtrl.
+        Reconstruit l'arbre à partir de l'adaptateur en conservant la sélection.
+        Reconstruit l'arbre complet, y compris les branches repliées.
+
+        Tous les descendants sont insérés dans le Treeview. L'option ``open``
+        contrôle uniquement leur visibilité, pas leur création : l'expansion
+        native de ttk.Treeview peut ainsi afficher immédiatement les enfants.
         """
         log.debug(
             "TreeListCtrl.RefreshAllItems : début, count=%d, adapter=%r",
@@ -1792,184 +1849,275 @@ class TreeListCtrl(
         # # Geler l'affichage
         # self.StopEditing()
         # self.__selection = self.curselection()
+        if self.__refreshing:
+            return
 
-        # Supprimer tous les éléments existants
-        for item in self.get_children():
-            self.delete(item)
-        if hasattr(self, "_item_to_object"):
+        self.__refreshing = True
+
+        try:
+            # # Supprimer tous les éléments existants
+            # for item in self.get_children():
+            #     self.delete(item)
+            try:
+                selected_objects = [
+                    obj for obj in self.curselection() if obj is not None
+                ]
+            except (tk.TclError, AttributeError):
+                selected_objects = []
+
+            for item_id in self.get_children(""):
+                self.delete(item_id)
+            # if hasattr(self, "_item_to_object"):
+            #     self._item_to_object.clear()
             self._item_to_object.clear()
-        if hasattr(self, "_object_to_item"):
+            # if hasattr(self, "_object_to_item"):
+            #     self._object_to_item.clear()
             self._object_to_item.clear()
 
-        root_items = self._getChildrenOf(None)
-
-        log.info(
-            "TreeListCtrl.RefreshAllItems DEBUG : racines=%r, nombre=%d",
-            root_items,
-            len(root_items),
-        )
-
-        for domain_object in root_items:
-            children = self._getChildrenOf(domain_object)
-
-            if children:
-                log.info(
-                    "TreeListCtrl.RefreshAllItems DEBUG : catégorie=%r, développée=%r, enfants=%r",
-                    domain_object,
-                    (
-                        self.__adapter.getItemExpanded(domain_object)
-                        if hasattr(self.__adapter, "getItemExpanded")
-                        else (
-                            domain_object.isExpanded()
-                            if hasattr(domain_object, "isExpanded")
-                            else None
-                        )
-                    ),
-                    children,
-                )
-
-        for domain_object in root_items:
-            column_values = self._renderColumnValues(domain_object)
-
-            # Simule un élément pour avoir le "+" de l'arbre
-            tree_item = self.insert(
-                "",
-                tk.END,
-                text="",
-                values=column_values,
-                tags=(str(self.getItemCTType(domain_object)),),
-            )
-
-            self._setObjectForItem(tree_item, domain_object)
-            if hasattr(self, "_object_to_item"):
-                self._object_to_item[domain_object] = tree_item
-
-            self._refreshObjectMinimally(
-                tree_item,
-                domain_object,
-            )
-
-            expanded = False
-            if hasattr(self.__adapter, "getItemExpanded"):
-                expanded = self.__adapter.getItemExpanded(domain_object)
-            elif hasattr(domain_object, "isExpanded"):
-                expanded = domain_object.isExpanded()
-
-            # # Reconstruction
-            # # self.__columns_with_images = [
-            # #     index
-            # #     for index in range(len(self._columns))  # TODO : La gestion des images est en cours de développement
-            # #     # if self.__adapter.hasColumnImages(index)
-            # # ]
-            # for i in range(count):
-            #     item = self.__adapter.getItemWithIndex(i)
-            #     values = [
-            #         self.getItemText(item, j) for j in range(len(self["columns"]))
-            #     ]
-            #     self.insert
-            children = self._getChildrenOf(domain_object)
-            if expanded:
-                self._addObjectRecursively(
-                    tree_item,
-                    domain_object,
-                )
-            elif children:
-                self.insert(
-                    tree_item,
+            # Construire chaque racine et tous ses descendants, sans placeholder.
+            # root_items = self._getChildrenOf(None)
+            #
+            # log.info(
+            #     "TreeListCtrl.RefreshAllItems DEBUG : racines=%r, nombre=%d",
+            #     root_items,
+            #     len(root_items),
+            # )
+            # for domain_object in root_items:
+            for domain_object in self._getChildrenOf(None):
+                # # children = self._getChildrenOf(domain_object)
+                # #
+                # # if children:
+                # #     log.info(
+                # #         "TreeListCtrl.RefreshAllItems DEBUG : catégorie=%r, développée=%r, enfants=%r",
+                # #         domain_object,
+                # #         (
+                # #             self.__adapter.getItemExpanded(domain_object)
+                # #             if hasattr(self.__adapter, "getItemExpanded")
+                # #             else (
+                # #                 domain_object.isExpanded()
+                # #                 if hasattr(domain_object, "isExpanded")
+                # #                 else None
+                # #             )
+                # #         ),
+                # #         children,
+                # #     )
+                # expanded = self._get_item_expanded(domain_object)
+                # # column_values = self._renderColumnValues(domain_object)
+                # # Simule un élément pour avoir le "+" de l'arbre
+                tree_item = self.insert(
+                    "",
                     tk.END,
                     text="",
+                    # values=column_values,
+                    values=self._renderColumnValues(domain_object),
+                    tags=(str(self.getItemCTType(domain_object)),),
+                    # open=expanded,
+                    open=self._get_item_expanded(domain_object),
                 )
-        # # Reconstruire l'arborescence
-        # root_item = self.GetRootItem()
-        # if not root_item:
-        #     root_item = self.insert("", tk.END, text="Hidden root")  # Use insert instead of AddRoot
-        # self._addObjectRecursively(root_item)
-        #
-        # # Restaurer la sélection
-        # for item in self.__selection:
-        #     self.selection_add(item)
-        log.debug(
-            "TreeListCtrl.RefreshAllItems : fin, lignes racines=%d",
-            len(self.get_children()),
-        )
+                self._setObjectForItem(tree_item, domain_object)
+                self._item_to_object[tree_item] = domain_object
+                # if hasattr(self, "_object_to_item"):
+                self._object_to_item[domain_object] = tree_item
+                self._refreshObjectMinimally(tree_item, domain_object)
+
+                # # expanded = False
+                # # if hasattr(self.__adapter, "getItemExpanded"):
+                # #     expanded = self.__adapter.getItemExpanded(domain_object)
+                # # elif hasattr(domain_object, "isExpanded"):
+                # #     expanded = domain_object.isExpanded()
+                # if expanded:
+                self._addObjectRecursively(tree_item, domain_object)
+                # elif self._getChildrenOf(domain_object):
+                #     self._insert_placeholder(tree_item)
+
+            #     # # Reconstruction
+            #     # # self.__columns_with_images = [
+            #     # #     index
+            #     # #     for index in range(len(self._columns))  # TODO : La gestion des images est en cours de développement
+            #     # #     # if self.__adapter.hasColumnImages(index)
+            #     # # ]
+            #     # for i in range(count):
+            #     #     item = self.__adapter.getItemWithIndex(i)
+            #     #     values = [
+            #     #         self.getItemText(item, j) for j in range(len(self["columns"]))
+            #     #     ]
+            #     #     self.insert
+            #     children = self._getChildrenOf(domain_object)
+            #     if expanded:
+            #         self._addObjectRecursively(
+            #             tree_item,
+            #             domain_object,
+            #         )
+            #     elif children:
+            #         self.insert(
+            #             tree_item,
+            #             tk.END,
+            #             text="",
+            #         )
+            # # # Reconstruire l'arborescence
+            # # root_item = self.GetRootItem()
+            # # if not root_item:
+            # #     root_item = self.insert("", tk.END, text="Hidden root")  # Use insert instead of AddRoot
+            # # self._addObjectRecursively(root_item)
+            # #
+            # # # Restaurer la sélection
+            # # for item in self.__selection:
+            # #     self.selection_add(item)
+            # Les iid changent à chaque reconstruction : restaurer par objet métier.
+            selected_iids = [
+                self._object_to_item[obj]
+                for obj in selected_objects
+                if obj in self._object_to_item
+            ]
+            if selected_iids:
+                self.selection_set(selected_iids)
+
+            log.debug(
+                "TreeListCtrl.RefreshAllItems : %d lignes racines affichées, %d objets métier chargés !",
+                len(self.get_children("")),
+                len(self._item_to_object),
+            )
+        finally:
+            self.__refreshing = False
 
     def _addObjectRecursively(
         self, parent_item: str, parent_object: Any = None
     ):
-        """Ajoute récursivement des objets à l'arborescence du Treeview."""
+        """Ajoute récursivement des objets à l'arborescence du Treeview.
+
+        Insère les enfants métier; les descendants reçoivent un placeholder si nécessaire.
+        Insère récursivement tous les descendants, même sous les branches fermées.
+        """
         # Devrait faire référence à la méthode viewer.task.RootNode.get_domain_children !
         # au lieu de tkinter.Misc.get_domain_children !
         log.debug(
             f"TreeListCtrl._addObjectRecursively : self.__adapter est de type {type(self.__adapter)}."
         )
-        # for child_object in self.__adapter.get_domain_children(parent_object):  # 'dict' object is not callable !
-        children = self._getChildrenOf(parent_object)
+        # # for child_object in self.__adapter.get_domain_children(parent_object):  # 'dict' object is not callable !
+        # children = self._getChildrenOf(parent_object)
 
-        log.info("TreeListCtrl._addObjectRecursively DEBUG : parent=%r, enfants=%r", parent_object, children)
+        # log.info("TreeListCtrl._addObjectRecursively DEBUG : parent=%r, enfants=%r", parent_object, children)
 
-        # for child_object in self.__adapter.children(
-        #         parent_object
-        # ):  # 'dict' object is not callable !
-        for child_object in children:
-            # LIGNE CORRIGÉE : Utiliser la méthode renommée 'get_domain_children' pour récupérer les objets de domaine.
-            # for child_object in self.__adapter.get_domain_children(parent_object):
-            # child_item = self.AppendItem(parent_item, '',
-            # child_item = self.Append(parent_item, "",
-            # AppendItem est utilisé dans wx !
-            # child_item = self.AppendItem(parent_item, "", self.getItemCTType(child_object), data=child_object)
-            # child_item = self.insert(parent_item, tk.END, text="", values=[self.__adapter.getItemText(child_object, i) for i in range(len(self._columns))], tags=self.getItemCTType(child_object), data=child_object)
-            # Correction : la méthode insert du Treeview attend des valeurs pour le paramètre 'values'.
-            # On utilise une liste des textes de colonnes, et on stocke l'objet lui-même dans 'tags' (ou 'data' qui n'est pas standard Tkinter, mais simulé).
-            # Récupération des valeurs de colonnes
-            # column_values = [
-            #     self.__adapter.getItemText(child_object, i)
-            #     for i in range(len(self._columns))
-            # ]
-            column_values = self._renderColumnValues(child_object)
-
-            # # Insertion de l'élément
-            # main_text = self.__adapter.getItemText(child_object, 0)
-            # TODO : il y a peut-être une erreur !?
+        # # for child_object in self.__adapter.children(
+        # #         parent_object
+        # # ):  # 'dict' object is not callable !
+        # for child_object in children:
+        for child_object in self._getChildrenOf(parent_object):
+            # # # LIGNE CORRIGÉE : Utiliser la méthode renommée 'get_domain_children' pour récupérer les objets de domaine.
+            # # # for child_object in self.__adapter.get_domain_children(parent_object):
+            # # # child_item = self.AppendItem(parent_item, '',
+            # # # child_item = self.Append(parent_item, "",
+            # # # AppendItem est utilisé dans wx !
+            # # # child_item = self.AppendItem(parent_item, "", self.getItemCTType(child_object), data=child_object)
+            # # # child_item = self.insert(parent_item, tk.END, text="", values=[self.__adapter.getItemText(child_object, i) for i in range(len(self._columns))], tags=self.getItemCTType(child_object), data=child_object)
+            # # # Correction : la méthode insert du Treeview attend des valeurs pour le paramètre 'values'.
+            # # # On utilise une liste des textes de colonnes, et on stocke l'objet lui-même dans 'tags' (ou 'data' qui n'est pas standard Tkinter, mais simulé).
+            # # # Récupération des valeurs de colonnes
+            # # # column_values = [
+            # # #     self.__adapter.getItemText(child_object, i)
+            # # #     for i in range(len(self._columns))
+            # # # ]
+            # # column_values = self._renderColumnValues(child_object)
+            # expanded = self._get_item_expanded(child_object)
             child_item = self.insert(
                 parent_item,
                 tk.END,
                 text="",
-                values=column_values,
+                # values=column_values,
+                values=self._renderColumnValues(child_object),
                 tags=(str(self.getItemCTType(child_object)),),
+                # open=expanded,
+                open=self._get_item_expanded(child_object),
             )
-
             self._setObjectForItem(child_item, child_object)
-            if hasattr(self, "_object_to_item"):
-                self._object_to_item[child_object] = child_item
-
+            self._item_to_object[child_item] = child_object
+            # if hasattr(self, "_object_to_item"):
+            self._object_to_item[child_object] = child_item
             # Rafraîchissement minimal
             self._refreshObjectMinimally(child_item, child_object)
 
-            # Gestion de l'expansion
-            expanded = False
-            if hasattr(self.__adapter, "getItemExpanded"):
-                expanded = self.__adapter.getItemExpanded(child_object)
-            elif hasattr(child_object, "isExpanded"):
-                expanded = child_object.isExpanded()
+            # # # Gestion de l'expansion
+            # # expanded = False
+            # # if hasattr(self.__adapter, "getItemExpanded"):
+            # #     expanded = self.__adapter.getItemExpanded(child_object)
+            # # elif hasattr(child_object, "isExpanded"):
+            # #     expanded = child_object.isExpanded()
+            # child_children = self._getChildrenOf(child_object)
+            # # if expanded:
+            # if expanded and child_children:
+            #     self._addObjectRecursively(child_item, child_object)
+            # # Call Expand on the item instead of on the tree
+            # # (self.Expand(childItem)) to prevent lots of events
+            # # (EVT_TREE_ITEM_EXPANDING/EXPANDED) being sent
+            # # child_item.Expand()
+            # elif child_children:
+            #     # # self.SetItemHasChildren(child_item, self.__adapter.get_domain_children(child_object))
+            #     # # self.insert(child_item, tk.END, text='')
+            #     # # Ajouter un élément factice pour permettre l'expansion
+            #     # # si l'élément a des enfants dans le modèle de données.
+            #     # # L'appel à children(child_object) dans le modèle de données détermine
+            #     # # si un "+" doit être affiché.
+            #     # # if self.__adapter.children(
+            #     # #         child_object
+            #     # # ):  # Utiliser le nouveau nom ici aussi
+            #     # self.insert(child_item, tk.END, text="")
+            #     self._insert_placeholder(child_item)
 
-            child_children = self._getChildrenOf(child_object)
-            if expanded:
-                self._addObjectRecursively(child_item, child_object)
-            # Call Expand on the item instead of on the tree
-            # (self.Expand(childItem)) to prevent lots of events
-            # (EVT_TREE_ITEM_EXPANDING/EXPANDED) being sent
-            # child_item.Expand()
-            elif child_children:
-                # self.SetItemHasChildren(child_item, self.__adapter.get_domain_children(child_object))
-                # self.insert(child_item, tk.END, text='')
-                # Ajouter un élément factice pour permettre l'expansion
-                # si l'élément a des enfants dans le modèle de données.
-                # L'appel à children(child_object) dans le modèle de données détermine
-                # si un "+" doit être affiché.
-                # if self.__adapter.children(
-                #         child_object
-                # ):  # Utiliser le nouveau nom ici aussi
-                self.insert(child_item, tk.END, text="")
+            # Important : toujours construire les descendants. Le Treeview
+            # masque lui-même ceux dont les ancêtres sont repliés.
+            self._addObjectRecursively(child_item, child_object)
+
+    # def _populate_item_children(self, item_id: str) -> None:
+    #     """Remplace les placeholders par les enfants réels, sans recréer les enfants déjà chargés."""
+    #     if not item_id or not self.exists(item_id):
+    #         return
+    #
+    #     domain_object = self._item_to_object.get(item_id)
+    #     if domain_object is None:
+    #         return
+    #
+    #     model_children = self._getChildrenOf(domain_object)
+    #     current_children = self.get_children(item_id)
+    #     real_children = [
+    #         child_id for child_id in current_children
+    #         if child_id in self._item_to_object
+    #     ]
+    #
+    #     # Supprimer uniquement les placeholders, jamais les enfants métier.
+    #     for child_id in current_children:
+    #         if self._item_is_placeholder(child_id):
+    #             self.delete(child_id)
+    #
+    #     if real_children or not model_children:
+    #         return
+    #
+    #     self._addObjectRecursively(item_id, domain_object)
+    #
+    # def _populate_open_item_after_release(self, event=None) -> None:
+    #     """Charge les enfants après le clic natif sur le chevron, sans dépendre du clic gauche custom."""
+    #     item_id = self.identify_row(event.y) if event is not None else self.focus()
+    #     if not item_id:
+    #         return
+    #
+    #     def populate_if_open():
+    #         try:
+    #             if self.winfo_exists() and self.exists(item_id) and self.item(item_id, "open"):
+    #                 self._populate_item_children(item_id)
+    #         except tk.TclError:
+    #             # Le widget ou l'item peut avoir été détruit entre-temps.
+    #             return
+    #
+    #     try:
+    #         self.after_idle(populate_if_open)
+    #     except tk.TclError:
+    #         # Le widget a pu être détruit pendant la propagation de l'événement.
+    #         return
+    #
+    # def _populate_focused_open_item(self, event=None) -> None:
+    #     """Charge les enfants lors d'une expansion au clavier."""
+    #     item_id = self.focus()
+    #     if item_id:
+    #         self._populate_open_item_after_release()
 
     def _refreshObjectMinimally(self, item: str, domain_object: Any):
         """Rafraîchit les aspects minimaux d'un objet (colonnes, couleurs, police, sélection)."""
@@ -2008,108 +2156,149 @@ class TreeListCtrl(
     def RefreshItems(self, *items):
         """Rafraîchit les éléments spécifiés."""
         for item in items:
-            if self.exists(item):
-                self._refreshObjectMinimally(item, None)
+            # if self.exists(item):
+            #     self._refreshObjectMinimally(item, None)
+            item_id = item if isinstance(item, str) and self.exists(item) else self._object_to_item.get(item)
+            if item_id and self.exists(item_id):
+                self._refreshObjectMinimally(item_id, self._item_to_object.get(item_id))
 
     def scheduleRefresh(self, count=0):
-        """Programme un rafraîchissement différé pour éviter les appels multiples."""
+        """
+        Programme un rafraîchissement différé
+        et regroupe les demandes rapprochées pour éviter les appels multiples.
+        """
         # if self.__refresh_scheduled:
         if hasattr(self, "__refresh_scheduled") and self.__refresh_scheduled:
             return
         self.__refresh_scheduled = True
 
-        def doRefresh():
-            # Protection contre la destruction de l'objet
-            if not self:
-                return
+        def do_refresh():
+            # # Protection contre la destruction de l'objet
+            # if not self:
+            #     return
             self.__refresh_scheduled = False
             log.debug(
                 f"TreeListCtrl.__doRefresh : exécution du rafraîchissement planifié."
             )
-            self.RefreshAllItems(count)
+            # self.RefreshAllItems(count)
+            try:
+                if self.winfo_exists():
+                    self.RefreshAllItems(count)
+            except tk.TclError:
+                # Le widget a été détruit avant l'exécution du callback.
+                pass
 
         # Utilisation de wx.CallAfter pour wxPython
-        self.after(1, doRefresh)
+        # self.after(1, do_refresh)
+        try:
+            self.after_idle(do_refresh)
+        except tk.TclError:
+            self.__refresh_scheduled = False
 
-    def _on_treeview_open(self, event=None):
-        """Remplace les enfants factices par les vrais enfants du modèle."""
-        log.warning(
-            "TreeListCtrl._on_treeview_open : événement TreeviewOpen reçu, focus=%r, widget=%r",
-            self.focus(),
-            event.widget if event else None,
-        )
-
-        item_id = self.focus()
-        if not item_id:
-            return
-
-        # Récupérer l'objet métier associé à l'élément Treeview.
-        # Elle retrouve la catégorie via _item_to_object, initialisé par _setObjectForItem().
-        domain_object = self._item_to_object.get(item_id)
-        if domain_object is None:
-            log.warning(
-                "TreeListCtrl._on_treeview_open : "
-                "aucun objet métier associé à %r",
-                item_id,
-            )
-            return
-
-        # Récupérer les enfants réels.
-        children = self._getChildrenOf(domain_object)
-        if not children:
-            return
-
-        # Si les vrais enfants sont déjà présents, ne rien reconstruire.
-        existing_children = self.get_children(item_id)
-        if (
-                existing_children
-                and all(
-            child in self._item_to_object
-            for child in existing_children
-        )
-        ):
-            return
-
-        # Supprimer les lignes factices.
-        for child_id in existing_children:
-            self.delete(child_id)
-            self._item_to_object.pop(child_id, None)
-
-        # Insérer les vrais enfants.
-        self._addObjectRecursively(item_id, domain_object)
-
-        log.info(
-            "TreeListCtrl._on_treeview_open : Ouverture : item=%r, objet=%r, enfants existants=%r, enfants métier=%r",
-            item_id,
-            domain_object,
-            self.get_children(item_id),
-            children,
-        )
-
-    def _on_treeview_close(self, event=None):
-        log.warning(
-            "TreeListCtrl._on_treeview_close : événement TreeviewClose reçu, focus=%r",
-            self.focus(),
-        )
+    # def _on_treeview_open(self, event=None):
+    #     # """Remplace les enfants factices par les vrais enfants du modèle."""
+    #     # log.warning(
+    #     #     "TreeListCtrl._on_treeview_open : événement TreeviewOpen reçu, focus=%r, widget=%r",
+    #     #     self.focus(),
+    #     #     event.widget if event else None,
+    #     # )
+    #     #
+    #     # item_id = self.focus()
+    #     # if not item_id:
+    #     #     return
+    #     #
+    #     # # Récupérer l'objet métier associé à l'élément Treeview.
+    #     # # Elle retrouve la catégorie via _item_to_object, initialisé par _setObjectForItem().
+    #     # domain_object = self._item_to_object.get(item_id)
+    #     # if domain_object is None:
+    #     #     log.warning(
+    #     #         "TreeListCtrl._on_treeview_open : "
+    #     #         "aucun objet métier associé à %r",
+    #     #         item_id,
+    #     #     )
+    #     #     return
+    #     #
+    #     # # Récupérer les enfants réels.
+    #     # children = self._getChildrenOf(domain_object)
+    #     # if not children:
+    #     #     return
+    #     #
+    #     # # Si les vrais enfants sont déjà présents, ne rien reconstruire.
+    #     # existing_children = self.get_children(item_id)
+    #     # if (
+    #     #         existing_children
+    #     #         and all(
+    #     #     child in self._item_to_object
+    #     #     for child in existing_children
+    #     # )
+    #     # ):
+    #     #     return
+    #     #
+    #     # # Supprimer les lignes factices.
+    #     # for child_id in existing_children:
+    #     #     self.delete(child_id)
+    #     #     self._item_to_object.pop(child_id, None)
+    #     #
+    #     # # Insérer les vrais enfants.
+    #     # self._addObjectRecursively(item_id, domain_object)
+    #     #
+    #     # log.info(
+    #     #     "TreeListCtrl._on_treeview_open : Ouverture : item=%r, objet=%r, enfants existants=%r, enfants métier=%r",
+    #     #     item_id,
+    #     #     domain_object,
+    #     #     self.get_children(item_id),
+    #     #     children,
+    #     # )
+    #     """Charge à la demande les enfants de l'item que Treeview vient d'ouvrir."""
+    #     item_id = self.focus()
+    #     if item_id:
+    #         self._populate_item_children(item_id)
+    #
+    # def _on_treeview_close(self, event=None):
+    #     """Le repli conserve les enfants chargés; ils seront réutilisés à la prochaine ouverture."""
+    #     log.warning(
+    #         "TreeListCtrl._on_treeview_close : événement TreeviewClose reçu, focus=%r",
+    #         self.focus(),
+    #     )
+    #     return None
 
     # ========================================================================
     # UTILITAIRES
     # ========================================================================
 
     def isAnyItemExpandable(self) -> bool:
-        """Vérifie si un élément est déployable."""
-        for item in self.get_children():
-            # if self.item(item, 'open') == 0:
-            if not self.item(item, "open"):
+        # """Vérifie si un élément est déployable."""
+        # for item in self.get_children():
+        #     # if self.item(item, 'open') == 0:
+        #     if not self.item(item, "open"):
+        #         return True
+        # return False
+        """Indique si un item métier fermé possède des enfants."""
+        for item_id in self._iter_domain_items():
+            if not self.item(item_id, "open") and self.get_children(item_id):
                 return True
         return False
 
     def isAnyItemCollapsable(self):
-        """Vérifie si un élément est réductible."""
-        for item in self.get_children():
-            if self.get_children(item):
+        # """Vérifie si un élément est réductible."""
+        # for item in self.get_children():
+        #     if self.get_children(item):
+        #         return True
+        # return False
+        """Indique si un item métier ouvert possède des enfants."""
+        for item_id in self._iter_domain_items():
+            if self.item(item_id, "open") and self.get_children(item_id):
                 return True
         return False
+
+    def _iter_domain_items(self):
+        """Parcourt les items métier en excluant les lignes factices."""
+        stack = list(self.get_children(""))
+        while stack:
+            item_id = stack.pop()
+            if item_id in self._item_to_object:
+                yield item_id
+                stack.extend(self.get_children(item_id))
 
     def GetItemCount(self) -> int:
         """Renvoie le nombre total d'éléments."""
@@ -2175,6 +2364,12 @@ class TreeListCtrl(
         Cette méthode doit être surchargée dans la classe dérivée.
         Gère le dépôt (drop) d'éléments dans l'arborescence.
 
+        Transmet le dépôt au modèle via le callback, comme la version wxPython.
+
+        Les identifiants Treeview sont convertis en objets métier. Le contrôle
+        ne déplace pas lui-même les lignes : le callback met à jour le modèle,
+        dont les notifications peuvent ensuite déclencher un rafraîchissement.
+
         Args :
             drop_item: Item cible du drop
             dragged_items: Items glissés
@@ -2183,45 +2378,74 @@ class TreeListCtrl(
         log.debug(
             f"OnDrop : Éléments glissés: {len(dragged_items)} items sur {drop_item} à la position ({part})."
         )
-        if not dragged_items:
+        # if not dragged_items:
+        if not dragged_items or not self.dragAndDropCommand:
             return  # Rien à faire
 
-        # Récupérer l'objet métier associé à l'élément sur lequel on dépose
-        if drop_item:
-            drop_object = self.GetItemPyData(drop_item)
-        else:
-            drop_object = None  # Dépôt à la racine
+        # # Récupérer l'objet métier associé à l'élément sur lequel on dépose
+        # if drop_item:
+        #     drop_object = self.GetItemPyData(drop_item)
+        # else:
+        #     drop_object = None  # Dépôt à la racine
+        drop_object = self._item_to_object.get(drop_item) if drop_item else None
         log.debug(f"OnDrop : Objet cible du drop: {drop_object}")
 
-        # Récupérer les objets métiers associés aux éléments déplacés
-        dragged_objects = [self.GetItemPyData(item) for item in dragged_items]
-
-        # Exemple de déplacement simple
-        for item in dragged_items:
-            if part == "on":
-                # Déplacer l'élément pour qu'il devienne un enfant
-                self.move(item, drop_item, "end")
-            else:
-                # Déplacer l'élément au-dessus ou en-dessous
-                index = self.index(drop_item)
-                if part == "below":
-                    index += 1
-                self.move(item, self.parent(drop_item), index)
-
-        # Logique de déplacement des éléments dans le modèle de données
-        try:
-            self.move_items(dragged_objects, drop_object, part)
-        except Exception as e:
-            print(f"Erreur lors du déplacement des éléments : {e}")
+        # # Récupérer les objets métiers associés aux éléments déplacés
+        # dragged_objects = [self.GetItemPyData(item) for item in dragged_items]
+        dragged_objects = [
+            self._item_to_object[item_id]
+            for item_id in dragged_items
+            if item_id in self._item_to_object
+        ]
+        if not dragged_objects:
             return
+        #
+        # # Exemple de déplacement simple
+        # for item in dragged_items:
+        #     if part == "on":
+        #         # Déplacer l'élément pour qu'il devienne un enfant
+        #         self.move(item, drop_item, "end")
+        #     else:
+        #         # Déplacer l'élément au-dessus ou en-dessous
+        #         index = self.index(drop_item)
+        #         if part == "below":
+        #             index += 1
+        #         self.move(item, self.parent(drop_item), index)
+        #
+        # # Logique de déplacement des éléments dans le modèle de données
+        # try:
+        #     self.move_items(dragged_objects, drop_object, part)
+        # except Exception as e:
+        #     print(f"Erreur lors du déplacement des éléments : {e}")
+        #     return
+        def perform_drop():
+            try:
+                if not self.winfo_exists():
+                    return
+                self.dragAndDropCommand(
+                    drop_object, dragged_objects, part, column
+                )
 
-        # Reconstruire le modèle de données/l'arborescence pour refléter les changements
-        self.rebuild_data_model()
+                # Rendre visibles les nouveaux enfants si le dépôt cible un item.
+                target_item = self._object_to_item.get(drop_object)
+                if target_item and self.exists(target_item):
+                    self.item(target_item, open=True)
+                    # self._populate_item_children(target_item)
+            except tk.TclError:
+                # Le widget peut avoir été détruit avant l'exécution différée.
+                return
 
-        # Appeler le callback dragAndDropCommand si défini
-        if self.dragAndDropCommand:
-            # self.dragAndDropCommand(None)  # Passer un event fictif
-            self.dragAndDropCommand(dragged_objects, drop_object, part)
+        # # Reconstruire le modèle de données/l'arborescence pour refléter les changements
+        # self.rebuild_data_model()
+        #
+        # # Appeler le callback dragAndDropCommand si défini
+        # if self.dragAndDropCommand:
+        #     # self.dragAndDropCommand(None)  # Passer un event fictif
+        #     self.dragAndDropCommand(dragged_objects, drop_object, part)
+        try:
+            self.after_idle(perform_drop)
+        except tk.TclError:
+            return
 
     def rebuild_data_model(self):
         """
