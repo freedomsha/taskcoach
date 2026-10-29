@@ -401,7 +401,8 @@ class TkinterApplication(
         # self.taskFile = persistencetk.LockedTaskFile(poll=not self.settings.getboolean('file', 'nopoll'))
         self.taskFile = taskfile.LockedTaskFile(
             parent=self.root,
-            poll=not self.settings.getboolean("file", "-nopoll"),
+            # poll=not self.settings.getboolean("file", "-nopoll"),  # -nopoll ne donne rien alors que nopoll=False
+            poll=not self.settings.getboolean("file", "nopoll"),
         )
         log.debug(
             "TkinterApplication.init : taskFile=%r, tasks=%d, categories=%d",
