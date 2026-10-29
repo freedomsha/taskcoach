@@ -995,6 +995,14 @@ class MainWindow(
         si le nombre de visionneuses diffère entre la perspective actuelle et les réglages. Si c'est le cas, elle utilise une perspective par défaut.
         Si la restauration échoue, un message d'erreur est affiché à l'utilisateur, et la perspective par défaut est utilisée.
 
+        La perspective est lue dans les paramètres, puis transmise au
+        gestionnaire AUI Tkinter. Si elle est absente, incompatible ou
+        impossible à restaurer, la disposition initiale est conservée
+        autant que possible.
+
+        La méthode rend ensuite les panneaux visibles, actualise leurs
+        titres et met à jour leur disposition.
+
         Actions :
             - Charge la perspective à partir du paramètre "view" -> "perspective" des réglages utilisateur.
             - Vérifie si le nombre de visionneuses correspond entre la perspective et les réglages, sinon réinitialise la perspective.
@@ -1007,77 +1015,19 @@ class MainWindow(
         Notes :
             - Empêche l'apparition de "panneaux zombies" en s'assurant que tous les panneaux sont visibles.
             - Met à jour les titres des panneaux pour refléter la traduction correcte en cas de changement de langue.
+
+        Returns:
+            bool: True si la perspective a été restaurée, False sinon.
         """
         log.debug(
             "MainWindow.__restore_perspective: Restauration de la perspective AUI depuis les paramètres."
         )
         # Tkinter n'a pas de "perspective" AUI. Cette logique serait à réimplémenter.
         # Pour l'exemple, nous ne faisons rien de fonctionnel ici.
-        # # perspective = self.settings.get("view", "perspective")
-        # perspective = self.settings.get("view", "perspective", {})  # raise_on_missing doit être un bool
-        perspective = self.settings.get("view", "perspective", raise_on_missing=False)  # raise_on_missing doit être un bool
-        if not perspective:
-            log.info(
-                "MainWindow.__restore_perspective: Pas de perspective sauvegardée, utilisation de la disposition par défaut."
-            )
-            # return
-            return False
-        # else:
-        #     log.info(
-        #         "MainWindow.__restore_perspective: Perspective sauvegardée trouvée."
-        #     )
-        #     for viewer_type in [
-        #         "taskviewer",
-        #         "categoryviewer",
-        #         "noteviewer",
-        #         "effortviewer",
-        #     ]:
-        #         if self.__perspective_and_settings_viewer_count_differ(
-        #             viewer_type
-        #         ):
-        #             log.warning(
-        #                 f"MainWindow.__restore_perspective: Le nombre de visionneuses pour {viewer_type} diffère, réinitialisation de la perspective."
-        #             )
-        #             # perspective = None  # ❌ Problème : écrase `perspective`
-        #             # break
-        #             return  # ✅ Quitte la méthode tôt (pas besoin de continuer)
-
-
-        # # 1. Détruire les viewers existants
-        # # for viewer in self.viewer_container.viewers:
-        # for viewer in self.viewer_container.viewers[
-        #     :
-        # ]:  # Copie pour éviter les problèmes d'itération
-        #     # viewer.destroy()
-        #     self.viewer_container.removeViewer(viewer)
-        #
-        # # Charger ici une disposition de widgets.
-        # try:
-        #     if perspective:
-        #         log.info(
-        #             "MainWindow.__restore_perspective: Restauration de la perspective sauvegardée (mock)."
-        #         )
-        #         # Charger la perspective (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
-        #         # viewer_types = perspective.get("viewers", [])
-        #     else:
-        #         log.info(
-        #             "MainWindow.__restore_perspective: Utilisation de la perspective par défaut."
-        #         )
-        #         # Charger la perspective par défaut (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
-        #         self.settings.set("view", "perspective", "default_perspective")
-        # except Exception as e:
-        #     log.exception(
-        #         f"MainWindow.__restore_perspective: Erreur lors de la restauration de la perspective : {e}"
-        #     )
-        #     messagebox.showerror(
-        #         _("Error"),
-        #         _(
-        #             "Could not restore window layout. Using default layout instead."
-        #         ),
-        #     )
-        #     # Charger la perspective par défaut (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
-        #     self.settings.set("view", "perspective", "default_perspective")
+        # Récupère le gestionnaire AUI Tkinter.
         manager = getattr(self, "manager", None)
+
+        # Ne tente pas de restaurer une perspective sans gestionnaire.
         if manager is None:
             log.warning(
                 "MainWindow.__restore_perspective : "
@@ -1085,8 +1035,98 @@ class MainWindow(
             )
             return False
 
+        # Récupère la perspective sauvegardée sans lever d'erreur si elle manque.
+        # # perspective = self.settings.get("view", "perspective")
+        # perspective = self.settings.get("view", "perspective", {})  # raise_on_missing doit être un bool
+        perspective = self.settings.get("view", "perspective", raise_on_missing=False)  # raise_on_missing doit être un bool
+        # if not perspective:
+        #     log.info(
+        #         "MainWindow.__restore_perspective: Pas de perspective sauvegardée, utilisation de la disposition par défaut."
+        #     )
+        #     # return
+        #     return False
+        # # else:
+        # #     log.info(
+        # #         "MainWindow.__restore_perspective: Perspective sauvegardée trouvée."
+        # #     )
+        # #     for viewer_type in [
+        # #         "taskviewer",
+        # #         "categoryviewer",
+        # #         "noteviewer",
+        # #         "effortviewer",
+        # #     ]:
+        # #         if self.__perspective_and_settings_viewer_count_differ(
+        # #             viewer_type
+        # #         ):
+        # #             log.warning(
+        # #                 f"MainWindow.__restore_perspective: Le nombre de visionneuses pour {viewer_type} diffère, réinitialisation de la perspective."
+        # #             )
+        # #             # perspective = None  # ❌ Problème : écrase `perspective`
+        # #             # break
+        # #             return  # ✅ Quitte la méthode tôt (pas besoin de continuer)
+        # Mémorise si une perspective non vide était disponible.
+        has_perspective = bool(perspective)
+
+        # # # 1. Détruire les viewers existants
+        # # # for viewer in self.viewer_container.viewers:
+        # # for viewer in self.viewer_container.viewers[
+        # #     :
+        # # ]:  # Copie pour éviter les problèmes d'itération
+        # #     # viewer.destroy()
+        # #     self.viewer_container.removeViewer(viewer)
+        # #
+        # # # Charger ici une disposition de widgets.
+        # # try:
+        # #     if perspective:
+        # #         log.info(
+        # #             "MainWindow.__restore_perspective: Restauration de la perspective sauvegardée (mock)."
+        # #         )
+        # #         # Charger la perspective (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
+        # #         # viewer_types = perspective.get("viewers", [])
+        # #     else:
+        # #         log.info(
+        # #             "MainWindow.__restore_perspective: Utilisation de la perspective par défaut."
+        # #         )
+        # #         # Charger la perspective par défaut (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
+        # #         self.settings.set("view", "perspective", "default_perspective")
+        # # except Exception as e:
+        # #     log.exception(
+        # #         f"MainWindow.__restore_perspective: Erreur lors de la restauration de la perspective : {e}"
+        # #     )
+        # #     messagebox.showerror(
+        # #         _("Error"),
+        # #         _(
+        # #             "Could not restore window layout. Using default layout instead."
+        # #         ),
+        # #     )
+        # #     # Charger la perspective par défaut (logique spécifique à AUI/wxPython à réimplémenter pour Tkinter)
+        # #     self.settings.set("view", "perspective", "default_perspective")
+        # manager = getattr(self, "manager", None)
+        # if manager is None:
+        #     log.warning(
+        #         "MainWindow.__restore_perspective : "
+        #         "gestionnaire AUI indisponible."
+        #     )
+        #     return False
+        # Vérifie si le nombre de visionneuses a changé depuis la sauvegarde.
+        if perspective:
+            # for viewer_type in viewer.viewerTypes():
+            for viewer_type in factorytk.viewerTypes():
+                if self.__perspective_and_settings_viewer_count_differ(
+                        viewer_type
+                ):
+                    # Une perspective incompatible ne doit pas être restaurée.
+                    perspective = ""
+
+                    # Signale pourquoi la disposition sauvegardée est ignorée.
+                    log.warning(
+                        "MainWindow.__restore_perspective : "
+                        "incompatibilité entre la perspective et les visionneuses."
+                    )
+                    break
+
         # # 2. Recréer les viewers depuis la perspective
-        # # TODO : Ne faut-il pas utiliser factorytk.py ?
+        # # TODO : Ne faut-il pas utiliser factorytk.py ? Si.
         # # viewer_types = perspective.get(
         # #     "viewers", []
         # # )  # ❌ `perspective` peut être `None`
@@ -1120,14 +1160,48 @@ class MainWindow(
         #     for viewer in self.viewer_container.viewers:
         #         if hasattr(viewer, "refresh"):
         #             viewer.refresh()
+        # Tente de restaurer la perspective, ou de conserver la disposition
+        # initiale si la chaîne est vide.
         try:
             restored = manager.LoadPerspective(perspective)
-        except Exception:
-            log.exception(
+        # Gère les erreurs de lecture ou de restauration de la perspective.
+        # except Exception:
+        #     log.exception(
+        #         "MainWindow.__restore_perspective : "
+        #         "échec de restauration de la perspective."
+        #     )
+        #     self.manager.LoadPerspective("")
+        #     return False
+        except (ValueError, TypeError) as reason:
+            log.error(
                 "MainWindow.__restore_perspective : "
-                "échec de restauration de la perspective."
+                "erreur lors de la restauration : %s",
+                reason,
+                exc_info=True,
             )
-            return False
+
+            # Affiche une erreur uniquement si une perspective devait être lue.
+            if has_perspective:
+                messagebox.showerror(
+                    _("Error"),
+                    _(
+                        "Impossible de restaurer la disposition des panneaux. "
+                        "La disposition par défaut sera utilisée."
+                    ),
+                    parent=self,
+                )
+
+            # Demande au gestionnaire de conserver sa disposition initiale.
+            try:
+                manager.LoadPerspective("")
+            except (ValueError, TypeError):
+                log.exception(
+                    "MainWindow.__restore_perspective : "
+                    "impossible de réinitialiser la perspective."
+                )
+
+            # Indique que la perspective sauvegardée n'a pas été restaurée.
+            restored = False
 
         # # S'assurer que tous les panneaux sont visibles pour éviter les "panneaux zombies".
         # # for Frame in self.paned_windows():
@@ -1149,10 +1223,58 @@ class MainWindow(
         #     # if hasattr(self.viewer, "title"):
         #     #     # frame.window.title(frame.get_translated_title())
         #     #     self.viewer.title(self.viewer.winfo_name())
+        # Force l'ancrage des panneaux flottants sous Wayland.
+        if operating_system.isWayland():
+            for pane in manager.GetAllPanes():
+                if pane.IsFloating():
+                    pane.Dock()
+
+        # Rend visibles les panneaux, conformément au comportement wxPython.
+        for pane in manager.GetAllPanes():
+            if not pane.IsShown():
+                pane.Show()
+
+            # Récupère le widget associé au panneau.
+            window = pane.window
+
+            # Actualise la légende uniquement si le widget expose title().
+            title_method = getattr(window, "title", None)
+            if callable(title_method):
+                try:
+                    pane.Caption(title_method())
+                except (AttributeError, TypeError):
+                    # Certains widgets Tkinter ne possèdent pas de titre exploitable.
+                    log.debug(
+                        "Impossible d'actualiser le titre du panneau %s.",
+                        pane.name,
+                        exc_info=True,
+                    )
+
+            # Réinitialise la hauteur minimale de la barre d'outils.
+            if pane.name == "toolbar" and window is not None:
+                try:
+                    # Récupère la hauteur demandée par le widget Tkinter.
+                    best_height = window.winfo_reqheight()
+
+                    # Conserve la largeur minimale par défaut et actualise la hauteur.
+                    pane.min_size = (-1, best_height)
+
+                except (AttributeError, TypeError):
+                    # La barre d'outils ne fournit pas les dimensions attendues.
+                    log.debug(
+                        "Impossible de recalculer la taille minimale de la barre "
+                        "d'outils.",
+                        exc_info=True,
+                    )
+
+        # Applique les changements de visibilité et de position.
+        manager.Update()
+
+        # Signale si la perspective sauvegardée a effectivement été restaurée.
         if not restored:
             log.warning(
                 "MainWindow.__restore_perspective : "
-                "perspective invalide ou incompatible."
+                "perspective absente, invalide ou incompatible."
             )
             return False
 
@@ -1165,6 +1287,7 @@ class MainWindow(
         #             self.viewer_container.activateViewer(viewer)
         #             break
 
+        # Confirmer la restauration.
         # # log.debug(
         # #     f"PerspectiveManager.restore_perspective: {viewer_types} restaurés !"
         # # )

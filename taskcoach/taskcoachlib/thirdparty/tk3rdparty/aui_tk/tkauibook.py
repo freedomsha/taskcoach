@@ -109,6 +109,9 @@ class AuiNotebook(tk.Frame):
         )
 
     def LoadPerspective(self, layout):
+        # def LoadPerspective(self, layout, update=True, restorecaption=False,
+        #                     restoreminimize=False):
+
         try:
             self.SetSelection(json.loads(layout).get("selection", -1))
             return True

@@ -23,6 +23,10 @@ from .aui_tk_constants import *
 NonePaneInfo = AuiPaneInfo()
 
 
+def _EscapeDelimiters(s):
+    return s.replace("|", "\\|").replace(";", "\\;")
+
+
 class TtkPanePlacement:
     """Paramètres de placement d'un panneau dans une grille."""
 
@@ -326,98 +330,750 @@ class AuiManager:
     def UpdateNotebook(self, notebook=None):
         return None
 
+    # def SavePaneInfo(self, pane):
+    #     return json.dumps(
+    #         {
+    #             "name": pane.name,
+    #             "caption": pane.caption,
+    #             "state": pane.state,
+    #             "dir": pane.dock_direction,
+    #             "layer": pane.dock_layer,
+    #             "row": pane.dock_row,
+    #             "pos": pane.dock_pos,
+    #             "prop": pane.dock_proportion,
+    #             "best": list(pane.best_size),
+    #             "min": list(pane.min_size),
+    #             "max": list(pane.max_size),
+    #             "floatpos": list(pane.floating_pos),
+    #             "floatsize": list(pane.floating_size),
+    #             "notebookid": pane.notebook_id,
+    #             "transparent": pane.transparent,
+    #         }
+    #     )
     def SavePaneInfo(self, pane):
-        return json.dumps(
-            {
-                "name": pane.name,
-                "caption": pane.caption,
-                "state": pane.state,
-                "dir": pane.dock_direction,
-                "layer": pane.dock_layer,
-                "row": pane.dock_row,
-                "pos": pane.dock_pos,
-                "prop": pane.dock_proportion,
-                "best": list(pane.best_size),
-                "min": list(pane.min_size),
-                "max": list(pane.max_size),
-                "floatpos": list(pane.floating_pos),
-                "floatsize": list(pane.floating_size),
-                "notebookid": pane.notebook_id,
-                "transparent": pane.transparent,
-            }
-        )
+        """
+        Sérialise les informations d'un panneau au format texte historique de wxAUI.
 
+        Le format produit est compatible avec SavePaneInfo() de wxPython
+        et peut être utilisé dans une perspective commençant par ``layout2|``.
+
+        Args:
+            pane (AuiPaneInfo): Instance de AuiPaneInfo à sérialiser. Panneau dont les propriétés doivent être sauvegardées.
+
+        Returns:
+            str: Propriétés du panneau séparées par des points-virgules.
+        """
+        # # Prépare les propriétés dans l'ordre du format wxAUI.
+        # values = [
+        #     ("name", pane.name),
+        #     ("caption", pane.caption),
+        #     ("state", pane.state),
+        #     ("dir", pane.dock_direction),
+        #     ("layer", pane.dock_layer),
+        #     ("row", pane.dock_row),
+        #     ("pos", pane.dock_pos),
+        #     ("prop", pane.dock_proportion),
+        #     ("bestw", pane.best_size[0]),
+        #     ("besth", pane.best_size[1]),
+        #     ("minw", pane.min_size[0]),
+        #     ("minh", pane.min_size[1]),
+        #     ("maxw", pane.max_size[0]),
+        #     ("maxh", pane.max_size[1]),
+        #     ("floatx", pane.floating_pos[0]),
+        #     ("floaty", pane.floating_pos[1]),
+        #     ("floatw", pane.floating_size[0]),
+        #     ("floath", pane.floating_size[1]),
+        # ]
+        #
+        # # Convertit chaque propriété en une paire clé=valeur.
+        # parts = []
+        #
+        # # Parcourt toutes les propriétés à sérialiser.
+        # for key, value in values:
+        #     # Convertit la valeur en texte.
+        #     value = str(value)
+        #
+        #     # Protège les antislashs déjà présents dans les valeurs.
+        #     value = value.replace("\\", "\\\\")
+        #
+        #     # Protège les séparateurs de panneaux présents dans les valeurs.
+        #     value = value.replace("|", "\\|")
+        #
+        #     # Protège les séparateurs de propriétés présents dans les valeurs.
+        #     value = value.replace(";", "\\;")
+        #
+        #     # Ajoute la propriété au résultat.
+        #     parts.append(f"{key}={value}")
+        #
+        # # Assemble les propriétés en utilisant le séparateur wxAUI.
+        # return ";".join(parts)
+        # Échappe les caractères réservés dans les valeurs textuelles.
+        result = "name=" + _EscapeDelimiters(pane.name) + ";"
+
+        # Enregistre le titre du panneau en échappant les délimiteurs.
+        result += "caption=" + _EscapeDelimiters(pane.caption) + ";"
+
+        # Enregistre la cible de minimisation uniquement si elle existe.
+        if pane.minimize_target:
+            result += "minitarget=" + _EscapeDelimiters(pane.minimize_target) + ";"
+
+        # Enregistre le mode de minimisation.
+        result += "minimode=%u;" % pane.minimize_mode
+
+        # Enregistre l'état et les paramètres d'ancrage.
+        result += "state=%u;" % pane.state
+        result += "dir=%d;" % pane.dock_direction
+        result += "layer=%d;" % pane.dock_layer
+        result += "row=%d;" % pane.dock_row
+        result += "pos=%d;" % pane.dock_pos
+        result += "prop=%d;" % pane.dock_proportion
+
+        # Enregistre la taille préférée.
+        result += "bestw=%d;" % pane.best_size[0]
+        result += "besth=%d;" % pane.best_size[1]
+
+        # Enregistre la taille minimale.
+        result += "minw=%d;" % pane.min_size[0]
+        result += "minh=%d;" % pane.min_size[1]
+
+        # Enregistre la taille maximale.
+        result += "maxw=%d;" % pane.max_size[0]
+        result += "maxh=%d;" % pane.max_size[1]
+
+        # Enregistre la position de la fenêtre flottante.
+        result += "floatx=%d;" % pane.floating_pos[0]
+        result += "floaty=%d;" % pane.floating_pos[1]
+
+        # Enregistre la taille de la fenêtre flottante.
+        result += "floatw=%d;" % pane.floating_size[0]
+        result += "floath=%d;" % pane.floating_size[1]
+
+        # Enregistre l'identifiant du notebook associé.
+        result += "notebookid=%d;" % pane.notebook_id
+
+        # Enregistre la transparence en dernier, comme dans wxPython.
+        result += "transparent=%d" % pane.transparent
+
+        # Retourne la chaîne au format historique.
+        return result
+
+    # def LoadPaneInfo(self, pane_part, pane):
+    #     try:
+    #         data = json.loads(pane_part)
+    #     except (TypeError, ValueError):
+    #         return pane
+    #     pane.name = data.get("name", pane.name)
+    #     pane.caption = data.get("caption", pane.caption)
+    #     pane.state = data.get("state", pane.state)
+    #     pane.dock_direction = data.get("dir", pane.dock_direction)
+    #     pane.dock_layer = data.get("layer", pane.dock_layer)
+    #     pane.dock_row = data.get("row", pane.dock_row)
+    #     pane.dock_pos = data.get("pos", pane.dock_pos)
+    #     pane.dock_proportion = data.get("prop", pane.dock_proportion)
+    #     pane.best_size = tuple(data.get("best", pane.best_size))
+    #     pane.min_size = tuple(data.get("min", pane.min_size))
+    #     pane.max_size = tuple(data.get("max", pane.max_size))
+    #     pane.floating_pos = tuple(data.get("floatpos", pane.floating_pos))
+    #     pane.floating_size = tuple(data.get("floatsize", pane.floating_size))
+    #     pane.notebook_id = data.get("notebookid", pane.notebook_id)
+    #     pane.transparent = data.get("transparent", pane.transparent)
+    #     return pane
     def LoadPaneInfo(self, pane_part, pane):
+        """
+        Restaure les propriétés d'un panneau depuis wxAUI ou depuis l'ancien JSON.
+
+        Args:
+            pane_part (str): Texte sérialisé ou ancien dictionnaire JSON.
+            pane (AuiPaneInfo): Panneau existant à modifier.
+
+        Returns:
+            AuiPaneInfo: Panneau modifié, ou inchangé si les données sont invalides.
+        """
+        # Importe JSON pour assurer la lecture des anciennes sauvegardes.
+        import json
+
+        # Essaie d'abord de reconnaître l'ancien format JSON.
         try:
             data = json.loads(pane_part)
+        # Le format texte wxAUI n'est pas du JSON.
         except (TypeError, ValueError):
+            data = None
+
+        # Traite les anciennes sauvegardes JSON.
+        if isinstance(data, dict):
+            # Restaure le nom sans remplacer la fenêtre Tkinter.
+            pane.name = data.get("name", pane.name)
+
+            # Restaure la légende enregistrée.
+            pane.caption = data.get("caption", pane.caption)
+
+            # Restaure l'état et les propriétés de positionnement.
+            pane.state = data.get("state", pane.state)
+            pane.dock_direction = data.get("dir", pane.dock_direction)
+            pane.dock_layer = data.get("layer", pane.dock_layer)
+            pane.dock_row = data.get("row", pane.dock_row)
+            pane.dock_pos = data.get("pos", pane.dock_pos)
+            pane.dock_proportion = data.get("prop", pane.dock_proportion)
+
+            # Restaure les tailles en conservant leur représentation sous forme de tuples.
+            pane.best_size = tuple(data.get("best", pane.best_size))
+            pane.min_size = tuple(data.get("min", pane.min_size))
+            pane.max_size = tuple(data.get("max", pane.max_size))
+            pane.floating_pos = tuple(data.get("floatpos", pane.floating_pos))
+            pane.floating_size = tuple(data.get("floatsize", pane.floating_size))
+
+            # Restaure les propriétés propres à l'ancienne implémentation Tkinter.
+            pane.notebook_id = data.get("notebookid", pane.notebook_id)
+            pane.transparent = data.get("transparent", pane.transparent)
+
+            # Retourne le panneau après restauration de l'ancien format.
             return pane
-        pane.name = data.get("name", pane.name)
-        pane.caption = data.get("caption", pane.caption)
-        pane.state = data.get("state", pane.state)
-        pane.dock_direction = data.get("dir", pane.dock_direction)
-        pane.dock_layer = data.get("layer", pane.dock_layer)
-        pane.dock_row = data.get("row", pane.dock_row)
-        pane.dock_pos = data.get("pos", pane.dock_pos)
-        pane.dock_proportion = data.get("prop", pane.dock_proportion)
-        pane.best_size = tuple(data.get("best", pane.best_size))
-        pane.min_size = tuple(data.get("min", pane.min_size))
-        pane.max_size = tuple(data.get("max", pane.max_size))
-        pane.floating_pos = tuple(data.get("floatpos", pane.floating_pos))
-        pane.floating_size = tuple(data.get("floatsize", pane.floating_size))
-        pane.notebook_id = data.get("notebookid", pane.notebook_id)
-        pane.transparent = data.get("transparent", pane.transparent)
+
+        # Vérifie que les données reçues sont une chaîne de caractères.
+        if not isinstance(pane_part, str):
+            return pane
+
+        # Prépare un dictionnaire contenant les propriétés décodées.
+        properties = {}
+
+        # Sépare les propriétés en ignorant les points-virgules échappés.
+        parts = []
+        current = []
+        escaped = False
+
+        # Parcourt les caractères pour ne pas couper les valeurs contenant des séparateurs.
+        for char in pane_part:
+            # Ajoute le caractère courant sans le traiter comme séparateur s'il est échappé.
+            if escaped:
+                current.append(char)
+                escaped = False
+            # Mémorise la présence d'un antislash d'échappement.
+            elif char == "\\":
+                escaped = True
+                current.append(char)
+            # Termine une propriété sur un point-virgule non échappé.
+            elif char == ";":
+                parts.append("".join(current))
+                current = []
+            # Accumule les autres caractères.
+            else:
+                current.append(char)
+
+        # Ajoute la dernière propriété après la boucle.
+        if current:
+            parts.append("".join(current))
+
+        # Décode chaque propriété clé=valeur.
+        for part in parts:
+            # Ignore les éléments vides ou qui ne contiennent pas de signe égal.
+            if "=" not in part:
+                continue
+
+            # Sépare la clé et la valeur au premier signe égal.
+            key, value = part.split("=", 1)
+
+            # Retire les espaces superflus autour de la clé.
+            key = key.strip()
+
+            # Décode les caractères échappés dans la valeur.
+            value = value.replace("\\;", ";").replace("\\|", "|")
+            value = value.replace("\\\\", "\\")
+
+            # Enregistre la propriété décodée.
+            properties[key] = value
+
+        # Définit les propriétés numériques à restaurer.
+        integer_fields = {
+            "state": "state",
+            "dir": "dock_direction",
+            "layer": "dock_layer",
+            "row": "dock_row",
+            "pos": "dock_pos",
+            "prop": "dock_proportion",
+        }
+
+        # Restaure les propriétés numériques lorsqu'elles sont valides.
+        for key, attribute in integer_fields.items():
+            # Ignore les propriétés absentes.
+            if key not in properties:
+                continue
+
+            # Convertit la valeur en entier sans interrompre le chargement en cas d'erreur.
+            try:
+                setattr(pane, attribute, int(properties[key]))
+            except (TypeError, ValueError):
+                pass
+
+        # Restaure le nom et la légende du panneau.
+        pane.name = properties.get("name", pane.name)
+        pane.caption = properties.get("caption", pane.caption)
+
+        # Définit les paires de propriétés correspondant aux tailles.
+        size_fields = {
+            "best": ("bestw", "besth"),
+            "min": ("minw", "minh"),
+            "max": ("maxw", "maxh"),
+            "floatpos": ("floatx", "floaty"),
+            "floatsize": ("floatw", "floath"),
+        }
+
+        # Parcourt les différentes paires de dimensions.
+        for attribute, (key_x, key_y) in size_fields.items():
+            # Ignore les paires dont aucune valeur n'est enregistrée.
+            if key_x not in properties and key_y not in properties:
+                continue
+
+            # Récupère la valeur actuelle pour préserver les dimensions absentes.
+            current_value = getattr(pane, {
+                "best": "best_size",
+                "min": "min_size",
+                "max": "max_size",
+                "floatpos": "floating_pos",
+                "floatsize": "floating_size",
+            }[attribute])
+
+            # Convertit chaque dimension indépendamment.
+            try:
+                x = int(properties.get(key_x, current_value[0]))
+                y = int(properties.get(key_y, current_value[1]))
+            except (TypeError, ValueError, IndexError):
+                continue
+
+            # Affecte le tuple de dimensions à l'attribut correspondant.
+            if attribute == "best":
+                pane.best_size = (x, y)
+            elif attribute == "min":
+                pane.min_size = (x, y)
+            elif attribute == "max":
+                pane.max_size = (x, y)
+            elif attribute == "floatpos":
+                pane.floating_pos = (x, y)
+            elif attribute == "floatsize":
+                pane.floating_size = (x, y)
+
+        # Retourne le panneau existant sans toucher à sa fenêtre ni à son icône.
         return pane
 
+    # def SavePerspective(self):
+    #     return json.dumps(
+    #         {"panes": [json.loads(self.SavePaneInfo(pane)) for pane in self._panes]}
+    #     )
     def SavePerspective(self):
-        return json.dumps(
-            {"panes": [json.loads(self.SavePaneInfo(pane)) for pane in self._panes]}
-        )
+        """
+        Sérialise et Sauvegarde la disposition au format historique wxAUI layout2.
 
-    def LoadPerspective(self, layout):
-        # try:
-        #     data = json.loads(layout)
-        # except (TypeError, ValueError):
-        #     return False
-        # for item in data.get("panes", []):
-        #     pane = AuiPaneInfo()
-        #     self.LoadPaneInfo(json.dumps(item), pane)
-        #     self._panes.append(pane)
-        # self.Update()
-        # return True
+        Returns:
+            str: Disposition sérialisée, compatible avec le format texte wxAUI.
+                 Perspective commençant par ``layout2|``.
+        """
+        # Initialise le résultat avec la version de format historique.
+        result = "layout2|"
+
+        # Sérialise et ajoute les panneaux existants dans leur ordre actuel.
+        for pane in self._panes:
+            # Ajoute les propriétés du panneau et le séparateur historique.
+            result += self.SavePaneInfo(pane) + "|"
+
+        # Ajoute les tailles des docks lorsqu'elles ont été enregistrées.
+        for dock in self._docks:
+            # Sérialise la direction, la couche, la rangée et la taille du dock.
+            result += "dock_size(%d,%d,%d)=%d|" % (
+                dock.dock_direction,
+                dock.dock_layer,
+                dock.dock_row,
+                dock.size,
+            )
+
+        # Retourne la disposition de la perspective complète.
+        return result
+
+
+    # def LoadPerspective(self, layout):
+    #     """
+    #     Charge une disposition AUI à partir d'une sérialisation JSON
+    #     créée avec la méthode SavePerspective.
+    #
+    #     Si update est True, la fenêtre est automatiquement mise à jour.
+    #
+    #     Args:
+    #         layout: Une chaîne de caractères qui contient la sérialisation JSON.
+    #         update: Pour mettre à jour immédiatement la fenêtre ou pas.
+    #         restorecaption: Si False, les captions des pages seront restaurées,
+    #                         sinon utiliser les dispositions définies dans le code.
+    #         restoreminimize: Si False, restaure les paramètres enregistrés,
+    #                          sinon utilise minimize_toolbar et
+    #                          minimize_mode définis dans le code.
+    #
+    #     Returns:
+    #         bool: True si la disposition a été chargée avec succès, False sinon.
+    #     """
+    #     # try:
+    #     #     data = json.loads(layout)
+    #     # except (TypeError, ValueError):
+    #     #     return False
+    #     # for item in data.get("panes", []):
+    #     #     pane = AuiPaneInfo()
+    #     #     self.LoadPaneInfo(json.dumps(item), pane)
+    #     #     self._panes.append(pane)
+    #     # self.Update()
+    #     # return True
+    #     try:
+    #         data = json.loads(layout)
+    #     except (TypeError, ValueError):
+    #         return False
+    #
+    #     if not isinstance(data, dict):
+    #         return False
+    #
+    #     saved_panes = data.get("panes", [])
+    #     if not isinstance(saved_panes, list):
+    #         return False
+    #
+    #     panes_by_name = {
+    #         pane.name: pane
+    #         for pane in self._panes
+    #         if getattr(pane, "name", None)
+    #     }
+    #
+    #     for item in saved_panes:
+    #         if not isinstance(item, dict):
+    #             continue
+    #
+    #         name = item.get("name")
+    #         pane = panes_by_name.get(name)
+    #
+    #         if pane is None:
+    #             continue
+    #
+    #         self.LoadPaneInfo(json.dumps(item), pane)
+    #
+    #     self.Update()
+    #     return True
+
+    # def LoadPerspective(
+    #         self,
+    #         layout,
+    #         update=True,
+    #         restorecaption=False,
+    #         restoreminimize=False,
+    # ):
+    #     """
+    #     Restaure une disposition des panneaux à partir d'une sérialisation JSON.
+    #
+    #     La disposition doit avoir été créée par SavePerspective(). Les panneaux
+    #     sont recherchés parmi ceux déjà enregistrés dans le gestionnaire.
+    #     Les panneaux inconnus sont ignorés afin de ne pas créer de fenêtres
+    #     ou de composants inexistants.
+    #
+    #     Les icônes définies dans le code sont préservées. Les paramètres
+    #     restorecaption et restoreminimize permettent de conserver les valeurs
+    #     définies par le programme plutôt que celles enregistrées dans la
+    #     disposition.
+    #
+    #     Args:
+    #         layout (str): Chaîne JSON représentant la disposition à restaurer.
+    #         update (bool): Met à jour l'affichage si True.
+    #         restorecaption (bool): Conserve les légendes définies dans le code.
+    #         restoreminimize (bool): Conserve les paramètres de minimisation
+    #             définis dans le code.
+    #
+    #     Returns:
+    #         bool: True si la disposition a été traitée, False si elle est invalide.
+    #     """
+    #     # Importe le module JSON si cet import n'existe pas déjà au niveau du fichier.
+    #     import json
+    #
+    #     # Essaie de décoder la disposition enregistrée au format JSON.
+    #     try:
+    #         data = json.loads(layout)
+    #     # Refuse les chaînes JSON invalides ou les types non acceptés par json.loads().
+    #     except (TypeError, ValueError):
+    #         return False
+    #
+    #     # Vérifie que la racine JSON est un dictionnaire.
+    #     if not isinstance(data, dict):
+    #         return False
+    #
+    #     # Récupère la liste des panneaux enregistrés dans la disposition.
+    #     saved_panes = data.get("panes", [])
+    #
+    #     # Vérifie que la liste des panneaux possède le type attendu.
+    #     if not isinstance(saved_panes, list):
+    #         return False
+    #
+    #     # Indexe les panneaux déjà connus du gestionnaire à partir de leur nom.
+    #     panes_by_name = {
+    #         pane.name: pane
+    #         for pane in self._panes
+    #         if getattr(pane, "name", None)
+    #     }
+    #
+    #     # Prépare un dictionnaire pour conserver les légendes définies dans le code.
+    #     saved_captions = {}
+    #
+    #     # Prépare un dictionnaire pour conserver les icônes définies dans le code.
+    #     saved_icons = {}
+    #
+    #     # Prépare un dictionnaire pour conserver les paramètres de minimisation.
+    #     saved_minimize = {}
+    #
+    #     # Parcourt les panneaux existants avant de restaurer la disposition.
+    #     for name, pane in panes_by_name.items():
+    #         # Conserve la légende actuelle lorsque l'attribut existe.
+    #         if hasattr(pane, "caption"):
+    #             saved_captions[name] = pane.caption
+    #
+    #         # Conserve l'icône actuelle lorsqu'elle est définie.
+    #         if hasattr(pane, "icon"):
+    #             saved_icons[name] = pane.icon
+    #
+    #         # Conserve les paramètres de minimisation lorsqu'ils existent.
+    #         if hasattr(pane, "minimize_target") and hasattr(pane, "minimize_mode"):
+    #             saved_minimize[name] = (
+    #                 pane.minimize_target,
+    #                 pane.minimize_mode,
+    #             )
+    #
+    #     # Parcourt les panneaux présents dans la disposition enregistrée.
+    #     for item in saved_panes:
+    #         # Ignore les entrées qui ne sont pas des dictionnaires.
+    #         if not isinstance(item, dict):
+    #             continue
+    #
+    #         # Récupère le nom du panneau à restaurer.
+    #         name = item.get("name")
+    #
+    #         # Recherche le panneau correspondant parmi les panneaux existants.
+    #         pane = panes_by_name.get(name)
+    #
+    #         # Ignore les panneaux qui n'existent pas dans l'interface actuelle.
+    #         if pane is None:
+    #             continue
+    #
+    #         # Restaure les propriétés enregistrées dans la disposition.
+    #         self.LoadPaneInfo(json.dumps(item), pane)
+    #
+    #         # Réapplique la légende définie dans le code si demandé.
+    #         if restorecaption and name in saved_captions:
+    #             pane.Caption(saved_captions[name])
+    #
+    #         # Réapplique l'icône définie dans le code si elle existait.
+    #         if name in saved_icons:
+    #             pane.icon = saved_icons[name]
+    #
+    #         # Réapplique les paramètres de minimisation si demandé.
+    #         if restoreminimize and name in saved_minimize:
+    #             pane.minimize_target, pane.minimize_mode = saved_minimize[name]
+    #
+    #     # Met à jour l'interface uniquement si le paramètre le demande.
+    #     if update:
+    #         self.Update()
+    #
+    #     # Signale que la disposition a été traitée.
+    #     return True
+
+    def LoadPerspective(
+            self,
+            layout,
+            update=True,
+            restorecaption=False,
+            restoreminimize=False,
+    ):
+        """
+        Restaure une disposition depuis un fichier wxAUI ou un ancien fichier JSON.
+
+        Args:
+            layout (str): Disposition enregistrée.
+            update (bool): Met à jour l'interface si True.
+            restorecaption (bool): Conserve les légendes définies dans le code.
+            restoreminimize (bool): Conserve les paramètres de minimisation du code.
+
+        Returns:
+            bool: True si la disposition a été reconnue, False sinon.
+        """
+        # Importe JSON pour lire les anciennes sauvegardes Tkinter.
+        import json
+
+        # Refuse les valeurs qui ne sont pas des chaînes.
+        if not isinstance(layout, str):
+            return False
+
+        # Conserve la chaîne initiale pour détecter le format JSON historique.
         try:
             data = json.loads(layout)
         except (TypeError, ValueError):
+            data = None
+
+        # Traite les anciens fichiers JSON de Tkinter.
+        if isinstance(data, dict):
+            # Récupère la liste des panneaux enregistrés.
+            saved_panes = data.get("panes", [])
+
+            # Vérifie que cette liste est valide.
+            if not isinstance(saved_panes, list):
+                return False
+
+            # Indexe les panneaux déjà existants par leur nom.
+            panes_by_name = {
+                pane.name: pane
+                for pane in self._panes
+                if getattr(pane, "name", None)
+            }
+
+            # Parcourt les panneaux sauvegardés.
+            for item in saved_panes:
+                # Ignore les éléments mal formés.
+                if not isinstance(item, dict):
+                    continue
+
+                # Recherche le panneau existant correspondant.
+                pane = panes_by_name.get(item.get("name"))
+
+                # Ignore les panneaux qui n'existent plus.
+                if pane is None:
+                    continue
+
+                # Préserve les propriétés non sérialisées avant la restauration.
+                icon = pane.icon
+                caption = pane.caption
+                minimize_target = pane.minimize_target
+                minimize_mode = pane.minimize_mode
+
+                # Restaure les propriétés depuis l'ancien JSON.
+                self.LoadPaneInfo(json.dumps(item), pane)
+
+                # Préserve toujours l'icône définie dans le code.
+                pane.icon = icon
+
+                # Préserve la légende définie dans le code si demandé.
+                if restorecaption:
+                    pane.caption = caption
+
+                # Préserve les paramètres de minimisation si demandé.
+                if restoreminimize:
+                    pane.minimize_target = minimize_target
+                    pane.minimize_mode = minimize_mode
+
+            # Met à jour l'affichage uniquement si demandé.
+            if update:
+                self.Update()
+
+            # Signale que l'ancien format JSON a été traité.
+            return True
+
+        # Vérifie que la disposition utilise le format historique wxAUI.
+        if not layout.startswith("layout2|"):
             return False
 
-        if not isinstance(data, dict):
-            return False
+        # Retire l'identifiant de format situé avant le premier séparateur.
+        input_text = layout[len("layout2|"):]
 
-        saved_panes = data.get("panes", [])
-        if not isinstance(saved_panes, list):
-            return False
+        # Protège les séparateurs échappés avant de découper les panneaux.
+        input_text = input_text.replace("\\|", "\a")
+        input_text = input_text.replace("\\;", "\b")
 
+        # Sépare les panneaux et les informations sur les docks.
+        parts = input_text.split("|")
+
+        # Indexe les panneaux existants par leur nom.
         panes_by_name = {
             pane.name: pane
             for pane in self._panes
             if getattr(pane, "name", None)
         }
 
-        for item in saved_panes:
-            if not isinstance(item, dict):
+        # Conserve les légendes, les icônes et les paramètres de minimisation du code.
+        saved_properties = {
+            name: (
+                pane.caption,
+                pane.icon,
+                pane.minimize_target,
+                pane.minimize_mode,
+            )
+            for name, pane in panes_by_name.items()
+        }
+
+        # Prépare la liste des informations de docks restaurées.
+        restored_docks = []
+
+        # Parcourt chaque segment de la disposition.
+        for part in parts:
+            # Restaure les séparateurs protégés dans le segment.
+            part = part.replace("\a", "|").replace("\b", ";")
+
+            # Ignore les segments vides.
+            if not part.strip():
                 continue
 
-            name = item.get("name")
-            pane = panes_by_name.get(name)
+            # Détecte une information de taille de dock.
+            if part.startswith("dock_size("):
+                # Analyse le format dock_size(direction,layer,row)=size.
+                try:
+                    dock_key, size_text = part.split("=", 1)
+                    coordinates = dock_key[len("dock_size("):-1].split(",")
 
+                    # Convertit les quatre valeurs en entiers.
+                    direction, layer, row = map(int, coordinates)
+                    size = int(size_text)
+
+                    # Crée un objet de dock avec les valeurs restaurées.
+                    dock = AuiDockInfo()
+                    dock.dock_direction = direction
+                    dock.dock_layer = layer
+                    dock.dock_row = row
+                    dock.size = size
+
+                    # Ajoute le dock restauré à la liste temporaire.
+                    restored_docks.append(dock)
+
+                # Ignore les informations de dock mal formées.
+                except (ValueError, TypeError):
+                    continue
+
+                # Passe au segment suivant.
+                continue
+
+            # Crée un panneau temporaire pour extraire son nom.
+            temporary_pane = AuiPaneInfo()
+
+            # Restaure les propriétés dans le panneau temporaire.
+            self.LoadPaneInfo(part, temporary_pane)
+
+            # Recherche le panneau existant correspondant au nom restauré.
+            pane = panes_by_name.get(temporary_pane.name)
+
+            # Ignore les panneaux inconnus sans créer de nouvelle fenêtre.
             if pane is None:
                 continue
 
-            self.LoadPaneInfo(json.dumps(item), pane)
+            # Récupère les propriétés du code enregistrées avant la restauration.
+            caption, icon, minimize_target, minimize_mode = saved_properties[pane.name]
 
-        self.Update()
+            # Restaure les propriétés de disposition dans le panneau existant.
+            self.LoadPaneInfo(part, pane)
+
+            # Préserve toujours l'icône définie dans le code.
+            pane.icon = icon
+
+            # Restaure la légende du code si le paramètre le demande.
+            if restorecaption:
+                pane.caption = caption
+
+            # Restaure les paramètres de minimisation du code si demandé.
+            if restoreminimize:
+                pane.minimize_target = minimize_target
+                pane.minimize_mode = minimize_mode
+
+        # Remplace les informations de docks uniquement si des docks ont été lus.
+        if restored_docks:
+            self._docks = restored_docks
+
+        # Met à jour l'affichage uniquement si demandé.
+        if update:
+            self.Update()
+
+        # Signale que le format wxAUI a été reconnu et traité.
         return True
-
 
     def _direction(self, pane):
         return {
