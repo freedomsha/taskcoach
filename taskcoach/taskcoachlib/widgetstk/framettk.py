@@ -28,7 +28,7 @@ class AuiManagedFrameWithDynamicCenterPane:
     déléguée à :class:`AuiManager`.
     """
 
-    def __init__(self, master=None, title="Task Coach", root=None, **kwargs):
+    def __init__(self, master=None, title="Task Coach AUI", root=None, **kwargs):
         # ``root`` est accepté pour faciliter la compatibilité avec du code
         # Tkinter existant qui utilise ce nom d'argument.
         if master is None:
@@ -39,7 +39,7 @@ class AuiManagedFrameWithDynamicCenterPane:
             try:
                 self.root.configure(**{option: value})
             except tk.TclError:
-                log.debug("Option Tk ignorée: %s", option, exc_info=True)
+                log.debug("AuiManagedFrameWithDynamicCenterPane : Option Tk ignorée: %s", option, exc_info=True)
 
         self.manager = AuiManager(self.root)
         self._center_pane = None

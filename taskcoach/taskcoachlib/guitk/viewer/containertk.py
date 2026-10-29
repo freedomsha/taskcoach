@@ -167,8 +167,8 @@ log = logging.getLogger(__name__)
 
 # class ViewerContainer:
 # class ViewerContainer(ttk.Frame):  # ttk.PanedWindow
-# class ViewerContainer(ttk.LabelFrame):
-class ViewerContainer(ttk.PanedWindow):
+class ViewerContainer(ttk.LabelFrame):
+    # class ViewerContainer(ttk.PanedWindow):
     """
     ViewerContainer est un conteneur de visionneuses. Il utilise un Panedwindow Tkinter
     pour afficher les visionneuses. Le ViewerContainer sait lequel de ses visualiseurs
@@ -230,9 +230,9 @@ class ViewerContainer(ttk.PanedWindow):
             text="Conteneur de visualisateurs...",
         )
         # self._label.pack(pady=20)
-        # self._label.grid(row=1, column=0, padx=10, pady=10)
-        # ttk.PanedWindow gère les viewer avec self.add(viewer,...)
-        self.add(self._label, weight=1)
+        self._label.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        # # ttk.PanedWindow gère les viewer avec self.add(viewer,...)
+        # self.add(self._label, weight=1)
         # self.containerWidget = containerWidget  # Le widget conteneur (par exemple, une fenêtre Tk).
         # self.containerWidget = parent_widget  # Le widget conteneur (par exemple, une fenêtre Tk, toplevel, ou ici MainWindow).
         # Mais en fait le conteneur est ViewerContainer lui-même !
@@ -397,10 +397,10 @@ class ViewerContainer(ttk.PanedWindow):
         # # viewer.pack(expand=True, fill="both")
         # # viewer.pack(fill="both", expand=True, padx=10, pady=5)  # copie de factorytk.MockViewerContainer
         # # viewer.grid(row=0, column=0)  # A essayer !
-        # viewer.grid(
-        #     row=self.viewer_count, column=0, padx=10, pady=5
-        # )  # TODO : Attention, peut-être double avec celui de factory addViewers ! A retirer ?
-        self.add(viewer, weight=1)
+        viewer.grid(
+            row=self.viewer_count, column=0, padx=10, pady=5, sticky="nsew"
+        )  # TODO : Attention, peut-être double avec celui de factory addViewers ! A retirer ?
+        # self.add(viewer, weight=1)  # PanedWindow utilise add()
         # self.viewer_count += 1
         # if isinstance(viewer, ViewerContainer):
         #     # viewer.pack(fill="both", expand=True, padx=10, pady=5)

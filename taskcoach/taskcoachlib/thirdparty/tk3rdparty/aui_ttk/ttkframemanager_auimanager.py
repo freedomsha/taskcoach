@@ -375,16 +375,49 @@ class AuiManager:
         )
 
     def LoadPerspective(self, layout):
+        # try:
+        #     data = json.loads(layout)
+        # except (TypeError, ValueError):
+        #     return False
+        # for item in data.get("panes", []):
+        #     pane = AuiPaneInfo()
+        #     self.LoadPaneInfo(json.dumps(item), pane)
+        #     self._panes.append(pane)
+        # self.Update()
+        # return True
         try:
             data = json.loads(layout)
         except (TypeError, ValueError):
             return False
-        for item in data.get("panes", []):
-            pane = AuiPaneInfo()
+
+        if not isinstance(data, dict):
+            return False
+
+        saved_panes = data.get("panes", [])
+        if not isinstance(saved_panes, list):
+            return False
+
+        panes_by_name = {
+            pane.name: pane
+            for pane in self._panes
+            if getattr(pane, "name", None)
+        }
+
+        for item in saved_panes:
+            if not isinstance(item, dict):
+                continue
+
+            name = item.get("name")
+            pane = panes_by_name.get(name)
+
+            if pane is None:
+                continue
+
             self.LoadPaneInfo(json.dumps(item), pane)
-            self._panes.append(pane)
+
         self.Update()
         return True
+
 
     def _direction(self, pane):
         return {
