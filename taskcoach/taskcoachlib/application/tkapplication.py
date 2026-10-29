@@ -13,17 +13,34 @@ n'ont pas d'équivalent direct dans tkinter et ont été supprimées ou
 
 # En général, il n'est pas recommandé de faire de TkinterApplication un enfant de tkinter.Tk. Voici pourquoi :
 #
-# Le design actuel de votre code utilise le principe de composition. Cela signifie que votre classe TkinterApplication possède une fenêtre principale (self.root = tk.Tk()), mais n'est pas elle-même la fenêtre. C'est une approche solide pour plusieurs raisons :
+# Le design actuel de votre code utilise le principe de composition.
+# Cela signifie que votre classe TkinterApplication possède une fenêtre principale (self.root = tk.Tk()),
+# mais n'est pas elle-même la fenêtre. C'est une approche solide pour plusieurs raisons :
 #
-#     Séparation des préoccupations : TkinterApplication est la logique de l'application (paramètres, gestion des fichiers, etc.), tandis que self.root est la représentation graphique de l'interface utilisateur. En les séparant, votre code est plus propre et plus facile à comprendre.
+#     Séparation des préoccupations : TkinterApplication est la logique de l'application
+#                                     (paramètres, gestion des fichiers, etc.),
+#                                     tandis que self.root est la représentation graphique
+#                                     de l'interface utilisateur. En les séparant,
+#                                     votre code est plus propre et plus facile à comprendre.
 #
-#     Modularité et flexibilité : En cas de besoin, vous pourriez potentiellement utiliser la même logique de classe TkinterApplication avec un autre framework d'interface graphique (comme PyQt ou PyGTK) en changeant simplement la partie qui gère l'interface, sans avoir à réécrire toute la logique métier.
+#     Modularité et flexibilité : En cas de besoin, vous pourriez potentiellement
+#                                 utiliser la même logique de classe TkinterApplication
+#                                 avec un autre framework d'interface graphique (comme PyQt ou PyGTK)
+#                                 en changeant simplement la partie qui gère l'interface,
+#                                 sans avoir à réécrire toute la logique métier.
 #
-#     Héritage multiple : Si vous faisiez hériter TkinterApplication de tk.Tk, vous pourriez rencontrer des problèmes si vous aviez besoin d'hériter également d'une autre classe pour d'autres fonctionnalités (bien que cela soit moins courant en Python).
+#     Héritage multiple : Si vous faisiez hériter TkinterApplication de tk.Tk,
+#                         vous pourriez rencontrer des problèmes si vous aviez besoin d'hériter
+#                         également d'une autre classe pour d'autres fonctionnalités
+#                         (bien que cela soit moins courant en Python).
 #
-# Votre conception actuelle imite la structure de l'application originale wxPython, où l'objet wx.App est distinct de la fenêtre principale (wx.Frame). C'est un modèle de conception éprouvé pour les applications de bureau.
+# Votre conception actuelle imite la structure de l'application originale wxPython,
+# où l'objet wx.App est distinct de la fenêtre principale (wx.Frame).
+# C'est un modèle de conception éprouvé pour les applications de bureau.
 #
-# Faire hériter TkinterApplication de tk.Tk (le principe d'héritage) pourrait sembler plus simple au premier abord, mais cela lierait de manière rigide votre logique d'application à un type de widget spécifique, ce qui est généralement considéré comme un couplage serré et peut compliquer la maintenance future.
+# Faire hériter TkinterApplication de tk.Tk (le principe d'héritage) pourrait sembler plus simple au premier abord,
+# mais cela lierait de manière rigide votre logique d'application à un type de widget spécifique,
+# ce qui est généralement considéré comme un couplage serré et peut compliquer la maintenance future.
 
 # 12/10/2026
 # Pas d'import wx nulle part
@@ -610,7 +627,7 @@ class TkinterApplication(
         log.info(
             "TkinterApplication.on_end_session : appelle détruit le parent."
         )
-        self.parent.destroy()  # TODO : Peut-être inutile !?
+        # self.parent.destroy()  # TODO : Peut-être inutile !?
         return True
 
     def on_reopen_app(self):
