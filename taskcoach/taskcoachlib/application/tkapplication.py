@@ -11,11 +11,14 @@ n'ont pas d'équivalent direct dans tkinter et ont été supprimées ou
 "maquettées" pour des raisons de démonstration.
 """
 
-# En général, il n'est pas recommandé de faire de TkinterApplication un enfant de tkinter.Tk. Voici pourquoi :
+# En général, il n'est pas recommandé de faire de TkinterApplication
+# un enfant de tkinter.Tk. Voici pourquoi :
 #
 # Le design actuel de votre code utilise le principe de composition.
-# Cela signifie que votre classe TkinterApplication possède une fenêtre principale (self.root = tk.Tk()),
-# mais n'est pas elle-même la fenêtre. C'est une approche solide pour plusieurs raisons :
+# Cela signifie que votre classe TkinterApplication
+# possède une fenêtre principale (self.root = tk.Tk()),
+# mais n'est pas elle-même la fenêtre.
+# C'est une approche solide pour plusieurs raisons :
 #
 #     Séparation des préoccupations : TkinterApplication est la logique de l'application
 #                                     (paramètres, gestion des fichiers, etc.),
@@ -56,8 +59,9 @@ from tkinter import messagebox
 from tkinter import Menu
 import threading
 
-# from tkinterdnd2 import TkinterDnD
-from tkinterdnd2 import *
+# # from tkinterdnd2 import TkinterDnD
+# from tkinterdnd2 import *
+import tkinterdnd2
 import re
 import locale
 import calendar
@@ -167,9 +171,10 @@ class TkinterApplication(
             return
         self.initialized = True
 
-        # Créer la fenêtre racine (root)
-        # self.root = tk.Tk()
-        self.root = TkinterDnD.Tk()  # Pour le drag and drop
+        # # Créer la fenêtre racine (root)
+        # # self.root = tk.Tk()
+        # self.root = TkinterDnD.Tk()  # Pour le drag and drop
+        self.root = tkinterdnd2.TkinterDnD.Tk()  # Pour le drag and drop
         self.root.title(meta.name)
         self.root.geometry("800x600")
         # self.root.protocol("WM_DELETE_WINDOW", self.on_end_session)  # Mis dans init !
