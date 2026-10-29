@@ -308,13 +308,23 @@ def start():
     # Définir le GUI global (pour tous les modules) AVANT tout import d'application
     from taskcoachlib.config.arguments import set_gui
 
-    set_gui(options.gui_name)
+    # set_gui(options.gui_name)
+    gui_name = options.gui_name
 
-    log.info(f"taskcoach.start : GUI sélectionné : {options.gui_name}")
+    # Protection si gui_name est encore une liste (ce qui peut arriver si l'option est utilisée plusieurs fois)
+    if isinstance(gui_name, list):
+        gui_name = gui_name[0]
+
+    set_gui(gui_name)
+
+    # log.info(f"taskcoach.start : GUI sélectionné : {options.gui_name}")
+    log.info(f"taskcoach.start : GUI sélectionné : %s", gui_name)
 
     app = None
+
     # NOW import l'application appropriée (et seulement celle-là)
-    if options.gui_name == "wx":
+    # if options.gui_name == "wx":
+    if gui_name == "wx":
         from taskcoachlib import application
         from taskcoachlib.application.application import Application
         # Lancement de l'initialisation de l'application version wxPython:
@@ -323,7 +333,8 @@ def start():
             options, args
         )  # définition de la variable app comme application avec options et args
         # app = application.Application(tcargs)
-    elif options.gui_name == "tk":
+    # elif options.gui_name == "tk":
+    elif gui_name == "tk":
         from taskcoachlib import application
         from taskcoachlib.application.tkapplication import TkinterApplication
         # Lancement de l'initialisation de l'application version tkinter:
@@ -335,9 +346,11 @@ def start():
     # Il est impératif d'appeler explicitement app.init() avant de démarrer l'application,
     # car c'est cette méthode qui charge les préférences utilisateur et prépare l'interface.
     # app.init()  # logique, 2nd appel d'init (le 1er est dans tkapplication.TkinterApplication.__init)
-    if options.gui_name == "wx":
+    # if options.gui_name == "wx":
+    if gui_name == "wx":
         app.init()
-    elif options.gui_name == "tk":
+    # elif options.gui_name == "tk":
+    elif gui_name == "tk":
         # TkinterApplication.__init__ effectue déjà l'initialisation
         # Ne pas appeler init() une seconde fois si le constructeur l'a déjà fait
         # TODO : Peut-être Créer l'instance init de l'application tkinter ?!

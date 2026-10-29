@@ -181,6 +181,7 @@ class SettingsIOTest(SettingsTestCase):
         """
         Vérifie les messages d'erreur en cas de sauvegarde.
         """
+        # TODO : à corriger !
 
         def file_that_raises_ioerror(*args):  # pylint: disable=W0613,W0622
             raise IOError
@@ -277,6 +278,7 @@ class SettingsFileLocationTest(SettingsTestCase):
         self.assertEqual(os.path.dirname(sys.argv[0]), self.settings.path())
 
     def testPathWhenSavingIniFileInProgramDirAndRunFromZipFile(self):
+        # TODO : à corriger !
         self.settings.setboolean("file", "saveinifileinprogramdir", True)
         sys.argv.insert(0, os.path.join("d:", "TaskCoach", "library.zip"))
         self.assertEqual(os.path.join("d:", "TaskCoach"), self.settings.path())
@@ -312,7 +314,7 @@ class ApplicationOptionsTest(tctest.TestCase):
     def setUp(self):
         super().setUp()
         # self.parser = config.ApplicationOptionParser()
-        self.parser = config.ApplicationArgumentParser()
+        self.parser = config.arguments.ApplicationArgumentParser()
 
     def parse(self, *args):
         return self.parser.parse_args(list(args))[0]
@@ -343,3 +345,18 @@ class ApplicationOptionsTest(tctest.TestCase):
     def testProfile(self):
         options = self.parse("--profile")
         self.assertTrue(options.profile)
+
+    def test_gui_option_returns_string(self):
+        # parser = ApplicationArgumentParser()
+
+        options, args = self.parser.parse_args(["--gui", "tk"])
+        self.assertEqual(options.gui_name, "tk")
+        self.assertIsInstance(options.gui_name, str)
+
+        options, args = self.parser.parse_args(["--gui", "wx"])
+        self.assertEqual(options.gui_name, "wx")
+        self.assertIsInstance(options.gui_name, str)
+
+        options, args = self.parser.parse_args([])
+        self.assertEqual(options.gui_name, "tk")
+        self.assertIsInstance(options.gui_name, str)

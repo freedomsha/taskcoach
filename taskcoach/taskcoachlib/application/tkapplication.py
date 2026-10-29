@@ -381,6 +381,12 @@ class TkinterApplication(
             parent=self.root,
             poll=not self.settings.getboolean("file", "-nopoll"),
         )
+        log.debug(
+            "TkinterApplication.init : taskFile=%r, tasks=%d, categories=%d",
+            self.taskFile,
+            len(self.taskFile.tasks()),
+            len(self.taskFile.categories()),
+        )
         # self.__auto_saver = persistence.AutoSaver(self.settings)
         # self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
         # self.__auto_backup = persistence.AutoBackup(self.settings)

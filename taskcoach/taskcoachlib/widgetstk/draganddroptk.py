@@ -929,6 +929,14 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         Équivalent de OnBeginDrag de wxPython.
         """
         item = self.identify_row(event.y)
+        log.info(
+            "TreeCtrlDragAndDropMixin.on_start_drag : DRAG START : item=%r, x=%s, y=%s, region=%r, element=%r",
+            item,
+            event.x,
+            event.y,
+            self.identify_region(event.x, event.y),
+            self.identify_element(event.x, event.y),
+        )
         if not item:
             self.dragged_items = []
             return

@@ -49,6 +49,7 @@ from . import defaults
 # ImportError: cannot import name 'Application' from partially initialized module
 # 'taskcoachlib.application' (most likely due to a circular import)
 # (/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/application/__init__.py)
+from taskcoachlib.i18n import _
 
 log = logging.getLogger(__name__)
 
@@ -221,10 +222,10 @@ class Settings(CachingConfigParser):
         """
         Initialisez l'objet Paramètres.
 
-        Args :
-            load (bool, optional) : s'il faut charger les paramètres à partir du fichier. La valeur par défaut est True.
-            iniFile (str, optional) : le chemin d'accès au fichier .ini. La valeur par défaut est Aucun.
-            guiused (str) : Nom du GUI utilisé.
+        Args:
+            load (bool, optional) : S'il faut charger les paramètres à partir du fichier. La valeur par défaut est True.
+            iniFile (str, optional) : Le chemin d'accès au fichier .ini. La valeur par défaut est Aucun.
+            gui_used (str) : Nom du GUI utilisé.
             *args : arguments supplémentaires.
             **kwargs : arguments de mots clés supplémentaires.
         """
@@ -708,6 +709,7 @@ class Settings(CachingConfigParser):
         if value != currentValue:
             super().set(section, option, value)
             # patterns.Event("%s.%s" % (section, option), self, value).send()
+            log.warning(f"Settings.set : patterns.Event pour {section}.{option} et self={self}, value={value}.")
             patterns.Event(f"{section}.{option}", self, value).send()
             return True
         else:

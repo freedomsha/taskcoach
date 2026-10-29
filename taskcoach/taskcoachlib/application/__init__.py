@@ -25,7 +25,7 @@ from taskcoachlib.application.interface import ApplicationInterface
 log = logging.getLogger(__name__)
 gui_name = get_gui()
 if gui_name == "wx":
-    log.info("application avec wx")
+    log.info("application : avec wx")
     from taskcoachlib.application.application import Application
 # try:
 #     from .application import Application
@@ -33,5 +33,5 @@ if gui_name == "wx":
 # except ImportError:
 #     from taskcoachlib.application.application import Application, TkinterApplication
 elif gui_name == "tk":
-    log.info("application avec tk")
+    log.info("application : avec tk")
     from taskcoachlib.application.tkapplication import TkinterApplication

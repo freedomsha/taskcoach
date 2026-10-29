@@ -116,7 +116,7 @@ class ApplicationArgumentParser:
             "-g",
             "--gui",
             action="store",
-            nargs=1,
+            # nargs=1,  # renvoie une liste lorsque l'option est fournie !
             default="tk",
             choices=["tk", "wx"],
             dest="gui_name",

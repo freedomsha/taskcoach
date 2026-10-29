@@ -108,7 +108,7 @@ class AuiManagedFrameWithDynamicCenterPane(wx.Frame):
             # Configuration de base des notebooks (moins avancée que AGW)
             # wx.aui ne gère pas les notebooks imbriqués comme AGW
             # TODO : A vérifier
-            notebook_art = aui.AuiDefaultTabArt()
+            notebook_art = aui.tabart.AuiDefaultTabArt()  # Vient de aui.tabart
             self.manager.SetArtProvider(notebook_art)
         self.manager.Update()
         self.bindEvents()  # Liaison des événements personnalisés
