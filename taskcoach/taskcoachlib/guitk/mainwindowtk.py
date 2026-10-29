@@ -559,13 +559,24 @@ class MainWindow(
             app_instance = (
                 application.tkapplication.TkinterApplication.getInstance()
             )
+            # Important : avant quitApplication(), car celui-ci appelle
+            # root.destroy().
+            # Sauvegarder la disposition AUI tant que la fenêtre et ses panneaux
+            # existent encore.
             # self.__save_perspective()  # ✅ Sauvegarde la perspective avant de fermer  -> Ne quitte plus en étant ici !
+            # Sauvegarder également les autres paramètres liés à la fenêtre,
+            # si nécessaire, avant la destruction de la racine.
+            # self.__save_position()
+            self.saveSettings()
             # should_quit = application.TkinterApplication.quitApplication(force=True)
             # should_quit = application.TkinterApplication.quitApplication(self, force=True)  # ?
             should_quit = app_instance.quitApplication(force=True)  # ?
-            should_hide = self.settings.getboolean("window", "hidewhenclosed")
+            should_hide = self.settings.getboolean(
+                "window",
+                "hidewhenclosed",
+            )
 
-            self.__save_perspective()  # ✅ Sauvegarde la perspective avant de fermer
+            # self.__save_perspective()  # ✅ Sauvegarde la perspective avant de fermer
             self.closeEditors()
 
             if should_quit or self.__shutdown:
@@ -584,8 +595,8 @@ class MainWindow(
                 self.parent.withdraw()  # Cache la fenêtre racine
             else:
                 log.debug("MainWindow.onClose: Fermeture par défaut.")
-                self.__save_perspective()  # ✅ Sauvegarde la perspective avant de fermer
-                self.saveSettings()
+                # self.__save_perspective()  # ✅ Sauvegarde la perspective avant de fermer  # Trop tardif
+                # self.saveSettings()  # Idem, trop tardif.
                 self.taskFile.stop()
                 self._idleController.stop()
                 # self.destroy()
@@ -593,7 +604,8 @@ class MainWindow(
                 # self.root.destroy()
         except Exception as e:
             log.exception(
-                "MainWindow.onClose: Erreur inattendue lors de la fermeture : %s",
+                "MainWindow.onClose: "
+                "Erreur inattendue lors de la fermeture : %s",
                 e,
             )
         # Arrêtez le thread de détection d'inactivité à la fin du programme.
