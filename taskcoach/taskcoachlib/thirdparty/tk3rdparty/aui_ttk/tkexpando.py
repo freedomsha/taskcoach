@@ -45,6 +45,16 @@ Exemple d'utilisation::
     root.mainloop()
 
 """
+# Principales différences avec la version wxPython :
+
+# Calcul des lignes : la méthode GetNumberOfLines personnalisée pour GTK et macOS n’est plus nécessaire. Tk compte directement les lignes affichées avec l’option "displaylines" de count(), qui tient compte du retour à la ligne.
+# Hauteur : tk.Text exprime sa hauteur en lignes, donc les calculs de hauteur en pixels (charHeight, _leading, extraHeight) disparaissent.
+# Changement de police : Tk recalcule automatiquement la hauteur, la surcharge SetFont n’est donc plus nécessaire.
+# Événements : wx.lib.newevent est remplacé par un événement virtuel Tk <<ExpandoLayoutNeeded>>, émis avec event_generate.
+# Détection des modifications : l’événement <<Modified>> remplace wx.EVT_TEXT. L’indicateur doit être réinitialisé avec edit_modified(False), sinon l’événement ne se déclenche plus.
+# Ajustement initial : wx.CallAfter est remplacé par after_idle.
+# Mise en page : le wx.Sizer disparaît. Avec pack ou grid, la modification de la hauteur est prise en compte par le gestionnaire de géométrie. L’événement permet de mettre à jour la fenêtre si nécessaire, par exemple avec root.update_idletasks().
+# Noms : les méthodes suivent la convention PEP 8 (set_max_lines, write_text, etc.) au lieu de SetMaxHeight, WriteText, etc. Le paramètre max_lines remplace la hauteur maximale en pixels, ce qui est plus naturel avec tkinter.
 
 import tkinter as tk
 
