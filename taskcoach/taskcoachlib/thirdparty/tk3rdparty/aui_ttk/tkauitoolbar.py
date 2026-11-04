@@ -14,7 +14,8 @@ except ImportError:
     from aui_tk_constants import *
 
 
-class AuiToolBar(tk.Frame):
+# class AuiToolBar(tk.Frame):
+class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
     """AuiToolBar Tkinter, conversion de la classe wxPython AuiToolBar.
 
     AuiToolBar est un widget de barre d'outils complètement redessiné et adapté
@@ -26,12 +27,14 @@ class AuiToolBar(tk.Frame):
     Le theme par défaut est AuiDefaultToolBarArt. Il peut être modifié en
     utilisant la méthode SetArtProvider.
     """
-    def __init__(self, parent, id=-1, pos=None, size=None, style=None, agwStyle=0):
+    def __init__(self, parent, window, text, id=-1, pos=None, size=None, style=None, agwStyle=0):
         """
         Constructeur de la classe AuiToolBar.
 
         Args:
-            parent: Fenêtre parente
+            parent: Widget Tkinter maître de la barre d'outils
+            window: Contrôleur logique de la barre d'outils
+            text: Texte de la barre d'outils
             id: Identifiant de la barre d'outils
             pos: Position de la barre d'outils
             size: Taille de la barre d'outils
@@ -44,7 +47,7 @@ class AuiToolBar(tk.Frame):
         ============================================
         Nom Valeur Description
         ======================== ======= ===========
-        AUI_TB_TEXT Affiche le texte dans le bouton ; par défaut, seuls les icônes sont affichées.
+        AUI_TB_TEXT Affiche le texte dans le bouton; par défaut, seuls les icônes sont affichées.
         AUI_TB_NO_TOOLTIPS Désactive l'affichage des tooltips.
         AUI_TB_NO_AUTORESIZE Désactive l'auto-redimensionnement.
         AUI_TB_GRIPPER Affiche le gripper.
@@ -56,7 +59,7 @@ class AuiToolBar(tk.Frame):
         AUI_TB_DOCKABLE Permet de faire glisser la barre d'outils.
         ======================= ======== ==========
         """
-        super().__init__(parent)
+        super().__init__(parent, text=text)
         self._agwStyle = agwStyle
         self._art = AuiDefaultToolBarArt()
         self._items = []
