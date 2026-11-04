@@ -179,6 +179,8 @@ class TtkGridLayout:
     def rebuild(self):
         """
         Reconstruit la grille Tkinter correspondant aux panes AUI.
+
+        Contient le principe de construction des panneaux.
         """
         # Retirer tous les widgets actuellement placés
         for entry in self._entries:
