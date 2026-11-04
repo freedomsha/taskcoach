@@ -30,7 +30,7 @@ def _EscapeDelimiters(s):
 class TtkPanePlacement:
     """Paramètres de placement d'un panneau dans une grille."""
 
-    POSITIONS = {"gauche", "droite", "au-dessus", "en-dessous", "centre"}
+    POSITIONS = {"left", "right", "top", "bottom", "center"}
     RELATIONS = {"global", "intermediaire", "unitaire"}
 
     def __init__(self, relation="unitaire", position="centre", rank="last"):
@@ -77,11 +77,11 @@ class TtkGridLayout:
         """
         direction = getattr(pane, "dock_direction", AUI_DOCK_LEFT)
         return {
-            AUI_DOCK_LEFT: "gauche",
-            AUI_DOCK_RIGHT: "droite",
-            AUI_DOCK_TOP: "au-dessus",
-            AUI_DOCK_BOTTOM: "en-dessous",
-        }.get(direction, "centre")
+            AUI_DOCK_LEFT: "left",
+            AUI_DOCK_RIGHT: "right",
+            AUI_DOCK_TOP: "top",
+            AUI_DOCK_BOTTOM: "bottom",
+        }.get(direction, "center")
 
     @staticmethod
     def _sort_key(entry):
@@ -161,16 +161,16 @@ class TtkGridLayout:
         """
         # TODO : à revoir avec la ToolBar et la barre d'info.
         direction = self._direction(pane)
-        if direction == "gauche":
+        if direction == "left":
             # return side_index, 0, 1, 1
             return top_offset + side_index, 0, 1, 1
-        if direction == "droite":
+        if direction == "right":
             # return side_index, 2, 1, 1
             return top_offset + side_index, nb_cols - 1, 1, 1
-        if direction == "au-dessus":
+        if direction == "top":
             # return 0, side_index, 1, 1
             return 0, left_offset + side_index, 1, 1
-        if direction == "en-dessous":
+        if direction == "bottom":
             # return 2, side_index, 1, 1
             return nb_rows - 1, left_offset + side_index, 1, 1
         # return 1, 1, 1, 1
@@ -178,27 +178,37 @@ class TtkGridLayout:
 
     def rebuild(self):
         """
-        Reconstruit la grille.
+        Reconstruit la grille Tkinter correspondant aux panes AUI.
         """
-        # Retirer tous les widgets
+        # Retirer tous les widgets actuellement placés
         for entry in self._entries:
             try:
                 entry["widget"].grid_forget()
             except tk.TclError:
                 pass
+                
         groups = {
-            "gauche": [],
-            "droite": [],
-            "au-dessus": [],
-            "en-dessous": [],
-            "centre": [],
+            "left": [],
+            "right": [],
+            "top": [],
+            "bottom": [],
+            "center": [],
         }
 
-        nb_left = len(groups["gauche"])
-        nb_right = len(groups["droite"])
-        nb_top = len(groups["au-dessus"])
-        nb_bottom = len(groups["en-dessous"])
-        has_center = len(groups["centre"]) > 0
+        # Regrouper les widgets par direction, classer réellement chaque pane dans son groupe
+        for entry in self._entries:
+            # groups[self._direction(entry["pane"])].append(entry)
+            direction = self._direction(entry["pane"])
+            groups[direction].append(entry)
+        # Tri des widgets par ordre d'ajout, conserver l'ordre AUI
+        for entries in groups.values():
+            entries.sort(key=self._sort_key)
+
+        nb_left = len(groups["left"])
+        nb_right = len(groups["right"])
+        nb_top = len(groups["top"])
+        nb_bottom = len(groups["bottom"])
+        has_center = len(groups["center"]) > 0
 
         top_offset = 1 if nb_top > 0 else 0
         left_offset = 1 if nb_left > 0 else 0
@@ -209,13 +219,7 @@ class TtkGridLayout:
         nb_rows = top_offset + central_height + (1 if nb_bottom > 0 else 0)
         nb_cols = left_offset + central_width + (1 if nb_right > 0 else 0)
 
-        # # Regrouper les widgets par direction
-        # for entry in self._entries:
-        #     groups[self._direction(entry["pane"])].append(entry)
-        # # Tri des widgets par ordre d'ajout
-        # for entries in groups.values():
-        #     entries.sort(key=self._sort_key)
-        # Placer les widgets dans la grille
+        Placer les widgets dans la grille
         for direction, entries in groups.items():
             for index, entry in enumerate(entries):
                 # Calculer la position du widget
@@ -236,16 +240,16 @@ class TtkGridLayout:
                     padx=1,
                     pady=1,
                 )
-        # Configurer les lignes et les colonnes
+        # Configurer l'expansion des lignes et des colonnes
         # for i in range(3):
         #     self.parent.rowconfigure(i, weight=1 if i == 1 else 0)
         #     self.parent.columnconfigure(i, weight=1 if i == 1 else 0)
-        for i in range(nb_rows):
-            weight = 1 if top_offset <= i < top_offset + central_height else 0
-            self.parent.rowconfigure(i, weight=weight)
-        for j in range(nb_cols):
-            weight = 1 if left_offset <= j < left_offset + central_width else 0
-            self.parent.columnconfigure(j, weight=weight)
+        for row in range(nb_rows):
+            weight = 1 if top_offset <= row < top_offset + central_height else 0
+            self.parent.rowconfigure(row, weight=weight)
+        for column in range(nb_cols):
+            weight = 1 if left_offset <= column < left_offset + central_width else 0
+            self.parent.columnconfigure(column, weight=weight)
 
     def clear(self):
         """
@@ -1272,11 +1276,11 @@ class AuiManager:
     def _placement_for(self, pane):
         position = self._direction(pane)
         position = {
-            "left": "gauche",
-            "right": "droite",
-            "top": "au-dessus",
-            "bottom": "en-dessous",
-        }.get(position, "centre")
+            "left": "left",
+            "right": "right",
+            "top": "bottom",
+            "bottom": "bottom",
+        }.get(position, "center")
         return TtkPanePlacement("global", position, getattr(pane, "dock_pos", "last"))
 
     def _undock_pane(self, pane):
