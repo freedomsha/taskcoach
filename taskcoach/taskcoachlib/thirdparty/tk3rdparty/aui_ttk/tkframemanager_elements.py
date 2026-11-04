@@ -184,7 +184,7 @@ class AuiPaneInfo:
         self.window = None
         self.frame = None
         self.state = 0
-        self.dock_direction = AUI_DOCK_LEFT
+        self.dock_direction = AUI_DOCK_LEFT  # Default dock direction, position par défaut du nouveau panneau
         self.dock_layer = 0
         self.dock_row = 0
         self.dock_pos = 0
