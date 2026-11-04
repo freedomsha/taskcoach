@@ -448,7 +448,7 @@ class PopupButtonMixin(object):
      - create_popup_menu(self)
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """
         Initialise le mixin.
         S'assure que le menu n'est pas encore créé.
