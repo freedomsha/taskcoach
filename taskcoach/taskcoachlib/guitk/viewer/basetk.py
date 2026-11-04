@@ -490,7 +490,8 @@ class Viewer(ttk.Frame, patterns.Observer):
             f"Viewer.initLayout : Initialisation de la mise en page de la visionneuse {self.__class__.__name__} title:{self.title()}."
         )
         # 1. Créer le sizer principal, enfant de 'self'
-        self._sizer = tk.Frame(self)  # Utilisation de Frame pour le sizer
+        self._sizer = tk.LabelFrame(self, text="Sizer")  # Utilisation de Frame pour le sizer
+        # self._sizer = tk.PanedWindow(self)  # Utilisation de Frame pour le sizer
         # self._sizer.pack(side="top", fill="both", expand=True)  # Gérez votre layout avec pack, grid ou place
         self._sizer.grid(
             row=0, column=0, sticky="news"
