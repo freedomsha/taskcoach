@@ -8,6 +8,9 @@ ou dessinent directement sur un Canvas Tkinter.
 This module contains some common functions used by wxPython-AUI to
 manipulate colours, bitmaps, text, gradient shadings and custom
 dragging images for AuiNotebook tabs.
+Ce module contient quelques fonctions courantes utilisées par AUI pour
+manipuler les couleurs, les bitmaps, le texte, les dégradés et les personnalisations
+pour faire glisser des images dans les onglets AuiNotebook.
 """
 
 # from __future__ import division
@@ -41,9 +44,12 @@ from .aui_tk_constants import *
 def _rgb(value):
     """
     Convert a color representation to an RGB tuple (red, green, blue).
+    Convertissez une représentation de couleur en un n-tuple RVB (rouge, vert, bleu).
 
     Supports hex strings (e.g. '#fff', '#ffffff'), color names (e.g. 'white'),
     wx.Colour-like objects (with Red(), Green(), Blue()), and RGB/RGBA tuples/lists.
+    Supporte les chaînes hex (par exemple: '#fff', '#ffffff'), les noms de couleur (par ex. : 'white'),
+    les objects de couleur (avec Red(), Green(), Blue()), et les listes/tuples RGB/RGBA.
 
     :param value: The color value to convert.
     :type value: str or tuple or list or wx.Colour
@@ -107,6 +113,7 @@ def _rgb(value):
 def _colour(rgb):
     """
     Convert an RGB sequence into a hex color string.
+    Convertir une séquence RGB en une chaîne de caractères hex pour la couleur.
 
     :param rgb: An iterable of at least 3 numeric color components (red, green, blue).
     :type rgb: tuple or list
@@ -121,6 +128,8 @@ def BlendColour(fg, bg, alpha):
     """
     Blends the two colour component fg and bg into one colour component, adding
     an optional alpha channel.
+    Mélange les deux couleurs composés de fg et bg en une couleur, additionné
+    à un canal alpha optionnel.
 
     :param fg: The first colour component.
     :type fg: int or float
@@ -145,12 +154,13 @@ def BlendColour(fg, bg, alpha):
 def StepColour(c, ialpha):
     """
     Darken/lighten the input colour c.
+    Obscurcit/Eclaircit l'entrée de couleur c.
 
-    :param c: A colour to darken/lighten.
-    :type c: str or tuple or list or wx.Colour
-    :param ialpha: A transparency value (0 = black, 100 = unchanged, 200 = white).
+    :param c: La couleur à Obscurcir/éclaircir.
+    :type c: str or tuple or list or tk.Colour
+    :param ialpha: Une valeur de transparence (0 = black, 100 = unchanged, 200 = white).
     :type ialpha: int
-    :return: The adjusted colour as a hex string.
+    :return: The adjusted colour as a hex string. La couleur ajustée sous forme de chaîne hexadécimale.
     :rtype: str
     """
 
@@ -199,10 +209,11 @@ def StepColour(c, ialpha):
 def LightContrastColour(c):
     """
     Creates a new, lighter colour based on the input colour c.
+    Créer une nouvelle couleur plus claire basée sur la couleur entrée c.
 
-    :param c: The input colour to analyze.
-    :type c: str or tuple or list or wx.Colour
-    :return: A lighter contrast colour as a hex string.
+    :param c: The input colour to analyze. La couleur entrée à analyser.
+    :type c: str or tuple or list or tk.Colour
+    :return: A lighter contrast colour as a hex string.  La couleur plus claire sous forme de chaîne hexadécimale.
     :rtype: str
     """
     # amount = 120
@@ -221,6 +232,8 @@ def ChopText(dc, text, max_size):
     """
     Chops the input text if its size does not fit in max_size, by cutting the
     text and adding ellipsis at the end.
+    Coupe le texte saisi si sa taille ne rentre pas dans max_size, en coupant le
+    texte et en ajoutant des points de suspension à la fin.
 
     :param dc: A device context, Canvas, or font used to measure text extent.
     :param str text: The text to chop.
@@ -275,6 +288,7 @@ def ChopText(dc, text, max_size):
 def BitmapFromBits(bits, w, h, colour):
     """
     A utility function that creates a masked bitmap from raw bits (XBM format).
+    Une fonction utilitaire qui crée un bitmap masqué à partir de bits bruts (format XBM). 
 
     :param bits: The raw bits of the bitmap.
     :type bits: bytes or list[int] or str
@@ -312,6 +326,7 @@ def BitmapFromBits(bits, w, h, colour):
 def IndentPressedBitmap(rect, button_state):
     """
     Indents the input rectangle rect based on the value of button_state.
+    Indente le rectangle d'entrée rect en fonction de la valeur de button_state
 
     :param rect: The button bitmap rectangle (object with x, y or sequence).
     :type rect: wx.Rect or tuple or list
@@ -395,6 +410,7 @@ def MakeDisabledBitmap(bitmap):
 def Clip(a, b, c):
     """
     Clips the value in a based on the extremes b and c.
+    Coupe la valeur dans a en fonction des extrêmes b et c.
 
     :param a: The value to analyze.
     :type a: int or float
@@ -448,6 +464,7 @@ def LightColour(colour, percent):
 def PaneCreateStippleBitmap():
     """
     Creates a stipple bitmap to be used for sash resize hints.
+    Crée un bitmap à points à utiliser pour les indices de redimensionnement des ceintures.
 
     :return: A 2x2 PIL Image containing the stipple pattern.
     :rtype: PIL.Image.Image
@@ -656,6 +673,7 @@ def FindFocusDescendant(ancestor):
 def GetLabelSize(dc, label, vertical):
     """
     Returns the :class:`~wx.lib.agw.aui.auibar.AuiToolBar` item label size.
+    Renvoie la taille de l'étiquette de l'élément de classe `~lib.agw.aui.auibar.AuiToolBar`.
 
     :param dc: A font (:class:`tkinter.font.Font`) or Canvas / DC used to measure text.
     :param str label: The toolbar tool label.
@@ -706,6 +724,7 @@ def GetLabelSize(dc, label, vertical):
 class TabDragImage:
     """
     This class handles the creation of a custom image in case of drag and drop of a notebook tab.
+    Cette classe gère la création d’une image personnalisée en cas de glisser-déposer d’un onglet de carnet.
 
     Gestionnaire minimal de l'image de glissement d'un onglet Tkinter.
     """
@@ -736,6 +755,7 @@ class TabDragImage:
         :param tabArt: An instance of :class:`AuiDefaultTabArt` or one of its derivations.
         :return: The created drag bitmap or PIL Image.
         """
+        # TODO : A convertir pour tkinter !
         #
         # control = page.control
         # memory = wx.MemoryDC(wx.Bitmap(1, 1))
@@ -819,6 +839,7 @@ class TabDragImage:
 def GetDockingImage(direction, useAero, center):
     """
     Returns the correct name of the docking bitmap depending on the input parameters.
+    Renvoie le nom correct du bitmap d'ancrage en fonction des paramètres d'entrée.
 
     :param int direction: The pane docking direction (e.g. AUI_DOCK_TOP, AUI_DOCK_LEFT, etc.).
     :param int useAero: Docking guide style (0 = default, 1 = Aero, 2 = Whidbey).
@@ -870,6 +891,7 @@ def GetDockingImage(direction, useAero, center):
 def TakeScreenShot(rect):
     """
     Takes a screenshot of the screen at given position and size (rect).
+    Prend une capture d'écran de l'écran à une position et une taille données (rect).
 
     :param rect: The screen rectangle for which we want to take a screenshot (object with x, y, width, height or sequence).
     :type rect: tuple or list or wx.Rect
@@ -919,6 +941,7 @@ def TakeScreenShot(rect):
 def RescaleScreenShot(bmp, thumbnail_size=200):
     """
     Rescales a bitmap to be thumbnail_size pixels wide (or tall) at maximum.
+    Redimensionne un bitmap pour qu'il soit de taille miniature en pixels de largeur (ou de hauteur) au maximum.
 
     :param bmp: The bitmap or PIL Image to rescale.
     :type bmp: PIL.Image.Image
@@ -990,6 +1013,7 @@ def RescaleScreenShot(bmp, thumbnail_size=200):
 def GetSlidingPoints(rect, size, direction):
     """
     Returns the point at which the sliding in and out of a minimized pane begins.
+    Retourne le point où commence le glissement d’entrée et de sortie d’un panneau minimisé.
 
     :param rect: The :class:`AuiToolBar` tool screen rectangle (tuple or object with x, y, width, height).
     :type rect: tuple or list or wx.Rect
@@ -1039,6 +1063,7 @@ def GetSlidingPoints(rect, size, direction):
 def CopyAttributes(newArt, oldArt):
     """
     Copies pens, brushes, colours and fonts from the old tab art to the new one.
+    Copie les crayons, brosses, couleurs et polices de l’ancienne jaquette à la nouvelle.
 
     :param newArt: The new tab art instance (e.g. :class:`AuiDefaultTabArt`).
     :param oldArt: The old tab art instance to copy attributes from.
