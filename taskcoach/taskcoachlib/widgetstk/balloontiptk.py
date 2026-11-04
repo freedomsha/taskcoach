@@ -428,7 +428,7 @@ class BalloonTip(Toplevel):
 
 
 # Le BalloonTipManager gère une file d'attente d'info-bulles pour s'assurer qu'elles ne s'affichent pas toutes en même temps et gère les événements de fermeture de la fenêtre parente.
-class BalloonTipManager(object):
+class BalloonTipManager:
     """
     Utilisez-le comme un mixin dans la fenêtre de niveau supérieur (tk.Tk ou tk.Toplevel)
     qui héberge les cibles de la bulle d'aide, pour éviter qu'ils n'apparaissent
