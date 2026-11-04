@@ -74,17 +74,19 @@ class AuiManagedFrameWithDynamicCenterPane:
             pane.Float()
         return pane
 
-    def addPane(self, window, caption, name, floating=False):
-        """Ajoute ``window`` comme panneau AUI.
+    def addPane(self, window, caption, name, floating=False, dock_direction=None):
+        """Ajoute une ``window`` comme panneau AUI.
 
         Args:
-            window: Widget Tkinter à gérer.
+            window: (tk.widget) Widget Tkinter à gérer.
             caption: Titre affiché pour le panneau flottant.
             name: Identifiant stable du panneau.
             floating: Affiche initialement le panneau dans un ``Toplevel``.
+            dock_direction: Direction d'ancrage initiale, si elle est imposée.
         Returns:
             L'objet ``AuiPaneInfo`` créé.
         """
+        # validation des arguments
         if not isinstance(name, str) or not name:
             raise ValueError("name doit être une chaîne non vide")
         if name in self._panes_by_name:
@@ -92,6 +94,7 @@ class AuiManagedFrameWithDynamicCenterPane:
         if not isinstance(window, tk.Misc):
             raise TypeError("window doit être un widget Tkinter")
 
+        # Création du panneau
         pane = self._pane_info(caption, name, floating=floating)
         if self._center_pane is None and not floating:
             pane.CenterPane()
@@ -110,8 +113,11 @@ class AuiManagedFrameWithDynamicCenterPane:
                 x, y = 30, 30
             pane.FloatingPosition(x, y)
 
+        # Ajout du panneau
         self.manager.AddPane(window, pane)
         self._panes_by_name[name] = pane
+
+        # Mise à jour de l'interface
         self.manager.Update()
         return pane
 
