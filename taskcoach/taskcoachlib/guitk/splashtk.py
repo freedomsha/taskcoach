@@ -43,7 +43,7 @@ import logging
 import tkinter as tk  # Pour l'interface graphique.
 from io import BytesIO
 from PIL import Image, ImageTk  # (Python Imaging Library) pour manipuler les images.
-from taskcoachlib import i18n
+# from taskcoachlib import i18n
 
 log = logging.getLogger(__name__)
 
