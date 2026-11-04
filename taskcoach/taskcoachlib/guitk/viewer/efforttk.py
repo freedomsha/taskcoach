@@ -81,7 +81,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 from taskcoachlib import command, widgetstk, domain, render  # CHANGED: widgets -> widgetstk
 from taskcoachlib.widgetstk import itemctrltk
-from taskcoachlib.widgetstk import  listctrltk
+from taskcoachlib.widgetstk import listctrltk
 from taskcoachlib.domain.effort import (BaseCompositeEffort, CompositeEffort,
                                         Effort, EffortAggregator, EffortList,
                                         EffortSorter)
