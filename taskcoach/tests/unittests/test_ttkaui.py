@@ -645,7 +645,11 @@ class TestBarreOutils(CasGraphique):
         super().setUp()
         # from taskcoachlib.guitk import tkauitoolbar
         from taskcoachlib.thirdparty.tk3rdparty.aui_ttk import tkauitoolbar
-        self.barre = tkauitoolbar.AuiToolBar(self.root)
+        # self.barre = tkauitoolbar.AuiToolBar(self.root)  # TypeError: AuiToolBar.__init__() missing 2 required positional arguments: 'window' and 'text'
+        self.barre = tkauitoolbar.AuiToolBar(self.root, self.root, 'Barre outils')
+        # self.barre.SetArtProvider(self.art)
+        # self.barre.SetToolStickySize(16)
+        self.barre.Realize()
 
     def test_ajout_outils(self):
         self.barre.AddSimpleTool(101, 'Nouveau', None, 'Creer')
