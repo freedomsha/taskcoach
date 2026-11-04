@@ -47,7 +47,7 @@ class TtkPanePlacement:
 class TtkGridLayout:
     """Projection déterministe d'une disposition AUI vers tkinter.grid().
 
-    La grille logique comporte trois lignes et trois colonnes. Les panneaux
+    La grille logique comporte trois lignes et trois colonnes(A revoir !!!). Les panneaux
     sont classés par direction, layer, row puis dock_pos. La reconstruction
     complète après chaque changement rend l'ajout, le retrait et le
     réordonnancement idempotents.
@@ -57,12 +57,24 @@ class TtkGridLayout:
         self.parent = parent
         self._entries = []
         parent.grid_propagate(False)
-        for index in range(3):
-            parent.rowconfigure(index, weight=1 if index == 1 else 0)
-            parent.columnconfigure(index, weight=1 if index == 1 else 0)
+        # for index in range(3):
+        #     parent.rowconfigure(index, weight=1 if index == 1 else 0)
+        #     parent.columnconfigure(index, weight=1 if index == 1 else 0)
+        self.rebuild()
 
     @staticmethod
     def _direction(pane):
+        """
+        Retourne la direction du panneau.
+
+        A gauche(par défaut), à droite, au-dessus, en-dessous ou au centre.
+
+        Args:
+            pane: Panneau choisi.
+
+        Returns:
+            La direction du panneau.
+        """
         direction = getattr(pane, "dock_direction", AUI_DOCK_LEFT)
         return {
             AUI_DOCK_LEFT: "gauche",
@@ -73,6 +85,15 @@ class TtkGridLayout:
 
     @staticmethod
     def _sort_key(entry):
+        """
+        Retourne la clé de tri pour un panneau.
+
+        Args:
+            entry: Le nom du panneau.
+
+        Returns:
+            La clé de tri pour le panneau.
+        """
         pane = entry["pane"]
         return (
             getattr(pane, "dock_layer", 0),
@@ -82,13 +103,37 @@ class TtkGridLayout:
         )
 
     def add(self, widget, pane):
+        """
+        Ajoute un widget.
+
+        Args:
+            widget: Widget à ajouter.
+            pane: Panneau où l'ajouter.
+
+        Returns:
+
+        """
+        # Retirer le widget s'il est déjà présent
         self.remove(widget, rebuild=False)
+        # Ajouter le widget à la grille
         self._entries.append(
             {"widget": widget, "pane": pane, "order": len(self._entries)}
         )
+        # Reconstruire la grille
         self.rebuild()
 
     def remove(self, widget, rebuild=True):
+        """
+        Retire un widget.
+
+        Args:
+            widget: Widget à retirer.
+            rebuild: Indique si la reconstruction doit être effectuée.
+
+        Returns:
+            True si le widget a été retiré, False sinon.
+
+        """
         found = False
         for entry in list(self._entries):
             if entry["widget"] is widget:
@@ -102,19 +147,40 @@ class TtkGridLayout:
             self.rebuild()
         return found
 
-    def _slot(self, pane, side_index):
+    # def _slot(self, pane, side_index):
+    def _slot(self, pane, side_index, nb_left, nb_right, nb_top, nb_bottom, has_center, top_offset, left_offset, central_height, central_width, nb_rows, nb_cols):
+        """
+        Positionne le panneau avec un index.
+
+        Args:
+            pane: Panneau à positionner.
+            side_index: Index sur le côté.
+
+        Returns:
+            Les coordonnées de la position du panneau.
+        """
+        # TODO : à revoir avec la ToolBar et la barre d'info.
         direction = self._direction(pane)
         if direction == "gauche":
-            return side_index, 0, 1, 1
+            # return side_index, 0, 1, 1
+            return top_offset + side_index, 0, 1, 1
         if direction == "droite":
-            return side_index, 2, 1, 1
+            # return side_index, 2, 1, 1
+            return top_offset + side_index, nb_cols - 1, 1, 1
         if direction == "au-dessus":
-            return 0, side_index, 1, 1
+            # return 0, side_index, 1, 1
+            return 0, left_offset + side_index, 1, 1
         if direction == "en-dessous":
-            return 2, side_index, 1, 1
-        return 1, 1, 1, 1
+            # return 2, side_index, 1, 1
+            return nb_rows - 1, left_offset + side_index, 1, 1
+        # return 1, 1, 1, 1
+        return top_offset + central_height // 2, left_offset + central_width // 2, 1, 1
 
     def rebuild(self):
+        """
+        Reconstruit la grille.
+        """
+        # Retirer tous les widgets
         for entry in self._entries:
             try:
                 entry["widget"].grid_forget()
@@ -127,14 +193,40 @@ class TtkGridLayout:
             "en-dessous": [],
             "centre": [],
         }
-        for entry in self._entries:
-            groups[self._direction(entry["pane"])].append(entry)
-        for entries in groups.values():
-            entries.sort(key=self._sort_key)
+
+        nb_left = len(groups["gauche"])
+        nb_right = len(groups["droite"])
+        nb_top = len(groups["au-dessus"])
+        nb_bottom = len(groups["en-dessous"])
+        has_center = len(groups["centre"]) > 0
+
+        top_offset = 1 if nb_top > 0 else 0
+        left_offset = 1 if nb_left > 0 else 0
+
+        central_height = max(nb_left, nb_right, 1 if has_center else 0)
+        central_width = max(nb_top, nb_bottom, 1 if has_center else 0)
+
+        nb_rows = top_offset + central_height + (1 if nb_bottom > 0 else 0)
+        nb_cols = left_offset + central_width + (1 if nb_right > 0 else 0)
+
+        # # Regrouper les widgets par direction
+        # for entry in self._entries:
+        #     groups[self._direction(entry["pane"])].append(entry)
+        # # Tri des widgets par ordre d'ajout
+        # for entries in groups.values():
+        #     entries.sort(key=self._sort_key)
+        # Placer les widgets dans la grille
         for direction, entries in groups.items():
             for index, entry in enumerate(entries):
-                row, column, rowspan, columnspan = self._slot(entry["pane"], index)
+                # Calculer la position du widget
+                # row, column, rowspan, columnspan = self._slot(entry["pane"], index)
+                row, column, rowspan, columnspan = self._slot(
+                    entry["pane"], index, nb_left, nb_right, nb_top, nb_bottom,
+                    has_center, top_offset, left_offset, central_height, central_width, nb_rows, nb_cols
+                )
+                # Stocker la position du widget
                 entry["grid"] = (row, column, rowspan, columnspan)
+                # Placer le widget dans la grille
                 entry["widget"].grid(
                     row=row,
                     column=column,
@@ -144,11 +236,21 @@ class TtkGridLayout:
                     padx=1,
                     pady=1,
                 )
-        for i in range(3):
-            self.parent.rowconfigure(i, weight=1 if i == 1 else 0)
-            self.parent.columnconfigure(i, weight=1 if i == 1 else 0)
+        # Configurer les lignes et les colonnes
+        # for i in range(3):
+        #     self.parent.rowconfigure(i, weight=1 if i == 1 else 0)
+        #     self.parent.columnconfigure(i, weight=1 if i == 1 else 0)
+        for i in range(nb_rows):
+            weight = 1 if top_offset <= i < top_offset + central_height else 0
+            self.parent.rowconfigure(i, weight=weight)
+        for j in range(nb_cols):
+            weight = 1 if left_offset <= j < left_offset + central_width else 0
+            self.parent.columnconfigure(j, weight=weight)
 
     def clear(self):
+        """
+        Retire tous les widgets.
+        """
         for entry in list(self._entries):
             try:
                 entry["widget"].grid_forget()
@@ -227,6 +329,21 @@ class AuiManager:
         return self._panes
 
     def AddPane(self, window, arg1=None, arg2=None, target=None):
+        """
+        Ajoute un panneau AUI.
+
+        Dépend du type de l'argument arg1.
+
+        Args:
+            window: Panneau à ajouter.
+            arg1: Si c'est un int, il s'agit d'une direction, sinon
+                  il s'agit d'une info de panneau.
+            arg2: Si arg1 est une direction, il s'agit du nom du panneau.
+            target: Position du panneau.
+
+        Returns:
+            L'objet ``AuiPaneInfo`` créé.
+        """
         if isinstance(arg1, int):
             return self.AddPane2(window, arg1, arg2 or "")
         if target is not None:
@@ -234,8 +351,22 @@ class AuiManager:
         return self.AddPane1(window, arg1)
 
     def AddPane1(self, window, pane_info=None):
+        """
+        Ajoute un panneau AUI ayant déjà une direction, une position, etc.
+
+        Args:
+            window: Panneau à ajouter
+            pane_info: Informations sur le panneau
+
+        Returns:
+            L'objet ``AuiPaneInfo`` créé.
+
+        """
+        # Création du panneau
         pane = pane_info or AuiPaneInfo()
         pane.window = pane.window or window
+
+        # Génération du nom du panneau si nécessaire
         if not pane.name:
             base = pane.caption.strip() or "pane"
             name = base
@@ -244,11 +375,26 @@ class AuiManager:
                 index += 1
                 name = f"{base}_{index}"
             pane.name = name
+
+        # Ajout du panneau à la liste des panneaux
         self._panes.append(pane)
+
+        # Mise à jour de l'interface
         self.Update()
         return pane
 
     def AddPane2(self, window, direction=AUI_DOCK_LEFT, caption=""):
+        """
+        Ajoute un panneau AUI avec une direction et un nom.
+
+        Args:
+            window: Panneau à ajouter.
+            direction: Direction du panneau
+            caption: Nom du panneau à afficher
+
+        Returns:
+            L'objet ``AuiPaneInfo`` créé.
+        """
         pane = (
             AuiPaneInfo()
             .Window(window)
@@ -259,16 +405,51 @@ class AuiManager:
         return self.AddPane1(window, pane)
 
     def AddPane3(self, window, direction=AUI_DOCK_LEFT, pos=(0, 0)):
+        """
+        Ajoute un panneau AUI flottant avec une direction et une position.
+
+        Args:
+            window: Panneau à ajouter.
+            direction: Direction du panneau.
+            pos: Position du panneau.
+
+        Returns:
+            L'objet ``AuiPaneInfo`` créé.
+        """
         pane = self.AddPane2(window, direction)
         pane.floating_pos = pos
         return pane
 
     def AddPane4(self, window, pane_info, target):
+        """
+        Ajoute un panneau AUI avec une direction, une position, une taille,
+        une note, une note
+
+
+        Args:
+            window: Panneau à ajouter.
+            pane_info: Informations sur le panneau.
+            target: Endroit de placement du panneau.
+
+        Returns:
+            L'objet ``AuiPaneInfo`` créé.
+        """
         pane = self.AddPane1(window, pane_info)
         pane.notebook_id = 0 if target else -1
         return pane
 
     def InsertPane(self, window, pane_info, direction=AUI_DOCK_LEFT):
+        """
+        Incorpore le panneau dans la liste des panneaux.
+
+        Args:
+            window: Panneau à entrer.
+            pane_info: Informations sur le panneau.
+            direction: Position du panneau.
+
+        Returns:
+            L'objet ``AuiPaneInfo`` créé.
+        """
         pane = pane_info or AuiPaneInfo()
         pane.window = window
         self._panes.insert(0, pane)
