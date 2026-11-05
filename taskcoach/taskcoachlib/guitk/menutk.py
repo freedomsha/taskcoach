@@ -664,16 +664,30 @@ class DynamicMenu(Menu):
         log.info("DynamicMenu : Création du menu Dynamique pour Tkinter.")
         log.debug(
             f"DynamicMenu : self={self.__class__.__name__} avec parent={parent} de type {type(parent)} et parent_mainwindow={parent_mainwindow} de type {type(parent_mainwindow)}."
-        )
+        )  # parent ne doit plus être None !
+        # Validation du parent
+        if parent is None:
+            raise ValueError(
+                f"{self.__class__.__name__} nécessite un parent Tkinter valide"
+            )
+
+        if parent_mainwindow is None:
+            parent_mainwindow = parent.winfo_toplevel()
         self._parent = parent
-        self._parent_mainwindow = parent_mainwindow
+        # self._parent_mainwindow = parent_mainwindow  # or parent.winfo_toplevel()
+        self._parent_mainwindow = (
+            parent_mainwindow
+            if parent_mainwindow is not None
+            else parent.winfo_toplevel()
+        )
         super().__init__(parent=parent, parent_mainwindow=parent_mainwindow)
         self._parentMenu = parentMenu
         self._labelInParentMenu = self.__GetLabelText(labelInParentMenu)
         self.registerForMenuUpdate()
-        # self.updateMenu()
-        # self.mainWindow().after_idle(self.updateMenu)  # Diffère l'update sauf qu'il ne faut jamais utiliser mainWindow() dans un __init__ !
-        parent_mainwindow.after_idle(self.updateMenu)  # Diffère l'update
+        # # self.updateMenu()
+        # # self.mainWindow().after_idle(self.updateMenu)  # Diffère l'update sauf qu'il ne faut jamais utiliser mainWindow() dans un __init__ !
+        # parent_mainwindow.after_idle(self.updateMenu)  # Diffère l'update
+        self._parent_mainwindow.after_idle(self.updateMenu)
 
     def registerForMenuUpdate(self):
         """
@@ -2336,7 +2350,7 @@ class EffortPopupMenu(Menu):
         # log.info("Initialisation du menu contextuel : %s", self.__class__.__name__)
 
         # super().__init__(parent)
-        super().__init__(parent, tearoff=0)
+        super().__init__(parent, parent_mainwindow=parent.winfo_toplevel(), tearoff=0)
         # super().__init__(parent, parent_mainwindow=parent_window)
         self.tasks = tasks
         self.efforts = efforts

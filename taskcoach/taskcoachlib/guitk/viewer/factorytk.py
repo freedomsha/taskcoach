@@ -219,8 +219,8 @@ class addViewers:
         #     pass
         # else:
         #     self._add_viewer(task.TaskInterdepsViewer)
-        # self._add_viewer(efforttk.Effortviewer)
-        # self._add_viewer(effort.EffortViewerForSelectedTasks)
+        self._add_viewer(efforttk.Effortviewer)
+        self._add_viewer(efforttk.EffortViewerForSelectedTasks)
         self._add_viewer(categorytk.Categoryviewer)
         # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
         #

@@ -321,13 +321,25 @@ class Effortviewer(
         # itemPopupMenu = taskcoachlib.guitk.menu.EffortPopupMenu(self.parent, self.taskFile.tasks(),
         itemPopupMenu = taskcoachlib.guitk.menutk.EffortPopupMenu(  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
             self.parent,
+            # self,
             self.taskFile.tasks(),
             self.taskFile.efforts(),
             self.settings,
             self,
         )
-        # columnPopupMenu = taskcoachlib.guitk.menu.EffortViewerColumnPopupMenu(self)
-        columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(self)  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
+        # # # columnPopupMenu = taskcoachlib.guitk.menu.EffortViewerColumnPopupMenu(self)
+        # # columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(self)  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
+        # columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(
+        #     # self.widget, # Sauf que self.widget n'est pas encore créé !
+        #     parent,
+        #     # parent_mainwindow=self.widget.winfo_toplevel(),
+        #     parent_mainwindow=parent.winfo_toplevel(),
+        # )
+        columnPopupMenu = taskcoachlib.guitk.menutk.EffortViewerColumnPopupMenu(
+            self,
+            parentMenu=parent,
+            parent_mainwindow=parent.winfo_toplevel(),
+        )
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
         log.debug("Effortviewer.createWidget : création du tableau treeviewer")
         widget = widgetstk.listctrltk.VirtualListCtrl(  # CHANGED: widgets.VirtualListCtrl -> widgetstk.VirtualListCtrl
