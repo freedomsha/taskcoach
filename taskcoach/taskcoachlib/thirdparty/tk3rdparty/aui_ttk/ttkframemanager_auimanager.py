@@ -221,7 +221,7 @@ class TtkGridLayout:
         nb_rows = top_offset + central_height + (1 if nb_bottom > 0 else 0)
         nb_cols = left_offset + central_width + (1 if nb_right > 0 else 0)
 
-        Placer les widgets dans la grille
+        # Placer les widgets dans la grille
         for direction, entries in groups.items():
             for index, entry in enumerate(entries):
                 # Calculer la position du widget

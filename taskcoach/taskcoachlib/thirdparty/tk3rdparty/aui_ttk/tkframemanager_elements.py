@@ -10,6 +10,8 @@ from .aui_tk_constants import *
 
 
 class AuiDockInfo:
+    """Classe pour stocker les informations sur la position
+    et la taille d'un panneau dans une fenêtre"""
     def __init__(self):
         self.dock_direction = 0
         self.dock_layer = 0
@@ -33,6 +35,11 @@ class AuiDockInfo:
 
 
 class AuiDockingGuideInfo:
+    """Classe pour stocker les informations sur la direction de la fenêtre.
+
+    Args:
+        other (AuiDockingGuideInfo, optional): Autre instance de AuiDockingGuideInfo. Defaults to None.
+    """
     def __init__(self, other=None):
         if other:
             self.Assign(other)
@@ -41,39 +48,81 @@ class AuiDockingGuideInfo:
             self.dock_direction = AUI_DOCK_NONE
 
     def Assign(self, other):
+        """Copie les informations de l'autre instance.
+
+        Args:
+            other (AuiDockingGuideInfo): Autre instance de AuiDockingGuideInfo.
+        """
         self.host = other.host
         self.dock_direction = other.dock_direction
 
     def Host(self, h):
+        """Définit l'hôte de la fenêtre.
+
+        Args:
+            h: Hôte de la fenêtre.
+        """
         self.host = h
         return self
 
     def Left(self):
+        """Définit la direction de la fenêtre sur la gauche.
+
+        Returns:
+            AuiDockingGuideInfo: Instance de AuiDockingGuideInfo.
+        """
         self.dock_direction = AUI_DOCK_LEFT
         return self
 
     def Right(self):
+        """Définit la direction de la fenêtre sur la droite.
+
+        Returns:
+            AuiDockingGuideInfo: Instance de AuiDockingGuideInfo.
+        """
         self.dock_direction = AUI_DOCK_RIGHT
         return self
 
     def Top(self):
+        """Définit la direction de la fenêtre sur le haut.
+
+        Returns:
+            AuiDockingGuideInfo: Instance de AuiDockingGuideInfo.
+        """
         self.dock_direction = AUI_DOCK_TOP
         return self
 
     def Bottom(self):
+        """Définit la direction de la fenêtre sur le bas.
+
+        Returns:
+            AuiDockingGuideInfo: Instance de AuiDockingGuideInfo.
+        """
         self.dock_direction = AUI_DOCK_BOTTOM
         return self
 
     def Center(self):
+        """Définit la direction de la fenêtre sur le centre.
+
+        Returns:
+            AuiDockingGuideInfo: Instance de AuiDockingGuideInfo.
+        """
         self.dock_direction = AUI_DOCK_CENTER
         return self
 
     def Centre(self):
+        """Définit la direction de la fenêtre sur le centre.
+
+        Returns:
+            AuiDockingGuideInfo: Instance de AuiDockingGuideInfo.
+        """
         self.dock_direction = AUI_DOCK_CENTRE
         return self
 
 
 class AuiDockUIPart:
+    """Classe pour stocker les informations sur la position
+    et la taille d'un panneau d'outils dans une fenêtre"""
     typeCaption = 0
     typeGripper = 1
     typeDock = 2
@@ -91,11 +140,13 @@ class AuiDockUIPart:
 
 
 class AuiPaneButton:
+    """Classe pour stocker les informations sur un bouton de panneau"""
     def __init__(self, button_id):
         self.button_id = button_id
 
 
 class AuiManagerEvent:
+    """Classe pour stocker les informations sur un événement de gestionnaire"""
     def __init__(self, manager=None, pane=None, button=None, dc=None):
         self.manager = manager
         self.pane = pane
@@ -105,43 +156,56 @@ class AuiManagerEvent:
         self.canveto_flag = True
 
     def SetManager(self, mgr):
+        """La fenêtre de réglage"""
         self.manager = mgr
 
     def SetDC(self, pdc):
+        """Définit le contexte de dessin"""
         self.dc = pdc
 
     def SetPane(self, p):
+        """Définit le panneau"""
         self.pane = p
 
     def SetButton(self, b):
+        """Définit le bouton"""
         self.button = b
 
     def GetManager(self):
+        """Retourne la fenêtre de réglage."""
         return self.manager
 
     def GetDC(self):
+        """Retourne le contexte de dessin."""
         return self.dc
 
     def GetPane(self):
+        """Retourne le panneau de la fenêtre."""
         return self.pane
 
     def GetButton(self):
+        """Retourne le bouton de la fenêtre."""
         return self.button
 
     def Veto(self, veto=True):
+        """Définit si l'événement est veto."""
         self.veto_flag = veto
 
     def GetVeto(self):
+        """Retourne si l'événement est veto."""
         return self.veto_flag
 
     def SetCanVeto(self, can_veto):
+        """Définit si l'événement peut être veto."""
         self.canveto_flag = can_veto
 
     def CanVeto(self):
+        """Retourne si l'événement peut être veto."""
         return self.canveto_flag and self.veto_flag
 
 
 class AuiPaneInfo:
+    """Classe pour stocker les informations sur un panneau"""
     optionFloating = 2**0
     optionHidden = 2**1
     optionLeftDockable = 2**2
@@ -366,6 +430,18 @@ class AuiPaneInfo:
         return self
 
     def Direction(self, direction):
+        """
+        Définit et retourne la direction.
+
+        Elle peut être AUI_DOCK_LEFT, AUI_DOCK_RIGHT, AUI_DOCK_TOP,
+        AUI_DOCK_BOTTOM ou AUI_DOCK_CENTER ou AUI_DOCK_CENTRE.
+
+        Args:
+            direction: Direction choisit.
+
+        Returns:
+            self: Instance de la classe.
+        """
         self.dock_direction = direction
         return self
 
