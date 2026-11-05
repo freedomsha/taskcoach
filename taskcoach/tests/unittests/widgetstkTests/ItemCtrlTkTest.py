@@ -202,10 +202,12 @@ class CtrlWithColumnsUnderTest(itemctrltk.CtrlWithColumnsMixin, ttk.Treeview):
     Contrôle de liste avec fonctionnalité de colonnes pour les tests (version Tk).
     """
     def __init__(self, parent, **kwargs):
+        self._columns_initialized = False
         columns = kwargs.get('columns', [])
         column_names = [c.name() for c in columns]
         ttk.Treeview.__init__(self, parent, columns=column_names, show='headings')
         itemctrltk.CtrlWithColumnsMixin.__init__(self, parent=parent, **kwargs)
+        self._columns_initialized = True
 
 
 class CtrlWithColumnsTest(

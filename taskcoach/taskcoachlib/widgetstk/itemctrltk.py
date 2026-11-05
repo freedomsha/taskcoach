@@ -1983,6 +1983,7 @@ class TaskTree(
     """
 
     def __init__(self, parent, **kwargs):
+        self._columns_initialized = False
         # Récupère les colonnes si elles sont passées
         # Extraire les colonnes et autres arguments spécifiques
         columns = kwargs.pop("columns", [])
@@ -2032,6 +2033,7 @@ class TaskTree(
         # Cela garantira que la colonne "Sujet" prend tout l'espace disponible,
         # comportement typique de TaskCoach.
         self.pack(fill=tk.BOTH, expand=True)
+        self._columns_initialized = True
 
     # def on_resize(self, event):
     #     """Ajuste la largeur de la colonne spécifiée en fonction de l'espace disponible."""

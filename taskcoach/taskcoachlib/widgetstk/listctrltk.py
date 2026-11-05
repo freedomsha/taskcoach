@@ -210,6 +210,7 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
     def __init__(self, parent, columns, selectCommand=None, editCommand=None,
                  itemPopupMenu=None, columnPopupMenu=None, resizeableColumn=0,
                  *args, **kwargs):
+        self._columns_initialized = False
         log.debug(f"VirtualListCtrl.__init__ called by {self.__class__.__name__} with {len(columns)} columns={columns!r}")
         log.debug(f"VirtualListCtrl.__init__ avec selectCommand={selectCommand}, editCommand={editCommand}, itemPopupMenu={itemPopupMenu}, columnPopupMenu={columnPopupMenu}, resizeableColumn={resizeableColumn}, args={args!r}")
         log.debug(f"VirtualListCtrl.__init__ kwargs before filtering: {kwargs!r}")
@@ -425,6 +426,7 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
             #              command=lambda the_col=col: self.sort_by(the_col.name()))
 
             self.bindEventHandlers()
+        self._columns_initialized = True
 
         # Analyse de l'Erreur
         #

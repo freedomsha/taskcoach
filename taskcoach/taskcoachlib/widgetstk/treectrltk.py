@@ -535,6 +535,7 @@ class TreeListCtrl(
             itemPopupMenu : Menu contextuel des éléments.
             columnPopupMenu : Menu contextuel des en-têtes de colonne.
         """
+        self._columns_initialized = False
         # Initialisation de la classe de base ttk.Treeview
         log.debug(
             f"Initialisation de TreeListCtrl avec {len(columns)} colonnes."
@@ -857,6 +858,7 @@ class TreeListCtrl(
         )
 
         # self.debug_columns()
+        self._columns_initialized = True
         log.debug("TreeListCtrl initialisé avec succès !")
 
     def heading(self, col_id, **kwargs):
