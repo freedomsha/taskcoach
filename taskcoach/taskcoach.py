@@ -47,6 +47,15 @@ log = logging.getLogger(__name__)
 
 
 def namer(name):
+    """
+    Nommer le fichier de log.
+
+    Args:
+        name: Nom de base du fichier.
+
+    Returns:
+        Le nom du fichier de log.
+    """
     # return "/log/" + name + ".txt"
     return name + ".log"
     # Avec la date et l'heure :
@@ -55,6 +64,14 @@ def namer(name):
 
 
 def rotator(source, dest):
+    """
+    Ouvre et enregistre les fichiers avec un système de rotation.
+
+    Args:
+        source: Fichier source.
+        dest: Fichier de destination.
+
+    """
     with open(source, "rb") as f_in:
         with open(dest, "wb") as f_out:
             f_out.write(f_in.read())

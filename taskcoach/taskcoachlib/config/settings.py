@@ -230,11 +230,12 @@ class Settings(CachingConfigParser):
             **kwargs : arguments de mots clés supplémentaires.
         """
         # --- LOG 1 : À l'entrée de __init__ de Page ---
-        log.debug(f"--- Settings.__init__ entrée ---")
-        log.debug(f"  load: {load}")
-        log.debug(f"  iniFile (reçu par Settings): {iniFile}")
-        log.debug(f"  *args (reçus par Settings): {args}")
-        log.debug(f"  **kwargs (reçus par Settings): {kwargs}")
+        log.warning(f"--- Settings.__init__ : Début ---")
+        log.info(f"  load: {load} -> Charger les paramètres à partir du fichier.")
+        log.info(f"  iniFile (reçu par Settings): {iniFile}")
+        log.info(f"  gui_used: {gui_used}")
+        log.info(f"  *args (reçus par Settings): {args}")
+        log.info(f"  **kwargs (reçus par Settings): {kwargs}")
         # log.debug("Settings : Initialisation MRO:", Settings.__mro__)
         # Soupir, ConfigParser.SafeConfigParser est une classe à l'ancienne, donc nous
         # devons appeler explicitement la superclasse __init__ :
@@ -293,7 +294,7 @@ class Settings(CachingConfigParser):
             self.onSettingsFileLocationChanged,
             "settings.file.saveinifileinprogramdir",
         )  # Envoie un message de notification à onSettingsFileLocationChanged
-        log.info("Settings.__init__ terminé avec succès !")
+        log.warning("Settings.__init__ terminé avec succès !")
 
     def acquire_ini_lock(self):
         """Acquire lock on ini file to prevent multiple instances from
@@ -361,7 +362,7 @@ class Settings(CachingConfigParser):
         """
         Initialisez les paramètres avec les valeurs par défaut.
         """
-        log.info(
+        log.warning(
             "Settings.initializeWithDefaults : Initialisation des paramètres avec les valeurs par défaut."
         )
         for section in self.sections():
