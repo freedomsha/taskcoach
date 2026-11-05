@@ -518,6 +518,9 @@ class AutoColumnWidthMixin:  # mixin !
         Appelé lorsque la taille du widget change.
         Calcule l'espace restant et l'attribue à la colonne redimensionnable.
         """
+        # Ignorer les événements pendant l'initialisation
+        if not getattr(self, "_columns_initialized", False):
+            return
         # Si aucun événement n'est passé, on utilise self (appel manuel)
         if event is None:
             widget_width = self.winfo_width()
@@ -592,7 +595,8 @@ class AutoColumnWidthMixin:  # mixin !
 
         try:
             # On met à jour la largeur de la colonne cible
-            self.column(self._resize_column_id, width=int(available_width))
+            # -1 car '#0' n'est pas visible !
+            self.column(self._resize_column_id - 1, width=int(available_width))
         except tk.TclError as e:
             log.warning(f"AutoColumnWidthMixin._on_autowidth_resize : Impossible de redimensionner la colonne {self._resize_column_id}", stack_info=True)
 
