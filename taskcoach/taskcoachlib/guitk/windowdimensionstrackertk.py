@@ -218,7 +218,8 @@ class WindowSizeAndPositionTracker(_Tracker):
                 self._window.state('zoomed')
             else:
                 # 'zoomed' fonctionne généralement bien pour maximiser sur Windows et certains Linux
-                self._window.state('zoomed')
+                # self._window.state('zoomed')
+                self._window.state('normal')
 
         if self.get_setting("iconized"):
             # Iconize (minimiser)
