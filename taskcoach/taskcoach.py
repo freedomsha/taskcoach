@@ -120,7 +120,7 @@ logging.getLogger("taskcoachlib.filesystem").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.filesystem.fs_poller").setLevel(
     logging.WARNING
 )
-logging.getLogger("taskcoachlib.config.settings").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.config.settings").setLevel(logging.WARNING)
 # logging.getLogger("taskcoachlib.application.application").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.application.tkapplication").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.persistence.taskfile").setLevel(logging.INFO)
