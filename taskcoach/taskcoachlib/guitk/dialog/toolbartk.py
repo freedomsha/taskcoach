@@ -121,6 +121,7 @@ class _AutoWidthTree(autowidth.AutoColumnWidthMixin, ttk.Treeview):
     """Simule _AutoWidthTree en utilisant ttk.Treeview."""
     # def __init__(self, *args, **kwargs):
     def __init__(self, parent, *args, **kwargs):
+        self._columns_initialized = False
         # super().__init__(*args, **kwargs)
         # Treeview de base pour simuler HyperTreeList
         super().__init__(parent, *args, columns=("Command",), show="tree", **kwargs)
@@ -131,6 +132,7 @@ class _AutoWidthTree(autowidth.AutoColumnWidthMixin, ttk.Treeview):
         # Activer l’auto-ajustement des colonnes
         self.SetResizeColumn("Command")
         self.bind("<Configure>", self._on_autowidth_resize)
+        self._columns_initialized = True
 
     def GetRootItem(self):
         # Simuler la racine pour Treeview (qui est la chaîne vide)
