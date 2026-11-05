@@ -459,7 +459,7 @@ class TkinterApplication(
         )  # TODO : Attention, il y a un double appel de init (1 dans __init__, le suivant dans taskcoach.py), risque de double ouverture de mainwindow !
         # app.pack(fill=tk.BOTH, expand=True)
         # self.mainwindow.pack(fill=tk.BOTH, expand=True)
-        self.mainwindow.grid(row=0, column=0, sticky="news")
+        # self.mainwindow.grid(row=0, column=0, sticky="news")
         # mainwindow est déjà instancié dans start mais
 
         # Liez les événements de la fenêtre racine à l'instance de MainWindow
@@ -482,7 +482,8 @@ class TkinterApplication(
 
         # self.idle_controller = guitk.idlecontroller.IdleController(mainWindow=app, settings=self.settings, effortList=self.taskFile.efforts())  # a verif l'ordre des arguments !
         self.idle_controller = guitk.idlecontrollertk.IdleController(
-            mainWindow=self.mainwindow,
+            # mainWindow=self.mainwindow,
+            mainWindow=self.root,
             settings=self.settings,
             effortList=self.taskFile.efforts(),
         )  # a verif l'ordre des arguments !
