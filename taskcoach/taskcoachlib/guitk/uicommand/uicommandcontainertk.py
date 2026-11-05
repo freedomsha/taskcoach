@@ -235,6 +235,8 @@ class UICommandContainerMixin(object):
                 )
                 self.appendSubMenuWithUICommands(menuTitle, menuUICommands)
             else:
+                # Essayer peut-être :
+                # elif isinstance(uiCommand, UICommand):
                 # Autre (supposé être une instance de UICommand) : ajoute la commande.
                 # self.appendUICommand(uiCommand)
                 # log.debug(f"UICommandContainerMixin.appendUICommands : ajoute la commande {uiCommand} !")

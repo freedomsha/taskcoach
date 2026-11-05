@@ -58,7 +58,7 @@ You should have received a copy of the GNU General Public License along with thi
 import logging
 from taskcoachlib import patterns, meta, notify
 from taskcoachlib.domain import date, task
-from taskcoachlib.guitk.dialog import editor
+# from taskcoachlib.guitk.dialog import editor  # Plus besoin de remindertk !
 from taskcoachlib.guitk.dialog.editor import TaskEditor
 from taskcoachlib.i18n import _
 from . import artprovidertk
@@ -117,7 +117,7 @@ class ReminderControllerTk(object):
         if requestUserAttention:
             self.requestUserAttention()
 
-    def showReminderMessage(self, taskWithReminder):
+    def showReminderMessage(self, taskWithReminder):  # Plus besoin de remindertk.ReminderDialog
         if self.__useOwnReminderDialog():
             self.__showReminderDialog(taskWithReminder)
         else:

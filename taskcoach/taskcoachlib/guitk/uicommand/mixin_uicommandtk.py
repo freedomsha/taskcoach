@@ -453,6 +453,7 @@ class PopupButtonMixin(object):
         Initialise le mixin.
         S'assure que le menu n'est pas encore créé.
         """
+        log.debug("PopupButtonMixin.__init__ : avec args=%s et kwargs=%s", args, kwargs)
         # __menu est mis en cache pour ne pas le recréer à chaque fois
         self.__menu = None
 

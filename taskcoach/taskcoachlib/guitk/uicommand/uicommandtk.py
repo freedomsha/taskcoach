@@ -280,6 +280,7 @@ class TaskListCommand(base_uicommandtk.UICommand):
     """
 
     def __init__(self, *args, **kwargs):
+        log.debug("TaskListCommand.__init__ : avec args=%s et kwargs=", args, kwargs)
         self.taskList = kwargs.pop("taskList", None)
         super().__init__(*args, **kwargs)
 

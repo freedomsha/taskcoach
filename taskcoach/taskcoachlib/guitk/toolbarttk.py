@@ -451,7 +451,7 @@ class ToolBar(_Toolbar, uicommandcontainertk.UICommandContainerMixin):
 
     def appendUICommand(self, ui_command):
         """Appends a single UI command to the toolbar."""
-        log.debug(f"TooBar.appendUICommand : Ajoute la command {ui_command}")
+        log.debug(f"ToolBar.appendUICommand : Ajoute la command {ui_command}")
         if ui_command is None:
             # Separator
             # ttk.Separator(self, orient=tk.VERTICAL).pack(side=tk.LEFT, padx=2)
@@ -531,7 +531,7 @@ class ToolBar(_Toolbar, uicommandcontainertk.UICommandContainerMixin):
             )
         except Exception as e:
             log.error(
-                f"ToolBar.appendUICommand : Error adding command {ui_command}: {e}"
+                f"ToolBar.appendUICommand : Error adding command {ui_command.id}{ui_command}: {e}"
             )
             raise
         # if button:  # TODO : gérer le bouton ?
