@@ -96,13 +96,18 @@ class AuiManagedFrameWithDynamicCenterPane:
 
         # Création du panneau
         pane = self._pane_info(caption, name, floating=floating)
-        if self._center_pane is None and not floating:
-            pane.CenterPane()
-            self._center_pane = pane
-        elif not floating:
-            pane.Right()
-            pane.Position(len(self.dockedPanes()))
-        else:
+
+        # Positionnement du panneau
+        # if self._center_pane is None and not floating:
+        #     pane.CenterPane()
+        #     self._center_pane = pane
+        # elif not floating:
+        #     pane.Right()
+        #     pane.Position(len(self.dockedPanes()))
+        # else:
+        if dock_direction is not None:
+            pane.Direction(dock_direction)
+        if floating:
             # Une position écran déterministe évite un flottement placé hors
             # écran lorsque le widget n'a pas encore été affiché.
             try:
@@ -112,6 +117,13 @@ class AuiManagedFrameWithDynamicCenterPane:
             except tk.TclError:
                 x, y = 30, 30
             pane.FloatingPosition(x, y)
+        elif dock_direction is None:
+            if self._center_pane is None:
+                pane.CenterPane()
+                self._center_pane = pane
+            else:
+                pane.Right()  # ou pane.Bottom() ??
+                pane.Position(len(self.dockedPanes()))
 
         # Ajout du panneau
         self.manager.AddPane(window, pane)
@@ -138,6 +150,23 @@ class AuiManagedFrameWithDynamicCenterPane:
 
     def dockedPanes(self):
         """Retourne les panneaux actuellement amarrés."""
+        # version wx :
+        # if USING_AGW:
+        #     return [
+        #         pane
+        #         for pane in self.manager.GetAllPanes()
+        #         if not pane.IsToolbar()
+        #         and not pane.IsFloating()
+        #         and not pane.IsNotebookPage()
+        #     ]
+        # else:
+        #     # Version AUI:
+        #     return [
+        #         pane
+        #         for pane in self.manager.GetAllPanes()
+        #         if not pane.IsFloating() and not pane.IsToolbar()
+        #     ]
+        # version tk :
         return [
             pane
             for pane in self.manager.GetAllPanes()
