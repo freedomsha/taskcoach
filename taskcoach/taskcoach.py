@@ -37,6 +37,12 @@ taskcoach.py est le point d'entrée principal. Il :
 import logging
 import logging.handlers
 
+# importer les bibliothèques permettant l'interface pour le système d'exploitation
+import os
+
+# et les paramètres et les variables propres au système
+import sys
+
 # et pour la gestion de la date et de l'heure dans les noms de fichiers de log
 from datetime import datetime
 
@@ -170,13 +176,6 @@ logging.basicConfig(
         logging.StreamHandler(),  # Affiche aussi dans la console
     ],
 )
-
-
-# importer les bibliothèques permettant l'interface pour le système d'exploitation
-import os
-
-# et les paramètres et les variables propres au système
-import sys
 
 # autour d'un bug dans Ubuntu 10.10
 # Fixe une variable d'environnement
