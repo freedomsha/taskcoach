@@ -28,5 +28,7 @@ from .artprovidertk import init
 # print("gui.init: initialisation de IOController")
 # from .iocontroller import IOController
 from . import idlecontrollertk
+from . import iocontrollertk
+from . import mainwindowtk
 
 # __all__ = ["dialog", "icons", "idlecontroller", "IOController", "init", "iphone", "MainWindow", "menu", "newid", "printer", "remindercontroller", "splash", "status", "toolbar", "uicommand", "viewer", "windowdimensionstracker", "wizard"]
