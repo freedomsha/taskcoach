@@ -278,9 +278,9 @@ class TkinterApplication(
                 self.settings.get("view", "weekstart"), 0
             )
         )
-        calendar.setfirstweekday(
-            dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
-        )
+        # calendar.setfirstweekday(
+        #     dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
+        # )
 
     def start(self):
         """
