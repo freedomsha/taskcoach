@@ -918,7 +918,7 @@ class Settings(CachingConfigParser):
                 self.set(
                     section, option, defaultValue, new=True
                 )  # Ignore current value
-            return evaluate(defaultValue)
+                return evaluate(defaultValue)
         else:
             return None
 

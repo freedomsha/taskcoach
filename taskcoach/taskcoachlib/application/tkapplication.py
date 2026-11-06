@@ -69,12 +69,13 @@ import calendar
 # Importer les classes nécessaires de votre bibliothèque d'application.
 # Notez que ces modules sont supposés avoir été mis à jour pour fonctionner avec tkinter.
 from taskcoachlib import (
+    i18n,
+    meta,
     operating_system,
     patterns,
     # persistencetk,
-    operating_system,
-    meta,
-    i18n,
+    # meta,
+    # i18n,
 )
 from taskcoachlib.persistence import taskfile
 from taskcoachlib.i18n import _
@@ -278,9 +279,9 @@ class TkinterApplication(
                 self.settings.get("view", "weekstart"), 0
             )
         )
-        calendar.setfirstweekday(
-            dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
-        )
+        # calendar.setfirstweekday(
+        #     dict(monday=0, sunday=6)[self.settings.get("view", "weekstart")]
+        # )
 
     def start(self):
         """
