@@ -219,8 +219,8 @@ class addViewers:
         #     pass
         # else:
         #     self._add_viewer(task.TaskInterdepsViewer)
-        # self._add_viewer(efforttk.Effortviewer)
-        # self._add_viewer(effort.EffortViewerForSelectedTasks)
+        self._add_viewer(efforttk.Effortviewer)
+        self._add_viewer(effort.EffortViewerForSelectedTasks)
         self._add_viewer(categorytk.Categoryviewer)
         # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
         #
@@ -300,7 +300,7 @@ class addViewers:
         )
         # # Le nom de la section des paramètres est maintenant un argument à part entière.
         # settings_section = viewer_class.settingsSection()
-        # # viewer_kwargs = self._viewer_kwargs(viewer_class)
+        viewer_kwargs = self._viewer_kwargs(viewer_class)
         # # viewer_kwargs = {
         # #     "settingsSection": settings_section,
         # #     "taskFile": self.__task_file,
@@ -308,6 +308,9 @@ class addViewers:
         # # }
 
         # Instanciation de la classe de visualiseur en passant les arguments requis.
+        # EffortViewerForSelectedTasks a besoin de savoir si Le conteneur a déjà des tâches d'affichées !
+        if viewer_class is efforttk.EffortViewerForSelectedTasks:
+            viewer_kwargs["ViewerContainer"] = self.__viewer_container
         # viewer = viewer_class(self.__viewer_container, self.__settings, self.__task_file, **viewer_kwargs)
         # Pass the containerWidget as the parent
         # viewer = viewer_class(self.__viewer_container.containerWidget, self.__settings, self.__task_file, **viewer_kwargs)
@@ -316,7 +319,8 @@ class addViewers:
             self.__viewer_container.containerWidget,
             self.__task_file,
             self.__settings,
-            **self._viewer_kwargs(viewer_class),
+            # **self._viewer_kwargs(viewer_class),
+            **viewer_kwargs,
         )  # Corrected line
 
         # TypeError: Can't instantiate abstract class Taskviewer without an implementation for abstract methods 'bitmap', 'createWidget', 'isShowingAttachments', 'isShowingCategories', 'isShowingEffort', 'isShowingNotes', 'isShowingTasks', 'isTreeViewer', 'isViewerContainer', 'visibleColumns'
