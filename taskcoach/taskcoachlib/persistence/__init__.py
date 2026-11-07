@@ -34,6 +34,7 @@ from .csv.reader import CSVReader
 from .todotxt import TodoTxtReader, TodoTxtWriter
 from .icalendar.writer import iCalendarWriter
 from .icalendar.ical import VCalendarParser
+from . import taskfile
 from .taskfile import TaskFile, LockedTaskFile
 from .autosaver import AutoSaver
 from .autoimporterexporter import AutoImporterExporter
@@ -59,6 +60,7 @@ __all__ = [
     "iCalendarWriter",
     "VCalendarParser",
     "TaskFile",
+    "taskfile",
     "LockedTaskFile",
     "AutoSaver",
     "AutoImporterExporter",
