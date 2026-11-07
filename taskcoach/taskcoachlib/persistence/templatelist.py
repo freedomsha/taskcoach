@@ -30,7 +30,11 @@ from pubsub import pub
 
 # except ImportError:
 #    from taskcoachlib.thirdparty.pubsub import pub
-from taskcoachlib.persistence.xml import TemplateXMLWriter, TemplateXMLReader
+from taskcoachlib.persistence import xml
+from taskcoachlib.persistence.xml import writer
+from taskcoachlib.persistence.xml import reader
+from taskcoachlib.persistence.xml.writer import TemplateXMLWriter
+from taskcoachlib.persistence.xml.reader import TemplateXMLReader
 
 log = logging.getLogger(__name__)
 
