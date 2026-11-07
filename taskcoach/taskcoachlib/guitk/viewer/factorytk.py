@@ -310,7 +310,7 @@ class addViewers:
         # Instanciation de la classe de visualiseur en passant les arguments requis.
         # EffortViewerForSelectedTasks a besoin de savoir si Le conteneur a déjà des tâches d'affichées !
         if viewer_class is efforttk.EffortViewerForSelectedTasks:
-            viewer_kwargs["ViewerContainer"] = self.__viewer_container
+            viewer_kwargs["viewerContainer"] = self.__viewer_container
         # viewer = viewer_class(self.__viewer_container, self.__settings, self.__task_file, **viewer_kwargs)
         # Pass the containerWidget as the parent
         # viewer = viewer_class(self.__viewer_container.containerWidget, self.__settings, self.__task_file, **viewer_kwargs)

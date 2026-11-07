@@ -941,6 +941,7 @@ class EffortViewerForSelectedTasks(Effortviewer):
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("settingsSection", "effortviewerforselectedtasks")
+        log.debug(f"EffortViewerForSelectedTasks.__init__ : initialisation avec args={args} et kwargs={kwargs}.")
         self.__viewerContainer = kwargs.pop("viewerContainer")
         self.__currentTaskViewer = (
             self.__viewerContainer.activeViewer()
