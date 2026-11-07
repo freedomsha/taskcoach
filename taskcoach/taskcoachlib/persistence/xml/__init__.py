@@ -21,3 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from .reader import XMLReader, TemplateXMLReader, ChangesXMLReader
 from .writer import XMLWriter, TemplateXMLWriter, ChangesXMLWriter
 from .templates import getDefaultTemplates
+
+__all__ = [
+    XMLReader,
+    TemplateXMLReader,
+    ChangesXMLReader,
+    XMLWriter,
+    TemplateXMLWriter,
+    ChangesXMLWriter,
+    getDefaultTemplates
+]
