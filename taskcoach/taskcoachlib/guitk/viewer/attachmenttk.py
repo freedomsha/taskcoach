@@ -127,7 +127,8 @@ class Attachmentviewer(
 
         # Création du Treeview pour afficher les pièces jointes
         self.tree = ttk.Treeview(
-            self, columns=[col.name for col in self._columns], show="headings"
+            # self, columns=[col.name for col in self._columns], show="headings"
+            parent, columns=[col.name for col in self._columns], show="headings"
         )
         for col in self._columns:
             self.tree.heading(

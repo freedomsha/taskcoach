@@ -316,8 +316,8 @@ class BaseNoteViewer(mixintk.AttachmentDropTargetMixin,  # pylint: disable=W0223
         # 3. Remplir l'arborescence (déplacé de l'ancien bloc)
         self._populate_tree()
 
-        # # 3. Placement du widget dans le BaseNoteViewer Frame (self)
-        widget.pack(side="top", fill="both", expand=True)  # Place le widget dans le BaseNoteViewer Frame
+        # # # 3. Placement du widget dans le BaseNoteViewer Frame (self)
+        # widget.pack(side="top", fill="both", expand=True)  # Place le widget dans le BaseNoteViewer Frame
 
         # # Configuration de la Treeview (équivalent à la fin de createWidget de note.py)
         # if self.hasOrderingColumn():
@@ -575,7 +575,8 @@ class BaseNoteViewer(mixintk.AttachmentDropTargetMixin,  # pylint: disable=W0223
         return True
 
     # S'agit-il de la variante de curselectionIsInstanceOf ?
-    def curselection(self) -> List[domain.note]:
+    # def curselection(self) -> List[domain.note]:
+    def curselection(self):
         """
         Retourne la sélection actuelle. Simulation.
         """
@@ -603,7 +604,8 @@ class BaseNoteViewer(mixintk.AttachmentDropTargetMixin,  # pylint: disable=W0223
         # Toujours renvoyer une liste vide si rien n'est sélectionné ou trouvé
         return []
 
-    def presentation(self) -> List[domain.note]:
+    # def presentation(self) -> List[domain.note]:
+    def presentation(self):
         """
         Retourne la liste complète des notes. Simulation.
         """
@@ -742,13 +744,13 @@ class Noteviewer(mixintk.FilterableViewerForCategorizablesMixin, BaseNoteViewer)
     pass
 
 
-if __name__ == '__main__':
-    root = tk.Tk()
-    root.title(_("Note Viewer Demo"))
-
-    app_settings = settings()
-    # viewer = Noteviewer(root, app_settings)
-    viewer = Noteviewer(root, task_file, app_settings)
-    viewer.pack(fill="both", expand=True)
-
-    root.mainloop()
+# if __name__ == '__main__':
+#     root = tk.Tk()
+#     root.title(_("Note Viewer Demo"))
+#
+#     app_settings = settings()
+#     # viewer = Noteviewer(root, app_settings)
+#     viewer = Noteviewer(root, task_file, app_settings)
+#     viewer.pack(fill="both", expand=True)
+#
+#     root.mainloop()

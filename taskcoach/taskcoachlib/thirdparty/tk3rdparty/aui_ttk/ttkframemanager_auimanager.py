@@ -53,14 +53,81 @@ class TtkGridLayout:
     réordonnancement idempotents.
     """
 
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, parent, scrollable=True):
+        self.root = None
+        self.canvas = None
+        self.scrollbar = None
+        self._canvas_window = None
+        self._scrollbar_update_pending = False
+        self._scrollbar_update_id = None
+        self._scrollbar_visible = False
         self._entries = []
-        parent.grid_propagate(False)
-        # for index in range(3):
-        #     parent.rowconfigure(index, weight=1 if index == 1 else 0)
-        #     parent.columnconfigure(index, weight=1 if index == 1 else 0)
+        if scrollable:
+            self.root = ttk.Frame(parent)
+            self.root.grid(row=0, column=0, sticky="nsew")
+            parent.rowconfigure(0, weight=1)
+            parent.columnconfigure(0, weight=1)
+
+            self.canvas = tk.Canvas(self.root, highlightthickness=0)
+            self.scrollbar = ttk.Scrollbar(
+                self.root, orient="vertical", command=self.canvas.yview
+            )
+            self.canvas.configure(yscrollcommand=self.scrollbar.set)
+            self.canvas.grid(row=0, column=0, sticky="nsew")
+            self.scrollbar.grid(row=0, column=1, sticky="ns")
+            self.scrollbar.grid_remove()
+            self.root.rowconfigure(0, weight=1)
+            self.root.columnconfigure(0, weight=1)
+
+            self.parent = ttk.Frame(self.canvas)
+            self._canvas_window = self.canvas.create_window(
+                0, 0, window=self.parent, anchor="nw"
+            )
+            self.canvas.bind("<Configure>", self._on_canvas_configure, add="+")
+            self.parent.bind("<Configure>", self._on_content_configure, add="+")
+        else:
+            self.parent = parent
         self.rebuild()
+
+    @property
+    def pane_parent(self):
+        return self.parent
+
+    def _on_canvas_configure(self, event):
+        self.canvas.itemconfigure(self._canvas_window, width=event.width)
+        self._schedule_scrollbar_update()
+
+    def _on_content_configure(self, _event=None):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all") or (0, 0, 0, 0))
+        self._schedule_scrollbar_update()
+
+    def _schedule_scrollbar_update(self):
+        if self._scrollbar_update_pending or self.root is None:
+            return
+        self._scrollbar_update_pending = True
+        self._scrollbar_update_id = self.root.after_idle(
+            self._update_scrollbar_visibility
+        )
+
+    def _update_scrollbar_visibility(self):
+        self._scrollbar_update_pending = False
+        self._scrollbar_update_id = None
+        if self.root is None or not self.root.winfo_exists():
+            return
+
+        bounds = self.canvas.bbox(self._canvas_window)
+        content_height = bounds[3] - bounds[1] if bounds else 0
+        viewport_height = self.canvas.winfo_height()
+        needs_scrollbar = viewport_height > 1 and content_height > viewport_height
+        if needs_scrollbar == self._scrollbar_visible:
+            return
+
+        self._scrollbar_visible = needs_scrollbar
+        if needs_scrollbar:
+            self.scrollbar.grid()
+        else:
+            self.scrollbar.grid_remove()
+            self.canvas.yview_moveto(0)
 
     @staticmethod
     def _direction(pane):
@@ -263,6 +330,26 @@ class TtkGridLayout:
             except tk.TclError:
                 pass
         self._entries.clear()
+        if self.canvas is not None:
+            self.canvas.configure(
+                scrollregion=self.canvas.bbox("all") or (0, 0, 0, 0)
+            )
+            self._schedule_scrollbar_update()
+
+    def destroy(self):
+        if self.root is None:
+            return
+        if self._scrollbar_update_id is not None:
+            try:
+                self.root.after_cancel(self._scrollbar_update_id)
+            except tk.TclError:
+                pass
+            self._scrollbar_update_id = None
+        try:
+            if self.root.winfo_exists():
+                self.root.destroy()
+        except tk.TclError:
+            pass
 
 
 class AuiManager:
@@ -278,6 +365,7 @@ class AuiManager:
         self._updating = False
         self._dock_hosts = {}
         self._layout = None
+        self._pane_parent = None
         if managed_window is not None:
             self.SetManagedWindow(managed_window)
 
@@ -310,7 +398,33 @@ class AuiManager:
         if isinstance(managed_window, tk.Misc):
             managed_window.bind("<Configure>", self.OnSize, add="+")
             managed_window.bind("<Destroy>", self._on_destroy_event, add="+")
+        self._layout = TtkGridLayout(managed_window)
+        self._pane_parent = self._layout.pane_parent
         return True
+
+    @property
+    def pane_parent(self):
+        """Parent widget to use when creating panes managed by this AUI manager."""
+        return self._pane_parent
+
+    def _prepare_pane_parent(self, window):
+        if not isinstance(window, tk.Misc) or self._frame is None:
+            return
+        if self._layout is None:
+            self._layout = TtkGridLayout(self._frame)
+            self._pane_parent = self._layout.pane_parent
+        if self._layout.root is not None and window.master is self._frame:
+            if self._layout._entries:
+                raise ValueError(
+                    "All docked panes must be children of manager.pane_parent"
+                )
+            self._layout.destroy()
+            self._layout = TtkGridLayout(self._frame, scrollable=False)
+            self._pane_parent = self._layout.pane_parent
+        elif window.master is not self._layout.pane_parent:
+            raise ValueError(
+                "Pane widgets must be created with manager.pane_parent as parent"
+            )
 
     def _on_destroy_event(self, event):
         if event.widget is self._frame:
@@ -368,6 +482,8 @@ class AuiManager:
             L'objet ``AuiPaneInfo`` créé.
 
         """
+        self._prepare_pane_parent(window)
+
         # Création du panneau
         pane = pane_info or AuiPaneInfo()
         pane.window = pane.window or window
@@ -456,6 +572,7 @@ class AuiManager:
         Returns:
             L'objet ``AuiPaneInfo`` créé.
         """
+        self._prepare_pane_parent(window)
         pane = pane_info or AuiPaneInfo()
         pane.window = window
         self._panes.insert(0, pane)
@@ -1273,7 +1390,8 @@ class AuiManager:
     def _host_for(self, pane):
         if self._layout is None:
             self._layout = TtkGridLayout(self._frame)
-        return self._layout.root
+            self._pane_parent = self._layout.pane_parent
+        return self._layout.pane_parent
 
     def _placement_for(self, pane):
         position = self._direction(pane)
@@ -1328,6 +1446,7 @@ class AuiManager:
             pane.frame.withdraw()
         if self._layout is None:
             self._layout = TtkGridLayout(self._frame)
+            self._pane_parent = self._layout.pane_parent
         if not any(e["widget"] is window for e in self._layout._entries):
             self._layout.add(window, pane)
 
@@ -1392,11 +1511,9 @@ class AuiManager:
                 pane.frame = None
         if self._layout is not None:
             self._layout.clear()
-            try:
-                self._layout.root.destroy()
-            except tk.TclError:
-                pass
+            self._layout.destroy()
             self._layout = None
+            self._pane_parent = None
         self._dock_hosts = {}
 
     def OnDestroy(self):

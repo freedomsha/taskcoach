@@ -493,9 +493,12 @@ class Viewer(ttk.Frame, patterns.Observer):
         self._sizer = tk.LabelFrame(self, text="Sizer")  # Utilisation de Frame pour le sizer
         # self._sizer = tk.PanedWindow(self)  # Utilisation de Frame pour le sizer
         # self._sizer.pack(side="top", fill="both", expand=True)  # Gérez votre layout avec pack, grid ou place
-        self._sizer.grid(
-            row=0, column=0, sticky="news"
-        )  # Utilisation de grid pour le layout
+        # Utilisation de grid pour le layout
+        self._sizer.grid(row=0, column=0, sticky="nsew")
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self._sizer.rowconfigure(1, weight=1)
+        self._sizer.columnconfigure(0, weight=1)
 
         # 2. Créer la barre d'outils, enfant de 'self._sizer'
         # self.toolbar = toolbarttk.ToolBar(self._sizer, self.settings, (16, 16))
@@ -541,7 +544,19 @@ class Viewer(ttk.Frame, patterns.Observer):
         # # self._sizer.Add(self.widget, proportion=1, flag=wx.EXPAND)
         # self.widget.pack(in_=self._sizer, fill=tk.BOTH, expand=True)  # Remplissage horizontal et vertical, expansion
         # self.widget.pack(fill=tk.BOTH, expand=True, side=tk.TOP)
-        self.widget.grid(row=1, column=0, sticky="new")
+        self.widget.grid(row=1, column=0, sticky="nsew")
+        if callable(getattr(self.widget, "yview", None)):
+            vertical_scrollbar = ttk.Scrollbar(
+                self._sizer, orient="vertical", command=self.widget.yview
+            )
+            self.widget.configure(yscrollcommand=vertical_scrollbar.set)
+            vertical_scrollbar.grid(row=1, column=1, sticky="ns")
+        if callable(getattr(self.widget, "xview", None)):
+            horizontal_scrollbar = ttk.Scrollbar(
+                self._sizer, orient="horizontal", command=self.widget.xview
+            )
+            self.widget.configure(xscrollcommand=horizontal_scrollbar.set)
+            horizontal_scrollbar.grid(row=2, column=0, sticky="ew")
         # if hasattr(self.widget, "GetCanvas"):
         #     self.widget.GetCanvas().pack(padx=10, pady=10, expand=True, fill="both")
         # else:

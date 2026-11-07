@@ -2635,8 +2635,7 @@ class Taskviewer(
         #     height=20
         # )
         self.widget = widgetstk.treectrltk.TreeListCtrl(
-            self,  # Le widget parent, ici Taskviewer
-            # frame,  # Le frame dans lequel le TreeListCtrl sera placé
+            parent,
             # adapter=self,  # Vous devez vous assurer que l'adapter est correct
             self.__task_file.tasks(),  # L'adaptateur (Taskviewer)
             # columns=columns,  # Les colonnes à afficher
@@ -2713,18 +2712,17 @@ class Taskviewer(
         #     # self.__tree.heading(self.__tree["columns"][idx+1], text=col_header.capitalize())
         #     self.__tree.column(col_id, width=100)
 
-        # Barre de défilement
-        scrollbar = ttk.Scrollbar(
-            self, orient="vertical", command=self.widget.yview
-        )
-        self.widget.configure(yscroll=scrollbar.set)
-
-        # Placer le Treeview et la barre de défilement
-        # self.widget.pack(side="left", fill="both", expand=True)
-        self.widget.grid(row=0, column=0, sticky="news")
-        # scrollbar.pack(side="right", fill="y")
-        scrollbar.grid(row=0, column=1, sticky="ns")
-
+        # # Barre de défilement
+        # scrollbar = ttk.Scrollbar(
+        #     self, orient="vertical", command=self.widget.yview
+        # )
+        # self.widget.configure(yscroll=scrollbar.set)
+        #
+        # # Placer le Treeview et la barre de défilement
+        # # self.widget.pack(side="left", fill="both", expand=True)
+        # self.widget.grid(row=0, column=0, sticky="news")
+        # # scrollbar.pack(side="right", fill="y")
+        # scrollbar.grid(row=0, column=1, sticky="ns")
         log.debug(
             f"Taskviewer.createWidget : Configuration des colonnes : {self.widget['columns']}."
         )

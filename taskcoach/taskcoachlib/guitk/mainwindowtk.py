@@ -386,7 +386,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Ce conteneur gère l'affichage et l'organisation des différentes visionneuses.
         """
         log.debug("MainWindow._create_viewer_container : création du conteneur")
-        self.viewer_container = containertk.ViewerContainer(self.parent, self.settings)
+        self.viewer_container = containertk.ViewerContainer(
+            self.manager.pane_parent, self.settings
+        )
 
         # self.parent.update_idletasks()  # Prématuré
 
@@ -452,7 +454,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             - La barre de statut est ensuite associée à la fenêtre principale à l'aide de `SetStatusBar`.
         """
         log.info("MainWindow._create_status_bar : Création de la barre de statut")
-        self.status_bar = statustk.StatusBar(self.parent, self.viewer_container)
+        self.status_bar = statustk.StatusBar(
+            self.manager.pane_parent, self.viewer_container
+        )
 
         # Ajout de la barre de statut au manager AUI
         self.addPane(
@@ -1163,7 +1167,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         if value:
             # Création de la nouvelle barre d'outils
-            bar = toolbarttk.MainToolBar(self.parent, self, self.settings, size=value)
+            bar = toolbarttk.MainToolBar(
+                self.manager.pane_parent, self, self.settings, size=value
+            )
 
             # Ajout au manager AUI
             self.addPane(

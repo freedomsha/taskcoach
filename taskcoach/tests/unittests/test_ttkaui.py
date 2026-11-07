@@ -493,6 +493,47 @@ class CasGraphique(unittest.TestCase):
 
 
 @_gui
+class TestDefilementGrilleAui(CasGraphique):
+
+    def setUp(self):
+        super().setUp()
+        self.manager = fm.AuiManager(self.root)
+
+    def tearDown(self):
+        self.manager.UnInit()
+        super().tearDown()
+
+    def test_barre_visible_uniquement_en_debordement(self):
+        self.root.geometry("320x180")
+        self.root.deiconify()
+        pane = ttk.Frame(self.manager.pane_parent, height=400)
+        pane.grid_propagate(False)
+        self.manager.AddPane(
+            pane,
+            fm.AuiPaneInfo().Name("large").Left().BestSize((200, 400)),
+        )
+        self.root.update()
+
+        self.assertTrue(self.manager._layout.scrollbar.winfo_ismapped())
+        self.assertLess(self.manager._layout.canvas.yview()[1], 1.0)
+
+        pane.configure(height=30)
+        self.root.update()
+        self.assertFalse(self.manager._layout.scrollbar.winfo_ismapped())
+
+    def test_panneaux_crees_avec_ancienne_api(self):
+        pane = ttk.Frame(self.root)
+        self.manager.AddPane(
+            pane,
+            fm.AuiPaneInfo().Name("legacy").Left(),
+        )
+        self.root.update()
+
+        self.assertIsNone(self.manager._layout.root)
+        self.assertEqual(pane.winfo_manager(), "grid")
+
+
+@_gui
 class TestUtilitairesGraphiques(CasGraphique):
 
     def test_bitmap_from_bits(self):
@@ -1120,7 +1161,7 @@ class TestGlisserDeposer(unittest.TestCase):
     """Simule un vrai glisser-deposer par evenements Tk sur le demonstrateur."""
 
     def setUp(self):
-        from taskcoachlib.guittk import demottkaui
+        from taskcoachlib.guitk import demottkaui
         self.demo = demottkaui.DemoTkAui(auto=False, duree=0)
         self.root = self.demo.root
         self.root.update()
