@@ -72,7 +72,7 @@ from tkinter import ttk, messagebox, filedialog
 import os
 from datetime import datetime
 from taskcoachlib.i18n import _
-from taskcoachlib.persistence import BackupManifest
+from taskcoachlib.persistence.autobackup import BackupManifest
 from taskcoachlib import render
 # Les importations pour wx sont remplacées par celles de Tkinter
 # et les classes correspondantes.
