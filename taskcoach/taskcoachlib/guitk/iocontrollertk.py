@@ -28,6 +28,7 @@ import traceback
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
 from taskcoachlib import meta, persistence, patterns, operating_system
+from taskcoachlib.persistence import taskfile
 from taskcoachlib.i18n import _
 
 # from taskcoachlib.thirdparty import lockfile  # TODO : obsolète ?
@@ -512,7 +513,7 @@ class IOController(object):
         tasks,
         filename=None,
         showerror=messagebox.showerror,
-        TaskFileClass=persistence.TaskFile,
+        TaskFileClass=persistence.taskfile.TaskFile,
         fileExists=os.path.exists,
     ):
         """La méthode permet de sauvegarder une sélection de tâches dans un nouveau fichier."""
