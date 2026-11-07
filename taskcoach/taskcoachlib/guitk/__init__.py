@@ -29,6 +29,6 @@ from .artprovidertk import init
 # from .iocontroller import IOController
 from . import idlecontrollertk
 from . import iocontrollertk
-from . import mainwindowtk
+# from . import mainwindowtk  # Crée des boucles infinis
 
 # __all__ = ["dialog", "icons", "idlecontroller", "IOController", "init", "iphone", "MainWindow", "menu", "newid", "printer", "remindercontroller", "splash", "status", "toolbar", "uicommand", "viewer", "windowdimensionstracker", "wizard"]
