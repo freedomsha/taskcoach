@@ -206,6 +206,7 @@ Explication des classes :
 import logging
 import tkinter as tk
 from abc import abstractclassmethod
+from logging import disable
 from tkinter import messagebox, simpledialog, ttk
 import re
 import operator
@@ -7736,12 +7737,22 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
     def setValue(self, value):
         """Définit l'état de la case à cocher."""
         if self.checkboxCtrl is not None:
-            self.checkboxCtrl.SetValue(value)
+            # self.checkboxCtrl.SetValue(value)  # AttributeError: 'Checkbutton' object has no attribute 'SetValue'
+            self.checkboxCtrl.config(state="normal" if value else "disabled")  # TODO : à revoir
+            # self.checkboxCtrl.config(state=value if value else "normal")
+        else:
+            # self._consolidate_var.set(value)
+            pass
 
     def enable(self, enable=True):
         """Active ou désactive la case à cocher."""
         if self.checkboxCtrl is not None:
-            self.checkboxCtrl.Enable(enable)
+            # # self.checkboxCtrl.Enable(enable)
+            # self.checkboxCtrl.config(state="normal" if enable is True else "disabled")
+            if enable:
+                self.checkboxCtrl.config(state="normal")
+            else:
+                self.checkboxCtrl.config(state="disabled")
 
 
 class ConsolidateEffortsPerTask(
