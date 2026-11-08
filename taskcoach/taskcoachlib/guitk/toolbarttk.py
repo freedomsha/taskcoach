@@ -765,12 +765,14 @@ class MainToolBar(ToolBar):
         Cette méthode ajuste la taille de la barre d'outils en fonction de la taille de la fenêtre parent.
 
         Args :
-            event (wx.SizeEvent) : L'événement de redimensionnement.
+            event : L'événement de redimensionnement.
         """
         # log.debug(
         #     "MainToolBar._OnSize : appelé pour remettre la ToolBar à la taille de la fenêtre."
         # )
-        event.Skip()
+        # event.Skip()  # Le gestionnaire Tkinter appelle event.Skip(), méthode wxPython inexistante ;
+        # une erreur survient lors du redimensionnement de la barre d’outils.
+
         # current_size = self.GetSize()
         # current_size = (self.parent.winfo_width(), self.parent.winfo_height())
         current_size = (self.winfo_width(), self.winfo_height())
