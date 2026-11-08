@@ -3899,8 +3899,21 @@ class XMLReader(object):  # nouvelle classe
         def convert_wx_font_string_to_tk(font_string):
             # Exemple de parsing d'une chaîne de style "Arial 10 bold"
             parts = font_string.split()
+            if not parts:
+                return None
             family = parts[0]
-            size = int(parts[1])
+            # size = int(parts[1]) if (parts[1] != "Sans") else ""
+            # Trouver la taille - chercher le premier élément numérique
+            size = None
+            for part in parts[1:]:
+                if part.isdigit():
+                    size = int(part)
+                    break
+
+            # Si aucune taille trouvée, utiliser une taille par défaut
+            if size is None:
+                size = 10  # Taille par défaut
+
             style = tkinter.font.NORMAL
             weight = tkinter.font.NORMAL
 
@@ -3918,12 +3931,29 @@ class XMLReader(object):  # nouvelle classe
             if GUI_NAME == "wx":
                 # font = wxadv.FontFromNativeInfoString(text)  # Obsolète
                 font = wx.Font(text)  # TODO : A Convertir pour tkinter
+                if font and font.IsOk():
+                    if font.GetPointSize() < 4:
+                        font.SetPointSize(self.__default_font_size)
+                    return font
             elif GUI_NAME == "tk":
                 font = convert_wx_font_string_to_tk(text)  # pour tkinter
-            if font and font.IsOk():
-                if font.GetPointSize() < 4:
-                    font.SetPointSize(self.__default_font_size)
-                return font
+                if font is not None:
+                    try:
+                        current_size = font.cget('size')
+                        if current_size < 4:
+                            font = tkinter.font.Font(
+                                family=font.cget('family'),
+                                size=self.__default_font_size,
+                                weight=font.cget('weight'),
+                                slant=font.cget('slant')
+                            )
+                    except:
+                        pass  # Garde la police telle quelle en cas d'erreur
+                    return font
+            # if font and font.IsOk():
+            #     if font.GetPointSize() < 4:
+            #         font.SetPointSize(self.__default_font_size)
+            #     return font
         return default_value
 
     # Mapping of removed/renamed icon names to their replacements
