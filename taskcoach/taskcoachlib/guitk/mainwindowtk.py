@@ -543,8 +543,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # Tkinter n'a pas de concept direct de "panes" comme AUI.
         log.debug("MainWindow.addPane: Ajout du volet %s à la fenêtre principale.", caption)
         # Les fenêtres flottantes ne sont pas possibles sur wayland !
-        if operating_system.isWayland():
-            floating = False
+        # TODO : A remettre si nécessaire !
+        # if operating_system.isWayland():
+        #     floating = False
 
         if not hasattr(page, 'settingsSection'):
             # Si le page n'a pas de méthode settingsSection, utiliser le name
@@ -705,14 +706,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             self.manager.LoadPerspective("")
 
         # Sur Wayland, forcer tous les panneaux flottants à s'ancrer
-        # TODO : à essayer avec tkinter !
-        if operating_system.isWayland():
-            try:
-                for pane in self.manager.GetAllPanes():
-                    if pane.IsFloating():
-                        pane.Dock()
-            except Exception as e:
-                log.warning(f"Erreur Wayland : {e}")
+        # TODO : à essayer avec tkinter ! Sinon remettre ces lignes
+        # if operating_system.isWayland():
+        #     try:
+        #         for pane in self.manager.GetAllPanes():
+        #             if pane.IsFloating():
+        #                 pane.Dock()
+        #     except Exception as e:
+        #         log.warning(f"Erreur Wayland : {e}")
 
         # S'assurer que tous les panneaux sont visibles
         try:
