@@ -343,7 +343,8 @@ class BaseCategoryViewer(
     def createColumns(self):
         """
         Crée et retourne les colonnes pour l'affichage des catégories.
-        Returns :
+
+        Returns:
             (list) : Liste des colonnes créées.
         """
         # pylint: disable=W0142,E1101

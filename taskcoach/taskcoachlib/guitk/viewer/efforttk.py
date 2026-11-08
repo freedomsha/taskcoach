@@ -19,31 +19,43 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-# Convertir des parties d'une application de wxPython (ou wx, comme l'indiquent les imports dans le fichier original) à tkinter est une tâche importante. Je suis ravi de t'aider à convertir le fichier effort.py en utilisant tes imports tkinter (taskcoachlib.guitk).
+# Convertir des parties d'une application de wxPython
+# (ou wx, comme l'indiquent les imports dans le fichier original) à tkinter est une tâche importante. Je suis ravi de t'aider à convertir le fichier effort.py en utilisant tes imports tkinter (taskcoachlib.guitk).
 #
 # Aperçu de la Conversion
 #
 # La conversion de effort.py vers une version tkinter (efforttk.py par exemple) implique :
 #
-#     Mise à jour des imports : Remplacer les imports wx et les références taskcoachlib.gui par tes imports taskcoachlib.guitk et les nouveaux modules tkinter (basetk, mixintk, refreshertk, widgetstk, etc.).
+#     Mise à jour des imports : Remplacer les imports wx et les références
+#     taskcoachlib.gui par tes imports taskcoachlib.guitk et les nouveaux
+#     modules tkinter (basetk, mixintk, refreshertk, widgetstk, etc.).
 #
-#     Mise à jour des classes de base : Changer les classes de base wx par leurs équivalents tkinter (par exemple, base.ListViewer devient basetk.ListViewer).
+#     Mise à jour des classes de base : Changer les classes de base wx par
+#     leurs équivalents tkinter (par exemple, base.ListViewer devient basetk.ListViewer).
 #
-#     Mise à jour des constantes wx : Remplacer les constantes spécifiques à wx (comme wx.IMAGE_LIST_SMALL ou wx.LIST_FORMAT_RIGHT) par des équivalents tkinter si nécessaire, ou les retirer si elles ne sont pas pertinentes dans le contexte tkinter.
+#     Mise à jour des constantes wx : Remplacer les constantes spécifiques
+#     à wx (comme wx.IMAGE_LIST_SMALL ou wx.LIST_FORMAT_RIGHT) par des
+#     équivalents tkinter si nécessaire, ou les retirer si elles ne sont pas
+#     pertinentes dans le contexte tkinter.
 #
-#     Ajustements de l'API des widgets : Adapter les appels de méthode de wx.ListCtrl (ou widgets.VirtualListCtrl) aux méthodes du widget tkinter équivalent (widgetstk.VirtualListCtrl).
+#     Ajustements de l'API des widgets : Adapter les appels de méthode de
+#     wx.ListCtrl (ou widgets.VirtualListCtrl) aux méthodes du widget tkinter
+#     équivalent (widgetstk.VirtualListCtrl).
 #
-# Dans le code converti ci-dessous, j'ai effectué les remplacements basés sur les imports que tu as fournis.
+# Dans le code converti ci-dessous, j'ai effectué les remplacements basés
+# sur les imports que tu as fournis.
 
 # Documentation des Changements
 #
-# J'ai effectué les modifications suivantes pour aligner le code avec ton environnement tkinter (guitk) :
+# J'ai effectué les modifications suivantes pour aligner le code avec
+# ton environnement tkinter (guitk) :
 #
 #     Imports de Bibliothèque :
 #
 #         L'import import wx a été supprimé car tkinter est utilisé.
 #
-#         from taskcoachlib import command, widgets, domain, render est devenu from taskcoachlib import command, widgetstk, domain, render.
+#         from taskcoachlib import command, widgets, domain, render est
+#         devenu from taskcoachlib import command, widgetstk, domain, render.
 #
 #         Les imports de l'interface graphique ont été mis à jour :
 #
@@ -61,7 +73,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #     Héritage des Classes :
 #
-#         La définition de la classe EffortViewer utilise maintenant les classes de base tkinter (suffixées par tk) : basetk.ListViewer, mixintk.FilterableViewerForCategorizablesMixin, mixintk.SortableViewerForEffortMixin, mixintk.SearchableViewerMixin, et basetk.SortableViewerWithColumns.
+#         La définition de la classe EffortViewer utilise maintenant
+#         les classes de base tkinter (suffixées par tk) :
+#         basetk.ListViewer, mixintk.FilterableViewerForCategorizablesMixin,
+#         mixintk.SortableViewerForEffortMixin, mixintk.SearchableViewerMixin,
+#         et basetk.SortableViewerWithColumns.
 #
 #         L'initialisation de self.secondRefresher utilise refreshertk.SecondRefresher.
 #
@@ -71,7 +87,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #             widgets.VirtualListCtrl est devenu widgetstk.VirtualListCtrl.
 #
-#             L'alignement des colonnes est passé de alignment=wx.LIST_FORMAT_RIGHT à alignment="right" (qui est une convention courante pour l'alignement dans tkinter/ttk.Treeview).
+#             L'alignement des colonnes est passé de alignment=wx.LIST_FORMAT_RIGHT
+#             à alignment="right" (qui est une convention courante pour l'alignement dans tkinter/ttk.Treeview).
 #
 #             J'ai commenté ou adapté le code spécifique à wxPython pour le redimensionnement automatique des colonnes (IsAutoResizing, ToggleAutoResizing) et l'assignation des images (AssignImageList(imageList, wx.IMAGE_LIST_SMALL)), car ces méthodes sont très spécifiques à wxPython et devront être remplacées par l'API de widgetstk ou retirées si elles ne sont pas nécessaires dans ton implémentation tkinter. J'ai mis une hypothèse pour AssignImageList et neutralisé la logique d'auto-redimensionnement pour éviter une erreur.
 
@@ -114,6 +131,9 @@ class Effortviewer(
     basetk.SortableViewerWithColumns,  # CHANGED: base.SortableViewerWithColumns -> basetk.SortableViewerWithColumns
     basetk.ListViewer,  # CHANGED: base.ListViewer -> basetk.ListViewer
 ):
+    """
+    Vue des efforts pour Tkinter.
+    """
     defaultTitle = _("Effort")
     defaultBitmap = "clock_icon"
     SorterClass = EffortSorter
@@ -315,9 +335,19 @@ class Effortviewer(
         return aggregator
 
     def createWidget(self, parent):  # CHANGEMENT: Ajout de 'parent'
+        """
+        Crée et retourne le widget utilisé pour afficher les efforts.
+
+        Args:
+            parent:
+
+        Returns:
+            widget (ttk.Treeview) : (listctrltk.VirtualListCtrl) Le widget VirtualListCtrl utilisé pour afficher les efforts.
+        """
         imageList = self.createImageList()  # Has side-effects
         # Déclaration des colonnes :
         self._columns = self._createColumns()  # pylint: disable=W0201
+        # Créer les menus contextuels
         # itemPopupMenu = taskcoachlib.guitk.menu.EffortPopupMenu(self.parent, self.taskFile.tasks(),
         itemPopupMenu = taskcoachlib.guitk.menutk.EffortPopupMenu(  # CHANGED: taskcoachlib.gui.menu -> taskcoachlib.guitk.menu
             self.parent,
@@ -341,6 +371,7 @@ class Effortviewer(
             parent_mainwindow=parent.winfo_toplevel(),
         )
         self._popupMenus.extend([itemPopupMenu, columnPopupMenu])
+        # Créer l'instance de VirtualListCtrl
         log.debug("Effortviewer.createWidget : création du tableau treeviewer")
         widget = widgetstk.listctrltk.VirtualListCtrl(  # CHANGED: widgets.VirtualListCtrl -> widgetstk.VirtualListCtrl
             # self,
@@ -353,6 +384,9 @@ class Effortviewer(
             resizeableColumn=1,
             **self.widgetCreationKeywordArguments()
         )
+        # # Il faut injecter le viewer comme parent pour que la délégation fonctionne
+        # widget._VirtualListCtrl__parent = self  # ? Pas nécessaire cette fois !
+
         # Remplacement des appels spécifiques à wxPython :
         # widget.AssignImageList(imageList, wx.IMAGE_LIST_SMALL) # Pylint: disable=E1101
         # On suppose que widgetstk.VirtualListCtrl gère l'AssignImageList en interne ou que cela n'est plus nécessaire.
@@ -361,9 +395,15 @@ class Effortviewer(
         if hasattr(widget, 'AssignImageList'):
             widget.AssignImageList(imageList, 'small')  # 'small' ou autre constante définie dans widgetstk
 
+        # Il reste à remplir le Treeview avec les données.
         return widget
 
     def _createColumns(self):
+        """Crée les colonnes du Treeview en fonction des paramètres.
+
+        Returns:
+            (list) : Liste des colonnes créées
+        """
         # pylint: disable=W0142
         kwargs = dict(resizeCallback=self.onResizeColumn)
         return (
@@ -378,28 +418,28 @@ class Effortviewer(
                         **kwargs
                     )
                     for name, columnHeader, eventType, renderCallback, sortCallback in (
-                    (
-                        "period",
-                        _("Period"),
-                        Effort.durationChangedEventType(),
-                        self.__renderPeriod,
-                        uicommand.ViewerSortByCommand(viewer=self, value="period"),
-                    ),
-                    (
-                        "task",
-                        _("Task"),
-                        Effort.taskChangedEventType(),
-                        lambda effort: effort.task().subject(recursive=True),
-                        None,
-                    ),
-                    (
-                        "description",
-                        _("Description"),
-                        Effort.descriptionChangedEventType(),
-                        lambda effort: effort.description(),
-                        None,
-                    ),
-                )
+                        (
+                            "period",
+                            _("Period"),
+                            Effort.durationChangedEventType(),
+                            self.__renderPeriod,
+                            uicommand.ViewerSortByCommand(viewer=self, value="period"),
+                        ),
+                        (
+                            "task",
+                            _("Task"),
+                            Effort.taskChangedEventType(),
+                            lambda effort: effort.task().subject(recursive=True),
+                            None,
+                        ),
+                        (
+                            "description",
+                            _("Description"),
+                            Effort.descriptionChangedEventType(),
+                            lambda effort: effort.description(),
+                            None,
+                        ),
+                    )
                 ]
                 + [
                     widgetstk.itemctrltk.Column( # CHANGED: widgets.Column -> widgetstk.Column
@@ -421,31 +461,31 @@ class Effortviewer(
                         **kwargs
                     )
                     for name, columnHeader, eventType, renderCallback in (
-                (
-                    "timeSpent",
-                    _("Time spent"),
-                    Effort.durationChangedEventType(),
-                    self.__renderTimeSpent,
-                ),
-                (
-                    "totalTimeSpent",
-                    _("Total time spent"),
-                    Effort.durationChangedEventType(),
-                    self.__renderTotalTimeSpent,
-                ),
-                (
-                    "revenue",
-                    _("Revenue"),
-                    Effort.revenueChangedEventType(),
-                    self.__renderRevenue,
-                ),
-                (
-                    "totalRevenue",
-                    _("Total revenue"),
-                    Effort.revenueChangedEventType(),
-                    self.__renderTotalRevenue,
-                ),
-            )
+                        (
+                            "timeSpent",
+                            _("Time spent"),
+                            Effort.durationChangedEventType(),
+                            self.__renderTimeSpent,
+                        ),
+                        (
+                            "totalTimeSpent",
+                            _("Total time spent"),
+                            Effort.durationChangedEventType(),
+                            self.__renderTotalTimeSpent,
+                        ),
+                        (
+                            "revenue",
+                            _("Revenue"),
+                            Effort.revenueChangedEventType(),
+                            self.__renderRevenue,
+                        ),
+                        (
+                            "totalRevenue",
+                            _("Total revenue"),
+                            Effort.revenueChangedEventType(),
+                            self.__renderTotalRevenue,
+                        ),
+                    )
                 ]
                 + [
                     widgetstk.itemctrltk.Column(  # CHANGED: widgets.Column -> widgetstk.Column
@@ -458,49 +498,49 @@ class Effortviewer(
                         **kwargs
                     )
                     for name, columnHeader, eventType, renderCallback in [
-                (
-                    "monday",
-                    _("Monday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 0),
-                ),
-                (
-                    "tuesday",
-                    _("Tuesday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 1),
-                ),
-                (
-                    "wednesday",
-                    _("Wednesday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 2),
-                ),
-                (
-                    "thursday",
-                    _("Thursday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 3),
-                ),
-                (
-                    "friday",
-                    _("Friday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 4),
-                ),
-                (
-                    "saturday",
-                    _("Saturday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 5),
-                ),
-                (
-                    "sunday",
-                    _("Sunday"),
-                    Effort.durationChangedEventType(),
-                    lambda effort: self.__renderTimeSpentOnDay(effort, 6),
-                ),
-            ]
+                        (
+                            "monday",
+                            _("Monday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 0),
+                        ),
+                        (
+                            "tuesday",
+                            _("Tuesday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 1),
+                        ),
+                        (
+                            "wednesday",
+                            _("Wednesday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 2),
+                        ),
+                        (
+                            "thursday",
+                            _("Thursday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 3),
+                        ),
+                        (
+                            "friday",
+                            _("Friday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 4),
+                        ),
+                        (
+                            "saturday",
+                            _("Saturday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 5),
+                        ),
+                        (
+                            "sunday",
+                            _("Sunday"),
+                            Effort.durationChangedEventType(),
+                            lambda effort: self.__renderTimeSpentOnDay(effort, 6),
+                        ),
+                    ]
                 ]
         )
 
@@ -513,14 +553,14 @@ class Effortviewer(
                 column
                 for column in self.visibleColumns()
                 if column.name()
-                   in [
-                       "monday",
-                       "tuesday",
-                       "wednesday",
-                       "thursday",
-                       "friday",
-                       "saturday",
-                       "sunday",
+                in [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
                    ]
             ]
         for column in columnsToShow:

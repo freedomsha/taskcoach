@@ -3,19 +3,34 @@
 Vue de l'effort pour Tkinter.
 Basé sur le fichier effort.py original de Task Coach.
 """
-# Le fichier effort.py est l'une des parties les plus complexes de l'application, car il gère l'affichage des efforts (temps passé) sur les tâches. Il inclut de nombreuses logiques pour la vue, les colonnes, le tri, le filtrage et la synchronisation des données.
+# Le fichier effort.py est l'une des parties les plus complexes de l'application,
+# car il gère l'affichage des efforts (temps passé) sur les tâches.
+# Il inclut de nombreuses logiques pour la vue, les colonnes, le tri, le filtrage et la synchronisation des données.
 #
 # J'ai réécrit le code pour utiliser Tkinter et sa bibliothèque ttk. Voici les principaux changements que j'ai effectués :
 #
-#     EffortViewer : Cette classe a été refactorisée pour utiliser ttk.Treeview pour l'affichage des efforts. J'ai ajouté des méthodes pour gérer le tri des colonnes (_on_column_click), l'actualisation de l'affichage (_refresh) et la mise à jour des données.
+#     EffortViewer : Cette classe a été refactorisée pour utiliser ttk.Treeview
+#     pour l'affichage des efforts.
+#     J'ai ajouté des méthodes pour gérer le tri des colonnes (_on_column_click),
+#     l'actualisation de l'affichage (_refresh) et la mise à jour des données.
 #
-#     Colonnes : Les colonnes de la vue (date, durée, notes, etc.) sont définies dynamiquement. J'ai inclus une logique pour la création de ces colonnes et pour la gestion de leur visibilité.
+#     Colonnes : Les colonnes de la vue (date, durée, notes, etc.)
+#     sont définies dynamiquement. J'ai inclus une logique
+#     pour la création de ces colonnes et pour la gestion de leur visibilité.
 #
-#     Synchronisation des données : La classe EffortViewerForSelectedTasks est convertie pour écouter les changements de sélection dans la vue principale des tâches, et pour mettre à jour sa propre vue en conséquence.
+#     Synchronisation des données : La classe EffortViewerForSelectedTasks est
+#     convertie pour écouter les changements de sélection dans la vue
+#     principale des tâches, et pour mettre à jour sa propre vue en conséquence.
 #
-#     Simulations de modules : Comme le fichier original dépend de nombreux modules (domain, uicommand, etc.), j'ai inclus des simulations simplifiées de ces classes pour que le code soit auto-suffisant et exécutable. Vous devrez les remplacer par vos versions réelles pour intégrer ce code dans votre projet.
+#     Simulations de modules : Comme le fichier original dépend de nombreux
+#     modules (domain, uicommand, etc.), j'ai inclus des simulations
+#     simplifiées de ces classes pour que le code soit auto-suffisant et exécutable.
+#     Vous devrez les remplacer par vos versions réelles pour intégrer ce code dans votre projet.
 #
-# Notez que la logique de pubsub est remplacée par une simple écoute des événements de l'interface utilisateur. Vous devrez peut-être adapter cela à votre propre système de gestion d'événements si vous en avez un.
+# Notez que la logique de pubsub est remplacée par une simple écoute des
+# événements de l'interface utilisateur.
+# Vous devrez peut-être adapter cela à votre propre système de gestion
+# d'événements si vous en avez un.
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
@@ -114,7 +129,7 @@ class Effortviewer(ttk.Frame):
         columns_list = ["date", "duration", "notes"]  # Simulation
 
         self.tree["columns"] = columns_list
-        self.tree.heading("#0", text=_("ID")) # Première colonne invisible
+        self.tree.heading("#0", text=_("ID"))  # Première colonne invisible
 
         for col in columns_list:
             self.tree.heading(col, text=col.capitalize(), command=lambda c=col: self._on_column_click(c))
