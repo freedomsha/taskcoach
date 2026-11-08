@@ -1138,7 +1138,9 @@ class XMLReader(object):  # nouvelle classe
                 f"XMLReader.read : __parse_category_nodes(root) a récupéré {len(categories)} catégories."
             )
             log.debug(
-                f"XMLReader.read : Category {root.attrib.get('subject')} contains {[child.attrib.get("subject") for child in root.findall("category")]}"
+                "XMLReader.read : Category %s contains %s",
+                root.attrib.get('subject'),
+                [child.attrib.get("subject") for child in root.findall("category")]
             )
         # print(f"XMLReader.read : 📂 DEBUG - Catégories de la tâche 'subject': categories = {categories}")
 
