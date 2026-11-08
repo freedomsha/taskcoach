@@ -384,8 +384,8 @@ class Effortviewer(
             resizeableColumn=1,
             **self.widgetCreationKeywordArguments()
         )
-        # # Il faut injecter le viewer comme parent pour que la délégation fonctionne
-        # widget._VirtualListCtrl__parent = self  # ? Pas nécessaire cette fois !
+        # Il reste à remplir le Treeview avec les données.
+        widget.setDataSource(self)
 
         # Remplacement des appels spécifiques à wxPython :
         # widget.AssignImageList(imageList, wx.IMAGE_LIST_SMALL) # Pylint: disable=E1101
@@ -395,7 +395,6 @@ class Effortviewer(
         if hasattr(widget, 'AssignImageList'):
             widget.AssignImageList(imageList, 'small')  # 'small' ou autre constante définie dans widgetstk
 
-        # Il reste à remplir le Treeview avec les données.
         return widget
 
     def _createColumns(self):
@@ -733,14 +732,59 @@ class Effortviewer(
         # return {wx.TreeItemIcon_Normal: -1} # Ancien code wx
         return {'normal': -1}  # Hypothèse de remplacement ou retour d'une valeur neutre
 
+    # La classe Effortviewer ne crée jamais d’attribut _items.
+    # Quand VirtualListCtrl.RefreshAllItems() demande une ligne,
+    # Effortviewer.getItemWithIndex() plante avant que les cellules puissent être rendues.
     def getItemCount(self):
-        return len(self._items)
+        """Retourne le nombre d'efforts actuellement affichés."""
+        # return len(self._items)  # AttributeError: 'Effortviewer' object has no attribute '_items'
+        return len(self.presentation())
 
     def getItemWithIndex(self, index):
-        return self._items[index]
+        """Retourne l'effort affiché à l'index demandé."""
+        # return self._items[index]  # AttributeError: 'Effortviewer' object has no attribute '_items'
+        return self.presentation()[index]
 
     # def getItemText(self, domain_object, column_name):  # Déclaré dans ViewerWithColumns
     #     return domain_object.get(column_name, "")
+    def getItemText(self, effort, column_name):
+        """Retourne le texte à afficher pour une cellule d'effort."""
+
+        renderers = {
+            "period": self.__renderPeriod,
+            "task": lambda item: item.task().subject(recursive=True),
+            "description": lambda item: item.description(),
+            "categories": self.renderCategories,
+            "timeSpent": self.__renderTimeSpent,
+            "totalTimeSpent": self.__renderTotalTimeSpent,
+            "revenue": self.__renderRevenue,
+            "totalRevenue": self.__renderTotalRevenue,
+            "monday": lambda item: self.__renderTimeSpentOnDay(item, 0),
+            "tuesday": lambda item: self.__renderTimeSpentOnDay(item, 1),
+            "wednesday": lambda item: self.__renderTimeSpentOnDay(item, 2),
+            "thursday": lambda item: self.__renderTimeSpentOnDay(item, 3),
+            "friday": lambda item: self.__renderTimeSpentOnDay(item, 4),
+            "saturday": lambda item: self.__renderTimeSpentOnDay(item, 5),
+            "sunday": lambda item: self.__renderTimeSpentOnDay(item, 6),
+        }
+
+        renderer = renderers.get(column_name)
+
+        if renderer is None:
+            return ""
+
+        try:
+            value = renderer(effort)
+        except Exception:
+            log.exception(
+                "Effortviewer.getItemText : erreur de rendu "
+                "pour la colonne %s et l'effort %r",
+                column_name,
+                effort,
+            )
+            return ""
+
+        return "" if value is None else value
 
     def getItemTooltipData(self, item):
         result = super().getItemTooltipData(item)
@@ -905,15 +949,31 @@ class Effortviewer(
 
     def __renderTotalTimeSpent(self, anEffort):
         """Return a rendered version of the effort total duration (of
-        composite efforts)."""
-        # No need to check for aggregation because this method is only used
-        # in aggregated mode
-        total_duration = anEffort.duration(
-            recursive=True,
-            rounding=self.__round_precision(),
-            roundUp=self.__always_round_up(),
-            consolidate=self.__consolidate_efforts_per_task(),
-        )
+        composite efforts).
+
+        Rend la durée totale d'un effort agrégé.
+        """
+        # # No need to check for aggregation because this method is only used
+        # # in aggregated mode
+        # total_duration = anEffort.duration(
+        #     recursive=True,
+        #     rounding=self.__round_precision(),
+        #     roundUp=self.__always_round_up(),
+        #     consolidate=self.__consolidate_efforts_per_task(),
+        # )
+        if isinstance(anEffort, BaseCompositeEffort):
+            total_duration = anEffort.duration(
+                recursive=True,
+                rounding=self.__round_precision(),
+                roundUp=self.__always_round_up(),
+                consolidate=self.__consolidate_efforts_per_task(),
+            )
+        else:
+            # Un effort détaillé n'est pas composite :
+            # sa durée est déjà sa durée totale.
+            # Cela évite de transmettre recursive=True à un effort détaillé
+            # et conserve le calcul récursif pour un BaseCompositeEffort.
+            total_duration = anEffort.duration()
         return render.timeSpent(
             total_duration,
             showSeconds=self.__show_seconds(),

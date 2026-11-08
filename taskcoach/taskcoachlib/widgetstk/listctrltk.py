@@ -381,6 +381,10 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
         # Vous devez gérer les données séparément, par exemple via un dictionnaire.
         # self.__item_data = {}
 
+        # CtrlWithColumnsMixin réinitialise self._columns à [].
+        # On restaure ici la liste de colonnes reçue par VirtualListCtrl.
+        self._columns = list(columns)
+
         #  Créer les en-têtes de colonne
         # Nous avons besoin de configurer la colonne #0 pour qu'elle soit masquée ou utilisée
         # comme première colonne de données (period).
@@ -497,6 +501,10 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
         """
         raise NotImplementedError
 
+    def setDataSource(self, dataSource):
+        """Set the viewer that supplies rows and cell values."""
+        self.__parent = dataSource
+
     # def getItemWithIndex(self, Index):
     def getItemWithIndex(self, rowIndex):
         """
@@ -523,9 +531,48 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
         correspondant à la cellule donnée.
 
         """
-        # # return self.__parent.getItemText(domainObject, columnIndex)
-        # raise NotImplementedError
-        return self.__parent.getItemText(domain_object, column_name)
+        # # # return self.__parent.getItemText(domainObject, columnIndex)
+        # # raise NotImplementedError
+        # return self.__parent.getItemText(domain_object, column_name)
+        text_to_return = self.__parent.getItemText(domain_object, column_name)
+        log.debug("VirtualListCtrl.getItemText : retourne %s pour l'objet %s à la colonne %s", text_to_return, domain_object, column_name)
+        return text_to_return
+    #
+    # def _renderItemValues(self, item):
+    #     """Construit les valeurs affichées pour une ligne.
+    #
+    #     Le widget ne connaît pas la logique métier des colonnes.
+    #     Il demande donc au viewer de rendre chaque cellule.
+    #     """
+    #     values = []
+    #
+    #     log.debug("VirtualListCtrl._renderItemValues :  recherche dans les colonnes %s", self.columns())
+    #     # for column in self.columns():  # TypeError: 'method' object is not iterable
+    #     # Parcourir plutôt l'attribut de liste déjà stocké sur le widget
+    #     for column in self._columns:
+    #         # render_callback = getattr(column, "renderCallback", None)
+    #         column_name = column.name()
+    #
+    #         # if callable(render_callback):
+    #         #     value = render_callback(item)
+    #         # else:
+    #         #     value = ""
+    #         value = self.__parent.getItemText(item, column_name)
+    #
+    #         values.append("" if value is None else str(value))
+    #     log.debug("VirtualListCtrl._renderItemValues : retourne la/les valeur(s) %s pour l'item %.", values, item)
+    #     return values
+
+    # C’est la méthode Column.render(obj) qui appelle le callback de rendu
+    # enregistré pour la colonne. Cette approche utilise donc directement
+    # les fonctions déjà fournies lors de la création des colonnes,
+    # sans passer par self.columns() ni par le getItemText() ajouté précédemment.
+    def _renderItemValues(self, item):
+        """Rend les cellules à partir des callbacks des colonnes."""
+        # return [column.render(item) for column in self._columns]
+        render_to_return = [column.render(item) for column in self._columns]
+        log.debug("VirtualListCtrl._renderItemValues : retourne la liste %s pour l'item %s des colonnes %s", render_to_return, item, self._columns)
+        return render_to_return
 
     # deux méthodes déléguées pour l'interface TaskCoach
     def getItemTooltipData(self, domainObject):
@@ -626,41 +673,61 @@ class VirtualListCtrl(itemctrltk.CtrlWithItemsMixin,
     #         # Liaison cruciale pour que _objectBelongingTo fonctionne
     #         # self._mapObjectToNode(domain_object, node_id)
 
+    def _findItemId(self, item):
+        for item_id, stored_item in self._item_to_object.items():
+            if stored_item is item or stored_item == item:
+                return item_id
+
+        return None
+
+    # La correction importante est donc de ne pas faire lire renderCallback.
+    # Le widget doit seulement demander au viewer la valeur de chaque colonne.
+    # Le viewer est le seul endroit qui connaît la logique d’affichage des efforts.
     def RefreshAllItems(self, count):
         # Effacer tous les éléments existants
         for item in self.get_children():
             self.delete(item)
-        # Insérer les nouveaux éléments
-        for i in range(count):
-            # ANCIEN CODE
-            # item = self.__parent.getItemWithIndex(i)  # AttributeError: 'Frame' object has no attribute 'getItemWithIndex'
-            # # item = self.getItemWithIndex(i)  # AttributeError: 'Frame' object has no attribute 'getItemWithIndex'
-            # # Le problème est que self.__parent est un Frame au lieu d'être le viewer parent qui contient cette méthode.
+            self._item_to_object.pop(item, None)
+        self._item_to_object.clear()
 
-            # NOUVEAU CODE - Vérifier si la méthode existe
+        # Insérer les nouveaux éléments
+        for index in range(count):
             if hasattr(self.__parent, 'getItemWithIndex'):
-                item = self.__parent.getItemWithIndex(i)
+                item = self.__parent.getItemWithIndex(index)
             else:
-                # # Fallback - utiliser directement la présentation
-                # if i < len(self.presentation()):  # AttributeError: 'VirtualListCtrl' object has no attribute 'presentation'
-                #     item = self.presentation()[i]
-                # else:
                 continue  # Ignorer cet index
-            values = [self.getItemText(item, j) for j in range(len(self['columns']))]
-            self.insert("", tk.END, values=values, tags=item)
+            # # values = [self.getItemText(item, j) for j in range(len(self['columns']))]  # NE PLUSUTILISER
+            # # CAR Elle transmet un entier de colonne, comme 0 ou 1,
+            # # alors que le viewer doit recevoir le nom réel, comme "timeSpent" ou "totalTimeSpent".
+            # # Correction qui dépend du nom exact de la méthode exposée par la classe Column.
+            # # Il ne faut pas ajouter getValue() sans vérifier la définition complète de Column.
+            # values = [column.getValue(item) for column in self.columns()]
+            values = self._renderItemValues(item)
+            item_id = self.insert("", tk.END, values=values)
+            self._setObjectForItem(item_id, item)
         # self.populate()  # Utiliser la méthode populate pour rafraîchir tous les éléments
 
     def RefreshItems(self, *items):
         for item in items:
-            index = self.__parent.getIndexOfItem(item)
-            if index is not None:
+            values = self._renderItemValues(item)
+            # index = self.__parent.getIndexOfItem(item)
+            item_id = self._findItemId(item)
+            # if index is not None:
+            if item_id is not None:
                 # Mettre à jour l'élément existant
-                values = [self.getItemText(item, j) for j in range(len(self['columns']))]
-                self.item(item, values=values, tags=item)
+                # values = [self.getItemText(item, j) for j in range(len(self['columns']))]
+                # self.item(item, values=values, tags=item)
+                self.item(item_id, values=values, tags=item)
             else:
                 # Ajouter un nouvel élément s'il n'existe pas
-                values = [self.getItemText(item, j) for j in range(len(self['columns']))]
-                self.insert("", tk.END, values=values, tags=item)
+                # values = [self.getItemText(item, j) for j in range(len(self['columns']))]
+                # self.insert("", tk.END, values=values, tags=item)
+                item_id = self.insert("", tk.END, values=values, tags=item)
+                # Les méthodes _findItemId() et l'accès à la liste des colonnes doivent être adaptés aux méthodes réellement présentes dans VirtualListCtrl. Il faut donc vérifier la définition complète de Column et de l'identifiant objet avant d'appliquer ceci:
+                # item_id = self._findItemId(item)
+                # if item_id is not None:
+                #     self.item(item_id, values=values)
+                self._setObjectForItem(item_id, item)
 
     def HitTest(self, xxx_todo_changeme, *args, **kwargs):
         """
@@ -850,4 +917,3 @@ if __name__ == '__main__':
     # list_ctrl.populate(data)
 
     root.mainloop()
-

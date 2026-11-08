@@ -833,12 +833,15 @@ class Viewer(ttk.Frame, patterns.Observer):
             # new_presentation = self.createSorter(
             #     self.domainObjectsToView()
             # )
+            log.debug("Viewer.refresh : nouvelle présentation :")
             new_presentation = self.createSorter(
                 self.createFilter(
                     self.domainObjectsToView()
                 )
             )
+            log.debug("Viewer.refresh : change la présentation comme ceci :", new_presentation)
             self.setPresentation(new_presentation)
+            log.debug("Viewer.refresh : Le changement est effectué.")
 
             log.debug(
                 "Viewer.refresh : nouvelle présentation=%r, nombre=%d",
@@ -1950,7 +1953,13 @@ class ViewerWithColumns(Viewer):
         if column is None:
             column = 1 if self.hasOrderingColumn() else 0
         column = self.visibleColumns()[column]
+        log.debug("ViewerWithColumns.getItemText : retourne l'élément de la colonne %s pour l'item %s", column, item)
         return column.render(item)
+        # return column.get(item)
+        # if isinstance(self, ttk.Treeview):
+        #     return self[column].get(item)
+        # else:
+        #     return column.render(item)
 
     def getItemImages(self, item, column=0):
         """
