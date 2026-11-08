@@ -596,7 +596,9 @@ class AutoColumnWidthMixin:  # mixin !
         try:
             # On met à jour la largeur de la colonne cible
             # -1 car '#0' n'est pas visible !
-            self.column(self._resize_column_id - 1, width=int(available_width))
+            self.column(self._resize_column_id - 1, width=int(available_width))  # Le code soustrait 1 à un identifiant de colonne chaîne, ce qui déclenche un TypeError pendant le redimensionnement automatique.
+            # self.column(self._resize_column_id, width=int(available_width))
+            log.debug("AutoColumnWidthMixin._on_autowidth_resize : redimensionne la colonne %s avec la largeur %s", self._resize_column_id, available_width)
         except tk.TclError as e:
             log.warning(f"AutoColumnWidthMixin._on_autowidth_resize : Impossible de redimensionner la colonne {self._resize_column_id}", stack_info=True)
 
