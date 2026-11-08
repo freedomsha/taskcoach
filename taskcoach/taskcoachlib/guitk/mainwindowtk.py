@@ -931,6 +931,11 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         """
         log.info("MainWindow.onClose : Fermeture de la fenêtre")
 
+        if getattr(self, "_closing", False):
+            return
+
+        self._closing = True
+
         try:
             app_instance = application.tkapplication.TkinterApplication.getInstance()
             should_quit = app_instance.quitApplication(force=True)
@@ -938,13 +943,27 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
             self.__save_perspective()
             self.__save_position()
-            self.closeEditors()
+            # self.closeEditors()
+            try:
+                if self.parent.winfo_exists():
+                    self.closeEditors()
+            except tk.TclError:
+                pass
 
             if should_quit or self.__shutdown:
                 log.debug("MainWindow.onClose: Quitter l'application")
-                self.taskFile.stop()
+                # self.taskFile.stop()
+                try:
+                    self.taskFile.stop()
+                except Exception:
+                    log.exception("Erreur pendant l'arrêt de TaskFile")
                 self._idleController.stop()
-                self.parent.destroy()
+                # self.parent.destroy()
+                try:
+                    if self.parent.winfo_exists():
+                        self.parent.destroy()
+                except tk.TclError:
+                    pass
             elif should_hide:
                 log.debug("MainWindow.onClose: Fenêtre cachée")
                 self.parent.withdraw()
@@ -953,9 +972,18 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
                 self.__save_perspective()
                 self.__save_position()
                 self.saveSettings()
-                self.taskFile.stop()
+                # self.taskFile.stop()
+                try:
+                    self.taskFile.stop()
+                except Exception:
+                    log.exception("Erreur pendant l'arrêt de TaskFile")
                 self._idleController.stop()
-                self.parent.destroy()
+                # self.parent.destroy()
+                try:
+                    if self.parent.winfo_exists():
+                        self.parent.destroy()
+                except tk.TclError:
+                    pass
         except Exception as e:
             log.exception(f"MainWindow.onClose : Erreur : {e}")
 
