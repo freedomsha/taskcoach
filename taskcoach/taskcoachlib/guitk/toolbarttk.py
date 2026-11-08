@@ -518,8 +518,8 @@ class ToolBar(_Toolbar, uicommandcontainertk.UICommandContainerMixin):
                 if not hasattr(self, "_tool_by_id"):
                     self._tool_by_id = {}
                 self._tool_by_id[ui_command.id] = widget
-                log.debug(
-                    "ToolBar.appendUICommand : appendToToolBar(%r) returned %r",
+                log.exception(
+                    "ToolBar.appendUICommand : erreur lors de l'ajout de la commande, appendToToolBar(%r) returned %r",
                     ui_command,
                     widget,
                 )
@@ -530,8 +530,14 @@ class ToolBar(_Toolbar, uicommandcontainertk.UICommandContainerMixin):
                 f"ToolBar.appendUICommand : Les UICommands de ToolBar sont {self.tools}."
             )
         except Exception as e:
-            log.error(
-                f"ToolBar.appendUICommand : Error adding command {ui_command.id}{ui_command}: {e}"
+            # log.error(
+            #     f"ToolBar.appendUICommand : Error adding command {ui_command.id}{ui_command}: {e}"
+            # )
+            command_id = getattr(ui_command, "id", "<id-inconnu>")
+            log.exception(
+                "ToolBar.appendUICommand : erreur lors de l'ajout de la commande %s%s",
+                command_id,
+                ui_command,
             )
             raise
         # if button:  # TODO : gérer le bouton ?

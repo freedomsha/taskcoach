@@ -453,9 +453,17 @@ class PopupButtonMixin(object):
         Initialise le mixin.
         S'assure que le menu n'est pas encore créé.
         """
-        log.debug("PopupButtonMixin.__init__ : avec args=%s et kwargs=%s", args, kwargs)
+        log.debug(
+            "PopupButtonMixin.__init__ : avec args=%s et kwargs=%s",
+            args,
+            kwargs,
+        )
         # __menu est mis en cache pour ne pas le recréer à chaque fois
         self.__menu = None
+        # Continuer la chaîne d'initialisation MRO.
+        # Sans cet appel, TaskListCommand puis UICommand
+        # ne reçoivent jamais les paramètres de la commande.
+        super().__init__(*args, **kwargs)
 
     def show_popup_menu(self):
         """

@@ -7667,7 +7667,13 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
 
     def __init__(self, *args, **kwargs):
         self.checkboxCtrl = None
+
         super().__init__(
+            # settings=settings,
+            # # section="...",
+            # section=section,
+            # # setting="...",
+            # setting=setting,
             menuText=_("&Always round up"),
             helpText=_("Always round up to the next rounding increment"),
             *args,

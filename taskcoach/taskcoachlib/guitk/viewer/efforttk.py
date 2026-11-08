@@ -670,6 +670,7 @@ class Effortviewer(
         # These are instance variables so that the choice can be changed
         # programmatically
         # pylint: disable=W0201
+        log.debug("Effortviewer.createModeToolBarUICommands : création des commandes avec le viewer %s et les réglages %s", self, self.settings)
         self.aggregationUICommand = uicommand.EffortViewerAggregationChoice(
             viewer=self, settings=self.settings
         )
@@ -681,6 +682,13 @@ class Effortviewer(
         )
         self.consolidateEffortsPerTaskUICommand = uicommand.ConsolidateEffortsPerTask(
             viewer=self, settings=self.settings
+        )
+        log.debug(
+            "Effortviewer.createModeToolBarUICommands : retourne (%s, %s, %s, %s)",
+            self.aggregationUICommand,
+            self.roundingUICommand,
+            self.alwaysRoundUpUICommand,
+            self.consolidateEffortsPerTaskUICommand,
         )
         return (
             self.aggregationUICommand,

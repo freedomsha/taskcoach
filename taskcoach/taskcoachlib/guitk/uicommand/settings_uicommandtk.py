@@ -231,6 +231,15 @@ class UICheckCommand(BooleanSettingsCommand):
         return self._variable.get()
 
     def _on_variable_changed(self, *args):
+        if not self.section:
+            raise ValueError(
+                f"{type(self).__name__}: la section de configuration est obligatoire"
+            )
+
+        if not self.setting:
+            raise ValueError(
+                f"{type(self).__name__}: le nom du paramètre est obligatoire"
+            )
         # Cette fonction est appelée lorsque la variable Tkinter change
         new_value = self._variable.get()
         # self.settings.setboolean(self.section, self.setting, new_value)
@@ -238,8 +247,8 @@ class UICheckCommand(BooleanSettingsCommand):
             # Met à jour le paramètre de l'application
             self.settings.setboolean(self.section, self.setting, new_value)
         except Exception as e:
-            log.error(f"Erreur lors de la modification du paramètre : {e}", exc_info=True)
             messagebox.showerror("Erreur", f"Une erreur est survenue lors de la modification du paramètre : {e}")
+            log.exception(f"Erreur lors de la modification du paramètre : {e}", exc_info=True)
 
     # Il est important d'ajouter des blocs try...except autour des opérations
     # qui pourraient potentiellement échouer, comme la lecture ou l'écriture des paramètres.
