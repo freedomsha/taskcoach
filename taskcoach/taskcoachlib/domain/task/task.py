@@ -58,6 +58,7 @@ import logging
 import ast
 import weakref
 
+import authlib
 from authlib.jose.rfc7518.jws_algs import NoneAlgorithm
 
 # from taskcoachlib.config.arguments import get_gui
