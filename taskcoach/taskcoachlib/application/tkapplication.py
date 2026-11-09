@@ -597,7 +597,8 @@ class TkinterApplication(
         if self.settings.getboolean("window", "tips"):
             from taskcoachlib import help
 
-            help.showTips(self.mainwindow, self.settings)
+            # help.showTips(self.mainwindow.winfo_toplevel(), self.settings)
+            help.showTips(self.root, self.settings)
 
     def __warn_user_that_ini_file_was_not_loaded(self):
         from taskcoachlib import meta
