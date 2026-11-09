@@ -2970,7 +2970,7 @@ class LockedTaskFile(TaskFile):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # parent n'est pris en compte
         """
         Initialiser le LockedTaskFile.
 
