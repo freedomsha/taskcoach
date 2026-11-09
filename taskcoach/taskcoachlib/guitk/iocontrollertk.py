@@ -246,21 +246,38 @@ class IOController(object):
             "IOController.openAfterStart : Ouvre le fichier spécifié en ligne de commande"
             " ou le dernier fichier ouvert par l'utilisateur, ou aucun fichier du tout."
         )
-        if commandLineArgs:
-            # Si un argument de ligne de commande est présent, on considère
-            # que c'est le nom du fichier à ouvrir.
-            try:
-                filename = commandLineArgs[0]
-                if isinstance(filename, bytes):
-                    filename = filename.decode(sys.getfilesystemencoding())
-                log.info(
-                    f"IOController.openAfterStart : Enregistre {filename} comme nom de fichier."
-                )
-            except Exception as e:
+        # if commandLineArgs:
+        #     # Si un argument de ligne de commande est présent, on considère
+        #     # que c'est le nom du fichier à ouvrir.
+        #     try:
+        #         filename = commandLineArgs[0]
+        #         if isinstance(filename, bytes):
+        #             filename = filename.decode(sys.getfilesystemencoding())
+        #         log.info(
+        #             f"IOController.openAfterStart : Enregistre {filename} comme nom de fichier."
+        #         )
+        #     except Exception as e:
+        #         messagebox.showerror(
+        #             "File Open Error", f"Cannot open file due to: {e}"
+        #         )
+        #         return
+        if isinstance(commandLineArgs, (str, bytes, os.PathLike)):
+            arguments = [commandLineArgs]
+        else:
+            arguments = list(commandLineArgs or [])
+
+        if arguments:
+            if len(arguments) != 1 or str(arguments[0]).startswith("-"):
                 messagebox.showerror(
-                    "File Open Error", f"Cannot open file due to: {e}"
+                    "File Open Error",
+                    "Expected exactly one task-file path.",
                 )
                 return
+            filename = os.fsdecode(arguments[0])
+            log.info(
+                "IOController.openAfterStart : Fichier à ouvrir : %s",
+                filename,
+            )
         else:
             # Sinon, on récupère le nom du dernier fichier ouvert par
             # l'utilisateur à partir des paramètres de configuration.
@@ -998,7 +1015,7 @@ class IOController(object):
         Returns:
 
         """
-        logging.info(f"MockIOController: Effacement (sauvegarde: {save}).")
+        logging.info(f"MockIOController: Effacement (sauvegarde: {save} pour self={self}).")
 
     def __syncReport(self, msg):
         r"""Affiche un message d'erreur dans une boîte de dialogue de rapport de synchronisation.

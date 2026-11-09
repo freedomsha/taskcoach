@@ -148,8 +148,8 @@ class TaskCoachFilesystemNotifier(FilesystemNotifier):
     """
     Une classe de notification pour gérer les modifications de fichiers pour Task Coach.
 
-    Basé sur FilesystemNotifier qui charge le notificateur selon le système (linux->inotify, win->win32, mac->notifeur)
-    ou FileSystemPollerNotifier.
+    Basé sur FilesystemNotifier qui charge le notificateur selon le système
+    (linux->inotify, win->win32, mac->notifeur) ou FileSystemPollerNotifier.
     """
 
     def __init__(self, taskFile):
@@ -591,8 +591,6 @@ class TaskFile(patterns.Observer):
             __changedOnDisk (bool) : Indique si le fichier a été modifié sur le disque.
             __notifier (TaskCoachFilesystemNotifier ou TaskCoachFilesystemPollerNotifier) : Un notificateur pour surveiller les changements de fichiers sur le disque.
             __saving (bool) : Indique si une opération de sauvegarde est en cours.
-
-
         """
         log.info(
             "Initialisation de TaskFile avec des arguments : %s, %s",
@@ -2403,10 +2401,13 @@ class TaskFile(patterns.Observer):
         #     self.__changeMonitor.stop()
         # 1. ARRÊTER temporairement le moniteur de changements avant la fusion
         if (
-            hasattr(self, "_TaskFile__changeMonitor")
-            and self._TaskFile__changeMonitor
+            # hasattr(self, "_TaskFile__changeMonitor")
+            hasattr(self, "_TaskFile__monitor")
+            # and self._TaskFile__changeMonitor
+            and self.__monitor
         ):
-            self._TaskFile__changeMonitor.stop()
+            # self._TaskFile__changeMonitor.stop()
+            self.__monitor.stop()
 
         # Gérer __loading, alors qu'une fusion/sauvegarde est une opération critique qui pourrait interférer avec un chargement en cours
         self.__loading = True
@@ -2501,14 +2502,18 @@ class TaskFile(patterns.Observer):
                     # ):
                     # 2. REDÉMARRER le moniteur de changements dans tous les cas
                     if (
-                        hasattr(self, "_TaskFile__changeMonitor")
-                        and self._TaskFile__changeMonitor
+                        # hasattr(self, "_TaskFile__changeMonitor")
+                        hasattr(self, "_TaskFile__monitor")
+                        # and self._TaskFile__changeMonitor
+                        and self.__monitor
                     ):
                         log.debug(
-                            f"TaskFile.mergeDiskChanges : relance du moniteur {self._TaskFile__changeMonitor}."
+                            # f"TaskFile.mergeDiskChanges : relance du moniteur {self._TaskFile__changeMonitor}."
+                            f"TaskFile.mergeDiskChanges : relance du moniteur {self.__monitor}."
                         )
-                        # self.__changeMonitor.start()
-                        self._TaskFile__changeMonitor.start()
+                        # # self.__changeMonitor.start()
+                        # self._TaskFile__changeMonitor.start()
+                        self.__monitor.start()
                         # # On force une remise à zéro complète du tracker pour cette session
                         # if hasattr(self.__changeMonitor, "clear"):
                         #     self.__changeMonitor.clear()
@@ -2516,10 +2521,14 @@ class TaskFile(patterns.Observer):
                         #     self.__changeMonitor.reset()
                         # 3. Forcer le nettoyage des reliquats d'événements de fusion
                         # pour que self.taskFile.changes() renvoie bien 0
-                        if hasattr(self._TaskFile__changeMonitor, "clear"):
-                            self._TaskFile__changeMonitor.clear()
-                        elif hasattr(self._TaskFile__changeMonitor, "reset"):
-                            self._TaskFile__changeMonitor.reset()
+                        # if hasattr(self._TaskFile__changeMonitor, "clear"):
+                        if hasattr(self.__monitor, "clear"):
+                            # self._TaskFile__changeMonitor.clear()
+                            self.__monitor.clear()
+                        # elif hasattr(self._TaskFile__changeMonitor, "reset"):
+                        elif hasattr(self.__monitor, "reset"):
+                            # self._TaskFile__changeMonitor.reset()
+                            self.__monitor.reset()
                     self.__monitor.thaw()
 
             else:
