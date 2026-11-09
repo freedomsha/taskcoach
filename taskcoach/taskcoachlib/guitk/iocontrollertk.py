@@ -984,7 +984,8 @@ class IOController(object):
         return self.__taskFile.filename()
 
     def isDirty(self):
-        return False
+        # return False
+        return self.__taskFile.isDirty()
 
     def stop(self):
         logging.info("IOController : Arrêt.")
@@ -999,6 +1000,7 @@ class IOController(object):
 
         """
         logging.info(f"MockIOController: Effacement (sauvegarde: {save}).")
+        
 
     def __syncReport(self, msg):
         r"""Affiche un message d'erreur dans une boîte de dialogue de rapport de synchronisation.
