@@ -7667,13 +7667,13 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
 
     def __init__(self, *args, **kwargs):
         self.checkboxCtrl = None
+        viewer = kwargs.get("viewer")
+        kwargs["setting"] = "alwaysroundup"
+        kwargs["kind"] = "checkbutton"
+        if viewer is not None:
+            kwargs["section"] = viewer.settingsSection()
 
         super().__init__(
-            # settings=settings,
-            # # section="...",
-            # section=section,
-            # # setting="...",
-            # setting=setting,
             menuText=_("&Always round up"),
             helpText=_("Always round up to the next rounding increment"),
             *args,
@@ -7700,13 +7700,14 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
         # toolbar.AddControl(self.checkboxCtrl)
         # self.checkboxCtrl.pack(side="left")  # A Adapter pour Tkinter
         self.checkboxCtrl.pack(side=tk.LEFT, padx=2, pady=2)
-        # TODO : Dois-je ajouter ceci ? :
-        # Référence générique utilisée par certains composants Tkinter.
-        # self._widget = self.checkboxCtrl
-        # S'assurer que l'état initial du checkbox est correct
-        self._variable.set(self.isSettingChecked())
-        # self.tools.append(self.checkboxCtrl)  # TODO : Si vous voulez les suivre dans une liste
-        # Faut-il ajouter ceci ? Oui
+        # Dois-je ajouter ceci ? Non:
+        # # Référence générique utilisée par certains composants Tkinter.
+        # # self._widget = self.checkboxCtrl
+        # # S'assurer que l'état initial du checkbox est correct
+        # self._variable.set(self.isSettingChecked())
+        # # Plus nécessaire car est directement associé
+        # # self.tools.append(self.checkboxCtrl)  # Si vous voulez les suivre dans une liste
+        # Faut-il ajouter ceci ? Oui :
         # si la méthode crée une ttk.Checkbutton, elle doit retourner self.checkboxCtrl
         return self.checkboxCtrl
 
@@ -7728,27 +7729,34 @@ class AlwaysRoundUp(settings_uicommandtk.UICheckCommand, ViewerCommand):
 
     def onCheck(self, event=None):
         """Enregistre l'état de l'arrondi au supérieur dans les paramètres de l'application."""
-        self.setSetting(event.IsChecked())
+        # self.setSetting(event.IsChecked())  # Non, directement liée à la valeur
+        self.doCommand(event)
 
     def doCommand(self, event=None):
         """Enregistre l'état de l'arrondi au supérieur dans les paramètres de l'application."""
-        self.setSetting(self._isMenuItemChecked(event))
+        # self.setSetting(self._isMenuItemChecked(event))
+        # Non, directement liée à la valeur
+        value = bool(self._variable.get())
+        if value != self.isSettingChecked():
+            self.setSetting(value)
 
     def setSetting(self, alwaysRoundUp):
         """Enregistre l'état de l'arrondi au supérieur dans les paramètres de l'application."""
         self.settings.setboolean(
-            self.viewer.settingsSection(), "alwaysroundup", alwaysRoundUp
+            # self.viewer.settingsSection(), "alwaysroundup", alwaysRoundUp
+            self.viewer.settingsSection(), "alwaysroundup", bool(alwaysRoundUp)
         )
 
     def setValue(self, value):
         """Définit l'état de la case à cocher."""
-        if self.checkboxCtrl is not None:
-            # self.checkboxCtrl.SetValue(value)  # AttributeError: 'Checkbutton' object has no attribute 'SetValue'
-            self.checkboxCtrl.config(state="normal" if value else "disabled")  # TODO : à revoir
-            # self.checkboxCtrl.config(state=value if value else "normal")
-        else:
-            # self._consolidate_var.set(value)
-            pass
+        # if self.checkboxCtrl is not None:
+        #     # self.checkboxCtrl.SetValue(value)  # AttributeError: 'Checkbutton' object has no attribute 'SetValue'
+        #     self.checkboxCtrl.config(state="normal" if value else "disabled")  # à revoir->fait le 09/11/2026
+        #     # self.checkboxCtrl.config(state=value if value else "normal")
+        # else:
+        #     # self._consolidate_var.set(value)
+        #     pass
+        self._variable.set(bool(value))
 
     def enable(self, enable=True):
         """Active ou désactive la case à cocher."""
