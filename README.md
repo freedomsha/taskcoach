@@ -36,6 +36,14 @@ taskcoachlib/
 
 Les répertoires `gui/` et `widgets/` contiennent l'ancienne implémentation wxPython et sont **voués à disparaître**. Le code est progressivement migré vers `guitk/` et `widgetstk/`. Durant la transition, les deux interfaces coexistent, Tkinter étant le choix par défaut.
 
+### État de l'avancement (novembre 2026)
+
+- Le point d'entrée `python taskcoach/taskcoach.py` atteint la boucle principale Tkinter lors d'un test de démarrage sur Linux.
+- Plusieurs problèmes bloquants de démarrage ont été corrigés : compatibilité syntaxique avec Python 3.11, conversion de certaines polices historiques, dépendances manquantes et initialisation de la commande d'arrondi des efforts.
+- La commande `AlwaysRoundUp` et son réglage `effortviewer.alwaysroundup` ont été vérifiés avec un widget Tkinter.
+- Le démarrage produit encore des erreurs répétées de formatage dans les messages de journalisation (`TypeError: not all arguments converted during string formatting`). Les vues et interactions doivent encore être validées ; ce test de démarrage ne remplace pas une campagne de tests fonctionnels.
+- La migration vers Tkinter est toujours en cours : wxPython et l'ancienne interface restent présents pour compatibilité.
+
 ## Prérequis
 
 - **Python 3.8 à 3.13** (3.11+ recommandé pour performance)
@@ -87,12 +95,12 @@ Le code de l'application se trouve dans `taskcoach/`, notamment dans le paquet `
 
 - **`taskcoachlib/domain/`** : Modèles métier (Task, Effort, Note, etc.) — cœur de l'application
 - **`taskcoachlib/persistence/`** : Lecteurs/écrivains XML, formats d'import/export
-- **`taskcoachlib/guitk/` et `widgetstk/`** : Interface Tkinter (à développer)
+- **`taskcoachlib/guitk/` et `widgetstk/`** : Interface Tkinter en cours de migration
 - **`taskcoachlib/application/`** : Initialisation, orchestration globale
 - **`taskcoachlib/command/`** : Pattern Command pour undo/redo
 - **`taskcoachlib/patterns/`** : Observer, Composite, etc.
 - **`taskcoachlib/gui/` et `widgets/`** : [LEGACY] Ancienne interface wxPython — à ignorer pour nouveau code
-- **`tests/`** : Suite de tests (à développer)
+- **`tests/`** : Tests unitaires et tests des composants ; la couverture des parcours Tkinter reste à renforcer
 
 ### Configuration du logging
 
@@ -108,44 +116,47 @@ Le niveau par défaut est `DEBUG`. Pour réduire la verbosité en production, mo
 level=logging.INFO,  # au lieu de logging.DEBUG
 ```
 
-### Priorités de développement (2025)
+### Priorités de développement
 
 #### 🔴 Haute priorité
 
 1. **Compléter la migration Tkinter** : Tous les fonctionnalités manquantes doivent être implémentées en Tkinter avant de supprimer wxPython
    - Audit des widgets manquants dans `widgetstk/`
-   - Tester les cas limites (drag & drop, printing, export)
+   - Tester les cas limites et les parcours complets (drag & drop, impression, export)
    - Documenter les dépendances wxPython → Tkinter pour chaque feature
 
-2. **Ajouter une suite de tests** (pytest)
-   - Commencer par `taskcoachlib/domain/` (priorité)
-   - Puis `taskcoachlib/persistence/` (import/export)
-   - CI/CD avec GitHub Actions
-   - Cible : couverture > 70%
+2. **Renforcer et automatiser les tests**
+   - Étendre les tests ciblés aux parcours Tkinter et à la persistance
+   - Ajouter ou compléter la CI avec GitHub Actions
+   - Mesurer la couverture pour fixer des objectifs réalistes
 
 3. **Audit des dépendances** : Mettre à jour ou remplacer
    - wxPython → suppression en fin de migration
    - Twisted → remplacer par asyncio natif (long terme)
    - Moderniser les versions de `requirements.txt`
 
+4. **Fiabiliser le démarrage et le logging**
+   - Corriger les appels de journalisation qui produisent des erreurs de formatage
+   - Vérifier le chargement des fichiers de démarrage et les principales vues Tkinter
+
 #### 🟡 Moyenne priorité
 
-4. **Code quality** : Linter, type hints
+5. **Code quality** : Linter, type hints
    - Intégrer mypy pour vérifier les types
    - Appliquer black/isort pour formattage
    - Supprimer les `# pylint: disable` injustifiés
 
-5. **Documentation** : Docstrings, architecture
+6. **Documentation** : Docstrings, architecture
    - Compléter les docstrings manquantes (notamment `VirtualListCtrl`)
    - Créer un diagramme UML à jour (`TCUML-*.puml`)
 
 #### 🟢 Basse priorité
 
-6. **Optimisations** : Performance, mémoire
+7. **Optimisations** : Performance, mémoire
    - Profiler pour identifier les goulots
    - Réduire la charge du logging en production
 
-7. **Support multilingue** : Améliorer la couverture `i18n/`
+8. **Support multilingue** : Améliorer la couverture `i18n/`
 
 ## Licence
 
