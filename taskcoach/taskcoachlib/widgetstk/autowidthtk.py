@@ -325,7 +325,7 @@ class AutoColumnWidthMixin:  # mixin !
         # Extraction des paramètres spécifiques avant de passer le reste au parent
         # resize_column = ID de colonne Tkinter (string)
         # self.resize_column = kwargs.pop("resizeableColumn", len(kwargs.get('columns', [])))  # Par défaut, la dernière colonne
-        self._resize_column_id = kwargs.pop("resizeableColumn", str(len(kwargs.get('columns', []))-1))  # Par défaut, la dernière colonne !!! Attention à ne pas oublier le -1.
+        self._resize_column_id = kwargs.pop("resizeableColumn", str(len(kwargs.get('columns', []))-1))  # Par défaut, la dernière colonne !!! Attention à ne pas oublier le -1 car commence à 0.
         #
         self.ResizeColumnMinWidth = kwargs.pop("resizeableColumnMinWidth", 50)
         # self._min_column_width = kwargs.pop("resizeableColumnMinWidth", 50)
@@ -361,7 +361,7 @@ class AutoColumnWidthMixin:  # mixin !
         Définit la colonne à redimensionner automatiquement.
 
         Args :
-            column (int) : Index de la colonne.
+            column_id (int) : Index de la colonne.
         """
         # log.info(f"Changement de la colonne à redimensionner : {self.resize_column} -> {column}")
         log.info(f"AutoColumnWidthMixin.SetResizeColumn : Changement de la colonne à redimensionner : {self._resize_column_id} -> {column_id}")
@@ -596,9 +596,13 @@ class AutoColumnWidthMixin:  # mixin !
         try:
             # On met à jour la largeur de la colonne cible
             # -1 car '#0' n'est pas visible !
-            self.column(self._resize_column_id - 1, width=int(available_width))  # Le code soustrait 1 à un identifiant de colonne chaîne, ce qui déclenche un TypeError pendant le redimensionnement automatique.
-            # self.column(self._resize_column_id, width=int(available_width))
-            log.debug("AutoColumnWidthMixin._on_autowidth_resize : redimensionne la colonne %s avec la largeur %s", self._resize_column_id, available_width)
+            # self.column(self._resize_column_id - 1, width=int(available_width))  # Le code soustrait 1 à un identifiant de colonne chaîne, ce qui déclenche un TypeError pendant le redimensionnement automatique.
+            self.column(self._resize_column_id, width=int(available_width))
+            log.debug(
+                "AutoColumnWidthMixin._on_autowidth_resize : redimensionne la colonne %s avec la largeur %s",
+                self._resize_column_id,
+                available_width
+            )
         except tk.TclError as e:
             log.warning(f"AutoColumnWidthMixin._on_autowidth_resize : Impossible de redimensionner la colonne {self._resize_column_id}", stack_info=True)
 
