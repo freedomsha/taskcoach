@@ -2253,9 +2253,9 @@ class TaskFile(patterns.Observer):
             self.__needSave = True  # Marquer comme nécessitant une sauvegarde pour éviter de perdre les modifications
             raise
         finally:
-            self.__needSave = False
+            # self.__needSave = False
             self.__saving = False
-            self.markClean()
+            # self.markClean()
             # ✅ NOUVEAU : Synchroniser le ChangeMonitor avec __needSave
             self.clearChangeMonitor()
             self.__notifier.saved()
