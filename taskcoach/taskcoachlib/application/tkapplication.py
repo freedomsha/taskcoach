@@ -401,7 +401,7 @@ class TkinterApplication(
 
         # self.taskFile = persistencetk.LockedTaskFile(poll=not self.settings.getboolean('file', 'nopoll'))
         self.taskFile = taskfile.LockedTaskFile(
-            parent=self.root,
+            # parent=self.root,  # Le paramètre parent n'est pas documenté ni utilisé par TaskFile.
             # poll=not self.settings.getboolean("file", "-nopoll"),  # -nopoll ne donne rien alors que nopoll=False
             poll=not self.settings.getboolean("file", "nopoll"),
         )
