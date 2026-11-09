@@ -3310,7 +3310,8 @@ class LockedTaskFile(TaskFile):
         # log.debug(f"LockedTaskFile.load : Finalement filename={filename}")
         log.debug(f"LockedTaskFile.load : Finalement filename={filename}")
 
-        # TODO : structure à revoir pour éviter les répétitions de code et les problèmes de verrouillage en cas d'erreur.
+        # Structure à revoir pour éviter les répétitions de code et les problèmes de verrouillage en cas d'erreur.
+        # Revue le 09/11/2026
         try:
             if lock and filename:
                 if breakLock:
@@ -3332,7 +3333,7 @@ class LockedTaskFile(TaskFile):
             # # Release lock if load fails ! NON, sinon on peut perdre le verrou en cas d'erreur de parsing XML,
             # ce qui est très mauvais pour la sécurité des données. Laisser le verrou en place est plus sûr,
             # même si cela peut nécessiter une intervention manuelle pour briser le verrou en cas de problème.
-            self.release_lock()  # Reste pour les tests, mais ne doit pas être utilisé en production,
+            # self.release_lock()  # Reste pour les tests, mais ne doit pas être utilisé en production,
             # car cela peut entraîner une perte de données si le verrou est relâché alors que le fichier est dans un état incohérent.
             raise
         # Le verrou doit être maintenu tant que le fichier est ouvert.
@@ -3340,7 +3341,8 @@ class LockedTaskFile(TaskFile):
             log.debug("LockedTaskFile.load : Finalement relâche le verrou.")
             # print("LockedTaskFile.load : Finalement relâche le verrou.")
             if self.__lock_acquired:  # Vérifier avant relâche
-                self.release_lock()  # Cela relâche le verrou systématiquement à la fin du chargement.
+                # self.release_lock()  # Cela relâche le verrou systématiquement à la fin du chargement.
+                pass
             # C'est une erreur majeure si l'intention est de garder le fichier verrouillé
             # pendant toute la session (ce qui est le cas pour LockedTaskFile).
             # Si le verrou est relâché, rien n'empêche une autre instance
