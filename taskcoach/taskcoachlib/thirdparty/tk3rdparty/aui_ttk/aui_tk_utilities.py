@@ -261,6 +261,14 @@ def ChopText(dc, text, max_size):
     #     if x < max_size:
     #         break
     def measure(s):
+        """
+
+        Args:
+            s:
+
+        Returns:
+
+        """
         if hasattr(dc, "measure"):
             return dc.measure(s)
         if hasattr(dc, "GetTextExtent"):
@@ -934,6 +942,7 @@ def TakeScreenShot(rect):
         raise ImportError("Pillow est nécessaire pour TakeScreenShot")
     x, y, w, h = (
         (rect.x, rect.y, rect.width, rect.height) if hasattr(rect, "x") else tuple(rect[:4])
+        # (rect.x, rect.y, rect.winfo_width(), rect.winfo_height()) if hasattr(rect, "x") else tuple(rect[:4])
     )
     return ImageGrab.grab((x, y, x + w, y + h))
 

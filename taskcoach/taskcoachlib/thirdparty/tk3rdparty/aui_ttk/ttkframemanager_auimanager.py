@@ -47,13 +47,19 @@ class TtkPanePlacement:
 class TtkGridLayout:
     """Projection déterministe d'une disposition AUI vers tkinter.grid().
 
-    La grille logique comporte trois lignes et trois colonnes(A revoir !!!). Les panneaux
-    sont classés par direction, layer, row puis dock_pos. La reconstruction
-    complète après chaque changement rend l'ajout, le retrait et le
-    réordonnancement idempotents.
+    La grille logique comporte trois lignes et trois colonnes(A revoir !!!).
+    Les panneaux sont classés par direction, layer, row puis dock_pos.
+    La reconstruction complète après chaque changement rend l'ajout,
+    le retrait et le réordonnancement idempotents.
     """
 
     def __init__(self, parent, scrollable=True):
+        """
+        Initialise
+        Args:
+            parent:
+            scrollable:
+        """
         self.root = None
         self.canvas = None
         self.scrollbar = None

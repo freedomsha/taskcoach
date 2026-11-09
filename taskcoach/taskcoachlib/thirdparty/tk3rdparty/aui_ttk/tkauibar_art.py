@@ -155,17 +155,17 @@ class AuiDefaultToolBarArt:
         """
         return self._orientation
 
-    def _xywh(self, r):
+    def _xywh(self, rect):
         """
         Convertit un rectangle en tuple (x, y, width, height).
 
         Args:
-            r: Rectangle.
+            rect: Rectangle.
 
         Returns:
             tuple: Un tuple contenant les coordonnées (x, y, width, height).
         """
-        return (r.x, r.y, r.width, r.height) if hasattr(r, "x") else tuple(r[:4])
+        return (rect.x, rect.y, rect.width, rect.height) if hasattr(rect, "x") else tuple(rect[:4])
 
     def DrawBackground(self, dc, wnd, r, horizontal=True):
         """
@@ -182,7 +182,7 @@ class AuiDefaultToolBarArt:
         """
         self.DrawPlainBackground(dc, wnd, r)
 
-    def DrawPlainBackground(self, dc, wnd, r):
+    def DrawPlainBackground(self, dc, wnd, rect):
         """
         Dessine l'arrière d'une barre d'outils avec une couleur de base.
 
@@ -194,15 +194,15 @@ class AuiDefaultToolBarArt:
         Args:
             dc: Contexte tk.Canvas.
             wnd: Fenêtre dérivée tk.Frame
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        x, y, w, h = self._xywh(r)
+        x, y, w, h = self._xywh(rect)
         dc.create_rectangle(x, y, x + w, y + h, fill=self._base_colour, outline="")
 
-    def DrawLabel(self, dc, wnd, item, r):
+    def DrawLabel(self, dc, wnd, item, rect):
         """
         Dessine une étiquette sur la barre d'outils.
 
@@ -210,12 +210,12 @@ class AuiDefaultToolBarArt:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
             item: Élément de la barre d'outils AuiToolBarItem.
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        x, y, w, h = self._xywh(r)
+        x, y, w, h = self._xywh(rect)
         dc.create_text(
             x + w // 2,
             y + h // 2,
@@ -224,7 +224,7 @@ class AuiDefaultToolBarArt:
             fill="#000000",
         )
 
-    def DrawButton(self, dc, wnd, item, r):
+    def DrawButton(self, dc, wnd, item, rect):
         """
         Dessine un bouton sur la barre d'outils.
 
@@ -232,17 +232,17 @@ class AuiDefaultToolBarArt:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
             item: Élément de la barre d'outils AuiToolBarItem..
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        x, y, w, h = self._xywh(r)
+        x, y, w, h = self._xywh(rect)
         fill = "#d0d0d0" if item.IsActive() else self._base_colour
         dc.create_rectangle(x, y, x + w, y + h, fill=fill, outline="#808080")
-        self.DrawLabel(dc, wnd, item, r)
+        self.DrawLabel(dc, wnd, item, rect)
 
-    def DrawDropDownButton(self, dc, wnd, item, r):
+    def DrawDropDownButton(self, dc, wnd, item, rect):
         """
         Dessine le bouton de Glisser/Déposer sur la barre d'outils.
 
@@ -250,13 +250,13 @@ class AuiDefaultToolBarArt:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
             item: Élément de la barre d'outils AuiToolBarItem..
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        self.DrawButton(dc, wnd, item, r)
-        x, y, w, h = self._xywh(r)
+        self.DrawButton(dc, wnd, item, rect)
+        x, y, w, h = self._xywh(rect)
         dc.create_polygon(
             x + w - 10,
             y + h // 2 - 2,
@@ -267,7 +267,7 @@ class AuiDefaultToolBarArt:
             fill="#000000",
         )
 
-    def DrawControlLabel(self, dc, wnd, item, r):
+    def DrawControlLabel(self, dc, wnd, item, rect):
         """
         Dessine une étiquette pour le contrôle de la toolbar.
 
@@ -275,12 +275,12 @@ class AuiDefaultToolBarArt:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
             item: Élément de la barre d'outils AuiToolBarItem.
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        self.DrawLabel(dc, wnd, item, r)
+        self.DrawLabel(dc, wnd, item, rect)
 
     def GetLabelSize(self, dc, wnd, item):
         """
@@ -311,19 +311,19 @@ class AuiDefaultToolBarArt:
         w, h = self.GetLabelSize(dc, wnd, item)
         return max(24, w + 12), max(24, h + 12)
 
-    def DrawSeparator(self, dc, wnd, r):
+    def DrawSeparator(self, dc, wnd, rect):
         """
         Dessine un séparateur sur la barre d'outils.
 
         Args:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        x, y, w, h = self._xywh(r)
+        x, y, w, h = self._xywh(rect)
         (
             dc.create_line(x + w // 2, y + 2, x + w // 2, y + h - 2, fill="#888888")
             if self._orientation == AUI_TBTOOL_HORIZONTAL
@@ -332,19 +332,19 @@ class AuiDefaultToolBarArt:
             )
         )
 
-    def DrawGripper(self, dc, wnd, r):
+    def DrawGripper(self, dc, wnd, rect):
         """
         Dessine un gripper sur la barre d'outils.
 
         Args:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
 
         Returns:
             None
         """
-        x, y, w, h = self._xywh(r)
+        x, y, w, h = self._xywh(rect)
         dc.create_rectangle(x, y, x + w, y + h, fill=self._base_colour, outline="")
         for i in range(3):
             dc.create_line(
@@ -355,20 +355,20 @@ class AuiDefaultToolBarArt:
                 fill=self._gripper_colour2,
             )
 
-    def DrawOverflowButton(self, dc, wnd, r, state):
+    def DrawOverflowButton(self, dc, wnd, rect, state):
         """
         Dessine un bouton de surcharge sur la barre d'outils.
 
         Args:
             dc: Contexte tk.Canvas
             wnd: Fenêtre dérivée tk.Frame.
-            r: Rectangle AuiToolBarItem.
+            rect: Rectangle AuiToolBarItem.
             state: L'état du bouton.
 
         Returns:
             None
         """
-        x, y, w, h = self._xywh(r)
+        x, y, w, h = self._xywh(rect)
         dc.create_rectangle(
             x, y, x + w, y + h, fill=self._base_colour, outline="#888888"
         )
@@ -418,16 +418,16 @@ class AuiDefaultToolBarArt:
         """
         return None
 
-    def GetToolsPosition(self, dc, item, r):
+    def GetToolsPosition(self, dc, item, rect):
         """
         Retourne l'image et le texte des rectangles pour l'élément de surcharge de la toolbar.
 
         Args:
             dc: Contexte tk.Canvas.
             item: Une instance de AuiToolBarItem.
-            r: Le rectangle AuiToolBarItem.
+            rect: Le rectangle AuiToolBarItem.
 
         Returns:
             tuple: Les coordonnées x et y du positionnement des outils.
         """
-        return self._xywh(r)[:2]
+        return self._xywh(rect)[:2]

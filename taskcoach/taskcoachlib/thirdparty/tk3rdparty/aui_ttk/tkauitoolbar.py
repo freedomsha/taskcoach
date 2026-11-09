@@ -1,5 +1,16 @@
 # -*- coding: utf-8 -*-
 """AuiToolBar Tkinter, conversion de la classe wxPython AuiToolBar."""
+# ---------------------------------------------------------------------------
+# AuiToolBar: configuration, state, layout and interaction helpers
+#
+# This block groups the toolbar's property setters/getters and event-handling
+# hooks. In the wxPython origin, these methods control visual state,
+# tool metadata, layout metrics, and user interaction with the toolbar.
+#
+# The implementation is adapted to Tkinter and keeps the same conceptual
+# API as the upstream AuiToolBar, while rendering the content on a Canvas.
+# ---------------------------------------------------------------------------
+
 
 import tkinter as tk
 from tkinter import ttk
@@ -258,18 +269,19 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
         long_help_string="",
     ):
         """
-        Ajoute un outil  à la barre d'outils.
+        Ajoute un outil à la barre d'outils.
+
         Args:
-            tool_id:
-            bitmap:
-            disabled_bitmap:
-            toggle:
-            client_data:
-            short_help_string:
-            long_help_string:
+            tool_id: Identifiant de l'outil.
+            bitmap: Image/icone de l'outil.
+            disabled_bitmap: Image/icone pour l'outil désactivé.
+            toggle: Booléen définissant l'état caché ou non.
+            client_data: Données client assicées à l'outil.
+            short_help_string: Aide au format court.
+            long_help_string: Aide au format long.
 
         Returns:
-
+            L'objet AuiToolBarItem ajouté.
         """
         i = self.AddTool(
             tool_id,
@@ -288,7 +300,7 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
         """
         Ajoute un outil de type case à cocher à la barre d'outils.
 
-        Args :
+        Args:
             *tool: Outil à ajouter.
             **k: Liste d'outils.
 
@@ -310,7 +322,7 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
         """
         Ajoute un nouvel outil avec case à cocher à la barre d'outils.
 
-        Args :
+        Args:
             *tool: Outil à ajouter.
             **k: Liste d'outils.
 
@@ -324,7 +336,7 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
         Ajoute un contrôle personnalisé à la barre d'outils.
 
         Args:
-            control: (tk.) La contrôle à ajouter.
+            control: (tk) La contrôle à ajouter.
             label: (str) Le libellé du contrôle.
 
         Returns:
@@ -641,13 +653,13 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
 
     def GetToolSticky(self, tool_id):
         """
-        Retourne ce que l'élément identifié de la barre d'outils
+        Retourne l'état collé de l'élément identifié de la barre d'outils.
 
         Args:
-            tool_id:
+            tool_id: Identifiant de l'outil.
 
         Returns:
-
+            Le statut d'adhérence de l'outil.
         """
         return self.FindTool(tool_id).IsSticky()
 
@@ -659,7 +671,7 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
             padding:
 
         Returns:
-
+            None
         """
         self._border_padding = padding
 
@@ -714,158 +726,517 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
         return self._orientation
 
     def SetToolPacking(self, packing):
+        """
+        Configure how toolbar tools are packed in the layout.
+
+        Args:
+            packing: Layout packing mode or spacing policy used by the toolbar.
+        """
         self._packing = packing
 
     def GetToolPacking(self):
+        """
+        Return the current packing configuration used by the toolbar.
+
+        Returns:
+            The current packing value.
+        """
         return self._packing
 
     def SetOrientation(self, v):
+        """
+        Set the toolbar orientation.
+
+        This updates both the internal orientation state and the art provider so
+        that drawing code uses the correct orientation for the current UI layout.
+
+        Args:
+            v: Orientation flag, typically a horizontal/vertical constant.
+        """
         self._orientation = v
         self._art.SetOrientation(v)
 
     def SetMargins(self, left, right, top, bottom):
+        """
+        Set the toolbar margins for all sides.
+
+        Args:
+            left: Left margin in pixels.
+            right: Right margin in pixels.
+            top: Top margin in pixels.
+            bottom: Bottom margin in pixels.
+        """
         self._margins = (left, right, top, bottom)
 
     def SetMarginsSize(self, size):
+        """
+        Set symmetric horizontal and vertical margins from a 2-tuple.
+
+        Args:
+            size: Tuple of the form (horizontal, vertical).
+        """
         self.SetMargins(size[0], size[0], size[1], size[1])
 
     def SetMarginsXY(self, x, y):
+        """
+        Set equal left/right and top/bottom margins using x and y values.
+
+        Args:
+            x: Horizontal margin to apply on both sides.
+            y: Vertical margin to apply on both sides.
+        """
         self.SetMargins(x, x, y, y)
 
     def GetGripperVisible(self):
+        """
+        Return whether the toolbar gripper is visible.
+
+        Returns:
+            True if the gripper is shown, otherwise False.
+        """
         return self._gripper_visible
 
     def SetGripperVisible(self, v):
+        """
+        Enable or disable the toolbar gripper.
+
+        Args:
+            v: Boolean indicating whether the gripper should be displayed.
+        """
         self._gripper_visible = v
 
     def GetOverflowVisible(self):
+        """
+        Return whether the overflow control is visible.
+
+        Returns:
+            True if overflow controls are visible, otherwise False.
+        """
         return self._overflow_visible
 
     def SetOverflowVisible(self, v):
+        """
+        Enable or disable the overflow display state.
+
+        Args:
+            v: Boolean indicating whether overflow UI should be shown.
+        """
         self._overflow_visible = v
 
     def SetFont(self, f):
+        """
+        Set the font used by the toolbar art provider.
+
+        Args:
+            f: Font object to assign to the toolbar rendering.
+        """
         self._art.SetFont(f)
 
     def SetHoverItem(self, p):
+        """
+        Store the currently hovered toolbar item.
+
+        Args:
+            p: Toolbar item instance or None.
+        """
         self._hover_item = p
 
     def SetPressedItem(self, p):
+        """
+        Store the currently pressed toolbar item.
+
+        Args:
+            p: Toolbar item instance or None.
+        """
         self._pressed_item = p
 
     def RefreshOverflowState(self):
+        """
+        Refresh the overflow state.
+
+        This method is currently a stub in the Tkinter port and does not yet
+        implement overflow logic beyond the default no-op.
+        """
         pass
 
     def ToggleTool(self, id, state):
+        """
+        Toggle a tool's checked/selected state.
+
+        Args:
+            id: Tool identifier.
+            state: True to enable the checked state, False to clear it.
+        """
         self.FindTool(id).SetState(1 if state else 0)
         self.OnPaint(None)
 
     def GetToolToggled(self, id):
+        """
+        Return True if the tool with the given id is toggled/checked.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Boolean indicating the tool's toggled state.
+        """
         return bool(self.FindTool(id).GetState())
 
     def EnableTool(self, id, state):
+        """
+        Enable or disable a toolbar item.
+
+        Args:
+            id: Tool identifier.
+            state: True to activate the tool, False to disable it.
+        """
         self.FindTool(id).SetActive(state)
 
     def GetToolEnabled(self, id):
+        """
+        Return whether the given tool is active/enabled.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            True if the tool is enabled, otherwise False.
+        """
         return self.FindTool(id).IsActive()
 
     def GetToolLabel(self, id):
+        """
+        Return the text label associated with a toolbar tool.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            The label string or the tool's current text.
+        """
         return self.FindTool(id).GetLabel()
 
     def SetToolLabel(self, id, v):
+        """
+        Update the label of a toolbar tool.
+
+        Args:
+            id: Tool identifier.
+            v: New label string.
+        """
         self.FindTool(id).SetLabel(v)
 
     def GetToolBitmap(self, id):
+        """
+        Return the normal bitmap for a tool.
+
+        Return the bitmap associated with a toolbar tool.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            The bitmap object or None.
+        """
         return self.FindTool(id).GetBitmap()
 
     def SetToolBitmap(self, id, v):
+        """
+        Set the normal bitmap of a tool.
+
+        This is a convenience alias for SetToolNormalBitmap.
+
+        Args:
+            id: Tool identifier.
+            v: Bitmap or image object.
+        """
         self.SetToolNormalBitmap(id, v)
 
     def SetToolNormalBitmap(self, id, v):
+        """
+        Set the standard bitmap used for the tool in its enabled state.
+
+        Args:
+            id: Tool identifier.
+            v: Bitmap or image object.
+        """
         self.FindTool(id).SetBitmap(v)
 
     def SetToolDisabledBitmap(self, id, v):
+        """
+        Set the bitmap used for the tool in its disabled state.
+
+        Args:
+            id: Tool identifier.
+            v: Disabled-state bitmap or image object.
+        """
         self.FindTool(id).SetDisabledBitmap(v)
 
     def GetToolShortHelp(self, id):
+        """
+        Return the short help text for a tool.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Short help string.
+        """
         return self.FindTool(id).GetShortHelp()
 
     def SetToolShortHelp(self, id, v):
+        """
+        Set the short help text of a tool.
+
+        Args:
+            id: Tool identifier.
+            v: Short help string shown in tooltips or status text.
+        """
         self.FindTool(id).SetShortHelp(v)
 
     def GetToolLongHelp(self, id):
+        """
+        Return the long help text of a tool.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Long help string.
+        """
         return self.FindTool(id).GetLongHelp()
 
     def SetToolAlignment(self, alignment):
+        """
+        Set the alignment preference for tools within the toolbar.
+
+        Args:
+            alignment: Alignment constant or layout hint.
+        """
         self._alignment = alignment
 
     def SetToolLongHelp(self, id, v):
+        """
+        Set the long help text of a tool.
+
+        Args:
+            id: Tool identifier.
+            v: Long help string.
+        """
         self.FindTool(id).SetLongHelp(v)
 
     def SetCustomOverflowItems(self, prepend, append):
+        """
+        Register custom overflow items appended before and after the default ones.
+
+        Args:
+            prepend: Items to add before the regular overflow elements.
+            append: Items to add after the regular overflow elements.
+        """
         self._overflow_prepend = prepend
         self._overflow_append = append
 
     def GetToolCount(self):
+        """
+        Return the number of tools currently stored in the toolbar.
+
+        Returns:
+            Integer count of toolbar items.
+        """
         return len(self._items)
 
     def GetToolIndex(self, id):
+        """
+        Return the index of a tool by its identifier.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Index of the matching tool, or -1 if not found.
+        """
         return next((n for n, i in enumerate(self._items) if i.GetId() == id), -1)
 
     def GetToolPos(self, id):
+        """
+        Alias for GetToolIndex.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Position index of the identified tool.
+        """
         return self.GetToolIndex(id)
 
     def GetToolFitsByIndex(self, id):
+        """
+        Return whether the tool at the given index fits within the available space.
+
+        In this Tkinter port, all tools are treated as fitting by default.
+
+        Args:
+            id: Tool identifier or index-like token.
+
+        Returns:
+            Always True in the current implementation.
+        """
         return True
 
     def GetToolFits(self, id):
+        """
+        Return whether the given tool fits in the current toolbar layout.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Always True in the current implementation.
+        """
         return True
 
     def GetToolRect(self, id):
+        """
+        Return the screen-space rectangle for a tool.
+
+        Args:
+            id: Tool identifier.
+
+        Returns:
+            Tuple of (x, y, width, height) if found, otherwise None.
+        """
         i = self.FindTool(id)
         return getattr(i, "rect", (0, 0, 0, 0)) if i else None
 
     def GetToolBarFits(self):
+        """
+        Return whether the toolbar fits in its current layout.
+
+        Returns:
+            Always True in the current implementation.
+        """
         return True
 
     def Realize(self):
+        """
+        Force a toolbar redraw and finalize its current layout.
+
+        Returns:
+            True after painting has been triggered.
+        """
         self.OnPaint(None)
         return True
 
     def GetOverflowState(self):
+        """
+        Return the current overflow state.
+
+        Returns:
+            False by default, as overflow is not yet represented.
+        """
         return False
 
     def GetOverflowRect(self):
+        """
+        Return the overflow region rectangle.
+
+        Returns:
+            Empty rectangle (0, 0, 0, 0).
+        """
         return (0, 0, 0, 0)
 
     def GetLabelSize(self, label):
+        """
+        Measure the rendered size of a label using the current toolbar font.
+
+        Args:
+            label: Text to measure.
+
+        Returns:
+            Tuple of (width, height) computed from the active font.
+        """
         return (
             self._art.GetFont().measure(label),
             self._art.GetFont().metrics("linespace"),
         )
 
     def GetAuiManager(self):
+        """
+        Return the AUI manager associated with the toolbar.
+
+        Returns:
+            The AUI manager instance. The linked AUI manager or None.
+        """
         return self._auiManager
 
     def SetAuiManager(self, v):
+        """
+        Attach this toolbar to an AUI manager.
+
+        Args:
+            v: AUI manager instance.
+        """
         self._auiManager = v
 
     def DoIdleUpdate(self):
+        """
+        Trigger a repaint during idle processing.
+
+        This keeps the drawing state synchronized without requiring an explicit refresh.
+        """
         self.OnPaint(None)
 
     def OnSize(self, event):
+        """
+        Handle a resize event for the toolbar canvas.
+
+        Args:
+            event: Tkinter resize event object.
+        """
         self.OnPaint(event)
 
     def DoSetSize(self, x, y, width, height, sizeFlags=None):
+        """
+        Set the toolbar geometry explicitly.
+
+        Args:
+            x: Left coordinate.
+            y: Top coordinate.
+            width: Width in pixels.
+            height: Height in pixels.
+            sizeFlags: Additional sizing flags ignored by the Tk port.
+        """
         self.place(x=x, y=y, width=width, height=height)
 
     def OnIdle(self, event):
+        """
+        Handle idle processing for the toolbar.
+
+        Args:
+            event: Tkinter idle event.
+        """
         self.DoIdleUpdate()
 
     def DoGetBestSize(self):
+        """
+        Return a preferred default size for the toolbar.
+
+        Returns:
+            Tuple (width, height) representing the default preferred size.
+        """
         return (400, 32)
 
     def OnPaint(self, event):
+        """
+        Repaint the toolbar canvas.
+
+        The method clears the canvas, walks every toolbar item, computes its
+        rendered width, assigns a rectangle to it, and calls the art provider to
+        draw separators, spacers, or buttons as appropriate.
+
+        Args:
+            event: Tkinter canvas event or None.
+        """
         self._canvas.delete("all")
         x = 2
         h = max(24, self.winfo_height())
@@ -886,43 +1257,126 @@ class AuiToolBar(tk.LabelFrame):  # LabelFrame est temporaire !
             x += w + self._tool_separation
 
     def OnEraseBackground(self, event):
+        """
+        No-op background erase handler.
+
+        Tkinter canvas painting is handled directly by OnPaint, so background
+        erasing is intentionally skipped.
+        """
         pass
 
     def OnLeftDown(self, event):
+        """
+        Handle a left mouse-button press on the toolbar.
+
+        Args:
+            event: Tkinter mouse event.
+        """
         self._pressed_item = self.FindToolForPosition(event.x, event.y)
 
     def OnLeftUp(self, event):
+        """
+        Handle a left mouse-button release.
+
+        Args:
+            event: Tkinter mouse event.
+        """
         self._pressed_item = None
 
     def OnRightDown(self, event):
+        """
+        Handle a right mouse-button press.
+
+        Args:
+            event: Tkinter mouse event.
+        """
         pass
 
     def OnRightUp(self, event):
+        """
+        Handle a right mouse-button release.
+
+        Args:
+            event: Tkinter mouse event.
+        """
         pass
 
     def OnMiddleDown(self, event):
+        """
+        Handle a middle mouse-button press.
+
+        Args:
+            event: Tkinter mouse event.
+        """
         pass
 
     def OnMiddleUp(self, event):
+        """
+        Handle a middle mouse-button release.
+
+        Args:
+            event: Tkinter mouse event.
+        """
         pass
 
     def OnMotion(self, event):
+        """
+        Handle mouse movement within the toolbar.
+
+        Args:
+            event: Tkinter mouse motion event.
+        """
         self._hover_item = self.FindToolForPosition(event.x, event.y)
 
     def OnLeaveWindow(self, event):
+        """
+        Clear hover state when the cursor leaves the toolbar.
+
+        Args:
+            event: Tkinter leave event.
+        """
         self._hover_item = None
 
     def OnSetCursor(self, event):
+        """
+        Hook for cursor handling.
+
+        Currently unimplemented.
+        """
         pass
 
     def OnCustomRender(self, dc, item, rect):
+        """
+        Hook for custom drawing of a toolbar item.
+
+        Args:
+            dc: Rendering context (unused in Tk port).
+            item: Toolbar item being rendered.
+            rect: Bounding rectangle for the item.
+        """
         pass
 
     def IsPaneMinimized(self):
+        """
+        Return whether the toolbar is currently minimized as a pane.
+
+        Returns:
+            False in the current implementation.
+        """
         return False
 
     def StartPreviewTimer(self):
+        """
+        Start any preview-timer logic for UI animations.
+
+        This is currently not implemented.
+        """
         pass
 
     def StopPreviewTimer(self):
+        """
+        Stop any preview-timer logic for UI animations.
+
+        This is currently not implemented.
+        """
         pass

@@ -26,8 +26,22 @@ class PyEmbeddedImageTk:
     """
     Simule PyEmbeddedImage de wxPython mais pour Tkinter,
     en décodant les données base64 et en créant un PhotoImage.
+
+    Même fonctionnement que artprovider ou icons.
+
+    Compatibility wrapper for wxPython's PyEmbeddedImage in a Tkinter app.
+
+    wxPython stores bitmaps as embedded image resources. This class reproduces
+    that behavior by decoding a base64 payload on demand and exposing it as a
+    Tkinter PhotoImage.
+
+    Attributes:
+        data_base64: Base64 string containing the original image byte stream.
+        _photo_image: Lazily-created Tkinter PhotoImage instance.
+        _image_pil: Optional PIL image object retained for reuse or inspection.
     """
     def __init__(self, data_base64):
+        """Create a lazy image wrapper around the encoded pixel payload."""
         self.data_base64 = data_base64
         self._photo_image = None
         self._image_pil = None
@@ -35,7 +49,12 @@ class PyEmbeddedImageTk:
     def GetPhotoImage(self):
         """
         Retourne l'objet PhotoImage de Tkinter.
+
         Charge l'image à partir des données base64 si ce n'est pas déjà fait.
+        Return the Tkinter PhotoImage for the embedded image.
+
+        The image is decoded and converted only on first access, which keeps the
+        module import lightweight and avoids creating Tk resources unnecessarily.
         """
         if self._photo_image is None:
             decoded_data = base64.b64decode(self.data_base64)
@@ -48,6 +67,11 @@ class PyEmbeddedImageTk:
     def GetImage(self):
         """
         Retourne l'objet Image PIL.
+
+        Return the underlying PIL Image object.
+
+        This is useful when callers need to inspect, manipulate, or convert the
+        embedded bitmap without relying on a Tk-specific API.
         """
         if self._image_pil is None:
             self.GetPhotoImage()  # Cela chargera aussi l'image PIL
@@ -66,20 +90,24 @@ vertical_border_padding = 4
 
 # if wx.Platform == "__WXMAC__":
 if platform.system() == "Darwin":
+    # macOS-specific layout values would live here.
     nb_close_bits = b"\xff\xff\xff\xff\x0f\xfe\x03\xf8\x01\xf0\x19\xf3\xb8\xe3\xf0\xe1\xe0\xe0\xf0\xe1\xb8\xe3\x19\xf3\x01\xf0\x03\xf8\x0f\xfe\xff\xff"
     """ AuiNotebook close button image on wxMAC. """
 
 # elif wx.Platform == "__WXGTK__":
 elif platform.system() == "Linux":
+    # Linux-specific layout values would live here.
     nb_close_bits = b"\xff\xff\xff\xff\x07\xf0\xfb\xef\xdb\xed\x8b\xe8\x1b\xec\x3b\xee\x1b\xec\x8b\xe8\xdb\xed\xfb\xef\x07\xf0\xff\xff\xff\xff\xff\xff"
     """ AuiNotebook close button image on wxGTK. """
 
 else:
+    # Fallback platform-specific configuration.
     nb_close_bits = b"\xff\xff\xff\xff\xff\xff\xff\xff\xe7\xf3\xcf\xf9\x9f\xfc\x3f\xfe\x3f\xfe\x9f\xfc\xcf\xf9\xe7\xf3\xff\xff\xff\xff\xff\xff\xff\xff"
     """ AuiNotebook close button image on wxMSW. """
 
 nb_left_bits = b"\xff\xff\xff\xff\xff\xff\xff\xfe\x7f\xfe\x3f\xfe\x1f\xfe\x0f\xfe\x1f\xfe\x3f\xfe\x7f\xfe\xff\xfe\xff\xff\xff\xff\xff\xff\xff\xff"
-""" AuiNotebook left button image. """
+""" AuiNotebook left button image.
+Bitmap used for the notebook left-scroll control."""
 
 nb_right_bits = b"\xff\xff\xff\xff\xff\xff\xdf\xff\x9f\xff\x1f\xff\x1f\xfe\x1f\xfc\x1f\xfe\x1f\xff\x9f\xff\xdf\xff\xff\xff\xff\xff\xff\xff\xff\xff"
 """ AuiNotebook right button image. """
