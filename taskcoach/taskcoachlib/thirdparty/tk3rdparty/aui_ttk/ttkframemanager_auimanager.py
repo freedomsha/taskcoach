@@ -24,6 +24,17 @@ NonePaneInfo = AuiPaneInfo()
 
 
 def _EscapeDelimiters(s):
+    """Protège les séparateurs utilisés par le format de sérialisation AUI.
+
+    Les caractères « | » et « ; » sont échappés afin qu'ils puissent être
+    conservés dans les valeurs textuelles d'un panneau.
+
+    Args:
+        s (str): Texte à protéger.
+
+    Returns:
+        str: Texte dans lequel les deux séparateurs sont échappés.
+    """
     return s.replace("|", "\\|").replace(";", "\\;")
 
 
@@ -47,18 +58,22 @@ class TtkPanePlacement:
 class TtkGridLayout:
     """Projection déterministe d'une disposition AUI vers tkinter.grid().
 
-    La grille logique comporte trois lignes et trois colonnes(A revoir !!!).
-    Les panneaux sont classés par direction, layer, row puis dock_pos.
-    La reconstruction complète après chaque changement rend l'ajout,
-    le retrait et le réordonnancement idempotents.
+    La grille logique comporte trois lignes et trois colonnes(A revoir !!!). Les panneaux
+    sont classés par direction, layer, row puis dock_pos. La reconstruction
+    complète après chaque changement rend l'ajout, le retrait et le
+    réordonnancement idempotents.
     """
 
     def __init__(self, parent, scrollable=True):
-        """
-        Initialise
-        Args:
-            parent:
-            scrollable:
+        """Construit le conteneur de panneaux et, si demandé, son dispositif de défilement.
+
+            En mode défilant, les panneaux sont placés dans une frame intégrée à un
+            Canvas. La barre verticale n'est affichée que lorsque le contenu dépasse
+            la hauteur visible.
+
+            Args:
+                parent (tk.Misc): Widget Tkinter qui accueillera le gestionnaire.
+                scrollable (bool): Active l'enveloppe Canvas et la barre de défilement.
         """
         self.root = None
         self.canvas = None
@@ -97,25 +112,52 @@ class TtkGridLayout:
 
     @property
     def pane_parent(self):
+        """Retourne le widget parent à utiliser pour créer les panneaux.
+
+            Les widgets gérés doivent être enfants de ce conteneur afin de pouvoir
+            être repositionnés dans la grille sans changer leur hiérarchie Tk.
+        """
         return self.parent
 
     def _on_canvas_configure(self, event):
+        """Adapte la largeur de la fenêtre Canvas à celle de la zone visible.
+
+            Args:
+                event: Événement Configure contenant les nouvelles dimensions du Canvas.
+        """
         self.canvas.itemconfigure(self._canvas_window, width=event.width)
         self._schedule_scrollbar_update()
 
     def _on_content_configure(self, _event=None):
+        """Met à jour la région défilable après un changement de taille du contenu.
+
+            Args:
+                _event: Événement Configure Tkinter (facultatif).
+        """
         self.canvas.configure(scrollregion=self.canvas.bbox("all") or (0, 0, 0, 0))
         self._schedule_scrollbar_update()
 
     def _schedule_scrollbar_update(self):
+        """Programme une vérification différée de la nécessité de la barre verticale.
+
+            Plusieurs événements Configure successifs sont regroupés en une seule
+            tâche after_idle pour éviter des recalculs redondants pendant le
+            réagencement des widgets.
+        """
         if self._scrollbar_update_pending or self.root is None:
             return
         self._scrollbar_update_pending = True
         self._scrollbar_update_id = self.root.after_idle(
             self._update_scrollbar_visibility
         )
+    
+      def _update_scrollbar_visibility(self):
+        """Affiche ou masque la barre de défilement selon la hauteur du contenu.
 
-    def _update_scrollbar_visibility(self):
+            La comparaison est effectuée entre la hauteur réelle du contenu dans le
+            Canvas et celle de la zone visible. Si le défilement devient inutile,
+            la vue est replacée en haut.
+        """
         self._scrollbar_update_pending = False
         self._scrollbar_update_id = None
         if self.root is None or not self.root.winfo_exists():
@@ -261,7 +303,7 @@ class TtkGridLayout:
                 entry["widget"].grid_forget()
             except tk.TclError:
                 pass
-                
+
         groups = {
             "left": [],
             "right": [],
@@ -288,6 +330,9 @@ class TtkGridLayout:
         top_offset = 1 if nb_top > 0 else 0
         left_offset = 1 if nb_left > 0 else 0
 
+        # Les panneaux gauche/droit déterminent la hauteur de la zone centrale ;
+        # les panneaux haut/bas en déterminent la largeur. Une cellule centrale
+        # est réservée lorsqu’au moins un panneau central est présent.
         central_height = max(nb_left, nb_right, 1 if has_center else 0)
         central_width = max(nb_top, nb_bottom, 1 if has_center else 0)
 
@@ -295,6 +340,8 @@ class TtkGridLayout:
         nb_cols = left_offset + central_width + (1 if nb_right > 0 else 0)
 
         # Placer les widgets dans la grille
+        # _slot() traduit l’index de chaque groupe en coordonnées de grille.
+        # Les cellules sont ensuite étirées pour occuper tout l’espace disponible.
         for direction, entries in groups.items():
             for index, entry in enumerate(entries):
                 # Calculer la position du widget
@@ -343,6 +390,11 @@ class TtkGridLayout:
             self._schedule_scrollbar_update()
 
     def destroy(self):
+        """Annule les tâches différées puis détruit l'enveloppe graphique.
+
+            La frame parente n'est pas détruite lorsque le gestionnaire fonctionne
+            en mode non défilant (root vaut alors None).
+        """
         if self.root is None:
             return
         if self._scrollbar_update_id is not None:
@@ -359,7 +411,26 @@ class TtkGridLayout:
 
 
 class AuiManager:
+    """Gère les panneaux d'une interface Tkinter selon une API compatible wxAUI.
+
+    Le gestionnaire conserve les objets AuiPaneInfo et traduit leur état en
+    placements dans une grille Tkinter. Il prend également en charge le
+    masquage, le flottement dans des fenêtres Toplevel et la sauvegarde ou la
+    restauration des perspectives de disposition.
+
+    Args:
+        managed_window (tk.Misc, optional): Fenêtre principale à gérer.
+        agwFlags (int, optional): Options de fonctionnement AUI.
+    """
     def __init__(self, managed_window=None, agwFlags=None):
+        """Initialise le gestionnaire AUI adapté à Tkinter.
+
+            Args:
+                managed_window (tk.Misc, optional): Fenêtre ou frame dont les
+                    panneaux seront gérés.
+                agwFlags (int, optional): Drapeaux de configuration AUI.
+                    Les valeurs par défaut sont utilisées si l'argument est omis.
+        """
         self._frame = None
         self._panes = []
         self._notebooks = []
@@ -376,27 +447,78 @@ class AuiManager:
             self.SetManagedWindow(managed_window)
 
     def GetArtProvider(self):
+        """Retourne le fournisseur de rendu associé au gestionnaire.
+
+            Returns:
+                object: Fournisseur d'apparence, ou None si aucun n'est défini.
+        """
         return self._art
 
     def SetArtProvider(self, art):
+        """Définit le fournisseur de rendu associé au gestionnaire.
+
+            Args:
+                art: Fournisseur d'apparence à conserver.
+        """
         self._art = art
 
     def GetAGWFlags(self):
+        """Retourne les drapeaux de configuration AUI actifs.
+
+            Returns:
+                int: Combinaison des options du gestionnaire.
+        """
         return self._agwFlags
 
     def SetAGWFlags(self, flags):
+        """Remplace les drapeaux de configuration AUI.
+
+            Args:
+                flags (int): Nouvelle combinaison d'options.
+        """
         self._agwFlags = flags
 
     def GetManagedWindow(self):
+        """Retourne le widget principal géré par ce gestionnaire.
+
+            Returns:
+                tk.Misc or None: Fenêtre ou frame associée.
+        """
         return self._frame
 
     def GetFrame(self):
+        """Retourne la fenêtre principale associée au gestionnaire.
+
+            Cette méthode est conservée pour assurer la compatibilité avec l'API AUI.
+        """
         return self._frame
 
     def SetFrame(self, frame):
+        """Associe directement une fenêtre principale au gestionnaire.
+
+            Contrairement à SetManagedWindow(), cette méthode ne crée pas la
+            disposition et ne lie pas les événements Tkinter.
+
+            Args:
+                frame (tk.Misc): Fenêtre ou frame à mémoriser.
+        """
         self._frame = frame
 
     def SetManagedWindow(self, managed_window):
+        """Associe la fenêtre gérée et initialise le système de disposition.
+
+            Les événements de redimensionnement et de destruction sont observés
+            afin de recalculer la disposition et de libérer les ressources.
+
+            Args:
+                managed_window (tk.Misc): Widget racine des panneaux.
+
+            Returns:
+                bool: True lorsque l'association a été effectuée.
+
+            Raises:
+                ValueError: Si managed_window vaut None.
+        """
         if managed_window is None:
             raise ValueError("managed_window ne peut pas être None")
         self.UnInit()
@@ -414,6 +536,20 @@ class AuiManager:
         return self._pane_parent
 
     def _prepare_pane_parent(self, window):
+        """Vérifie et prépare le parent Tkinter utilisé par un panneau.
+
+            Tous les panneaux doivent partager le parent fourni par pane_parent.
+            Si aucun panneau n'a encore été ajouté, le gestionnaire peut remplacer
+            son conteneur défilant par un conteneur direct lorsque le widget fourni
+            est enfant immédiat de la fenêtre gérée.
+
+            Args:
+                window (tk.Misc): Widget destiné à devenir un panneau.
+
+            Raises:
+                ValueError: Si le widget n'a pas le parent requis ou si le
+                    conteneur ne peut plus être remplacé après l'ajout de panneaux.
+        """
         if not isinstance(window, tk.Misc) or self._frame is None:
             return
         if self._layout is None:
@@ -433,18 +569,47 @@ class AuiManager:
             )
 
     def _on_destroy_event(self, event):
+        """Désinitialise le gestionnaire lorsque sa fenêtre principale est détruite.
+
+            Args:
+                event: Événement Destroy émis par Tkinter.
+        """
         if event.widget is self._frame:
             self.UnInit()
 
     def GetPaneByWidget(self, window):
+        """Recherche les informations du panneau associé à un widget.
+
+            Args:
+                window (tk.Misc): Widget du panneau recherché.
+
+            Returns:
+                AuiPaneInfo: Informations du panneau, ou NonePaneInfo si absent.
+        """
         return next(
             (pane for pane in self._panes if pane.window is window), NonePaneInfo
         )
 
     def GetPaneByName(self, name):
+        """Recherche un panneau à partir de son nom logique.
+
+            Args:
+                name (str): Nom attribué au panneau.
+
+            Returns:
+                AuiPaneInfo: Panneau trouvé, ou NonePaneInfo si absent.
+        """
         return next((pane for pane in self._panes if pane.name == name), NonePaneInfo)
 
     def GetPane(self, item):
+        """Recherche un panneau par son nom ou par son widget.
+
+            Args:
+                item (str or tk.Misc): Nom du panneau ou widget associé.
+
+            Returns:
+                AuiPaneInfo: Informations du panneau, ou NonePaneInfo si absent.
+        """
         return (
             self.GetPaneByName(item)
             if isinstance(item, str)
@@ -452,6 +617,11 @@ class AuiManager:
         )
 
     def GetAllPanes(self):
+        """Retourne la liste interne des panneaux gérés.
+
+            Returns:
+                list[AuiPaneInfo]: Panneaux enregistrés dans le gestionnaire.
+        """
         return self._panes
 
     def AddPane(self, window, arg1=None, arg2=None, target=None):
@@ -586,6 +756,14 @@ class AuiManager:
         return pane
 
     def DetachPane(self, window):
+        """Retire un panneau du gestionnaire sans détruire son widget.
+
+            Le widget est d'abord désamarré, puis les informations du panneau sont
+            retirées de la liste et la disposition restante est recalculée.
+
+            Args:
+                window (tk.Misc): Widget du panneau à détacher.
+        """
         pane = self.GetPane(window)
         if pane.IsOk():
             self._undock_pane(pane)
@@ -594,6 +772,14 @@ class AuiManager:
             self.Update()
 
     def ClosePane(self, pane):
+        """Ferme et retire un panneau, en appliquant sa politique de destruction.
+
+            La fenêtre flottante est détruite si elle existe. Le widget contenu
+            n'est détruit que si IsDestroyOnClose() l'indique.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à fermer.
+        """
         self._undock_pane(pane)
         if pane.frame is not None:
             pane.frame.destroy()
@@ -606,38 +792,95 @@ class AuiManager:
         self.Update()
 
     def ShowPane(self, window, show=True):
+        """Affiche ou masque un panneau puis actualise la disposition.
+
+            Args:
+                window (tk.Misc): Widget du panneau concerné.
+                show (bool): True pour afficher le panneau, False pour le masquer.
+        """
         pane = self.GetPane(window)
         if pane.IsOk():
             pane.Show(show)
             self.Update()
 
     def ActivatePane(self, pane):
+        """Mémorise le panneau actuellement actif.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à considérer comme actif.
+        """
         self._active_pane = pane
 
     def CreateNotebook(self, parent=None):
+        """Crée un notebook AUI Tkinter et l'enregistre auprès du gestionnaire.
+
+            Args:
+                parent (tk.Misc, optional): Parent du notebook. La fenêtre gérée
+                    est utilisée par défaut.
+
+            Returns:
+                AuiNotebook: Notebook nouvellement créé.
+        """
         notebook = AuiNotebook(parent or self._frame)
         self._notebooks.append(notebook)
         return notebook
 
     def GetNotebooks(self):
+        """Retourne les notebooks créés par ce gestionnaire.
+
+            Returns:
+                list[AuiNotebook]: Liste des notebooks enregistrés.
+        """
         return self._notebooks
 
     def SetMasterManager(self, manager):
+        """Définit le gestionnaire AUI parent de celui-ci.
+
+            Args:
+                manager (AuiManager): Gestionnaire maître.
+        """
         self._masterManager = manager
 
     def SetAutoNotebookTabArt(self, art):
+        """Définit le fournisseur d'apparence des onglets automatiques.
+
+            Args:
+                art: Fournisseur d'apparence des onglets.
+        """
         self._autoNBTabArt = art
 
     def GetAutoNotebookTabArt(self):
+        """Retourne le fournisseur d'apparence des onglets automatiques.
+
+            Returns:
+                object or None: Fournisseur précédemment défini.
+        """
         return getattr(self, "_autoNBTabArt", None)
 
     def SetAutoNotebookStyle(self, style):
+        """Définit le style appliqué aux notebooks automatiques.
+
+            Args:
+                style (int): Combinaison des options de style.
+        """
         self._autoNBStyle = style
 
     def GetAutoNotebookStyle(self):
+        """Retourne le style des notebooks automatiques.
+
+            Returns:
+                int: Style configuré, ou AUI_NB_DEFAULT_STYLE par défaut.
+        """
         return getattr(self, "_autoNBStyle", AUI_NB_DEFAULT_STYLE)
 
     def UpdateNotebook(self, notebook=None):
+        """Point d'extension conservé pour la compatibilité avec l'API AUI.
+
+            L'implémentation Tkinter actuelle ne réalise aucun traitement ici.
+
+            Args:
+                notebook (AuiNotebook, optional): Notebook à actualiser.
+        """
         return None
 
     # def SavePaneInfo(self, pane):
@@ -1229,7 +1472,6 @@ class AuiManager:
                 for pane in self._panes
                 if getattr(pane, "name", None)
             }
-
             # Parcourt les panneaux sauvegardés.
             for item in saved_panes:
                 # Ignore les éléments mal formés.
@@ -1386,6 +1628,14 @@ class AuiManager:
         return True
 
     def _direction(self, pane):
+        """Convertit la constante de direction AUI en nom de côté Tk.
+
+            Args:
+                pane (AuiPaneInfo): Panneau dont on examine l'ancrage.
+
+            Returns:
+                str: ``left``, ``right``, ``top``, ``bottom`` ou ``top`` par défaut.
+        """
         return {
             AUI_DOCK_LEFT: "left",
             AUI_DOCK_RIGHT: "right",
@@ -1394,12 +1644,34 @@ class AuiManager:
         }.get(pane.dock_direction, "top")
 
     def _host_for(self, pane):
+        """Retourne le conteneur dans lequel les panneaux sont hébergés.
+
+            Crée la disposition à la demande si SetManagedWindow() ne l'a pas
+            encore initialisée.
+
+            Args:
+                pane (AuiPaneInfo): Panneau concerné (réservé à la compatibilité).
+
+            Returns:
+                tk.Misc: Parent des widgets de panneau.
+        """
         if self._layout is None:
             self._layout = TtkGridLayout(self._frame)
             self._pane_parent = self._layout.pane_parent
         return self._layout.pane_parent
 
     def _placement_for(self, pane):
+        """Construit la description de placement Tk correspondant à un panneau AUI.
+
+            La relation est actuellement globale ; la direction AUI est traduite
+            en côté de la grille et dock_pos est conservé comme rang.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à convertir.
+
+            Returns:
+                TtkPanePlacement: Paramètres de placement calculés.
+        """
         position = self._direction(pane)
         position = {
             "left": "left",
@@ -1410,6 +1682,14 @@ class AuiManager:
         return TtkPanePlacement("global", position, getattr(pane, "dock_pos", "last"))
 
     def _undock_pane(self, pane):
+        """Retire le widget du panneau de la grille et des gestionnaires de géométrie.
+
+            Plusieurs méthodes *forget* sont tentées pour tolérer les widgets qui
+            auraient été placés auparavant avec pack, grid ou place.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à désamarrer.
+        """
         window = pane.window
         if window is None:
             return
@@ -1422,6 +1702,18 @@ class AuiManager:
                 pass
 
     def _float_pane(self, pane):
+        """Place le contenu du panneau dans une fenêtre Tkinter indépendante.
+
+            La fenêtre Toplevel est créée si nécessaire, reçoit le titre du panneau
+            et retrouve sa position et sa taille enregistrées lorsqu'elles sont
+            disponibles.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à rendre flottant.
+
+            Returns:
+                tk.Toplevel: Fenêtre flottante contenant le widget.
+        """
         if pane.frame is None or not pane.frame.winfo_exists():
             pane.frame = tk.Toplevel(self._frame)
         floating = pane.frame
@@ -1429,6 +1721,8 @@ class AuiManager:
         self._undock_pane(pane)
         window = pane.window
         if window is not None:
+            # Le widget quitte son gestionnaire de géométrie courant avant
+            # d’être rattaché au Toplevel puis affiché avec pack().
             try:
                 window.pack_forget()
             except (AttributeError, tk.TclError):
@@ -1445,6 +1739,14 @@ class AuiManager:
         return floating
 
     def _dock_pane(self, pane):
+        """Réintègre le widget d'un panneau dans la grille principale.
+
+            Une fenêtre flottante existante est masquée, puis le widget est ajouté
+            à la disposition s'il n'y figure pas déjà.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à réamarrer.
+        """
         window = pane.window
         if window is None:
             return
@@ -1457,6 +1759,16 @@ class AuiManager:
             self._layout.add(window, pane)
 
     def Update(self):
+        """Applique l'état courant de chaque panneau à la disposition Tkinter.
+
+            Les panneaux flottants sont transférés dans un Toplevel, les panneaux
+            visibles sont placés dans la grille et les panneaux masqués sont
+            désamarrés. Le verrou _updating évite les appels récursifs.
+
+            Raises:
+                Exception: Toute erreur provenant du placement Tkinter est propagée ;
+                    le verrou est néanmoins réinitialisé dans le bloc finally.
+        """
         if self._updating:
             return
         self._updating = True
@@ -1474,15 +1786,26 @@ class AuiManager:
             self._updating = False
 
     def LayoutAll(self):
+        """Reconstruit ou actualise la disposition de tous les panneaux.
+        """
         self.Update()
 
     def OnSize(self, event=None):
+        """Rafraîchit la disposition lorsque la fenêtre gérée est redimensionnée.
+
+            Args:
+                event: Événement Configure Tkinter (facultatif).
+        """
         self.Update()
 
     def RecalculatePaneSizes(self):
+        """Point de compatibilité AUI ; aucun recalcul distinct n'est requis ici.
+        """
         return None
 
     def Render(self):
+        """Point de compatibilité AUI ; le rendu est assuré par les widgets ttk.
+        """
         return None
 
     def FloatPane(self, pane):
@@ -1502,12 +1825,30 @@ class AuiManager:
         return True
 
     def CreateFloatingFrame(self, pane):
+        """Crée ou récupère la fenêtre flottante associée à un panneau.
+
+            Args:
+                pane (AuiPaneInfo): Panneau à détacher.
+
+            Returns:
+                tk.Toplevel: Fenêtre flottante.
+        """
         return self._float_pane(pane)
 
     def Initialize(self):
+        """Initialise l'affichage des panneaux en appliquant leur état courant.
+
+            Returns:
+                None: Valeur renvoyée par Update().
+        """
         return self.Update()
 
     def UnInit(self):
+        """Libère les fenêtres flottantes et les ressources de disposition.
+
+            Les widgets de contenu ne sont pas détruits par cette méthode ; seules
+            les fenêtres flottantes et l'enveloppe créée par le gestionnaire le sont.
+        """
         for pane in getattr(self, "_panes", []):
             if pane.frame is not None:
                 try:
@@ -1523,8 +1864,16 @@ class AuiManager:
         self._dock_hosts = {}
 
     def OnDestroy(self):
+        """Désinitialise le gestionnaire lors de la destruction de son environnement.
+        """
         self.UnInit()
 
 
 class AuiManager_DCP(AuiManager):
+    """Variante de compatibilité du gestionnaire AUI.
+
+    Cette classe conserve le nom attendu par les composants qui utilisent
+    l'ancienne API ; elle ne surcharge actuellement aucun comportement.
+    """
     pass
+
