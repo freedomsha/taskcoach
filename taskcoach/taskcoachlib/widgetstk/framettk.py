@@ -20,26 +20,46 @@ log = logging.getLogger(__name__)
 
 
 class AuiManagedFrameWithDynamicCenterPane:
-    """Fenêtre Tkinter équipée du gestionnaire AUI ttk.
+    """Fenêtre Tkinter dont les panneaux sont organisés par un gestionnaire AUI.
 
-    Le premier panneau ajouté est placé au centre. Les panneaux suivants sont
-    placés à droite par défaut, comme dans l'ancienne implémentation wxPython.
-    La gestion effective de la grille, du flottement et du réamarrage est
-    déléguée à :class:`AuiManager`.
+    Par défaut, le premier panneau non flottant devient le panneau central.
+    Les panneaux non flottants ajoutés ensuite sont placés à droite. Il est
+    possible de préciser une direction d'ancrage ou de créer un panneau
+    initialement flottant.
+
+    La gestion de la disposition, du flottement et du réamarrage est déléguée
+    à :class:`AuiManager`.
     """
 
     def __init__(self, master=None, title="Task Coach AUI", root=None, **kwargs):
-        # ``root`` est accepté pour faciliter la compatibilité avec du code
-        # Tkinter existant qui utilise ce nom d'argument.
+        """Crée la fenêtre principale et initialise son gestionnaire AUI.
+
+        Args:
+            master: Fenêtre ou widget Tkinter parent. Si absent, ``root`` est
+                utilisé ; si les deux sont absents, une instance de ``Tk`` est
+                créée.
+            title: Titre de la fenêtre principale.
+            root: Ancien nom de l'argument ``master``, conservé pour compatibilité.
+            **kwargs: Options transmises à ``configure`` sur la fenêtre Tkinter.
+                Les options non acceptées par Tk sont ignorées et consignées
+                dans le journal de débogage.
+        """
+        # ``root`` est conservé comme alias de ``master`` pour compatibilité.
         if master is None:
             master = root
         self.root = master if master is not None else tk.Tk()
         self.root.title(title)
+
         for option, value in kwargs.items():
             try:
                 self.root.configure(**{option: value})
             except tk.TclError:
-                log.debug("AuiManagedFrameWithDynamicCenterPane : Option Tk ignorée: %s", option, exc_info=True)
+                log.debug(
+                    "AuiManagedFrameWithDynamicCenterPane : "
+                    "option Tk ignorée : %s",
+                    option,
+                    exc_info=True,
+                )
 
         self.manager = AuiManager(self.root)
         self._center_pane = None
@@ -47,15 +67,31 @@ class AuiManagedFrameWithDynamicCenterPane:
         self.bindEvents()
 
     def bindEvents(self):
-        """Réserve le point d'extension des événements AUI.
+        """Point d'extension réservé au raccordement des événements AUI.
 
-        La version actuelle de ``AuiManager`` réalise les changements d'état
-        directement par ``Update``. Elle ne fournit pas encore les événements
-        wx ``EVT_AUI_PANE_CLOSE`` et ``EVT_AUI_PANE_FLOATING``.
+        L'implémentation actuelle du gestionnaire met directement à jour
+        l'interface via ``Update`` et ne reproduit pas encore les événements
+        wxPython tels que ``EVT_AUI_PANE_CLOSE`` ou
+        ``EVT_AUI_PANE_FLOATING``. Cette méthode reste donc volontairement
+        vide afin de préserver l'interface de la classe d'origine.
         """
         return None
 
     def _pane_info(self, caption, name, floating=False):
+        """Construit la description AUI d'un nouveau panneau.
+
+        Les options communes (déplacement, flottement, fermeture et
+        maximisation) sont configurées ici pour que tous les panneaux créés
+        par :meth:`addPane` aient le même comportement de base.
+
+        Args:
+            caption: Texte affiché dans la barre de titre du panneau.
+            name: Identifiant unique du panneau.
+            floating: Indique si le panneau doit être initialement flottant.
+
+        Returns:
+            L'objet ``AuiPaneInfo`` configuré.
+        """
         pane = (
             AuiPaneInfo()
             .Name(name)
@@ -75,18 +111,28 @@ class AuiManagedFrameWithDynamicCenterPane:
         return pane
 
     def addPane(self, window, caption, name, floating=False, dock_direction=None):
-        """Ajoute une ``window`` comme panneau AUI.
+        """Ajoute un widget à la fenêtre en tant que panneau AUI.
+
+        Si aucune direction n'est fournie, le premier panneau amarré devient
+        le panneau central et les suivants sont placés à droite. Un panneau
+        flottant est initialement placé à proximité de la fenêtre principale.
 
         Args:
-            window: (tk.widget) Widget Tkinter à gérer.
-            caption: Titre affiché pour le panneau flottant.
-            name: Identifiant stable du panneau.
-            floating: Affiche initialement le panneau dans un ``Toplevel``.
-            dock_direction: Direction d'ancrage initiale, si elle est imposée.
+            window: Widget Tkinter géré par le panneau.
+            caption: Titre affiché dans l'en-tête du panneau.
+            name: Identifiant unique et stable du panneau.
+            floating: Si vrai, crée le panneau dans une fenêtre flottante.
+            dock_direction: Direction d'ancrage AUI explicite, ou ``None``
+                pour appliquer le placement par défaut.
+
         Returns:
-            L'objet ``AuiPaneInfo`` créé.
+            L'objet ``AuiPaneInfo`` créé et enregistré.
+
+        Raises:
+            ValueError: Si le nom est vide ou déjà utilisé.
+            TypeError: Si ``window`` n'est pas un widget Tkinter.
         """
-        # validation des arguments
+        # Valider les arguments avant de modifier l'état du gestionnaire.
         if not isinstance(name, str) or not name:
             raise ValueError("name doit être une chaîne non vide")
         if name in self._panes_by_name:
@@ -107,39 +153,64 @@ class AuiManagedFrameWithDynamicCenterPane:
         # else:
         if dock_direction is not None:
             pane.Direction(dock_direction)
+
         if floating:
-            # Une position écran déterministe évite un flottement placé hors
-            # écran lorsque le widget n'a pas encore été affiché.
+            # Une position initiale proche de la fenêtre principale évite
+            # qu'un Toplevel soit créé à une position écran imprévisible.
             try:
                 self.root.update_idletasks()
                 x = self.root.winfo_rootx() + 30
                 y = self.root.winfo_rooty() + 30
             except tk.TclError:
+                # La fenêtre peut ne pas encore être pleinement initialisée.
                 x, y = 30, 30
             pane.FloatingPosition(x, y)
         elif dock_direction is None:
             if self._center_pane is None:
                 pane.CenterPane()
-                self._center_pane = pane
             else:
                 pane.Right()  # ou pane.Bottom() ??
+                # La position est calculée avant AddPane : elle correspond
+                # donc au nombre de panneaux déjà amarrés.
                 pane.Position(len(self.dockedPanes()))
 
         # Ajout du panneau
+        # Enregistrer également un panneau central demandé explicitement.
+        # Sans cela, le panneau suivant pourrait être promu au centre.
+        if not floating and self.isCenterPane(pane):
+            self._center_pane = pane
+
         self.manager.AddPane(window, pane)
         self._panes_by_name[name] = pane
-
         # Mise à jour de l'interface
         self.manager.Update()
         return pane
 
     def _resolve_pane(self, pane_or_window_or_name):
+        """Résout un panneau à partir de son descripteur, widget ou nom.
+
+        Args:
+            pane_or_window_or_name: Objet ``AuiPaneInfo``, widget associé ou
+                nom du panneau.
+
+        Returns:
+            Le descripteur ``AuiPaneInfo`` correspondant. Si aucun panneau ne
+            correspond, le gestionnaire renvoie un descripteur invalide, que
+            les méthodes appelantes contrôlent avec ``IsOk``.
+        """
         if isinstance(pane_or_window_or_name, AuiPaneInfo):
             return pane_or_window_or_name
         return self.manager.GetPane(pane_or_window_or_name)
 
     def setPaneTitle(self, window, title):
-        """Modifie le titre du panneau identifié par son widget ou son nom."""
+        """Modifie la légende du panneau identifié par son widget ou son nom.
+
+        Si le panneau possède déjà une fenêtre flottante, son titre natif est
+        également actualisé.
+
+        Raises:
+            KeyError: Si aucun panneau ne correspond à ``window``.
+        """
         pane = self._resolve_pane(window)
         if not pane.IsOk():
             raise KeyError("Panneau introuvable: {!r}".format(window))
@@ -149,7 +220,11 @@ class AuiManagedFrameWithDynamicCenterPane:
         self.manager.Update()
 
     def dockedPanes(self):
-        """Retourne les panneaux actuellement amarrés."""
+        """Renvoie les panneaux amarrés, hors barres d'outils et pages d'onglet.
+
+        Un panneau masqué reste un panneau amarré : le filtrage porte donc sur
+        son état d'ancrage, pas sur sa visibilité momentanée.
+        """
         # version wx :
         # if USING_AGW:
         #     return [
@@ -174,18 +249,32 @@ class AuiManagedFrameWithDynamicCenterPane:
             and pane.IsDocked()
             and not pane.IsToolbar()
             and not pane.IsNotebookPage()
-            and pane.IsShown()
+            # and pane.IsShown()
         ]
 
     def float(self, window):
-        """Détache le panneau identifié par son widget, son nom ou son info."""
+        """Détache un panneau et le place dans une fenêtre flottante.
+
+        ``window`` peut être le widget contenu, le nom du panneau ou son
+        descripteur ``AuiPaneInfo``.
+
+        Raises:
+            KeyError: Si le panneau demandé n'existe pas.
+        """
         pane = self._resolve_pane(window)
         if not pane.IsOk():
             raise KeyError("Panneau introuvable: {!r}".format(window))
         self.manager.FloatPane(pane)
 
     def dock(self, window):
-        """Réamarrer le panneau identifié par son widget, son nom ou son info."""
+        """Réintègre dans la fenêtre principale un panneau éventuellement flottant.
+
+        ``window`` peut être le widget contenu, le nom du panneau ou son
+        descripteur ``AuiPaneInfo``.
+
+        Raises:
+            KeyError: Si le panneau demandé n'existe pas.
+        """
         pane = self._resolve_pane(window)
         if not pane.IsOk():
             raise KeyError("Panneau introuvable: {!r}".format(window))
@@ -193,22 +282,35 @@ class AuiManagedFrameWithDynamicCenterPane:
 
     @staticmethod
     def isCenterPane(pane):
-        """Indique si un objet ``AuiPaneInfo`` est le panneau central."""
+        """Indique si le descripteur correspond à un panneau central.
+
+        Les deux noms de constante sont testés pour rester compatible avec
+        les variantes ``CENTER`` et ``CENTRE`` présentes selon les versions
+        des constantes AUI.
+        """
         return pane.dock_direction in {
             getattr(aui, "AUI_DOCK_CENTER", 4),
             getattr(aui, "AUI_DOCK_CENTRE", 4),
         }
 
     def Show(self):
+        """Rend visible la fenêtre principale."""
         self.root.deiconify()
 
     def Hide(self):
+        """Masque la fenêtre principale sans la détruire."""
         self.root.withdraw()
 
     def start_loop(self):
+        """Lance la boucle événementielle principale de Tkinter."""
         self.root.mainloop()
 
     def destroy(self):
+        """Libère le gestionnaire AUI puis détruit la fenêtre Tkinter.
+
+        ``UnInit`` est appelé avant la destruction de la fenêtre afin que le
+        gestionnaire puisse détacher ses propres liaisons et ressources.
+        """
         self.manager.UnInit()
         self.root.destroy()
 
