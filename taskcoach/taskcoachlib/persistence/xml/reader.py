@@ -3903,6 +3903,9 @@ class XMLReader(object):  # nouvelle classe
                 return None
             family = parts[0]
             # size = int(parts[1]) if (parts[1] != "Sans") else ""
+            # Supposait que le 2nd élément de la chaîne était toujours un nombre.
+            # Quand parts[1] valait "Sans", elle retournait une chaîne vide "",
+            # ce qui provoquait l'erreur invalid literal for int(): 'Sans' lors de la création de la police tkinter.
             # Trouver la taille - chercher le premier élément numérique
             size = None
             for part in parts[1:]:
@@ -3910,7 +3913,7 @@ class XMLReader(object):  # nouvelle classe
                     size = int(part)
                     break
 
-            # Si aucune taille trouvée, utiliser une taille par défaut
+            # Si aucune taille trouvée, utiliser une taille par défaut de 10
             if size is None:
                 size = 10  # Taille par défaut
 
@@ -3928,9 +3931,10 @@ class XMLReader(object):  # nouvelle classe
             # return tkinter.font.Font(family=parts[0], size=int(parts[1]), weight=tkinter.font.BOLD if "bold" in parts else tkinter.font.NORMAL, slant=tkinter.font.ITALIC if "italic" in parts else tkinter.font.NORMAL)
 
         if text:
+            # Séparation des logiques wx et tk.
             if GUI_NAME == "wx":
                 # font = wxadv.FontFromNativeInfoString(text)  # Obsolète
-                font = wx.Font(text)  # TODO : A Convertir pour tkinter
+                font = wx.Font(text)
                 if font and font.IsOk():
                     if font.GetPointSize() < 4:
                         font.SetPointSize(self.__default_font_size)
@@ -3939,8 +3943,10 @@ class XMLReader(object):  # nouvelle classe
                 font = convert_wx_font_string_to_tk(text)  # pour tkinter
                 if font is not None:
                     try:
+                        # Utilisation de font.cget('size') pour vérifier la taille.
                         current_size = font.cget('size')
                         if current_size < 4:
+                            # Recrée la police avec self.__default_font_size
                             font = tkinter.font.Font(
                                 family=font.cget('family'),
                                 size=self.__default_font_size,
