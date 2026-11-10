@@ -55,8 +55,9 @@ to make use this new tab art.
 # Utilise les constantes et les utilitaires Tkinter fournis.
 # Vérification de la syntaxe Python réussie.
 #
-# La session de travail a été réinitialisée pendant le traitement. Les fichiers fournis dans votre dernier message ont toutefois été réimportés et utilisés comme références avant la conversion.
-# À noter : cette version fournit une base Tkinter fonctionnelle et compatible avec l’API générale, mais les styles visuels spécialisés VC71, FF2, VC8 et Chrome utilisent encore le rendu commun de AuiDefaultTabArt.
+# À noter : cette version fournit une base Tkinter fonctionnelle et compatible
+# avec l’API générale, mais les styles visuels spécialisés VC71, FF2, VC8 et Chrome
+# utilisent encore le rendu commun de AuiDefaultTabArt.
 
 __author__ = "Andrea Gavana <andrea.gavana@gmail.com>"
 __date__ = "31 March 2009"
@@ -101,6 +102,11 @@ def _rect(r):
 
 
 def _font(value=None, bold=False):
+    """
+    Retourne la police définit par value.
+
+    Si elle fait partie des standard tkinter ou définie.
+    """
     if isinstance(value, tkfont.Font):
         return value
     return tkfont.Font(
@@ -188,13 +194,20 @@ class AuiDefaultTabArt(object):
         """Default class constructor."""
         #
         # self._normal_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self._normal_font = _font()
         # self._selected_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self._selected_font = _font(bold=True)
         # self._selected_font.SetWeight(wx.FONTWEIGHT_BOLD)
+        
         # self._measuring_font = self._selected_font
+        self._measuring_font = self._selected_font
         #
         # self._fixed_tab_width = 100
+        self._fixed_tab_width = 100
         # self._tab_ctrl_height = 0
+        self._tab_ctrl_height = 0
         # self._buttonRect = wx.Rect()
+        self._buttonRect = (0, 0, 0, 0)
         #
         # self.SetDefaultColours()
         #
@@ -223,12 +236,7 @@ class AuiDefaultTabArt(object):
         # self._focusPen = wx.Pen(active_colour, 1, wx.PENSTYLE_USER_DASH)
         # self._focusPen.SetDashes([1, 1])
         # self._focusPen.SetCap(wx.CAP_BUTT)
-        self._normal_font = _font()
-        self._selected_font = _font(bold=True)
-        self._measuring_font = self._selected_font
-        self._fixed_tab_width = 100
-        self._tab_ctrl_height = 0
-        self._buttonRect = (0, 0, 0, 0)
+
         self._agwFlags = AUI_NB_DEFAULT_STYLE
         self._active_close_bmp = self._disabled_close_bmp = self._hover_close_bmp = (
             self._pressed_close_bmp
@@ -712,7 +720,7 @@ class AuiDefaultTabArt(object):
         bg = self._tab_top_colour if active else self._tab_inactive_top_colour
         dc.create_rectangle(
             x, y, x + w, y + h, fill=_hex(bg), outline=_hex(self._border_colour)
-        )
+        )  # Normalement Canevas_rectangle = dc.create_rectangle() ! Non ?
         caption = getattr(page, "caption", "")
         f = self._selected_font if active else self._normal_font
         dc.create_text(
@@ -896,7 +904,7 @@ class AuiDefaultTabArt(object):
         #     self._buttonRect = wx.Rect(rect.x, rect.y, 30, rect.height)
         #
         # return out_rect
-        return None
+        return None  # Pourquoi ?
 
     # def DrawFocusRectangle(self, dc, page, wnd, draw_text, text_offset, bitmap_offset, drawn_tab_yoff, drawn_tab_height, textx, texty):
     def DrawFocusRectangle(self, dc, rect):
