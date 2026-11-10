@@ -1001,7 +1001,8 @@ class IOController(object):
         return self.__taskFile.filename()
 
     def isDirty(self):
-        return False
+        # return False
+        return self.__taskFile.isDirty()
 
     def stop(self):
         logging.info("IOController : Arrêt.")

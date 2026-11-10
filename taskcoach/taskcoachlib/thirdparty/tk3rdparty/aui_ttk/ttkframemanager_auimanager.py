@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Gestionnaire AUI basé sur ttk.PanedWindow et ttk.Notebook.
+"""Gestionnaire AUI basé sur ttk.PanedWindow ou grid et ttk.Notebook.
 
 Cette version conserve l'API de tkframemanager_auimanager.py pour les
 opérations de panneaux, mais utilise une disposition ttk explicite.

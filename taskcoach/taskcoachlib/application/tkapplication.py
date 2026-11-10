@@ -401,7 +401,7 @@ class TkinterApplication(
 
         # self.taskFile = persistencetk.LockedTaskFile(poll=not self.settings.getboolean('file', 'nopoll'))
         self.taskFile = taskfile.LockedTaskFile(
-            parent=self.root,
+            # parent=self.root,  # Le paramètre parent n'est pas documenté ni utilisé par TaskFile.
             # poll=not self.settings.getboolean("file", "-nopoll"),  # -nopoll ne donne rien alors que nopoll=False
             poll=not self.settings.getboolean("file", "nopoll"),
         )
@@ -729,16 +729,23 @@ class TkinterApplication(
         if hasattr(self, "idle_notifier") and self.idle_notifier:
             self.idle_notifier.stop()
 
-    @staticmethod
-    def getInstance():
+    # @staticmethod
+    # def getInstance():
+    #     """Retourne l'instance unique de TkinterApplication."""
+    #     log.debug(
+    #         f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
+    #     )
+    #     # if TkinterApplication.instance is None:
+    #     #    TkinterApplication()  # Crée l'instance si elle n'existe pas
+    #     return TkinterApplication.instance
+    #     # return patterns.Singleton.__call__(TkinterApplication)
+    @classmethod
+    def getInstance(cls):
         """Retourne l'instance unique de TkinterApplication."""
         log.debug(
             f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
         )
-        # if TkinterApplication.instance is None:
-        #    TkinterApplication()  # Crée l'instance si elle n'existe pas
-        return TkinterApplication.instance
-        # return patterns.Singleton.__call__(TkinterApplication)
+        return cls()
 
 
 # if __name__ == '__main__':
