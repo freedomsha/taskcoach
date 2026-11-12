@@ -104,7 +104,7 @@ from taskcoachlib.guitk.uicommand import uicommandtk as uicommand
 from taskcoachlib.guitk import toolbarttk, artprovidertk
 from taskcoachlib.guitk.viewer import mixintk  # Import relatif
 from taskcoachlib.widgetstk import itemctrltk
-from taskcoachlib.widgetstk.tooltiptk import ToolTip
+from taskcoachlib.widgetstk.tooltiptk import ToolTipMixin
 
 from taskcoachlib.help.balloontipstk import (
     BalloonTipManager,
@@ -247,7 +247,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         # Tooltips (à adapter si ToolTipMixin est utilisé)
         # if isinstance(self.widget, ToolTipMixin):  # si widget est une instance de ToolTipMixin
         if isinstance(
-            self.widget, ToolTip
+            self.widget, ToolTipMixin
         ):  # si widget est une instance de ToolTipMixin
             # Informer l'utilisateur
             pub.subscribe(
