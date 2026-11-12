@@ -140,7 +140,7 @@ from typing import Optional
 from tkinter import Toplevel, Label
 import threading
 import time
-from taskcoachlib.widgetstk.tooltiptk import ToolTip
+from taskcoachlib.widgetstk.tooltiptk import SimpleToolTip
 
 
 # Les caractères de contrôle unicode ne sont pas gérés directement de la même manière.
@@ -320,8 +320,8 @@ class StaticTextWithToolTip(tk.Label):
     def __init__(self, parent: tk.Tk, label: str, **kwargs):
         # Utilise tk.Label pour afficher le texte statique
         super().__init__(parent, text=label, **kwargs)
-        # Crée une infobulle à partir de la classe ToolTip
-        self.tooltip = ToolTip(self, label)
+        # Crée une infobulle à partir de la classe SimpleToolTip
+        self.tooltip = SimpleToolTip(self, label)
 
 # # Classe pour gérer les infobulles (Tooltips)
 # class ToolTip:
