@@ -28,7 +28,6 @@ class Singleton(ABCMeta):
     Prend en charge l'héritage de classes abstraites (ABC) sans conflit de métaclasse.
     """
 
-    @classmethod
     def __call__(class_, *args, **kwargs):
         """
         Appelée lorsque l'instance est "appelée" en fonction;
@@ -49,7 +48,6 @@ class Singleton(ABCMeta):
         # log.debug(f"Singleton.__call__ : retourne la classe instanciée {class_.instance.__class__.__name__}")  # !!! Crée une boucle !!!
         return class_.instance
 
-    @classmethod
     def deleteInstance(class_):
         """Supprimez la (unique) instance. Cette méthode est principalement destinée aux tests unitaires afin
         qu'ils puissent commencer avec une table rase."""
@@ -58,12 +56,10 @@ class Singleton(ABCMeta):
 
     delete_instance = deleteInstance
 
-    @classmethod
     # def hasInstance(class_) -> bool:
     def hasInstance(class_):
         """La (seule) instance a-t-elle déjà été créée ?"""
         return "instance" in class_.__dict__
 
-    @classmethod
     def getInstance(cls):
         return cls()
