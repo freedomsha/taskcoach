@@ -582,7 +582,8 @@ class _CtrlWithColumnPopupMenuMixin(_CtrlWithPopupMenuMixin):
         super().__init__(parent, *args, **kwargs)
         if self.__popupMenu:
             # TODO: A revoir avec les nouveaux fichiers (s'il existe heading_widget)
-            self._attachPopupMenu(self.heading_widget, self.onColumnPopupMenu)
+            # self._attachPopupMenu(self.heading_widget, self.onColumnPopupMenu)
+            self._attachPopupMenu(self, ["<Button-3>"], self.onColumnPopupMenu)
         log.debug("_CtrlWithColumnPopupMenuMixin initialisé !")
 
     def onColumnPopupMenu(self, event):
@@ -684,8 +685,9 @@ class _CtrlWithDropTargetMixin(
 
     def GetMainWindow(self):
         """Retourne la fenêtre principale."""
-        # return self.winfo_toplevel()
-        return self.__parent.winfo_toplevel()
+        # # return self.winfo_toplevel()
+        # return self.__parent.winfo_toplevel()
+        return self.winfo_toplevel()
         # TODO : A revoir si ne fonctionne pas !
         # try:
         # Tenter l'appel normal
@@ -734,7 +736,7 @@ class _CtrlWithDropTargetMixin(
 # d'info-bulle appropriée.
 # class CtrlWithToolTipMixin(_CtrlWithItemsMixin, tooltiptk.ToolTip):
 class CtrlWithToolTipMixin(
-    _CtrlWithItemsMixin
+    _CtrlWithItemsMixin, tooltiptk.ToolTipMixin
 ):  # Retirer l'héritage de tooltiptk.ToolTip qui se fait en interne
     """
     Mixin pour afficher des info-bulles par item.
@@ -769,6 +771,7 @@ class CtrlWithToolTipMixin(
         # super().__init__(master, *args, **kwargs)  # <-- PROBLÈME
         # Appel explicite au parent mixin
         # _CtrlWithItemsMixin.__init__(self, *args, **kwargs)  # revenir à super().__init__ ?
+        tooltiptk.ToolTipMixin.__init__(self)
         # Le ToolTip est initialisé en lui passant le widget `self` (VirtualListCtrl)
         # Il faut s'assurer que self est correctement initialisé avant cet appel.
         # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")  # `self` est maintenant le widget
@@ -781,8 +784,8 @@ class CtrlWithToolTipMixin(
         # Création de l’info-bulle Tkinter
         # self.item_tooltip = None
         # self._tooltip = None
-        # self._tooltip = tooltiptk.SimpleToolTip(self)  # TODO : Pas encore créé !
-        self._tooltip = tooltiptk.ToolTip(self)  # TODO : en attendant !
+        self._tooltip = tooltiptk.SimpleToolTip(self)  # créé le 12/11/2026 !
+        # self._tooltip = tooltiptk.ToolTip(self)  # en attendant !
 
         # Liaison du mouvement de souris
         # L'erreur `_w` vient de tooltiptk.ToolTip.__init__ -> self._set_bindings() -> self.widget.bind()
@@ -2020,7 +2023,9 @@ class TaskTree(
         )
 
         # Liez la colonne redimensionnable à l'événement de configuration
-        self.bind("<Configure>", self.on_resize)
+        # self.bind("<Configure>", self.on_resize)  # self._on_autowidth_resize or self.resizeColumns ?
+        self.bind("<Configure>", self.resizeColumns)
+
         # self.bind("<Motion>", self.on_motion_update_tooltip)
 
         # self.resize_column = 'task_name'  # Définissez la colonne à redimensionner
@@ -2163,3 +2168,128 @@ if __name__ == "__main__":
     )
 
     root.mainloop()
+
+
+# ---------------------------------------------------------------------------
+# Compatibilité avec l'API publique de itemctrl.py
+# ---------------------------------------------------------------------------
+# Tkinter et wxPython n'ont pas la même API graphique. Ces méthodes ne
+# prétendent pas transformer un Treeview en contrôle wxPython : elles
+# conservent les noms utilisés par les viewers et adaptent leur comportement
+# aux primitives ttk.Treeview.
+
+def _column_header_image_index(self):
+    return self.__headerImageIndex
+
+
+def _column_set_width(self, width):
+    self.width = width
+    return width
+
+
+def _column_sort(self, *args, **kwargs):
+    callback = getattr(self, "_Column__sortCallback", None)
+    if callback is not None:
+        return callback(*args, **kwargs)
+    return None
+
+
+Column.headerImageIndex = _column_header_image_index
+Column.setWidth = _column_set_width
+Column.sort = _column_sort
+
+
+def _columns_column_index(self, column):
+    name = column.name() if hasattr(column, "name") else column
+    for index, current in enumerate(getattr(self, "_all_columns", ())):
+        if current.name() == name:
+            return index
+    raise ValueError("Colonne inconnue: {!r}".format(name))
+
+
+def _columns_get_column(self, column):
+    name = column.name() if hasattr(column, "name") else column
+    for current in getattr(self, "_all_columns", ()):
+        if current.name() == name:
+            return current
+    raise ValueError("Colonne inconnue: {!r}".format(name))
+
+
+def _columns_get_column_header(self, column):
+    return _columns_get_column(self, column).header()
+
+
+def _columns_current_sort_column(self):
+    return getattr(self, "sort_column", None)
+
+
+def _columns_is_column_visible(self, column):
+    name = column.name() if hasattr(column, "name") else column
+    return self.is_column_visible(name)
+
+
+def _columns_show_sort_column(self, column=None):
+    if column is None:
+        return self._currentSortColumn()
+    name = column.name() if hasattr(column, "name") else column
+    self.sort_by(name)
+    return name
+
+
+def _columns_show_sort_order(self, column=None):
+    return getattr(self, "sort_reverse", False)
+
+
+_BaseCtrlWithColumnsMixin._getColumnIndex = _columns_column_index
+_BaseCtrlWithColumnsMixin._getColumn = _columns_get_column
+_BaseCtrlWithColumnsMixin._getColumnHeader = _columns_get_column_header
+_CtrlWithHideableColumnsMixin.isColumnVisible = _columns_is_column_visible
+_CtrlWithSortableColumnsMixin._currentSortColumn = _columns_current_sort_column
+_CtrlWithSortableColumnsMixin.showSortColumn = _columns_show_sort_column
+_CtrlWithSortableColumnsMixin.showSortOrder = _columns_show_sort_order
+
+
+def _drop_get_main_window(self):
+    return self.winfo_toplevel()
+
+
+def _drop_on_drop_url(self, x, y, url):
+    item = self.identify_row(y) if hasattr(self, "identify_row") else self.focus()
+    callback = getattr(self, "_CtrlWithDropTargetMixin__onDropURLCallback", None)
+    if callback and self._itemIsOk(item):
+        return callback(self._objectBelongingTo(item), url)
+    return None
+
+
+def _drop_on_drop_files(self, x, y, filenames):
+    item = self.identify_row(y) if hasattr(self, "identify_row") else self.focus()
+    callback = getattr(self, "_CtrlWithDropTargetMixin__onDropFilesCallback", None)
+    if callback and self._itemIsOk(item):
+        return callback(self._objectBelongingTo(item), filenames)
+    return None
+
+
+def _drop_on_drop_mail(self, x, y, mail):
+    item = self.identify_row(y) if hasattr(self, "identify_row") else self.focus()
+    callback = getattr(self, "_CtrlWithDropTargetMixin__onDropMailCallback", None)
+    if callback and self._itemIsOk(item):
+        return callback(self._objectBelongingTo(item), mail)
+    return None
+
+
+_CtrlWithDropTargetMixin.GetMainWindow = _drop_get_main_window
+_CtrlWithDropTargetMixin.onDropURL = _drop_on_drop_url
+_CtrlWithDropTargetMixin.onDropFiles = _drop_on_drop_files
+_CtrlWithDropTargetMixin.onDropMail = _drop_on_drop_mail
+
+
+def _item_on_list_item_right_click(self, event):
+    return self.onItemPopupMenu(event)
+
+
+def _item_on_list_context_menu(self, event):
+    return self.onItemPopupMenu(event)
+
+
+_CtrlWithItemPopupMenuMixin.onListItemRightClick = _item_on_list_item_right_click
+_CtrlWithItemPopupMenuMixin.onListContextMenu = _item_on_list_context_menu
