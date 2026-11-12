@@ -302,7 +302,7 @@ from taskcoachlib.domain.date import dateandtime
 from taskcoachlib.command import taskCommands
 
 
-class HierarchicalCalendar(CalendarCanvas, tooltiptk.ToolTip):
+class HierarchicalCalendar(tooltiptk.ToolTipMixin, CalendarCanvas):
     """
     Un calendrier hiérarchique pour afficher les tâches et les événements,
     adapté pour Tkinter.
@@ -334,9 +334,12 @@ class HierarchicalCalendar(CalendarCanvas, tooltiptk.ToolTip):
 
         self.getItemTooltipData = parent.getItemTooltipData
         super().__init__(parent, **kwargs)
+        # Initialisation du mixin tooltip et de SimpleToolTip
+        tooltiptk.ToolTipMixin.__init__(self, **kwargs)
+        self.__tip = tooltiptk.SimpleToolTip(self)
         self.SetCalendarFormat(self.__calFormat)
 
-        self.__tip = tooltiptk.ToolTip(self)
+        # self.__tip = tooltiptk.ToolTip(self)
         # self.__dropTarget = draganddrop.DropTarget(self.OnDropURL, self.OnDropFiles, self.OnDropMail)
         # self.SetDropTarget(self.__dropTarget)
         # Le glisser-déposer doit être géré manuellement.
@@ -419,35 +422,38 @@ class HierarchicalCalendar(CalendarCanvas, tooltiptk.ToolTip):
         if self.__popupMenu:
             self.__popupMenu.post(event.x_root, event.y_root)
 
-    # Tooltip methods
-    def on_enter(self, event):
-        """Gère l'entrée de la souris dans le widget."""
-        x, y = event.x, event.y
-        hit = self.HitTest(x, y)
-        if hit and hit.event:
-            self.tooltip_text = self.GetText(hit.event)
-            if self.tooltip_text:
-                self.show_tooltip()
+    # # Tooltip methods
+    # Supprimer les méthodes de survol manuelles on_enter, on_leave,
+    # show_tooltip et hide_tooltip qui font doublon avec le comportement
+    # géré nativement par ToolTipMixin.
+    # def on_enter(self, event):
+    #     """Gère l'entrée de la souris dans le widget."""
+    #     x, y = event.x, event.y
+    #     hit = self.HitTest(x, y)
+    #     if hit and hit.event:
+    #         self.tooltip_text = self.GetText(hit.event)
+    #         if self.tooltip_text:
+    #             self.show_tooltip()
 
-    def on_leave(self, event):
-        """Gère la sortie de la souris du widget."""
-        self.hide_tooltip()
-        self.tooltip_text = ""
+    # def on_leave(self, event):
+    #     """Gère la sortie de la souris du widget."""
+    #     self.hide_tooltip()
+    #     self.tooltip_text = ""
 
-    def show_tooltip(self):
-        """Affiche l'infobulle."""
-        if self.tooltip_text:
-            self.update_idletasks()
-            # x = self.winfo_rootx() + self.mouse_x + 10
-            x = self.winfo_rootx() + self.winfo_pointerx() + 10
-            # y = self.winfo_rooty() + self.mouse_y + 10
-            y = self.winfo_rooty() + self.winfo_pointery() + 10
-            self.geometry(f"+{x}+{y}")
-            self.deiconify()
+    # def show_tooltip(self):
+    #     """Affiche l'infobulle."""
+    #     if self.tooltip_text:
+    #         self.update_idletasks()
+    #         # x = self.winfo_rootx() + self.mouse_x + 10
+    #         x = self.winfo_rootx() + self.winfo_pointerx() + 10
+    #         # y = self.winfo_rooty() + self.mouse_y + 10
+    #         y = self.winfo_rooty() + self.winfo_pointery() + 10
+    #         self.geometry(f"+{x}+{y}")
+    #         self.deiconify()
 
-    def hide_tooltip(self):
-        """Masque l'infobulle."""
-        self.withdraw()
+    # def hide_tooltip(self):
+    #     """Masque l'infobulle."""
+    #     self.withdraw()
 
     def OnBeforeShowToolTip(self, x, y):
         """
