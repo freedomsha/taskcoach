@@ -58,7 +58,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import Menu
 import re
-from taskcoachlib.widgetstk.tooltiptk import ToolTip
+from taskcoachlib.widgetstk.tooltiptk import ToolTipMixin, SimpleToolTip
 from taskcoachlib.i18n import _
 from taskcoachlib.guitk.artprovidertk import getIcon
 # try:
@@ -93,7 +93,7 @@ log = logging.getLogger(__name__)
 
 # class SearchCtrl(ttk.Frame, ToolTipMixin):
 # class SearchCtrl(ttk.Frame, ToolTip):
-class SearchCtrl(ttk.Frame):
+class SearchCtrl(ToolTipMixin, ttk.Frame):
     """
     Une adaptation de wx.SearchCtrl pour Tkinter.
     """
@@ -139,7 +139,7 @@ class SearchCtrl(ttk.Frame):
         self.__entry.bind("<KeyRelease>", self.on_entry_key_release)
         # self.__entry.setvar("value", value)  # Le nom de la variable ? "value"?
         self.__entry.insert(0, value)
-        self.tooltip = ToolTip(self.__entry, text=_("Enter your search term here."))  # Info-bulle
+        self.tooltip = SimpleToolTip(self.__entry, text=_("Enter your search term here."))  # Info-bulle
 
         # Bouton d'annulation
         # # self.__cancel_button = ttk.Button(self, text="×", width=2, command=self.clear_search)
@@ -153,7 +153,7 @@ class SearchCtrl(ttk.Frame):
         #     self.__cancel_button = ttk.Button(self, text="×", width=2, command=self.clear_search)
         self.__cancel_button.grid(row=0, column=1, sticky='e', padx=(0, 5))
         self.__cancel_button.grid_remove()  # Cacher par défaut
-        self.cancel_tooltip = ToolTip(self.__cancel_button, text=_("Clear search"))
+        self.cancel_tooltip = SimpleToolTip(self.__cancel_button, text=_("Clear search"))
 
         # Bouton de recherche/menu
         # self.__search_button = ttk.Button(self, text="🔍", width=2, command=self.on_search_button)
@@ -167,7 +167,7 @@ class SearchCtrl(ttk.Frame):
         #     self.__search_button = ttk.Button(self, text="🔍", width=2, command=self.on_search_button)
         self.__search_button.grid(row=0, column=2, sticky='e')
         self.__search_button.bind("<Button-1>", self.on_search_button)
-        self.search_tooltip = ToolTip(self.__search_button, text=_("Show search options"))
+        self.search_tooltip = SimpleToolTip(self.__search_button, text=_("Show search options"))
 
         self.__create_menu()
 

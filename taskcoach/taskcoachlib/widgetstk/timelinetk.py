@@ -149,6 +149,8 @@ Cette classe remplace entièrement l’ancienne TimelineTk.
 # pour supprimer les fallbacks et les protections (version plus concise, en supposant la API exacte),
 # ou créer un patch PR pour que tu puisses l'examiner dans GitHub.
 
+import operator  # Opérateurs logiques
+from functools import reduce  # Réduction logique
 from typing import List, Any, Optional        # Types utilitaires
 import tkinter as tk                          # Importe Tkinter
 from tkinter import Menu, messagebox          # Permet de gérer les menus contextuels
@@ -156,6 +158,7 @@ import inspect
 import sys
 import traceback
 
+from taskcoachlib.widgetstk import tooltiptk as tooltip
 # Importer les classes du module tktimeline déjà converti
 from taskcoachlib.thirdparty.timeline.tktimeline import TimeLineCanvas, Node, HotMap
 
@@ -178,7 +181,7 @@ from taskcoachlib.thirdparty.timeline.tktimeline import TimeLineCanvas, Node, Ho
 #         # Laisser TimeLineCanvas/Node comme None et lever plus tard avec un message clair
 
 
-class TimelineTk(TimeLineCanvas):
+class TimelineTk(tooltip.ToolTipMixin, TimeLineCanvas):
     """
     Widget Timeline pour Tkinter basé sur TimeLineCanvas.
 
@@ -257,6 +260,10 @@ class TimelineTk(TimeLineCanvas):
         #     except Exception as e:
         #         tb = traceback.format_exc()
         #         raise RuntimeError(f"Impossible de créer TimeLineCanvas: {e}\n{tb}")
+        # Initialisation du mixin tooltip et de SimpleToolTip
+        tooltip.ToolTipMixin.__init__(self)
+        # Tooltip simple
+        self.__tip = tooltip.SimpleToolTip(self)  # Instance tooltip
 
         # Lie le clic droit pour afficher le menu contextuel
         # self.bind("<Button-3>", self.on_popup)          # Associe on_popup au clic droit
@@ -471,9 +478,23 @@ class TimelineTk(TimeLineCanvas):
         Compatibilité wx : dans Tkinter, la gestion des tooltips
         se fait dans TimeLineCanvas.
         """
-        pass                                            # Ne fait rien pour le moment
-        # L'info-bulle est généralement gérée dans le widget TimeLineCanvas lui-même.
-        return None
+        # pass                                            # Ne fait rien pour le moment
+        # # L'info-bulle est généralement gérée dans le widget TimeLineCanvas lui-même.
+        # return None
+        item = self.hot_map.findNodeAtPosition((x, y))
+        if item is None or item == self.model:
+            return None
+        tooltipData = self.getItemTooltipData(item)
+        doShow = reduce(
+            operator.__or__,
+            list(map(bool, [data[1] for data in tooltipData])),
+            False,
+        )
+        if doShow:
+            self.__tip.SetData(tooltipData)
+            return self.__tip
+        else:
+            return None
 
     def isAnyItemExpandable(self) -> bool:
         """
