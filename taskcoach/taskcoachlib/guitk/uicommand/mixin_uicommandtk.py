@@ -227,9 +227,9 @@ class NeedsSelectedTasksMixin(NeedsSelectionMixin):
             return False
 
         # Comportement normal
-        log.debug(
-            f"NeedsSelectedTasksMixin.enabled : retourne {super()}.enabled() et {self.viewer}.curselectionIsInstanceOf() !"
-        )
+        # log.debug(
+        #     f"NeedsSelectedTasksMixin.enabled : retourne {super()}.enabled() et {self.viewer}.curselectionIsInstanceOf() !"
+        # )
         return super().enabled(event) and self.viewer.curselectionIsInstanceOf(
             task.Task
         )

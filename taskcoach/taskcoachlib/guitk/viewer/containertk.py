@@ -579,9 +579,9 @@ class ViewerContainer(ttk.LabelFrame):
         #     return None
         # return self.viewer.focus_get()
         # return self.focus_get()
-        log.debug(
-            f"ViewerContainer.activeViewer : retourne self._active_viewer={self._active_viewer} !"
-        )
+        # log.debug(
+        #     f"ViewerContainer.activeViewer : retourne self._active_viewer={self._active_viewer} !"
+        # )
         return self._active_viewer
         # return self._active_viewer
 

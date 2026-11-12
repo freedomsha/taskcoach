@@ -742,9 +742,9 @@ class TkinterApplication(
     @classmethod
     def getInstance(cls):
         """Retourne l'instance unique de TkinterApplication."""
-        log.debug(
-            f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
-        )
+        # log.debug(
+        #     f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
+        # )
         return cls()
 
 

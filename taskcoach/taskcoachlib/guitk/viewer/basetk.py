@@ -839,7 +839,7 @@ class Viewer(ttk.Frame, patterns.Observer):
                     self.domainObjectsToView()
                 )
             )
-            log.debug("Viewer.refresh : change la présentation comme ceci :", new_presentation)
+            log.debug("Viewer.refresh : change la présentation comme ceci : %s", new_presentation)
             self.setPresentation(new_presentation)
             log.debug("Viewer.refresh : Le changement est effectué.")
 
@@ -953,9 +953,9 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def presentation(self):
         """Retourne les objets de domaine que cette visionneuse affiche actuellement."""
-        log.debug(
-            f"Viewer.presentation : renvoie les objets de domaine que la visionneuse {self.__class__.__name__} affiche actuellement : {self.__presentation}."
-        )
+        # log.debug(
+        #     f"Viewer.presentation : renvoie les objets de domaine que la visionneuse {self.__class__.__name__} affiche actuellement : {self.__presentation}."
+        # )
         return self.__presentation
         # if hasattr(self, '__presentation'):
         #     return self.__presentation

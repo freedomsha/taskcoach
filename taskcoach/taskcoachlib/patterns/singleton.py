@@ -44,8 +44,13 @@ class Singleton(ABCMeta):
         """
         if not class_.hasInstance():
             # pylint: disable=W0201
-            class_.instance = super().__call__(*args, **kwargs)
-        # log.debug(f"Singleton.__call__ : retourne la classe instanciée {class_.instance.__class__.__name__}")  # !!! Crée une boucle !!!
+            instance = class_.__new__(class_, *args, **kwargs)
+            class_.instance = instance
+            try:
+                instance.__init__(*args, **kwargs)
+            except Exception:
+                del class_.instance
+                raise
         return class_.instance
 
     def deleteInstance(class_):

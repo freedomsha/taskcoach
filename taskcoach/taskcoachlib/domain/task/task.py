@@ -1705,9 +1705,9 @@ class Task(
             else:
                 # print("Task.status :    ✅ Statut = inactive (0)")
                 self.__task_status = mod_status.inactive
-        log.debug(
-            f"DEBUG - Task.status() : statut calculé pour {self.subject()} = {self.__task_status}, son __hash__ = {self.__task_status.__hash__()}."
-        )
+        # log.debug(
+        #     f"DEBUG - Task.status() : statut calculé pour {self.subject()} = {self.__task_status}, son __hash__ = {self.__task_status.__hash__()}."
+        # )
         return (
             self.__task_status
         )  # Problème de double emploi avec object.__status
