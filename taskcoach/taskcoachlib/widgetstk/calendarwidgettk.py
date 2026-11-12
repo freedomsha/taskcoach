@@ -44,7 +44,7 @@ from taskcoachlib.widgetstk import tooltiptk as tooltip
 log = logging.getLogger(__name__)
 
 
-class _CalendarContent(tooltip.ToolTip, tkScheduler):
+class _CalendarContent(tooltip.ToolTipMixin, tkScheduler):
     """
     Composant interne représentant le contenu principal du calendrier dans TaskCoach.
 
@@ -102,6 +102,7 @@ class _CalendarContent(tooltip.ToolTip, tkScheduler):
         self.changeConfigCb = onChangeConfig
         self.popupMenu = popupMenu
 
+        self.__tip = tooltip.SimpleToolTip(self)
         self.__selection = []
 
         self.__showNoPlannedStartDate = False
@@ -432,8 +433,10 @@ class _CalendarContent(tooltip.ToolTip, tkScheduler):
                 tooltipData = self.getItemTooltipData(item)
                 doShow = any(data[1] for data in tooltipData)
                 if doShow:
-                    tooltip_text = "\n".join([f"{label}: {value}" for label, value in tooltipData if value])
-                    return tooltip_text
+                    # tooltip_text = "\n".join([f"{label}: {value}" for label, value in tooltipData if value])
+                    self.__tip.SetData(tooltipData)
+                    # return tooltip_text
+                    return self.__tip
         return None
 
     # Intégration Tkinter
