@@ -35,6 +35,8 @@ class SquareMap(tooltip.ToolTipMixin, squaremap.SquareMap):
             highlight=False
         )
 
+        # Initialisation du mixin tooltip et de SimpleToolTip
+        tooltip.ToolTipMixin.__init__(self)
         # Tooltip simple
         self.__tip = tooltip.SimpleToolTip(self)  # Instance tooltip
 
