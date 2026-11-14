@@ -67,4 +67,5 @@ class Singleton(ABCMeta):
         return "instance" in class_.__dict__
 
     def getInstance(cls):
+        """Retourne l'instance unique de TkinterApplication."""
         return cls()

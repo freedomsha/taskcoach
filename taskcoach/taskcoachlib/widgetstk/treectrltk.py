@@ -315,7 +315,7 @@ from taskcoachlib.guitk import artprovidertk
 
 # from .itemctrl import *
 # from taskcoachlib.widgetstk import draganddroptk, itemctrltk
-from taskcoachlib.widgetstk import itemctrltk
+from taskcoachlib.widgetstk import itemctrltk, draganddroptk
 from taskcoachlib.widgetstk.draganddroptk import TreeCtrlDragAndDropMixin
 from taskcoachlib.widgetstk.itemctrltk import (
     Column,
@@ -363,7 +363,7 @@ class SimpleTreeItem:  # Voir itemctrltk.py pour une version plus complète
 
 
 class TreeCtrl(
-    ttk.Treeview
+    draganddroptk.TreeCtrlDragAndDropMixin, ttk.Treeview
 ):  # Remplace HyperTreeList et CustomTreeCtrl de wxPython
     """
     Une version de TreeCtrl pour Tkinter avec glisser-déposer.

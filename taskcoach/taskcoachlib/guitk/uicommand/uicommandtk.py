@@ -238,8 +238,10 @@ from taskcoachlib.domain import (
 )
 from taskcoachlib.guitk import dialog, printertk
 from taskcoachlib.guitk.dialog import (
+    backupmanagertk,
     templatestk,
     editor,
+    exporttk,
     preferencestk,
     syncpreferences,
 )
@@ -281,7 +283,7 @@ class TaskListCommand(base_uicommandtk.UICommand):
     """
 
     def __init__(self, *args, **kwargs):
-        log.debug("TaskListCommand.__init__ : avec args=%s et kwargs=", args, kwargs)
+        log.debug("TaskListCommand.__init__ : avec args=%s et kwargs=%s", args, kwargs)
         self.taskList = kwargs.pop("taskList", None)
         super().__init__(*args, **kwargs)
 
@@ -382,7 +384,7 @@ class FileOpen(IOCommand):
             self.iocontroller.open()
             log.info("FileOpen command executed!")
         except Exception as e:
-            log.exception(f"FileOpen.doCommand : Erreur : {e}", exc_info=True)
+            log.exception(f"FileOpen.doCommand : Erreur : %s", e, exc_info=True)
 
 
 class RecentFileOpen(IOCommand):
@@ -460,7 +462,7 @@ class FileSave(IOCommand):
     def doCommand(self, event=None):
         self.iocontroller.save()
 
-    def enabled(self):
+    def enabled(self, event=None):
         return self.iocontroller.needSave()
 
 
@@ -481,7 +483,7 @@ class FileMergeDiskChanges(IOCommand):
     def doCommand(self, event=None):
         self.iocontroller.mergeDiskChanges()
 
-    def enabled(self):
+    def enabled(self, event=None):
         return self.iocontroller.changedOnDisk()
 
 
@@ -969,7 +971,7 @@ class FileManageBackups(IOCommand, settings_uicommandtk.SettingsCommand):
         """
         # On instancie le dialogue (qui doit être converti en Tkinter Toplevel/Dialog)
         # On utilise le 'with' si votre classe BackupManagerDialog supporte le protocole context manager
-        dlg = dialog.BackupManagerDialog(
+        dlg = dialog.backupmanagertk.BackupManagerDialog(
             self.mainWindow(), self.settings, self.iocontroller.filename()
         )
 
@@ -977,7 +979,7 @@ class FileManageBackups(IOCommand, settings_uicommandtk.SettingsCommand):
         # on attend la fermeture si c'est un dialogue modal.
         # Si vous avez implémenté une méthode showModal() retournant le résultat :
         if (
-            dlg.showModal() == "OK"
+            dlg.showModal() == "OK"  # TODO: showModal() à créer dans BackupManagerDialog ou à utiliser dans une des treeview créées
         ):  # Adapté selon votre implémentation (ex: tk.OK ou "OK")
             restored_filename = dlg.restoredFilename()
             if restored_filename:
@@ -1025,7 +1027,7 @@ class FileExportAsHTML(FileExportCommand):
 
     @staticmethod
     def getExportDialogClass():
-        return dialog.export.ExportAsHTMLDialog
+        return dialog.exporttk.ExportAsHtmlDialog
 
     def exportFunction(self):
         return self.iocontroller.exportAsHTML
@@ -1051,7 +1053,7 @@ class FileExportAsCSV(FileExportCommand):
 
     @staticmethod
     def getExportDialogClass():
-        return dialog.export.ExportAsCSVDialog
+        return dialog.exporttk.ExportAsCSVDialog
 
     def exportFunction(self):
         return self.iocontroller.exportAsCSV
@@ -3963,9 +3965,11 @@ class TaskMarkActive(
 
     def enabled(self, event=None):
         def canBeMarkedActive(aTask):
-            return (
-                aTask.actualStartDateTime() > date.Now() or aTask.completed()
-            )
+            if aTask:
+                return (
+                    aTask.actualStartDateTime() > date.Now() or aTask.completed()
+                )
+            return False
 
         return super().enabled(event) and any(
             [canBeMarkedActive(task) for task in self.viewer.curselection()]
@@ -4178,7 +4182,7 @@ class DragAndDropCommand(ViewerCommand):
     """
 
     def onCommandActivate(
-        self, dropItem, dragItems, part, column
+            self, dropItem, dragItems, part, column
     ):  # pylint: disable=W0221
         """Méthode appelée lors de l'activation de la commande de glisser-déposer.
 
@@ -4221,7 +4225,7 @@ class DragAndDropCommand(ViewerCommand):
         )
         if dragAndDropCommand.canDo():
             dragAndDropCommand.do()
-            return dragAndDropCommand
+        return dragAndDropCommand  # TODO : A commenter ?
 
     def createCommand(self, dropItem, dragItems, part, column, isTree):
         """Méthode abstraite à implémenter pour créer la commande de glisser-déposer.
@@ -6335,6 +6339,7 @@ class Search(ViewerCommand, settings_uicommandtk.SettingsCommand):
         """Ajoute le contrôle de recherche à la barre d'outils,
         lie les événements clavier appropriés et initialise le contrôle avec les paramètres
         de recherche courants."""
+        log.debug("Search.appendToToolBar : ajoute le contrôle de recherche à la barre d'outils %s.", toolbar)
         self.__bound = True
         (
             searchString,

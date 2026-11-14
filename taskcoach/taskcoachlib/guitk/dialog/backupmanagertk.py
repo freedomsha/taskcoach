@@ -178,7 +178,7 @@ class BackupManagerDialog(tk.Toplevel):
         # self.__backups_listbox.pack(side="left", fill="both", expand=True)
         # self.__backups_listbox.bind("<<ListboxSelect>>", self._OnSelectBackup)
         # Treeview pour les sauvegardes
-        self.__backups = ttk.Treeview(backups_frame, columns=(), show="tree", selectmode="browse")
+        self.__backups = ttk.Treeview(backups_frame, columns=(), show="tree", selectmode="browse")  # TODO: peut-être une treeviewctrl !?
         self.__backups.heading("#0", text=_("Date"))
 
         backups_scrollbar = ttk.Scrollbar(backups_frame, orient="vertical", command=self.__backups.yview)

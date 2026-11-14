@@ -54,9 +54,9 @@ import logging
 import os
 import sys
 import time
-import tkinter as tk
+# import tkinter as tk
 from tkinter import messagebox
-from tkinter import Menu
+# from tkinter import Menu
 import threading
 
 # # from tkinterdnd2 import TkinterDnD
@@ -67,25 +67,24 @@ import locale
 import calendar
 
 # Importer les classes nécessaires de votre bibliothèque d'application.
-# Notez que ces modules sont supposés avoir été mis à jour pour fonctionner avec tkinter.
+# Notez que ces modules sont supposés avoir été mis à jour pour fonctionner
+# avec tkinter.
 from taskcoachlib import (
-    i18n,
+    # i18n,
     meta,
     operating_system,
     patterns,
     # persistencetk,
-    # meta,
-    # i18n,
 )
 from taskcoachlib.persistence import taskfile
-from taskcoachlib.i18n import _
+# from taskcoachlib.i18n import _
 from taskcoachlib.application.interface import ApplicationInterface
 from taskcoachlib.config.settings import Settings
 from taskcoachlib.domain import date
 from taskcoachlib import guitk
-from taskcoachlib.guitk import artprovidertk
+# from taskcoachlib.guitk import artprovidertk
 from taskcoachlib.guitk import mainwindowtk
-from taskcoachlib.guitk import iocontrollertk
+# from taskcoachlib.guitk import iocontrollertk
 
 # Remplacement de la création de IdleController par:
 from taskcoachlib.powermgt import idletk
@@ -95,6 +94,9 @@ log = logging.getLogger(__name__)
 
 # Maquette de la classe RedirectedOutput car elle utilise wx.MessageBox
 class RedirectedOutput:
+    """
+    Classe pour rediriger la sortie standard. Vers un fichier de log.
+    """
     _rx_ignore = [
         re.compile("RuntimeWarning: PyOS_InputHook"),
     ]
@@ -108,6 +110,7 @@ class RedirectedOutput:
         )
 
     def write(self, bf):
+        """Ouvre et écrit bf dans le fichier.."""
         for rx in self._rx_ignore:
             if rx.search(bf):
                 return
@@ -251,7 +254,7 @@ class TkinterApplication(
                         )
 
                     def saveYourself(
-                        self, saveType, shutdown, interactStyle, fast
+                        self, save_type, shutdown, interact_style, fast
                     ):  # pylint: disable=W0613
                         if shutdown:
                             # wx.CallAfter(self._callback)
@@ -553,6 +556,7 @@ class TkinterApplication(
     def __init_domain_objects(self):
         from taskcoachlib.domain import task, attachment
 
+        # TODO : à revoir :
         task.Task.settings = self.settings
         attachment.Attachment.settings = self.settings
 
@@ -729,23 +733,24 @@ class TkinterApplication(
         if hasattr(self, "idle_notifier") and self.idle_notifier:
             self.idle_notifier.stop()
 
-    # @staticmethod
-    # def getInstance():
-    #     """Retourne l'instance unique de TkinterApplication."""
-    #     log.debug(
-    #         f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
-    #     )
-    #     # if TkinterApplication.instance is None:
-    #     #    TkinterApplication()  # Crée l'instance si elle n'existe pas
-    #     return TkinterApplication.instance
-    #     # return patterns.Singleton.__call__(TkinterApplication)
-    @classmethod
-    def getInstance(cls):
-        """Retourne l'instance unique de TkinterApplication."""
-        # log.debug(
-        #     f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
-        # )
-        return cls()
+    # Méthode de singleton.py !:
+    # # @staticmethod
+    # # def getInstance():
+    # #     """Retourne l'instance unique de TkinterApplication."""
+    # #     log.debug(
+    # #         f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
+    # #     )
+    # #     # if TkinterApplication.instance is None:
+    # #     #    TkinterApplication()  # Crée l'instance si elle n'existe pas
+    # #     return TkinterApplication.instance
+    # #     # return patterns.Singleton.__call__(TkinterApplication)
+    # @classmethod
+    # def getInstance(cls):
+    #
+    #     # log.debug(
+    #     #     f"TkinterApplication.getInstance : retourne TkinterApplication.instance"
+    #     # )
+    #     return cls()
 
 
 # if __name__ == '__main__':

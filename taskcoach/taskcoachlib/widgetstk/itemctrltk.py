@@ -771,7 +771,8 @@ class CtrlWithToolTipMixin(
         # super().__init__(master, *args, **kwargs)  # <-- PROBLÈME
         # Appel explicite au parent mixin
         # _CtrlWithItemsMixin.__init__(self, *args, **kwargs)  # revenir à super().__init__ ?
-        tooltiptk.ToolTipMixin.__init__(self)
+        # tooltiptk.ToolTipMixin.__init__(self)
+        tooltiptk.ToolTipMixin.__init__(self, parent, *args, **kwargs)
         # Le ToolTip est initialisé en lui passant le widget `self` (VirtualListCtrl)
         # Il faut s'assurer que self est correctement initialisé avant cet appel.
         # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")  # `self` est maintenant le widget
@@ -804,7 +805,8 @@ class CtrlWithToolTipMixin(
 
             # 'self' est maintenant un objet Treeview/TreeListCtrl entièrement initialisé.
             # self.item_tooltip = tooltiptk.ToolTip(self, text="Default")
-            self._tooltip = tooltiptk.ToolTip(self, text="Default")
+            # self._tooltip = tooltiptk.ToolTip(self, text="Default")
+            self._tooltip = tooltiptk.SimpleToolTip(self, [(None, "Default")])
 
     def on_motion_update_tooltip(self, event):
         """Met à jour l'info-bulle en fonction de l'élément survolé."""
@@ -831,7 +833,8 @@ class CtrlWithToolTipMixin(
         if not domainObject:
             # if self.item_tooltip: self.item_tooltip.hide_tooltip()
             if self._tooltip:
-                self._tooltip.hide_tooltip()
+                # self._tooltip.hide_tooltip()
+                self._tooltip.Hide()
             return
         # résolution robuste du "provider" de tooltip
         provider = getattr(self, "_tooltip_provider", None) or getattr(
@@ -850,10 +853,12 @@ class CtrlWithToolTipMixin(
             # self.item_tooltip.text = tooltip_text
             self._tooltip.text = tooltip_text
             # self.item_tooltip.show_tooltip_now()
-            self._tooltip.show_tooltip_now()
+            # self._tooltip.show_tooltip_now()
+            self._tooltip.Show()
         else:
             # self.item_tooltip.hide_tooltip()
-            self._tooltip.hide_tooltip()
+            # self._tooltip.hide_tooltip()
+            self._tooltip.Hide()
         # Et expose une méthode publique pour que le viewer
         # appelle tree._tooltip_provider = adapter après initialisation
         # (ou mieux, tree.set_tooltip_provider(adapter)).
@@ -869,7 +874,8 @@ class CtrlWithToolTipMixin(
 
         # Si aucun item valide, masquer l’info-bulle
         if not self._itemIsOk(item):
-            self._tooltip.hide()
+            # self._tooltip.hide()
+            self._tooltip.Hide()
             return
 
         # Récupération de l’objet métier
@@ -877,7 +883,8 @@ class CtrlWithToolTipMixin(
 
         # Si aucun objet, pas de tooltip
         if obj is None:
-            self._tooltip.hide()
+            # self._tooltip.hide()
+            self._tooltip.Hide()
             return
 
         # Récupération des données de tooltip depuis le viewer
@@ -885,7 +892,8 @@ class CtrlWithToolTipMixin(
             tooltip_data = self.getItemTooltipData(obj)
         except AttributeError:
             # Le viewer n’implémente pas les tooltips
-            self._tooltip.hide()
+            # self._tooltip.hide()
+            self._tooltip.Hide()
             return
 
         # tooltip_data est une liste de tuples (label, valeur)
@@ -895,11 +903,13 @@ class CtrlWithToolTipMixin(
 
         # Si aucune donnée à afficher
         if not text_lines:
-            self._tooltip.hide()
+            # self._tooltip.hide()
+            self._tooltip.Hide()
             return
 
         # Mise à jour du texte
-        self._tooltip.set_text("\n".join(text_lines))
+        # self._tooltip.set_text("\n".join(text_lines))
+        self._tooltip.SetData([None, "\n".join(text_lines)])
 
 
 # NOTE : Il n'est pas nécessaire de lier "<Motion>" ici car `tooltiptk.ToolTip` le fait déjà

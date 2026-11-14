@@ -93,7 +93,7 @@ log = logging.getLogger(__name__)
 
 # class SearchCtrl(ttk.Frame, ToolTipMixin):
 # class SearchCtrl(ttk.Frame, ToolTip):
-class SearchCtrl(ToolTipMixin, ttk.Frame):
+class SearchCtrl(ttk.Frame, ToolTipMixin):
     """
     Une adaptation de wx.SearchCtrl pour Tkinter.
     """
@@ -109,6 +109,7 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
         # self.__bitmapSize = kwargs.pop("size", (16, 16))
         # value = kwargs.pop("value", "")
         super().__init__(parent, *args, **kwargs)
+        # ttk.Frame.__init__(parent, *args, **kwargs)
         # ToolTipMixin.__init__(self)
         # ToolTip.__init__(self, parent, *args, **kwargs)  # self, widget, text, delay=500, **kwargs
 
@@ -137,9 +138,10 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
         self.__entry.grid(row=0, column=0, sticky='nsew', padx=(0, 5))
         self.__entry.bind("<Return>", self.on_search_button)
         self.__entry.bind("<KeyRelease>", self.on_entry_key_release)
-        # self.__entry.setvar("value", value)  # Le nom de la variable ? "value"?
+        # self.__entry.setvar("value", value)  # Le nom de la variable ? "value"? dans l'init
         self.__entry.insert(0, value)
-        self.tooltip = SimpleToolTip(self.__entry, text=_("Enter your search term here."))  # Info-bulle
+        # self.tooltip = SimpleToolTip(self.__entry, _("Enter your search term here."))  # Info-bulle
+        self.tooltip = SimpleToolTip(parent, [(None,str(self.__entry)), (None, _("Enter your search term here."))])  # Info-bulle
 
         # Bouton d'annulation
         # # self.__cancel_button = ttk.Button(self, text="×", width=2, command=self.clear_search)
@@ -153,7 +155,8 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
         #     self.__cancel_button = ttk.Button(self, text="×", width=2, command=self.clear_search)
         self.__cancel_button.grid(row=0, column=1, sticky='e', padx=(0, 5))
         self.__cancel_button.grid_remove()  # Cacher par défaut
-        self.cancel_tooltip = SimpleToolTip(self.__cancel_button, text=_("Clear search"))
+        # self.cancel_tooltip = SimpleToolTip(self.__cancel_button, text=_("Clear search"))
+        self.cancel_tooltip = SimpleToolTip(parent, [(cancel_icon, str(self.__cancel_button)), (None, _("Clear search"))])
 
         # Bouton de recherche/menu
         # self.__search_button = ttk.Button(self, text="🔍", width=2, command=self.on_search_button)
@@ -163,11 +166,13 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
         search_icon = getIcon("magnifier_glass_icon", (16,16))
         self.__search_button = ttk.Button(self, image=search_icon, width=2, command=self.on_search_button)
         self.__search_button.image = search_icon  # Garder une référence
+        # self.__search_button["image"] = search_icon  # Garder une référence
         # else:
         #     self.__search_button = ttk.Button(self, text="🔍", width=2, command=self.on_search_button)
         self.__search_button.grid(row=0, column=2, sticky='e')
         self.__search_button.bind("<Button-1>", self.on_search_button)
-        self.search_tooltip = SimpleToolTip(self.__search_button, text=_("Show search options"))
+        # self.search_tooltip = SimpleToolTip(self.__search_button, text=_("Show search options"))
+        self.search_tooltip = SimpleToolTip(parent, [(search_icon, str(self.__search_button)), (None, _("Show search options"))])
 
         self.__create_menu()
 
@@ -229,10 +234,13 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
             # self.__callback(self.get_search_params())
             params = self.get_search_params()
             if params['regularExpression'] and not self.is_valid_regex(params['value']):
-                self.tooltip.text = _("Invalid regular expression")
-                self.tooltip.show_tooltip()  # Montrer l'info-bulle d'erreur
+                # self.tooltip.text = _("Invalid regular expression")
+                self.tooltip.data = [(None, _("Invalid regular expression"))]
+                # self.tooltip.show_tooltip()  # Montrer l'info-bulle d'erreur
+                self.tooltip.Show()  # Montrer l'info-bulle d'erreur
             else:
-                self.tooltip.hide_tooltip()  # Cacher l'info-bulle si elle est visible
+                # self.tooltip.hide_tooltip()  # Cacher l'info-bulle si elle est visible
+                self.tooltip.Hide()  # Cacher l'info-bulle si elle est visible
                 self.__callback(params)
 
     def get_search_params(self):
@@ -262,7 +270,6 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
         self.__recentSearches.clear()
         self.update_recent_searches()
 
-
     def remember_search_string(self, search_string):
         """ Ajoute une chaîne de recherche à l'historique. """
         if search_string in self.__recentSearches:
@@ -289,7 +296,8 @@ class SearchCtrl(ToolTipMixin, ttk.Frame):
         except re.error:
             return False
 
-        # --- Exemple d'utilisation ---
+
+# --- Exemple d'utilisation ---
 if __name__ == '__main__':
     def my_search_callback(params):
         print("Recherche lancée avec les paramètres :")

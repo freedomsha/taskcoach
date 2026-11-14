@@ -50,7 +50,11 @@ class Filter(patterns.SetDecorator):
             Keyword Args :
                 treeMode : Un booléen indiquant si le filtre doit fonctionner en mode arborescence.
         """
+        # self.__treeMode = kwargs.pop("treeMode", False)
         self.__treeMode = kwargs.pop("treeMode", False)
+        log.debug(f"Filter.__init__ : récupère self.__treeMode={self.__treeMode}")
+        if hasattr(kwargs, "treemode"):
+            log.warning("kwargs a aussi treemode qu'il vaut mieux utiliser: %s", kwargs)
         # Track items added as ancestors to maintain tree hierarchy, not because
         # they matched filter criteria. Used by outer filters for orphan cleanup.
         self.__filterForced = set()
