@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from taskcoachlib.patterns import Observer, ObservableComposite
 from taskcoachlib.domain.categorizable import CategorizableCompositeObject
 
@@ -39,6 +40,8 @@ from pubsub import pub
 #    from taskcoachlib.thirdparty.pubsub import pub
 # else:
 #    from wx.lib.pubsub import pub
+
+log = logging.getLogger(__name__)
 
 
 class ChangeMonitor(Observer):
@@ -349,21 +352,21 @@ class ChangeMonitor(Observer):
             __frozen : Indique si le moniteur est gelé (ne surveille pas les changements).
             _changes (dict) : Un dictionnaire pour suivre les changements, où les clés sont les IDs des objets et les valeurs sont des ensembles de changements associés à ces objets.
         """
-        print("ChangeMonitor.onAttributeChanged : === onAttributeChanged ===")
-        print("ChangeMonitor.onAttributeChanged : TOPIC =", topic)
-        print("ChangeMonitor.onAttributeChanged : TOPIC TYPE =", type(topic))
-        print(
-            "ChangeMonitor.onAttributeChanged : sender =",
+        log.debug("ChangeMonitor.onAttributeChanged : === onAttributeChanged ===")
+        log.debug("ChangeMonitor.onAttributeChanged : TOPIC = %s", topic)
+        log.debug("ChangeMonitor.onAttributeChanged : TOPIC TYPE = %s", type(topic))
+        log.debug(
+            "ChangeMonitor.onAttributeChanged : sender = %s %s",
             type(sender).__name__,
             sender.id(),
         )
 
         if hasattr(topic, "getName"):
-            print("ChangeMonitor.onAttributeChanged : NAME =", topic.getName())
+            log.debug("ChangeMonitor.onAttributeChanged : NAME = %s", topic.getName())
 
         if hasattr(topic, "getNameTuple"):
-            print(
-                "ChangeMonitor.onAttributeChanged : TUPLE =",
+            log.debug(
+                "ChangeMonitor.onAttributeChanged : TUPLE = %s",
                 topic.getNameTuple(),
             )
         # Vérifie si le moniteur est gelé
@@ -515,32 +518,32 @@ class ChangeMonitor(Observer):
     def onChildAdded(self, event):
         """Lorsqu'un enfant est ajouté à un objet composite observable,
         cette méthode est appelée pour enregistrer le changement."""
-        print("ChangeMonitor.onChildAdded: event=%s" % event)  # Debug print
-        print(
-            "ChangeMonitor.onChildAdded: event.values()=%s"
-            % list(event.values())
+        log.debug("ChangeMonitor.onChildAdded: event=%s", event)  # Debug print
+        log.debug(
+            "ChangeMonitor.onChildAdded: event.values()=%s",
+            list(event.values())
         )  # Debug print
-        print(
-            "ChangeMonitor.onChildAdded: event.sourcesAndValuesByType()=%s"
-            % list(event.sourcesAndValuesByType().items())
+        log.debug(
+            "ChangeMonitor.onChildAdded: event.sourcesAndValuesByType()=%s",
+            list(event.sourcesAndValuesByType().items())
         )  # Debug print
-        print(
-            "ChangeMonitor.onChildAdded: event.sources()=%s"
-            % list(event.sources())
+        log.debug(
+            "ChangeMonitor.onChildAdded: event.sources()=%s",
+            list(event.sources())
         )  # Debug print
         # Event.sources() retourne un set. Appeler event.sources()[0] provoque TypeError car les sets ne sont pas indexables. C'est exactement l'exception que tu as dans la stack trace.
         # Dans certains tests, on voyait list(event.sources()) dans les prints (qui fonctionne) mais d'autres endroits utilisaient l'indexation directement — d'où l'exception intermittente.
         # Avoid indexing into a set returned by event.sources()
         first_source = next(iter(event.sources()), None)
-        print(
+        log.debug(
             # "ChangeMonitor.onChildAdded: event.values(source=event.sources()[0])=%s"
             # % list(event.values(source=event.sources()[0]))
-            "ChangeMonitor.onChildAdded: event.values(source=first_source)=%s"
-            % list(event.values(source=first_source))
+            "ChangeMonitor.onChildAdded: event.values(source=first_source)=%s",
+            list(event.values(source=first_source))
         )  # Debug print
-        print(
-            "ChangeMonitor.onChildAdded: repr(self._changes)=%s"
-            % repr(self._changes)
+        log.debug(
+            "ChangeMonitor.onChildAdded: repr(self._changes)=%s",
+            repr(self._changes)
         )  # Debug print
         if self.__frozen:
             return
@@ -555,38 +558,38 @@ class ChangeMonitor(Observer):
                 if self._changes[obj.id()] is None:
                     self._changes[obj.id()] = set()
                 self._changes[obj.id()].add("__parent__")
-        print(
-            "ChangeMonitor.onChildAdded: after processing, repr(self._changes)=%s !"
-            % repr(self._changes)
+        log.debug(
+            "ChangeMonitor.onChildAdded: after processing, repr(self._changes)=%s !",
+            repr(self._changes)
         )  # Debug print
 
     def onChildRemoved(self, event):
         """Lorsqu'un enfant est retiré d'un objet composite observable,
         cette méthode est appelée pour enregistrer le changement."""
-        print("ChangeMonitor.onChildRemoved: event=%s" % event)  # Debug print
-        print(
-            "ChangeMonitor.onChildRemoved: event.values()=%s"
-            % list(event.values())
+        log.debug("ChangeMonitor.onChildRemoved: event=%s",event)  # Debug print
+        log.debug(
+            "ChangeMonitor.onChildRemoved: event.values()=%s",
+            list(event.values())
         )  # Debug print
-        print(
-            "ChangeMonitor.onChildRemoved: event.sourcesAndValuesByType()=%s"
-            % list(event.sourcesAndValuesByType().items())
+        log.debug(
+            "ChangeMonitor.onChildRemoved: event.sourcesAndValuesByType()=%s",
+            list(event.sourcesAndValuesByType().items())
         )  # Debug print
-        print(
-            "ChangeMonitor.onChildRemoved: event.sources()=%s"
-            % list(event.sources())
+        log.debug(
+            "ChangeMonitor.onChildRemoved: event.sources()=%s",
+            list(event.sources())
         )  # Debug print
         # Avoid indexing into a set returned by event.sources()
         first_source = next(iter(event.sources()), None)
-        print(
+        log.debug(
             # "ChangeMonitor.onChildRemoved: event.values(source=event.sources()[0])=%s"
             # % list(event.values(source=event.sources()[0]))
-            "ChangeMonitor.onChildRemoved: event.values(source=first_source)=%s"
-            % list(event.values(source=first_source))
+            "ChangeMonitor.onChildRemoved: event.values(source=first_source)=%s",
+            list(event.values(source=first_source))
         )  # Debug print
-        print(
-            "ChangeMonitor.onChildRemoved: repr(self._changes)=%s"
-            % repr(self._changes)
+        log.debug(
+            "ChangeMonitor.onChildRemoved: repr(self._changes)=%s",
+            repr(self._changes)
         )  # Debug print
         if self.__frozen:
             return
@@ -601,9 +604,9 @@ class ChangeMonitor(Observer):
                 and self._changes[obj.id()] is not None
             ):
                 self._changes[obj.id()].add("__parent__")
-        print(
-            "ChangeMonitor.onChildRemoved: after processing, repr(self._changes)=%s !"
-            % repr(self._changes)
+        log.debug(
+            "ChangeMonitor.onChildRemoved: after processing, repr(self._changes)=%s !",
+            repr(self._changes)
         )  # Debug print
 
     def onObjectAdded(self, event):
@@ -722,32 +725,32 @@ class ChangeMonitor(Observer):
     def onCategoryAdded(self, event):
         """Lorsqu'une catégorie est ajoutée à un objet catégorisable composite,
         cette méthode est appelée pour enregistrer le changement."""
-        print("ChangeMonitor.onCategoryAdded: event=%s" % event)  # Debug print
-        print(
-            "ChangeMonitor.onCategoryAdded: event.values()=%s"
-            % list(event.values())
+        log.debug("ChangeMonitor.onCategoryAdded: event=%s", event)  # Debug print
+        log.debug(
+            "ChangeMonitor.onCategoryAdded: event.values()=%s",
+            list(event.values())
         )  # Debug print
-        print(
-            "ChangeMonitor.onCategoryAdded: event.sourcesAndValuesByType()=%s"
-            % list(event.sourcesAndValuesByType().items())
+        log.debug(
+            "ChangeMonitor.onCategoryAdded: event.sourcesAndValuesByType()=%s",
+            list(event.sourcesAndValuesByType().items())
         )  # Debug print
-        print(
-            "ChangeMonitor.onCategoryAdded: event.sources()=%s"
-            % list(event.sources())
+        log.debug(
+            "ChangeMonitor.onCategoryAdded: event.sources()=%s",
+            list(event.sources())
         )  # Debug print
         # Avoid indexing into a set returned by event.sources()
         first_source = next(iter(event.sources()), None)
         # Event.sources() retourne un set. Appeler event.sources()[0] provoque TypeError car les sets ne sont pas indexables. C'est exactement l'exception que tu as dans la stack trace.
         # Dans certains tests, on voyait list(event.sources()) dans les prints (qui fonctionne) mais d'autres endroits utilisaient l'indexation directement — d'où l'exception intermittente.
-        print(
+        log.debug(
             # "ChangeMonitor.onCategoryAdded: event.values(source=event.sources()[0])=%s"
             # % list(event.values(source=event.sources()[0]))
-            "ChangeMonitor.onCategoryAdded: event.values(source=first_source)=%s"
-            % list(event.values(source=first_source))
+            "ChangeMonitor.onCategoryAdded: event.values(source=first_source)=%s",
+            list(event.values(source=first_source))
         )  # Debug print
-        print(
-            "ChangeMonitor.onCategoryAdded: repr(self._changes)=%s"
-            % repr(self._changes)
+        log.debug(
+            "ChangeMonitor.onCategoryAdded: repr(self._changes)=%s",
+            repr(self._changes)
         )  # Debug print
         if self.__frozen:
             return
@@ -767,9 +770,9 @@ class ChangeMonitor(Observer):
                     else:
                         # self._changes[obj.id()].add("__add" + name)
                         self._changes[obj.id()].add(f"__add{name}")
-        print(
-            "ChangeMonitor.onCategoryAdded: after processing, repr(self._changes)=%s !"
-            % repr(self._changes)
+        log.debug(
+            "ChangeMonitor.onCategoryAdded: after processing, repr(self._changes)=%s !",
+            repr(self._changes)
         )  # Debug print
 
     def onCategoryRemoved(self, event):

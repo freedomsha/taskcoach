@@ -122,6 +122,11 @@ logging.getLogger("taskcoachlib.domain.base.owner").setLevel(logging.INFO)
 # Réduire les lectures répétées des attributs
 logging.getLogger("taskcoachlib.domain.base.attribute").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.domain.base.filter").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.base.object").setLevel(logging.DEBUG)
+logging.getLogger("taskcoachlib.domain.effort.effort").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.task.task").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.category.category").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.note.note").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.filesystem").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.filesystem.fs_poller").setLevel(
     logging.WARNING
@@ -137,6 +142,7 @@ logging.getLogger("taskcoachlib.gui.uicommand.settings_uicommand").setLevel(
     logging.INFO
 )
 logging.getLogger("taskcoachlib.gui.toolbar").setLevel(logging.INFO)
+
 # # Réduire les logs très fréquents de l'interface Tkinter
 # logging.getLogger("taskcoachlib.guitk").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.guitk.mainwindowtk").setLevel(logging.INFO)
@@ -146,19 +152,29 @@ logging.getLogger("taskcoachlib.gui.toolbar").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.guitk.uicommand.settings_uicommandtk").setLevel(
 #     logging.INFO
 # )
-# logging.getLogger("taskcoachlib.guitk.viewer.basetk").setLevel(logging.INFO)
-# logging.getLogger("taskcoachlib.guitk.viewer.tasktk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.factorytk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.basetk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.mixintk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.tasktk").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.guitk.toolbarttk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.changes.monitor").setLevel(logging.INFO)
+# WIDGETS
 # logging.getLogger("taskcoachlib.widgets.treectrl").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.widgets.itemctrl").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.widgets.autowidth").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.widgets.tooltip").setLevel(logging.INFO)
+# WIDGETS TK
+logging.getLogger("taskcoachlib.widgetstk.autowidthtk").setLevel(logging.INFO)
+
+# Décorateurs
+logging.getLogger("taskcoachlib.domain.task.sorter").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.base.sorter").setLevel(logging.INFO)
 
 filename_dated = "taskcoach_" + datetime.now().strftime("%Y%m%d%H%M") + ".log"
 rh = logging.handlers.RotatingFileHandler(
     # "taskcoach.log", maxBytes=1024000, backupCount=50
     filename_dated,
-    maxBytes=1024000,
+    maxBytes=1048576,
     backupCount=50,
 )
 rh.rotator = rotator

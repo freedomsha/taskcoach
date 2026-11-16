@@ -2258,6 +2258,9 @@ class Taskviewer(
 
         # Section de configuration
         kwargs.setdefault("settingsSection", "taskviewer")
+
+        # # Essai d'enregistrement de présentation
+        # self.__presentation = super().presentation()
         log.debug(
             f"Taskviewer.__init__ : self={self.__class__.__name__} avec parent={parent} de type {type(parent)} sans parent_mainwindow."
         )
@@ -2414,32 +2417,33 @@ class Taskviewer(
             log.debug(f"Impossible d'afficher l'info-bulle d'activation: {e}")
 
     # Le problème exact :
-    #
     #     Viewer.__init__ (dans basetk.py) essaie de créer la présentation (self.__presentation = ...).
-    #
     #     Pour créer cette présentation, il appelle self.createFilter.
-    #
     #     createFilter (dans mixintk.py) a besoin de savoir si on est en mode arbre, donc il appelle self.isTreeViewer().
-    #
     #     isTreeViewer (dans tasktk.py) contient une ligne de log : log.debug(f"... {self.presentation().treeMode()}.").
-    #
     #     Ce log essaie d'exécuter self.presentation().
-    #
     #     self.presentation() (dans basetk.py) essaie de retourner self.__presentation.
-    #
     #     CRASH : self.__presentation n'existe pas encore, car nous sommes précisément à l'étape 1 (sa création).
     #
-    # La solution : Il faut modifier le fichier tasktk.py pour supprimer l'appel prématuré à presentation() dans le log, et gérer le fait que la présentation n'est pas encore disponible lors de l'initialisation.
+    # La solution : Il faut modifier le fichier tasktk.py
+    # pour supprimer l'appel prématuré à presentation() dans le log,
+    # et gérer le fait que la présentation n'est pas encore disponible
+    # lors de l'initialisation.
     def isTreeViewer(self):
         """
         Détermine si le visualiseur est en mode arborescence en lisant les paramètres.
+
         Utilise la présentation si elle existe, sinon (pendant l'init) utilise les settings.
         """
         # return self.isTreeMode()
+        # A la base, renvoie à :
+        # return self.presentation().isTreeMode()
+        # sauf que self n'a pas forcément presentation dans ses attributs !
+        # if hasattr(self, __presentation):
         try:
             # On tente de récupérer le mode depuis la présentation active
             log.debug(
-                f"Taskviewer.isTreeViewer : essaie de renvoyer {self.presentation().treeMode()}."
+                f"Taskviewer.isTreeViewer : essaie de renvoyer self.presentation().treeMode()."
             )
             return self.presentation().treeMode()
             # return self.presentation.treeMode()  # ?
@@ -2448,8 +2452,8 @@ class Taskviewer(
             # lors de l'initialisation dans Viewer.__init__), on se replie sur les paramètres.
             # Note : On évite absolument de logger self.presentation() ici pour ne pas recréer l'erreur.
 
-            log.debug(
-                f"Taskviewer.isTreeViewer : N'a pas trouvé de treeMode dans {self}.presentation."
+            log.exception(
+                f"Taskviewer.isTreeViewer : N'a pas trouvé de treeMode dans {self}.presentation.", exc_info=True
             )
             log.debug(
                 "Taskviewer.isTreeViewer : Présentation non prête, lecture depuis les settings."
@@ -2461,6 +2465,7 @@ class Taskviewer(
             log.debug(
                 f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !"
             )
+            # log.debug(f"Taskviewer.isTreeViewer : renvoie self_settings {self_settings}.")
             return self_settings
             # treeMode_found = self.settings.getboolean(self.settingsSection(), "treemode")
             # log.debug(f"Taskviewer.isTreeViewer : renvoie treeMode_found {treeMode_found}.")
@@ -4213,7 +4218,7 @@ class Taskviewer(
         # Do some custom logic here, if needed
         # ...
         # return super().settingsSection()  # Call the superclass implementation
-        return "taskviewer"
+        return "taskviewer"  # TODO :
 
     # def refresh(self):
     def refresh(self, *args, **kwargs):

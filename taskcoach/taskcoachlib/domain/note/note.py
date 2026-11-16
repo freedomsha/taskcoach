@@ -37,16 +37,16 @@ class Note(AttachmentOwner, CategorizableCompositeObject):
     # pass
 
     def __init__(self, *args, **kwargs):
-        print(f"Note.__init__ kwargs = {kwargs}")
-        print(">>> Note.__init__ AVANT super")
+        log.debug(f"Note.__init__ kwargs = {kwargs}")
+        log.debug(">>> Note.__init__ AVANT super")
         super().__init__(*args, **kwargs)
-        print(">>> Note.__init__ APRES super")
-        print("Note.__init__ : terminé !")
+        log.debug(">>> Note.__init__ APRES super")
+        log.debug("Note.__init__ : terminé !")
         # Note: Effective appearance is computed by ComputeStyles polling
 
     def addAttachments(self, param, **kwargs):
         """Ajouter une ou plusieurs pièces jointes à la note."""
-        print(
+        log.debug(
             f"Note.addAttachments : Ajout de pièces jointes à la note {self.id}."
         )
         # self.addAttachments(param)

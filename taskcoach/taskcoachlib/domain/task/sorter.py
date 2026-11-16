@@ -59,7 +59,13 @@ class Sorter(base.TreeSorter):
             # (from module "taskcoachlib.domain.task.sorter") inadequate: needs to accept 1 more args (newValue)
 
     def setTreeMode(self, treeMode=True):
-        log.debug(f"Setting tree mode to {treeMode}.")
+        """
+        Règle le mode d'affichage arbre ou liste.
+
+        Args:
+            treeMode (Bool) : Vrai si en mode arbre (par défaut). Faux si liste.
+        """
+        log.debug(f"Sorter.setTreeMode : Setting treeMode to {treeMode}.")
         self.__treeMode = treeMode
         try:
             self.observable().setTreeMode(treeMode)
@@ -104,11 +110,12 @@ class Sorter(base.TreeSorter):
 
     def _registerObserverForAttribute(self, attribute):
         # log.debug(f"Registering observer for attribute {attribute}.")
-        print(
-            f"task.sorter._registerObserverForAttribute : Registering observer for attribute {attribute}."
+        log.debug(
+            "Sorter._registerObserverForAttribute : Registering observer for attribute %s.",
+            attribute
         )
         for eventType in self._getSortEventTypes(attribute):
-            print("REGISTER:", repr(eventType))
+            log.debug("Sorter._registerObserverForAttribute : REGISTER: %s", repr(eventType))
         # Sorter is always observing task dates and prerequisites because
         # sorting by status depends on those attributes. Hence we don't need
         # to subscribe to these attributes when they become the sort key.

@@ -162,9 +162,9 @@ class Sorter(patterns.ListDecorator):  # classe enfant
             return getattr(self.DomainObjectClass, f"{sortKey}SortFunction")
         except AttributeError:
             # raise AttributeError(
-            log.debug(
-                f"Aucune fonction {sortKey}SortFunction "
-                f"dans {self.DomainObjectClass.__name__}"
+            log.exception(
+                "Sorter._getSortKeyFunction : Aucune fonction %sSortFunction dans %s",
+                sortKey, self.DomainObjectClass.__name__,
             )
             return self._getSortKeyFunction("subject")
 

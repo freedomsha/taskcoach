@@ -100,7 +100,7 @@ log = logging.getLogger(__name__)
 
 def viewerTypes() -> List[str]:
     """
-    Renvoie les types de visualisateurs disponibles, en utilisant les noms
+    Renvoie les types de visualiseurs disponibles, en utilisant les noms
     utilisés dans les paramètres.
     """
     types = [
@@ -128,7 +128,7 @@ def viewerTypes() -> List[str]:
 #  la classe addViewers n'a pas besoin de l'argument parent dans son constructeur __init__().
 #  La raison en est que l'objet viewer_container lui-même
 #  contient une référence à son propre widget parent (viewer_container.containerWidget)
-#  qui est utilisé lors de l'initialisation des visualisateurs individuels.
+#  qui est utilisé lors de l'initialisation des visualiseurs individuels.
 
 
 # Double initialisation : Je vois deux initialisations des visionneuses dans les journaux.
@@ -177,7 +177,7 @@ class addViewers:
         self.__settings = settings
         self.floating = (
             False  # Start viewers floating? Not when restoring layout
-        )
+        )  # TODO : à revoir !
         self.__viewer_init_args = (
             viewer_container.containerWidget,
             task_file,
@@ -199,7 +199,7 @@ class addViewers:
 
         Ouvrez les visionneuses telles qu'elles ont été enregistrées précédemment dans les paramètres.
         """
-        log.debug(
+        log.info(
             "addViewers.__add_all_viewers : Ouvre toutes les visionneuses."
         )
         # self._add_viewer(notetk.Noteviewer)  # Il échoue parce que ne fournit pas d'implémentations pour les méthodes abstraites requises, comme décrit dans l'erreur console.
@@ -276,7 +276,7 @@ class addViewers:
         #     except KeyError:
         #         log.warning(f"Impossible de trouver la classe de visualisateur pour : {viewer_name}")
 
-        log.debug(
+        log.info(
             "addViewers.__add_all_viewers : Tout les visualiseurs sont ouverts !"
         )
 
@@ -295,7 +295,7 @@ class addViewers:
     def _add_viewer(self, viewer_class: Type[Viewer]) -> None:
         # def _add_viewer(self, viewer_class, config_section, new_item_type):
         """Ajoute un seul visualiseur (viewer) de la classe spécifiée au conteneur."""
-        log.debug(
+        log.info(
             f"addViewers._add_viewer : Ajoute le visualiseur {viewer_class.__name__}."
         )
         # # Le nom de la section des paramètres est maintenant un argument à part entière.
@@ -356,7 +356,7 @@ class addViewers:
         #     # configSection=config_section,
         #     # newItemType=new_item_type
         # )
-        log.debug(
+        log.info(
             f"addViewers._add_viewer : Le visualiseur {viewer_class.__name__} a été ajouté au conteneur {self.__viewer_container} !"
         )
 
@@ -367,7 +367,7 @@ class addViewers:
         self.__add_all_viewers()
 
     def _viewer_classes(self) -> List[Type[ttk.Frame]]:
-        """Retourne la liste des classes de visualisateurs à ajouter."""
+        """Retourne la liste des classes de visualiseurs à ajouter."""
         viewer_classes: List[Type[ttk.Frame]] = []
         for viewer_type in viewerTypes():
             number_of_viewers = self._number_of_viewers_to_add(
@@ -375,12 +375,15 @@ class addViewers:
                     viewer_type.capitalize()
                 ]
             )
+            log.debug("addViwers._viewer_classes : ajout de %s classes de type %s.", number_of_viewers, viewer_type)
             for _ in range(number_of_viewers):
                 viewer_classes.append(
                     globals()[viewer_type.replace("viewer", "")].__dict__[
                         viewer_type.capitalize()
                     ]
                 )
+        log.info("addViewers._viewer_classes : retourne la liste des visionneuses : %s !",
+                 viewer_classes)
         return viewer_classes
 
     def _number_of_viewers_to_add(self, viewer_class: Type[ttk.Frame]) -> int:

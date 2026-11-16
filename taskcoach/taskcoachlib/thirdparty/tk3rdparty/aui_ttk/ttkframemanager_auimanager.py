@@ -151,12 +151,12 @@ class TtkGridLayout:
             self._update_scrollbar_visibility
         )
     
-      def _update_scrollbar_visibility(self):
+    def _update_scrollbar_visibility(self):
         """Affiche ou masque la barre de défilement selon la hauteur du contenu.
 
-            La comparaison est effectuée entre la hauteur réelle du contenu dans le
-            Canvas et celle de la zone visible. Si le défilement devient inutile,
-            la vue est replacée en haut.
+        La comparaison est effectuée entre la hauteur réelle du contenu dans le
+        Canvas et celle de la zone visible. Si le défilement devient inutile,
+        la vue est replacée en haut.
         """
         self._scrollbar_update_pending = False
         self._scrollbar_update_id = None
@@ -634,7 +634,7 @@ class AuiManager:
             window: Panneau à ajouter.
             arg1: Si c'est un int, il s'agit d'une direction, sinon
                   il s'agit d'une info de panneau.
-            arg2: Si arg1 est une direction, il s'agit du nom du panneau.
+            arg2: Si arg1 est une direction, arg2 est le nom du panneau.
             target: Position du panneau.
 
         Returns:

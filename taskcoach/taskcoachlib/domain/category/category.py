@@ -16,8 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import logging
 from taskcoachlib import patterns
 from taskcoachlib.domain import base, note, attachment
+
+log = logging.getLogger(__name__)
 
 
 class Category(
@@ -156,7 +159,7 @@ class Category(
                 stylePriority=self.__stylePriority,
             )
         )
-        print(f"Category.__getcopystate : retourne state={state}!")
+        log.debug(f"Category.__getcopystate : retourne state={state}!")
         return state
 
     def subjectChangedEvent(self, event):

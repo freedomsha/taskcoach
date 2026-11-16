@@ -3064,8 +3064,8 @@ class Task(
                              (si recursive est True),
                              sinon inclure les prérequis des enfants.
         """
-        log.info(
-            f"DEBUG - Task.prerequisites called with recursive={recursive}, upwards={upwards} for task={self}"
+        log.debug(
+            f"Task.prerequisites called with recursive={recursive}, upwards={upwards} for task={self}"
         )
         prerequisites = set(self.__prerequisites)
         if recursive and upwards and self.parent() is not None:
@@ -3076,7 +3076,7 @@ class Task(
             for child in self.children(recursive=True):
                 prerequisites |= child.prerequisites()
         log.debug(
-            f"DEBUG - Task.prerequisites returning prerequisites={prerequisites} for task={self} !"
+            f"Task.prerequisites returning prerequisites={prerequisites} for task={self} !"
         )
         return prerequisites
 

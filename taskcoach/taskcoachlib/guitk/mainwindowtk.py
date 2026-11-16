@@ -337,7 +337,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         la barre de menu, le contrôleur de rappel et les autres éléments de
         l'interface graphique.
         """
-        log.debug("MainWindow._create_window_components : création des composants")
+        log.info("MainWindow._create_window_components : création des composants :")
 
         # Création du conteneur pour les visionneuses
         self._create_viewer_container()
@@ -377,7 +377,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
                     window.winfo_height(),
                 )
 
-        log.debug("MainWindow._create_window_components : terminé !")
+        log.info("MainWindow._create_window_components : terminé !")
 
     def _create_viewer_container(self) -> None:
         """
@@ -385,14 +385,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         Ce conteneur gère l'affichage et l'organisation des différentes visionneuses.
         """
-        log.debug("MainWindow._create_viewer_container : création du conteneur")
+        log.info("MainWindow._create_viewer_container : création du conteneur :")
         self.viewer_container = containertk.ViewerContainer(
             self.manager.pane_parent, self.settings
         )
 
         # self.parent.update_idletasks()  # Prématuré
 
-        log.warning(
+        log.debug(
             "viewer_container: manager=%s, mapped=%s, requested=%sx%s, actual=%sx%s",
             self.viewer_container.winfo_manager(),
             self.viewer_container.winfo_ismapped(),
@@ -410,7 +410,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         )
         pane = self.manager.GetPane("viewer_container")
 
-        log.warning(
+        log.debug(
             "viewer_container pane: ok=%s, shown=%s, floating=%s, "
             "min=%s, best=%s, window=%s",
             pane.IsOk(),
@@ -428,14 +428,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         # self.manager.Update()  # Prématuré
 
-        log.debug(
+        log.info(
             "MainWindow._create_viewer_container : conteneur créé, "
             "mapped=%s, size=%sx%s",
             self.viewer_container.winfo_ismapped(),
             self.viewer_container.winfo_width(),
             self.viewer_container.winfo_height(),
         )
-        log.debug("MainWindow._create_viewer_container : conteneur %s créé !", self.viewer_container)
+        log.info("MainWindow._create_viewer_container : conteneur %s créé !", self.viewer_container)
 
     def _create_status_bar(self) -> None:
         """
@@ -453,7 +453,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             - La barre de statut est créée en passant la fenêtre principale (`self`) et les visionneuses (`self.viewer`).
             - La barre de statut est ensuite associée à la fenêtre principale à l'aide de `SetStatusBar`.
         """
-        log.info("MainWindow._create_status_bar : Création de la barre de statut")
+        log.info("MainWindow._create_status_bar : Création de la barre de statut :")
         self.status_bar = statustk.StatusBar(
             self.manager.pane_parent, self.viewer_container
         )
@@ -466,6 +466,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             floating=False,
             dock_direction=AUI_DOCK_BOTTOM,
         )
+        log.info("MainWindow._create_status_bar : Barre de statut créée !")
 
     def __create_menu_bar(self) -> None:
         """
@@ -525,9 +526,11 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
               la liste des efforts (`self.taskFile.efforts()`), et les paramètres utilisateur (`self.settings`).
             - Le contrôleur est ensuite assigné à l'attribut `reminderController` de la fenêtre principale.
         """
+        log.info("MainWindow.__create_reminder_controller : Crée et initialise le contrôleur de rappels pour la gestion des tâches et des efforts.")
         self.reminderController = remindercontrollertk.ReminderControllerTk(
             self, self.taskFile.tasks(), self.taskFile.efforts(), self.settings
         )
+        log.info("MainWindow.__create_reminder_controller : contrôleur de rappel créé !")
 
     def addPane(self, page, caption, name, floating: bool = False, dock_direction=None) -> None:
         """
@@ -535,13 +538,19 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         Args:
             page : Le volet à ajouter. window tk.Widget.
-            caption (str): Le titre du volet.
-            name (str): Nom unique du volet.
-            floating (bool): Indique si le volet doit être flottant.
-            dock_direction: Direction d'ancrage du volet, si elle est imposée.
+            caption (str) : Le titre du volet.
+            name (str) : Nom unique du volet.
+            floating (bool) : Indique si le volet doit être flottant.
+            dock_direction : Direction d'ancrage du volet, si elle est imposée.
         """
         # Tkinter n'a pas de concept direct de "panes" comme AUI.
-        log.debug("MainWindow.addPane: Ajout du volet %s à la fenêtre principale.", caption)
+        log.info("MainWindow.addPane: Ajout du volet %s à la fenêtre principale.", caption)
+        log.debug("MainWindow.addPane: le volet page=%s flottant(%s), au nom de %s à la position %s.",
+                  page,
+                  floating,
+                  name,
+                  dock_direction
+                  )
         # Les fenêtres flottantes ne sont pas possibles sur wayland !
         # TODO : A remettre si nécessaire !
         # if operating_system.isWayland():
@@ -552,7 +561,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             page.settingsSection = lambda: name
 
         name = page.settingsSection()
-        # Ajout du volet au manager AUI
+        # Ajout du volet au manager AUI (de framettk)
         super().addPane(
             page,
             caption,
@@ -567,7 +576,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Initialise la fenêtre principale de Task Coach en définissant la disposition des composants
         et en appliquant les paramètres d'affichage sauvegardés.
         """
-        log.debug("MainWindow._init_window : Initialisation de la fenêtre principale")
+        log.info("MainWindow._init_window : Initialisation de la fenêtre principale")
 
         # Définition du nom du fichier de tâches
         self.__filename = self.taskFile.filename()
@@ -603,7 +612,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             pane=0,
         )
 
-        log.debug("MainWindow._init_window : Fenêtre principale initialisée !")
+        log.info("MainWindow._init_window : Fenêtre principale initialisée !")
 
     def __init_window_components(self):
         """
@@ -625,6 +634,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             - Restaure la disposition des panneaux de la fenêtre en appelant
               `__restore_perspective`.
         """
+        log.info(
+            "MainWindow.__init_window_components: ✅ Initialisation des composants principaux de la fenêtre et restauration de la perspective de la fenêtre :"
+        )
         # Affichage de la barre d'outils
         self.showToolBar(self.settings.getvalue("view", "toolbar"))
 
@@ -637,7 +649,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         # Réinitialisation de la position de la toolbar
         self.parent.after(100, self._resetToolbarPosition)
-        log.debug(
+        log.info(
             "MainWindow.__init_window_components: ✅ Initialisation des composants principaux de la fenêtre terminée et perspective de la fenêtre restaurée !"
         )
 
@@ -675,7 +687,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             bool: True si la perspective a été restaurée, False sinon.
         """
         # Tkinter n'a pas de "perspective" AUI. Cette logique a été réimplémentée.
-        log.debug("__restore_perspective : Restauration de la perspective")
+        log.info("MainWindow.__restore_perspective : Restauration de la perspective:")
 
         perspective = self.settings.get("view", "perspective")
 
@@ -733,6 +745,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             log.warning(f"Erreur lors de la mise à jour des panneaux : {e}")
 
         self.manager.Update()
+        log.info("MainWindow.__restore_perspective : perspective restaurée !")
 
     # def __restore_perspective(self):
     #     log.debug("__restore_perspective : restauration désactivée pour diagnostic")
@@ -749,6 +762,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Returns :
             (bool) : True si le nombre de visionneuses diffère, sinon False.
         """
+        log.info("MainWindow.__perspective_and_settings_viewer_count_differ : vérification du nombre de visionneuses.")
         # Cette logique est spécifique à AUI.
         # Dans Tkinter, cela dépendrait de votre gestionnaire de layout.
         perspective = self.settings.get("view", "perspective")
@@ -757,7 +771,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # obtenir le nombre de viewers du type viewer_type dans les paramètres
         settings_viewer_count = self.settings.getint("view", f"{viewer_type}count")
         log.debug(
-            f"MainWindow.__perspective_and_settings_viewer_count_differ: perspective_viewer_count={perspective_viewer_count}, settings_viewer_count={settings_viewer_count}"
+            f"MainWindow.__perspective_and_settings_viewer_count_differ: perspective_viewer_count={perspective_viewer_count}, settings_viewer_count={settings_viewer_count} !"
         )
         return perspective_viewer_count != settings_viewer_count
 
@@ -768,13 +782,16 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         Cela permet de mettre à jour l'affichage des composants en fonction des événements de l'application.
         """
+        log.info("MainWindow.__register_for_window_component_changes: enregistrement aux notifications :")
         pub.subscribe(self.__onFilenameChanged, "taskfile.filenameChanged")
         pub.subscribe(self.__onDirtyChanged, "taskfile.dirty")
         pub.subscribe(self.__onDirtyChanged, "taskfile.clean")
         pub.subscribe(self.showStatusBar, "settings.view.statusbar")
         pub.subscribe(self.showToolBar, "settings.view.toolbar")
-        log.debug(
-            "MainWindow.__register_for_window_component_changes: ✅ Enregistrement effectué pour recevoir des notifications de changement de composants de fenêtre, comme les barres d'outils et les barres de statut !"
+        log.info(
+            "MainWindow.__register_for_window_component_changes: ✅ Enregistrement effectué "
+            "pour recevoir des notifications de changement de composants de fenêtre, "
+            "comme les barres d'outils et les barres de statut !"
         )
 
     def __onFilenameChanged(self, filename):
@@ -785,8 +802,10 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Args :
             filename (str) : Nom du fichier.
         """
+        log.info("MainWindow.__onFilenameChanged : Changement de nom pour %s.", filename)
         self.__filename = filename
         self.__setTitle()
+        log.info("MainWindow.__onFilenameChanged : Nouveau nom de fichier : %s", self.__filename)
 
     def __onDirtyChanged(self, taskFile):
         """Gère les changements dans l'état de modification du fichier.
@@ -798,10 +817,16 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Args :
             taskFile (TaskFile) : Le fichier de tâches dont l'état de modification a changé.
         """
+        log.info("MainWindow.__onDirtyChanged : changement d'état du fichier %s.",
+                 taskFile
+                 )
         # Met à jour l'état interne selon l'état "dirty" du fichier de tâches.
         self.__dirty = taskFile.isDirty()
         # Met à jour le titre de la fenêtre pour refléter cet état.
         self.__setTitle()
+        log.info("MainWindow.__onDirtyChanged : Le fichier %s est dirty(%s) !",
+                 taskFile, self.__dirty
+                 )
 
     def __setTitle(self):
         """
@@ -829,9 +854,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             message (str) : Le message à afficher.
             pane (int) : Le panneau de la barre de statut (0 par défaut).
         """
+        log.info("MainWindow.displayMessage : Affichage d'un message dans la barre de statut :")
+        log.debug("MainWindow.displayMessage : Affiche '%s' dans la barre de statut (panneau n° %s).",
+                  message, pane)
         if hasattr(self, 'status_bar') and self.status_bar:
             # self.status_bar.SetStatusText(message, pane)
             self.status_bar.set_status_text(message, pane)
+        log.info("MainWindow.displayMessage : Message '%s' affiché dans la barre de statut (panneau n° %s) !",
+                 message, pane)
 
     def saveSettings(self):
         """Sauvegarde les paramètres actuels de la fenêtre.
@@ -844,11 +874,12 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         self.__save_viewer_counts()
         self.__save_perspective()
         self.__save_position()
+        log.info("MainWindow.saveSettings : Sauvegarde des paramètres terminée !")
 
     def __save_viewer_counts(self):
         """Enregistre le nombre de visionneuses pour chaque type."""
-        log.debug(
-            "MainWindow.__save_viewer_counts: Sauvegarde du nombre de viewers."
+        log.info(
+            "MainWindow.__save_viewer_counts: Sauvegarde du nombre de visionneuses/viewers."
         )
         # Logique spécifique à AUI/wxPython réimplémentée pour Tkinter.
         try:
@@ -858,8 +889,13 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
                 else:
                     count = 0
                 self.settings.set("view", viewer_type + "count", str(count))
+                log.debug("MainWindow.__save_viewer_count : sauvegarde %s visionneuses de type %s dans 'view.%scount'.",
+                          count, viewer_type, viewer_type)
         except Exception as e:
-            log.warning(f"Erreur lors de l'enregistrement des comptes de viewers : {e}")
+            log.exception("Erreur lors de l'enregistrement des comptes de viewers : %s", e)
+        log.info(
+            "MainWindow.__save_viewer_counts: Enregistrement du nombre visionneuses/viewers terminé !"
+        )
 
     def __save_perspective(self):
         """Sauvegarde la perspective actuelle de la fenêtre.
@@ -870,7 +906,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # Sauvegarder :
         # - La liste des viewers ouverts
         # - Leur taille, position, etc. (si applicable)
-        log.debug("MainWindow.__save_perspective: Sauvegarde la perspective AUITkinter.")
+        log.info("MainWindow.__save_perspective: Sauvegarde la perspective AUITkinter.")
         # # # Logique spécifique à AUI/wxPython à réimplémenter pour Tkinter.
         # # # Récupérer la liste des viewers ouverts
         # # # Récupérer le viewer actif
@@ -890,17 +926,20 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         dans les paramètres de l'application.
         Cela permet de restaurer la fenêtre à la même position lors de la prochaine ouverture.
         """
-        log.debug(
+        log.info(
             "MainWindow.__save_position: Sauvegarde de la position et la taille de la fenêtre principale."
         )
         try:
             self.__dimensions_tracker.save_position()
         except Exception as e:
             log.warning(f"Erreur lors de la sauvegarde de la position : {e}")
+        log.info(
+            "MainWindow.__save_position: Sauvegarde de la position et la taille de la fenêtre principale terminée !"
+        )
 
     def closeEditors(self) -> None:
         """Ferme tous les éditeurs ouverts dans la fenêtre principale."""
-        log.info("MainWindow.closeEditors : Fermeture des éditeurs")
+        log.info("MainWindow.closeEditors : Fermeture des éditeurs :")
         # Dans Tkinter, vous devriez garder une liste des Toplevels (éditeurs) ouverts
         # et les détruire ici.
         try:
@@ -911,6 +950,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
                     child.quit()
         except Exception as e:
             log.exception(f"MainWindow.closeEditors : Erreur : {e}")
+        log.info("MainWindow.closeEditors : Tous les éditeurs doivent être fermés !")
 
     def checkXFCE4(self):
         """
@@ -923,14 +963,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
     def setShutdownInProgress(self) -> None:
         """Indique que le processus d'arrêt de l'application est en cours."""
-        log.info("MainWindow.setShutdownInProgress : Arrêt en cours")
+        log.info("MainWindow.setShutdownInProgress : Arrêt de l'application en cours :")
         self.__shutdown = True
 
     def onClose(self):
         """
         Gère la fermeture de la fenêtre.
         """
-        log.info("MainWindow.onClose : Fermeture de la fenêtre")
+        log.info("MainWindow.onClose : Fermeture de la fenêtre :")
 
         if getattr(self, "_closing", False):
             return
@@ -989,7 +1029,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             log.exception(f"MainWindow.onClose : Erreur : {e}")
 
         self._idleController.stop()
-        log.info("MainWindow.onClose: Fenêtre fermée")
+        log.info("MainWindow.onClose: Fenêtre principale fermée !")
 
     def show(self):
         """Affiche la fenêtre."""
@@ -1006,6 +1046,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         """
         Gère la minimisation de la fenêtre.
         """
+        log.info("MainWindow.onIconify : minimisation de la fenêtre principale :")
         try:
             if self.parent.state() == "iconic":
                 if self.settings.getboolean("window", "hidewheniconized"):
@@ -1018,6 +1059,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
                 self._is_hidden_when_iconized = False
         except Exception as e:
             log.warning(f"Erreur dans onIconify : {e}")
+        log.info("MainWindow.onIconify : Fenêtre principale minimisée !")
 
     def onResize(self, event=None):
         """
@@ -1052,7 +1094,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             value (bool): True pour afficher, False pour masquer.
         """
         log.debug(
-            "MainWindow.showStatusBar : Affichage de la barre de statut : %s",
+            "MainWindow.showStatusBar : Affichage de la barre de statut : %s :",
             value
         )
 
@@ -1073,6 +1115,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         pane.Show(bool(value))
         self.manager.Update()
         self.parent.update_idletasks()
+        log.info("MainWindow.showStatusBar : Barre de statut affichée (%s) !", value)
 
     def createToolBarUICommands(self):
         """
@@ -1090,7 +1133,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # pour chaque commande et de son ajout à la barre d'outils.
         # Il faut s'assurer que self.toolbar est correctement défini
         # et que le bouton est bien packé.
-        log.debug("MainWindow.createToolBarUICommands: Création des commandes UI de la barre d'outils.")
+        log.info("MainWindow.createToolBarUICommands: Création des commandes UI de la barre d'outils :")
 
         # Cette liste est manuellement construite et peut contenir :
         #     - des instances de UICommand comme FileOpen, EditUndo, etc.
@@ -1117,6 +1160,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             ),
         ])
 
+        log.info("MainWindow.createToolBarUICommands: création des commandes UI de la barre d'outils terminé !")
+        log.debug("MainWindow.createToolBarUICommands: retourne les commandes UI : %s",
+                  uiCommands)
         # Retourne explicitement une liste d’instances de UICommand
         return uiCommands
 
@@ -1129,10 +1175,10 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Returns:
             str: La perspective de la barre d'outils.
         """
-        log.debug(
+        log.info(
             "MainWindow.getToolBarPerspective: Récupération de la perspective de la barre d'outils."
         )
-        return self.settings.get("view", "toolbarperspective")
+        return self.settings.get("view", "toolbarperspective")  # C'est dans defaults.py, ligne 44.
 
     def saveToolBarPerspective(self, perspective):
         """
@@ -1141,8 +1187,8 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Args:
             perspective (str): La perspective à sauvegarder.
         """
-        log.debug(
-            "MainWindow.saveToolBarPerspective: Sauvegarde de la perspective de la barre d'outils."
+        log.info(
+            "MainWindow.saveToolBarPerspective: Sauvegarde de la perspective de la barre d'outils %s.", perspective
         )
         self.settings.set("view", "toolbarperspective", perspective)
 
@@ -1186,12 +1232,15 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             - `self.manager.AddPane(pane, paneInfo)` : Ajoute un panneau à la fenêtre principale.
             - `self.manager.Update()` : Met à jour la disposition de la fenêtre après les modifications.
         """
-        log.debug(f"MainWindow.showToolBar : Affichage de la barre d'outils : {value}")
+        log.info(f"MainWindow.showToolBar : Affichage de la barre d'outils (%s) :",
+                  value)
 
         # Vérifier si une barre d'outils existe déjà
         currentToolbar = self.manager.GetPane("toolbar")
         if currentToolbar.IsOk():
             self.manager.DetachPane(currentToolbar.window)
+            log.debug("MainWindow.showToolBar : Destruction de la barre d'outils actuelles %s.",
+                      currentToolbar)
             currentToolbar.window.destroy()
 
         if value:
@@ -1211,11 +1260,15 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
             # Masquer la poignée
             self.parent.after(100, lambda: bar.SetGripperVisible(False))
+            log.debug("MainWindow.showToolBar : Barre d'outils à afficher : %s",
+                      bar)
 
         self.manager.Update()
         # # Second update()
         self.parent.update_idletasks()
         # self.manager.Update()
+        log.info("MainWindow.showToolBar : Barre d'outils affichée (%s) !",
+                 value)
 
     def onCloseToolBar(self, event=None) -> None:
         """
@@ -1227,15 +1280,18 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Args:
             event: L'événement de fermeture.
         """
-        log.debug("MainWindow.onCloseToolBar : Fermeture de la barre d'outils.")
+        log.info("MainWindow.onCloseToolBar : Fermeture de la barre d'outils.")
         try:
             # Mettre à jour les paramètres
             self.settings.setvalue("view", "toolbar", None)
         except Exception as e:
-            log.exception(f"MainWindow.onCloseToolBar : Erreur : {e}")
+            log.exception("MainWindow.onCloseToolBar : Erreur : %s",
+                          e, exc_info=True)
+        log.info("MainWindow.onCloseToolBar : Barre d'outils fermée !")
 
     def _resetToolbarPosition(self):
         """Réinitialise la position de la toolbar."""
+        log.info("MainWindow._resetToolbarPosition : réinitialisation de la position de la toolbar.")
         pane = self.manager.GetPane("toolbar")
         if not pane.IsOk() or pane.IsFloating():
             return
@@ -1251,11 +1307,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             else:  # left/right
                 pane.MinSize((-1, self.parent.winfo_height()))
             self.manager.Update()
+        log.info("MainWindow._resetToolbarPosition : Toolbar %s repositionnée sur %s !",
+                 pane, pane.dock_pos)
 
     def _onAuiRender(self, event):
         """Détecte le rendu AUI pour réinitialiser la position."""
         # Pour l'AUI Tkinter, on peut utiliser un système de tracking des actions
         # Cela dépend de l'implémentation spécifique de tk3rdparty.aui_ttk
+        log.info("MainWindow._onAuiRender : Réinitialisation du rendu AUI :")
         try:
             action = getattr(self.manager, "_action", 0)
             prev_action = getattr(self, "_prev_manager_action", 0)
@@ -1275,7 +1334,8 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
             self._prev_manager_action = action
         except Exception as e:
-            log.debug(f"_onAuiRender : {e}")
+            log.exception("MainWindow._onAuiRender : %s", e, exc_info=True)
+        log.info("MainWindow._onAuiRender : Rendu AUI réinitialisé !")
 
     def advanceSelection(self, forward) -> None:
         """
@@ -1295,6 +1355,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Returns:
             int: Le nombre de visionneuses.
         """
+        # TODO : où l'utiliser ?
         log.debug(f"MainWindow.viewerCount: Retourne le nombre de viewers : {len(self.viewer_container)}.")
         log.debug("MainWindow.viewerCount: Sinon self.viewer_container.viewer_count=%s", self.viewer_container.viewer_count)
         return len(self.viewer_container)
@@ -1378,7 +1439,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         #     dlg.value
         # )  # Retourne le type de synchronisation choisi par l'utilisateur.
 
-
     def notifyIPhoneProtocolFailed(self) -> None:
         """Affiche un message d'erreur pour l'échec du protocole iPhone.
 
@@ -1413,6 +1473,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         Cette méthode est souvent utilisée lors de la fermeture d'un fichier ou avant l'ouverture d'un nouveau fichier de tâches.
         """
+        log.info("MainWindow.clearTasks : Effacement de toutes les tâches :")
         self.taskFile.clear(False)
         log.info("MainWindow.clearTasks : Toutes les tâches ont été effacées !")
 
@@ -1427,13 +1488,15 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             categories: Liste des catégories à restaurer.
             tasks: Liste des tâches à restaurer.
         """
-        log.debug(f"MainWindow.restoreTasks : Restauration de {len(categories)} catégories et {len(tasks)} tâches.")
+        log.info(f"MainWindow.restoreTasks : Restauration de {len(categories)} catégories et {len(tasks)} tâches du fichier de tâches.")
         self.taskFile.clear(False)
         # Ces listes sont étendues aux vraies listes de tâches/catégories
         # Ajouter les nouvelles catégories.
         self.taskFile.categories().extend(categories)
         # Ajouter les nouvelles tâches.
         self.taskFile.tasks().extend(tasks)
+        log.info("MainWindow.restoreTasks : %s catégories et %s tâches restaurés du ficher de tâches %s !",
+                 len(categories), len(tasks), )
 
     # Méthodes pour la gestion des catégories et tâches iPhone
     def addIPhoneCategory(self, category) -> None:
@@ -1556,10 +1619,13 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         """
         Restaure la fenêtre principale à partir de la barre des tâches.
         """
+        log.info("MainWindow.restore : réouvre la fenêtre principale depuis l'état minimisé :")
         if self.settings.getboolean("window", "maximized"):
             self.parent.state('zoomed')  # Pour Windows
+
         self.parent.deiconify()
         self.parent.lift()
+        log.info("MainWindow.restore : Fenêtre principale réouverte !")
 
 
 # # --- Exemple d'utilisation (pour tester la fenêtre Tkinter) ---

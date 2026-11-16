@@ -214,6 +214,7 @@ class ToolTipMixin:
     def __init__(self, *args, **kwargs):
         delay = kwargs.pop("tooltipDelay", kwargs.pop("delay", 200))
         enabled = kwargs.pop("tooltipsEnabled", True)
+        # super().__init__(parent, *args, **kwargs)
         self._tooltip_enabled = bool(enabled)
         self._tooltip_delay = int(delay)
         self._tooltip_after_id = None
