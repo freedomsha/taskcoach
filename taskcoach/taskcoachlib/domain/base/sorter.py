@@ -172,10 +172,11 @@ class Sorter(patterns.ListDecorator):  # classe enfant
         # log.debug(f"Registering observer for attribute {attribute}.")
         # print(
         log.debug(
-            f"base.Sorter._registerObserverForAttribute : Registering observer for attribute {attribute}."
+            "base.Sorter._registerObserverForAttribute : Registering observer for attribute %s.",
+            attribute,
         )
         for eventType in self._getSortEventTypes(attribute):
-            print(
+            log.debug(
                 "base.sorter._registerObserverForAttribute : REGISTER:",
                 repr(eventType),
             )

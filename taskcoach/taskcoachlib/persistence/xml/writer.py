@@ -1613,8 +1613,8 @@ class ChangesXMLWriter(object):
             f"ChangesXMLWriter.write : Tentative de lecture du fichier {self.__fd.name} :"
         )
         if hasattr(self.__fd, "getvalue"):  # StringIO ou BytesIO
-            log.info(
-                f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.getvalue()}"
+            log.debug(
+                f"ChangesXMLWriter.write : Contenu du fichier écrit valeurs:\n{self.__fd.getvalue()}"
             )
         # else:  # Fichier ouvert en mode écriture
         # elif "r" in self.__fd.mode or "+" in self.__fd.mode:  # Si le fichier supporte la lecture
@@ -1623,7 +1623,7 @@ class ChangesXMLWriter(object):
         ):  # Si le fichier supporte la lecture
             # AttributeError: 'SafeWriteFile' object has no attribute 'mode'
             self.__fd.seek(0)  # Repositionne le curseur au début
-            log.info(
+            log.debug(
                 f"ChangesXMLWriter.write : Contenu du fichier écrit:\n{self.__fd.read()}"
             )
             self.__fd.seek(0)  # Remet le curseur au début du fichier

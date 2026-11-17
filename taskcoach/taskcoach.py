@@ -146,18 +146,37 @@ logging.getLogger("taskcoachlib.gui.toolbar").setLevel(logging.INFO)
 # # Réduire les logs très fréquents de l'interface Tkinter
 # logging.getLogger("taskcoachlib.guitk").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.guitk.mainwindowtk").setLevel(logging.INFO)
-# logging.getLogger("taskcoachlib.guitk.menutk").setLevel(
-#     logging.WARNING
-# )  # en cours->debug !
-# logging.getLogger("taskcoachlib.guitk.uicommand.settings_uicommandtk").setLevel(
-#     logging.INFO
-# )
+logging.getLogger("taskcoachlib.guitk.menutk").setLevel(
+    logging.INFO
+)  # en cours->debug !
+logging.getLogger("taskcoachlib.guitk.viewer.containertk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.viewer.factorytk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.viewer.basetk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.viewer.mixintk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.viewer.tasktk").setLevel(logging.INFO)
-# logging.getLogger("taskcoachlib.guitk.toolbarttk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.efforttk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.categorytk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.toolbarttk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.changes.monitor").setLevel(logging.INFO)
+
+# Décorateurs
+logging.getLogger("taskcoachlib.domain.task.sorter").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.base.sorter").setLevel(logging.INFO)
+
+# composites et categorisables
+logging.getLogger("taskcoachlib.patterns.composite").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.categorizable.categorizablecontainer").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.categorizable.categorizable").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.domain.base.object").setLevel(logging.INFO)
+
+# les commandes
+logging.getLogger("taskcoachlib.guitk.uicommand.settings_uicommandtk").setLevel(
+    logging.INFO
+)
+logging.getLogger("taskcoachlib.guitk.uicommand.uicommandtk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.uicommand.uicommandcontainertk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.uicommand.base_uicommandtk").setLevel(logging.INFO)
+
 # WIDGETS
 # logging.getLogger("taskcoachlib.widgets.treectrl").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.widgets.itemctrl").setLevel(logging.INFO)
@@ -165,10 +184,16 @@ logging.getLogger("taskcoachlib.changes.monitor").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.widgets.tooltip").setLevel(logging.INFO)
 # WIDGETS TK
 logging.getLogger("taskcoachlib.widgetstk.autowidthtk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.widgetstk.treectrltk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.widgetstk.listctrltk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.widgetstk.itemctrltk").setLevel(logging.INFO)
 
-# Décorateurs
-logging.getLogger("taskcoachlib.domain.task.sorter").setLevel(logging.INFO)
-logging.getLogger("taskcoachlib.domain.base.sorter").setLevel(logging.INFO)
+#
+logging.getLogger("taskcoachlib.persistence.templatelist").setLevel(logging.INFO)
+
+# Power management et signals
+logging.getLogger("taskcoachlib.powermgt.idletk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.idlecontrollertk").setLevel(logging.INFO)
 
 filename_dated = "taskcoach_" + datetime.now().strftime("%Y%m%d%H%M") + ".log"
 rh = logging.handlers.RotatingFileHandler(
