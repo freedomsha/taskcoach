@@ -165,7 +165,7 @@ from typing import (
 import tkinter as tk  # module tkinter principal
 from tkinter import ttk, Menu, PhotoImage  # widgets ttk modernes
 import logging  # journalisation
-from taskcoachlib.guitk import artprovidertk
+from taskcoachlib.guitk import artprovidertk  # TODO : cela pose problème !
 from taskcoachlib.widgetstk import draganddroptk
 from taskcoachlib.widgetstk import tooltiptk
 from taskcoachlib.widgetstk import autowidthtk
@@ -1995,7 +1995,7 @@ class TaskTree(
     La classe principale qui combine tous les mixins et hérite de ttk.Treeview.
     """
 
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         self._columns_initialized = False
         # Récupère les colonnes si elles sont passées
         # Extraire les colonnes et autres arguments spécifiques

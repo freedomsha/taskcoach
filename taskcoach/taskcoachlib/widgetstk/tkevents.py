@@ -25,7 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Tkinter gère le dessin directement sur le canevas en utilisant des méthodes
 # comme create_rectangle, create_line, etc. De plus,
 # les événements personnalisés de wxPython (wx.NewEventType) n'ont pas
-# d'équivalent direct dans Tkinter, il faut donc utiliser le système de bind standard.
+# d'équivalent direct dans Tkinter,
+# il faut donc utiliser le système de bind standard.
 #
 # Voici une conversion de la classe CalendarCanvas et des classes de support
 # pour Tkinter. J'ai simplifié le code pour qu'il se concentre sur les aspects
@@ -56,15 +57,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # comment on pourrait adapter tkevents.py pour répondre à tes besoins :
 #
 # Structure générale :
-#
-#
 # On va créer une tk.Frame principale pour contenir tous les éléments.
 # On aura trois tk.Canvas :
 #
 # Un pour l'affichage des heures (à gauche).
 # Un pour l'en-tête des jours/dates (en haut).
 # Un principal pour la grille du calendrier et les événements.
-#
 #
 # Des tk.Scrollbar seront ajoutées et liées au canvas principal.
 #

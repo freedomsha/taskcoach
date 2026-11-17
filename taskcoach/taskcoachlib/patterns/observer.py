@@ -215,7 +215,8 @@ class Set(set):
         # def __new__(cls, iterable: Optional[Iterable] = None, *args, **kwargs) -> 'Set':
         # # return set.__new__(class_, iterable)
         if iterable is not None and not isinstance(iterable, Iterable):
-            raise TypeError("iterable must be an iterable")
+            # raise TypeError("iterable must be an iterable")
+            raise TypeError(f"{iterable} must be an iterable")
         if iterable is None:
             return set.__new__(class_)
         else:
