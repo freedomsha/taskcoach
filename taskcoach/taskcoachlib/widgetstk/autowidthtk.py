@@ -47,43 +47,86 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 #
 # La conversion directe de autowidth.py de wxPython vers Tkinter n'est pas possible.
 # La logique et l'architecture des deux frameworks sont fondamentalement différentes.
-#  Le module autowidth.py est un mixin wxPython, une classe conçue pour être héritée par d'autres classes wxPython comme wx.ListCtrl ou wx.TreeListCtrl afin de leur ajouter une fonctionnalité de redimensionnement automatique des colonnes.
+# Le module autowidth.py est un mixin wxPython, une classe conçue pour être héritée
+# par d'autres classes wxPython comme wx.ListCtrl ou wx.TreeListCtrl
+# afin de leur ajouter une fonctionnalité de redimensionnement automatique des colonnes.
 #
 # Différences fondamentales entre wxPython et Tkinter
 #
 #     Architecture des widgets :
+#         wxPython : Il utilise une approche orientée objet avec des classes
+#                    de widgets spécifiques qui ont des méthodes et des attributs
+#                    bien définis pour gérer leur comportement et leur apparence
+#                    (ex: GetColumnWidth, SetColumnWidth, Bind, Unbind).
+#                    Le mixin dans le fichier autowidth.py s'appuie directement
+#                    sur ces méthodes pour fonctionner.
 #
-#         wxPython : Il utilise une approche orientée objet avec des classes de widgets spécifiques qui ont des méthodes et des attributs bien définis pour gérer leur comportement et leur apparence (ex: GetColumnWidth, SetColumnWidth, Bind, Unbind). Le mixin dans le fichier autowidth.py s'appuie directement sur ces méthodes pour fonctionner.
-#
-#         Tkinter : Bien que basé sur Tcl/Tk, il encapsule les commandes Tcl dans des classes Python. L'équivalent de wx.ListCtrl est le ttk.Treeview. Le redimensionnement automatique des colonnes n'est pas géré de la même manière dans ttk.Treeview et ne dispose pas des mêmes mécanismes de liaison d'événements (Bind, Unbind) pour le glissement des colonnes ou le redimensionnement de la fenêtre.
+#         Tkinter : Bien que basé sur Tcl/Tk, il encapsule les commandes Tcl
+#                   dans des classes Python.
+#                   L'équivalent de wx.ListCtrl est le ttk.Treeview.
+#                   Le redimensionnement automatique des colonnes n'est pas géré
+#                   de la même manière dans ttk.Treeview et ne dispose pas des
+#                   mêmes mécanismes de liaison d'événements (Bind, Unbind)
+#                   pour le glissement des colonnes ou le redimensionnement de la fenêtre.
 #
 #     Gestion des événements :
 #
-#         wxPython : Il utilise un système de liaison d'événements basé sur des types d'événements spécifiques (wx.EVT_SIZE, wx.EVT_LIST_COL_BEGIN_DRAG, etc.) pour réagir aux actions de l'utilisateur ou du système.
+#         wxPython : Il utilise un système de liaison d'événements basé
+                    sur des types d'événements spécifiques
+                    (wx.EVT_SIZE, wx.EVT_LIST_COL_BEGIN_DRAG, etc.)
+                    pour réagir aux actions de l'utilisateur ou du système.
 #
-#         Tkinter : Il utilise une méthode bind() pour associer des fonctions à des événements génériques de l'interface utilisateur, tels que <Configure> pour les changements de taille ou <B1-Motion> pour le glissement de la souris. Ces événements ne correspondent pas directement à ceux de wxPython.
+#         Tkinter : Il utilise une méthode bind() pour associer des fonctions
+                   à des événements génériques de l'interface utilisateur,
+                   tels que <Configure> pour les changements de taille ou
+                   <B1-Motion> pour le glissement de la souris.
+                   Ces événements ne correspondent pas directement à ceux de wxPython.
 #
 #     Contexte du mixin :
 #
-#         Le mixin AutoColumnWidthMixin est fortement lié aux spécificités de wxPython, notamment aux méthodes de la classe wx.ListCtrl (ou similaires). Il utilise des fonctionnalités comme super().__init__(*args, **kwargs) pour s'intégrer dans l'arbre d'héritage de wxPython.
+#         Le mixin AutoColumnWidthMixin est fortement lié aux spécificités
+          de wxPython, notamment aux méthodes de la classe wx.ListCtrl (ou similaires).
+          Il utilise des fonctionnalités comme super().__init__(*args, **kwargs)
+          pour s'intégrer dans l'arbre d'héritage de wxPython.
 #
 # Approche recommandée pour Tkinter
 #
-# Au lieu de tenter une conversion directe, il faut réimplémenter la fonctionnalité pour un widget ttk.Treeview de Tkinter. Le ttk.Treeview possède une option stretch qui peut être configurée pour redimensionner automatiquement une colonne pour remplir l'espace restant, ce qui est l'objectif principal du mixin wxPython.
+# Au lieu de tenter une conversion directe, il faut réimplémenter la fonctionnalité
+ pour un widget ttk.Treeview de Tkinter.
+  Le ttk.Treeview possède une option stretch qui peut être configurée
+  pour redimensionner automatiquement une colonne pour remplir l'espace restant,
+  ce qui est l'objectif principal du mixin wxPython.
 #
 # Pour réaliser une fonctionnalité similaire à celle d' autowidth.py, voici une approche :
 #
-#     Identifier la colonne à redimensionner : Déterminez l'identifiant de la colonne dans votre ttk.Treeview que vous souhaitez redimensionner automatiquement.
+#     Identifier la colonne à redimensionner :
+ Déterminez l'identifiant de la colonne dans votre ttk.Treeview
+ que vous souhaitez redimensionner automatiquement.
 #
-#     Gérer l'événement de redimensionnement : Liez l'événement <Configure> de la fenêtre parent au widget ttk.Treeview. Cet événement se déclenche lorsque la fenêtre est redimensionnée.
+#     Gérer l'événement de redimensionnement :
+ Liez l'événement <Configure> de la fenêtre parent au widget ttk.Treeview.
+ Cet événement se déclenche lorsque la fenêtre est redimensionnée.
 #
-#     Ajuster la largeur des colonnes : Dans la fonction liée à l'événement <Configure>, calculez l'espace disponible. Parcourez toutes les colonnes du ttk.Treeview  et déduisez leur largeur fixe de la largeur totale de la fenêtre. L'espace restant est alloué à la colonne "auto-ajustable" à l'aide de treeview.column("colonne_id", width=nouvelle_largeur).
+#     Ajuster la largeur des colonnes :
+ Dans la fonction liée à l'événement <Configure>, calculez l'espace disponible.
+ Parcourez toutes les colonnes du ttk.Treeview  et déduisez leur largeur fixe
+ de la largeur totale de la fenêtre.
+ L'espace restant est alloué à la colonne "auto-ajustable"
+ à l'aide de treeview.column("colonne_id", width=nouvelle_largeur).
 #
-#     Gérer le glissement des colonnes : Tkinter ne propose pas de gestion native pour le glissement d'une colonne de ttk.Treeview. Cependant, des solutions existent pour gérer manuellement les événements de la souris (<B1-Motion>, <ButtonRelease-1>) pour simuler le redimensionnement des colonnes.
+#     Gérer le glissement des colonnes :
+ Tkinter ne propose pas de gestion native
+ pour le glissement d'une colonne de ttk.Treeview.
+ Cependant, des solutions existent pour gérer manuellement les événements de
+ la souris (<B1-Motion>, <ButtonRelease-1>)
+ pour simuler le redimensionnement des colonnes.
 #
-#     Rechercher des modules existants : Il est possible qu'un module tiers similaire existe déjà pour Tkinter.
+#     Rechercher des modules existants : Il est possible qu'un module tiers
+ similaire existe déjà pour Tkinter.
 #
-# En résumé, la migration nécessite une réécriture complète de la logique en utilisant les outils et les méthodes propres à Tkinter, plutôt qu'une conversion ligne par ligne.
+# En résumé, la migration nécessite une réécriture complète de la logique
+ en utilisant les outils et les méthodes propres à Tkinter,
+ plutôt qu'une conversion ligne par ligne.
 
 # Le fichier autowidth.py que vous avez fourni est un mixin wxPython,
 # une classe qui fournit des fonctionnalités de redimensionnement automatique
@@ -137,13 +180,18 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 """
 # Ce qui a été ajouté :
 #
-#     Logs de niveau DEBUG : Pour les calculs mathématiques et les passages fréquents (comme on_resize).
+#     Logs de niveau DEBUG : Pour les calculs mathématiques et
+#     les passages fréquents (comme on_resize).
 #
-#     Logs de niveau INFO : Pour les actions importantes comme le changement de colonne cible ou le lancement d'un redimensionnement complet.
+#     Logs de niveau INFO : Pour les actions importantes
+#     comme le changement de colonne cible ou le lancement d'un redimensionnement complet.
 #
-#     Gestion d'erreur sur self._font : Si _font n'est pas encore initialisé dans la classe qui utilise le mixin, le code ne plantera pas et logguera un avertissement.
+#     Gestion d'erreur sur self._font : Si _font n'est pas encore initialisé
+#     dans la classe qui utilise le mixin, le code ne plantera pas
+#     et logguera un avertissement.
 #
-#     Utilisation de self.ResizeColumnMinWidth : J'ai remplacé la valeur en dur 50 par l'attribut de l'instance dans on_resize.
+#     Utilisation de self.ResizeColumnMinWidth : J'ai remplacé la valeur
+#     en dur '50' par l'attribut de l'instance dans on_resize.
 
 # 1. État réel de autowidthtk.py
 # Réponse courte
@@ -151,7 +199,9 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 # 👉 Non, autowidthtk.py n’est pas encore totalement sûr ni totalement fonctionnel
 # 👉 Mais : la logique de base est bonne et exploitable
 #
-# Tu es clairement au bon niveau d’abstraction (un mixin dédié à l’auto-redimensionnement), et tu as déjà fait l’essentiel du travail intellectuel de portage wx → Tkinter.
+# Tu es clairement au bon niveau d’abstraction (un mixin dédié à
+# l’auto-redimensionnement), et tu as déjà fait l’essentiel du travail
+# intellectuel de portage wx → Tkinter.
 #
 # Ce qui est déjà BIEN fait ✅
 #
@@ -171,13 +221,10 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 # 2. Problèmes concrets identifiés
 # Je vais être précis, parce que certains points peuvent te faire perdre beaucoup de temps plus tard.
 # Problème 1 – AutoColumnWidthMixin appelle super().__init__
-# Pourquoi c’est dangereux
-#
+# Pourquoi c’est dangereux :
 # Dans TaskCoach Tkinter, tu as adopté (à juste titre) cette règle :
-#
 # 👉 Les mixins abstraits ne doivent PAS initialiser le widget Tkinter
 # Or ici :
-#
 # AutoColumnWidthMixin n’hérite pas de ttk.Treeview
 # mais il appelle quand même super().__init__
 # ce qui dépend dangereusement du MRO
@@ -190,7 +237,6 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 # ⚠️ Ce mixin n’est PAS “non-coopératif”, contrairement aux autres mixins de itemctrltk.py.
 #
 # 🔴 Problème 2 – Hypothèse implicite : self est un Treeview
-#
 # Dans tout le fichier, tu utilises :
 # Cela suppose implicitement que :
 #
@@ -199,16 +245,14 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 #
 # ➡️ Ce n’est pas faux conceptuellement, mais :
 # il faut l’assumer explicitement
-# et surtout ne jamais appeler __init__ du widget ici
+# et surtout ne jamais appeler __init__ du widget ici !
 #
 # 🟠 Problème 3 – resize_column ambigu (index vs id)
 # Problème
 # Dans Tkinter :
-#
 # les colonnes sont identifiées par ID string ("task_name")
 # PAS par index entier (sauf #0)
 # 👉 Ici, resize_column peut être :
-#
 # un int
 # ou une string
 # ou un index hors liste
@@ -248,8 +292,6 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 #
 #     Utilisation dans itemctrltk.py :
 #         Dans votre fichier itemctrltk.py, vous avez :
-#         Python
-#
 #     class _CtrlWithAutoResizedColumnsMixin(autowidthtk.AutoColumnWidthMixin):
 #         # ...
 #         def on_resize(self, event):
@@ -267,15 +309,14 @@ Licence : GNU General Public License, version 3 ou ultérieure.
 #     et de laisser ce fichier autowidthtk.py gérer la logique.
 #
 # Définir la colonne à étirer :
-#
-#     Dans TaskTree (ou TaskList dans itemctrltk.py), après avoir créé les colonnes, vous devrez appeler :
-#     Python
-#
+#     Dans TaskTree (ou TaskList dans itemctrltk.py),
+#     après avoir créé les colonnes, vous devrez appeler :
 # self.setResizeColumn('task_name') # ou 'subject', l'ID de la colonne principale
 #
 # Cela garantira que la colonne "Sujet" prend tout l'espace disponible, comportement typique de TaskCoach.
 import logging
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import ttk
 
 log = logging.getLogger(__name__)
@@ -349,6 +390,26 @@ class AutoColumnWidthMixin:  # mixin !
 
         # self.resize_column = 'task_name'
         self.__is_auto_resizing = False
+
+        # # TODO : à définir !
+        # # Définition de l'objet police de caractère utilisé
+        # # pour afficher le texte des cellules et des en-têtes
+        # # dans le contrôle (ttk.Treeview/TreeListCtrl)
+        # self._font = self.
+        # Solution dans @property (paresseuse et robuste)
+        # Avantage :
+        #   │
+        #   │ • Aucun risque de crash dans __init__ si les composants graphiques ne sont pas encore reliés au serveur X / Wayland.
+        #   │ • Vous supprimez simplement la ligne self._font = self. dans __init__.
+        # Sinon :
+        # try:
+        #     style = ttk.Style(self)
+        #     font_name = style.lookup("Treeview", "font") or "TkDefaultFont"
+        #     self._font = tkfont.nametofont(font_name)
+        # except Exception:
+        #     self._font = tkfont.nametofont("TkDefaultFont")
+        self._cached_font = None
+
         # Liaison de l'événement de redimensionnement de la fenêtre/widget
         # self.bind('<Configure>', self.on_resize)  # pour détecter les redimensionnements
         self.bind('<Configure>', self._on_autowidth_resize)  # pour détecter les redimensionnements
@@ -606,6 +667,28 @@ class AutoColumnWidthMixin:  # mixin !
         except tk.TclError as e:
             log.warning(f"AutoColumnWidthMixin._on_autowidth_resize : Impossible de redimensionner la colonne {self._resize_column_id}", stack_info=True)
 
+    @property
+    def _font(self):
+        """Retourne l'objet Font servant à mesurer la largeur du texte."""
+        if not hasattr(self, "_cached_font") or self._cached_font is None:
+            try:
+                # 1. On tente d'interroger la police configurée dans le style ttk
+                style = ttk.Style(self)
+                widget_style = self.cget("style") or "Treeview"
+                font_spec = style.lookup(widget_style, "font") or "TkDefaultFont"
+
+                if isinstance(font_spec, str):
+                    self._cached_font = tkfont.nametofont(font_spec)
+                else:
+                    self._cached_font = tkfont.Font(self, font=font_spec)
+            except Exception:
+                # 2. Fallback sur la police Tkinter standard
+                try:
+                    self._cached_font = tkfont.nametofont("TkDefaultFont")
+                except Exception:
+                    self._cached_font = None
+        return self._cached_font
+
 
 # Pour la compatibilité avec le code existant qui pourrait importer TaskList d'ici
 # (Bien que TaskList soit plutôt définie dans itemctrltk.py ou domain)
@@ -613,9 +696,10 @@ class AutoColumnWidthMixin:  # mixin !
 # Elle est très utile pour les tests
 # 👉 Mais elle ne doit jamais être utilisée en production
 #
-# TODO : Je te conseille :
+# Conseil :
 # soit de la déplacer dans un fichier de test
 # soit de la marquer explicitement comme helper / debug
+# -> création de demotkautowidth.py dans guitk/demos.
 
 # class AutoWidthTreeList(AutoColumnWidthMixin, ttk.Treeview):
 #     """
