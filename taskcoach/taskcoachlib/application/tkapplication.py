@@ -54,14 +54,17 @@ import logging
 import os
 import sys
 import time
-# import tkinter as tk
-from tkinter import messagebox
-# from tkinter import Menu
+
 import threading
 
 # # from tkinterdnd2 import TkinterDnD
 # from tkinterdnd2 import *
-import tkinterdnd2
+try:
+    import tkinterdnd2
+except ImportError:
+    import tkinter as tk
+from tkinter import messagebox
+# from tkinter import Menu
 import re
 import locale
 import calendar
@@ -527,7 +530,13 @@ class TkinterApplication(
         log.info(
             f"TkinterApplication.__init_config : Chargement des paramètres depuis {ini_file if ini_file else 'le fichier par défaut'} : {load_settings}"
         )
-        self.settings = Settings(load_settings, ini_file, "tk")
+        gui_name = getattr(self._options, "gui_name", None) or "tk"
+
+        self.settings = Settings(
+            load_settings,
+            ini_file,
+            gui_name,
+        )
         # self.settings.load()  # AttributeError: 'Settings' object has no attribute 'load'
         log.info("init_config : passé avec succès !")
 

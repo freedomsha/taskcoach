@@ -372,6 +372,11 @@ def start():
     if isinstance(gui_name, list):
         gui_name = gui_name[0]
 
+    if gui_name not in ("tk", "wx"):
+        parser.parser.error(
+            f"Interface graphique inconnue : {gui_name!r}"
+        )
+
     set_gui(gui_name)
 
     # log.info(f"taskcoach.start : GUI sélectionné : {options.gui_name}")

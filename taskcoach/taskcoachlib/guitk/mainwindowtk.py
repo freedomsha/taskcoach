@@ -1496,7 +1496,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # Ajouter les nouvelles tâches.
         self.taskFile.tasks().extend(tasks)
         log.info("MainWindow.restoreTasks : %s catégories et %s tâches restaurés du ficher de tâches %s !",
-                 len(categories), len(tasks), )
+                 len(categories), len(tasks), self.taskFile)
 
     # Méthodes pour la gestion des catégories et tâches iPhone
     def addIPhoneCategory(self, category) -> None:

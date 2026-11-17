@@ -22,13 +22,13 @@ import logging
 import os
 import sys
 
-from taskcoachlib.config.arguments import get_gui
+# from taskcoachlib.config.arguments import get_gui
 
-gui_name = get_gui()
-if gui_name == "wx":
-    import wx
-elif gui_name == "tk":
-    import tkinter as tk
+# gui_name = get_gui()
+# if gui_name == "wx":
+#     import wx
+# elif gui_name == "tk":
+import tkinter as tk
 from tkinter import messagebox
 
 import shutil
@@ -259,7 +259,13 @@ class Settings(CachingConfigParser):
             self.MessageboxUsed = self.wx.MessageBox
         elif self.gui_used == "tk":
             log.info("Settings.__init__ avec tkinter plutôt que wx.")
+            self.wx = None
             self.MessageboxUsed = messagebox.showerror
+        else:
+            raise ValueError(
+                f"Interface graphique inconnue : {self.gui_used!r}. "
+                "Valeurs attendues : 'tk' ou 'wx'."
+            )
         # Ensure errorMessage is initialized
         errorMessage = None
 
