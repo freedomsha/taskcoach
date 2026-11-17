@@ -270,20 +270,23 @@ class Viewer(ttk.Frame, patterns.Observer):
         if self.toolbar.winfo_ismapped() and hasattr(
             self.winfo_toplevel(), "AddBalloonTip"
         ):  # Tests avec winfo
+            # if isinstance(self.winfo_toplevel(), BalloonTipManager):
+            # TODO : A définir ! mauvaise construction !?
             self.winfo_toplevel().AddBalloonTip(  # Utilisation de self.winfo_toplevel()
-                self.settings,
-                "customizabletoolbars",
-                self.toolbar,
-                title=_("Toolbars are customizable"),
-                getRect=lambda: (
-                    0,
-                    0,
-                    28,
-                    16,
-                ),  # Rect factice, car on ne peut pas vraiment obtenir la position du Tool
+                # self.settings,  # target ?
+                # "customizabletoolbars",  # message ? non, quoi ?
+                self.toolbar,  # title ? non, quoi ?
                 message=_(
                     """Click on the gear icon on the right to add buttons and rearrange them."""
                 ),
+                title=_("Toolbars are customizable"),
+                # getRect=lambda: (
+                #     0,
+                #     0,
+                #     28,
+                #     16,
+                # ),  # Rect factice, car on ne peut pas vraiment obtenir la position du Tool
+
             )
 
     def onShowTooltipsChanged(self, value):

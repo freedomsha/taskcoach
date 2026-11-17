@@ -35,7 +35,7 @@ from taskcoachlib import (
 )  # base à besoin des widgets .tooltip.ToolTipMixin, .itemctrl.Column,
 from taskcoachlib.widgets.tooltip import ToolTipMixin
 from taskcoachlib.widgets.balloontip import (
-    BalloonTipManager,
+    BalloonTipManager,  # pour AddBalloonTip()
 )  # pour __DisplayBallon
 from taskcoachlib.i18n import _
 from taskcoachlib.gui.uicommand import uicommand

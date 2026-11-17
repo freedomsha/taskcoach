@@ -98,9 +98,16 @@ class BalloonTip(Toplevel):
     ARROWSIZE = 16
     MAXWIDTH = 300
 
-    def __init__(self, parent, target, message=None, title=None, bitmap=None, getRect=None):
+    def __init__(
+            self,
+            parent,
+            target,
+            message=None,
+            title=None,
+            bitmap=None,
+            getRect=None):
         """
-        Initialise une nouvelle info-bulle.
+        Initialise une nouvelle info-bulle (BalloonTip).
 
         :param parent: Fenêtre parente (une instance de tk.Tk ou tk.Toplevel).
         :param target: Widget cible auquel la bulle est associée (Button, Label, etc.).
@@ -111,10 +118,16 @@ class BalloonTip(Toplevel):
         """
         # Appeler le constructeur de Toplevel avec le parent
         super().__init__(parent)
+        # TODO : Le style wxPython est :
+        # style=wx.NO_BORDER
+        # | wx.FRAME_FLOAT_ON_PARENT
+        # | wx.FRAME_NO_TASKBAR
+        # | wx.FRAME_SHAPED
+        # | wx.POPUP_WINDOW,
 
         self._parent = parent
         self._target = target
-        self._getRect = getRect
+        self._get_rect = getRect
         self._title = title
         self._message = message
         self._bitmap = bitmap
@@ -136,7 +149,8 @@ class BalloonTip(Toplevel):
         self.transient(parent)
 
         # Gestionnaire d'événement de clic pour fermer la bulle
-        self.bind("<Button-1>", self.do_close)
+        # self.bind("<Button-1>", self.do_close)
+        self.bind("<Button-1>", self.on_click)
 
         # Le contenu de la bulle est dessiné sur un canevas
         self._canvas = tk.Canvas(self, bg=self._background, highlightthickness=0)
@@ -147,9 +161,22 @@ class BalloonTip(Toplevel):
         self._draw_tip()
         self.position()
 
+        # Il est plus sûr de lier également le canevas :
+        # self._canvas.bind("<Button-1>", self.do_close)
+        # La méthode on_click() existe déjà, mais elle n'est pas utilisée par cette liaison initiale.
+        self._canvas.bind("<Button-1>", self.on_click)
+
         # Lier les événements de déplacement et de redimensionnement de la fenêtre parente
         self.update_id = None
-        self._target.bind("<Configure>", self._on_configure)
+        # self._target.bind("<Configure>", self._on_configure)
+        # Cela couvre le redimensionnement ou la modification de géométrie du
+        # widget cible, mais pas nécessairement le déplacement de la fenêtre principale.
+        # La bulle peut donc rester à une ancienne position lorsque la fenêtre Tk est déplacée.
+        # Il faudrait plutôt surveiller le niveau supérieur Tkinter :
+        top = self._target.winfo_toplevel()
+        self._target_bind_id = top.bind("<Configure>", self._on_configure, add="+")
+        # Il faut également mémoriser cette liaison et la supprimer lors de la fermeture de la bulle.
+        # Voir _unbind_target()
 
     def _get_font(self, size, bold):
         """Helper to get a font."""
@@ -158,13 +185,75 @@ class BalloonTip(Toplevel):
         except IOError:
             return ImageFont.load_default()
 
+    def _unbind_target(self):
+        # if self._target is not None:
+        #     try:
+        #         self._target.unbind("<Configure>", self._target_bind_id)
+        #     except tk.TclError:
+        #         pass
+        if self._target.winfo_toplevel() is not None:
+            try:
+                top = self._target.winfo_toplevel()
+                top.unbind("<Configure>", self._target_bind_id)
+            except tk.TclError:
+                pass
+
     def do_close(self, event=None):
         """
         Ferme la bulle.
         """
         if self.update_id:
             self.after_cancel(self.update_id)
+        self._unbind_target()
         self.destroy()
+
+    # Méthode compatibilité avec wxpython
+    def DoClose(self, event=None, unbind=True):
+        self.do_close(event)
+
+    def _wrap_message(self, text, max_width):
+        """Découpe le message en lignes selon sa largeur réelle.
+
+        Découpe le texte en lignes en fonction de sa largeur réelle
+        avec la police Pillow, plutôt que du nombre de caractères.
+        Elle conserve les sauts de ligne déjà présents
+        et coupe aussi les mots trop longs pour tenir dans la largeur maximale.
+        """
+        lines = []
+
+        for paragraph in text.splitlines() or [""]:
+            words = paragraph.split()
+            if not words:
+                lines.append("")
+                continue
+
+            line = ""
+            for word in words:
+                candidate = word if not line else f"{line} {word}"
+
+                if self._message_font.getlength(candidate) <= max_width:
+                    line = candidate
+                    continue
+
+                if line:
+                    lines.append(line)
+                    line = ""
+
+                # Découpe les mots individuels trop longs pour la largeur disponible.
+                part = ""
+                for char in word:
+                    candidate = part + char
+                    if part and self._message_font.getlength(candidate) > max_width:
+                        lines.append(part)
+                        part = char
+                    else:
+                        part = candidate
+                line = part
+
+            if line:
+                lines.append(line)
+
+        return lines
 
     def _draw_tip(self):
         """
@@ -195,10 +284,30 @@ class BalloonTip(Toplevel):
             title_text_height = title_bbox[3] - title_bbox[1]
 
         if self._message:
-            # message_bbox = self._message_font.textbbox((0, 0), self._message)
-            message_bbox = self._message_font.getbbox(self._message)
-            message_text_width = message_bbox[2] - message_bbox[0]
-            message_text_height = message_bbox[3] - message_bbox[1]
+            # # message_bbox = self._message_font.textbbox((0, 0), self._message)
+            # message_bbox = self._message_font.getbbox(self._message)
+            # message_text_width = message_bbox[2] - message_bbox[0]
+            # message_text_height = message_bbox[3] - message_bbox[1]
+            message_lines = self._wrap_message(
+                self._message or "",
+                self.MAXWIDTH,
+                )
+
+            line_bbox = self._message_font.getbbox("Ag")
+            message_line_height = line_bbox[3] - line_bbox[1]
+            line_spacing = 2
+
+            message_text_width = max(
+                (
+                    self._message_font.getlength(line)
+                    for line in message_lines
+                ),
+                default=0,
+            )
+            message_text_height = (
+                    len(message_lines) * message_line_height
+                    + max(0, len(message_lines) - 1) * line_spacing
+            )
 
         # # Utiliser une image PIL pour dessiner la forme et le contenu
         # total_width = content_width + padding * 2
@@ -300,7 +409,15 @@ class BalloonTip(Toplevel):
             text_y += title_text_height + padding
 
         if self._message:
-            draw.text((margin, text_y), self._message, font=self._message_font, fill="black")
+            # draw.text((margin, text_y), self._message, font=self._message_font, fill="black")
+            for line in message_lines:
+                draw.text(
+                    (margin, text_y),
+                    line,
+                    font=self._message_font,
+                    fill="black",
+                )
+                text_y += message_line_height + line_spacing
 
         self._tk_image = ImageTk.PhotoImage(image)
         self._canvas.config(width=img_width, height=img_height)
@@ -322,10 +439,29 @@ class BalloonTip(Toplevel):
         # self.arrow_x = 0
         # self.arrow_y = 0
 
+    def _get_target_rect(self):
+        """
+        Retourne les coordonnées du rectangle du widget cible.
+
+        Returns:
+            Coordonnées x, y, w, h du widget cible.
+        """
+        if self._get_rect is not None:
+            return self._get_rect()
+
+        return (
+            self._target.winfo_rootx(),
+            self._target.winfo_rooty(),
+            self._target.winfo_width(),
+            self._target.winfo_height(),
+        )
+
     def _get_position(self):
         """Calculates the position of the tip."""
-        target_x, target_y = self._target.winfo_rootx(), self._target.winfo_rooty()
-        target_width, target_height = self._target.winfo_width(), self._target.winfo_height()
+        # Utilisation des self._target.winfo_ plutôt que self._get_rect
+        # target_x, target_y = self._target.winfo_rootx(), self._target.winfo_rooty()
+        # target_width, target_height = self._target.winfo_width(), self._target.winfo_height()
+        target_x, target_y, target_width, target_height = self._get_target_rect()
 
         # Position below the widget
         x = target_x + (target_width / 2) - (self._width / 2)
@@ -333,16 +469,27 @@ class BalloonTip(Toplevel):
 
         return f"{int(x)}+{int(y)}"
 
+    # Le positionnement n'est pas cohérent entre _get_position() et position()
+    # Dans _get_position(), la bulle est placée sous la cible :
+    # y = target_y + target_height
+    # Dans position(), elle est d'abord placée au-dessus :
+    # y = target_y - tip_height
+    # puis déplacée sous la cible si elle sort par le haut.
+    # La méthode _get_position() n'est apparemment pas utilisée,
+    # mais cette duplication crée une source de bugs et de confusion.
+    # Il faudrait conserver une seule méthode de calcul de position.
+
     def position(self):
         """
         Calcule et définit la position de la bulle par rapport à son widget cible.
         Gère la direction de la flèche (haut/bas) selon la place disponible.
         """
-        # Récupérer la géométrie du widget cible
-        target_x = self._target.winfo_rootx()
-        target_y = self._target.winfo_rooty()
-        target_width = self._target.winfo_width()
-        target_height = self._target.winfo_height()
+        # # Récupérer la géométrie du widget cible
+        # target_x = self._target.winfo_rootx()
+        # target_y = self._target.winfo_rooty()
+        # target_width = self._target.winfo_width()
+        # target_height = self._target.winfo_height()
+        target_x, target_y, target_width, target_height = self._get_target_rect()
 
         # Calculer la position x de la bulle
         tip_width = self.winfo_width()
@@ -364,6 +511,10 @@ class BalloonTip(Toplevel):
 
         # Dessiner la flèche sur le canevas en fonction de la direction
         self.draw_arrow(direction)
+
+    # Méthode de compatibilité avec wxpython
+    def Position(self):
+        self.position()
 
     def _on_configure(self, event):
         """
@@ -408,8 +559,10 @@ class BalloonTip(Toplevel):
         tip_width = self.winfo_width()
 
         # Calculer la position x de la flèche par rapport au widget cible
-        target_x_relative_to_tip = self._target.winfo_rootx() - self.winfo_rootx()
-        arrow_tip_x = target_x_relative_to_tip + floor(self._target.winfo_width() / 2)
+        # target_x_relative_to_tip = self._target.winfo_rootx() - self.winfo_rootx()
+        target_x_relative_to_tip = self._get_target_rect()[0] - self.winfo_rootx()
+        # arrow_tip_x = target_x_relative_to_tip + floor(self._target.winfo_width() / 2)
+        arrow_tip_x = target_x_relative_to_tip + floor(self._get_target_rect()[2] / 2)
 
         if direction == "bottom":
             points = [
@@ -427,7 +580,16 @@ class BalloonTip(Toplevel):
             self._canvas.create_polygon(points, fill='wheat', outline='wheat', tags="arrow")
 
 
-# Le BalloonTipManager gère une file d'attente d'info-bulles pour s'assurer qu'elles ne s'affichent pas toutes en même temps et gère les événements de fermeture de la fenêtre parente.
+# Le BalloonTipManager gère une file d'attente d'info-bulles
+# pour s'assurer qu'elles ne s'affichent pas toutes en même temps
+# et gère les événements de fermeture de la fenêtre parente.
+#
+# La partie BalloonTipManager est la plus facilement réutilisable. Elle conserve :
+#   une file d'attente ;
+#   l'affichage d'une seule bulle à la fois ;
+#   la déduplication ;
+#   les callbacks OnBalloonTipShow et OnBalloonTipClosed ;
+#   le passage automatique à la bulle suivante.
 class BalloonTipManager:
     """
     Utilisez-le comme un mixin dans la fenêtre de niveau supérieur (tk.Tk ou tk.Toplevel)
