@@ -631,24 +631,30 @@ class TkinterApplication(
     def on_end_session(self, *args, **kwargs):
         """
         Gère la fin de la session, appelée lorsque l'utilisateur ferme la fenêtre.
+
+        Appelle uniquement la procédure de fermeture, sans détruire directement la racine une seconde fois.
         """
         log.info("TkinterApplication.on_end_session : Arrêt de la session.")
         # self.quitApplication(force=True)
-        log.info("TkinterApplication.on_end_session : appelle OnQUit().")
-        self.OnQuit()  # Appelle la méthode OnQuit pour gérer les arrêts de services
-        log.info(
-            "TkinterApplication.on_end_session : appelle mainwindow.OnClose()."
-        )
-        self.mainwindow.onClose()  # Appelle la méthode de fermeture de MainWindow
+        # log.info("TkinterApplication.on_end_session : appelle OnQUit().")
+        # self.OnQuit()  # Appelle la méthode OnQuit pour gérer les arrêts de services
+        # Elle est lancé par self.quitApplication()
+        if self.mainwindow is not None:
+            log.info(
+                "TkinterApplication.on_end_session : appelle mainwindow.OnClose()."
+            )
+            self.mainwindow.onClose()  # Appelle la méthode de fermeture de MainWindow
+        else:
+            self.quitApplication(force=True)
 
-        # Cette ligne est essentielle pour fermer la fenêtre Tkinter
-        log.info(
-            "TkinterApplication.on_end_session : appelle détruit la fenêtre racine root."
-        )
-        self.root.destroy()
-        log.info(
-            "TkinterApplication.on_end_session : appelle détruit le parent."
-        )
+        # # Cette ligne est essentielle pour fermer la fenêtre Tkinter
+        # log.info(
+        #     "TkinterApplication.on_end_session : appelle détruit la fenêtre racine root."
+        # )
+        # self.root.destroy()
+        # log.info(
+        #     "TkinterApplication.on_end_session : appelle détruit le parent."
+        # )
         # self.parent.destroy()  # TODO : Peut-être inutile !?
         return True
 
@@ -661,6 +667,8 @@ class TkinterApplication(
     def quitApplication(self, force=False):
         """
         Quitte l'application et enregistre tout.
+
+        Nettoie les ressources et sauvegarde les données.
 
         Args:
             force: S'il faut forcer la fermeture même s'il y a des modifications non sauvegardées.
@@ -729,10 +737,10 @@ class TkinterApplication(
         # self.mainwindow.onClose()  # Appelle la méthode de fermeture de MainWindow  # Attention boucle !
 
         log.debug(
-            "TkinterApplication.quitApplication : détruit la fenêtre racine root !"
+            # "TkinterApplication.quitApplication : détruit la fenêtre racine root !"
+            "TkinterApplication.quitApplication : nettoyage terminé !"
         )
-        # Cette ligne est essentielle pour fermer la fenêtre Tkinter
-        self.root.destroy()
+        # # Cette ligne est essentielle pour fermer la fenêtre Tkinter, non !
         # self.root.destroy()  # Ne fonctionne pas avec le reste !
         # self.parent.destroy()
         return True

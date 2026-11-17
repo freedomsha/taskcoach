@@ -211,7 +211,8 @@ class ToolTipMixin:
     widget Tkinter.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
+        self.parent = parent
         delay = kwargs.pop("tooltipDelay", kwargs.pop("delay", 200))
         enabled = kwargs.pop("tooltipsEnabled", True)
         # super().__init__(parent, *args, **kwargs)
@@ -221,9 +222,9 @@ class ToolTipMixin:
         self._tooltip = None
         self._tooltip_position = (0, 0)
         self._tooltip_bindings = []
-        self._tooltip_bindings.append(self.bind("<Motion>", self._on_tooltip_motion, add="+"))
-        self._tooltip_bindings.append(self.bind("<Leave>", self._on_tooltip_leave, add="+"))
-        self._tooltip_bindings.append(self.bind("<ButtonPress>", self._on_tooltip_leave, add="+"))
+        self._tooltip_bindings.append(self.parent.bind("<Motion>", self._on_tooltip_motion, add="+"))
+        self._tooltip_bindings.append(self.parent.bind("<Leave>", self._on_tooltip_leave, add="+"))
+        self._tooltip_bindings.append(self.parent.bind("<ButtonPress>", self._on_tooltip_leave, add="+"))
 
     def SetToolTipsEnabled(self, enabled):
         """
@@ -254,11 +255,11 @@ class ToolTipMixin:
         """
         if self._tooltip is None:
             return
-        self.update_idletasks()
+        self._tooltip.update_idletasks()
         width = self._tooltip.winfo_reqwidth()
         height = self._tooltip.winfo_reqheight()
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
+        screen_width = self._tooltip.winfo_screenwidth()
+        screen_height = self._tooltip.winfo_screenheight()
         if x + width > screen_width:
             x = max(5, screen_width - width - 5)
         if y + height > screen_height:
@@ -271,6 +272,7 @@ class ToolTipMixin:
         self.ShowTip(x, y)
 
     def HideTip(self):
+        """Cache l'info-bulle."""
         if self._tooltip is not None:
             self._tooltip.Hide()
             self._tooltip = None
@@ -326,13 +328,31 @@ class ToolTipMixin:
 
     def destroy(self):
         """Désinstalle les liaisons et détruit l'info-bulle."""
-        self._cancel_scheduled_show()
-        self.hide_tooltip()
+        # self._cancel_scheduled_show()  # TODO : Mince, il s'agit de quelle méthode à la base ?
+        cancel_scheduled_show = getattr(
+            self,
+            "_cancel_scheduled_show",
+            None,
+        )
 
-        self.widget.unbind("<Enter>", self._enter_binding)
-        self.widget.unbind("<Leave>", self._leave_binding)
-        self.widget.unbind("<Motion>", self._motion_binding)
-        self.widget.unbind("<ButtonPress>", self._button_binding)
+        if callable(cancel_scheduled_show):
+            cancel_scheduled_show()
+        # self.hide_tooltip()
+        self.HideTip()
+
+        # # self.widget.unbind("<Enter>", self._enter_binding)
+        # # self.parent.unbind("<Enter>", self._enter_binding)
+        self.parent.unbind("<Enter>")
+        # # self.widget.unbind("<Leave>", self._leave_binding)
+        # self.parent.unbind("<Leave>", self._on_tooltip_leave)
+        self.parent.unbind("<Leave>")
+        # # self.widget.unbind("<Motion>", self._motion_binding)
+        # self.parent.unbind("<Motion>", self._on_tooltip_motion)
+        self.parent.unbind("<Motion>")
+        # # self.widget.unbind("<ButtonPress>", self._button_binding)
+        # self.parent.unbind("<ButtonPress>", self._on_tooltip_leave)
+        self.parent.unbind("<ButtonPress>")
+        # TODO : Il va peut-être falloir les réaffecter !
 
 # # Exemple d'utilisation
 # if __name__ == "__main__":

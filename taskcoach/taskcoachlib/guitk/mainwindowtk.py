@@ -968,7 +968,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
     def onClose(self):
         """
-        Gère la fermeture de la fenêtre.
+        Ferme proprement et détruit la fenêtre principale ainsi que l'application.
         """
         log.info("MainWindow.onClose : Fermeture de la fenêtre :")
 
@@ -980,55 +980,82 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         try:
             app_instance = application.tkapplication.TkinterApplication.getInstance()
             should_quit = app_instance.quitApplication(force=True)
-            should_hide = self.settings.getboolean("window", "hidewhenclosed")
+            should_hide = self.settings.getboolean(
+                "window",
+                "hidewhenclosed",
+            )
 
-            self.__save_perspective()
-            self.__save_position()
-            # self.closeEditors()
-            try:
+            if not should_quit:
+                self._closing = False
+                return
+
+            # self.__save_perspective()
+            # self.__save_position()
+            # # self.closeEditors()
+            # try:
+            #     if self.parent.winfo_exists():
+            #         self.closeEditors()
+            # except tk.TclError:
+            #     pass
+
+            if should_hide and not self.__shutdown:
                 if self.parent.winfo_exists():
-                    self.closeEditors()
-            except tk.TclError:
-                pass
+                    self.parent.withdraw()
+                self._closing = False
+                return
 
-            if should_quit or self.__shutdown:
-                log.debug("MainWindow.onClose: Quitter l'application")
-                # self.taskFile.stop()
-                try:
-                    self.taskFile.stop()
-                except Exception:
-                    log.exception("Erreur pendant l'arrêt de TaskFile")
-                self._idleController.stop()
-                # self.parent.destroy()
-                try:
-                    if self.parent.winfo_exists():
-                        self.parent.destroy()
-                except tk.TclError:
-                    pass
-            elif should_hide:
-                log.debug("MainWindow.onClose: Fenêtre cachée")
-                self.parent.withdraw()
-            else:
-                log.debug("MainWindow.onClose: Fermeture par défaut")
-                self.__save_perspective()
-                self.__save_position()
-                self.saveSettings()
-                # self.taskFile.stop()
-                try:
-                    self.taskFile.stop()
-                except Exception:
-                    log.exception("Erreur pendant l'arrêt de TaskFile")
-                self._idleController.stop()
-                # self.parent.destroy()
-                try:
-                    if self.parent.winfo_exists():
-                        self.parent.destroy()
-                except tk.TclError:
-                    pass
+            # La méthode quitApplication() appelle déjà self.OnQuit() et self.taskFile.close().
+            # Il faut donc éviter de refaire ces opérations après quitApplication().
+            # if should_quit or self.__shutdown:
+            #     log.debug("MainWindow.onClose: Quitter l'application")
+            #     # self.taskFile.stop()
+            #     try:
+            #         self.taskFile.stop()
+            #     except Exception:
+            #         log.exception("Erreur pendant l'arrêt de TaskFile")
+            #     self._idleController.stop()
+            #     # self.parent.destroy()
+            #     try:
+            #         if self.parent.winfo_exists():
+            #             self.parent.destroy()
+            #     except tk.TclError:
+            #         pass
+            # elif should_hide:
+            #     log.debug("MainWindow.onClose: Fenêtre cachée")
+            #     self.parent.withdraw()
+            # else:
+            #     log.debug("MainWindow.onClose: Fermeture par défaut")
+            #     self.__save_perspective()
+            #     self.__save_position()
+            #     self.saveSettings()
+            #     # self.taskFile.stop()
+            #     try:
+            #         self.taskFile.stop()
+            #     except Exception:
+            #         log.exception("Erreur pendant l'arrêt de TaskFile")
+            #     self._idleController.stop()
+            #     # self.parent.destroy()
+            #     try:
+            #         if self.parent.winfo_exists():
+            #             self.parent.destroy()
+            #     except tk.TclError:
+            #         pass
+            if self.parent.winfo_exists():
+                self.parent.destroy()
+        except tk.TclError:
+            # La fenêtre a déjà été détruite.
+            pass
         except Exception as e:
-            log.exception(f"MainWindow.onClose : Erreur : {e}")
+            log.exception(f"MainWindow.onClose : Erreur pendant la fermeture : {e}")
+        finally:
+            self._closing = False
 
-        self._idleController.stop()
+        # self._idleController.stop()
+        # Sécuriser le contrôleur d'inactivité
+        idle_controller = getattr(self, "_idleController", None)
+
+        if idle_controller is not None:
+            idle_controller.stop()
         log.info("MainWindow.onClose: Fenêtre principale fermée !")
 
     def show(self):
