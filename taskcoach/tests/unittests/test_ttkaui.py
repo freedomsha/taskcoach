@@ -63,7 +63,7 @@ from taskcoachlib.thirdparty.tk3rdparty.aui_ttk  import ttkframemanager_auimanag
 # from taskcoachlib.thirdparty.tk3rdparty.aui_tk.tkframemanager import (AuiDockInfo, AuiDockingGuideInfo,
 #     AuiDockUIPart, AuiPaneButton, AuiManagerEvent, AuiPaneInfo, NonePaneInfo)
 from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.tkframemanager_elements import AuiDockInfo, AuiDockingGuideInfo, AuiDockUIPart, AuiPaneButton, AuiPaneInfo, AuiManagerEvent
-from taskcoachlib.thirdparty.tk3rdparty.aui_tk.tkframemanager_auimanager import AuiManager, NonePaneInfo
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.tkframemanager_auimanager import AuiManager, NonePaneInfo
 
 
 def _fausse_page(caption='Onglet', active=True):
