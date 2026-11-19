@@ -1,4 +1,5 @@
-# D'accord, convertissons le fichier container.py de wxPython vers Tkinter,
+# D'accord, convertissons le fichier container.py de wxPython
+# vers Tkinter,
 # en remplaçant aui par tkinter.ttk.Notebook.
 # Voici une version convertie du code,
 # accompagnée d'explications sur les changements.
@@ -161,6 +162,7 @@ except ModuleNotFoundError:
 
 # import taskcoachlib.guitk.menutk
 from pubsub import pub  # pip install PyPubSub
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.tkframemanager_elements import AuiPaneInfo
 
 log = logging.getLogger(__name__)
 
@@ -200,7 +202,7 @@ class ViewerContainer(ttk.LabelFrame):
     """
 
     # def __init__(self, containerWidget, settings, *args, **kwargs):
-    def __init__(self, parent_widget, settings, *args, **kwargs):
+    def __init__(self, parent_widget, settings, *args, manager, viewer_parent, **kwargs):
         """
         Initialise le conteneur de visionneuses.
 
@@ -223,20 +225,23 @@ class ViewerContainer(ttk.LabelFrame):
             parent_widget, *args, **kwargs
         )  # text ne fonctionne pas dans PanedWindow
         # TODO : copier factorytk Mock
+
         self.viewer_count = 0  # copie de factorytk.MockViewerContainer
-        self._label = ttk.Label(
-            self,
-            name="visual_conteneur",
-            text="Conteneur de visualisateurs...",
-        )
-        # self._label.pack(pady=20)
-        self._label.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        # self._label = ttk.Label(
+        #     self,
+        #     name="visual_conteneur",
+        #     text="Conteneur de visualisateurs...",
+        # )
+        # # self._label.pack(pady=20)
+        # self._label.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         # # ttk.PanedWindow gère les viewer avec self.add(viewer,...)
         # self.add(self._label, weight=1)
         # self.containerWidget = containerWidget  # Le widget conteneur (par exemple, une fenêtre Tk).
         # self.containerWidget = parent_widget  # Le widget conteneur (par exemple, une fenêtre Tk, toplevel, ou ici MainWindow).
         # Mais en fait le conteneur est ViewerContainer lui-même !
-        self.containerWidget = self
+        self.containerWidget = self  # compatibilité : contrôleur attendu par le code
+        self.viewer_parent = viewer_parent
+        self.manager = manager
         self._settings = settings
         self.viewers = []  # Liste des visionneuses
         # # self.notebook = ttk.Notebook(containerWidget)  # Utilisation de ttk.Notebook. On utilise 'self' ici, car ViewerContainer est le parent du notebook.
@@ -252,6 +257,7 @@ class ViewerContainer(ttk.LabelFrame):
         self._notify_active_viewer = (
             False  # A ajuster en fonction de l'utilisation
         )
+        self._pane_by_viewer = {}
         self.__bind_event_handlers()
         # super().__init__(*args, **kwargs)
         # super().__init__(containerWidget, settings, *args, **kwargs)
@@ -366,9 +372,11 @@ class ViewerContainer(ttk.LabelFrame):
 
     # Modifiez la signature de la méthode addViewer
     # def addViewer(self, viewer_class, *args, **kwargs):
-    def addViewer(self, viewer, *args, **kwargs):
+    def addViewer(self, viewer, *args, floating=False, **kwargs):
         # def _add_viewer(self, viewer, *args, **kwargs):
         """
+        Enregistre le viewer et confie son placement au AUI principal.
+
         Crée et ajoute une visionneuse (viewer) au conteneur.
         """
         # Cette méthode fait double emploi avec celle de factorytk.py !
@@ -380,6 +388,27 @@ class ViewerContainer(ttk.LabelFrame):
         )
 
         # viewer_frame = ttk.Frame(self.notebook)
+        name = viewer.settingsSection()
+        pane_info = (
+            AuiPaneInfo()
+            .Name(name)
+            .Caption(viewer.title())
+            .DefaultPane()
+            .Movable(True)
+            .Floatable(True)
+        )
+
+        # Le premier viewer occupe le centre ; les suivants sont dockés à droite.
+        if not self.viewers:
+            pane_info.CenterPane()
+        else:
+            pane_info.Right().Position(len(self.viewers) - 1)
+
+        if floating:
+            pane_info.Float()
+
+        pane = self.manager.AddPane(viewer, pane_info)
+        self._pane_by_viewer[viewer] = pane
 
         # Créez le visualiseur avec le nouveau cadre comme parent
         # viewer = viewer_class(viewer_frame, *args, **kwargs)
@@ -389,17 +418,13 @@ class ViewerContainer(ttk.LabelFrame):
         # Ajoute le viewer au bandeau de viewers
         # self.paned_window.add(viewer)  # viewer doit être un widget Tkinter
 
-        # ✅ Si c'est le premier viewer, le définir comme actif
-        if self._active_viewer is None:
-            self._active_viewer = viewer
-
-        # # Placez le visualiseur à l'intérieur du nouveau cadre PanedWindow
-        # # viewer.pack(expand=True, fill="both")
-        # # viewer.pack(fill="both", expand=True, padx=10, pady=5)  # copie de factorytk.MockViewerContainer
-        # # viewer.grid(row=0, column=0)  # A essayer !
-        viewer.grid(
-            row=self.viewer_count, column=0, padx=10, pady=5, sticky="nsew"
-        )  # TODO : Attention, peut-être double avec celui de factory addViewers ! A retirer ?
+        # # # Placez le visualiseur à l'intérieur du nouveau cadre PanedWindow
+        # # # viewer.pack(expand=True, fill="both")
+        # # # viewer.pack(fill="both", expand=True, padx=10, pady=5)  # copie de factorytk.MockViewerContainer
+        # # # viewer.grid(row=0, column=0)  # A essayer !
+        # viewer.grid(
+        #     row=self.viewer_count, column=0, padx=10, pady=5, sticky="nsew"
+        # )  # TODO : Attention, peut-être double avec celui de factory addViewers ! A retirer ?
         # self.add(viewer, weight=1)  # PanedWindow utilise add()
         # self.viewer_count += 1
         # if isinstance(viewer, ViewerContainer):
@@ -418,12 +443,16 @@ class ViewerContainer(ttk.LabelFrame):
         )
 
         # Met à jour les listes de viewers
-        # self.viewers.append(viewer)
-        # self.viewer_widget_map[viewer] = viewer_frame
-        self.viewer_count += 1
-
-        if len(self.viewers) == 1:
-            self.activateViewer(viewer)
+        # # self.viewers.append(viewer)
+        # # self.viewer_widget_map[viewer] = viewer_frame
+        # self.viewer_count += 1
+        self.viewer_count = len(self.viewers)
+        #
+        # # ✅ Si c'est le premier viewer, le définir comme actif
+        # if self._active_viewer is None:
+        #     self._active_viewer = viewer
+        # if len(self.viewers) == 1:
+        #     self.activateViewer(viewer)
         if self._active_viewer is None:
             self.activateViewer(viewer)
         log.warning(
@@ -436,17 +465,28 @@ class ViewerContainer(ttk.LabelFrame):
         log.warning(
             f"ViewerContainer.removeViewer : retire le visualiseur {viewer} de {self.viewers}."
         )
-        # for i, (v, frame) in enumerate(self.viewers):
-        for i, v in enumerate(
-            self.viewers
-        ):  # ✅ Parcourt une liste de viewers
-            if v == viewer:
-                # Retire la visionneuse de la liste
-                # self.notebook.forget(i)
-                self.viewers.pop(i)
-                self.viewer_count -= 1
-                viewer.grid_forget()  # Important pour libérer les ressources
-                break
+        if viewer not in self.viewers:
+            return
+        # # for i, (v, frame) in enumerate(self.viewers):
+        # for i, v in enumerate(
+        #     self.viewers
+        # ):  # ✅ Parcourt une liste de viewers
+        #     if v == viewer:
+        #         # Retire la visionneuse de la liste
+        #         # self.notebook.forget(i)
+        #         self.viewers.pop(i)
+        #         self.viewer_count -= 1
+        #         viewer.grid_forget()  # Important pour libérer les ressources
+        #         break
+        self.manager.DetachPane(viewer)
+        self._pane_by_viewer.pop(viewer, None)
+        self.viewers.remove(viewer)
+        self.viewer_count = len(self.viewers)
+
+        if self._active_viewer is viewer:
+            self._active_viewer = self.viewers[0] if self.viewers else None
+            if self._active_viewer is not None:
+                self.activateViewer(self._active_viewer)
 
     def selectViewer(self, viewer):
         """Sélectionne un visualiseur."""
@@ -525,7 +565,7 @@ class ViewerContainer(ttk.LabelFrame):
                     )  # Activer une autre visionneuse si possible
 
     def activateViewer(self, viewer_to_activate):
-        """Active la visionneuse spécifiée."""
+        """Active la visionneuse spécifiée et informe AUI."""
         log.info(
             # f"ViewerContainer.activateViewer : Activation du visualiseur {viewer_to_activate.title()}."
             "ViewerContainer.activateViewer : Activation du visualiseur."
@@ -549,21 +589,38 @@ class ViewerContainer(ttk.LabelFrame):
         #     else:
         #         v.config(relief=tk.RAISED)  # exemple
 
-        if viewer_to_activate in self.viewers:
-            self._active_viewer = viewer_to_activate
-            self.selectViewer(
-                viewer_to_activate
-            )  # ✅ OK (appelle selectViewer)
-            # Monte le viewer au premier plan
-            # viewer_to_activate.tkraise()
-            # ttk.PanedWindow gère l'affichage des viewers avec self.add(viewer,....)
-            log.debug(
-                f"ViewerContainer.activateViewer : {viewer_to_activate.title()} est maintenant actif."
-            )
-        else:
+        # ---
+        # if viewer_to_activate in self.viewers:
+        #     self._active_viewer = viewer_to_activate
+        #     self.selectViewer(
+        #         viewer_to_activate
+        #     )  # ✅ OK (appelle selectViewer)
+        #     # Monte le viewer au premier plan
+        #     # viewer_to_activate.tkraise()
+        #     # ttk.PanedWindow gère l'affichage des viewers avec self.add(viewer,....)
+        #     log.debug(
+        #         f"ViewerContainer.activateViewer : {viewer_to_activate.title()} est maintenant actif."
+        #     )
+        # else:
+        #     log.warning(
+        #         f"ViewerContainer.activateViewer : Le viewer {viewer_to_activate} n'est pas dans la liste !"
+        #     )
+        # ---
+        if viewer_to_activate not in self.viewers:
             log.warning(
                 f"ViewerContainer.activateViewer : Le viewer {viewer_to_activate} n'est pas dans la liste !"
             )
+            return
+
+        self._active_viewer = viewer_to_activate
+        pane = self.manager.GetPane(viewer_to_activate)
+        if pane.IsOk():
+            self.manager.ActivatePane(pane)
+
+        self.sendViewerStatusEvent()
+        log.debug(
+            f"ViewerContainer.activateViewer : le viewer {viewer_to_activate.title()} est maintenant actif !"
+        )
 
     # def activeViewer(self):
     def activeViewer(self):

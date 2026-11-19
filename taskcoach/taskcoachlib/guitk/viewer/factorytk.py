@@ -316,7 +316,8 @@ class addViewers:
         # viewer = viewer_class(self.__viewer_container.containerWidget, self.__settings, self.__task_file, **viewer_kwargs)
         # viewer = viewer_class(self.__viewer_container.containerWidget, **viewer_kwargs)
         viewer_instance = viewer_class(
-            self.__viewer_container.containerWidget,
+            # self.__viewer_container.containerWidget,
+            self.__viewer_container.viewer_parent,
             self.__task_file,
             self.__settings,
             # **self._viewer_kwargs(viewer_class),
@@ -334,10 +335,15 @@ class addViewers:
         #
         #     isTreeViewer : La méthode isTreeViewer de wxpython est utilisée pour déterminer le mode d'affichage, soit arborescence, soit liste. Votre code Tkinter gère déjà ce comportement en utilisant l'attribut self.__viewMode dans le constructeur et en définissant les colonnes par défaut. Vous pouvez créer une nouvelle méthode appelée isTreeMode pour encapsuler cette logique.
 
-        # # Ajout du visualiseur au conteneur
-        # # self.__viewer_container.addViewer(viewer)
-        self.__viewer_container.addViewer(viewer_instance)
-        # self.__viewer_container.addViewer(viewer_instance, floating=self.floating)
+        # pane = self.__viewer_container.mainwindow.addViewerPane(
+        #     viewer_instance,
+        #     name=viewer_instance.settingsSection(),
+        #     caption=viewer_instance.title(),
+        # )  # Non, pas ici !
+        # # # Ajout du visualiseur au conteneur
+        # # # self.__viewer_container.addViewer(viewer)
+        # self.__viewer_container.addViewer(viewer_instance)
+        self.__viewer_container.addViewer(viewer_instance, floating=self.floating)
         # self.__viewer_container.pack(fill="both", expand=True, padx=10, pady=5)
         # viewer.grid(row=self.viewer_count + 1, column=0, padx=10, pady=5)
 

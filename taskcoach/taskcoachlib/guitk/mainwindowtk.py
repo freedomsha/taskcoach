@@ -362,7 +362,16 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         self.parent.update_idletasks()
 
         # test:
-        for pane_name in ("viewer_container", "status_bar", "toolbar"):
+        # for pane_name in ("viewer_container", "status_bar", "toolbar"):
+        #     #  Le diagnostic ne doit plus chercher le pane viewer_container.
+        #     #  Utilise plutôt les noms des viewers enregistrés :
+        pane_names = [
+            viewer.settingsSection()
+            for viewer in self.viewer_container
+        ]
+        pane_names.extend(("status_bar", "toolbar"))
+
+        for pane_name in pane_names:
             pane = self.manager.GetPane(pane_name)
 
             if pane.IsOk():
@@ -381,13 +390,18 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
     def _create_viewer_container(self) -> None:
         """
+        Crée le contrôleur des viewers, sans en faire un pane AUI.
+
         Crée le conteneur pour les visionneuses (tâches, notes, etc.) dans la fenêtre principale.
 
         Ce conteneur gère l'affichage et l'organisation des différentes visionneuses.
         """
         log.info("MainWindow._create_viewer_container : création du conteneur :")
         self.viewer_container = containertk.ViewerContainer(
-            self.manager.pane_parent, self.settings
+            self.manager.pane_parent,
+            self.settings,
+            manager=self.manager,
+            viewer_parent=self.manager.pane_parent,
         )
 
         # self.parent.update_idletasks()  # Prématuré
@@ -401,30 +415,30 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             self.viewer_container.winfo_width(),
             self.viewer_container.winfo_height(),
         )
-        # Ajout du conteneur au manager AUI qui gère les panneaux
-        self.addPane(
-            self.viewer_container,
-            caption=_("Tasks"),
-            name="viewer_container",
-            floating=False
-        )
-        pane = self.manager.GetPane("viewer_container")
+        # # Ajout du conteneur au manager AUI qui gère les panneaux
+        # self.addPane(
+        #     self.viewer_container,
+        #     caption=_("Tasks"),
+        #     name="viewer_container",
+        #     floating=False
+        # )
+        # pane = self.manager.GetPane("viewer_container")
 
-        log.debug(
-            "viewer_container pane: ok=%s, shown=%s, floating=%s, "
-            "min=%s, best=%s, window=%s",
-            pane.IsOk(),
-            pane.IsShown(),
-            pane.IsFloating(),
-            pane.min_size,
-            pane.best_size,
-            pane.window,
-        )
-        # Forcer la visibilité du panneau et actualiser AUI
-        if pane.IsOk():
-            pane.Show(True)
-            pane.MinSize((200, 200))
-            pane.BestSize((200, 200))
+        # log.debug(
+        #     "viewer_container pane: ok=%s, shown=%s, floating=%s, "
+        #     "min=%s, best=%s, window=%s",
+        #     pane.IsOk(),
+        #     pane.IsShown(),
+        #     pane.IsFloating(),
+        #     pane.min_size,
+        #     pane.best_size,
+        #     pane.window,
+        # )
+        # # Forcer la visibilité du panneau et actualiser AUI
+        # if pane.IsOk():
+        #     pane.Show(True)
+        #     pane.MinSize((200, 200))
+        #     pane.BestSize((200, 200))
 
         # self.manager.Update()  # Prématuré
 
@@ -549,23 +563,25 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
                   page,
                   floating,
                   name,
-                  dock_direction
+                  dock_direction,
                   )
-        # Les fenêtres flottantes ne sont pas possibles sur wayland !
-        # TODO : A remettre si nécessaire !
-        # if operating_system.isWayland():
-        #     floating = False
-
-        if not hasattr(page, 'settingsSection'):
-            # Si le page n'a pas de méthode settingsSection, utiliser le name
-            page.settingsSection = lambda: name
-
-        name = page.settingsSection()
+        # # Les fenêtres flottantes ne sont pas possibles sur wayland !
+        # # TODO : A remettre si nécessaire !
+        # # if operating_system.isWayland():
+        # #     floating = False
+        #
+        # if not hasattr(page, 'settingsSection'):
+        #     # Si le page n'a pas de méthode settingsSection, utiliser le name
+        #     page.settingsSection = lambda: name
+        #
+        # name = page.settingsSection()
+        pane_name = name or page.settingsSection()
         # Ajout du volet au manager AUI (de framettk)
         super().addPane(
             page,
             caption,
-            name,
+            # name,
+            pane_name,
             floating=floating,
             dock_direction=dock_direction,
         )
