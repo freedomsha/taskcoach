@@ -5,6 +5,7 @@ Cette version conserve l'API de tkframemanager_auimanager.py pour les
 opérations de panneaux, mais utilise une disposition ttk explicite.
 """
 
+import logging
 import json
 import tkinter as tk
 from tkinter import ttk
@@ -19,6 +20,8 @@ from .tkframemanager_elements import (
 )
 from .ttkauibook import AuiNotebook
 from .aui_tk_constants import *
+
+log = logging.getLogger(__name__)
 
 NonePaneInfo = AuiPaneInfo()
 
@@ -622,7 +625,13 @@ class AuiManager:
             Returns:
                 list[AuiPaneInfo]: Panneaux enregistrés dans le gestionnaire.
         """
+        log.info("AuiManager.GetAllPanes : retourne la liste interne des panneaux gérés.")
+        log.debug("AuiManager.GetAllPanes : %s", self._panes)
         return self._panes
+        # manager.GetAllPanes() doit contenir les viewers eux-mêmes
+        # — par exemple taskviewer, effortviewer, categoryviewer —
+        # ainsi que la barre d’état et la toolbar.
+        # L’AUI peut alors les nommer, les placer et sauvegarder une perspective qui les inclut. 
 
     def AddPane(self, window, arg1=None, arg2=None, target=None):
         """
