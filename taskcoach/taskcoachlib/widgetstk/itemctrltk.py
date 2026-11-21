@@ -1898,6 +1898,8 @@ class CtrlWithColumnsMixin(
         log.debug(
             f"CtrlWithColumnsMixin.__init__ : appel de super() avec parent={parent}, args={args}, kwargs={kwargs}."
         )
+        # Liste des colonnes Column
+        self._columns: List[Column] = []
         # # # Passer les arguments filtrés à la chaîne d'héritage
         super().__init__(parent, *args, **kwargs)
         # # # super().__init__(columns=columns, columnPopupMenu=columnPopupMenu, *args, **kwargs)
@@ -1908,8 +1910,6 @@ class CtrlWithColumnsMixin(
         # _CtrlWithSortableColumnsMixin.__init__(self, master, columns=columns, *args, **kwargs)
         # _CtrlWithColumnPopupMenuMixin.__init__(self, master, columnPopupMenu=columnPopupMenu, *args, **kwargs)
 
-        # Liste des colonnes Column
-        self._columns: List[Column] = []
         log.debug("CtrlWithColumnsMixin initialisé !")
 
     # def setColumns(self, columns: List[Column]) -> None:

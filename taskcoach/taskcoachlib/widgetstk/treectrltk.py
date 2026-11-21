@@ -576,7 +576,7 @@ class TreeListCtrl(
             c for c in columns if c.name() != "#0" and c.is_shown()
         ]
         log.debug(
-            f"TreeListCtrl : Les colonnes visibles sont self.display_columns={self.display_columns}."
+            f"TreeListCtrl.__init__ : Les colonnes visibles sont self.display_columns={self.display_columns}."
         )
         # display_columns = [c for c in columns if hasattr(c, 'is_shown') and c.is_shown()]
         # Ça te garantit que les identifiants utilisés par le Treeview
@@ -590,7 +590,7 @@ class TreeListCtrl(
         # )
         display_column_ids = [c.name() for c in self.display_columns]
         log.debug(
-            f"TreeListCtrl : La liste des identifiants des colonnes visibles sont display_column_ids={display_column_ids}."
+            f"TreeListCtrl.__init__ : La liste des identifiants des colonnes visibles sont display_column_ids={display_column_ids}."
         )
 
         # # # Appelez le constructeur de la classe parente
@@ -699,10 +699,13 @@ class TreeListCtrl(
             selectCommand=selectCommand,
             editCommand=editCommand,
         )
+        # Ne pas passer columns=columns ici s'il écrase la config de ttk.Treeview,
+        # ou utilisez _init_columns_mixin déjà présent dans votre classe
         # CtrlWithItemsMixin.__init__(self, parent, itemPopupMenu=itemPopupMenu)
         CtrlWithColumnsMixin.__init__(
             self, parent, columns=columns, columnPopupMenu=columnPopupMenu
         )
+        # self._init_columns_mixin(columns, columnPopupMenu)
         # Gestion spécifique des colonnes visibles pour l'init
         # On conserve la liste complète des objets colonnes pour usage interne
         self._columns = columns
@@ -771,6 +774,12 @@ class TreeListCtrl(
         #     *args, **kwargs
         # )
 
+        # Garantir que le Treeview a bien conservé ses colonnes avant _configure_columns()
+        # Restaurer les colonnes de ttk.Treeview si CtrlWithColumnsMixin les a réinitialisées
+        # self["columns"] = column_ids  # TypeError: TreeListCtrl.configure() takes 1 positional argument but 2 were given
+        # self["displaycolumns"] = display_column_ids
+        # Restaurer les colonnes de ttk.Treeview avant _configure_columns()
+        self.configure(columns=column_ids, displaycolumns=display_column_ids)
         # # Configurer les en-têtes de colonnes
         # # # for col in self._columns:
         # # for col in columns:
@@ -864,7 +873,8 @@ class TreeListCtrl(
     def heading(self, col_id, **kwargs):
         """Délègue l'appel à ttk.Treeview.heading."""
         # self.heading(col_id, **kwargs)  # RecursionError: maximum recursion depth exceeded
-        super().heading(col_id, **kwargs)
+        log.debug("TreeListCtrl.heading : délègue l'appel heading pour col_id=%s avec kwargs=%s", col_id, kwargs)
+        return super().heading(col_id, **kwargs)
         # _tkinter.TclError: Column #24 out of range
 
     def column(self, col_id, **kwargs) -> int:
@@ -911,14 +921,15 @@ class TreeListCtrl(
         # return self.tree.yview(*args)
         return super().yview(*args)
 
-    def configure(self, **kwargs):
+    def configure(self, cnf=None, **kwargs):
         """Délègue l'appel à ttk.Treeview.configure."""
         # return self.configure(**kwargs)  # RecursionError: maximum recursion depth exceeded
-        return super().configure(**kwargs)
+        return super().configure(cnf, **kwargs)
 
     def _configure_columns(self):
         """Configure les en-têtes et propriétés des colonnes."""
         # for col in self._columns:
+        log.debug("TreeListCtrl._configure_columns : configuration des colonnes de %s", self.display_columns)
         for col in self.display_columns:
             log.debug(
                 f"TreeListCtrl._configure_columns : Configuration de la colonne '{col.name()}' avec header '{col.header()}' et width {col.width}."
