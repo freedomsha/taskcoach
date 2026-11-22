@@ -636,6 +636,7 @@ class BalloonTipManager:
         et si le manager n'est pas en cours d'arrêt.
         """
         if self.__tips and not self.__shutdown and self.__displaying is None:
+            log.debug("BalloonTipManager.__Try : ")
             # Récupère le prochain tip de la file
             target, message, title, bitmap, getRect, kwargs = self.__tips.pop(0)
 
