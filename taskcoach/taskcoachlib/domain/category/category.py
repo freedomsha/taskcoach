@@ -221,7 +221,7 @@ class Category(
 
     def addCategorizable(self, *categorizables, **kwargs):
         """Add one or more categorizables to this category."""
-        print(
+        log.debug(
             f"Category.addCategorizable: pour {self}, ajoute les categorizables : {categorizables} !"
         )
         self.__categorizables.add(

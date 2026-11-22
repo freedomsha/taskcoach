@@ -261,6 +261,11 @@ class IOController(object):
         #             "File Open Error", f"Cannot open file due to: {e}"
         #         )
         #         return
+        # Cette validation évite d’ouvrir par erreur une option
+        # comme un fichier et refuse plusieurs arguments ambigus.
+        # Pour distinguer proprement fichier positionnel et arguments inconnus,
+        # la solution plus complète serait de déclarer le fichier
+        # comme argument positionnel dans le parseur et d’adapter l’appelant.
         if isinstance(commandLineArgs, (str, bytes, os.PathLike)):
             arguments = [commandLineArgs]
         else:

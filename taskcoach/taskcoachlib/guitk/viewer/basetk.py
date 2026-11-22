@@ -200,6 +200,7 @@ class Viewer(ttk.Frame, patterns.Observer):
         self.__presentation = self.createSorter(
             self.createFilter(self.domainObjectsToView())
         )
+        log.debug("Viewer.__init__ : la présentation de self=%s est self.__presentation=%s pour self.domainObjectsToView()=%s.", self.__class__.__name__, self.__presentation, self.domainObjectsToView())
 
         # En résumé, l'erreur principale est un problème de hiérarchie de widgets Tkinter.
         # La solution est de s'assurer que tu crées les widgets dans le bon ordre

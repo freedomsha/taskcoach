@@ -133,46 +133,46 @@ class Task(
     Elle hérite de NoteOwner, AttachmentOwner et CategorizableCompositeObject
     pour gérer les notes, les pièces jointes et les catégories associées à la tâche.
 
-    Mélange trois rsponsabilités :
+    Mélange trois responsabilités:
     - Initialisation héritée
     - Création des Attribute
     - Abonnement aux événements.
 
-        Attributs :
-            subject (str) : Le titre de la tâche.
-            description (str) : La description détaillée de la tâche.
-            dueDateTime (DateTime) : La date d'échéance de la tâche.
-            plannedStartDateTime (DateTime) : La date de début planifiée de la tâche.
-            actualStartDateTime (DateTime) : La date de début réelle de la tâche.
-            completionDateTime (DateTime) : La date d'achèvement de la tâche.
-            budget (TimeDelta) : Le temps alloué à la tâche.
-            plannedDuration (TimeDelta) : La durée planifiée de la tâche.
-            __categories : Les catégories associées à la tâche.
-            __computed_status : Le statut calculé de la tâche, basé sur les dates et autres attributs
-            __status_text : Texte descriptif du statut (ex: "Overdue", "Due Soon", "Completed")
-            __status_icon : Icône représentant le statut
-            __status_source : Explication de la raison pour laquelle la tâche a ce statut
-            __dueSoonHours : Nombre d'heures avant l'échéance pour considérer une tâche comme "due soon"
-            __dueDateTime :
-            __plannedStartDateTime :
-            __actualStartDateTime :
-            __completionDateTime :
-            __percentageComplete :
-            __budget :
-            __plannedDuration :
-            __plannedDurationMode :
-            _efforts :
-            __priority :
-            __hourlyFee :
-            __fixedFee :
-            __reminder :
-            __reminderBeforeSnooze :
-            __recurrence :
-            __prerequisites :
-            __dependencies :
-            __shouldMarkCompletedWhenAllChildrenCompleted :
+    Attributs:
+        subject (str) : Le titre de la tâche.
+        description (str) : La description détaillée de la tâche.
+        dueDateTime (DateTime) : La date d'échéance de la tâche.
+        plannedStartDateTime (DateTime) : La date de début planifiée de la tâche.
+        actualStartDateTime (DateTime) : La date de début réelle de la tâche.
+        completionDateTime (DateTime) : La date d'achèvement de la tâche.
+        budget (TimeDelta) : Le temps alloué à la tâche.
+        plannedDuration (TimeDelta) : La durée planifiée de la tâche.
+        __categories : Les catégories associées à la tâche.
+        __computed_status : Le statut calculé de la tâche, basé sur les dates et autres attributs
+        __status_text : Texte descriptif du statut (ex : "Overdue", "Due Soon", "Completed")
+        __status_icon : Icône représentant le statut
+        __status_source : Explication de la raison pour laquelle la tâche a ce statut
+        __dueSoonHours : Nombre d'heures avant l'échéance pour considérer une tâche comme "due soon"
+        __dueDateTime :
+        __plannedStartDateTime :
+        __actualStartDateTime :
+        __completionDateTime :
+        __percentageComplete :
+        __budget :
+        __plannedDuration :
+        __plannedDurationMode :
+        _efforts :
+        __priority :
+        __hourlyFee :
+        __fixedFee :
+        __reminder :
+        __reminderBeforeSnooze :
+        __recurrence :
+        __prerequisites :
+        __dependencies :
+        __shouldMarkCompletedWhenAllChildrenCompleted :
     """
-    # Voici un aperçu général de la classe Task et de ses fonctionnalités clés :
+    # Voici un aperçu général de la classe Task et de ses fonctionnalités clés:
     #
     # 1. **Attributs des données**:
     #    - _id: Un identifiant unique pour la tâche.
@@ -293,8 +293,8 @@ class Task(
             categories (list) : Liste des catégories assignées à la tâche.
             efforts (list) : Liste des efforts enregistrés associés à la tâche.
             shouldMarkCompletedWhenAllChildrenCompleted (bool) : Si vrai,
-                la tâche sera marquée comme terminée lorsque toutes ses
-                sous-tâches seront complétées.
+                la tâche sera marquée comme terminée
+                lorsque toutes ses sous-tâches seront complétées.
             recurrence (Recurrence) : Récurrence de la tâche.
             percentageComplete (int) : Pourcentage d'achèvement de la tâche.
             prerequisites (list) : Liste des tâches prérequis.

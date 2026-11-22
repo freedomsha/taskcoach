@@ -2443,7 +2443,7 @@ class Taskviewer(
         try:
             # On tente de récupérer le mode depuis la présentation active
             log.debug(
-                f"Taskviewer.isTreeViewer : essaie de renvoyer self.presentation().treeMode()."
+                "Taskviewer.isTreeViewer : essaie de renvoyer self.presentation().treeMode()."
             )
             return self.presentation().treeMode()
             # return self.presentation.treeMode()  # ?
