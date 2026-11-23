@@ -1141,7 +1141,7 @@ class TestDemoSequenceAuto(unittest.TestCase):
     """Valide la sequence automatique du demonstrateur, sans intervention."""
 
     def test_sequence_auto(self):
-        from taskcoachlib.guitk import demottkaui
+        from taskcoachlib.guitk.demos import demottkaui
         application = None
         try:
             application = demottkaui.DemoTkAui(auto=False, duree=0)
@@ -1161,7 +1161,7 @@ class TestGlisserDeposer(unittest.TestCase):
     """Simule un vrai glisser-deposer par evenements Tk sur le demonstrateur."""
 
     def setUp(self):
-        from taskcoachlib.guitk import demottkaui
+        from taskcoachlib.guitk.demos import demottkaui
         self.demo = demottkaui.DemoTkAui(auto=False, duree=0)
         self.root = self.demo.root
         self.root.update()

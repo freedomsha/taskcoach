@@ -36,7 +36,8 @@ class Demo:
             style.configure(f"{title}.TLabelframe", background=colour)
 
         self.toolbar = ttk.Frame(self.root, padding=6)
-        self.toolbar.pack(fill="x")
+        # self.toolbar.pack(fill="x")
+        self.toolbar.grid(row=0, column=0, sticky="ew")
         ttk.Button(self.toolbar, text="Ajouter panneau", command=self.add_panel).pack(side="left")
         ttk.Button(self.toolbar, text="Retirer panneau actif", command=self.remove_active).pack(side="left", padx=5)
         ttk.Button(self.toolbar, text="Flotter actif", command=self.float_active).pack(side="left")

@@ -3497,8 +3497,14 @@ class TaskNew(TaskListCommand, settings_uicommandtk.SettingsCommand):
         #  Liste de tâches dans laquelle créer la nouvelle tâche :
         taskList = kwargs["taskList"]
         if "menuText" not in kwargs:  # Provide for subclassing
-            kwargs["menuText"] = taskList.newItemMenuText
-            kwargs["helpText"] = taskList.newItemHelpText
+            if hasattr(taskList, "newItemMenuText"):
+                kwargs["menuText"] = taskList.newItemMenuText
+            else:
+                kwargs["menuText"] = ""
+            if hasattr(taskList, "newItemHelpText"):
+                kwargs["helpText"] = taskList.newItemHelpText
+            else:
+                kwargs["helpText"] = ""
         super().__init__(bitmap="new", *args, **kwargs)
         # super().__init__(
         #     menuText=_("New task\tCtrl+T"),
@@ -4591,7 +4597,7 @@ class EffortNew(
 
     La commande nécessite la sélection d'au moins une tâche.
 
-    Attributes :
+    Attributes:
         bitmap (str) : Le chemin vers l'icône de la commande (facultatif).
         effortList (EffortList) : La liste d'efforts utilisée pour gérer les efforts.
     """
@@ -4600,8 +4606,10 @@ class EffortNew(
         effortList = kwargs["effortList"]
         super().__init__(
             bitmap="new",
-            menuText=effortList.newItemMenuText,
-            helpText=effortList.newItemHelpText,
+            menuText=getattr(
+                effortList, "newItemMenuText", _("&New effort...\tCtrl+E")
+            ),
+            helpText=getattr(effortList, "newItemHelpText", help.effortNew),
             *args,
             **kwargs,
         )

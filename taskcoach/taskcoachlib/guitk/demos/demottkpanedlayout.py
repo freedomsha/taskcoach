@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import tkinter as tk
 from tkinter import ttk
-try:
-    from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.ttkframemanager_auimanager import TtkPaneLayout, TtkPanePlacement
-except ImportError:
-    from ttkframemanager_auimanager import TtkPaneLayout, TtkPanePlacement
+# try:
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.ttkframemanager_auimanager import TtkGridLayout, TtkPanePlacement
+# except ImportError:
+#     from ttkframemanager_auimanager import TtkPaneLayout, TtkPanePlacement
+
 
 def main():
     root=tk.Tk(); root.title("Ttk PaneLayout"); root.geometry("900x560")
-    layout=TtkPaneLayout(root)
-    panels=[("Gauche","gauche",0), ("Centre","centre","last"), ("Droite","droite","last"), ("Haut","au-dessus","last")]
+    # layout=TtkPaneLayout(root)
+    layout=TtkGridLayout(root)
+    panels=[("Gauche","left",0), ("Centre","center","last"), ("Droite","right","last"), ("Haut","top","last")]
     for title,pos,rank in panels:
         frame=ttk.Frame(root,padding=12); ttk.Label(frame,text=title,font=("TkDefaultFont",14,"bold")).pack(anchor="w")
         ttk.Label(frame,text=f"position={pos}, rank={rank}").pack(anchor="w")

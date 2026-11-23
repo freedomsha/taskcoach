@@ -2,16 +2,16 @@
 """Démonstrateur du gestionnaire AUI ttk et d'un panneau flottant."""
 import tkinter as tk
 from tkinter import ttk
-try:
-    from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.ttkframemanager_auimanager import AuiManager
-    from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.ttkauibook import AuiNotebook
-    from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.aui_tk_constants import AUI_DOCK_LEFT, AUI_DOCK_RIGHT
-    from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.tkframemanager_elements import AuiPaneInfo
-except ImportError:
-    from ttkframemanager_auimanager import AuiManager
-    from ttkauibook import AuiNotebook
-    from aui_tk_constants import AUI_DOCK_LEFT, AUI_DOCK_RIGHT
-    from tkframemanager_elements import AuiPaneInfo
+# try:
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.ttkframemanager_auimanager import AuiManager
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.ttkauibook import AuiNotebook
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.aui_tk_constants import AUI_DOCK_LEFT, AUI_DOCK_RIGHT
+from taskcoachlib.thirdparty.tk3rdparty.aui_ttk.tkframemanager_elements import AuiPaneInfo
+# except ImportError:
+#     from ttkframemanager_auimanager import AuiManager
+#     from ttkauibook import AuiNotebook
+#     from aui_tk_constants import AUI_DOCK_LEFT, AUI_DOCK_RIGHT
+#     from tkframemanager_elements import AuiPaneInfo
 
 
 def main():
@@ -25,4 +25,7 @@ def main():
     right=ttk.Frame(root,padding=10); ttk.Label(right,text="Panneau droit").pack(anchor="w"); ttk.Button(right,text="Flotter",command=lambda:manager.FloatPane(manager.GetPane(right))).pack(anchor="w",pady=8)
     manager.AddPane(right,AuiPaneInfo().Name("right").Caption("Droite").Right().BestSize(190,0))
     root.mainloop()
-if __name__ == "__main__": main()
+
+
+if __name__ == "__main__":
+    main()

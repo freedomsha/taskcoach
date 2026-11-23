@@ -616,13 +616,19 @@ class SortableViewerMixin(object):
         Returns:
             bool: True si le modèle est trié par sortKey, False sinon.
         """
+        # if hasattr(self.presentation(), "isSortedBy"):
+        #     return self.presentation().isSortedBy(sortKey)
         presentation_obj = self.presentation()
         # log.debug(f"SortableViewerMixin.isSortBy : Type de presentation_ob: {type(presentation_obj)}")  # Attendu: NoteSorter
         log.debug(f"SortableViewerMixin.isSortBy : self.presentation(): {presentation_obj} pour self={self.__class__.__name__}.")
-        sortKeys = self.presentation().sortKeys()
-        # return sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
-        result_isSortBy = sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
-        return result_isSortBy
+        if hasattr(presentation_obj, "sortKeys"):
+            # sortKeys = self.presentation().sortKeys()
+            sortKeys = presentation_obj.sortKeys()
+            # return sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
+            result_isSortBy = sortKeys and (sortKeys[0] == sortKey or sortKeys[0] == "-" + sortKey)
+            return result_isSortBy
+        else:
+            return False
 
     def sortKey(self):
         """

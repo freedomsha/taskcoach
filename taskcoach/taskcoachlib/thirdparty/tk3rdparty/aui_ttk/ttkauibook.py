@@ -483,7 +483,7 @@ class AuiNotebook(ttk.Frame):
         if page.winfo_parent() != str(self._notebook):
             raise ValueError("Avec ttk.Notebook, chaque page doit avoir le notebook comme parent")
         # Borne l'index d'insertion dans les limites actuelles de la liste
-        page_idx = max(0, min(int(page_idx), len(self._pages)))
+        page_idx = max(0, min(int(page_idx), len(self._pages)-1))
         info = AuiNotebookPage()
         info.window = page
         info.caption = caption

@@ -136,6 +136,7 @@ logging.getLogger("taskcoachlib.config.settings").setLevel(logging.WARNING)
 # logging.getLogger("taskcoachlib.application.tkapplication").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.persistence.taskfile").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.persistence.xml.reader").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.persistence.xml.writer").setLevel(logging.INFO)
 # logging.getLogger("taskcoachlib.gui.mainwindow").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.gui.menu").setLevel(logging.WARNING)
 logging.getLogger("taskcoachlib.gui.uicommand.settings_uicommand").setLevel(
@@ -151,9 +152,9 @@ logging.getLogger("taskcoachlib.guitk.menutk").setLevel(
 )  # en cours->debug !
 logging.getLogger("taskcoachlib.guitk.viewer.containertk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.viewer.factorytk").setLevel(logging.INFO)
-logging.getLogger("taskcoachlib.guitk.viewer.basetk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.basetk").setLevel(logging.DEBUG)
 logging.getLogger("taskcoachlib.guitk.viewer.mixintk").setLevel(logging.INFO)
-logging.getLogger("taskcoachlib.guitk.viewer.tasktk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.guitk.viewer.tasktk").setLevel(logging.DEBUG)
 logging.getLogger("taskcoachlib.guitk.viewer.efforttk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.viewer.categorytk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.guitk.toolbarttk").setLevel(logging.INFO)
@@ -184,7 +185,8 @@ logging.getLogger("taskcoachlib.guitk.uicommand.base_uicommandtk").setLevel(logg
 logging.getLogger("taskcoachlib.widgets.tooltip").setLevel(logging.INFO)
 # WIDGETS TK
 logging.getLogger("taskcoachlib.widgetstk.autowidthtk").setLevel(logging.INFO)
-logging.getLogger("taskcoachlib.widgetstk.treectrltk").setLevel(logging.INFO)
+logging.getLogger("taskcoachlib.widgetstk.draganddroptk").setLevel(logging.DEBUG)
+logging.getLogger("taskcoachlib.widgetstk.treectrltk").setLevel(logging.DEBUG)
 logging.getLogger("taskcoachlib.widgetstk.listctrltk").setLevel(logging.INFO)
 logging.getLogger("taskcoachlib.widgetstk.itemctrltk").setLevel(logging.INFO)
 

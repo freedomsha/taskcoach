@@ -62,7 +62,6 @@ from taskcoachlib.thirdparty.tk3rdparty.aui_tk  import tkframemanager_auimanager
 # from taskcoachlib.thirdparty.tk3rdparty.aui_tk.tkframemanager import (AuiDockInfo, AuiDockingGuideInfo,
 #     AuiDockUIPart, AuiPaneButton, AuiManagerEvent, AuiPaneInfo, NonePaneInfo)
 from taskcoachlib.thirdparty.tk3rdparty.aui_tk.tkframemanager_elements import AuiDockInfo, AuiDockingGuideInfo, AuiDockUIPart, AuiPaneButton, AuiPaneInfo, AuiManagerEvent
-from taskcoachlib.thirdparty.tk3rdparty.aui_tk.tkframemanager_auimanager import AuiManager, NonePaneInfo
 
 
 def _fausse_page(caption='Onglet', active=True):
@@ -1095,7 +1094,7 @@ class TestDemoSequenceAuto(unittest.TestCase):
     """Valide la sequence automatique du demonstrateur, sans intervention."""
 
     def test_sequence_auto(self):
-        from taskcoachlib.guitk import demotkaui
+        from taskcoachlib.guitk.demos import demotkaui
         application = None
         try:
             application = demotkaui.DemoTkAui(auto=False, duree=0)
@@ -1115,7 +1114,7 @@ class TestGlisserDeposer(unittest.TestCase):
     """Simule un vrai glisser-deposer par evenements Tk sur le demonstrateur."""
 
     def setUp(self):
-        from taskcoachlib.guitk import demotkaui
+        from taskcoachlib.guitk.demos import demotkaui
         self.demo = demotkaui.DemoTkAui(auto=False, duree=0)
         self.root = self.demo.root
         self.root.update()

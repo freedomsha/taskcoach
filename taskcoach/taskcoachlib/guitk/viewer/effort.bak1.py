@@ -35,6 +35,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 from taskcoachlib import domain
+from taskcoachlib.domain.task import task
 from taskcoachlib.guitk.uicommand import uicommandtk
 
 from taskcoachlib.i18n import _
@@ -198,7 +199,7 @@ class EffortViewerForSelectedTasks(Effortviewer):
         # Simulation d'un abonnement à un événement
         self.__viewerContainer.on_task_selection_changed = self.onTaskSelectionChanged
 
-    def tasksToShowEffortFor(self) -> List[domain.task]:
+    def tasksToShowEffortFor(self) -> List[domain.task.task]:
         if self.__viewerContainer.activeViewer() is not None:
             return self.__viewerContainer.activeViewer().curselection()
         return []

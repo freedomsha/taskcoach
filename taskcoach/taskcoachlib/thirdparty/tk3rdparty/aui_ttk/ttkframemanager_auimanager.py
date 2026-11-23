@@ -47,12 +47,12 @@ class TtkPanePlacement:
     POSITIONS = {"left", "right", "top", "bottom", "center"}
     RELATIONS = {"global", "intermediaire", "unitaire"}
 
-    def __init__(self, relation="unitaire", position="centre", rank="last"):
+    def __init__(self, relation="unitaire", position="center", rank="last"):
         """Initialise les paramètres de placement."""
         if relation not in self.RELATIONS:
             raise ValueError("relation doit être global, intermediaire ou unitaire")
         if position not in self.POSITIONS:
-            raise ValueError("position inconnue")
+            raise ValueError(f"position inconnue : {position}")
         if rank != "last" and not isinstance(rank, int):
             raise TypeError("rank doit être 'last' ou un entier")
         self.relation, self.position, self.rank = relation, position, rank
@@ -1770,13 +1770,13 @@ class AuiManager:
     def Update(self):
         """Applique l'état courant de chaque panneau à la disposition Tkinter.
 
-            Les panneaux flottants sont transférés dans un Toplevel, les panneaux
-            visibles sont placés dans la grille et les panneaux masqués sont
-            désamarrés. Le verrou _updating évite les appels récursifs.
+        Les panneaux flottants sont transférés dans un Toplevel, les panneaux
+        visibles sont placés dans la grille et les panneaux masqués sont
+        désamarrés. Le verrou _updating évite les appels récursifs.
 
-            Raises:
-                Exception: Toute erreur provenant du placement Tkinter est propagée ;
-                    le verrou est néanmoins réinitialisé dans le bloc finally.
+        Raises:
+            Exception: Toute erreur provenant du placement Tkinter est propagée ;
+                le verrou est néanmoins réinitialisé dans le bloc finally.
         """
         if self._updating:
             return
