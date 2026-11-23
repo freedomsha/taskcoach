@@ -648,6 +648,8 @@ class Effortviewer(
         return columnUICommands
 
     def createCreationToolBarUICommands(self):
+        # if hasattr(self, "presentation"):
+        # Toujours vraie pour une méthode de classe ! Ne protège pas contre une présentation vide !
         return (
             uicommand.EffortNew(
                 viewer=self,
@@ -656,6 +658,7 @@ class Effortviewer(
                 settings=self.settings,
             ),
         )
+        # return None
 
     def createActionToolBarUICommands(self):
         tasks = self.taskFile.tasks()

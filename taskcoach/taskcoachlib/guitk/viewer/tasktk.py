@@ -2445,9 +2445,19 @@ class Taskviewer(
             log.debug(
                 "Taskviewer.isTreeViewer : essaie de renvoyer self.presentation().treeMode()."
             )
-            return self.presentation().treeMode()
+            log.debug("Taskviewer.isTreeViewer : avec self.presentation=%s", self.presentation())
+            if self.presentation() != [] and self.presentation().treeMode() is not None:
+                return self.presentation().treeMode()
+            else:
+                self_settings = self.settings.getboolean(
+                    self.settingsSection(), "treemode"
+                )
+                log.debug(
+                    f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !"
+                )
+                return self_settings
             # return self.presentation.treeMode()  # ?
-        except AttributeError as e:
+        except AttributeError:
             # Si self.presentation() échoue (car self.__presentation n'existe pas encore
             # lors de l'initialisation dans Viewer.__init__), on se replie sur les paramètres.
             # Note : On évite absolument de logger self.presentation() ici pour ne pas recréer l'erreur.

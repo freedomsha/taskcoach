@@ -229,7 +229,12 @@ class Viewer(ttk.Frame, patterns.Observer):
         # self.toolbar = toolbarttk.ToolBar(self, settings, (16, 16))  # -> déplacer dans initLayout
         # # self.toolbar.pack(fill="both", side="top", expand=True)  # -> déplacer dans initLayout
         # self.initLayout()
-        self.registerPresentationObservers()
+        if self.__presentation != []:
+            self.registerPresentationObservers()
+        # Je laisserais basetk.py inchangé pour l’instant :
+        # son fallback à [] permet à isTreeViewer() de gérer l’initialisation,
+        # même si on pourrait ensuite remplacer ce fallback par un mécanisme
+        # d’état plus explicite.
         # self.createWidget()  # Call createWidget to instantiate self.widget
         # Déjà instancié !, pourquoi l'appeler ?
         self.refresh()
@@ -957,13 +962,14 @@ class Viewer(ttk.Frame, patterns.Observer):
 
     def presentation(self):
         """Retourne les objets de domaine que cette visionneuse affiche actuellement."""
-        # log.debug(
-        #     f"Viewer.presentation : renvoie les objets de domaine que la visionneuse {self.__class__.__name__} affiche actuellement : {self.__presentation}."
-        # )
-        return self.__presentation
-        # if hasattr(self, '__presentation'):
-        #     return self.__presentation
-        # return []
+        # Je laisserais basetk.py inchangé pour l’instant :
+        # son fallback à [] permet à isTreeViewer() de gérer l’initialisation,
+        # même si on pourrait ensuite remplacer ce fallback par un mécanisme
+        # d’état plus explicite.
+        try:
+            return self.__presentation
+        except AttributeError:
+            return []
 
     def setPresentation(self, presentation):
         """Change the presentation of the viewer."""

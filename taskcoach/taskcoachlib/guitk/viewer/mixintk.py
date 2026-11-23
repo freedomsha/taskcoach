@@ -450,6 +450,16 @@ class FilterableViewerForTasksMixin(FilterableViewerForCategorizablesMixin):
             self.hideCompositeTasks(False)
 
     def hasFilter(self):
+        # # return super().hasFilter() or self.presentation().hasFilter()
+        # if hasattr(super(), "hasFilter"):
+        #     return super().hasFilter()
+        # elif hasattr(self.presentation(), "hasFilter"):
+        #     return self.presentation().hasFilter()
+        # else:
+        #     return False
+        if not hasattr(super(), "hasFilter") and not hasattr(self.presentation(), "hasFilter"):
+            log.warning("FilterableViewerForTaskMixin.hasFilter : Aucun filtres de catégories ni de tâches !")
+            return False
         return super().hasFilter() or self.presentation().hasFilter()
 
     def createFilterUICommands(self):
@@ -489,6 +499,7 @@ class SortableViewerMixin(object):
         """
         Enregistrer et renvoyer la présentation aux abonnés observateurs.
         """
+        # if hasattr(super(), "presentation") or hasattr(self, "presentation"):
         super().registerPresentationObservers()
         pub.subscribe(self.onSortOrderChanged,
                       self.presentation().sortEventType())
