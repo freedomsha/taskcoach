@@ -677,18 +677,21 @@ class Noteviewer(mixintk.FilterableViewerForCategorizablesMixin, BaseNoteViewer)
     # Assurez-vous que SorterClass est bien la classe NoteSorter que vous avez convertie
     SorterClass = note.sorter.NoteSorter
 
-    def presentation(self):
-        """
-        Surcharge la méthode pour s'assurer que le trieur (Sorter) est créé et retourné.
-        """
-        if not hasattr(self, '_sorter') or self._sorter is None:
-            # self.domainObjectsToView() retourne l'objet NoteContainer
-            # SorterClass est NoteSorter (défini plus haut dans la classe)
-            container = self.domainObjectsToView()
-            self._sorter = self.SorterClass(container, **self.sorterOptions())
-            # Le trieur doit également s'enregistrer pour observer les changements
-            # du conteneur (NoteContainer) pour mettre à jour la vue si nécessaire.
-        return self._sorter
+    # def presentation(self):
+    #     """
+    #     Surcharge la méthode pour s'assurer que le trieur (Sorter) est créé et retourné.
+    #
+    #     Retourne la présentation courante gérée par le viewer de base.
+    #     """
+    #     # if not hasattr(self, '_sorter') or self._sorter is None:
+    #     #     # self.domainObjectsToView() retourne l'objet NoteContainer
+    #     #     # SorterClass est NoteSorter (défini plus haut dans la classe)
+    #     #     container = self.domainObjectsToView()
+    #     #     self._sorter = self.SorterClass(container, **self.sorterOptions())
+    #     #     # Le trieur doit également s'enregistrer pour observer les changements
+    #     #     # du conteneur (NoteContainer) pour mettre à jour la vue si nécessaire.
+    #     # return self._sorter
+    #     return basetk.Viewer.presentation(self)
 
     # La méthode createSorter doit retourner le Sorter
     # Si vous n'avez pas cette méthode, le mixin la fournit par défaut.
