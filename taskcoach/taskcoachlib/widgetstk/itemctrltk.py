@@ -291,7 +291,9 @@ class _CtrlWithItemsMixin:
         # # ✔️ Utilise un dictionnaire interne :
         # self._item_to_object = {}
         # Dictionnaire interne : item_id -> objet métier
-        self._item_to_object: Dict[str, Any] = {}
+        # self._item_to_object: Dict[str, Any] = {}
+        if not hasattr(self, "_item_to_object"):  # A appliquer aussi dans TreeHelperMixin.__init__()
+            self._item_to_object: Dict[str, Any] = {}
 
         # # Bind double-clic pour activer l’édition
         # ANCIEN CODE (CAUSE L'ERREUR DANS LE MRO)
@@ -628,14 +630,32 @@ class _CtrlWithDropTargetMixin(
         super().__init__(parent, *args, **kwargs)
 
         # Initialise le gestionnaire de glisser-déposer de draganddrop.py
-        if (
-            self.__onDropFilesCallback
-            or self.__onDropURLCallback
-            or self.__onDropMailCallback
-        ):
-            self.drop_target = draganddroptk.FileTextDropTarget(
-                self, self._handle_drop_callback
+        # if (
+        #     self.__onDropFilesCallback
+        #     or self.__onDropURLCallback
+        #     or self.__onDropMailCallback
+        # ):
+        #     self.drop_target = draganddroptk.FileTextDropTarget(
+        #         self, self._handle_drop_callback
+        #     )  # FileTextDropTarget n'existe plus dans le draganddroptk.py
+        self.drop_target = None
+
+        if self.__onDropFilesCallback or self.__onDropURLCallback:
+            self.drop_target = draganddroptk.DropTarget(
+                onDropFileCallback=(
+                    lambda x, y, files: self._handle_drop_callback(files)
+                    if self.__onDropFilesCallback else None
+                ),
+                onDropUrlCallback=(
+                    lambda x, y, text: self._handle_drop_callback(text)
+                    if self.__onDropURLCallback else None
+                ),
             )
+            self.drop_target.attach(self)
+            # Cette correction suppose que la racine Tk utilise tkinterdnd2.
+            # Le dépôt de courriels propriétaires reste à traiter séparément :
+            # le callback onDropMail ne suffit pas
+            # à reproduire le comportement de wxPython.
         log.debug("_CtrlWithDropTargetMixin initialisé !")
 
     # Assurez-vous que cette méthode gère correctement les différents types
@@ -2025,9 +2045,13 @@ class TaskTree(
         CtrlWithColumnsMixin.__init__(
             self,
             parent,
-            columns=[c.name() for c in columns],
+            # columns=[c.name() for c in columns],
+            columns=columns,
             columnPopupMenu=columnPopupMenu,
-        )
+        )  # Or celui-ci et ses parents manipulent notamment col.name() et col.is_shown().
+        # Il faut donc conserver les objets : columns = columns !
+        # Attention : cela ne résout pas à lui seul la chaîne de constructeurs de TaskTree,
+        # qui doit encore être harmonisée.
         log.debug(
             f"TaskTree : {len(columns)} colonnes ({columns}) après CtrWithColumnsMixin."
         )

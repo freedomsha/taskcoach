@@ -732,6 +732,7 @@ class TreeListCtrl(
         # )
         # Le widget ttk.Treeview existe déjà : ne PAS appeler le __init__ du
         # mixin, car sa chaîne super() réinitialiserait le widget Tk !
+        # Remplacer par :
         self.initialize_drag_support(
             validateDrag=self.validateDragCallback,
             dragAndDropCommand=dragAndDropCommand,
@@ -1278,6 +1279,10 @@ class TreeListCtrl(
     # def sort_by(self, col, reverse=False):
     def sort_by(self, col_name: str):
         """Trie les éléments du Treeview par colonne."""
+        # Attention, réordonne les lignes du Treeview sans nécessairement
+        # réordonner les données métier.
+        # TODO : Il faut déterminer si le tri est purement visuel
+        #  ou s'il doit être délégué au viewer.
         # data = [(self.set(item, col), item) for item in self.get_children('')]
         data = [
             (self.set(item, col_name), item) for item in self.get_children("")
@@ -1724,6 +1729,7 @@ class TreeListCtrl(
         items = self.GetItemChildren("", recursively=True)
         if items:
             self.selection_set(*items)
+        # A conserver !
 
     # ========================================================================
     # RAFRAÎCHISSEMENT DES DONNÉES
@@ -2406,7 +2412,6 @@ class TreeListCtrl(
     # ========================================================================
     # GLISSER-DÉPOSER
     # ========================================================================
-
     def OnDrop(
         self, drop_item: str, dragged_items: List[str], part: int, column: int
     ):
@@ -2474,9 +2479,18 @@ class TreeListCtrl(
             try:
                 if not self.winfo_exists():
                     return
+                # Transmission des objets métier :
+                # Il faut toutefois vérifier la signature réelle
+                # de dragAndDropCommand dans les viewers,
+                # car le contrôle transmet quatre arguments.
                 self.dragAndDropCommand(
                     drop_object, dragged_objects, part, column
                 )
+                # C'est la bonne séparation des responsabilités pour Task Coach :
+                # le contrôle gère l'interaction, tandis que
+                # la commande métier modifie les tâches.
+                # Je recommande de conserver cette approche plutôt
+                # que de déplacer directement les lignes avec Treeview.move().
 
                 # Rendre visibles les nouveaux enfants si le dépôt cible un item.
                 target_item = self._object_to_item.get(drop_object)

@@ -385,7 +385,7 @@ from __future__ import annotations
 
 import logging
 import urllib.parse
-from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import tkinter as tk
 from tkinter import ttk
@@ -1130,7 +1130,12 @@ class TreeHelperMixin:
 
     def __init__(self, *args, **kwargs):
         """Initialise le dictionnaire d'association des identifiants d'éléments vers leurs objets métier."""
-        self._item_to_object = {}
+        # self._item_to_object = {}
+        if not hasattr(self, "_item_to_object"):  # Même principe appliquer dans _CtrlWithItemsMixin !
+            self._item_to_object: Dict[str, Any] = {}
+        # Sinon, lorsqu'un deuxième constructeur initialise son mixin,
+        # il peut effacer les associations entre les identifiants des lignes
+        # et les objets métier.
         super().__init__(*args, **kwargs)
         log.info("TreeHelperMixin.__init__ : Dictionnaire self._item_to_object=%s", self._item_to_object)
 
@@ -1322,6 +1327,9 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
                                      hover_expand_delay=delay)
         log.debug("TreeCtrlDragAndDropMixin initialisé !")
 
+    # A conserver car important !
+    # Son caractère idempotent évite de réinstaller les bindings
+    # lors d'une deuxième initialisation.
     def initialize_drag_support(self, *, validateDrag=None,
                                 dragAndDropCommand=None,
                                 allow_root_drop=True,
@@ -2085,6 +2093,8 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     # def IsValidDropTarget(self, drop_target: Optional[str]) -> bool:
     #     return self.is_valid_drop_target(drop_target)
 
+    # A conserver car important !
+    # L'interdiction des déplacements crée un cycle dans l'arborescence.
     def IsValidDropTarget(self, dropTarget: str) -> bool:
         """Valide une cible et appelle le callback historique si fourni.
 
