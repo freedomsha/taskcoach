@@ -372,6 +372,12 @@ class TreeCtrl(
     # TreeCtrl.__init__(self, parent, columns=column_names, show='tree headings',
     #                   displaycolumns=displaycolumns, *args, **kwargs) de TreeListCtrl.
     def __init__(self, parent: tk.Widget, **kwargs):
+        """Construit un Treeview simple avec le mixin DnD déjà installé.
+
+        Args:
+            parent: Conteneur Tkinter du contrôle.
+            **kwargs: Options standard de ttk.Treeview et du mixin.
+        """
         super().__init__(parent, **kwargs)
         # self.drag_and_drop = DragAndDrop(parent)
         # self.drag_and_drop = TreeCtrlDragAndDropMixin(parent)  # TODO : A redéfinir plus tard !
@@ -383,10 +389,15 @@ class TreeCtrl(
         self.setup_drag_and_drop()
 
     def setup_drag_and_drop(self):
-        """Configure les gestionnaires d'événements pour le glisser-déposer."""
-        self.bind("<Button-1>", self.on_press)
-        self.bind("<B1-Motion>", self.on_drag)
-        self.bind("<ButtonRelease-1>", self.on_release)
+        """Conserve l'API historique sans doubler les liaisons du mixin.
+
+        TreeCtrlDragAndDropMixin a déjà enregistré les événements dans
+        son constructeur. Les méthodes on_press/on_drag/on_release ci-dessous
+        restent disponibles pour compatibilité mais ne sont pas liées.
+        """
+        # self.bind("<Button-1>", self.on_press)
+        # self.bind("<B1-Motion>", self.on_drag)
+        # self.bind("<ButtonRelease-1>", self.on_release)
 
     def on_press(self, event: tk.Event):
         """Gère le clic de la souris pour démarrer un glisser-déposer."""
@@ -716,8 +727,14 @@ class TreeListCtrl(
         # TreeCtrlDragAndDropMixin.__init__(self, parent, dragAndDropCommand=dragAndDropCommand)
         # AttributeError: 'TreeListCtrl' object has no attribute 'tk'
         # # Correction : appeler l'initialisation du mixin après l'initialisation de ttk.Treeview
-        TreeCtrlDragAndDropMixin.__init__(
-            self, parent, dragAndDropCommand=dragAndDropCommand
+        # TreeCtrlDragAndDropMixin.__init__(
+        #     self, parent, dragAndDropCommand=dragAndDropCommand
+        # )
+        # Le widget ttk.Treeview existe déjà : ne PAS appeler le __init__ du
+        # mixin, car sa chaîne super() réinitialiserait le widget Tk !
+        self.initialize_drag_support(
+            validateDrag=self.validateDragCallback,
+            dragAndDropCommand=dragAndDropCommand,
         )
         # itemctrltk.CtrlWithToolTipMixin.__init__(self, parent)
 
@@ -1094,7 +1111,7 @@ class TreeListCtrl(
         # self.bind("<ButtonRelease-1>", self.on_end_drag)
         # self.bind('<Configure>', self.on_resize)  # <-- Bind event to the Treeview
         # Événements de souris
-        self.bind("<Button-1>", self._on_left_click)
+        self.bind("<Button-1>", self._on_left_click, add="+")
         self.bind("<Double-1>", self._on_double_click)
         self.bind("<Double-3>", self._on_right_click)
         # liaison temporaire :
@@ -1115,13 +1132,15 @@ class TreeListCtrl(
         # self.bind("<ButtonRelease-1>", self._populate_open_item_after_release, add="+")
         # self.bind("<KeyRelease>", self._populate_focused_open_item, add="+")
 
-        # Événements de glisser-déposer (depuis le mixin)
-        # self.bind("<ButtonPress-1>", self.on_start_drag)
-        self.bind("<ButtonPress-1>", self.on_start_drag, add="+")
-        # self.bind("<B1-Motion>", self.on_dragging)
-        self.bind("<B1-Motion>", self.on_dragging, add="+")
-        # self.bind("<ButtonRelease-1>", self.on_end_drag)
-        self.bind("<ButtonRelease-1>", self.on_end_drag, add="+")
+        # # Événements de glisser-déposer (depuis le mixin)
+        # # self.bind("<ButtonPress-1>", self.on_start_drag)
+        # self.bind("<ButtonPress-1>", self.on_start_drag, add="+")
+        # # self.bind("<B1-Motion>", self.on_dragging)
+        # self.bind("<B1-Motion>", self.on_dragging, add="+")
+        # # self.bind("<ButtonRelease-1>", self.on_end_drag)
+        # self.bind("<ButtonRelease-1>", self.on_end_drag, add="+")
+        # Déjà installés par initialize_drag_support(). Ne pas les lier
+        # une deuxième fois : cela déclencherait deux traitements par geste.
 
         # Redimensionnement
         # self.bind('<Configure>', self.on_resize)
@@ -1430,6 +1449,12 @@ class TreeListCtrl(
 
     # === Méthodes spécifiques au TreeListCtrl ===
     def __on_item_check_or_activate(self, event):
+        """Traite un clic dans la colonne hiérarchique.
+
+        Active la case à cocher si le clic tombe dans sa zone estimée ;
+        sinon, délègue l'action à selectCommand. Gestionnaire historique,
+        non relié directement par _bind_events dans cette version.
+        """
         item_id = self.identify_row(event.y)
         if not item_id:
             return
@@ -1460,7 +1485,7 @@ class TreeListCtrl(
             # Le clic doit être dans la zone de la case à cocher pour basculer
             if 0 <= event.x - x <= image_width:
                 self.CheckItem(item_id, not self.IsItemChecked(item_id))
-            else:
+            elif self.selectCommand:
                 self.selectCommand(event)
 
     def on_left_click(self, event):
@@ -1693,8 +1718,12 @@ class TreeListCtrl(
         """Sélectionne tous les éléments de l'arborescence."""
         # all_items = self.GetChildren(recursively=True)
         # self.selection_set(all_items)
-        for item in self.get_children():
-            self.selection_set(item)
+
+        # for item in self.get_children():
+        #     self.selection_set(item)
+        items = self.GetItemChildren("", recursively=True)
+        if items:
+            self.selection_set(*items)
 
     # ========================================================================
     # RAFRAÎCHISSEMENT DES DONNÉES
@@ -2325,11 +2354,15 @@ class TreeListCtrl(
         Surcharge la méthode du mixin pour la compatibilité.
         """
         log.info("TreeListCtrl.GetItemChildren : récupère la liste des enfants de %s de façon récursive(%s).", item, recursively)
+        parent_id = "" if item is None else item
         if not recursively:
-            return self.get_children(item)
+            # return self.get_children(item)
+            return list(self.get_children(parent_id))
         # else:
+        # Parcours en largeur, sans modifier la liste en cours d'itération.
         children = []
-        queue = list(self.get_children(item))
+        # queue = list(self.get_children(item))
+        queue = list(self.get_children(parent_id))
         while queue:
             child = queue.pop(0)
             children.append(child)
@@ -2344,7 +2377,11 @@ class TreeListCtrl(
         return self.GetItemChildren(item, recursively)
 
     def GetRootItem(self) -> Optional[str]:
-        """Renvoie le premier élément de niveau racine."""
+        """Renvoie le premier élément de premier niveau, ou None.
+
+        Attention : contrairement à TreeHelperMixin.GetRootItem(), cette
+        méthode ne renvoie pas la racine implicite ``""`` de ttk.Treeview.
+        """
         log.info("TreeListCtrl.GetRootItem : renvoie le 1er élément de la racine.")
         # return self.get_children()[0] if self.get_children() else None
         children = self.get_children()
@@ -2371,7 +2408,7 @@ class TreeListCtrl(
     # ========================================================================
 
     def OnDrop(
-        self, drop_item: str, dragged_items: List[str], part: str, column: int
+        self, drop_item: str, dragged_items: List[str], part: int, column: int
     ):
         """
         Cette méthode doit être surchargée dans la classe dérivée.
@@ -2386,7 +2423,8 @@ class TreeListCtrl(
         Args :
             drop_item: Item cible du drop
             dragged_items: Items glissés
-            part: Position ("above", "below", "on")
+            part: Position relative : -1 (avant/above), 0 (sur/on), 1 (après/below).
+            column: Index de colonne transmis par le mixin.
         """
         log.debug(
             f"OnDrop : Éléments glissés: {len(dragged_items)} items sur {drop_item} à la position ({part})."
@@ -2412,7 +2450,7 @@ class TreeListCtrl(
         ]
         if not dragged_objects:
             return
-        #
+
         # # Exemple de déplacement simple
         # for item in dragged_items:
         #     if part == "on":
@@ -2432,6 +2470,7 @@ class TreeListCtrl(
         #     print(f"Erreur lors du déplacement des éléments : {e}")
         #     return
         def perform_drop():
+            """ Effectue le dépôt et appelle le callback dragAndDropCommand."""
             try:
                 if not self.winfo_exists():
                     return
@@ -2462,9 +2501,13 @@ class TreeListCtrl(
 
     def rebuild_data_model(self):
         """
-        Reconstruit la structure de données sous-jacente
-        (après une opération de glisser-déposer).
+        Journalise la hiérarchie actuellement affichée.
+
+        Cette méthode ne reconstruit pas le modèle métier : celui-ci est
+        modifié par dragAndDropCommand dans OnDrop().
         """
+        # TODO : est-elle sensé Reconstruire la structure de données sous-jacente
+        #         (après une opération de glisser-déposer) ?
         log.debug(
             "Reconstruction du modèle de données. La structure de l'arborescence a été mise à jour."
         )
@@ -2659,8 +2702,11 @@ class CheckTreeCtrl(TreeListCtrl):
         def rebind_events():
             log.info("CheckTreeCtrl.rebind_events : appel de rebind_events !")
             if hasattr(self, "_w"):
-                self.unbind("<Button-1>")
+                # self.unbind("<Button-1>")
+                # Remplacer le traitement des cases sans supprimer le
+                # gestionnaire de démarrage DnD (même séquence Tk).
                 self.bind("<Button-1>", self.onMouseLeftDown)
+                self.bind("<Button-1>", self._on_press, add="+")
 
         # On planifie l'exécution dès que Tkinter est prêt
         self.after(0, rebind_events)

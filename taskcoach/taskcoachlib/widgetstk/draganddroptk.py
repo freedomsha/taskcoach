@@ -1296,6 +1296,11 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         """
         Initialise le mixin de drag-and-drop.
 
+        Initialise le widget par la chaîne MRO puis installe les événements.
+
+        Pour un widget déjà créé explicitement par ttk.Treeview.__init__,
+        utiliser initialize_drag_support() plutôt que rappeler __init__.
+
         Args:
             *args:
             **kwargs: Peut contenir 'validateDrag' (callback de validation)
@@ -1306,12 +1311,40 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         # hover_expand_delay:
         # dragAndDropCommand:
         log.debug("TreeCtrlDragAndDropMixin.__init__: Initialisation")
+        validate = kwargs.pop("validateDrag", None)
+        command = kwargs.pop("dragAndDropCommand", None)
+        allow_root = kwargs.pop("allow_root_drop", True)
+        delay = kwargs.pop("hover_expand_delay", self.HOVER_EXPAND_MS)
+        super().__init__(*args, **kwargs)
+        self.initialize_drag_support(validateDrag=validate,
+                                     dragAndDropCommand=command,
+                                     allow_root_drop=allow_root,
+                                     hover_expand_delay=delay)
+        log.debug("TreeCtrlDragAndDropMixin initialisé !")
 
-        # # Extraction du callback de validation
-        self._validateDragCallback = kwargs.pop('validateDrag', None)
-        # self._validateDragCallback = validateDrag
-        self._dragAndDropCommand = kwargs.pop('dragAndDropCommand', None)
+    def initialize_drag_support(self, *, validateDrag=None,
+                                dragAndDropCommand=None,
+                                allow_root_drop=True,
+                                hover_expand_delay=None):
+        """Initialise uniquement l'état DnD et les liaisons d'un widget existant.
 
+        N'appelle jamais ttk.Treeview.__init__ ni les autres constructeurs
+        de mixins. La méthode est idempotente pour les bindings.
+        """
+        # # # Extraction du callback de validation
+        # self._validateDragCallback = kwargs.pop('validateDrag', None)
+        # # self._validateDragCallback = validateDrag
+        # self._dragAndDropCommand = kwargs.pop('dragAndDropCommand', None)
+        if getattr(self, "_drag_support_initialized", False):
+            self._validateDragCallback = validateDrag
+            self._dragAndDropCommand = dragAndDropCommand
+            self.allow_root_drop = allow_root_drop
+            return
+
+        self._drag_support_initialized = True
+        self._validateDragCallback = validateDrag
+        self._dragAndDropCommand = dragAndDropCommand
+        self.allow_root_drop = allow_root_drop
         # super().__init__(*args, **kwargs)
         # TreeHelperMixin n'a pas d'__init__, donc pas besoin de l'appeler explicitement
 
@@ -1348,15 +1381,18 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         # dnd_enter_callback, dnd_leave_callback et dnd_end_callback.
 
         # Variables d'état du drag-and-drop
-        # self.allow_root_drop = allow_root_drop
-        self.allow_root_drop = kwargs.pop('allow_root_drop', None)
-        # self._hover_expand_delay = hover_expand_delay
-        self._hover_expand_delay = kwargs.pop('_hover_expand_delay', None)
+        # # self.allow_root_drop = allow_root_drop
+        # self.allow_root_drop = kwargs.pop('allow_root_drop', None)
+        # # self._hover_expand_delay = hover_expand_delay
+        # self._hover_expand_delay = kwargs.pop('_hover_expand_delay', None)
+        self._hover_expand_delay = (self.HOVER_EXPAND_MS if hover_expand_delay is None
+                                    else hover_expand_delay)
         # self._item_to_object: dict[str, Any] = {}
         # self._dragItems = []
         self._dragItems: List[str] = []
-        # self.dragged_items = []
-        self.dragged_items: List[str] = []
+        # # self.dragged_items = []
+        # self.dragged_items: List[str] = []
+        self.dragged_items: List[str] = self._dragItems
         # self._dragStartPos = None
         self._dragStartPos: Optional[Tuple[int, int]] = None
         # self._dragColumn = -1
@@ -1374,17 +1410,17 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
         self._dropPart = 0
         self._dropColumn = 0
 
-        self._hoverExpandItem: Optional[str] = None
-        self._hoverExpandTimer: Optional[str] = None
+        self._hoverExpandItem: Optional[str] = None  # ?
+        self._hoverExpandTimer: Optional[str] = None  # ?
         self._hoverItem = None
         self._hoverAfter = None
         self._oldCursor = None
 
-        super().__init__(*args, **kwargs)
+        # super().__init__(*args, **kwargs)
         # Note: Les bindings étaient/sont faits dans TreeListCtrl._bind_events()
         # pour éviter les conflits d'ordre d'initialisation
         self._bind_drag_events()
-        log.debug("TreeCtrlDragAndDropMixin initialisé !")
+        # log.debug("TreeCtrlDragAndDropMixin initialisé !")
 
     def _bind_drag_events(self) -> None:
         """Associe les liaisons d'événements souris et clavier nécessaires au glisser-déposer."""
@@ -1491,7 +1527,7 @@ class TreeCtrlDragAndDropMixin(TreeHelperMixin):
     # ========================================================================
     def _column_at(self, x):
         """Retourne l'indice numérique de la colonne correspondant à la coordonnée horizontale x."""
-        # TODO : AREVOIR !
+        # TODO : A REVOIR !
         column = self.identify_column(x)
         log.debug("TreeCtrlDragAndDropMixin._column_at : essaie de retourner l'indice numérique de la colonne %s", column)
         try:
