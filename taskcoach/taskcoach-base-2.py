@@ -6,11 +6,12 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Importation de l'application Tkinter
-from taskcoachlib.application.tkapplication-base-a import TkApplication
+from taskcoachlib.application.tkapplication import TkinterApplication
+
 
 def main():
     try:
-        app = TkApplication()
+        app = TkinterApplication()
         app.run()
     except Exception as e:
         print(f"Erreur au démarrage : {e}")

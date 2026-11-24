@@ -60,9 +60,12 @@ import threading
 # # from tkinterdnd2 import TkinterDnD
 # from tkinterdnd2 import *
 try:
-    import tkinterdnd2
+    # import tkinterdnd2
+    from tkinterdnd2 import TkinterDnD
+    RootWindow = TkinterDnD.Tk
 except ImportError:
     import tkinter as tk
+    RootWindow = tk.Tk
 from tkinter import messagebox
 # from tkinter import Menu
 import re
@@ -178,10 +181,12 @@ class TkinterApplication(
             return
         self.initialized = True
 
-        # # Créer la fenêtre racine (root)
-        # # self.root = tk.Tk()
-        # self.root = TkinterDnD.Tk()  # Pour le drag and drop
-        self.root = tkinterdnd2.TkinterDnD.Tk()  # Pour le drag and drop
+        # # # Créer la fenêtre racine (root)
+        # # # self.root = tk.Tk()
+        # # self.root = TkinterDnD.Tk()  # Pour le drag and drop
+        # self.root = tkinterdnd2.TkinterDnD.Tk()  # Pour le drag and drop
+        # Si tkinterdnd2 est absent, le repli importe Tkinter mais le constructeur utilise quand même tkinterdnd2.
+        self.root = RootWindow()  # Cela permet de démarrer sans le glisser-déposer externe, plutôt que de planter.
         self.root.title(meta.name)
         self.root.geometry("800x600")
         # self.root.protocol("WM_DELETE_WINDOW", self.on_end_session)  # Mis dans init !
@@ -709,10 +714,11 @@ class TkinterApplication(
         date.Scheduler().shutdown()
 
         # Enregistrement du fichier de tâches avant de quitter
-        log.debug(
-            "TkinterApplication.quitApplication : lance taskfile.close() pour enregistrer le fichier de tâches avant de quitter."
-        )
-        self.taskFile.close()
+        # log.debug(
+        #     "TkinterApplication.quitApplication : lance taskfile.close() pour enregistrer le fichier de tâches avant de quitter."
+        # )
+        # self.taskFile.close()  # Inutile puisque IOController.close() a déjà fermé le fichier
+        # sous réserve que toutes les branches de fermeture passent bien par IOController.close().
         log.debug(
             "TkinterApplication.quitApplication : Fichier de tâches enregistré et fermé."
         )

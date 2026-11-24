@@ -86,7 +86,7 @@ import html
 from io import StringIO
 import logging
 # from . import task  # Assurez-vous que le module 'task' de votre dossier 'domain' est accessible
-from taskcoachlib.domain import task
+# from taskcoachlib.domain import task  # Unused
 
 log = logging.getLogger(__name__)
 

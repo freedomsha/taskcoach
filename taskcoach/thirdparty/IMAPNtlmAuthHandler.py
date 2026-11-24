@@ -13,6 +13,7 @@
 
 import ntlm
 
+
 class IMAPNtlmAuthHandler(object):
     """Example use:
     
