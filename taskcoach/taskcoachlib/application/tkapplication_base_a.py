@@ -24,13 +24,16 @@ class TkApplication:
     def init_views(self):
         # Importer les vues
         try:
-            from taskcoachlib.guitk.taskviewer import TaskViewer
-            from taskcoachlib.guitk.categoryviewer import CategoryViewer
-            from taskcoachlib.guitk.effortviewer import EffortViewer
+            # from taskcoachlib.guitk.taskviewer import TaskViewer
+            from taskcoachlib.guitk.viewer.tasktk import Taskviewer
+            # from taskcoachlib.guitk.categoryviewer import CategoryViewer
+            from taskcoachlib.guitk.viewer.categorytk import Categoryviewer
+            # from taskcoachlib.guitk.effortviewer import EffortViewer
+            from taskcoachlib.guitk.viewer.efforttk import Effortviewer
 
-            self.task_viewer = TaskViewer(self.root)
-            self.category_viewer = CategoryViewer(self.root)
-            self.effort_viewer = EffortViewer(self.root)
+            self.task_viewer = Taskviewer(self.root, self.taskFile, self.settings)
+            self.category_viewer = Categoryviewer(self.root)
+            self.effort_viewer = Effortviewer(self.root, self.taskFile, self.settings)
         except ImportError as e:
             print(f"Erreur d'importation des vues : {e}")
             # Créer des vues de secours

@@ -6,7 +6,7 @@ import os
 # Ajouter le chemin du projet
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from taskcoachlib.application.tkapplication-base import TkApplication
+from taskcoachlib.application.tkapplication_base_a import TkApplication
 
 
 def main():
