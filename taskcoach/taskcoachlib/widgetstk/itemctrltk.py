@@ -1086,9 +1086,18 @@ class Column(object):
         # )
         self.__renderCallback = renderCallback or self.defaultRenderer
         # self.__resizeCallback = kwargs.pop("resizeCallback", None)
-        # self.__alignment = alignment
-        # self.__alignment = kwargs.pop("alignment", wx.LIST_FORMAT_LEFT)
-        self.__alignment = kwargs.pop("alignment", "w")
+        # Si le constructeur accepte bien un paramètre alignment:
+        if alignment:
+            self.__alignment = alignment
+            # C'est important pour les listes, l'affichage des valeurs numériques
+            # et l'export HTML.
+        else:
+            # Comme Python a déjà consommé le paramètre nommé alignment,
+            # celui-ci n'est normalement plus dans kwargs.
+            # self.__alignment = kwargs.pop("alignment", wx.LIST_FORMAT_LEFT)
+            self.__alignment = kwargs.pop("alignment", "w")
+            # Toutes les colonnes sont donc initialisées avec l'alignement "w",
+            # même lorsqu'un alignement à droite ou centré est demandé.
         self._is_shown = is_shown  # Ajout de l'attribut is_shown
         self.__hasImages = "imageIndicesCallback" in kwargs
         self.__imageIndicesCallback = (
