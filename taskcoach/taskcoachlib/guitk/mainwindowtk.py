@@ -994,32 +994,43 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         self._closing = True
 
         try:
-            app_instance = application.tkapplication.TkinterApplication.getInstance()
-            # Appel avant hidewhenclosed ! :
-            # should_quit = app_instance.quitApplication(force=True)  # Risque de fermer un fichier sans nom sans l'enregistrer !
-            should_quit = app_instance.quitApplication(force=False)
+            # app_instance = application.tkapplication.TkinterApplication.getInstance()
+            # # Appel avant hidewhenclosed ! :
+            # # should_quit = app_instance.quitApplication(force=True)  # Risque de fermer un fichier sans nom sans l'enregistrer !
+            # should_quit = app_instance.quitApplication(force=False)
             should_hide = self.settings.getboolean(
                 "window",
                 "hidewhenclosed",
             )
 
-            if not should_quit:
-                self._closing = False
-                return
-
-            # self.__save_perspective()
-            # self.__save_position()
-            # # self.closeEditors()
-            # try:
-            #     if self.parent.winfo_exists():
-            #         self.closeEditors()
-            # except tk.TclError:
-            #     pass
+            # if not should_quit:
+            #     self._closing = False
+            #     return
+            #
+            # # self.__save_perspective()
+            # # self.__save_position()
+            # # # self.closeEditors()
+            # # try:
+            # #     if self.parent.winfo_exists():
+            # #         self.closeEditors()
+            # # except tk.TclError:
+            # #     pass
 
             if should_hide and not self.__shutdown:
+                log.debug("MainWindow.onClose : Fenêtre masquée (hidewhenclosed)")
                 if self.parent.winfo_exists():
                     self.parent.withdraw()
-                self._closing = False
+                # self._closing = False
+                return
+
+            app_instance = application.tkapplication.TkinterApplication.getInstance()
+            if app_instance is not None:
+                # should_quit = app_instance.quitApplication(force=True)
+                should_quit = app_instance.quitApplication(force=False)
+            else:
+                should_quit = True
+
+            if not should_quit:
                 return
 
             # La méthode quitApplication() appelle déjà self.OnQuit() et self.taskFile.close().
