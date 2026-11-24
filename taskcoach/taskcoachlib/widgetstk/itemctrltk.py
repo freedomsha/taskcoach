@@ -1150,15 +1150,19 @@ class Column(object):
     #     if self.__resizeCallback:
     #         self.__resizeCallback(self, width)
 
-    def render(self, obj: Any) -> str:
+    def render(self, obj: Any) -> str:  # Mauvaise signature par rapport à celle de Viewer2HTMLConverter.render()
         """
         Produit le texte à afficher pour un objet métier.
 
         Args :
-            obj: objet TaskCoach
+            obj: objet TaskCoach.
         Returns :
             texte affichable
         """
+        # Il faut harmoniser les signatures et vérifier que
+        # les valeurs de couleur retournées par cssColorSyntax()
+        # sont bien des chaînes CSS. Actuellement,
+        # la branche Tkinter peut retourner directement un tuple RGB.
         return str(self.__renderCallback(obj))
 
     # def defaultRenderer(self, *args, **kwargs):  # pylint: disable=W0613

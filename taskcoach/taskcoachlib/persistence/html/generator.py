@@ -368,7 +368,12 @@ class Viewer2HTMLConverter(object):
 
         # rendered_item = cgi.escape(column.render(item,
         renderedItem = html.escape(column.render(item,
-                                                 humanReadable=False)).replace("\n", "<br>")
+                                                 # humanReadable=False)).replace("\n", "<br>")  # Si le générateur reçoit ces colonnes Tkinter, cela produira un TypeError pour l'argument humanReadable.
+                                                 obj=False)).replace("\n", "<br>")
+        # Il faut harmoniser les signatures et vérifier que
+        # les valeurs de couleur retournées par cssColorSyntax()
+        # sont bien des chaînes CSS. Actuellement,
+        # la branche Tkinter peut retourner directement un tuple RGB.
         if indent:
             # Indent the subject with whitespace
             renderedItem = "&nbsp;" * len(item.ancestors()) * 3 + renderedItem
