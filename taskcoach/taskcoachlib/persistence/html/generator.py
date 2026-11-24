@@ -17,18 +17,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # from future import standard_library
+import logging
 
 # standard_library.install_aliases()
 # from builtins import zip
 # from builtins import map
 # from builtins import object
-import wx
+# import wx  #
+import tkinter as tk
 # import cgi remplacé par html
 import html
 import io
+
+from taskcoachlib.config import GUI_NAME
 from taskcoachlib.domain import task
 
 # pylint: disable=W0142
+log = logging.getLogger(__name__)
 
 
 css = """
@@ -136,10 +141,12 @@ class Viewer2HTMLConverter(object):
             there is no external CSS file, we include all CSS style information
             in a HTML style section. """
         visibleColumns = self.viewer.visibleColumns()
-        columnAlignments = [{wx.LIST_FORMAT_LEFT: "left",
-                             wx.LIST_FORMAT_CENTRE: "center",
-                             wx.LIST_FORMAT_RIGHT: "right"}[column.alignment()]
-                            for column in visibleColumns]
+        # columnAlignments = [{wx.LIST_FORMAT_LEFT: "left",
+        #                      wx.LIST_FORMAT_CENTRE: "center",
+        #                      wx.LIST_FORMAT_RIGHT: "right"}[column.alignment()]
+        #                     for column in visibleColumns]
+        # TODO: A convertir pour tkinter
+        columnAlignments = [{"w": "left", "center": "center", "e": "right"}[column.alignment()] for column in visibleColumns]
         styleContent = []
         for column, alignment in zip(visibleColumns, columnAlignments):
             columnStyle = self.indent(
@@ -250,7 +257,8 @@ class Viewer2HTMLConverter(object):
         """ Determine the background color for the item. Returns a CSS style
             specification or a HTML style specification when printing. """
         bgColor = item.backgroundColor(recursive=True)
-        if bgColor and bgColor != wx.WHITE:
+        # if bgColor and bgColor != wx.WHITE:  # TODO : A convertir pour tkinter
+        if bgColor and bgColor != "#ffffff":
             bgColor = self.cssColorSyntax(bgColor)
         else:
             return dict()
@@ -271,7 +279,8 @@ class Viewer2HTMLConverter(object):
     def bodyCell(self, item, column, printing, level):
         """Return a <td> for the item/column combination."""
         attributes = {"class": column.name()}
-        if printing and column.alignment() == wx.LIST_FORMAT_RIGHT:
+        # if printing and column.alignment() == wx.LIST_FORMAT_RIGHT:  # TODO : A Convertir pour tkinter
+        if printing and column.alignment() == "e":  # comme nswe !
             attributes["align"] = "right"
         return self.wrap(item, "td", level, oneLine=True, **attributes)
 
@@ -311,10 +320,20 @@ class Viewer2HTMLConverter(object):
         # def cssColorSyntax(class_, wxColor):
         """ Translate the wx-color, either a wx.Colour instance or a tuple,
             into CSS syntax. """
-        try:
-            return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)
-        except AttributeError:  # color is a tuple
-            return class_.cssColorSyntax(wx.Colour(*wxColor))
+        if GUI_NAME == "wx":
+            import wx
+            try:
+                return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)
+            except AttributeError:  # color is a tuple
+                return class_.cssColorSyntax(wx.Colour(*wxColor))
+        elif GUI_NAME == "tk":
+            try:
+                # return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)  # A Convertir
+                return wxColor
+            except AttributeError:  # color is a tuple
+                # return class_.cssColorSyntax(wx.Colour(*wxColor))  # TODO : A Convertir
+                log.debug("Viewer2HTMLConverter.cssColorSyntax : couleur %s à convertir !", *wxColor)
+        return class_.cssColorSyntax(*wxColor)
 
     @staticmethod
     def render(item, column, indent=False):
