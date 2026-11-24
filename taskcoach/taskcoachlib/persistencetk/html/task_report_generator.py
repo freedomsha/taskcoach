@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # car ce module est spécifique au format HTML. Cependant, si votre objectif est de :
 #
 #     Créer une classe de rapport Tkinter qui affiche ou exporte les données
-#     des tâches (par exemple, dans un format texte simple ou dans une fenêtre Tkinter), OU
-#
+#     des tâches (par exemple, dans un format texte simple ou dans une fenêtre Tkinter),
+#     OU
 #     Créer un composant d'affichage Tkinter (comme un TreeView ou un Text) qui
 #     formate le contenu comme le faisait le générateur.
 #
