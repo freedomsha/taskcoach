@@ -995,7 +995,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
 
         try:
             app_instance = application.tkapplication.TkinterApplication.getInstance()
-            should_quit = app_instance.quitApplication(force=True)
+            # Appel avant hidewhenclosed ! :
+            # should_quit = app_instance.quitApplication(force=True)  # Risque de fermer un fichier sans nom sans l'enregistrer !
+            should_quit = app_instance.quitApplication(force=False)
             should_hide = self.settings.getboolean(
                 "window",
                 "hidewhenclosed",
