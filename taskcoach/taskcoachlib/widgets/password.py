@@ -33,7 +33,8 @@ class KeychainPasswordWidget(wx.Dialog):
         hsz = wx.BoxSizer(wx.HORIZONTAL)
         hsz.Add(wx.StaticText(pnl, wx.ID_ANY, _("Password:")), 0, wx.ALL, 3)
 
-        from taskcoachlib.thirdparty.keyring import get_password
+        # from taskcoachlib.thirdparty.keyring import get_password
+        from keyring import get_password
 
         password = get_password(self.domain, self.username)
         self.password = (password or "").decode("UTF-8")
