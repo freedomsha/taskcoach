@@ -401,7 +401,13 @@ class SubjectPage(Page):
         self._modificationTextEntry = None
         self._descriptionSync = None
         self._subjectSync = None
-        self.addEntries()
+        # self.addEntries()
+        # Entre les deux appels, certains attributs sont remis à None.
+        # Conséquence : création répétée des widgets et des mécanismes
+        # de synchronisation, avec un risque de callbacks multiples
+        # ou de références perdues.
+        # Correction : initialiser tous les attributs avant la création des champs,
+        # puis appeler addEntries() une seule fois.
         self.subject_entry = None
         self._descriptionEntry = None
         self._settings = settings
