@@ -79,7 +79,7 @@ class AutoSaverTestCase(tctest.TestCase):
     def setUp(self):
         task.Task.settings = self.settings = config.Settings(load=False)
         self.taskFile = DummyTaskFile()
-        self.autoSaver = persistence.AutoSaver(self.settings)
+        self.autoSaver = persistence.AutoSaver(self.settings, self.__wx_app)  # TODO : AutoSaver a changé. Définir self.root wx.GetApp() ou self.__wx_app ou self.root ou self.winfo_toplevel
 
     def tearDown(self):
         super().tearDown()

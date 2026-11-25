@@ -50,7 +50,7 @@ class AutoExporterTestCase(tctest.TestCase):
     def testAddOneTaskWhenAutoSaveIsOn(self):
         self.settings.set("file", "autoexport", '["Todo.txt"]')
         self.settings.set("file", "autosave", "True")
-        autosaver = persistence.AutoSaver(self.settings)
+        autosaver = persistence.AutoSaver(self.settings, self.__wx_app)  # TODO : AutoSaver a changé. Définir self.root wx.GetApp() ou self.__wx_app ou self.root ou self.winfo_toplevel
         theTask = task.Task(subject="Some task")
         self.taskFile.tasks().append(theTask)
         autosaver.on_idle(dummy.Event())
@@ -80,7 +80,7 @@ class AutoExporterTestCase(tctest.TestCase):
     def testImportOneTaskWhenAutoSaving(self):
         self.settings.set("file", "autoimport", '["Todo.txt"]')
         self.settings.set("file", "autosave", "True")
-        autosaver = persistence.AutoSaver(self.settings)
+        autosaver = persistence.AutoSaver(self.settings, self.__wx_app)  # TODO : AutoSaver a changé. Définir self.root wx.GetApp() ou self.__wx_app ou self.root ou self.winfo_toplevel
         # with file(self.txtFilename, 'w') as todoTxtFile:
         with io.open(self.txtFilename, "w") as todoTxtFile:
             todoTxtFile.write("Imported task\n")

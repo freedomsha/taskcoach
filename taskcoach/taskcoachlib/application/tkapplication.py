@@ -82,7 +82,7 @@ from taskcoachlib import (
     patterns,
     # persistencetk,
 )
-from taskcoachlib.persistence import taskfile
+from taskcoachlib.persistence import taskfile, autosaver
 # from taskcoachlib.i18n import _
 from taskcoachlib.application.interface import ApplicationInterface
 from taskcoachlib.config.settings import Settings
@@ -423,6 +423,7 @@ class TkinterApplication(
             len(self.taskFile.categories()),
         )
         # self.__auto_saver = persistence.AutoSaver(self.settings)
+        # self.__auto_saver = autosaver.AutoSaver(self.settings, self.root)  # TODO : A vérifier !
         # self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
         # self.__auto_backup = persistence.AutoBackup(self.settings)
 
