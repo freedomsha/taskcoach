@@ -37,7 +37,14 @@ class KeychainPasswordWidget(wx.Dialog):
         from keyring import get_password
 
         password = get_password(self.domain, self.username)
-        self.password = (password or "").decode("UTF-8")
+        # self.password = (password or "").decode("UTF-8")
+        # # Avec les versions actuelles de keyring, get_password()
+        # # renvoie normalement une chaîne str, qui ne possède pas de méthode decode().
+        self.password = (
+            password.decode("utf-8")
+            if isinstance(password, bytes)
+            else password or ""
+        )
         self.passwordField = wx.TextCtrl(
             pnl, wx.ID_ANY, self.password, style=wx.TE_PASSWORD
         )
