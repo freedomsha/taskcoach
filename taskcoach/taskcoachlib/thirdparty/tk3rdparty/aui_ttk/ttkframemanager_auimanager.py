@@ -1710,8 +1710,74 @@ class AuiManager:
             except (AttributeError, tk.TclError):
                 pass
 
+    def _capture_pane_view_state(self, window):
+        """Capture l'état graphique facultatif exposé par un visualiseur.
+
+        Le widget Tkinter ne peut pas être reparenté. Le visualiseur doit donc
+        fournir une fabrique de vue et, s'il possède un état local, les méthodes
+        ``get_view_state`` et ``set_view_state``.
+        """
+        state = None
+        getter = getattr(window, "get_view_state", None)
+        if callable(getter):
+            state = getter()
+        return state
+
+    def _rebuild_pane_window(self, pane, parent):
+        """Reconstruit la vue d'un panneau sous ``parent``.
+
+        Le modèle métier reste porté par l'objet existant. La vue graphique est
+        recréée par l'une des fabriques explicites du visualiseur. Cette
+        convention évite de prétendre qu'un ``pack(in_=...)`` change le parent
+        Tcl d'un widget existant.
+        """
+        old_window = pane.window
+        state = self._capture_pane_view_state(old_window)
+
+        factory = None
+        for name in ("rebuild_view", "create_view", "clone_for_parent"):
+            candidate = getattr(old_window, name, None)
+            if callable(candidate):
+                factory = candidate
+                break
+        if factory is None:
+            raise TypeError(
+                "Le panneau flottant doit exposer rebuild_view(parent), "
+                "create_view(parent) ou clone_for_parent(parent) pour être "
+                "reconstruit dans un nouveau Toplevel"
+            )
+
+        new_window = factory(parent)
+        if new_window is None or not isinstance(new_window, tk.Misc):
+            raise TypeError("La fabrique de vue doit retourner un widget Tkinter")
+
+        pane.window = new_window
+        restore = getattr(new_window, "set_view_state", None)
+        if state is not None and callable(restore):
+            restore(state)
+
+        self._undock_pane_from_widget(old_window)
+        try:
+            if old_window.winfo_exists() and old_window is not new_window:
+                old_window.destroy()
+        except tk.TclError:
+            pass
+        return new_window
+
+    def _undock_pane_from_widget(self, window):
+        """Retire un widget de tous les gestionnaires de géométrie connus."""
+        if self._layout is not None:
+            self._layout.remove(window)
+        for method in ("pack_forget", "grid_forget", "place_forget"):
+            try:
+                getattr(window, method)()
+            except (AttributeError, tk.TclError):
+                pass
+
     def _float_pane(self, pane):
-        """Place le contenu du panneau dans une fenêtre Tkinter indépendante.
+        """Reconstruit la vue du panneau dans une fenêtre flottante.
+
+        Place le contenu du panneau dans une fenêtre Tkinter indépendante.
 
             La fenêtre Toplevel est créée si nécessaire, reçoit le titre du panneau
             et retrouve sa position et sa taille enregistrées lorsqu'elles sont
@@ -1728,31 +1794,37 @@ class AuiManager:
         floating = pane.frame
         floating.title(pane.caption or pane.name)
         self._undock_pane(pane)
+
         window = pane.window
         if window is not None:
-            # Le widget quitte son gestionnaire de géométrie courant avant
-            # d’être rattaché au Toplevel puis affiché avec pack().
-            try:
-                window.pack_forget()
-            except (AttributeError, tk.TclError):
-                pass
-            try:
-                window.configure(in_=floating)
-            except (AttributeError, tk.TclError):
-                pass
+            # # Le widget quitte son gestionnaire de géométrie courant avant
+            # # d’être rattaché au Toplevel puis affiché avec pack().
+            # try:
+            #     window.pack_forget()
+            # except (AttributeError, tk.TclError):
+            #     pass
+            # try:
+            #     window.configure(in_=floating)
+            # except (AttributeError, tk.TclError):
+            #     pass
+            # window.pack(fill="both", expand=True)
+            # # TODO : Tkinter ne permet pas de changer le parent Tcl d'un widget
+            # #  existant de cette manière. L'erreur est interceptée,
+            # #  mais le pack() suivant ne déplace pas le widget dans le nouveau Toplevel.
+            # #  Conséquence probable : le panneau flottant s'ouvre vide
+            # #  ou son contenu reste dans son ancien conteneur.
+            # #  La même limitation apparaît dans ttkframemanager_floating.py.
+            # #  La correction exige une adaptation architecturale :
+            # #  conserver le modèle métier du visualiseur,
+            # #  mais recréer ou reconstruire sa partie graphique dans le nouveau
+            # #  conteneur, puis restaurer sa sélection, son état et sa disposition.
+            # #  Un simple remplacement de configure() par pack(in_=...)
+            # #  ne suffit pas pour déplacer un widget entre deux fenêtres de premier niveau.
+            # Le parent Tcl est fixé à la création. On reconstruit donc la vue
+            # dans le Toplevel au lieu d'utiliser configure(in_=...) ou pack(in_).
+            window = self._rebuild_pane_window(pane, floating)
             window.pack(fill="both", expand=True)
-            # TODO : Tkinter ne permet pas de changer le parent Tcl d'un widget
-            #  existant de cette manière. L'erreur est interceptée,
-            #  mais le pack() suivant ne déplace pas le widget dans le nouveau Toplevel.
-            #  Conséquence probable : le panneau flottant s'ouvre vide
-            #  ou son contenu reste dans son ancien conteneur.
-            #  La même limitation apparaît dans ttkframemanager_floating.py.
-            #  La correction exige une adaptation architecturale :
-            #  conserver le modèle métier du visualiseur,
-            #  mais recréer ou reconstruire sa partie graphique dans le nouveau
-            #  conteneur, puis restaurer sa sélection, son état et sa disposition.
-            #  Un simple remplacement de configure() par pack(in_=...)
-            #  ne suffit pas pour déplacer un widget entre deux fenêtres de premier niveau.
+
         if pane.floating_pos:
             floating.geometry(f"+{pane.floating_pos[0]}+{pane.floating_pos[1]}")
         if pane.floating_size and pane.floating_size[0] > 0:

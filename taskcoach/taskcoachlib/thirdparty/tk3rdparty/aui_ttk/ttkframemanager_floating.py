@@ -34,7 +34,9 @@ class TtkFloatingFrame(tk.Toplevel):
         self._attach_content()
 
     def _attach_content(self):
-        """Déplace le widget du panneau dans la fenêtre flottante.
+        """Reconstruit la vue du panneau comme enfant de ce Toplevel.
+
+        Déplace le widget du panneau dans la fenêtre flottante.
 
         Les gestionnaires de géométrie précédemment utilisés sont désactivés
         avant de tenter d'afficher le widget dans cette fenêtre. Tkinter ne
@@ -44,18 +46,52 @@ class TtkFloatingFrame(tk.Toplevel):
         content = getattr(self.pane, "window", None)
         if content is None or not content.winfo_exists():
             return
-        self._content = content
-        for method in ("pack_forget", "grid_forget", "place_forget"):
-            try: getattr(content, method)()
-            except (AttributeError, tk.TclError): pass
+
+        # self._content = content
+        state = None
+        getter = getattr(content, "get_view_state", None)
+        if callable(getter):
+            state = getter()
+
+        factory = None
+        for name in ("rebuild_view", "create_view", "clone_for_parent"):
+            candidate = getattr(content, name, None)
+            if callable(candidate):
+                factory = candidate
+                break
+        if factory is None:
+            raise TypeError(
+                "Le panneau flottant doit exposer rebuild_view(parent), "
+                "create_view(parent) ou clone_for_parent(parent)"
+            )
+
+        replacement = factory(self)
+        if replacement is None or not isinstance(replacement, tk.Misc):
+            raise TypeError("La fabrique de vue doit retourner un widget Tkinter")
+
+
+        self._content = replacement
+        self.pane.window = replacement
+        # for method in ("pack_forget", "grid_forget", "place_forget"):
+        #     try: getattr(content, method)()
+        #     except (AttributeError, tk.TclError): pass
+        # try:
+        #     content.configure(in_=self)
+        # except tk.TclError:
+        #     # Le paramètre ``in_`` ne change pas le parent Tcl réel du widget.
+        #     # Tk ne permet pas de reparentage direct après la création :
+        #     # le gestionnaire peut devoir utiliser une enveloppe intermédiaire.
+        #     pass
+        restore = getattr(replacement, "set_view_state", None)
+        if state is not None and callable(restore):
+            restore(state)
         try:
-            content.configure(in_=self)
+            if content.winfo_exists() and content is not replacement:
+                content.destroy()
         except tk.TclError:
-            # Le paramètre ``in_`` ne change pas le parent Tcl réel du widget.
-            # Tk ne permet pas de reparentage direct après la création :
-            # le gestionnaire peut devoir utiliser une enveloppe intermédiaire.
             pass
-        content.pack(fill="both", expand=True)
+        # content.pack(fill="both", expand=True)
+        replacement.pack(fill="both", expand=True)
 
     def _on_configure(self, event=None):
         """Enregistre la taille et la position actuelles de la fenêtre.
