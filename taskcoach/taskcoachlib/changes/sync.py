@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from builtins import object
-import wx  # For ArtProvider
+# import wx  # For ArtProvider
 
 from taskcoachlib.changes import ChangeMonitor
 from taskcoachlib.domain.note import NoteOwner
@@ -113,11 +113,21 @@ class ChangeSynchronizer(object):
                 changes.merge(self.conflictChanges)
 
     def notify(self, message):
-        self.notifier.Notify(
-            _("Task Coach"),
-            message,
-            wx.ArtProvider.GetBitmap("taskcoach", size=wx.Size(32, 32)),
-        )
+        from taskcoachlib.config.gui import get_gui
+        if get_gui() == "wx":
+            import wx
+            self.notifier.Notify(
+                _("Task Coach"),
+                message,
+                wx.ArtProvider.GetBitmap("taskcoach", size=wx.Size(32, 32)),
+            )
+        elif get_gui() == "tk":
+            from taskcoachlib.guitk.icons import PyEmbeddedImageTk
+            self.notifier.Notify(
+                _("Task Coach"),
+                message,
+                PyEmbeddedImageTk.GetImage("taskcoach", size=(32, 32)),
+            )
 
     def mergeObjects(self, memList, diskList):
         # Map id to object

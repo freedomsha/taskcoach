@@ -16,4 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .speaker import Speaker
+from taskcoachlib.config.gui import get_gui
+if get_gui() == "wx":
+    from .speaker import Speaker
+elif get_gui() == "tk":
+    from .speakertk import Speaker

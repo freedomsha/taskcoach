@@ -29,7 +29,6 @@ import stat
 import re
 import imaplib
 import configparser
-import wx
 import socket
 import mailbox
 
@@ -377,9 +376,19 @@ class ThunderbirdImapReader(object):
                         str(self.user), str(pwd)
                     )
                 elif "AUTH=NTLM" in imap.capabilities:
-                    domain = wx.GetTextFromUser(
-                        _("Please enter the domain for user %s") % self.user
-                    )
+                    # domain = wx.GetTextFromUser(
+                    #     _("Please enter the domain for user %s") % self.user
+                    # )
+                    prompt = _("Please enter the domain for user %s") % self.user
+                    from taskcoachlib.config.gui import get_gui
+                    if get_gui() == "wx":
+                        import wx
+                        domain = wx.GetTextFromUser(prompt)
+                    else:
+                        from tkinter import simpledialog
+                        domain = simpledialog.askstring("Thunderbird", prompt)
+                    if domain is None:
+                        raise ThunderbirdCancelled("User canceled")
                     domain_username = "\\".join(
                         [domain.upper(), str(self.user)]
                     )
