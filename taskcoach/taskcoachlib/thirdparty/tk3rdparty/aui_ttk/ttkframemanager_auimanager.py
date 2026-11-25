@@ -1741,6 +1741,18 @@ class AuiManager:
             except (AttributeError, tk.TclError):
                 pass
             window.pack(fill="both", expand=True)
+            # TODO : Tkinter ne permet pas de changer le parent Tcl d'un widget
+            #  existant de cette manière. L'erreur est interceptée,
+            #  mais le pack() suivant ne déplace pas le widget dans le nouveau Toplevel.
+            #  Conséquence probable : le panneau flottant s'ouvre vide
+            #  ou son contenu reste dans son ancien conteneur.
+            #  La même limitation apparaît dans ttkframemanager_floating.py.
+            #  La correction exige une adaptation architecturale :
+            #  conserver le modèle métier du visualiseur,
+            #  mais recréer ou reconstruire sa partie graphique dans le nouveau
+            #  conteneur, puis restaurer sa sélection, son état et sa disposition.
+            #  Un simple remplacement de configure() par pack(in_=...)
+            #  ne suffit pas pour déplacer un widget entre deux fenêtres de premier niveau.
         if pane.floating_pos:
             floating.geometry(f"+{pane.floating_pos[0]}+{pane.floating_pos[1]}")
         if pane.floating_size and pane.floating_size[0] > 0:
