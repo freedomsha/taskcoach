@@ -367,9 +367,11 @@ class Viewer2HTMLConverter(object):
             return "<br />".join(map(html.escape, sorted([attachment.subject() for attachment in item.attachments()])))
 
         # rendered_item = cgi.escape(column.render(item,
-        renderedItem = html.escape(column.render(item,
-                                                 # humanReadable=False)).replace("\n", "<br>")  # Si le générateur reçoit ces colonnes Tkinter, cela produira un TypeError pour l'argument humanReadable.
-                                                 obj=False)).replace("\n", "<br>")
+        renderedItem = html.escape(
+            str(column.render(item)),
+            # humanReadable=False)).replace("\n", "<br>")  # Si le générateur reçoit ces colonnes Tkinter, cela produira un TypeError pour l'argument humanReadable.
+            # obj=False)
+        ).replace("\n", "<br>")
         # Il faut harmoniser les signatures et vérifier que
         # les valeurs de couleur retournées par cssColorSyntax()
         # sont bien des chaînes CSS. Actuellement,
