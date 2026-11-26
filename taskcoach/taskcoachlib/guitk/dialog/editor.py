@@ -2010,7 +2010,10 @@ class PrerequisitesPage(PageWithViewer):
     #     PageWithViewer.addEntries(self)
 
     def selected(self):
-        """Gère la sélection de la page et ajoute les champs d'édition seulement lors du premier affichage."""
+        """Gère la sélection de la page et ajoute les champs d'édition
+        seulement lors du premier affichage.
+        """
+        # Initialisation différée :
         if not self.__realized:
             self.__realized = True
             # # Appelle la version explicite de addEntries (qui appelle PageWithViewer.addEntries)
@@ -2022,19 +2025,6 @@ class PrerequisitesPage(PageWithViewer):
             PageWithViewer.addEntries(self)
             # fit() est une fonction wxPython. On l'omet en Tkinter.
             # self.fit()
-
-    def selected(self):
-        """
-        Gère la sélection de la page et ajoute les champs d'édition
-        seulement lors du premier affichage.
-        """
-        if not self.__realized:
-            self.__realized = True
-            # Appelle la version de PageWithViewer.addEntries pour créer et ajouter le viewer
-            # Note: Si la classe PageWithViewer que j'ai implémentée avait déjà
-            # appelé self.addEntries() dans son __init__, nous devrions être vigilants.
-            # Pour l'instant, on suppose que l'appel de super().addEntries() est nécessaire.
-            PageWithViewer.addEntries(self)
 
     def createViewer(self, taskFile, settings, settingsSection):
         assert len(self.items) == 1
