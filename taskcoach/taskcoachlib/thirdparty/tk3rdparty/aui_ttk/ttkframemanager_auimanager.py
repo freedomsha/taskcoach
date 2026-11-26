@@ -18,6 +18,7 @@ from .tkframemanager_elements import (
     AuiManagerEvent,
     AuiPaneInfo,
 )
+from .ttkframemanager_floating import ManagedFrame, TtkFloatingFrame
 from .ttkauibook import AuiNotebook
 from .aui_tk_constants import *
 
@@ -686,8 +687,15 @@ class AuiManager:
         # Ajout du panneau à la liste des panneaux
         self._panes.append(pane)
 
-        # Mise à jour de l'interface
-        self.Update()
+        try:
+            # Mise à jour de l'interface
+            self.Update()
+        except Exception:
+            if pane.frame is None and not any(
+                entry["pane"] is pane for entry in self._layout._entries
+            ):
+                self._panes.remove(pane)
+            raise
         return pane
 
     def AddPane2(self, window, direction=AUI_DOCK_LEFT, caption=""):
@@ -775,6 +783,7 @@ class AuiManager:
         """
         pane = self.GetPane(window)
         if pane.IsOk():
+            self._release_floating_frame(pane)
             self._undock_pane(pane)
             self._panes.remove(pane)
             pane.window = None
@@ -789,12 +798,13 @@ class AuiManager:
             Args:
                 pane (AuiPaneInfo): Panneau à fermer.
         """
+        self._release_floating_frame(pane, preserve=not pane.IsDestroyOnClose())
         self._undock_pane(pane)
-        if pane.frame is not None:
-            pane.frame.destroy()
-            pane.frame = None
+        # if pane.frame is not None:
+        #     pane.frame.destroy()
+        #     pane.frame = None
         window = pane.window
-        if window is not None and pane.IsDestroyOnClose():
+        if window is not None and pane.IsDestroyOnClose() and window.winfo_exists():
             window.destroy()
         if pane in self._panes:
             self._panes.remove(pane)
@@ -1723,6 +1733,8 @@ class AuiManager:
             state = getter()
         return state
 
+    _view_factories = ("rebuild_view", "create_view", "clone_for_parent")
+
     def _rebuild_pane_window(self, pane, parent):
         """Reconstruit la vue d'un panneau sous ``parent``.
 
@@ -1732,10 +1744,13 @@ class AuiManager:
         Tcl d'un widget existant.
         """
         old_window = pane.window
+        if old_window.master is parent:
+            return old_window
         state = self._capture_pane_view_state(old_window)
 
         factory = None
-        for name in ("rebuild_view", "create_view", "clone_for_parent"):
+        # for name in ("rebuild_view", "create_view", "clone_for_parent"):
+        for name in self._view_factories:
             candidate = getattr(old_window, name, None)
             if callable(candidate):
                 factory = candidate
@@ -1751,17 +1766,24 @@ class AuiManager:
         if new_window is None or not isinstance(new_window, tk.Misc):
             raise TypeError("La fabrique de vue doit retourner un widget Tkinter")
 
-        pane.window = new_window
-        restore = getattr(new_window, "set_view_state", None)
-        if state is not None and callable(restore):
-            restore(state)
+        # pane.window = new_window
+        if new_window.master is not parent or not new_window.winfo_exists():
+            raise ValueError("La fabrique doit créer un enfant du parent demandé")
+        try:
+            restore = getattr(new_window, "set_view_state", None)
+            if state is not None and callable(restore):
+                restore(state)
+        except Exception:
+            new_window.destroy()
+            raise
 
         self._undock_pane_from_widget(old_window)
-        try:
-            if old_window.winfo_exists() and old_window is not new_window:
-                old_window.destroy()
-        except tk.TclError:
-            pass
+        pane.window = new_window
+        # try:
+        #     if old_window.winfo_exists() and old_window is not new_window:
+        old_window.destroy()
+        # except tk.TclError:
+        #     pass
         return new_window
 
     def _undock_pane_from_widget(self, window):
@@ -1775,7 +1797,9 @@ class AuiManager:
                 pass
 
     def _float_pane(self, pane):
-        """Reconstruit la vue du panneau dans une fenêtre flottante.
+        """Affiche le cadre natif du visualiseur ou une vue reconstruite à flot.
+
+        Reconstruit la vue du panneau dans une fenêtre flottante.
 
         Place le contenu du panneau dans une fenêtre Tkinter indépendante.
 
@@ -1789,65 +1813,75 @@ class AuiManager:
             Returns:
                 tk.Toplevel: Fenêtre flottante contenant le widget.
         """
-        if pane.frame is None or not pane.frame.winfo_exists():
-            pane.frame = tk.Toplevel(self._frame)
+        # if pane.frame is None or not pane.frame.winfo_exists():
+        #     pane.frame = tk.Toplevel(self._frame)
         floating = pane.frame
-        floating.title(pane.caption or pane.name)
-        self._undock_pane(pane)
+        # floating.title(pane.caption or pane.name)
+        # self._undock_pane(pane)
+        if floating is None:
+            window = pane.window
+            if isinstance(window, tk.Frame) and not any(
+                callable(getattr(window, name, None)) for name in self._view_factories
+            ):
+                floating = ManagedFrame(window, self, pane)
+                self._layout.remove(window)
+            else:
+                floating = TtkFloatingFrame(self._frame, self, pane)
+            pane.frame = floating
+            floating.last_geometry = (None, None)
+            floating.wm_deiconify()
+        elif floating.wm_state() == "withdrawn":
+            floating.wm_deiconify()
 
-        window = pane.window
-        if window is not None:
-            # # Le widget quitte son gestionnaire de géométrie courant avant
-            # # d’être rattaché au Toplevel puis affiché avec pack().
-            # try:
-            #     window.pack_forget()
-            # except (AttributeError, tk.TclError):
-            #     pass
-            # try:
-            #     window.configure(in_=floating)
-            # except (AttributeError, tk.TclError):
-            #     pass
-            # window.pack(fill="both", expand=True)
-            # # TODO : Tkinter ne permet pas de changer le parent Tcl d'un widget
-            # #  existant de cette manière. L'erreur est interceptée,
-            # #  mais le pack() suivant ne déplace pas le widget dans le nouveau Toplevel.
-            # #  Conséquence probable : le panneau flottant s'ouvre vide
-            # #  ou son contenu reste dans son ancien conteneur.
-            # #  La même limitation apparaît dans ttkframemanager_floating.py.
-            # #  La correction exige une adaptation architecturale :
-            # #  conserver le modèle métier du visualiseur,
-            # #  mais recréer ou reconstruire sa partie graphique dans le nouveau
-            # #  conteneur, puis restaurer sa sélection, son état et sa disposition.
-            # #  Un simple remplacement de configure() par pack(in_=...)
-            # #  ne suffit pas pour déplacer un widget entre deux fenêtres de premier niveau.
-            # Le parent Tcl est fixé à la création. On reconstruit donc la vue
-            # dans le Toplevel au lieu d'utiliser configure(in_=...) ou pack(in_).
-            window = self._rebuild_pane_window(pane, floating)
-            window.pack(fill="both", expand=True)
-
-        if pane.floating_pos:
-            floating.geometry(f"+{pane.floating_pos[0]}+{pane.floating_pos[1]}")
-        if pane.floating_size and pane.floating_size[0] > 0:
-            floating.geometry(f"{pane.floating_size[0]}x{pane.floating_size[1]}")
+        title = pane.caption or pane.name
+        if floating.wm_title() != title:
+            floating.wm_title(title)
+        size, pos = pane.floating_size, pane.floating_pos
+        last_size, last_pos = floating.last_geometry
+        geometry = ""
+        if size != last_size and size and min(size) > 0:
+            geometry = f"{size[0]}x{size[1]}"
+        if pos != last_pos and pos and tuple(pos) != (-1, -1):
+            geometry += f"+{pos[0]}+{pos[1]}"
+        if geometry:
+            floating.wm_geometry(geometry)
+        floating.last_geometry = (size, pos)
         return floating
 
+    def _release_floating_frame(self, pane, preserve=True):
+        """Libère la fenêtre flottante, en gardant le contenu si demandé."""
+        frame = pane.frame
+        if frame is None:
+            return
+        if isinstance(frame, ManagedFrame):
+            frame.dock()
+        else:
+            if preserve:
+                self._rebuild_pane_window(pane, self._host_for(pane))
+            frame.destroy()
+        pane.frame = None
+
     def _dock_pane(self, pane):
-        """Réintègre le widget d'un panneau dans la grille principale.
+        """Réintègre le panneau dans son conteneur d'amarrage.
 
-            Une fenêtre flottante existante est masquée, puis le widget est ajouté
-            à la disposition s'il n'y figure pas déjà.
+        Réintègre le widget d'un panneau dans la grille principale.
 
-            Args:
-                pane (AuiPaneInfo): Panneau à réamarrer.
+        Une fenêtre flottante existante est masquée, puis le widget est ajouté
+        à la disposition s'il n'y figure pas déjà.
+
+        Args:
+            pane (AuiPaneInfo): Panneau à réamarrer.
         """
+        self._release_floating_frame(pane)
         window = pane.window
         if window is None:
             return
-        if pane.frame is not None and pane.frame.winfo_exists():
-            pane.frame.withdraw()
-        if self._layout is None:
-            self._layout = TtkGridLayout(self._frame)
-            self._pane_parent = self._layout.pane_parent
+        # if pane.frame is not None and pane.frame.winfo_exists():
+        #     pane.frame.withdraw()
+        # if self._layout is None:
+        #     self._layout = TtkGridLayout(self._frame)
+        #     self._pane_parent = self._layout.pane_parent
+        self._host_for(pane)
         if not any(e["widget"] is window for e in self._layout._entries):
             self._layout.add(window, pane)
 
@@ -1869,12 +1903,17 @@ class AuiManager:
             for pane in self._panes:
                 if pane.window is None:
                     continue
-                if pane.IsFloating():
+                if not pane.IsShown():
+                    if pane.IsFloating() and pane.frame is not None:
+                        if pane.frame.wm_state() != "withdrawn":
+                            pane.frame.wm_withdraw()
+                    else:
+                        self._release_floating_frame(pane)
+                        self._undock_pane(pane)
+                elif pane.IsFloating():
                     self._float_pane(pane)
-                elif pane.IsShown():
-                    self._dock_pane(pane)
                 else:
-                    self._undock_pane(pane)
+                    self._dock_pane(pane)
         finally:
             self._updating = False
 
@@ -1905,8 +1944,14 @@ class AuiManager:
         """Détache le contenu du panneau et l'affiche dans un Toplevel."""
         if not pane.IsOk():
             return None
+        was_floating = pane.IsFloating()
         pane.Float()
-        self.Update()
+        try:
+            self.Update()
+        except Exception:
+            if not was_floating and pane.frame is None:
+                pane.Dock()
+            raise
         return pane.frame
 
     def DockPane(self, pane):
@@ -1914,7 +1959,12 @@ class AuiManager:
         if not pane.IsOk():
             return False
         pane.Dock()
-        self.Update()
+        try:
+            self.Update()
+        except Exception:
+            if pane.frame is not None:
+                pane.Float()
+            raise
         return True
 
     def CreateFloatingFrame(self, pane):
@@ -1943,12 +1993,8 @@ class AuiManager:
             les fenêtres flottantes et l'enveloppe créée par le gestionnaire le sont.
         """
         for pane in getattr(self, "_panes", []):
-            if pane.frame is not None:
-                try:
-                    pane.frame.destroy()
-                except tk.TclError:
-                    pass
-                pane.frame = None
+            if pane.frame is not None and pane.frame.winfo_exists():
+                self._release_floating_frame(pane)
         if self._layout is not None:
             self._layout.clear()
             self._layout.destroy()

@@ -1,12 +1,50 @@
 # -*- coding: utf-8 -*-
 """Fenêtre flottante ttk pour les panneaux AUI.
 
+Héberge les panneaux qui fournissent une fabrique de reconstruction.
+
 Le widget original est conservé comme référence de comportement. Cette
 version détache réellement le contenu du panneau de son parent, le place dans
 un Toplevel et le réintègre dans le gestionnaire lors du réamarrage.
 """
 import tkinter as tk
-from tkinter import ttk
+
+
+class ManagedFrame(tk.Wm):
+    """Interface de fenêtre pour un tk.Frame promu par le gestionnaire Tk.
+
+    Le widget reste accessible par son chemin Tcl. Les opérations wm (dont
+    title) sont distinctes des méthodes métier de même nom du visualiseur.
+    """
+
+    def __init__(self, widget, manager, pane):
+        self.widget = widget
+        self.tk = widget.tk
+        self._w = widget._w
+        self.wm_manage(widget)
+        self._close = widget.register(lambda: manager.DockPane(pane))
+        self.wm_protocol("WM_DELETE_WINDOW", self._close)
+
+        def remember_geometry(event):
+            if event.widget is widget and pane.frame is self:
+                pane.floating_size = (event.width, event.height)
+                pane.floating_pos = (widget.winfo_x(), widget.winfo_y())
+                self.last_geometry = (pane.floating_size, pane.floating_pos)
+
+        self._configure = widget.bind("<Configure>", remember_geometry, add="+")
+
+    def __str__(self):
+        return str(self.widget)
+
+    def __getattr__(self, name):
+        return getattr(self.widget, name)
+
+    def dock(self):
+        """Rend le cadre à son parent de grille et libère les rappels Tk."""
+        self.widget.unbind("<Configure>", self._configure)
+        self.wm_protocol("WM_DELETE_WINDOW", "")
+        self.widget.deletecommand(self._close)
+        self.wm_forget(self.widget)
 
 
 class TtkFloatingFrame(tk.Toplevel):
@@ -31,10 +69,16 @@ class TtkFloatingFrame(tk.Toplevel):
         self.title(getattr(pane, "caption", "") or getattr(pane, "name", "Panneau"))
         self.protocol("WM_DELETE_WINDOW", self._on_close)
         self.bind("<Configure>", self._on_configure, add="+")
-        self._attach_content()
+        try:
+            self._attach_content()
+        except Exception:
+            self.destroy()
+            raise
 
     def _attach_content(self):
-        """Reconstruit la vue du panneau comme enfant de ce Toplevel.
+        """Confie la reconstruction et la restauration de l'état au gestionnaire.
+
+        Reconstruit la vue du panneau comme enfant de ce Toplevel.
 
         Déplace le widget du panneau dans la fenêtre flottante.
 
@@ -43,55 +87,9 @@ class TtkFloatingFrame(tk.Toplevel):
         permettant pas de modifier directement le parent Tcl d'un widget
         existant, l'échec de la tentative ``configure(in_=...)`` est toléré.
         """
-        content = getattr(self.pane, "window", None)
-        if content is None or not content.winfo_exists():
-            return
-
-        # self._content = content
-        state = None
-        getter = getattr(content, "get_view_state", None)
-        if callable(getter):
-            state = getter()
-
-        factory = None
-        for name in ("rebuild_view", "create_view", "clone_for_parent"):
-            candidate = getattr(content, name, None)
-            if callable(candidate):
-                factory = candidate
-                break
-        if factory is None:
-            raise TypeError(
-                "Le panneau flottant doit exposer rebuild_view(parent), "
-                "create_view(parent) ou clone_for_parent(parent)"
-            )
-
-        replacement = factory(self)
-        if replacement is None or not isinstance(replacement, tk.Misc):
-            raise TypeError("La fabrique de vue doit retourner un widget Tkinter")
-
-
-        self._content = replacement
-        self.pane.window = replacement
-        # for method in ("pack_forget", "grid_forget", "place_forget"):
-        #     try: getattr(content, method)()
-        #     except (AttributeError, tk.TclError): pass
-        # try:
-        #     content.configure(in_=self)
-        # except tk.TclError:
-        #     # Le paramètre ``in_`` ne change pas le parent Tcl réel du widget.
-        #     # Tk ne permet pas de reparentage direct après la création :
-        #     # le gestionnaire peut devoir utiliser une enveloppe intermédiaire.
-        #     pass
-        restore = getattr(replacement, "set_view_state", None)
-        if state is not None and callable(restore):
-            restore(state)
-        try:
-            if content.winfo_exists() and content is not replacement:
-                content.destroy()
-        except tk.TclError:
-            pass
-        # content.pack(fill="both", expand=True)
-        replacement.pack(fill="both", expand=True)
+        if self.pane.window is not None:
+            self._content = self.manager._rebuild_pane_window(self.pane, self)
+            self._content.pack(fill="both", expand=True)
 
     def _on_configure(self, event=None):
         """Enregistre la taille et la position actuelles de la fenêtre.
@@ -100,9 +98,12 @@ class TtkFloatingFrame(tk.Toplevel):
         déplace ou redimensionne la fenêtre. Les informations sont conservées
         sur le panneau pour permettre au gestionnaire de les réutiliser.
         """
+        if event is not None and event.widget is not self:
+            return
         try:
             self.pane.floating_size = (self.winfo_width(), self.winfo_height())
             self.pane.floating_pos = (self.winfo_x(), self.winfo_y())
+            self.last_geometry = (self.pane.floating_size, self.pane.floating_pos)
         except tk.TclError:
             # Tk peut encore émettre un événement pendant la destruction
             # de la fenêtre ; les informations ne sont alors plus accessibles.

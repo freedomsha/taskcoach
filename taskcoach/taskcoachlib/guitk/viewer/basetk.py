@@ -133,7 +133,7 @@ log = logging.getLogger(__name__)
 
 
 # class Viewer(ttk.Frame, patterns.Observer, ABC):
-class Viewer(ttk.Frame, patterns.Observer):
+class Viewer(tk.Frame, patterns.Observer):
     """
     Classe de base pour les visionneuses dans Task Coach (Tkinter).
 
@@ -168,9 +168,11 @@ class Viewer(ttk.Frame, patterns.Observer):
         log.debug(
             f"Viewer.__init__ : Initialisation d'une nouvelle visionneuse self={self.__class__.__name__} avec parent={parent}."
         )
-        ttk.Frame.__init__(self, parent)  # Initialisation de ttk.Frame
-        # ttk.Frame.__init__(self, parent, *args, **kwargs)  # Initialisation de ttk.Frame
-        # init du Frame avant ou après l'Observer ?  Après.
+        # ttk.Frame.__init__(self, parent)  # Initialisation de ttk.Frame
+        # # ttk.Frame.__init__(self, parent, *args, **kwargs)  # Initialisation de ttk.Frame
+        # # init du Frame avant ou après l'Observer ?  Après.
+        # Tk peut détacher ce cadre avec wm manage en conservant tous ses enfants.
+        tk.Frame.__init__(self, parent)
         patterns.Observer.__init__(self)  # initialisation de Observer
 
         self.parent = parent  # window or frame ?

@@ -1019,6 +1019,113 @@ class TestMDI(CasGraphique):
 
 
 @_gui
+class TestTransitionsPanneau(CasGraphique):
+    """Exerce les transitions publiques avec de vrais widgets Tk."""
+
+    def setUp(self):
+        super().setUp()
+        self.manager = fm.AuiManager(self.root)
+
+    def tearDown(self):
+        try:
+            self.manager.UnInit()
+        finally:
+            super().tearDown()
+
+    def add(self, widget, floating=False):
+        info = AuiPaneInfo().Name("vue").Caption("Vue").DefaultPane()
+        if floating:
+            info.Float()
+        return self.manager.AddPane(widget, info)
+
+    def test_visualiseur_conserve_arbre_et_selection(self):
+        view = tk.Frame(self.manager.pane_parent)
+        tree = ttk.Treeview(view)
+        tree.pack()
+        item = tree.insert("", "end", text="Tâche")
+        tree.selection_set(item)
+        pane = self.add(view)
+
+        for _ in range(3):
+            frame = self.manager.FloatPane(pane)
+            self.assertIs(frame.widget, view)
+            frame.wm_geometry("360x240+40+30")
+            self.root.update()
+            self.manager.OnSize()
+            self.manager.Update()
+            self.assertEqual(pane.floating_size, (360, 240))
+            self.assertIs(tree.winfo_toplevel(), view)
+            self.manager.ShowPane(view, False)
+            self.assertEqual(frame.wm_state(), "withdrawn")
+            self.manager.ShowPane(view)
+            view.tk.call(frame.wm_protocol("WM_DELETE_WINDOW"))
+            self.assertIs(self.manager.GetPane(view), pane)
+            self.assertIsNone(pane.frame)
+            self.assertEqual(view.winfo_manager(), "grid")
+            self.assertEqual(tree.selection(), (item,))
+
+    def test_construction_une_fois_par_parent(self):
+        parents = []
+
+        class Vue(ttk.Frame):
+            valeur = "initiale"
+
+            def rebuild_view(self, parent):
+                parents.append(parent)
+                return Vue(parent)
+
+            def get_view_state(self):
+                return self.valeur
+
+            def set_view_state(self, state):
+                self.valeur = state
+
+        dock = self.manager.pane_parent
+        pane = self.add(Vue(dock), floating=True)
+        frame = pane.frame
+        pane.window.valeur = "modifiée"
+        self.manager.Update()
+        self.manager.OnSize()
+        self.assertEqual(parents, [frame])
+        self.manager.DockPane(pane)
+        self.manager.Update()
+        self.assertEqual(parents, [frame, dock])
+        self.assertIs(pane.window.master, dock)
+        self.assertEqual(pane.window.valeur, "modifiée")
+        self.assertFalse(frame.winfo_exists())
+
+    def test_restauration_en_echec_conserve_le_panneau(self):
+        class Vue(ttk.Frame):
+            def rebuild_view(self, parent):
+                return Vue(parent)
+
+            def get_view_state(self):
+                return "état"
+
+            def set_view_state(self, state):
+                raise ValueError("restauration")
+
+        view = Vue(self.manager.pane_parent)
+        pane = self.add(view)
+        children = self.root.winfo_children()
+        with self.assertRaisesRegex(ValueError, "restauration"):
+            self.manager.FloatPane(pane)
+        self.assertIs(pane.window, view)
+        self.assertFalse(pane.IsFloating())
+        self.assertEqual(view.winfo_manager(), "grid")
+        self.assertEqual(self.root.winfo_children(), children)
+        self.manager.Update()
+
+    def test_detacher_sans_detruire(self):
+        view = tk.Frame(self.manager.pane_parent)
+        self.add(view, floating=True)
+        self.manager.DetachPane(view)
+        self.assertTrue(view.winfo_exists())
+        self.assertEqual(view.winfo_manager(), "")
+        self.assertFalse(self.manager.GetPane(view).IsOk())
+
+
+@_gui
 class TestGestionnaire(CasGraphique):
 
     def setUp(self):
