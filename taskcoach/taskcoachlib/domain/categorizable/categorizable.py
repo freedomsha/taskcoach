@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 from taskcoachlib import patterns
 from taskcoachlib.domain import base
-from taskcoachlib.domain.attribute import font, color
+from taskcoachlib.domain.attribute import color
 
 log = logging.getLogger(__name__)
 
@@ -394,7 +394,13 @@ class CategorizableCompositeObject(base.CompositeObject):
         if not fonts and self.parent():
             return self.parent()._categoryFont()
         else:
-            return font.FontMixer.mix(*fonts)  # pylint: disable=W0142
+            from taskcoachlib.config.gui import get_gui
+            if get_gui() == "tk":
+                from taskcoachlib.domain.attribute.font import mixertk
+                return mixertk.FontMixer.mix(*fonts)
+            else:
+                from taskcoachlib.domain.attribute import font
+                return font.FontMixer.mix(*fonts)  # pylint: disable=W0142
 
     def icon(self, recursive=False):
         icon = super().icon()
