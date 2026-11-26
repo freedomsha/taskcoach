@@ -32,13 +32,14 @@ taskcoach.py est le point d'entrée principal. Il :
 """
 
 # Programme principal
+
+# importer les bibliothèques permettant l'interface pour le système d'exploitation
+import os
+
 # importer la bibliothèque pour enregistrer les événements
 # voir https://docs.python.org/fr/3.12/library/logging.html pour son implantation
 import logging
 import logging.handlers
-
-# importer les bibliothèques permettant l'interface pour le système d'exploitation
-import os
 
 # et les paramètres et les variables propres au système
 import sys
@@ -46,7 +47,7 @@ import sys
 # et pour la gestion de la date et de l'heure dans les noms de fichiers de log
 from datetime import datetime
 
-from taskcoachlib.config.arguments import CURRENT_GUI
+# from taskcoachlib.config.arguments import CURRENT_GUI
 
 # Créer un enregistreur de niveau module
 log = logging.getLogger(__name__)
