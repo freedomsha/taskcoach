@@ -51,13 +51,13 @@ from taskcoachlib.domain import effort, date
 from taskcoachlib.i18n import _
 
 # from taskcoachlib.notify import NotificationFrameBase, NotificationCenter  # En cours de conversion
-from taskcoachlib.notify import notifier_universaltk
+# from taskcoachlib.notify import notifier_universaltk
 from taskcoachlib.patterns import Observer
 from taskcoachlib.powermgt import idletk
 from pubsub import pub
 from taskcoachlib import render
 import tkinter as tk
-from tkinter import messagebox
+# from tkinter import messagebox
 
 log = logging.getLogger(__name__)
 
@@ -138,16 +138,16 @@ class WakeFromIdleFrame(tk.Toplevel):
         """
         Action pour le bouton "Do nothing".
         """
-        if self._effort in self._displayed:
-            self._displayed.remove(self._effort)
+        # if self._effort in self._displayed:
+        #     self._displayed.remove(self._effort)
         self.DoClose()
 
     def DoStopAt(self):
         """
         Action pour le bouton "Stop it at...".
         """
-        if self._effort in self._displayed:
-            self._displayed.remove(self._effort)
+        # if self._effort in self._displayed:
+        #     self._displayed.remove(self._effort)
         EditEffortStopDateTimeCommand(
             newValue=self._idleTime, items=[self._effort]
         ).do()
@@ -157,8 +157,8 @@ class WakeFromIdleFrame(tk.Toplevel):
         """
         Action pour le bouton "Stop it at... and resume Now".
         """
-        if self._effort in self._displayed:
-            self._displayed.remove(self._effort)
+        # if self._effort in self._displayed:
+        #     self._displayed.remove(self._effort)
         EditEffortStopDateTimeCommand(
             newValue=self._idleTime, items=[self._effort]
         ).do()
@@ -169,6 +169,7 @@ class WakeFromIdleFrame(tk.Toplevel):
         """
         Ferme la fenêtre.
         """
+        self._displayed.discard(self._effort)
         self.destroy()
 
 
@@ -186,25 +187,30 @@ class IdleController(Observer):
 
         # super().__init__(self._mainWindow)
         # super().__init__(mainWindow)
-        min_idle_time = settings.getint("feature", "minidletime") * 60
+        super().__init__()
+        self._suspended = False
+        self._stopped = False
+        # min_idle_time = settings.getint("feature", "minidletime") * 60
         # IdleNotifier.__init__(self, root=mainWindow, min_idle_time=min_idle_time)
         self._idle_notifier = idletk.IdleNotifier(
-            root=mainWindow, min_idle_time=min_idle_time
+            # root=mainWindow, min_idle_time=min_idle_time
+            mainWindow, self.getMinIdleTime(), on_wake=self.wake
         )
-        # Observer.__init__(self)
-        super().__init__()
+        # # Observer.__init__(self)
+        # super().__init__()
 
         self.__tracker = effort.EffortListTracker(self._effortList)
         self.__tracker.subscribe(self.__onTrackedChanged, "effortlisttracker")
 
         pub.subscribe(self.poweroff, "powermgt.off")
         pub.subscribe(self.poweron, "powermgt.on")
+        self.__onTrackedChanged(self.__tracker.trackedEfforts())
 
     def __onTrackedChanged(self, efforts):
         """
         Gère les changements dans la liste des efforts suivis.
         """
-        if len(efforts):
+        if efforts and not self._suspended:
             self.resume()
         else:
             self.pause()
@@ -230,45 +236,64 @@ class IdleController(Observer):
             if effort not in self._displayed:
                 self._displayed.add(effort)
                 # Remplace le cadre de notification wxPython par Tkinter
-                frm = WakeFromIdleFrame(
+                # frm = WakeFromIdleFrame(
+                WakeFromIdleFrame(
                     parent=self._mainWindow,
                     idleTime=date.DateTime.fromtimestamp(self._lastActivity),
                     effort=effort,
                     displayedEfforts=self._displayed,
                     title=_("Notification"),
                 )
-                # La ligne ci-dessous est une version simplifiée de NotificationCenter().NotifyFrame(frm)
-                # car nous ne savons pas comment NotificationCenter est implémenté dans Tkinter
-                self._mainWindow.after(0, lambda: None)
-                # NotificationCenter().NotifyFrame(frm)
+                # # La ligne ci-dessous est une version simplifiée de NotificationCenter().NotifyFrame(frm)
+                # # car nous ne savons pas comment NotificationCenter est implémenté dans Tkinter
+                # self._mainWindow.after(0, lambda: None)
+                # # NotificationCenter().NotifyFrame(frm)
 
     def poweroff(self):
-        """Called when a 'powermgt.off' message is received."""
-        # print("Power Off signal received (IdleController)")
-        log.debug("Power Off signal received (IdleController)")
+        """Suspend la surveillance pendant la veille du système.
+
+        Appelé quand un message 'powermgt.off' est reçu.
+        """
+        # log.debug("Power Off signal received (IdleController)")
+        self._suspended = True
         self.pause()  # Pause the idle checker when powering off
-        self._idle_notifier.stop()
+        # self._idle_notifier.stop()
 
     def poweron(self):
-        """Called when a 'powermgt.on' message is received."""
-        # print("Power On signal received (IdleController)")
-        log.debug("Power On signal received (IdleController)")
-        self.resume()  # Resume the idle checker when powering on
-        self._idle_notifier.start()
+        """Rétablit la surveillance si un effort est encore suivi.
+
+        Appelé quand un message 'powermgt.on' est reçu."""
+        # log.debug("Power On signal received (IdleController)")
+        # self.resume()  # Resume the idle checker when powering on
+        # self._idle_notifier.start()
+        self._suspended = False
+        self.__onTrackedChanged(self.__tracker.trackedEfforts())
 
     def pause(self):
-        """Pause the idle checker."""
-        log.debug("Idle checker paused (IdleController).")
+        """Suspend temporairement la surveillance."""
+        # log.debug("Idle checker paused (IdleController).")
         # Implement any logic to pause the idle checker (e.g., stop the timer)
         self._idle_notifier.stop()
 
     def resume(self):
-        """Resume the idle checker."""
-        log.debug("Idle checker resumed (IdleController).")
+        """Active la surveillance tant que le contrôleur est en service."""
+        # log.debug("Idle checker resumed (IdleController).")
         # Implement any logic to resume the idle checker (e.g., start the timer)
-        self._idle_notifier.start()
+        if not self._stopped and not self._suspended:
+            self._idle_notifier.min_idle_time = self.getMinIdleTime()
+            self._idle_notifier.start()
 
     def stop(self):
-        """Arrête le Contrôleur pour l'inactivité du système."""
-        log.debug("Idle checker and IdleController stop.")
-        self._idle_notifier.stop()
+        """Annule le rappel Tk et détache les observateurs de cette session.
+
+        Arrête le Contrôleur pour l'inactivité du système."""
+        # log.debug("Idle checker and IdleController stop.")
+        # self._idle_notifier.stop()
+        if self._stopped:
+            return
+        self._stopped = True
+        self.pause()
+        self.__tracker.unsubscribe(self.__onTrackedChanged, "effortlisttracker")
+        self.__tracker.removeInstance()
+        pub.unsubscribe(self.poweroff, "powermgt.off")
+        pub.unsubscribe(self.poweron, "powermgt.on")

@@ -89,11 +89,12 @@ from taskcoachlib.config.settings import Settings
 from taskcoachlib.domain import date
 from taskcoachlib import guitk
 # from taskcoachlib.guitk import artprovidertk
-from taskcoachlib.guitk import mainwindowtk
+# # Remplacement de la création de IdleController par:
+# from taskcoachlib.powermgt import idletk
+# Finallement non.
+from taskcoachlib.guitk import idlecontrollertk, mainwindowtk
 # from taskcoachlib.guitk import iocontrollertk
 
-# Remplacement de la création de IdleController par:
-from taskcoachlib.powermgt import idletk
 
 log = logging.getLogger(__name__)
 
@@ -487,20 +488,19 @@ class TkinterApplication(
         # self.root.iconphoto(False, artprovider.iconBundle("taskcoach"))
         # self.root.iconphoto(False, artprovidertk.iconBundle("taskcoach"))  # TODO : problème d'Image non trouvée !
 
-        # Initialize IdleNotifier *after* MainWindow  -> A mettre dans une méthode !
-        self.idle_notifier = idletk.IdleNotifier(
-            root=self.root,
-            min_idle_time=self.settings.getint("feature", "minidletime") * 60,
-        )  # Minutes to seconds
-
-        # self.idle_controller = guitk.idlecontroller.IdleController(mainWindow=app, settings=self.settings, effortList=self.taskFile.efforts())  # a verif l'ordre des arguments !
-        self.idle_controller = guitk.idlecontrollertk.IdleController(
+        # # Initialize IdleNotifier *after* MainWindow  -> A mettre dans une méthode !
+        # self.idle_notifier = idletk.IdleNotifier(
+        #     root=self.root,
+        #     min_idle_time=self.settings.getint("feature", "minidletime") * 60,
+        # )  # Minutes to seconds
+        # Unifier la surveillance
+        self.idle_controller = idlecontrollertk.IdleController(
             # mainWindow=self.mainwindow,
             mainWindow=self.root,
             settings=self.settings,
             effortList=self.taskFile.efforts(),
-        )  # a verif l'ordre des arguments !
-        self.idle_notifier.start()  # Démarrer la surveillance !
+        )
+        # self.idle_notifier.start()  # Démarrer la surveillance !
 
         # self.__wx_app.SetTopWindow(self.mainwindow) n'a pas d'équivalent direct
         self.__init_spell_checking()
@@ -753,9 +753,13 @@ class TkinterApplication(
         return True
 
     def OnQuit(self):
-        """Stop the IdleNotifier before quitting."""
-        if hasattr(self, "idle_notifier") and self.idle_notifier:
-            self.idle_notifier.stop()
+        """Libère le contrôleur après confirmation de la fermeture."""
+        # if hasattr(self, "idle_notifier") and self.idle_notifier:
+        #     self.idle_notifier.stop()
+        controller = getattr(self, "idle_controller", None)
+        if controller is not None:
+            controller.stop()
+            self.idle_controller = None
 
     # Méthode de singleton.py !:
     # # @staticmethod

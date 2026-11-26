@@ -184,7 +184,7 @@ from taskcoachlib import application, meta, operating_system
 from taskcoachlib.config.settings import Settings
 from taskcoachlib.guitk import (
     artprovidertk,
-    idlecontrollertk,
+    # idlecontrollertk,
     iocontrollertk,
     remindercontrollertk,
     statustk,
@@ -226,7 +226,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         reminderController : Gère les rappels de tâches.
         bonjourRegister : Service Bonjour pour la synchronisation iPhone.
         bonjourAcceptor : Accepte les connexions iPhone.
-        _idleController : Gère les actions d'inactivité (suivi du temps).
     """
 
     def __init__(self, parent, iocontroller, taskFile, settings: Settings, *args, **kwargs):
@@ -249,7 +248,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             __shutdown (bool) : Indicateur indiquant si l'application est en cours d'arrêt (initialisé à False).
             bonjourRegister : Service Bonjour pour la synchronisation avec un iPhone (None par défaut).
             bonjourAcceptor : Accepte les connexions Bonjour pour la synchronisation (None par défaut).
-            _idleController : Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches.
 
         Composants créés :
             - Barre d'état (status bar).
@@ -311,14 +309,14 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # Enregistrement pour les changements de composants
         self.__register_for_window_component_changes()
 
-        # Initialisation du contrôleur d'inactivité
-        # Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches. :
-        log.debug(
-            "MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts"
-        )
-        self._idleController = idlecontrollertk.IdleController(
-            self.parent, self.settings, self.taskFile.efforts()
-        )
+        # # Initialisation du contrôleur d'inactivité
+        # # Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches. :
+        # log.debug(
+        #     "MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts"
+        # )
+        # self._idleController = idlecontrollertk.IdleController(
+        #     self.parent, self.settings, self.taskFile.efforts()
+        # )
 
         # Vérification XFCE4
         self.parent.after(100, self.checkXFCE4)
@@ -1042,7 +1040,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             #         self.taskFile.stop()
             #     except Exception:
             #         log.exception("Erreur pendant l'arrêt de TaskFile")
-            #     self._idleController.stop()
+            #     # self._idleController.stop()
             #     # self.parent.destroy()
             #     try:
             #         if self.parent.winfo_exists():
@@ -1062,7 +1060,7 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             #         self.taskFile.stop()
             #     except Exception:
             #         log.exception("Erreur pendant l'arrêt de TaskFile")
-            #     self._idleController.stop()
+            #     # self._idleController.stop()
             #     # self.parent.destroy()
             #     try:
             #         if self.parent.winfo_exists():
@@ -1080,11 +1078,11 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             self._closing = False
 
         # self._idleController.stop()
-        # Sécuriser le contrôleur d'inactivité
-        idle_controller = getattr(self, "_idleController", None)
-
-        if idle_controller is not None:
-            idle_controller.stop()
+        # # Sécuriser le contrôleur d'inactivité
+        # idle_controller = getattr(self, "_idleController", None)
+        #
+        # if idle_controller is not None:
+        #     idle_controller.stop()
         log.info("MainWindow.onClose: Fenêtre principale fermée !")
 
     def show(self):

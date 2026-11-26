@@ -24,12 +24,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 # Initialisation: Le temps d'inactivité minimum est passé au constructeur.
 # Logging: Ajout de logs pour faciliter le débogage.
 
-import sys
+# import sys
 import time
-import threading
+# import threading
 from tkinter import Tk
 from ctypes import *
-from pubsub import pub
+# from pubsub import pub
 from taskcoachlib import operating_system
 import logging
 
@@ -155,139 +155,138 @@ else:
 # 20/08/2025 Elle N'hérite PLUS d'IdleQuery.
 
 # class IdleNotifier(IdleQuery):
-class IdleNotifier():
-    STATE_SLEEPING = 0
-    STATE_AWAKE = 1
+class IdleNotifier:
+    """Sonde l'inactivité système depuis la boucle principale Tk."""
+    # STATE_SLEEPING = 0
+    # STATE_AWAKE = 1
 
-    # def __init__(self, root: Tk):
-    def __init__(self, root: Tk, min_idle_time: int):
-        # super(IdleNotifier, self).__init__() # No longer inheriting from IdleQuery
-        self.idle_query = IdleQuery()  # Instance de IdleQuery pour obtenir le temps d'inactivité
+    def __init__(self, root: Tk, min_idle_time: int, on_wake=None):
         self.root = root  # Fenêtre principale Tkinter
         self.min_idle_time = min_idle_time  # Temps minimum en secondes
-        self.state = self.STATE_AWAKE
-        self.lastActivity = time.time()
-        self.goneToSleep = None
+        self.idle_query = IdleQuery()  # Instance de IdleQuery pour obtenir le temps d'inactivité
+        # self.state = self.STATE_AWAKE
+        self._on_wake = on_wake
+        # self.lastActivity = time.time()
+        self._after_id = None
+        # elf.goneToSleep = None
+        self._idle_since = None
         self._check_interval = 1000  # Intervalle de vérification en ms (1 seconde)
-        self._thread = None
-        self._running = False
+        # self._thread = None
+        # self._running = False
 
-        self.bind_events()
+        # self.bind_events()
         log.debug("IdleNotifier initialisé.")
 
-    def bind_events(self):
-        """
-        Lie les événements de la fenêtre principale pour détecter l'activité.
-        """
-        self.root.bind('<Motion>', self._on_activity)
-        self.root.bind('<KeyPress>', self._on_activity)
-
-    def _on_activity(self, event):
-        """
-        Met à jour le timestamp de la dernière activité.
-        """
-        self.lastActivity = time.time()
-        # log.debug("Activité détectée, mise à jour du timestamp.")
+    # def bind_events(self):
+    #     """
+    #     Lie les événements de la fenêtre principale pour détecter l'activité.
+    #     """
+    #     self.root.bind('<Motion>', self._on_activity)
+    #     self.root.bind('<KeyPress>', self._on_activity)
+    #
+    # def _on_activity(self, event):
+    #     """
+    #     Met à jour le timestamp de la dernière activité.
+    #     """
+    #     self.lastActivity = time.time()
+    #     # log.debug("Activité détectée, mise à jour du timestamp.")
 
     def start(self):
-        """
-        Démarre la détection d'inactivité.
-        """
-        if not self._running:
-            self._running = True
-            self._thread = threading.Thread(target=self._run_idle_check)
-            self._thread.daemon = True
-            self._thread.start()
-            log.info("Détection d'inactivité démarrée dans un thread.")
+        """Programme une seule vérification périodique.
+
+        Démarre la détection d'inactivité."""
+        # if not self._running:
+        #     self._running = True
+        #     self._thread = threading.Thread(target=self._run_idle_check)
+        #     self._thread.daemon = True
+        #     self._thread.start()
+        #     log.info("Détection d'inactivité démarrée dans un thread.")
+        if self._after_id is None:
+            self._after_id = self.root.after(self._check_interval, self._check)
 
     def stop(self):
-        """
-        Arrête la détection d'inactivité.
-        """
-        self._running = False
-        if self._thread:
-            self._thread.join()
-            self._thread = None
-            log.info("Détection d'inactivité arrêtée et thread terminé.")
+        """Annule le prochain rappel et termine la période d'inactivité.
 
-    def _run_idle_check(self):
-        """
-        Boucle de vérification d'inactivité dans un thread séparé.
-        """
-        while self._running:
-            self._check()
-            time.sleep(self._check_interval / 1000)
+        Arrête la détection d'inactivité."""
+        # self._running = False
+        # if self._thread:
+        #     self._thread.join()
+        #     self._thread = None
+        #     log.info("Détection d'inactivité arrêtée et thread terminé.")
+        if self._after_id is not None:
+            self.root.after_cancel(self._after_id)
+            self._after_id = None
+        self._idle_since = None
+
+    # def _run_idle_check(self):
+    #     """
+    #     Boucle de vérification d'inactivité dans un thread séparé.
+    #     """
+    #     while self._running:
+    #         self._check()
+    #         time.sleep(self._check_interval / 1000)
 
     def _check(self):
-        """
-        Vérifie l'état d'inactivité et appelle les méthodes sleep/wake.
-        """
-        # current_idle_seconds = self.getIdleSeconds()
-        current_idle_seconds = self.idle_query.getIdleSeconds()
-        if self.state == self.STATE_AWAKE and current_idle_seconds >= self.getMinIdleTime():
-            self.goneToSleep = self.lastActivity
-            self.state = self.STATE_SLEEPING
-            self.sleep()
-            log.info("Passage en état d'inactivité.")
-        elif self.state == self.STATE_SLEEPING and current_idle_seconds < self.getMinIdleTime():
-            self.state = self.STATE_AWAKE
-            self.wake(self.goneToSleep)
-            log.info("Réveil de l'état d'inactivité.")
+        """Mémorise la dernière activité système et signale la reprise une fois.
 
-    def getMinIdleTime(self):
-        """
-        Doit retourner le temps minimum en secondes avant de passer en inactivité.
-        """
-        # raise NotImplementedError
-        return self.min_idle_time
+        Vérifie l'état d'inactivité et appelle les méthodes sleep/wake."""
+        # Programmer avant la notification permet à son destinataire d'annuler
+        # le prochain rappel, même pendant le traitement du réveil.
+        self._after_id = None
+        self.start()
+        # # current_idle_seconds = self.getIdleSeconds()
+        # current_idle_seconds = self.idle_query.getIdleSeconds()
+        idle_seconds = self.idle_query.getIdleSeconds()
+        # if self.state == self.STATE_AWAKE and current_idle_seconds >= self.getMinIdleTime():
+        #     self.goneToSleep = self.lastActivity
+        #     self.state = self.STATE_SLEEPING
+        #     self.sleep()
+        #     log.info("Passage en état d'inactivité.")
+        # elif self.state == self.STATE_SLEEPING and current_idle_seconds < self.getMinIdleTime():
+        #     self.state = self.STATE_AWAKE
+        #     self.wake(self.goneToSleep)
+        #     log.info("Réveil de l'état d'inactivité.")
+        if idle_seconds >= self.min_idle_time:
+            if self._idle_since is None:
+                self._idle_since = time.time() - idle_seconds
+        elif self._idle_since is not None:
+            timestamp = self._idle_since
+            self._idle_since = None
+            if self._on_wake is not None:
+                self._on_wake(timestamp)
 
-    def sleep(self):
-        """
-        Appelée lorsque le temps d'inactivité minimum s'est écoulé sans aucune
-        saisie de l'utilisateur.
-        """
-        # pass
-        log.info("Going to sleep...")
-        # Envoyer un message à travers pubsub
-        pub.sendMessage("powermgt.off")
-
-    def wake(self, timestamp):
-        """
-        Appelée lorsque l'ordinateur n'est plus en inactivité.
-        """
-        # pass
-        log.info(f"Waking up! Was idle since {timestamp}")
-        # Envoyer un message à travers pubsub
-        pub.sendMessage("powermgt.on")
+    # def getMinIdleTime(self):
+    #     """
+    #     Doit retourner le temps minimum en secondes avant de passer en inactivité.
+    #     """
+    #     # raise NotImplementedError
+    #     return self.min_idle_time
+    #
+    # def sleep(self):
+    #     """
+    #     Appelée lorsque le temps d'inactivité minimum s'est écoulé sans aucune
+    #     saisie de l'utilisateur.
+    #     """
+    #     # pass
+    #     log.info("Going to sleep...")
+    #     # Envoyer un message à travers pubsub
+    #     pub.sendMessage("powermgt.off")
+    #
+    # def wake(self, timestamp):
+    #     """
+    #     Appelée lorsque l'ordinateur n'est plus en inactivité.
+    #     """
+    #     # pass
+    #     log.info(f"Waking up! Was idle since {timestamp}")
+    #     # Envoyer un message à travers pubsub
+    #     pub.sendMessage("powermgt.on")
 
 
 # ==============================================================================
 # Exemple d'utilisation
-
 if __name__ == "__main__":
-    class MyIdleNotifier(IdleNotifier):
-        # def getMinIdleTime(self):
-        #     return 5  # 5 secondes pour les tests
-        #
-        # def sleep(self):
-        #     print("Going to sleep...")
-        #
-        # def wake(self, timestamp):
-        #     print(f"Waking up! Was idle since {timestamp}")
-        def __init__(self, root: Tk):
-            super().__init__(root, min_idle_time=5)  # 5 secondes pour les tests
-
     root = Tk()
     root.title("Idle Notifier Test")
-    root.geometry("400x200")
-
-    notifier = MyIdleNotifier(root)
+    notifier = IdleNotifier(root, 5, lambda since: print("Inactif depuis", since))
     notifier.start()
-
-    print("Déplacez la souris ou appuyez sur une touche pour réinitialiser le temps d'inactivité.")
-    print("Le programme passera en état 'inactif' après 5 secondes d'inactivité.")
-
     root.mainloop()
-
-    # Arrêtez le thread de détection d'inactivité à la fin du programme.
-    notifier.stop()
