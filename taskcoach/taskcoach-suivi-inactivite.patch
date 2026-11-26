@@ -1,0 +1,501 @@
+diff --git a/taskcoach/taskcoachlib/application/tkapplication.py b/taskcoach/taskcoachlib/application/tkapplication.py
+index 8b61cd0..0b12e13 100644
+--- a/taskcoach/taskcoachlib/application/tkapplication.py
++++ b/taskcoach/taskcoachlib/application/tkapplication.py
+@@ -89,11 +89,9 @@ from taskcoachlib.config.settings import Settings
+ from taskcoachlib.domain import date
+ from taskcoachlib import guitk
+ # from taskcoachlib.guitk import artprovidertk
+-from taskcoachlib.guitk import mainwindowtk
++from taskcoachlib.guitk import idlecontrollertk, mainwindowtk
+ # from taskcoachlib.guitk import iocontrollertk
+ 
+-# Remplacement de la création de IdleController par:
+-from taskcoachlib.powermgt import idletk
+ 
+ log = logging.getLogger(__name__)
+ 
+@@ -487,20 +485,11 @@ class TkinterApplication(
+         # self.root.iconphoto(False, artprovider.iconBundle("taskcoach"))
+         # self.root.iconphoto(False, artprovidertk.iconBundle("taskcoach"))  # TODO : problème d'Image non trouvée !
+ 
+-        # Initialize IdleNotifier *after* MainWindow  -> A mettre dans une méthode !
+-        self.idle_notifier = idletk.IdleNotifier(
+-            root=self.root,
+-            min_idle_time=self.settings.getint("feature", "minidletime") * 60,
+-        )  # Minutes to seconds
+-
+-        # self.idle_controller = guitk.idlecontroller.IdleController(mainWindow=app, settings=self.settings, effortList=self.taskFile.efforts())  # a verif l'ordre des arguments !
+-        self.idle_controller = guitk.idlecontrollertk.IdleController(
+-            # mainWindow=self.mainwindow,
++        self.idle_controller = idlecontrollertk.IdleController(
+             mainWindow=self.root,
+             settings=self.settings,
+             effortList=self.taskFile.efforts(),
+-        )  # a verif l'ordre des arguments !
+-        self.idle_notifier.start()  # Démarrer la surveillance !
++        )
+ 
+         # self.__wx_app.SetTopWindow(self.mainwindow) n'a pas d'équivalent direct
+         self.__init_spell_checking()
+@@ -753,9 +742,11 @@ class TkinterApplication(
+         return True
+ 
+     def OnQuit(self):
+-        """Stop the IdleNotifier before quitting."""
+-        if hasattr(self, "idle_notifier") and self.idle_notifier:
+-            self.idle_notifier.stop()
++        """Libère le contrôleur après confirmation de la fermeture."""
++        controller = getattr(self, "idle_controller", None)
++        if controller is not None:
++            controller.stop()
++            self.idle_controller = None
+ 
+     # Méthode de singleton.py !:
+     # # @staticmethod
+diff --git a/taskcoach/taskcoachlib/guitk/idlecontrollertk.py b/taskcoach/taskcoachlib/guitk/idlecontrollertk.py
+index 5893057..19d4e10 100644
+--- a/taskcoach/taskcoachlib/guitk/idlecontrollertk.py
++++ b/taskcoach/taskcoachlib/guitk/idlecontrollertk.py
+@@ -36,13 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ # car je n'ai pas les détails de son implémentation dans le contexte Tkinter.
+ # TODO : Il se peut que vous deviez ajuster cela en fonction de votre structure de code pour les notifications.
+ 
+-# Changements clés :
+-#
+-# IdleController n’hérite désormais que de l’Observer.
+-# Au lieu d’hériter d’IdleNotifier, une instance de IdleNotifier est créée en tant que membre d’IdleController ( self._idle_notifier = idletk. IdleNotifier(root=mainWindow, min_idle_time=min_idle_time)).
+-# Les méthodes poweroff, poweron, pause et resume appellent désormais les méthodes correspondantes sur l’instance self._idle_notifier.
+-
+-import logging
+ from taskcoachlib.command import (
+     NewEffortCommand,
+     EditEffortStopDateTimeCommand,
+@@ -51,15 +44,12 @@ from taskcoachlib.domain import effort, date
+ from taskcoachlib.i18n import _
+ 
+ # from taskcoachlib.notify import NotificationFrameBase, NotificationCenter  # En cours de conversion
+-from taskcoachlib.notify import notifier_universaltk
+ from taskcoachlib.patterns import Observer
+ from taskcoachlib.powermgt import idletk
+ from pubsub import pub
+ from taskcoachlib import render
+ import tkinter as tk
+-from tkinter import messagebox
+ 
+-log = logging.getLogger(__name__)
+ 
+ 
+ # class WakeFromIdleFrame(NotificationFrameBase):
+@@ -138,16 +128,12 @@ class WakeFromIdleFrame(tk.Toplevel):
+         """
+         Action pour le bouton "Do nothing".
+         """
+-        if self._effort in self._displayed:
+-            self._displayed.remove(self._effort)
+         self.DoClose()
+ 
+     def DoStopAt(self):
+         """
+         Action pour le bouton "Stop it at...".
+         """
+-        if self._effort in self._displayed:
+-            self._displayed.remove(self._effort)
+         EditEffortStopDateTimeCommand(
+             newValue=self._idleTime, items=[self._effort]
+         ).do()
+@@ -157,8 +143,6 @@ class WakeFromIdleFrame(tk.Toplevel):
+         """
+         Action pour le bouton "Stop it at... and resume Now".
+         """
+-        if self._effort in self._displayed:
+-            self._displayed.remove(self._effort)
+         EditEffortStopDateTimeCommand(
+             newValue=self._idleTime, items=[self._effort]
+         ).do()
+@@ -169,6 +153,7 @@ class WakeFromIdleFrame(tk.Toplevel):
+         """
+         Ferme la fenêtre.
+         """
++        self._displayed.discard(self._effort)
+         self.destroy()
+ 
+ 
+@@ -184,27 +169,25 @@ class IdleController(Observer):
+         self._effortList = effortList
+         self._displayed = set()
+ 
+-        # super().__init__(self._mainWindow)
+-        # super().__init__(mainWindow)
+-        min_idle_time = settings.getint("feature", "minidletime") * 60
+-        # IdleNotifier.__init__(self, root=mainWindow, min_idle_time=min_idle_time)
++        super().__init__()
++        self._suspended = False
++        self._stopped = False
+         self._idle_notifier = idletk.IdleNotifier(
+-            root=mainWindow, min_idle_time=min_idle_time
++            mainWindow, self.getMinIdleTime(), on_wake=self.wake
+         )
+-        # Observer.__init__(self)
+-        super().__init__()
+ 
+         self.__tracker = effort.EffortListTracker(self._effortList)
+         self.__tracker.subscribe(self.__onTrackedChanged, "effortlisttracker")
+ 
+         pub.subscribe(self.poweroff, "powermgt.off")
+         pub.subscribe(self.poweron, "powermgt.on")
++        self.__onTrackedChanged(self.__tracker.trackedEfforts())
+ 
+     def __onTrackedChanged(self, efforts):
+         """
+         Gère les changements dans la liste des efforts suivis.
+         """
+-        if len(efforts):
++        if efforts and not self._suspended:
+             self.resume()
+         else:
+             self.pause()
+@@ -230,45 +213,41 @@ class IdleController(Observer):
+             if effort not in self._displayed:
+                 self._displayed.add(effort)
+                 # Remplace le cadre de notification wxPython par Tkinter
+-                frm = WakeFromIdleFrame(
++                WakeFromIdleFrame(
+                     parent=self._mainWindow,
+                     idleTime=date.DateTime.fromtimestamp(self._lastActivity),
+                     effort=effort,
+                     displayedEfforts=self._displayed,
+                     title=_("Notification"),
+                 )
+-                # La ligne ci-dessous est une version simplifiée de NotificationCenter().NotifyFrame(frm)
+-                # car nous ne savons pas comment NotificationCenter est implémenté dans Tkinter
+-                self._mainWindow.after(0, lambda: None)
+-                # NotificationCenter().NotifyFrame(frm)
+ 
+     def poweroff(self):
+-        """Called when a 'powermgt.off' message is received."""
+-        # print("Power Off signal received (IdleController)")
+-        log.debug("Power Off signal received (IdleController)")
+-        self.pause()  # Pause the idle checker when powering off
+-        self._idle_notifier.stop()
++        """Suspend la surveillance pendant la veille du système."""
++        self._suspended = True
++        self.pause()
+ 
+     def poweron(self):
+-        """Called when a 'powermgt.on' message is received."""
+-        # print("Power On signal received (IdleController)")
+-        log.debug("Power On signal received (IdleController)")
+-        self.resume()  # Resume the idle checker when powering on
+-        self._idle_notifier.start()
++        """Rétablit la surveillance si un effort est encore suivi."""
++        self._suspended = False
++        self.__onTrackedChanged(self.__tracker.trackedEfforts())
+ 
+     def pause(self):
+-        """Pause the idle checker."""
+-        log.debug("Idle checker paused (IdleController).")
+-        # Implement any logic to pause the idle checker (e.g., stop the timer)
++        """Suspend temporairement la surveillance."""
+         self._idle_notifier.stop()
+ 
+     def resume(self):
+-        """Resume the idle checker."""
+-        log.debug("Idle checker resumed (IdleController).")
+-        # Implement any logic to resume the idle checker (e.g., start the timer)
+-        self._idle_notifier.start()
++        """Active la surveillance tant que le contrôleur est en service."""
++        if not self._stopped and not self._suspended:
++            self._idle_notifier.min_idle_time = self.getMinIdleTime()
++            self._idle_notifier.start()
+ 
+     def stop(self):
+-        """Arrête le Contrôleur pour l'inactivité du système."""
+-        log.debug("Idle checker and IdleController stop.")
+-        self._idle_notifier.stop()
++        """Annule le rappel Tk et détache les observateurs de cette session."""
++        if self._stopped:
++            return
++        self._stopped = True
++        self.pause()
++        self.__tracker.unsubscribe(self.__onTrackedChanged, "effortlisttracker")
++        self.__tracker.removeInstance()
++        pub.unsubscribe(self.poweroff, "powermgt.off")
++        pub.unsubscribe(self.poweron, "powermgt.on")
+diff --git a/taskcoach/taskcoachlib/guitk/mainwindowtk.py b/taskcoach/taskcoachlib/guitk/mainwindowtk.py
+index a71fbc1..411b97a 100644
+--- a/taskcoach/taskcoachlib/guitk/mainwindowtk.py
++++ b/taskcoach/taskcoachlib/guitk/mainwindowtk.py
+@@ -184,7 +184,6 @@ from taskcoachlib import application, meta, operating_system
+ from taskcoachlib.config.settings import Settings
+ from taskcoachlib.guitk import (
+     artprovidertk,
+-    idlecontrollertk,
+     iocontrollertk,
+     remindercontrollertk,
+     statustk,
+@@ -226,7 +225,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
+         reminderController : Gère les rappels de tâches.
+         bonjourRegister : Service Bonjour pour la synchronisation iPhone.
+         bonjourAcceptor : Accepte les connexions iPhone.
+-        _idleController : Gère les actions d'inactivité (suivi du temps).
+     """
+ 
+     def __init__(self, parent, iocontroller, taskFile, settings: Settings, *args, **kwargs):
+@@ -249,7 +247,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
+             __shutdown (bool) : Indicateur indiquant si l'application est en cours d'arrêt (initialisé à False).
+             bonjourRegister : Service Bonjour pour la synchronisation avec un iPhone (None par défaut).
+             bonjourAcceptor : Accepte les connexions Bonjour pour la synchronisation (None par défaut).
+-            _idleController : Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches.
+ 
+         Composants créés :
+             - Barre d'état (status bar).
+@@ -311,15 +308,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
+         # Enregistrement pour les changements de composants
+         self.__register_for_window_component_changes()
+ 
+-        # Initialisation du contrôleur d'inactivité
+-        # Contrôleur d'inactivité utilisé pour suivre les efforts sur les tâches. :
+-        log.debug(
+-            "MainWindow: Initialise le contrôleur d'inactivité pour le suivi des efforts"
+-        )
+-        self._idleController = idlecontrollertk.IdleController(
+-            self.parent, self.settings, self.taskFile.efforts()
+-        )
+-
+         # Vérification XFCE4
+         self.parent.after(100, self.checkXFCE4)
+ 
+@@ -1042,7 +1030,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
+             #         self.taskFile.stop()
+             #     except Exception:
+             #         log.exception("Erreur pendant l'arrêt de TaskFile")
+-            #     self._idleController.stop()
+             #     # self.parent.destroy()
+             #     try:
+             #         if self.parent.winfo_exists():
+@@ -1062,7 +1049,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
+             #         self.taskFile.stop()
+             #     except Exception:
+             #         log.exception("Erreur pendant l'arrêt de TaskFile")
+-            #     self._idleController.stop()
+             #     # self.parent.destroy()
+             #     try:
+             #         if self.parent.winfo_exists():
+@@ -1079,12 +1065,6 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
+         finally:
+             self._closing = False
+ 
+-        # self._idleController.stop()
+-        # Sécuriser le contrôleur d'inactivité
+-        idle_controller = getattr(self, "_idleController", None)
+-
+-        if idle_controller is not None:
+-            idle_controller.stop()
+         log.info("MainWindow.onClose: Fenêtre principale fermée !")
+ 
+     def show(self):
+diff --git a/taskcoach/taskcoachlib/powermgt/idletk.py b/taskcoach/taskcoachlib/powermgt/idletk.py
+index db0cd81..27cce1f 100644
+--- a/taskcoach/taskcoachlib/powermgt/idletk.py
++++ b/taskcoach/taskcoachlib/powermgt/idletk.py
+@@ -17,19 +17,9 @@ GNU General Public License for more details.
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ """
+-# Points Clés des Modifications à idletk.py:
+-#
+-# Héritage: La classe IdleNotifier hérite maintenant uniquement de object et utilise une instance de IdleQuery pour obtenir le temps d'inactivité.
+-# pubsub: Les méthodes sleep et wake envoient des messages pubsub ("powermgt.off" et "powermgt.on").
+-# Initialisation: Le temps d'inactivité minimum est passé au constructeur.
+-# Logging: Ajout de logs pour faciliter le débogage.
+-
+-import sys
+ import time
+-import threading
+ from tkinter import Tk
+ from ctypes import *
+-from pubsub import pub
+ from taskcoachlib import operating_system
+ import logging
+ 
+@@ -149,145 +139,50 @@ else:
+ 
+ 
+ # ==============================================================================
+-# La classe IdleNotifier est maintenant indépendante de la GUI pour une meilleure
+-# portabilité et utilise un thread pour la détection d'inactivité.
+-# Elle est conçue pour être utilisée avec n'importe quelle boucle d'événements Tkinter.
+-# 20/08/2025 Elle N'hérite PLUS d'IdleQuery.
+-
+-# class IdleNotifier(IdleQuery):
+-class IdleNotifier():
+-    STATE_SLEEPING = 0
+-    STATE_AWAKE = 1
+-
+-    # def __init__(self, root: Tk):
+-    def __init__(self, root: Tk, min_idle_time: int):
+-        # super(IdleNotifier, self).__init__() # No longer inheriting from IdleQuery
+-        self.idle_query = IdleQuery()  # Instance de IdleQuery pour obtenir le temps d'inactivité
+-        self.root = root  # Fenêtre principale Tkinter
+-        self.min_idle_time = min_idle_time  # Temps minimum en secondes
+-        self.state = self.STATE_AWAKE
+-        self.lastActivity = time.time()
+-        self.goneToSleep = None
+-        self._check_interval = 1000  # Intervalle de vérification en ms (1 seconde)
+-        self._thread = None
+-        self._running = False
+-
+-        self.bind_events()
+-        log.debug("IdleNotifier initialisé.")
+-
+-    def bind_events(self):
+-        """
+-        Lie les événements de la fenêtre principale pour détecter l'activité.
+-        """
+-        self.root.bind('<Motion>', self._on_activity)
+-        self.root.bind('<KeyPress>', self._on_activity)
+-
+-    def _on_activity(self, event):
+-        """
+-        Met à jour le timestamp de la dernière activité.
+-        """
+-        self.lastActivity = time.time()
+-        # log.debug("Activité détectée, mise à jour du timestamp.")
++class IdleNotifier:
++    """Sonde l'inactivité système depuis la boucle principale Tk."""
++
++    def __init__(self, root: Tk, min_idle_time: int, on_wake=None):
++        self.root = root
++        self.min_idle_time = min_idle_time
++        self.idle_query = IdleQuery()
++        self._on_wake = on_wake
++        self._after_id = None
++        self._idle_since = None
++        self._check_interval = 1000
+ 
+     def start(self):
+-        """
+-        Démarre la détection d'inactivité.
+-        """
+-        if not self._running:
+-            self._running = True
+-            self._thread = threading.Thread(target=self._run_idle_check)
+-            self._thread.daemon = True
+-            self._thread.start()
+-            log.info("Détection d'inactivité démarrée dans un thread.")
++        """Programme une seule vérification périodique."""
++        if self._after_id is None:
++            self._after_id = self.root.after(self._check_interval, self._check)
+ 
+     def stop(self):
+-        """
+-        Arrête la détection d'inactivité.
+-        """
+-        self._running = False
+-        if self._thread:
+-            self._thread.join()
+-            self._thread = None
+-            log.info("Détection d'inactivité arrêtée et thread terminé.")
+-
+-    def _run_idle_check(self):
+-        """
+-        Boucle de vérification d'inactivité dans un thread séparé.
+-        """
+-        while self._running:
+-            self._check()
+-            time.sleep(self._check_interval / 1000)
++        """Annule le prochain rappel et termine la période d'inactivité."""
++        if self._after_id is not None:
++            self.root.after_cancel(self._after_id)
++            self._after_id = None
++        self._idle_since = None
+ 
+     def _check(self):
+-        """
+-        Vérifie l'état d'inactivité et appelle les méthodes sleep/wake.
+-        """
+-        # current_idle_seconds = self.getIdleSeconds()
+-        current_idle_seconds = self.idle_query.getIdleSeconds()
+-        if self.state == self.STATE_AWAKE and current_idle_seconds >= self.getMinIdleTime():
+-            self.goneToSleep = self.lastActivity
+-            self.state = self.STATE_SLEEPING
+-            self.sleep()
+-            log.info("Passage en état d'inactivité.")
+-        elif self.state == self.STATE_SLEEPING and current_idle_seconds < self.getMinIdleTime():
+-            self.state = self.STATE_AWAKE
+-            self.wake(self.goneToSleep)
+-            log.info("Réveil de l'état d'inactivité.")
+-
+-    def getMinIdleTime(self):
+-        """
+-        Doit retourner le temps minimum en secondes avant de passer en inactivité.
+-        """
+-        # raise NotImplementedError
+-        return self.min_idle_time
+-
+-    def sleep(self):
+-        """
+-        Appelée lorsque le temps d'inactivité minimum s'est écoulé sans aucune
+-        saisie de l'utilisateur.
+-        """
+-        # pass
+-        log.info("Going to sleep...")
+-        # Envoyer un message à travers pubsub
+-        pub.sendMessage("powermgt.off")
++        """Mémorise la dernière activité système et signale la reprise une fois."""
++        # Programmer avant la notification permet à son destinataire d'annuler
++        # le prochain rappel, même pendant le traitement du réveil.
++        self._after_id = None
++        self.start()
++        idle_seconds = self.idle_query.getIdleSeconds()
++        if idle_seconds >= self.min_idle_time:
++            if self._idle_since is None:
++                self._idle_since = time.time() - idle_seconds
++        elif self._idle_since is not None:
++            timestamp = self._idle_since
++            self._idle_since = None
++            if self._on_wake is not None:
++                self._on_wake(timestamp)
+ 
+-    def wake(self, timestamp):
+-        """
+-        Appelée lorsque l'ordinateur n'est plus en inactivité.
+-        """
+-        # pass
+-        log.info(f"Waking up! Was idle since {timestamp}")
+-        # Envoyer un message à travers pubsub
+-        pub.sendMessage("powermgt.on")
+-
+-
+-# ==============================================================================
+-# Exemple d'utilisation
+ 
+ if __name__ == "__main__":
+-    class MyIdleNotifier(IdleNotifier):
+-        # def getMinIdleTime(self):
+-        #     return 5  # 5 secondes pour les tests
+-        #
+-        # def sleep(self):
+-        #     print("Going to sleep...")
+-        #
+-        # def wake(self, timestamp):
+-        #     print(f"Waking up! Was idle since {timestamp}")
+-        def __init__(self, root: Tk):
+-            super().__init__(root, min_idle_time=5)  # 5 secondes pour les tests
+-
+     root = Tk()
+     root.title("Idle Notifier Test")
+-    root.geometry("400x200")
+-
+-    notifier = MyIdleNotifier(root)
++    notifier = IdleNotifier(root, 5, lambda since: print("Inactif depuis", since))
+     notifier.start()
+-
+-    print("Déplacez la souris ou appuyez sur une touche pour réinitialiser le temps d'inactivité.")
+-    print("Le programme passera en état 'inactif' après 5 secondes d'inactivité.")
+-
+     root.mainloop()
+-
+-    # Arrêtez le thread de détection d'inactivité à la fin du programme.
+-    notifier.stop()
