@@ -969,7 +969,8 @@ class Application(ApplicationInterface, metaclass=patterns.Singleton):
         log.debug(
             f"Application.init: le fichier à ouvrir est self.taskfile = {self.taskFile.lastFilename()}."
         )
-        self.__auto_saver = persistence.AutoSaver(self.settings)
+        # self.__auto_saver = persistence.AutoSaver(self.settings)  # TODO : La signature d'AutoSaver a changé !
+        self.__auto_saver = persistence.AutoSaver(self.settings, self.__wx_app)
         self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
         self.__auto_backup = persistence.AutoBackup(self.settings)
         # 2. Création IOController
