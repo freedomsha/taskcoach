@@ -1322,10 +1322,15 @@ class PageWithViewer(Page):
         )
 
         # 2. Ajout du Viewer à la page
-        # Nous utilisons la méthode addEntry de la classe Page de base.
-        # growable=True est l'équivalent de flags=[wx.EXPAND]
-        # et permet au Treeview de prendre tout l'espace restant.
-        self.addEntry(self.viewer, growable=True)
+        # # Nous utilisons la méthode addEntry de la classe Page de base.
+        # # growable=True est l'équivalent de flags=[wx.EXPAND]
+        # # et permet au Treeview de prendre tout l'espace restant.
+        # self.addEntry(self.viewer, growable=True)
+        # # Dans Page, addEntry est définie ainsi :
+        # # def addEntry(self, label, widget, row=None, flags=None, growable=False):
+        # # Il manque l'argument obligatoire widget. Dès qu'une page crée son visualiseur, cet appel déclenche donc
+        # # TypeError: Page.addEntry() missing 1 required positional argument: 'widget'
+        self.addEntry(None, self.viewer, growable=True)
 
     def entries(self):
         """Retourne le Viewer comme première entrée pour le focus."""
