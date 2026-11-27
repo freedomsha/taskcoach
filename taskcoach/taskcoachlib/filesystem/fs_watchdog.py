@@ -29,11 +29,14 @@ another instance) and triggers reload prompts.
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from taskcoachlib.powermgt import GUI_NAME
+# from taskcoachlib.powermgt import GUI_NAME
+from taskcoachlib.config.gui import get_gui
 
 # if GUI_NAME == "wx":
+# if get_gui() == "wx":
 #     import wx
 # elif GUI_NAME == "tk":
+# elif get_gui() == "tk":
 #     import tkinter as tk
 
 from taskcoachlib.filesystem import base
@@ -114,11 +117,13 @@ class FilesystemNotifier(base.NotifierBase):
 
     def dispatch_to_main_thread(self, func):
         """Dispatch a function call to the main GUI thread."""
-        if GUI_NAME == "wx":
+        # if GUI_NAME == "wx":
+        if get_gui() == "wx":
             import wx
 
             wx.CallAfter(func)
-        elif GUI_NAME == "tk":
+        # elif GUI_NAME == "tk":
+        elif get_gui() == "tk":
             if self._main_window:
                 self._main_window.after_idle(func)
             else:

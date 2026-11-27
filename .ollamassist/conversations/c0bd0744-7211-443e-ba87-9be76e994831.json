@@ -1,0 +1,15 @@
+{
+  "id" : "c0bd0744-7211-443e-ba87-9be76e994831",
+  "title" : "Dans mainwindowtk, des problèmes bloquants sont présents dan...",
+  "createdAt" : 1791983298546,
+  "updatedAt" : 1792006961387,
+  "messages" : [ {
+    "role" : "USER",
+    "content" : "Dans mainwindowtk, des problèmes bloquants sont présents dans le code actuel :\nmainwindowtk.py utilise encore self.viewer dans __save_perspective, alors que l’attribut créé est self.viewer_container.Peux-tu m'aider à corriger cela ?",
+    "timestamp" : 1792002528584
+  }, {
+    "role" : "USER",
+    "content" : "ça va ?",
+    "timestamp" : 1792006961387
+  } ]
+}

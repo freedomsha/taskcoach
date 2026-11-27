@@ -8,9 +8,9 @@
             <TabSessionState>
               <option name="projectPath" value="$PROJECT_DIR$" />
               <option name="provider" value="claude" />
-              <option name="sessionId" value="8e8866c5-415e-43c3-82f4-d9242c141927" />
+              <option name="sessionId" value="a52f7406-c0d2-40b6-959d-45467859299a" />
               <option name="cwd" value="$PROJECT_DIR$" />
-              <option name="model" value="qwen3-coder[1m]" />
+              <option name="model" value="claude-sonnet-5[1m]" />
               <option name="permissionMode" value="default" />
             </TabSessionState>
           </value>

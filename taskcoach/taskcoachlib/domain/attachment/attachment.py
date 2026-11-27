@@ -120,7 +120,8 @@ from filecmp import cmp
 from functools import total_ordering
 import os
 from urllib.parse import urlparse
-from taskcoachlib import patterns, mailer
+from taskcoachlib import patterns
+# from taskcoachlib import mailer
 from taskcoachlib.domain import base
 from taskcoachlib.i18n import _
 from taskcoachlib.tools import openfile

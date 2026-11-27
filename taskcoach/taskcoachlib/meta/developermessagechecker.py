@@ -16,9 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from taskcoachlib.config.gui import get_gui
+import logging
 from . import data
 import threading
 import urllib.request
+
+log = logging.getLogger(__name__)
 
 
 class DeveloperMessageChecker(threading.Thread):
@@ -27,7 +31,10 @@ class DeveloperMessageChecker(threading.Thread):
     def __init__(self, settings, urlopen=urllib.request.urlopen, call_after=None):
         self.__settings = settings
         self.__urlopen = urlopen
-        self.__call_after = call_after or self.__wx_call_after
+        if get_gui() == "wx":
+            self.__call_after == self.__wx_call_after
+        elif get_gui() == "tk":
+            self.__call_after == self._after_idle
         super().__init__()
 
     @staticmethod  # TODO : vérifie s'il faut le commenter ou non
@@ -59,6 +66,12 @@ class DeveloperMessageChecker(threading.Thread):
         # Must use CallAfter because this is a non-GUI thread.
         return self.__call_after(self.__show_dialog, message, url, show)
 
+    def _after_idle(self, function, *args, **kwargs):
+        """ Use this method for calling GUI methods from a non-GUI thread. """
+        log.debug("DeveloperMessageChecker : Appel de CallAfter version tk.")
+        self.after_idle(function, *args, **kwargs)
+        log.debug("DeveloperMessageChecker : CallAfter passé avec succès.")
+
     @staticmethod
     def __wx_call_after(function, *args, **kwargs):
         """ Use this method for calling GUI methods from a non-GUI thread. """
@@ -76,11 +89,17 @@ class DeveloperMessageChecker(threading.Thread):
 
     def __create_dialog(self, message, url):
         """ Create the message dialog. """
-        import wx
-        from taskcoachlib.gui.dialog import developer_message
-        return developer_message.MessageDialog(wx.GetApp().GetTopWindow(),
-                                               message=message, url=url,
-                                               settings=self.__settings)
+        if get_gui() == "wx":
+            import wx
+            from taskcoachlib.gui.dialog import developer_message
+            return developer_message.MessageDialog(wx.GetApp().GetTopWindow(),
+                                                   message=message, url=url,
+                                                   settings=self.__settings)
+        elif get_gui() == "tk":
+            from taskcoachlib.guitk.dialog import developer_messagetk
+            return developer_messagetk.MessageDialog(self.root.winfo_toplevel(),
+                                                     message=message, url=url,
+                                                     settings=self.__settings)
 
     @staticmethod
     def __parse_message_file(message_file):

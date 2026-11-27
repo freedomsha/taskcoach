@@ -3917,7 +3917,7 @@ class XMLReader(object):  # nouvelle classe
             if size is None:
                 size = 10  # Taille par défaut
 
-            style = tkinter.font.NORMAL
+            style = tkinter.font.ROMAN
             weight = tkinter.font.NORMAL
 
             if "bold" in parts:
@@ -4046,7 +4046,8 @@ class XMLReader(object):  # nouvelle classe
         # mais il n'y a pas de garantie que ces dates seront correctement restaurées.
         # Solution : Envisagez d'utiliser un gestionnaire de contexte
         # ou une autre méthode pour garantir que les dates de modification soient correctement restaurées
-        self.__modification_datetimes[item] = item.modificationDateTime()
+        if item:
+            self.__modification_datetimes[item] = item.modificationDateTime()
         # log.debug(f"XMLReader.__save_modification_datetime: Enregistre {item}.modificationDateTime() = {self.__modification_datetimes[item]}"
         #           f" dans {self}.__modification_datetimes[{item}] "
         #           f"et retourne item = {item}")

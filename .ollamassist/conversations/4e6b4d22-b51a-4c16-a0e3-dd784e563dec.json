@@ -1,0 +1,39 @@
+{
+  "id" : "4e6b4d22-b51a-4c16-a0e3-dd784e563dec",
+  "title" : "Peux-tu me rédiger les docstrings de AUIPaneInfo pour la cla...",
+  "createdAt" : 1794309526061,
+  "updatedAt" : 1795721440096,
+  "messages" : [ {
+    "role" : "USER",
+    "content" : "Peux-tu me rédiger les docstrings de AUIPaneInfo pour la classe, les méthodes et des commentaires pour les méthodes complexes ?",
+    "timestamp" : 1794309606672
+  }, {
+    "role" : "USER",
+    "content" : "Peux-tu me rédiger les docstrings de AUIPaneInfo pour la classe, les méthodes et des commentaires pour les méthodes complexes ?",
+    "timestamp" : 1794309943944
+  }, {
+    "role" : "USER",
+    "content" : "Peux-tu me rédiger les docstrings de la classe AUIPaneInfo ? Ensuite tu feras les méthodes et des commentaires pour les méthodes complexes.",
+    "timestamp" : 1794310330477
+  }, {
+    "role" : "USER",
+    "content" : "Peux-tu me rédiger le docstring de Sorter.setTreeMode ? Ajoutes des commentaires si c'est complexe !",
+    "timestamp" : 1794807802805
+  }, {
+    "role" : "USER",
+    "content" : "En quoi peux-tu m'être utile ? Tu as l'air limité !",
+    "timestamp" : 1794808347130
+  }, {
+    "role" : "USER",
+    "content" : "Alors !",
+    "timestamp" : 1794828209635
+  }, {
+    "role" : "USER",
+    "content" : "Peux-tu résoudre ce problème ? :\n2026-11-17 09:05:27,585 [DEBUG] taskcoachlib.application.tkapplication: TkinterApplication.quitApplication : nettoyage terminé !\n2026-11-17 09:05:27,589 [ERROR] taskcoachlib.guitk.mainwindowtk: MainWindow.onClose : Erreur pendant la fermeture : deletecommand() argument must be str, not method\nTraceback (most recent call last):\n  File \"/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/guitk/mainwindowtk.py\", line 1044, in onClose\n    self.parent.destroy()\n    ~~~~~~~~~~~~~~~~~~~^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 2548, in destroy\n    for c in list(self.children.values()): c.destroy()\n                                           ~~~~~~~~~^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 2833, in destroy\n    for c in list(self.children.values()): c.destroy()\n                                           ~~~~~~~~~^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 2833, in destroy\n    for c in list(self.children.values()): c.destroy()\n                                           ~~~~~~~~~^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 2833, in destroy\n    for c in list(self.children.values()): c.destroy()\n                                           ~~~~~~~~~^^\n  [Previous line repeated 3 more times]\n  File \"/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/widgetstk/tooltiptk.py\", line 346, in destroy\n    self.parent.unbind(\"<Leave>\", self._on_tooltip_leave)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 1582, in unbind\n    self._unbind(('bind', self._w, sequence), funcid)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 1595, in _unbind\n    self.deletecommand(funcid)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^\n  File \"/usr/lib/python3.14/tkinter/__init__.py\", line 710, in deletecommand\n    self.tk.deletecommand(name)\n    ~~~~~~~~~~~~~~~~~~~~~^^^^^^\nTypeError: deletecommand() argument must be str, not method",
+    "timestamp" : 1794902913120
+  }, {
+    "role" : "USER",
+    "content" : "quoi mettre à la place de wx.CallAfter() pour Tkinter ?```py\n            \n```",
+    "timestamp" : 1795721440096
+  } ]
+}

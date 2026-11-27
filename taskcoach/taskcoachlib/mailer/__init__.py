@@ -29,7 +29,11 @@ import urllib.parse
 # from taskcoachlib.thirdparty import chardet
 import chardet
 from taskcoachlib.tools import openfile
-from taskcoachlib.mailer.macmail import getSubjectOfMail
+from taskcoachlib.config.gui import get_gui
+if get_gui() == "wx":
+    from taskcoachlib.mailer.macmail import getSubjectOfMail
+elif get_gui() == "tk":
+    from taskcoachlib.mailer.macmailtk import getSubjectOfMail
 from taskcoachlib.i18n import _
 from taskcoachlib import operating_system
 

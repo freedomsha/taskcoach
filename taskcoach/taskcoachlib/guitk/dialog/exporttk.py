@@ -69,7 +69,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.simpledialog import Dialog
 from taskcoachlib.i18n import _
-from taskcoachlib import meta, widgets
+from taskcoachlib import meta  # , widgetstk
 import typing as t
 
 log = logging.getLogger(__name__)

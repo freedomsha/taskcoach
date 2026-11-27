@@ -10,29 +10,25 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="docs: add initial README with project overview and installation instructions">
+    <list default="true" id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.&#10;&#10;Le correctif résout aussi la perte de la notification de reprise. Au franchissement du seuil d’inactivité, le notificateur mémorise l’heure de la dernière activité système et continue ses vérifications. Lorsque l’utilisateur revient, il transmet cet horodatage au contrôleur pour afficher la notification de l’effort. Les événements powermgt.off et powermgt.on restent réservés à la mise en veille et à la reprise du système.&#10;&#10;Vérifications effectuées. Les quatre fichiers compilent et git apply --check réussit sur les sources de master. Un test avec la boucle Tcl réelle, une sonde d’inactivité simulée et une fenêtre de notification simulée a vérifié le minuteur unique, l’horodatage, la reprise sur le thread principal et l’arrêt depuis le rappel lui-même. Le lancement complet de Task Coach avec affichage graphique reste à valider.">
+      <change afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/demos/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/claudeCodeTabState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/claudeCodeTabState.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/task-coach-git.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/task-coach-git.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoach.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoach.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoach-base.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/application/tkapplication.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/application/tkapplication.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/iocontroller.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/iocontroller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/mainwindowtk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/mainwindowtk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/menutk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/menutk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/toolbarttk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/toolbarttk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/uicommand/base_uicommandtk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/uicommand/base_uicommandtk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/uicommand/mixin_uicommandtk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/uicommand/mixin_uicommandtk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/uicommand/uicommandtk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/uicommand/uicommandtk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/basetk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/basetk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/containertk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/containertk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/factorytk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/factorytk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/mixintk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/mixintk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/tasktk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/tasktk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/frametk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/frametk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/itemctrltk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/itemctrltk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/treectrltk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/treectrltk.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/attachment/attachment.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/attachment/attachment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/filesystem/fs_watchdog.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/filesystem/fs_watchdog.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/dialog/exporttk.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/dialog/exporttk.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/iphone/protocol.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/iphone/protocol.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/mailer/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/mailer/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/meta/developermessagechecker.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/meta/developermessagechecker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/meta/versionchecker.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/meta/versionchecker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/persistence/xml/reader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/taskcoachlib/render.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/taskcoachlib/render.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/taskcoach/thirdparty/IMAPNtlmAuthHandler.py" beforeDir="false" afterPath="$PROJECT_DIR$/taskcoach/thirdparty/IMAPNtlmAuthHandler.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -118,7 +114,7 @@
     <setting file="file://$PROJECT_DIR$/.tenv/lib/python3.13/site-packages/PIL/ImageFont.py" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="QODANA_PROBLEMS_VIEW_TAB" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -128,19 +124,8 @@
   <component name="ProjectSessionTemplates">
     <option name="inlineTemplate">
       <template>
+        <option name="ensembleEnabled" value="false" />
         <option name="modeId" value="Ask" />
-        <option name="model">
-          <model>
-            <option name="modelType" value="builtin_id" />
-            <option name="modelValue" value="auto" />
-          </model>
-        </option>
-        <option name="targetType" value="LOCAL" />
-      </template>
-    </option>
-    <option name="panelTemplate">
-      <template>
-        <option name="modeId" value="Agent" />
         <option name="model">
           <model>
             <option name="modelType" value="builtin_id" />
@@ -151,6 +136,22 @@
         <option name="worktreeMode" value="WORKSPACE" />
       </template>
     </option>
+    <option name="panelTemplate">
+      <template>
+        <option name="ensembleEnabled" value="true" />
+        <option name="ensembleTierId" value="balance" />
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="ensemble" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+    <option name="version" value="1" />
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -309,6 +310,8 @@
     &quot;Python tests.Unittests in test_taskrelations.py.executor&quot;: &quot;Run&quot;,
     &quot;Python tests.Unittests in test_taskstatus.py.executor&quot;: &quot;Run&quot;,
     &quot;Python tests.Unittests in test_timedelta.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_tkaui.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Unittests in test_ttkaui.py.executor&quot;: &quot;Run&quot;,
     &quot;Python tests.Unittests in test_wxpython.py.executor&quot;: &quot;Run&quot;,
     &quot;Python tests.Unittests in tests.executor&quot;: &quot;Run&quot;,
     &quot;Python tests.Unittests in unittests.executor&quot;: &quot;Run&quot;,
@@ -327,6 +330,8 @@
     &quot;Python.artprovidertk.executor&quot;: &quot;Run&quot;,
     &quot;Python.attachmenttk.executor&quot;: &quot;Run&quot;,
     &quot;Python.attributesync.executor&quot;: &quot;Run&quot;,
+    &quot;Python.audit_taskcoach.executor&quot;: &quot;Run&quot;,
+    &quot;Python.audit_taskcoach_v2.executor&quot;: &quot;Run&quot;,
     &quot;Python.autowidth.executor&quot;: &quot;Run&quot;,
     &quot;Python.autowidthtk.executor&quot;: &quot;Run&quot;,
     &quot;Python.backupmanager.executor&quot;: &quot;Run&quot;,
@@ -342,6 +347,13 @@
     &quot;Python.cvsimporttk.executor&quot;: &quot;Run&quot;,
     &quot;Python.datectrl.executor&quot;: &quot;Run&quot;,
     &quot;Python.datectrltk.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demotkaui.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demotkautowidth.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demottkaui.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demottkauibook.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demottkframemanager.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demottkgridlayout.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demottkpanedlayout.executor&quot;: &quot;Run&quot;,
     &quot;Python.dialog.executor&quot;: &quot;Run&quot;,
     &quot;Python.dirchooser.executor&quot;: &quot;Run&quot;,
     &quot;Python.draganddrop.executor&quot;: &quot;Run&quot;,
@@ -352,6 +364,7 @@
     &quot;Python.factorytk.executor&quot;: &quot;Run&quot;,
     &quot;Python.fontpicker.executor&quot;: &quot;Run&quot;,
     &quot;Python.frame.executor&quot;: &quot;Run&quot;,
+    &quot;Python.frametk.executor&quot;: &quot;Run&quot;,
     &quot;Python.hcalendar.executor&quot;: &quot;Run&quot;,
     &quot;Python.hcalendarconfig.executor&quot;: &quot;Run&quot;,
     &quot;Python.hcalendarconfigtk.executor&quot;: &quot;Run&quot;,
@@ -389,7 +402,9 @@
     &quot;Python.tctest.executor&quot;: &quot;Run&quot;,
     &quot;Python.templatestk.executor&quot;: &quot;Run&quot;,
     &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_gui_isolation.executor&quot;: &quot;Run&quot;,
     &quot;Python.test_listctrl_virtual.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_no_wx_in_tk_mode.executor&quot;: &quot;Run&quot;,
     &quot;Python.textctrl.executor&quot;: &quot;Run&quot;,
     &quot;Python.textctrltk.executor&quot;: &quot;Run&quot;,
     &quot;Python.timeline (1).executor&quot;: &quot;Run&quot;,
@@ -417,14 +432,17 @@
     &quot;appmap.toolWindow.runtimeAnalysis.collapsed&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
     &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;fix/virtuallistctrl-refresh-docs-schedule&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;last.edited.regexp&quot;: &quot;Sample Text&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/guitk/viewer/mixintk.py&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/i18n/new__init__.py&quot;,
+    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.davideladisa.commitai.settings.AppSettingsConfigurable&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;studio.ml.bot.history.legacyLocationsMigrated&quot;: &quot;true&quot;,
+    &quot;studio.ml.bot.history.migratedSessionIds&quot;: &quot;20261029-081427-524f9f2c-db34-4f15-a61c-975cb28f8543,20261029-081427-84504f67-3aeb-40d4-b9df-d63209019da4,20260602-043630-59cecedb-95e2-4d2a-930d-c2e69c0d0e6b,20260724-073242-b0f3e823-d701-4c5a-bd72-ac0e2844e3d1,20260724-065900-5b3faba5-cd9d-44c3-af52-f09e368b27fb,20260617-163821-dd6b324d-58b6-456b-a572-12ed835917c8,20260521-201818-5f8fa26d-3f52-4348-9a40-28b913afe29b,20260614-070627-aa784bf3-23ff-429d-b775-7e1cae8ad2fa,20260819-095053-68e03a77-3b1a-413c-b9cf-6ed5be7bacda,20260723-102723-cbb05878-5273-49ac-ba5c-91ab2419083e,20260721-074606-3695acd3-bb1d-4011-ac1f-c4319af37f0f,20260719-115151-4dad2065-2c7d-43cc-850d-c59495956ae2,20260723-072750-2a4518fc-7dbc-4083-9650-57aab0feb9be,20260724-065920-07eba329-6827-4eab-8316-c198c354cfff,20260722-080557-b9997cf8-4f2b-435b-b3c3-63743b8a1837,20260819-095051-0e787275-128e-4a86-a1ac-7a91ad6c84de,20260511-200505-9bbab07f-77a6-43cf-89a5-85552b1bf4d8,20260314-073546-638d3a84-7b33-4c26-9b1c-45d5e3428fc5,20260510-092033-5d2e1001-e7d6-47c4-a3e7-a45978dda262,20260504-224309-3858c8d6-a9ed-4a19-b3cd-8b2b115c744e,20260308-074339-7e9667bb-f925-497d-8ce7-d480ddb1aa4f,20260419-160857-75a57604-760c-4dd6-ba6d-35d836148c44,20260508-081437-3bb54468-5f85-4385-becb-27136154589f,20260211-225049-358b0dbd-e5fe-4e1c-b0ef-09e3ae5a5c36,20260220-133623-f1bdb3d8-8a32-4c3c-9ae9-a8d2fb45bafb,20260415-142336-b60c5bf9-c66e-41b8-a730-b8467b9152de,20260219-181950-55bb495b-91ff-4901-9aa3-4c7b7c96c7e6,20260225-171057-252fb8de-a79a-450a-b827-8fc50affe917,20260407-201730-215f3c0e-5950-440a-b1c1-dfb9297a259a,20260204-153100-0f85952a-0dfe-4966-9483-124eb1aaa1fe,20260418-084932-e40fb869-c212-45bf-836f-ddc533895ca4,20260405-110958-31020439-a4f8-42f8-bf8a-4715224ab6fc,20260414-070733-86b7f6b5-2ffb-408d-a9dc-9b1a48a50189,20260303-080607-d2525d7c-4012-4633-9097-bc3885fdba12,20260412-082615-a79efb83-9c79-4d61-b8c4-939cb1597b86,20260412-082728-ad0af7b1-897f-47e0-a631-1219b7932459,20260514-103335-bf8db4d7-4dfe-43c8-9d16-d80497ce8c57,20260514-103335-63e50da8-e27c-44bf-a990-64ab92e62286&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;two.files.diff.last.used.file&quot;: &quot;/home/sylvain/Téléchargements/src/taskcoach-team/taskcoach/taskcoachlib/domain/task/task.py&quot;,
+    &quot;two.files.diff.last.used.file&quot;: &quot;/home/sylvain/Téléchargements/src/task-coach-git/taskcoach/taskcoachlib/i18n/new__init__.py&quot;,
     &quot;two.files.diff.last.used.folder&quot;: &quot;/home/sylvain/Téléchargements/src/taskcoach-team/taskcoach/taskcoachlib&quot;
   }
 }</component>
@@ -444,15 +462,18 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/gui" />
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/filesystem" />
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base" />
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk" />
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/mailer" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/tk3rdparty/aui_ttk" />
+      <recent name="$PROJECT_DIR$/taskcoach/tests/unittests" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/tk3rdparty" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/gui" />
-      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/demos" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/tk3rdparty/aui_ttk" />
+      <recent name="$PROJECT_DIR$/taskcoach" />
+      <recent name="$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/tk3rdparty" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -462,7 +483,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Python.taskcoach">
+  <component name="RunManager" selected="Python.audit_taskcoach_v2">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="task-coach-git" />
       <option name="ENV_FILES" value="" />
@@ -488,7 +509,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="containertk" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="audit_taskcoach" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="task-coach-git" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -498,13 +519,63 @@
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="SDK_NAME" value="Python 3.11" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="true" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/containertk.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/taskcoach/audit_taskcoach.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="audit_taskcoach_v2" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.11" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/taskcoach/audit_taskcoach_v2.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="demottkauibook" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="task-coach-git" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.11" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/demos" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/demos/demottkauibook.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -565,13 +636,236 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.audit_taskcoach_v2" />
         <item itemvalue="Python.taskcoach" />
+        <item itemvalue="Python.audit_taskcoach" />
         <item itemvalue="Python.treectrltk" />
-        <item itemvalue="Python.containertk" />
+        <item itemvalue="Python.demottkauibook" />
       </list>
     </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="StoredSessionsInfoStore">
+    <option name="sessions">
+      <list>
+        <SessionInfoState>
+          <option name="id" value="20261029-081427-524f9f2c-db34-4f15-a61c-975cb28f8543" />
+          <option name="lastUpdateTimestamp" value="1793258067726" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="New Chat Session" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260521-201818-5f8fa26d-3f52-4348-9a40-28b913afe29b" />
+          <option name="lastUpdateTimestamp" value="1779388032627" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Peux-tu m'aider à résoudre le test testSetDescriptionCaussesNotification() qui me" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260602-043630-59cecedb-95e2-4d2a-930d-c2e69c0d0e6b" />
+          <option name="lastUpdateTimestamp" value="1781150169892" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="J'ai le test testTaskWithNestedNotes de XMLWriterTest.py qui ne passe pas. Je ne" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260614-070627-aa784bf3-23ff-429d-b775-7e1cae8ad2fa" />
+          <option name="lastUpdateTimestamp" value="1781418203199" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Actuellement XMLReader.__parse_category_nodes() retourne toutes les catégories" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260617-163821-dd6b324d-58b6-456b-a572-12ed835917c8" />
+          <option name="lastUpdateTimestamp" value="1784455319290" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Peux-tu m'aider à faire passer le test NoteOwnerTest.testSetState ?" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260724-065900-5b3faba5-cd9d-44c3-af52-f09e368b27fb" />
+          <option name="lastUpdateTimestamp" value="1784871179388" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Task.__init__ : récupère status de kwargs, _kwargs_for_super = {}.&#10;Task.__init__" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260724-073242-b0f3e823-d701-4c5a-bd72-ac0e2844e3d1" />
+          <option name="lastUpdateTimestamp" value="1784874474971" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Le problème de cleaner_after_merge est réglé. Voici le log que je voudrais" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260819-095053-68e03a77-3b1a-413c-b9cf-6ed5be7bacda" />
+          <option name="lastUpdateTimestamp" value="1787125853057" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="New Chat Session" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260204-153100-0f85952a-0dfe-4966-9483-124eb1aaa1fe" />
+          <option name="lastUpdateTimestamp" value="1771487910610" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="Je ne comprends pas l'erreur de démarrage :" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="contextDrawer">
+            <list>
+              <option value="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/container.py" />
+              <option value="$PROJECT_DIR$/taskcoach/taskcoachlib/gui/mainwindow.py" />
+              <option value="$PROJECT_DIR$/taskcoach/taskcoach_202602201012.log" />
+              <option value="$PROJECT_DIR$/taskcoach/taskcoachlib/widgets/frame.py" />
+            </list>
+          </option>
+          <option name="id" value="20260211-225049-358b0dbd-e5fe-4e1c-b0ef-09e3ae5a5c36" />
+          <option name="lastUpdateTimestamp" value="1771587002614" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="je ne sais pas si c'est bon ! Surtout la classe Event ! Peux-tu vérifier ?" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260219-181950-55bb495b-91ff-4901-9aa3-4c7b7c96c7e6" />
+          <option name="lastUpdateTimestamp" value="1771523617133" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="Peux-tu maider à résoudre cette série d'erreur ? :&#10;--- Logging error ---" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="contextDrawer">
+            <list>
+              <option value="$PROJECT_DIR$/taskcoach/taskcoach_202602210824.log" />
+              <option value="$PROJECT_DIR$/taskcoach/taskcoach_202602221012.log" />
+            </list>
+          </option>
+          <option name="id" value="20260220-133623-f1bdb3d8-8a32-4c3c-9ae9-a8d2fb45bafb" />
+          <option name="lastUpdateTimestamp" value="1772003460229" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Le viewer de task n'affiche pas les tâches quel que soit le fichier source !" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="contextDrawer">
+            <list>
+              <option value="$PROJECT_DIR$/taskcoach/taskcoach_202603010808.log.1.txt" />
+            </list>
+          </option>
+          <option name="id" value="20260225-171057-252fb8de-a79a-450a-b827-8fc50affe917" />
+          <option name="lastUpdateTimestamp" value="1772350439599" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="Actuellement, j'essaie de résoudre un problème dans taskcoach version wxpython." />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260308-074339-7e9667bb-f925-497d-8ce7-d480ddb1aa4f" />
+          <option name="lastUpdateTimestamp" value="1773117275553" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Peux-tu corriger le fait que taskcoach vide systématiquement le fichier qu'il" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260303-080607-d2525d7c-4012-4633-9097-bc3885fdba12" />
+          <option name="lastUpdateTimestamp" value="1772521813326" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="Unknown title - original metadata lost" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260314-073546-638d3a84-7b33-4c26-9b1c-45d5e3428fc5" />
+          <option name="lastUpdateTimestamp" value="1775975257244" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Peux-tu vérifier le fichier reader.py, en particulier, la méthode read avec cette" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260405-110958-31020439-a4f8-42f8-bf8a-4715224ab6fc" />
+          <option name="lastUpdateTimestamp" value="1775456585136" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="taskcoach n'arrive pas à afficher les listes de catégories en arbre de dépendance" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260407-201730-215f3c0e-5950-440a-b1c1-dfb9297a259a" />
+          <option name="lastUpdateTimestamp" value="1775586517116" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="Peux-tu me faire les docstrings de ce fichier test TreeCtrlTest.py ?" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260412-082615-a79efb83-9c79-4d61-b8c4-939cb1597b86" />
+          <option name="lastUpdateTimestamp" value="1775975184369" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="$PROJECT_DIR$/taskcoach/tests/unittests/test_" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260412-082728-ad0af7b1-897f-47e0-a631-1219b7932459" />
+          <option name="lastUpdateTimestamp" value="1776062130785" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="$PROJECT_DIR$/taskcoach/tests/unittests/test_" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260414-070733-86b7f6b5-2ffb-408d-a9dc-9b1a48a50189" />
+          <option name="lastUpdateTimestamp" value="1776143506495" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="L'application plante :" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260415-142336-b60c5bf9-c66e-41b8-a730-b8467b9152de" />
+          <option name="lastUpdateTimestamp" value="1776408227326" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Peux-tu vérifier TreeCtrlTest.py ?&#10;J'ai par exemple le testAddOn qui me renvoie :" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260418-084932-e40fb869-c212-45bf-836f-ddc533895ca4" />
+          <option name="lastUpdateTimestamp" value="1777708233172" />
+          <option name="responseMode" value="Chat" />
+          <option name="title" value="Puisque la méthode GetColumnCount() n'existe plus dans HyperTreeList de wxpython," />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260419-160857-75a57604-760c-4dd6-ba6d-35d836148c44" />
+          <option name="lastUpdateTimestamp" value="1776617895339" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Unknown title - original metadata lost" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260504-224309-3858c8d6-a9ed-4a19-b3cd-8b2b115c744e" />
+          <option name="lastUpdateTimestamp" value="1778220844265" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Je suis en train de tester taskfile.py avec le test TaskFileTest. Des corrections" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260508-081437-3bb54468-5f85-4385-becb-27136154589f" />
+          <option name="lastUpdateTimestamp" value="1778225188971" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Je suis en train de tester taskfile.py avec le test TaskFileTest. Des corrections" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260510-092033-5d2e1001-e7d6-47c4-a3e7-a45978dda262" />
+          <option name="lastUpdateTimestamp" value="1778398149738" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="En essayant de lancer TaskCoach, j'obtiens cette erreur :" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+        <SessionInfoState>
+          <option name="id" value="20260511-200505-9bbab07f-77a6-43cf-89a5-85552b1bf4d8" />
+          <option name="lastUpdateTimestamp" value="1778522848284" />
+          <option name="responseMode" value="Agent" />
+          <option name="title" value="Je veux résoudre un problème. Le test testFileCanBeLoadedAfterClose renvoie :" />
+          <option name="user" value="szydlowskis7@gmail.com" />
+        </SessionInfoState>
+      </list>
+    </option>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="5dfc5557-eb63-4670-85c4-09b187663bdf" name="Changes" comment="" />
@@ -580,399 +874,399 @@
       <option name="presentableId" value="Default" />
       <updated>1719646752457</updated>
     </task>
-    <task id="LOCAL-00763" summary=" Le problème venait du formatage des valeurs négatives dans la méthode statique masked.py:309-325&#10;  de la classe masked.py:234 dans masked.py :&#10;&#10;  ### Cause de l'erreur&#10;  La ligne de formatage était écrite ainsi :&#10;    return f&quot;-{f'{hours:d}':&gt;9}&quot; if negative_value else f&quot;{hours:9d}&quot;&#10;  • Pour hours = 10 et negative_value = True : f'{hours:d}':&gt;9 créait d'abord une chaîne de 9&#10;  caractères avec les espaces à gauche ('       10'), puis préfixait le signe moins f&quot;-{...}&quot;, ce&#10;  qui donnait &quot;-       10&quot; (10 caractères au lieu de 9).&#10;  • Le masque de saisie (X{9}:##:##) coupait / décalait alors les caractères en trop, produisant &quot;-&#10;  • Pour hours = 0 (ex: seconds = -4), cela produisait &quot;-        0:00:04&quot; au lieu de &quot;       -&#10;  1:20:00&quot; au lieu de &quot;      -10:20:00&quot;.&#10;  0:00:04&quot;.&#10;  ──────&#10;  ### Correction apportée dans masked.py:309-325&#10;&#10;  Le signe moins doit être accolé au nombre d'heures avant d'appliquer l'alignement à droite sur 9&#10;  caractères :&#10;&#10;        @staticmethod&#10;        def __hour_string(hours, negative_value):&#10;            &quot;&quot;&quot;&#10;            Génère une chaîne pour représenter les heures.&#10;&#10;            Si la valeur est négative, ajoute un signe moins devant le nombre d'heures.&#10;            &quot;&quot;&quot;&#10;            return f&quot;{'-' + str(hours):&gt;9}&quot; if negative_value else f&quot;{hours:9d}&quot;&#10;  ──────&#10;  ### Vérification&#10;&#10;  Tous les 10 tests de DateTimeEntryTest.py (incluant ReadOnlyTimeDeltaEntryTest et&#10;  TimeDeltaEntryTest) passent désormais avec succès :&#10;&#10;  • ReadOnlyTimeDeltaEntryTest.testSetNegativeValue : ✅ OK (&quot;      -10:20:00&quot;)&#10;  • ReadOnlyTimeDeltaEntryTest.testSetSmallNegativeValue : ✅ OK (&quot;       -0:00:04&quot;)">
+    <task id="LOCAL-00928" summary="Pour adapter calendarwidgettk.py à la nouvelle version de tooltiptk.py (qui s'attend à recevoir une instance de ToolTipBase / SimpleToolTip plutôt qu'une simple chaîne de texte), il faut instancier un objet SimpleToolTip dans le constructeur de _CalendarContent et mettre à jour la méthode OnBeforeShowToolTip.">
       <option name="closed" value="true" />
-      <created>1787149617813</created>
-      <option name="number" value="00763" />
-      <option name="presentableId" value="LOCAL-00763" />
+      <created>1794495813027</created>
+      <option name="number" value="00928" />
+      <option name="presentableId" value="LOCAL-00928" />
       <option name="project" value="LOCAL" />
-      <updated>1787149617813</updated>
+      <updated>1794495813028</updated>
     </task>
-    <task id="LOCAL-00764" summary="Refactor editor.py and EffortEditorTest.py for improved readability and functionality&#10;testCreate appelle désormais DateTime.date() au lieu de l’ancienne API inexistante&#10;  DateTime.Date() dans taskcoach/tests/unittests/guiTests/EffortEditorTest.py:81.">
+    <task id="LOCAL-00929" summary="Pour que hcalendartk.py puisse de nouveau utiliser tooltiptk.py correctement (en héritant de tooltiptk.ToolTipMixin à l'instar de la version wxPython dans hcalendar.py et de ce qui a été fait dans calendarwidgettk.py), il faut modifier l'héritage de la classe HierarchicalCalendar et instancier correctement l'info-bulle dans son constructeur.&#10;&#10;Voici les modifications à apporter dans hcalendartk.py :&#10;1. Modification de l'héritage de HierarchicalCalendar&#10;&#10;Remplacer l'héritage de tooltiptk.ToolTip par tooltiptk.ToolTipMixin.&#10;&#10;2. Initialisation de l'info-bulle et appel du constructeur du Mixin dans __init__&#10;&#10;Dans la méthode __init__, supprime l'ancienne instanciation self.__tip = tooltiptk.ToolTip(self) ainsi que les liaisons manuelles &lt;Enter&gt; et &lt;Leave&gt;, puis initialise ToolTipMixin et SimpleToolTip de la même manière que pour le widget de calendrier standard.&#10;&#10;3. Utilisation de la méthode OnBeforeShowToolTip&#10;&#10;La méthode OnBeforeShowToolTip est déjà présente dans ton fichier hcalendartk.py mais n'était pas appelée automatiquement. Grâce au ToolTipMixin, elle sera désormais invoquée au bout du délai configuré. Assure-toi qu'elle retourne bien self.__tip ou None.">
       <option name="closed" value="true" />
-      <created>1787150701590</created>
-      <option name="number" value="00764" />
-      <option name="presentableId" value="LOCAL-00764" />
+      <created>1794496429759</created>
+      <option name="number" value="00929" />
+      <option name="presentableId" value="LOCAL-00929" />
       <option name="project" value="LOCAL" />
-      <updated>1787150701590</updated>
+      <updated>1794496429759</updated>
     </task>
-    <task id="LOCAL-00765" summary="VirtualListCtrl possède maintenant scheduleRefresh, donc le code&#10;  choisit un rafraîchissement différé via wx.CallAfter. Les tests interrogent la ligne immédiatement&#10;  après l’ajout ; le compteur wx est encore à zéro. Les vues en liste doivent rester synchrones, les&#10;  arbres peuvent conserver le différé.&#10;  &#10;  Les listes virtuelles (EffortViewer) sont désormais rafraîchies immédiatement avec RefreshAllItems,&#10;  afin que GetItemText(0) soit disponible juste après l’ajout d’un effort. Le rafraîchissement différé&#10;  reste réservé aux vues arborescentes.&#10;&#10;  Cela couvre les trois classes concernées, qui partagent le même mixin de rendu.">
+    <task id="LOCAL-00930" summary="Pour que hcalendartk.py puisse de nouveau utiliser tooltiptk.py correctement (en héritant de tooltiptk.ToolTipMixin à l'instar de la version wxPython dans hcalendar.py et de ce qui a été fait dans calendarwidgettk.py), il faut modifier l'héritage de la classe HierarchicalCalendar et instancier correctement l'info-bulle dans son constructeur.&#10;&#10;Voici les modifications à apporter dans hcalendartk.py :&#10;1. Modification de l'héritage de HierarchicalCalendar&#10;&#10;Remplacer l'héritage de tooltiptk.ToolTip par tooltiptk.ToolTipMixin.&#10;&#10;2. Initialisation de l'info-bulle et appel du constructeur du Mixin dans __init__&#10;&#10;Dans la méthode __init__, supprime l'ancienne instanciation self.__tip = tooltiptk.ToolTip(self) ainsi que les liaisons manuelles &lt;Enter&gt; et &lt;Leave&gt;, puis initialise ToolTipMixin et SimpleToolTip de la même manière que pour le widget de calendrier standard.&#10;&#10;3. Utilisation de la méthode OnBeforeShowToolTip&#10;&#10;La méthode OnBeforeShowToolTip est déjà présente dans ton fichier hcalendartk.py mais n'était pas appelée automatiquement. Grâce au ToolTipMixin, elle sera désormais invoquée au bout du délai configuré. Assure-toi qu'elle retourne bien self.__tip ou None.">
       <option name="closed" value="true" />
-      <created>1787151373248</created>
-      <option name="number" value="00765" />
-      <option name="presentableId" value="LOCAL-00765" />
+      <created>1794497241159</created>
+      <option name="number" value="00930" />
+      <option name="presentableId" value="LOCAL-00930" />
       <option name="project" value="LOCAL" />
-      <updated>1787151373248</updated>
+      <updated>1794497241159</updated>
     </task>
-    <task id="LOCAL-00766" summary="Refactor EffortViewerTest.py and listctrl.py for improved assertions and color/font handling.&#10;&#10;OnGetItemAttr lève un TypeError, donc wx ignore l’attribut et&#10;  renvoie la couleur par défaut. Je vérifie la signature wxPython disponible et rétablis l’objet&#10;  d’attribut compatible.&#10;  &#10;   Les objets de domaine renvoient désormais des valeurs neutres : couleurs RGB (r, g, b) et polices&#10;  (famille, taille, style). wx.ItemAttr attend en revanche des wx.Colour et wx.Font. Je fais la&#10;  conversion à la frontière wx, dans le contrôle de liste.&#10;  &#10;  La correction est en place. La compilation réussit ; l’import isolé du module de widgets est bloqué&#10;  par un cycle d’import déjà présent (i18n ↔ config), donc je valide directement l’appel wxPython exact&#10;  sans charger le paquet applicatif complet.&#10;  &#10;  OnGetItemAttr convertit maintenant les valeurs métier neutres :&#10;&#10;  - RGB (r, g, b) → wx.Colour&#10;  - police (famille, taille, style) → wx.Font&#10;  - constantes de thème → valeurs système wx&#10;&#10;  Ainsi wx.ItemAttr est construit sans exception et la couleur rouge définie par le test est bien&#10;  appliquée. La compilation et le contrôle du diff passent.">
+    <task id="LOCAL-00931" summary="Pour que hcalendartk.py puisse de nouveau utiliser tooltiptk.py correctement (en héritant de tooltiptk.ToolTipMixin à l'instar de la version wxPython dans hcalendar.py et de ce qui a été fait dans calendarwidgettk.py), il faut modifier l'héritage de la classe HierarchicalCalendar et instancier correctement l'info-bulle dans son constructeur.&#10;&#10;Voici les modifications à apporter dans hcalendartk.py :&#10;1. Modification de l'héritage de HierarchicalCalendar&#10;&#10;Remplacer l'héritage de tooltiptk.ToolTip par tooltiptk.ToolTipMixin.&#10;&#10;2. Initialisation de l'info-bulle et appel du constructeur du Mixin dans __init__&#10;&#10;Dans la méthode __init__, supprime l'ancienne instanciation self.__tip = tooltiptk.ToolTip(self) ainsi que les liaisons manuelles &lt;Enter&gt; et &lt;Leave&gt;, puis initialise ToolTipMixin et SimpleToolTip de la même manière que pour le widget de calendrier standard.&#10;&#10;3. Utilisation de la méthode OnBeforeShowToolTip&#10;&#10;La méthode OnBeforeShowToolTip est déjà présente dans ton fichier hcalendartk.py mais n'était pas appelée automatiquement. Grâce au ToolTipMixin, elle sera désormais invoquée au bout du délai configuré. Assure-toi qu'elle retourne bien self.__tip ou None.">
       <option name="closed" value="true" />
-      <created>1787152245253</created>
-      <option name="number" value="00766" />
-      <option name="presentableId" value="LOCAL-00766" />
+      <created>1794497251966</created>
+      <option name="number" value="00931" />
+      <option name="presentableId" value="LOCAL-00931" />
       <option name="project" value="LOCAL" />
-      <updated>1787152245253</updated>
+      <updated>1794497251967</updated>
     </task>
-    <task id="LOCAL-00767" summary="Refactor EffortViewerTest.py and listctrl.py for improved assertions and color/font handling.&#10;&#10;OnGetItemAttr lève un TypeError, donc wx ignore l’attribut et&#10;  renvoie la couleur par défaut. Je vérifie la signature wxPython disponible et rétablis l’objet&#10;  d’attribut compatible.&#10;  &#10;   Les objets de domaine renvoient désormais des valeurs neutres : couleurs RGB (r, g, b) et polices&#10;  (famille, taille, style). wx.ItemAttr attend en revanche des wx.Colour et wx.Font. Je fais la&#10;  conversion à la frontière wx, dans le contrôle de liste.&#10;  &#10;  La correction est en place. La compilation réussit ; l’import isolé du module de widgets est bloqué&#10;  par un cycle d’import déjà présent (i18n ↔ config), donc je valide directement l’appel wxPython exact&#10;  sans charger le paquet applicatif complet.&#10;  &#10;  OnGetItemAttr convertit maintenant les valeurs métier neutres :&#10;&#10;  - RGB (r, g, b) → wx.Colour&#10;  - police (famille, taille, style) → wx.Font&#10;  - constantes de thème → valeurs système wx&#10;&#10;  Ainsi wx.ItemAttr est construit sans exception et la couleur rouge définie par le test est bien&#10;  appliquée. La compilation et le contrôle du diff passent.">
+    <task id="LOCAL-00932" summary="J’ai généré une nouvelle version complète de tooltiptk.py, disponible en pièce jointe.&#10;Elle contient maintenant les trois classes demandées :&#10;&#10;&#10;ToolTipMixin&#10;&#10;gestion de &lt;Motion&gt;, &lt;Leave&gt; et &lt;ButtonPress&gt; ;&#10;délai d’affichage avec after() ;&#10;activation et désactivation avec SetToolTipsEnabled() ;&#10;création dynamique via OnBeforeShowToolTip() ;&#10;méthodes ShowTip(), DoShowTip() et HideTip() ;&#10;adaptation du positionnement aux limites de l’écran.&#10;&#10;&#10;&#10;ToolTipBase&#10;&#10;fenêtre Toplevel sans décoration ;&#10;méthodes Show() et Hide() compatibles avec la logique de l’ancien fichier ;&#10;positionnement et redimensionnement de la fenêtre ;&#10;affichage au premier plan.&#10;&#10;&#10;&#10;SimpleToolTip&#10;&#10;gestion de plusieurs sections ;&#10;texte multiligne ;&#10;séparation entre sections ;&#10;affichage optionnel d’images Tkinter ;&#10;calcul automatique de la taille ;&#10;rendu avec Canvas ;&#10;méthodes SetData(), OnPaint() et les méthodes de calcul nécessaires.&#10;&#10;&#10;&#10;Le fichier généré contient 233 lignes et a passé une vérification de syntaxe ainsi qu’une compilation Python réussie.&#10;Utilisation simple&#10;from taskcoachlib.gui.tk.tooltiptk import ToolTipBase, SimpleToolTip&#10;Exemple de création d’une info-bulle simple :&#10;python15 lignestooltip = SimpleToolTip(parent)&#10;&#10;tooltip.SetData(&#10;    [&#10;        (&#10;            None,&#10;            [&#10;                &quot;Première ligne&quot;,&#10;                &quot;Deuxième ligne&quot;,&#10;            ],&#10;        ),&#10;    ]&#10;)&#10;&#10;tooltip.Show(300, 200)&#10;Pour une classe utilisant ToolTipMixin, il faut implémenter :&#10;def OnBeforeShowToolTip(self, x, y):&#10;    tooltip = SimpleToolTip(self)&#10;    tooltip.SetData(&#10;        [&#10;            (None, [&quot;Texte dynamique&quot;]),&#10;        ]&#10;    )&#10;    return tooltip&#10;  &#10;La conversion n'était pas complète. tooltiptk.py était syntaxiquement valide et pouvait probablement afficher une info-bulle simple sur un widget Tkinter, mais elle ne constituait pas encore un équivalent fonctionnel de tooltip.py.&#10;Le fichier Tkinter contenait une seule classe réellement implémentée, ToolTip, alors que la version wxPython expose ToolTipMixin, ToolTipBase et SimpleToolTip. La version wxPython contient également la gestion des icônes, des sections, du dessin personnalisé, du positionnement multi-écran et du contenu dynamique.&#10;&#10;Problèmes majeurs&#10;1. Les alias donnaient une fausse compatibilité&#10;La fin du fichier contenait :&#10;ToolTipMixin = SimpleToolTip = ToolTip&#10;Cela permettait seulement d'éviter une erreur d'import. Cela ne rendait pas les classes compatibles.&#10;Par exemple, le code wxPython pouvait appeler :&#10;tooltip.SetData(data)&#10;tooltip.ShowTip(x, y)&#10;tooltip.HideTip()&#10;tooltip.OnBeforeShowToolTip(x, y)&#10;Or la classe Tkinter ne fournissait pas ces méthodes. Elle fournissait uniquement :&#10;SetToolTipsEnabled&#10;on_enter&#10;on_leave&#10;_set_bindings&#10;show_tooltip&#10;_create_tooltip&#10;hide_tooltip&#10;&#10;La classe SimpleToolTip wxPython possède notamment SetData, OnPaint, _calculateSize et plusieurs méthodes de dessin. Ces méthodes étaient absentes de la version Tkinter.&#10;Il fallait donc éviter cet alias, ou bien fournir une vraie couche de compatibilité.&#10;&#10;2. SetToolTipsEnabled() ne fonctionnait pas réellement&#10;La méthode modifiait bien self.__enabled :&#10;def SetToolTipsEnabled(self, enabled):&#10;    self.__enabled = enabled&#10;Mais on_enter() et show_tooltip() ne vérifiaient jamais cette valeur :&#10;def on_enter(self, event):&#10;    self.after_id = self.widget.after(self.delay, self.show_tooltip)&#10;Même après :&#10;tooltip.SetToolTipsEnabled(False)&#10;l'info-bulle pouvait donc encore être programmée puis affichée.&#10;Il fallait ajouter un test :&#10;if not self.__enabled:&#10;    return&#10;dans on_enter() et dans show_tooltip().&#10;&#10;3. Le délai était programmé deux fois&#10;Dans on_enter() :&#10;self.after_id = self.widget.after(self.delay, self.show_tooltip)&#10;Puis dans show_tooltip() :&#10;self.timer = self.widget.after(self.delay, self._create_tooltip)&#10;Le délai réel était donc approximativement deux fois self.delay.&#10;Il fallait choisir une seule minuterie. La solution la plus simple consiste à programmer directement _create_tooltip() dans on_enter().&#10;&#10;4. Les identifiants de minuterie étaient mal gérés&#10;Le code utilisait deux attributs :&#10;self.after_id = None&#10;self.timer = None&#10;Mais on_leave() annulait seulement after_id :&#10;if self.after_id:&#10;    self.widget.after_cancel(self.after_id)&#10;self.timer pouvait donc rester programmé. Inversement, hide_tooltip() annule timer, mais pas after_id.&#10;Cela peut provoquer une création tardive de l'info-bulle après que la souris a déjà quitté le widget.&#10;Il est préférable d'utiliser un seul attribut, par exemple :&#10;self._after_id = None&#10;&#10;5. La position n'était pas équivalente à celle de wxPython&#10;La version wxPython positionne l'info-bulle à partir de la position de la souris :&#10;self.__position = (x + 20, y + 10)&#10;Puis elle convertit les coordonnées locales en coordonnées écran.&#10;La version Tkinter place l'info-bulle en bas à droite du widget :&#10;x = self.widget.winfo_rootx() + self.widget.winfo_width()&#10;y = self.widget.winfo_rooty() + self.widget.winfo_height()&#10;Ce n'est pas nécessairement mauvais, mais ce n'est pas le même résultat. Pour reproduire le comportement wxPython, il faut utiliser event.x_root et event.y_root, ou mémoriser la position pendant &lt;Motion&gt;.&#10;&#10;6. Le positionnement ne tenait pas compte des limites de l'écran&#10;La version wxPython vérifie la taille de l'écran et déplace l'info-bulle si elle risque de sortir de la zone visible.1&#10;La version Tkinter ne faisait aucun contrôle. Si le widget est près du bord droit ou inférieur de l'écran, l'info-bulle peut être partiellement invisible.&#10;Il faudrait utiliser les dimensions de l'écran :&#10;screen_width = self.widget.winfo_screenwidth()&#10;screen_height = self.widget.winfo_screenheight()&#10;puis ajuster x et y.&#10;&#10;7. Le texte était créé avec wraplength, mais ce paramètre n'est pas utilisé&#10;Le constructeur enregistre :&#10;self.wraplength = wraplength&#10;Mais le Label est créé sans :&#10;wraplength=self.wraplength&#10;Le paramètre ne produit donc actuellement aucun effet.&#10;Il faudrait écrire :&#10;label = Label(&#10;    self.tooltip_window,&#10;    text=self.text,&#10;    wraplength=self.wraplength,&#10;    ...&#10;)&#10;La fonction textwrap.fill() de l'exemple travaille en nombre de caractères, alors que wraplength Tkinter est exprimé en pixels. Ce sont deux mécanismes différents.&#10;&#10;8. Les événements étaient remplacés au lieu d'être ajoutés&#10;Ces appels :&#10;self.widget.bind(&quot;&lt;Enter&gt;&quot;, self.on_enter)&#10;self.widget.bind(&quot;&lt;Leave&gt;&quot;, self.on_leave)&#10;self.widget.bind(&quot;&lt;ButtonPress&gt;&quot;, self.on_leave)&#10;remplacaient une éventuelle liaison existante sur le widget.&#10;Dans une application comme TaskCoach, cela peut casser un comportement déjà associé au widget. Pour ajouter une liaison sans supprimer les précédentes, il est généralement préférable d'utiliser add=&quot;+&quot; :&#10;self.widget.bind(&quot;&lt;Enter&gt;&quot;, self.on_enter, add=&quot;+&quot;)&#10;self.widget.bind(&quot;&lt;Leave&gt;&quot;, self.on_leave, add=&quot;+&quot;)&#10;self.widget.bind(&quot;&lt;ButtonPress&gt;&quot;, self.on_leave, add=&quot;+&quot;)&#10;Il faut toutefois prévoir une méthode de désinstallation pour retirer précisément ces liaisons.&#10;&#10;9. La gestion du survol était moins complète&#10;La version wxPython réagit au mouvement de la souris, cache l'info-bulle lorsqu'elle est déplacée et demande le contenu dynamique via OnBeforeShowToolTip().&#10;La version Tkinter utilisait seulement &lt;Enter&gt; et &lt;Leave&gt;. Elle ne gèrait donc pas :&#10;&#10;la position courante de la souris ;&#10;le changement de contenu pendant le survol ;&#10;le masquage lors du déplacement dans certains cas ;&#10;le déplacement de la souris dans la fenêtre d'info-bulle ;&#10;la méthode équivalente à OnBeforeShowToolTip().&#10;&#10;10. Les infobulles riches n'était pas portées&#10;La classe wxPython SimpleToolTip sait gérer des sections et des icônes. Elle dessine elle-même :&#10;&#10;la bordure ;&#10;les séparateurs horizontaux ;&#10;les séparateurs verticaux ;&#10;les icônes ;&#10;les lignes de texte ;&#10;la taille de la fenêtre.&#10;&#10;La classe Tkinter créait uniquement un Label texte. Le rendu n'était donc pas équivalent.&#10;&#10;Ce qui était correct dans la version Tkinter&#10;Les choix suivants vont dans la bonne direction :&#10;Toplevel(self.widget)&#10;pour créer une fenêtre indépendante, ainsi que :&#10;wm_overrideredirect(True)&#10;pour supprimer la barre de titre, et :&#10;after(...)&#10;after_cancel(...)&#10;pour gérer le délai.&#10;L'utilisation de destroy() pour fermer la fenêtre est également adaptée à Tkinter.&#10;Peut-on utiliser les classes et méthodes comme dans wxPython ?&#10;Réponse courte&#10;Non, pas directement.&#10;Les widgets Tkinter ne possèdent pas les méthodes wxPython comme :&#10;Bind&#10;Show&#10;Hide&#10;PopupMenu&#10;ClientToScreenXY&#10;GetPosition&#10;GetSize&#10;Refresh&#10;Tkinter utilise plutôt :&#10;bind&#10;deiconify&#10;withdraw&#10;destroy&#10;winfo_rootx&#10;winfo_rooty&#10;winfo_width&#10;winfo_height&#10;after&#10;after_cancel&#10;Les deux bibliothèques ont des rôles similaires, mais leurs API et leur modèle d'événements sont différents.&#10;&#10;Équivalences principales&#10; wxPython/Tkinter&#10; Bind(wx.EVT_ENTER_WINDOW, callback)/bind(&quot;&lt;Enter&gt;&quot;, callback)&#10; Bind(wx.EVT_LEAVE_WINDOW, callback)/bind(&quot;&lt;Leave&gt;&quot;, callback)&#10; Bind(wx.EVT_MOTION, callback)/bind(&quot;&lt;Motion&gt;&quot;, callback)&#10; wx.Timerafter()timer.Stop()/after_cancel(id)&#10; wx.Frame ou wx.PopupWindowToplevelShow()/deiconify()&#10; Hide()/withdraw() ou destroy()&#10; SetSize()/geometry()&#10; ClientToScreenXY()/winfo_rootx() et winfo_rooty()&#10; GetPosition()/event.x, event.y&#10; GetSize()/winfo_width(), winfo_height()&#10; Refresh()/update_idletasks() ou modification du widget&#10; wx.ClientDC / wx.PaintDC/Canvas, Label ou dessin Tkinter&#10;&#10;&#10;Pour conserver les noms wxPython&#10;Si le code existant appellait déjà ShowTip() et HideTip(), il est possible d'ajouter une petite couche de compatibilité :&#10;class ToolTipMixin(ToolTip):&#10;    &quot;&quot;&quot;Compatibilité partielle avec l'ancienne API wxPython.&quot;&quot;&quot;&#10;&#10;    def ShowTip(self, x, y):&#10;        self._last_position = (x, y)&#10;        self._create_tooltip()&#10;&#10;    def HideTip(self):&#10;        self.hide_tooltip()&#10;Mais cette compatibilité reste partielle. ShowTip(x, y) dans Tkinter doit recevoir des coordonnées écran, contrairement à l'ancienne logique wxPython qui convertissait les coordonnées locales.&#10;Pour SimpleToolTip, il faut créer une vraie classe séparée, probablement basée sur :&#10;class SimpleToolTip(tk.Toplevel):&#10;avec un Canvas ou plusieurs widgets Label. Elle doit réimplémenter SetData() et le calcul du contenu. Il ne faut pas simplement faire :&#10;SimpleToolTip = ToolTip&#10;&#10;Conclusion&#10;tooltiptk.py était une première ébauche utile pour une info-bulle textuelle simple, mais il n'était pas complet et présentait plusieurs problèmes de comportement :&#10;activation et désactivation inopérantes ;&#10;minuterie déclenchée deux fois ;&#10;annulation incomplète des minuteries ;&#10;API wxPython non reproduite ;&#10;alias trompeurs ;&#10;positionnement différent ;&#10;absence de contrôle des bords de l'écran ;&#10;gestion des icônes et sections absente ;&#10;contenu dynamique absent ;&#10;risque d'écraser des événements Tkinter existants.&#10;&#10;Vous pouviez l'utiliser uniquement dans un nouveau code conçu spécifiquement pour Tkinter, avec un appel du type :&#10;tooltip = ToolTip(widget, &quot;Texte de l'info-bulle&quot;)&#10;Vous ne pouviez pas encore l'utiliser comme remplacement transparent de tooltip.py.">
       <option name="closed" value="true" />
-      <created>1787152261168</created>
-      <option name="number" value="00767" />
-      <option name="presentableId" value="LOCAL-00767" />
+      <created>1794499716716</created>
+      <option name="number" value="00932" />
+      <option name="presentableId" value="LOCAL-00932" />
       <option name="project" value="LOCAL" />
-      <updated>1787152261168</updated>
+      <updated>1794499716716</updated>
     </task>
-    <task id="LOCAL-00768" summary="L’échec survient pendant le setUp, avant l’assertion sur les réglages : un CompositeEffortPerPeriod&#10;  émet un changement de durée mais n’a pas d’id(). Je vais adapter l’observateur du viewer pour traiter&#10;  ces objets agrégés sans les supposer persistables.&#10;  &#10;  La cause était uniquement une ligne de journalisation ajoutée récemment : elle appelait sender.id()&#10;  avant le rafraîchissement. J’ai supprimé cette hypothèse ; le composite est maintenant journalisé via&#10;  sa représentation, puis traité normalement.&#10;  &#10;  CompositeEffortPerPeriod n’est pas un objet persisté et n’a donc pas de méthode id(). L’observateur&#10;  ne l’appelle plus dans son journal de débogage et peut rafraîchir l’effort agrégé normalement.">
+    <task id="LOCAL-00933" summary="Réimplémentation de ToolTip">
       <option name="closed" value="true" />
-      <created>1787152583152</created>
-      <option name="number" value="00768" />
-      <option name="presentableId" value="LOCAL-00768" />
+      <created>1794499889132</created>
+      <option name="number" value="00933" />
+      <option name="presentableId" value="LOCAL-00933" />
       <option name="project" value="LOCAL" />
-      <updated>1787152583152</updated>
+      <updated>1794499889132</updated>
     </task>
-    <task id="LOCAL-00769" summary="L’écart d’une commande indique une colonne qui n’est plus correctement exclue selon le mode actif.&#10;&#10;L’écart est attendu depuis l’ajout volontaire de la colonne « ID » : la commande correspondante est&#10;  présente dans tous les modes, mais les attentes du test n’ont pas été ajustées. Je mets à jour&#10;  uniquement ces quatre cardinalités.&#10;  &#10;  La colonne ID, ajoutée à tous les modes, apporte une commande supplémentaire. Les attentes sont donc&#10;  maintenant : details 7, day 9, week 10, month 9.&#10;&#10;  Compilation et contrôle du diff réussis.">
+    <task id="LOCAL-00934" summary="Réimplémentation de ToolTipMixin">
       <option name="closed" value="true" />
-      <created>1787152841374</created>
-      <option name="number" value="00769" />
-      <option name="presentableId" value="LOCAL-00769" />
+      <created>1794499951364</created>
+      <option name="number" value="00934" />
+      <option name="presentableId" value="LOCAL-00934" />
       <option name="project" value="LOCAL" />
-      <updated>1787152841374</updated>
+      <updated>1794499951364</updated>
     </task>
-    <task id="LOCAL-00770" summary="SetAffirmativeButton() ne remplace pas directement un getter : il faut conserver la référence au&#10;  bouton lors de sa création, l’enregistrer dans le sizer, puis lier l’événement sur cette référence.&#10;  Je vérifie le constructeur et applique ce remplacement.&#10;  &#10;  Je remplace la fabrique automatique par un StdDialogButtonSizer explicite : le bouton OK est alors&#10;  disponible comme variable locale, passé à SetAffirmativeButton(), puis lié à onOk.&#10;  &#10;  SetAffirmativeButton() sert à enregistrer un bouton créé explicitement ; il ne le retourne pas. Le&#10;  dialogue crée donc okButton, l’enregistre avec SetAffirmativeButton(), puis lie directement&#10;  okButton.Bind(...).">
+    <task id="LOCAL-00935" summary="Réimplémentation de ToolTipMixin, et compatibilité avec l'ancien itemctrl.py">
       <option name="closed" value="true" />
-      <created>1787154424520</created>
-      <option name="number" value="00770" />
-      <option name="presentableId" value="LOCAL-00770" />
+      <created>1794500512690</created>
+      <option name="number" value="00935" />
+      <option name="presentableId" value="LOCAL-00935" />
       <option name="project" value="LOCAL" />
-      <updated>1787154424520</updated>
+      <updated>1794500512690</updated>
     </task>
-    <task id="LOCAL-00771" summary="SetAffirmativeButton() ne remplace pas directement un getter : il faut conserver la référence au&#10;  bouton lors de sa création, l’enregistrer dans le sizer, puis lier l’événement sur cette référence.&#10;  Je vérifie le constructeur et applique ce remplacement.&#10;  &#10;  Je remplace la fabrique automatique par un StdDialogButtonSizer explicite : le bouton OK est alors&#10;  disponible comme variable locale, passé à SetAffirmativeButton(), puis lié à onOk.&#10;  &#10;  SetAffirmativeButton() sert à enregistrer un bouton créé explicitement ; il ne le retourne pas. Le&#10;  dialogue crée donc okButton, l’enregistre avec SetAffirmativeButton(), puis lie directement&#10;  okButton.Bind(...).">
+    <task id="LOCAL-00936" summary="fix: update backup management dialog to use ttk.Treeview">
       <option name="closed" value="true" />
-      <created>1787154511289</created>
-      <option name="number" value="00771" />
-      <option name="presentableId" value="LOCAL-00771" />
+      <created>1794662005642</created>
+      <option name="number" value="00936" />
+      <option name="presentableId" value="LOCAL-00936" />
       <option name="project" value="LOCAL" />
-      <updated>1787154511289</updated>
+      <updated>1794662005642</updated>
     </task>
-    <task id="LOCAL-00772" summary="Fix description concatenation in filter.py to use item.description() instead of item.getDescription()">
+    <task id="LOCAL-00937" summary="amélioration des loggings et docstrings.">
       <option name="closed" value="true" />
-      <created>1787154529241</created>
-      <option name="number" value="00772" />
-      <option name="presentableId" value="LOCAL-00772" />
+      <created>1794828378232</created>
+      <option name="number" value="00937" />
+      <option name="presentableId" value="LOCAL-00937" />
       <option name="project" value="LOCAL" />
-      <updated>1787154529241</updated>
+      <updated>1794828378232</updated>
     </task>
-    <task id="LOCAL-00773" summary="Fix description concatenation in filter.py to use item.description() instead of item.getDescription()">
+    <task id="LOCAL-00938" summary="amélioration des loggings et docstrings.">
       <option name="closed" value="true" />
-      <created>1787154549269</created>
-      <option name="number" value="00773" />
-      <option name="presentableId" value="LOCAL-00773" />
+      <created>1794893477526</created>
+      <option name="number" value="00938" />
+      <option name="presentableId" value="LOCAL-00938" />
       <option name="project" value="LOCAL" />
-      <updated>1787154549269</updated>
+      <updated>1794893477526</updated>
     </task>
-    <task id="LOCAL-00774" summary="Le test simule wx.FileSelector, mais le contrôleur mémorise cette fonction dans&#10;  taskcoachlib.gui.iocontroller.file_selector à l’import. La simulation n’atteint donc plus le&#10;  contrôleur et aucune confirmation n’est affichée. Je corrige le fixture pour remplacer cette&#10;  dépendance injectée et initialise explicitement le marqueur.&#10;  &#10;  Le test remplace maintenant iocontroller.file_selector, la dépendance réellement utilisée par&#10;  IOController, au lieu de wx.FileSelector. userWarned est aussi initialisé à False.&#10;&#10;  La confirmation d’écrasement reçoit bien le fichier simulé et peut appeler la wx.MessageBox mockée.">
+    <task id="LOCAL-00939" summary="Correction du problème : Argument --gui wx non transmis à l’application Tk.&#10;taskcoach.py appellait set_gui(gui_name), mais seulement après avoir importé taskcoachlib.config. Or settings.py choisissait le GUI à l’import du module. Le mode sélectionné pouvait donc rester tk lors de l’initialisation des réglages, même avec --gui wx.&#10;&#10;restoreTasks pouvait provoquer une erreur de journalisation.&#10;Dans mainwindowtk.py, le message contenaitt trois emplacements %s, mais l’appel fournissait seulement deux valeurs. Cette méthode pouvait lever TypeError au moment d’écrire ce log. Il manquait self.taskFile.">
       <option name="closed" value="true" />
-      <created>1787155324328</created>
-      <option name="number" value="00774" />
-      <option name="presentableId" value="LOCAL-00774" />
+      <created>1794895052917</created>
+      <option name="number" value="00939" />
+      <option name="presentableId" value="LOCAL-00939" />
       <option name="project" value="LOCAL" />
-      <updated>1787155324328</updated>
+      <updated>1794895052917</updated>
     </task>
-    <task id="LOCAL-00775" summary="Refactor asserts and settings for improved debugging and clarity">
+    <task id="LOCAL-00940" summary="Correction du problème : La fermeture est fragile dans le mode Tk.&#10;quitApplication() détruit self.root; MainWindow.onClose() appelle ensuite encore des opérations sur la fenêtre et arrête le contrôleur d’inactivité. Des erreurs sont interceptées à certains endroits, mais le chemin de fermeture mérite un test ciblé.&#10;&#10;Fermeture et destruction de la fenêtre&#10;Le problème venait du fait que plusieurs composants pouvaient détruire la même fenêtre :&#10;MainWindow.onClose(), &#10;TkinterApplication.quitApplication(), et&#10;TkinterApplication.on_end_session().&#10;&#10;quitApplication() contenait notamment : self.root.destroy()&#10;Puis MainWindow.onClose() continuait son traitement et pouvait encore appeler : self._idleController.stop().&#10;Cela créait un chemin de fermeture difficile à contrôler.&#10;&#10;Règle proposée&#10;Une seule méthode doit détruire la fenêtre Tkinter. Dans cette architecture, le meilleur choix est :&#10;&#10;quitApplication() nettoie les ressources et sauvegarde les données ;&#10;MainWindow.onClose() détruit la fenêtre ;&#10;on_end_session() appelle uniquement la procédure de fermeture, sans détruire directement la racine une seconde fois.&#10;&#10;Modification de quitApplication()&#10;Dans tkapplication.py, supprimer : self.root.destroy() à la fin de quitApplication().&#10;&#10;Modification de MainWindow.onClose()&#10;&#10;Attention à quitApplication()&#10;La méthode appelle déjà self.OnQuit() et self.taskFile.close() donc il faut éviter de refaire ces opérations dans MainWindow.onClose() après l'appel à quitApplication(). Le nettoyage doit être centralisé dans quitApplication().&#10;&#10;Sécuriser le contrôleur d’inactivité&#10;Dans MainWindow.onClose(), si une fermeture intervient pendant une initialisation incomplète, _idleController peut ne pas encore exister.&#10;&#10;Correction de on_end_session()&#10;self.root.destroy() devait être supprimé.&#10;&#10;Résumé des changements&#10;&#10;Ne plus choisir Tkinter ou wxPython lors de l’import global de settings.py.&#10;Transmettre réellement options.gui_name à Settings.&#10;Ne détruire root qu’à un seul endroit.&#10;Retirer self.root.destroy() de quitApplication().&#10;Laisser MainWindow.onClose() effectuer la destruction finale.&#10;Supprimer la destruction supplémentaire dans on_end_session().&#10;Éviter les doubles appels à taskFile.close(), taskFile.stop() et IdleController.stop().">
       <option name="closed" value="true" />
-      <created>1787380766154</created>
-      <option name="number" value="00775" />
-      <option name="presentableId" value="LOCAL-00775" />
+      <created>1794905359392</created>
+      <option name="number" value="00940" />
+      <option name="presentableId" value="LOCAL-00940" />
       <option name="project" value="LOCAL" />
-      <updated>1787380766155</updated>
+      <updated>1794905359392</updated>
     </task>
-    <task id="LOCAL-00776" summary="Refactor code for improved readability and maintainability. Corrections de bugs, corrections de prise de logs">
+    <task id="LOCAL-00941" summary="Correction de self._font dans autowidthtk.py et ajout d'une démo pour l'autowidth.">
       <option name="closed" value="true" />
-      <created>1787552435567</created>
-      <option name="number" value="00776" />
-      <option name="presentableId" value="LOCAL-00776" />
+      <created>1794910451144</created>
+      <option name="number" value="00941" />
+      <option name="presentableId" value="LOCAL-00941" />
       <option name="project" value="LOCAL" />
-      <updated>1787552435567</updated>
+      <updated>1794910451144</updated>
     </task>
-    <task id="LOCAL-00777" summary="Refactor code for improved readability and maintainability. Update method signatures and enhance logging for better debugging.">
+    <task id="LOCAL-00942" summary="Correction de self._font dans autowidthtk.py et ajout d'une démo pour l'autowidth.">
       <option name="closed" value="true" />
-      <created>1787636827218</created>
-      <option name="number" value="00777" />
-      <option name="presentableId" value="LOCAL-00777" />
+      <created>1794910707181</created>
+      <option name="number" value="00942" />
+      <option name="presentableId" value="LOCAL-00942" />
       <option name="project" value="LOCAL" />
-      <updated>1787636827218</updated>
+      <updated>1794910707181</updated>
     </task>
-    <task id="LOCAL-00778" summary="Refactor logging statements for improved readability and consistency across multiple files.">
+    <task id="LOCAL-00943" summary="Pas encore possible de le garantir. Dans les dernières versions fournies, l’appel à AddBalloonTip() dans basetk.py est maintenant cohérent : self.toolbar est la cible, et message et title sont passés une seule fois. Le retour à la ligne est aussi intégré dans balloontiptk.py.12&#10;La syntaxe des deux fichiers est valide, mais cela ne vérifie pas leur fonctionnement à l’exécution. Il reste notamment un point concret à confirmer dans le code : BalloonTipManager.__Try() crée la bulle en transmettant getRect, mais l’appel de basetk.py ne lui en fournit pas. La bulle dépend donc ici des coordonnées Tk du widget cible self.toolbar.21&#10;Mon avis précis : l’appel est corrigé et le retour à la ligne est en place, mais je ne peux pas conclure que balloontiptk.py est complètement opérationnel sans essai dans l’application. Ça ne veut pas dire qu’il faut écrire les tests maintenant. Il faut simplement valider le parcours réel : afficher une bulle, vérifier le texte multiligne, la position, puis la fermeture et le passage au tip suivant.">
       <option name="closed" value="true" />
-      <created>1787727182391</created>
-      <option name="number" value="00778" />
-      <option name="presentableId" value="LOCAL-00778" />
+      <created>1794921897584</created>
+      <option name="number" value="00943" />
+      <option name="presentableId" value="LOCAL-00943" />
       <option name="project" value="LOCAL" />
-      <updated>1787727182391</updated>
+      <updated>1794921897584</updated>
     </task>
-    <task id="LOCAL-00779" summary="Refactor logging statements for improved readability and consistency across multiple files.">
+    <task id="LOCAL-00944" summary="MainWindow ajoutait un seul pane viewer_container à AUI (mainwindowtk.py, création du conteneur). Les viewers étaient ensuite placés dans la grille interne de ce conteneur (containertk.py, addViewer()). AUI ne voyait donc jamais les viewers individuels et ne pouvait pas les déplacer séparément.&#10;&#10;Changement proposé : ViewerContainer devient un contrôleur de viewers, pas leur conteneur géométrique.&#10;&#10;    Dans mainwindowtk.py, ne plus enregistrer ViewerContainer comme pane.&#10;    Dans factorytk.py, créer chaque viewer dans un conteneur de pane dédié, puis l’enregistrer auprès du AuiManager.&#10;    Dans containertk.py, conserver la liste des viewers, le viewer actif et la délégation des commandes ; retirer son placement par grid().&#10;&#10;On peut garder factorytk comme fabrique et ViewerContainer comme registre/délégué de viewers, sans réécrire leur construction. Le changement minimal est de créer chaque viewer directement dans le parent de panneaux du gestionnaire AUI, puis de l’enregistrer comme pane. Ainsi, l’AUI principal voit les viewers individuellement.&#10;&#10;Ça évite le modèle « un pane AUI contenant tous les viewers ». Ça ne rend pas encore le glisser-déposer fonctionnel : le gestionnaire aui_ttk doit encore implémenter les interactions de déplacement. Mais cette modification donne à AUI les bons panneaux à déplacer.&#10;&#10;1. mainwindowtk.py — ne plus enregistrer le conteneur comme pane&#10;Le conteneur devient un contrôleur non affiché. Les viewers qu’il suit seront les panes visibles. La barre d’état et la toolbar restent gérées par le manager principal.&#10;Changements dans _create_viewer_container().&#10;Dans _create_window_components(), le diagnostic ne doit plus chercher le pane viewer_container. On utilise plutôt les noms des viewers enregistrés.&#10;Enfin, dans MainWindow.addPane(), on ne remplace pas un nom explicite par settingsSection() : sinon status_bar peut être enregistré sous un autre nom et devenir introuvable par GetPane(&quot;status_bar&quot;).&#10;&#10;Ces changements concernent la création actuelle du conteneur et l’ajout de panes dans mainwindowtk.py et addPane().&#10;&#10;2. containertk.py — garder l’API du conteneur, déléguer la géométrie à AUI&#10;Garde ViewerContainer comme ttk.LabelFrame pour limiter les changements aux appelants qui s’attendent à un widget. Mais ne le place pas à l’écran, ne lui ajoute pas de label décoratif et n’y fais plus de grid() pour afficher les viewers. Il garde sa liste, son viewer actif et la délégation des commandes ; le manager principal gère leur disposition.&#10;Changements dans le constructeur __init__.&#10;Suppression de la création et du grid() de self._label.&#10;Changements dans addViewer() et adaptation du retrait pour éviter que le manager garde un pane fantôme.&#10;Ajout de l'information à AUI dans activateViewer().&#10;import de AuiPaneInfo en tête du fichier depuis le backend actif aui_ttk. L’API du contrôleur reste donc en place ; seule la responsabilité géométrique change. Les méthodes existantes de navigation, d’export et de commandes peuvent continuer à passer par viewer_container.&#10;&#10;3. factorytk.py — changer uniquement le parent de création&#10;La fabrique continue de choisir les classes, de construire leurs arguments et d’appeler addViewer(). Le changement nécessaire était que le widget soit construit dans le parent attendu par le manager, au lieu d’être enfant de ViewerContainer.&#10;&#10;Dans _add_viewer(), remplacer le premier argument du constructeur.&#10;&#10;C’est ce qui satisfait la contrainte du AuiManager actif : les widgets panes doivent être créés comme enfants de manager.pane_parent, sinon son contrôle de parent les rejette. La logique de sélection des viewers dans la fabrique ne change pas. &#10;&#10;Après ces modifications, manager.GetAllPanes() doit contenir les viewers eux-mêmes — par exemple taskviewer, effortviewer, categoryviewer — ainsi que la barre d’état et la toolbar. L’AUI peut alors les nommer, les placer et sauvegarder une perspective qui les inclut. Le conteneur conserve la liste et les API de commandes ; la fabrique conserve la construction des viewers.&#10;&#10;Il restera ensuite à implémenter le drag-and-drop dans ttkframemanager_auimanager.py. L’enregistrement individuel des viewers est nécessaire pour ça, mais ne suffit pas à lui seul : le manager actuel ne transforme pas encore Movable(True) en déplacement réel à la souris.">
       <option name="closed" value="true" />
-      <created>1787727197954</created>
-      <option name="number" value="00779" />
-      <option name="presentableId" value="LOCAL-00779" />
+      <created>1795071912961</created>
+      <option name="number" value="00944" />
+      <option name="presentableId" value="LOCAL-00944" />
       <option name="project" value="LOCAL" />
-      <updated>1787727197954</updated>
+      <updated>1795071912962</updated>
     </task>
-    <task id="LOCAL-00780" summary="Refactor toolbar separator handling for improved layout consistency">
+    <task id="LOCAL-00945" summary="fix: update API endpoint for user registration">
       <option name="closed" value="true" />
-      <created>1787731174896</created>
-      <option name="number" value="00780" />
-      <option name="presentableId" value="LOCAL-00780" />
+      <created>1795089828385</created>
+      <option name="number" value="00945" />
+      <option name="presentableId" value="LOCAL-00945" />
       <option name="project" value="LOCAL" />
-      <updated>1787731174896</updated>
+      <updated>1795089828386</updated>
     </task>
-    <task id="LOCAL-00781" summary="Refactor print statements to use logging for improved debugging and consistency">
+    <task id="LOCAL-00946" summary="fix: improve logging and column handling in TreeListCtrl and CtrlWithColumnsMixin">
       <option name="closed" value="true" />
-      <created>1787731696719</created>
-      <option name="number" value="00781" />
-      <option name="presentableId" value="LOCAL-00781" />
+      <created>1795277749365</created>
+      <option name="number" value="00946" />
+      <option name="presentableId" value="LOCAL-00946" />
       <option name="project" value="LOCAL" />
-      <updated>1787731696719</updated>
+      <updated>1795277749366</updated>
     </task>
-    <task id="LOCAL-00782" summary="Refactor print statements to use logging for improved debugging and consistency">
+    <task id="LOCAL-00947" summary="fix: add debug logging to BalloonTipManager for better traceability">
       <option name="closed" value="true" />
-      <created>1787742492074</created>
-      <option name="number" value="00782" />
-      <option name="presentableId" value="LOCAL-00782" />
+      <created>1795371669853</created>
+      <option name="number" value="00947" />
+      <option name="presentableId" value="LOCAL-00947" />
       <option name="project" value="LOCAL" />
-      <updated>1787742492074</updated>
+      <updated>1795371669853</updated>
     </task>
-    <task id="LOCAL-00783" summary="Refactor print statements to use logging for improved debugging and consistency">
+    <task id="LOCAL-00948" summary="fix: enhance debug logging across multiple modules for improved traceability">
       <option name="closed" value="true" />
-      <created>1787805643412</created>
-      <option name="number" value="00783" />
-      <option name="presentableId" value="LOCAL-00783" />
+      <created>1795372074258</created>
+      <option name="number" value="00948" />
+      <option name="presentableId" value="LOCAL-00948" />
       <option name="project" value="LOCAL" />
-      <updated>1787805643412</updated>
+      <updated>1795372074258</updated>
     </task>
-    <task id="LOCAL-00784" summary="Refactor print statements to use logging for improved debugging and consistency">
+    <task id="LOCAL-00949" summary="J'ai repéré plusieurs incompatibilités importantes entre treectrltk.py et la dernière version de draganddroptk.py.&#10;&#10;La plus sérieuse concerne l'initialisation multiple du Treeview : TreeListCtrl appelle directement ttk.Treeview.__init__(), puis les constructeurs de plusieurs mixins, dont TreeCtrlDragAndDropMixin.__init__(). Or ce dernier utilise super().__init__(), qui peut remonter jusqu'au constructeur du widget. Cela risque de recréer ou de réinitialiser le contrôle.&#10;&#10;J'ai également constaté que les événements de glisser-déposer sont associés deux fois, que TreeListCtrl.OnDrop() documente part comme une chaîne alors que le mixin transmet -1, 0 ou 1, et que les deux fichiers n'emploient pas toujours la même convention pour la racine de l'arborescence.&#10;&#10;Je vais conserver les fonctionnalités métier existantes, notamment le callback dragAndDropCommand, et corriger les points d'intégration sans transformer arbitrairement la logique de Task Coach.&#10;&#10;J'ai préparé deux fichiers révisés, car la correction de treectrltk.py nécessite aussi une petite adaptation de draganddroptk.py.&#10;Télécharger treectrltk_revu.py&#10;&#10;3 282 lignes — corrections d'intégration et compléments de documentation.&#10;&#10;&#10;&#10;Télécharger draganddroptk_integration.py&#10;&#10;632 lignes — initialisation du glisser-déposer adaptée à un widget déjà créé.&#10;&#10;&#10;&#10;Modifications principales&#10;- Initialisation : ajout de initialize_drag_support() pour installer le glisser-déposer sans rappeler ttk.Treeview.__init__().&#10;- Événements : suppression des liaisons DnD redondantes et correction des interactions avec les clics de CheckTreeCtrl.&#10;- OnDrop() : documentation et annotation corrigées pour les positions -1, 0 et 1.&#10;- Sélection : correction de select_all(), qui ne conservait auparavant que le dernier élément sélectionné.&#10;- Arborescence : amélioration de GetItemChildren() et clarification de GetRootItem().&#10;- Docstrings : ajout des descriptions manquantes et clarification de plusieurs comportements, sans supprimer les fonctionnalités métier existantes.">
       <option name="closed" value="true" />
-      <created>1787806103386</created>
-      <option name="number" value="00784" />
-      <option name="presentableId" value="LOCAL-00784" />
+      <created>1795435219615</created>
+      <option name="number" value="00949" />
+      <option name="presentableId" value="LOCAL-00949" />
       <option name="project" value="LOCAL" />
-      <updated>1787806103386</updated>
+      <updated>1795435219615</updated>
     </task>
-    <task id="LOCAL-00785" summary="Refactor print statements to use logging for improved consistency and debugging">
+    <task id="LOCAL-00950" summary="fix: refactor presentation method in Noteviewer to return base viewer presentation">
       <option name="closed" value="true" />
-      <created>1787806148270</created>
-      <option name="number" value="00785" />
-      <option name="presentableId" value="LOCAL-00785" />
+      <created>1795454676203</created>
+      <option name="number" value="00950" />
+      <option name="presentableId" value="LOCAL-00950" />
       <option name="project" value="LOCAL" />
-      <updated>1787806148271</updated>
+      <updated>1795454676204</updated>
     </task>
-    <task id="LOCAL-00786" summary="Refactor print statements to use logging for improved consistency and debugging">
+    <task id="LOCAL-00951" summary="Je propose trois corrections ciblées :&#10;1.&#10;tasktk.py — dans isTreeViewer(), utiliser presentation().treeMode() seulement si la présentation expose treeMode; sinon, lire le réglage treemode. Ça couvre le démarrage avant création de la présentation, sans comparer à [] ni retourner None.&#10;2.&#10;mixintk.py — faire retourner à hasFilter() la combinaison des filtres de catégories et de tâches (super().hasFilter() or ...), en vérifiant que la présentation expose hasFilter() pendant l’initialisation.&#10;3.&#10;efforttk.py — retirer la garde hasattr(self, &quot;presentation&quot;), qui est toujours vraie pour une méthode de classe et ne protège pas contre une présentation vide. La méthode doit toujours retourner un tuple de commandes, comme attendu par l’assemblage de la barre d’outils.&#10;Je laisserais basetk.py inchangé pour l’instant : son fallback à [] permet à isTreeViewer() de gérer l’initialisation, même si on pourrait ensuite remplacer ce fallback par un mécanisme d’état plus explicite.">
       <option name="closed" value="true" />
-      <created>1787806197909</created>
-      <option name="number" value="00786" />
-      <option name="presentableId" value="LOCAL-00786" />
+      <created>1795455129556</created>
+      <option name="number" value="00951" />
+      <option name="presentableId" value="LOCAL-00951" />
       <option name="project" value="LOCAL" />
-      <updated>1787806197909</updated>
+      <updated>1795455129556</updated>
     </task>
-    <task id="LOCAL-00787" summary="Refactor ToolTip class for improved readability and maintainability">
+    <task id="LOCAL-00952" summary="## **Résultat de la vérification des trois fichiers**&#10;&#10;Les trois modules sont syntaxiquement analysables, mais **je déconseille de les utiliser ensemble en l'état**. Le problème principal est architectural : `itemctrltk.py` combine des mixins coopératifs (qui appellent `super()`) avec d'autres constructeurs qui arrêtent volontairement la chaîne d'initialisation. `treectrltk.py` essaie de contourner cela en appelant plusieurs constructeurs manuellement.&#10;&#10;J'ai identifié les changements prioritaires suivants :&#10;&#10;| Priorité | Fichier            | Changement nécessaire                                                                             |&#10;| -------- | ------------------ | ------------------------------------------------------------------------------------------------- |&#10;| Critique | `itemctrltk.py`    | Supprimer l'utilisation de `FileTextDropTarget`, absent de `draganddroptk.py`                     |&#10;| Critique | `treectrltk.py`    | Éviter les réinitialisations du widget lors de l'appel des mixins                                 |&#10;| Critique | Les trois          | Préserver un seul dictionnaire partagé `_item_to_object`                                          |&#10;| Haute    | `treectrltk.py`    | Ne plus lier deux fois les événements de glisser-déposer                                          |&#10;| Haute    | `itemctrltk.py`    | Faire recevoir à la gestion des colonnes des objets `Column`, et non parfois des noms de colonnes |&#10;| Haute    | `treectrltk.py`    | Préserver le modèle métier lors du déplacement des tâches                                         |&#10;| Moyenne  | `draganddroptk.py` | Fiabiliser le traitement des dépôts externes et des callbacks                                     |&#10;| Moyenne  | Les trois          | Nettoyer les anciens blocs commentés et compléter les docstrings utiles                           |&#10;&#10;Le point le plus important est de **ne pas résoudre le problème en supprimant tous les appels à&amp;#x20;**`super()`**&amp;#x20;sans distinction**. Cela pourrait réparer `TreeListCtrl` tout en cassant `TaskTree` ou d'autres contrôles.&#10;&#10;## **1.&amp;#x20;**`itemctrltk.py`**&amp;#x20;: les corrections à effectuer**&#10;&#10;### **A. Corriger&amp;#x20;**`_CtrlWithDropTargetMixin`&#10;&#10;Vers la ligne 636, tu utilises :&#10;&#10;```&#10;self.drop_target = draganddroptk.FileTextDropTarget(    self, self._handle_drop_callback)&#10;```&#10;&#10;Or `FileTextDropTarget` n'existe pas dans le `draganddroptk.py` fourni. Remplace ce bloc par :&#10;&#10;```&#10;self.drop_target = Noneif self.__onDropFilesCallback or self.__onDropURLCallback:    self.drop_target = draganddroptk.DropTarget(        onDropFileCallback=(            lambda x, y, files: self._handle_drop_callback(files)            if self.__onDropFilesCallback else None        ),        onDropUrlCallback=(            lambda x, y, text: self._handle_drop_callback(text)            if self.__onDropURLCallback else None        ),    )    self.drop_target.attach(self)&#10;```&#10;&#10;Cette correction suppose que la racine Tk utilise `tkinterdnd2`. Le dépôt de courriels propriétaires reste à traiter séparément : le callback `onDropMail` ne suffit pas à reproduire le comportement de wxPython.&#10;&#10;### **B. Protéger&amp;#x20;**`_item_to_object`&#10;&#10;Dans `_CtrlWithItemsMixin.__init__()`, remplacer :&#10;&#10;```&#10;self._item_to_object: Dict[str, Any] = {}&#10;```&#10;&#10;par :&#10;&#10;```&#10;if not hasattr(self, &quot;_item_to_object&quot;):    self._item_to_object: Dict[str, Any] = {}&#10;```&#10;&#10;Il faut appliquer le même principe dans `TreeHelperMixin.__init__()` de `draganddroptk.py`.&#10;&#10;Sinon, lorsqu'un deuxième constructeur initialise son mixin, il peut effacer les associations entre les identifiants des lignes et les objets métier.&#10;&#10;### **C. Corriger&amp;#x20;**`TaskTree`&#10;&#10;Dans `TaskTree.__init__()`, tu transmets actuellement :&#10;&#10;```&#10;columns=[c.name() for c in columns]&#10;```&#10;&#10;à `CtrlWithColumnsMixin`.&#10;&#10;Or celui-ci et ses parents manipulent notamment `col.name()` et `col.is_shown()`. Il faut donc conserver les objets :&#10;&#10;```&#10;columns=columns&#10;```&#10;&#10;Attention : cela ne résout pas à lui seul la chaîne de constructeurs de `TaskTree`, qui doit encore être harmonisée.&#10;&#10;## **2.&amp;#x20;**`treectrltk.py`**&amp;#x20;: les corrections à effectuer**&#10;&#10;### **A. Corriger définitivement l'initialisation des mixins**&#10;&#10;La partie problématique de `TreeListCtrl.__init__()` est :&#10;&#10;```&#10;ttk.Treeview.__init__(...)CtrlWithItemsMixin.__init__(...)CtrlWithColumnsMixin.__init__(...)TreeCtrlDragAndDropMixin.__init__(...)&#10;```&#10;&#10;Les constructeurs de `CtrlWithItemsMixin` et de `CtrlWithColumnsMixin` utilisent `super().__init__()`. Dans le contexte de l'héritage multiple, cela peut traverser plusieurs autres mixins et atteindre le `Treeview` déjà initialisé.&#10;&#10;La solution à retenir est la suivante : **initialiser une fois le widget Tk, puis appeler des méthodes d'initialisation fonctionnelle distinctes pour chacun des mixins**. Il faut créer ou terminer ces méthodes dans `itemctrltk.py` avant de remplacer les appels ci-dessus. Il ne suffit pas d'appeler directement les constructeurs des classes parentes.&#10;&#10;Pour le glisser-déposer, la méthode existe déjà dans le fichier fourni. Remplace :&#10;&#10;```&#10;TreeCtrlDragAndDropMixin.__init__(    self, parent, dragAndDropCommand=dragAndDropCommand)&#10;```&#10;&#10;par :&#10;&#10;```&#10;self.initialize_drag_support(    validateDrag=self.validateDragCallback,    dragAndDropCommand=dragAndDropCommand,)&#10;```&#10;&#10;Cette modification est compatible avec le mécanisme prévu par ton `draganddroptk.py`, qui initialise le DnD d'un widget déjà créé.&#10;&#10;### **B. Supprimer les liaisons redondantes**&#10;&#10;Dans `TreeListCtrl._bind_events()`, supprime les trois bindings suivants :&#10;&#10;```&#10;self.bind(&quot;&lt;ButtonPress-1&gt;&quot;, self.on_start_drag, add=&quot;+&quot;)self.bind(&quot;&lt;B1-Motion&gt;&quot;, self.on_dragging, add=&quot;+&quot;)self.bind(&quot;&lt;ButtonRelease-1&gt;&quot;, self.on_end_drag, add=&quot;+&quot;)&#10;```&#10;&#10;`initialize_drag_support()` installe déjà `_on_press`, `_on_motion` et `_on_release`. Conserver les deux jeux de bindings risque d'exécuter deux fois la même action.&#10;&#10;### **C. Conserver&amp;#x20;**`TreeListCtrl.OnDrop()`&#10;&#10;Dans ta version actuelle, `TreeListCtrl.OnDrop()` transmet les objets métier à :&#10;&#10;```&#10;self.dragAndDropCommand(    drop_object, dragged_objects, part, column)&#10;```&#10;&#10;C'est la bonne séparation des responsabilités pour Task Coach : le contrôle gère l'interaction, tandis que la commande métier modifie les tâches. **Je recommande de conserver cette approche plutôt que de déplacer directement les lignes avec&amp;#x20;**`Treeview.move()`**.**&#10;&#10;Il faut toutefois vérifier la signature réelle de `dragAndDropCommand` dans les viewers, car le contrôle transmet quatre arguments.&#10;&#10;### **D. Sélection et colonnes**&#10;&#10;Ton `select_all()` utilise maintenant correctement :&#10;&#10;```&#10;items = self.GetItemChildren(&quot;&quot;, recursively=True)if items:    self.selection_set(*items)&#10;```&#10;&#10;Cette correction est à conserver.&#10;&#10;En revanche, `sort_by()` réordonne les lignes du `Treeview` sans nécessairement réordonner les données métier. Il faut déterminer si le tri est purement visuel ou s'il doit être délégué au viewer.&#10;&#10;## **3.&amp;#x20;**`draganddroptk.py`**&amp;#x20;: les corrections restantes**&#10;&#10;`initialize_drag_support()` est la partie importante à conserver. Son caractère idempotent évite de réinstaller les bindings lors d'une deuxième initialisation.&#10;&#10;Je recommande également de conserver `IsValidDropTarget()`, notamment l'interdiction des déplacements créant un cycle dans l'arborescence.&#10;&#10;Le traitement des dépôts provenant d'applications externes reste à tester avec `tkinterdnd2`, particulièrement lorsqu'un même widget accepte à la fois des fichiers et du texte. Il ne faut pas déduire systématiquement le format déposé de la seule forme de `event.data`.&#10;&#10;## **4. Vérifications à réaliser après modification**&#10;&#10;Les trois fichiers passent le contrôle syntaxique Python, mais ce résultat ne garantit pas qu'ils s'initialisent correctement ensemble.&#10;&#10;Le test prioritaire est une création réelle de `TreeListCtrl`, suivie d'un contrôle des bindings et de la conservation des objets métier. Il faudra ensuite tester le déplacement d'une tâche, le refus du dépôt d'un parent sur un enfant, l'ouverture des branches, puis les colonnes masquées et les menus contextuels.&#10;&#10;Il reste une dépendance importante à analyser : `autowidthtk.AutoColumnWidthMixin`, qui participe à la chaîne d'héritage de `CtrlWithColumnsMixin`. Sans connaître son constructeur, je ne peux pas garantir une refonte complète et sûre de la MRO.&#10;&#10;**Conclusion :** les corrections de DnD et de stockage des objets sont assez ciblées. En revanche, pour l'initialisation de `itemctrltk.py`, il faut privilégier une correction structurée de l'ensemble des mixins plutôt qu'une série de contournements. C'est le principal obstacle restant à la cohérence des trois modules.">
       <option name="closed" value="true" />
-      <created>1787806270318</created>
-      <option name="number" value="00787" />
-      <option name="presentableId" value="LOCAL-00787" />
+      <created>1795461805697</created>
+      <option name="number" value="00952" />
+      <option name="presentableId" value="LOCAL-00952" />
       <option name="project" value="LOCAL" />
-      <updated>1787806270319</updated>
+      <updated>1795461805697</updated>
     </task>
-    <task id="LOCAL-00788" summary="Fix conditional statement for GUI name check in __init__.py">
+    <task id="LOCAL-00953" summary="fix: update import statements and layout configurations for consistency">
       <option name="closed" value="true" />
-      <created>1787806404579</created>
-      <option name="number" value="00788" />
-      <option name="presentableId" value="LOCAL-00788" />
+      <created>1795462052832</created>
+      <option name="number" value="00953" />
+      <option name="presentableId" value="LOCAL-00953" />
       <option name="project" value="LOCAL" />
-      <updated>1787806404579</updated>
+      <updated>1795462052832</updated>
     </task>
-    <task id="LOCAL-00789" summary="Refactor import statements for improved organization and clarity">
+    <task id="LOCAL-00954" summary="fix: update import statements and layout configurations for consistency">
       <option name="closed" value="true" />
-      <created>1787806427453</created>
-      <option name="number" value="00789" />
-      <option name="presentableId" value="LOCAL-00789" />
+      <created>1795462066545</created>
+      <option name="number" value="00954" />
+      <option name="presentableId" value="LOCAL-00954" />
       <option name="project" value="LOCAL" />
-      <updated>1787806427453</updated>
+      <updated>1795462066545</updated>
     </task>
-    <task id="LOCAL-00790" summary="Add documentation for serialization invariants in __init__.py">
+    <task id="LOCAL-00955" summary="fix: modify quitApplication call to prevent unsaved file closure">
       <option name="closed" value="true" />
-      <created>1787806497059</created>
-      <option name="number" value="00790" />
-      <option name="presentableId" value="LOCAL-00790" />
+      <created>1795498665679</created>
+      <option name="number" value="00955" />
+      <option name="presentableId" value="LOCAL-00955" />
       <option name="project" value="LOCAL" />
-      <updated>1787806497059</updated>
+      <updated>1795498665679</updated>
     </task>
-    <task id="LOCAL-00791" summary="Add all exports to __init__.py for improved module accessibility">
+    <task id="LOCAL-00956" summary="fix: modify quitApplication call to prevent unsaved file closure">
       <option name="closed" value="true" />
-      <created>1787806527147</created>
-      <option name="number" value="00791" />
-      <option name="presentableId" value="LOCAL-00791" />
+      <created>1795498673922</created>
+      <option name="number" value="00956" />
+      <option name="presentableId" value="LOCAL-00956" />
       <option name="project" value="LOCAL" />
-      <updated>1787806527147</updated>
+      <updated>1795498673922</updated>
     </task>
-    <task id="LOCAL-00792" summary="Uncomment __all__ exports in __init__.py for improved module accessibility">
+    <task id="LOCAL-00957" summary="fix: adjust comment formatting for clarity in task_report_generator.py">
       <option name="closed" value="true" />
-      <created>1787806556253</created>
-      <option name="number" value="00792" />
-      <option name="presentableId" value="LOCAL-00792" />
+      <created>1795498690265</created>
+      <option name="number" value="00957" />
+      <option name="presentableId" value="LOCAL-00957" />
       <option name="project" value="LOCAL" />
-      <updated>1787806556253</updated>
+      <updated>1795498690265</updated>
     </task>
-    <task id="LOCAL-00793" summary="Refactor import statements for consistency and clarity in __init__.py">
+    <task id="LOCAL-00958" summary="fix: update import statements to use keyring library for password retrieval">
       <option name="closed" value="true" />
-      <created>1787806673934</created>
-      <option name="number" value="00793" />
-      <option name="presentableId" value="LOCAL-00793" />
+      <created>1795500709226</created>
+      <option name="number" value="00958" />
+      <option name="presentableId" value="LOCAL-00958" />
       <option name="project" value="LOCAL" />
-      <updated>1787806673934</updated>
+      <updated>1795500709226</updated>
     </task>
-    <task id="LOCAL-00794" summary="Uncomment and update viewer ID initialization for clarity in menu.py">
+    <task id="LOCAL-00959" summary="Fermeture forcée pouvant perdre les tâches non enregistrées&#10;Dans guitk/mainwindowtk.py, ligne 995 :&#10;should_quit = app_instance.quitApplication(force=True)&#10;&#10;Cet appel aboutit à IOController.close(force=True). D'après iocontrollertk.py, lignes 705–717, lorsqu'un fichier n'a pas encore de nom, l'enregistrement est abandonné sans demander de confirmation.&#10;&#10;Conséquence : fermer l'application avec un nouveau fichier de tâches non enregistré peut entraîner une perte de données.&#10;&#10;Correction à privilégier :&#10;should_quit = app_instance.quitApplication(force=False)&#10;&#10;Le cas d'une fermeture réellement forcée doit être traité séparément, notamment à l'arrêt du système.&#10;&#10;Masquer la fenêtre provoque quand même la fermeture de l'application&#10;PRIORITÉ HAUTE — CYCLE DE VIE&#10;&#10;Dans guitk/mainwindowtk.py, lignes 995–1023, quitApplication() est appelé avant de vérifier hidewhenclosed.&#10;&#10;La procédure de fermeture arrête des services et ferme le fichier de tâches. Ce n'est qu'ensuite que la fenêtre peut être masquée avec withdraw().&#10;&#10;Conséquence : la fenêtre peut rester cachée alors que son application a déjà été arrêtée. Sa réouverture risque de ne plus fonctionner correctement.&#10;&#10;Correction : vérifier d'abord si la fenêtre doit simplement être masquée. N'appeler quitApplication() que si l'utilisateur quitte réellement Task Coach.">
       <option name="closed" value="true" />
-      <created>1787807250487</created>
-      <option name="number" value="00794" />
-      <option name="presentableId" value="LOCAL-00794" />
+      <created>1795541165271</created>
+      <option name="number" value="00959" />
+      <option name="presentableId" value="LOCAL-00959" />
       <option name="project" value="LOCAL" />
-      <updated>1787807250487</updated>
+      <updated>1795541165271</updated>
     </task>
-    <task id="LOCAL-00795" summary="Update ID generation logic for consistency in newid.py">
+    <task id="LOCAL-00960" summary="Création en double des champs dans l'éditeur&#10;Dans guitk/dialog/editor.py, lignes 395–422, SubjectPage.__init__() exécute deux fois :&#10;self.addEntries()&#10;&#10;Entre les deux appels, certains attributs sont remis à None.&#10;&#10;Conséquence : création répétée des widgets et des mécanismes de synchronisation, avec un risque de callbacks multiples ou de références perdues.&#10;&#10;Correction : initialiser tous les attributs avant la création des champs, puis appeler addEntries() une seule fois.">
       <option name="closed" value="true" />
-      <created>1787807282693</created>
-      <option name="number" value="00795" />
-      <option name="presentableId" value="LOCAL-00795" />
+      <created>1795541230498</created>
+      <option name="number" value="00960" />
+      <option name="presentableId" value="LOCAL-00960" />
       <option name="project" value="LOCAL" />
-      <updated>1787807282693</updated>
+      <updated>1795541230498</updated>
     </task>
-    <task id="LOCAL-00796" summary="Refactor Viewer initialization and layout logic for clarity in basetk.py, container.py, and containertk.py">
+    <task id="LOCAL-00961" summary="Le repli prévu sans tkinterdnd2 ne fonctionne pas&#10;Dans application/tkapplication.py, lignes 62–65 et 184 :&#10;try:    import tkinterdnd2except ImportError:    import tkinter as tk&#10;&#10;Puis :&#10;self.root = tkinterdnd2.TkinterDnD.Tk()&#10;&#10;Si tkinterdnd2 est absent, le repli importe Tkinter mais le constructeur utilise quand même tkinterdnd2.&#10;&#10;Correction :&#10;try:    from tkinterdnd2 import TkinterDnD    RootWindow = TkinterDnD.Tkexcept ImportError:    import tkinter as tk    RootWindow = tk.Tk# Dans __init__self.root = RootWindow()&#10;&#10;Cela permettrait de démarrer sans le glisser-déposer externe, plutôt que de planter.&#10;&#10;&#10;Le fichier de tâches est fermé deux fois&#10;La séquence suivante est confirmée :&#10;TkinterApplication.quitApplication()&#10;&#10;IOController.close() → TaskFile.close()&#10;&#10;TaskFile.close() une deuxième fois&#10;&#10;Dans tkapplication.py, ligne 715, le second appel est inutile puisque IOController.close() a déjà fermé le fichier.&#10;&#10;Il peut provoquer un nettoyage répété du moniteur de changements et des collections. Je recommande de supprimer le deuxième appel, sous réserve que toutes les branches de fermeture passent bien par IOController.close().">
       <option name="closed" value="true" />
-      <created>1787982690619</created>
-      <option name="number" value="00796" />
-      <option name="presentableId" value="LOCAL-00796" />
+      <created>1795541585792</created>
+      <option name="number" value="00961" />
+      <option name="presentableId" value="LOCAL-00961" />
       <option name="project" value="LOCAL" />
-      <updated>1787982690619</updated>
+      <updated>1795541585792</updated>
     </task>
-    <task id="LOCAL-00797" summary="Refactor Viewer initialization and layout logic for clarity in basetk.py, container.py, and containertk.py">
+    <task id="LOCAL-00962" summary="refactor: rename and update viewer imports in taskcoach application">
       <option name="closed" value="true" />
-      <created>1787982723729</created>
-      <option name="number" value="00797" />
-      <option name="presentableId" value="LOCAL-00797" />
+      <created>1795542395488</created>
+      <option name="number" value="00962" />
+      <option name="presentableId" value="LOCAL-00962" />
       <option name="project" value="LOCAL" />
-      <updated>1787982723729</updated>
+      <updated>1795542395488</updated>
     </task>
-    <task id="LOCAL-00798" summary="Les domaines et le guitk semblent stables. Il reste encore à afficher les tâches et revoir les menus avant toutes autres choses.">
+    <task id="LOCAL-00963" summary="Column ignore l'alignement demandé&#10;widgetstk/itemctrltk.py, lignes 1049–1100&#10;&#10;Le constructeur accepte bien un paramètre alignment, mais le stocke incorrectement :&#10;alignment: str = &quot;w&quot;,&#10;Puis :&#10;self.__alignment = kwargs.pop(&quot;alignment&quot;, &quot;w&quot;)&#10;&#10;Comme Python a déjà consommé le paramètre nommé alignment, celui-ci n'est normalement plus dans kwargs. Toutes les colonnes sont donc initialisées avec l'alignement &quot;w&quot;, même lorsqu'un alignement à droite ou centré est demandé.&#10;&#10;Correction :&#10;self.__alignment = alignment&#10;&#10;C'est important pour les listes, l'affichage des valeurs numériques et l'export HTML.">
       <option name="closed" value="true" />
-      <created>1788069207132</created>
-      <option name="number" value="00798" />
-      <option name="presentableId" value="LOCAL-00798" />
+      <created>1795546635871</created>
+      <option name="number" value="00963" />
+      <option name="presentableId" value="LOCAL-00963" />
       <option name="project" value="LOCAL" />
-      <updated>1788069207133</updated>
+      <updated>1795546635871</updated>
     </task>
-    <task id="LOCAL-00799" summary="Correction de l’interface Tkinter et des commandes UI&#10;&#10;Correction de la transmission du viewer dans FileSaveSelectedTaskAsTemplate.&#10;Adaptation de la gestion des menus et des fenêtres principales Tkinter.&#10;Correction de la mémorisation des menus et des index d’entrées associés aux commandes.&#10;Mise à jour des entrées de menu avec entryconfigure().&#10;Amélioration de la gestion des commandes et des conteneurs UI.&#10;Correction de la création et de l’association des widgets de la barre d’outils.&#10;Correction de la gestion du widget de recherche et de ses bindings clavier.&#10;Amélioration de la gestion des viewers, des treeviews et des rafraîchisseurs.&#10;Ajout de protections contre les widgets indisponibles pendant l’initialisation.&#10;Amélioration des logs de diagnostic et suppression des traitements incompatibles avec Tkinter.">
+    <task id="LOCAL-00964" summary="Double initialisation restante dans EffortPage&#10;guitk/dialog/editor.py, lignes 1507–1520&#10;&#10;La double initialisation de SubjectPage est corrigée, mais une situation comparable subsistait dans EffortPage.&#10;&#10;Le constructeur de PageWithViewer appelle déjà self.addEntries(), puis EffortPage.__init__() le rappelle :&#10;super().__init__(    items, parent, taskFile, settings, settingsSection,    *args, **kwargs)self.addEntries()&#10;&#10;Correction : supprimer le second appel dans EffortPage.__init__().&#10;&#10;J'ai aussi relevé une duplication dans PrerequisitesPage : son initialisation peut créer le visualiseur, puis selected() le crée de nouveau. Il faudrait adopter le mécanisme différé déjà utilisé dans CategoriesPage.">
       <option name="closed" value="true" />
-      <created>1788500087714</created>
-      <option name="number" value="00799" />
-      <option name="presentableId" value="LOCAL-00799" />
+      <created>1795547316423</created>
+      <option name="number" value="00964" />
+      <option name="presentableId" value="LOCAL-00964" />
       <option name="project" value="LOCAL" />
-      <updated>1788500087715</updated>
+      <updated>1795547316424</updated>
     </task>
-    <task id="LOCAL-00800" summary="Amélioration de la classe ToggleCategoryMenu dans menutk.py pour une meilleure gestion des catégories et ajout de détails dans les exceptions dans observer.py.">
+    <task id="LOCAL-00965" summary="L'export HTML n'est pas totalement compatible avec Column&#10;PRIORITÉ MOYENNE — persistence/html/generator.py&#10;&#10;Dans Viewer2HTMLConverter.render(), le code appelle :&#10;column.render(item, humanReadable=False)&#10;&#10;&#10;&#10;Or la classe widgetstk.itemctrltk.Column définit :&#10;def render(self, obj: Any) -&gt; str:&#10;&#10;&#10;&#10;Si le générateur reçoit ces colonnes Tkinter, cela produira un TypeError pour l'argument humanReadable.&#10;&#10;Il faut harmoniser les signatures et vérifier que les valeurs de couleur retournées par cssColorSyntax() sont bien des chaînes CSS. Actuellement, la branche Tkinter peut retourner directement un tuple RGB.">
       <option name="closed" value="true" />
-      <created>1788590104103</created>
-      <option name="number" value="00800" />
-      <option name="presentableId" value="LOCAL-00800" />
+      <created>1795548042255</created>
+      <option name="number" value="00965" />
+      <option name="presentableId" value="LOCAL-00965" />
       <option name="project" value="LOCAL" />
-      <updated>1788590104103</updated>
+      <updated>1795548042255</updated>
     </task>
-    <task id="LOCAL-00801" summary="Diminution des messages de log en passant de DEBUG à INFO.">
+    <task id="LOCAL-00966" summary="Nouveau blocage trouvé : persistence.autosaver importe toujours wxPython&#10;J'ai trouvé un problème important dans taskcoachlib/persistence/autosaver.py.&#10;Ce fichier contient toujours :&#10;import wx&#10;&#10;&#10;Et persistence/__init__.py, ligne 39 l'importe automatiquement :&#10;from .autosaver import AutoSaver&#10;&#10;&#10;Sans wxPython installé, le démarrage Tkinter risque toujours un ModuleNotFoundError.&#10;&#10;L'implémentation actuelle d'AutoSaver appelle wx.GetApp() et utilise wx.EVT_IDLE pour déclencher l'enregistrement automatique. Il faut remplacer ce fonctionnement par une planification Tkinter, par exemple root.after() ou root.after_idle(), sans perdre la gestion des fichiers modifiés.&#10;&#10;Je considère ce point comme prioritaire avant les autres améliorations graphiques.&#10;&#10;Corrections appliquées :&#10;&#10;Suppression complète des références à wxPython.&#10;Remplacement de wx.EVT_IDLE par root.after_idle().&#10;Ajout de l’injection explicite du root Tkinter dans le constructeur :&#10;AutoSaver(settings, root)&#10;&#10;Conservation de la liste des fichiers modifiés.&#10;Évitement de la planification multiple grâce à l’identifiant retourné par after_idle().&#10;Compatibilité avec l’appel Tkinter on_idle() sans argument.&#10;Vérification syntaxique réussie.&#10;Aucun import wx ni appel wx.* restant dans le fichier corrigé.&#10;&#10;Le nouveau fichier est placé dans persistencetk :&#10;Le fichier d’origine contenait encore la logique wxPython et un appel Tkinter incomplet, notamment self.root qui n’était jamais initialisé.&#10;&#10;Le root doit bien être transmis au constructeur (AutoSaver(settings, root)) ou être accessible comme settings.root. Sinon, le code lève volontairement un RuntimeError lorsqu’un fichier devient modifié.">
       <option name="closed" value="true" />
-      <created>1788599274519</created>
-      <option name="number" value="00801" />
-      <option name="presentableId" value="LOCAL-00801" />
+      <created>1795594641478</created>
+      <option name="number" value="00966" />
+      <option name="presentableId" value="LOCAL-00966" />
       <option name="project" value="LOCAL" />
-      <updated>1788599274519</updated>
+      <updated>1795594641478</updated>
     </task>
-    <task id="LOCAL-00802" summary="Diminution des messages de log en passant de DEBUG à INFO.">
+    <task id="LOCAL-00967" summary="Plusieurs autres packages réintroduisent wxPython pendant l'initialisation&#10;PRIORITÉ HAUTE — ISOLATION DES INTERFACES&#10;&#10;Le contrôle des dépendances a révélé d'autres chemins problématiques :&#10;Package&#9;Fichier&#9;Problème&#10;workarounds&#9;display.py, font.py&#9;Imports wxPython non conditionnels&#10;changes&#9;sync.py&#9;Import wxPython alors que changes/__init__.py charge ce module&#10;mailer&#9;__init__.py, macmail.py&#9;Imports wxPython, y compris sur Linux&#10;speak&#9;speaker.py&#9;Import wxPython et utilisation de wx.CallLater&#10;&#10;Ces modules sont accessibles à partir des modules Tkinter : iocontrollertk, uicommandtk, preferencestk ou du lecteur XML.&#10;&#10;Par exemple, cette chaîne est présente :&#10;guitk/uicommand/uicommandtk.py&#10;    └── taskcoachlib.mailer&#10;          ├── import wx&#10;          └── macmail.py&#10;                └── import wx&#10;&#10;&#10;Et une autre :&#10;guitk/iocontrollertk.py&#10;    └── taskcoachlib.workarounds&#10;          ├── display.py → import wx&#10;          └── font.py    → import wx&#10;&#10;&#10;Il faut traiter ces imports à la source, en séparant les adaptations propres à wxPython des fonctions partagées. Installer wxPython permet de contourner les erreurs de module absent, mais ne garantit pas que les appels wx fonctionneront dans une application Tkinter.&#10;&#10;Oui, il faut traiter ces chemins à la source. Les fichiers fournis montrent toutefois que tous les modules signalés ne posent pas le même problème :&#10;&#10;workarounds/display.py et workarounds/font.py importent wxPython dès le chargement du module. Ces adaptations wx doivent être isolées afin qu’un démarrage Tk ne les exécute pas.12&#10;changes/sync.py n’importe pas wx au chargement. Son import de wx est local à notify() et limité à la branche où get_gui() vaut &quot;wx&quot;. Pour Tk, la méthode utilise le chemin Tk séparé.3&#10;mailer/macmail.py importe wx au niveau du module et définit une classe héritant de wx.ProgressDialog. Rendre seulement l’import conditionnel ne suffirait donc pas : la classe doit aussi être définie ou chargée uniquement pour le chemin wx/macOS.4&#10;mailer/thunderbird.py importe wx au niveau du module, puis s’en sert pour demander un domaine dans le cas d’une authentification NTLM. Ce dialogue devra dépendre de l’interface active, pas de wx pour le seul fait que le module est importé.5&#10;speak/speaker.py importe wx au chargement et utilise wx.CallLater pour réessayer pendant la lecture. Cette planification doit être adaptée à l’interface, ou remplacée par une solution indépendante de wx.6&#10;mailer/outlook.py n’importe pas wx dans le fichier fourni ; ses fonctions Outlook sont définies sous la condition Windows.7&#10;&#10;Je ne peux pas encore corriger de façon fiable l’import automatique de mailer/__init__.py ni celui de workarounds/__init__.py, car ces fichiers ne sont pas dans les pièces jointes. Ils sont déterminants pour savoir quels sous-modules sont chargés au démarrage. Pour faire un correctif complet sans deviner la structure, il me faut aussi ces deux fichiers et, idéalement, taskcoachlib/config/gui.py ainsi que le code Tk qui initialise le lecteur de mail et le haut-parleur.&#10;&#10;Cinq fichiers modifiés : l’initialisation de workarounds, l’initialisation de mailer, macmail.py, thunderbird.py et speaker.py. Les imports wx ont été retirés des chemins Tk concernés, et sync.py est resté inchangé, car son import de wx est déjà limité à la branche wx de notify().123456&#10;J’ai vérifié la syntaxe Python des fichiers de l’archive. Je n’ai pas exécuté de tests d’intégration dans TaskCoach. Cette archive ne remplace pas draganddrop.py, qui contient encore des classes et fonctionnalités wx spécifiques, ni ne fournit un remplacement Tk de ces fonctionnalités. À intégrer, il faudra donc tester notamment l’ouverture des mails macOS, la demande de domaine Thunderbird sous Tk et le comportement de la synthèse vocale. Le bac de travail a été réinitialisé pendant l’opération ; j’ai repris les fichiers joints avant de préparer et vérifier l’archive.">
       <option name="closed" value="true" />
-      <created>1788599287362</created>
-      <option name="number" value="00802" />
-      <option name="presentableId" value="LOCAL-00802" />
+      <created>1795615700975</created>
+      <option name="number" value="00967" />
+      <option name="presentableId" value="LOCAL-00967" />
       <option name="project" value="LOCAL" />
-      <updated>1788599287362</updated>
+      <updated>1795615700975</updated>
     </task>
-    <task id="LOCAL-00803" summary="Amélioration de la gestion des sous-menus dans ToggleCategoryMenu et mise à jour des messages de log pour plus de clarté.">
+    <task id="LOCAL-00968" summary="Correction de la gestion des widgets flottants dans Tkinter pour éviter les erreurs de conteneur">
       <option name="closed" value="true" />
-      <created>1788602397739</created>
-      <option name="number" value="00803" />
-      <option name="presentableId" value="LOCAL-00803" />
+      <created>1795617484486</created>
+      <option name="number" value="00968" />
+      <option name="presentableId" value="LOCAL-00968" />
       <option name="project" value="LOCAL" />
-      <updated>1788602397740</updated>
+      <updated>1795617484486</updated>
     </task>
-    <task id="LOCAL-00804" summary="Amélioration de la gestion des mises à jour du menu dynamique avec ajout de gestion des erreurs et de messages de log détaillés.&#10;Correction dans DynamicMenuThatGetsUICommandsFromViewer.registerForMenuUpdate() avec postcommand pour la mise à jour avant l'ouverture de menu.">
+    <task id="LOCAL-00969" summary="Amélioration de la gestion des fenêtres flottantes dans Tkinter en reconstruisant la vue des panneaux et en capturant l'état graphique.">
       <option name="closed" value="true" />
-      <created>1788673467482</created>
-      <option name="number" value="00804" />
-      <option name="presentableId" value="LOCAL-00804" />
+      <created>1795633712899</created>
+      <option name="number" value="00969" />
+      <option name="presentableId" value="LOCAL-00969" />
       <option name="project" value="LOCAL" />
-      <updated>1788673467482</updated>
+      <updated>1795633712900</updated>
     </task>
-    <task id="LOCAL-00805" summary="Amélioration de la gestion des erreurs dans Observer.__init__ avec ajout de logs d'avertissement et d'information, et gestion des exceptions lors de l'appel à super().">
+    <task id="LOCAL-00970" summary="Correction de la gestion du mot de passe dans password.py pour assurer la compatibilité avec les versions récentes de keyring.">
       <option name="closed" value="true" />
-      <created>1788674315992</created>
-      <option name="number" value="00805" />
-      <option name="presentableId" value="LOCAL-00805" />
+      <created>1795633923354</created>
+      <option name="number" value="00970" />
+      <option name="presentableId" value="LOCAL-00970" />
       <option name="project" value="LOCAL" />
-      <updated>1788674315992</updated>
+      <updated>1795633923355</updated>
     </task>
-    <task id="LOCAL-00806" summary="Amélioration de la gestion des logs dans les méthodes appendToToolBar et appendUICommands, ajout de messages de débogage et de mise en garde pour une meilleure traçabilité. Améliorations des appendToToolbar de différentes commandes avec retour des widgets.">
+    <task id="LOCAL-00971" summary="Le fichier mixer.py a été converti pour utiliser Tkinter au lieu de wxPython.&#10;Modifications réalisées :&#10;&#10;Suppression de import wx.&#10;Utilisation de tkinter.font via tkfont.&#10;Remplacement de wx.Font par tkfont.Font.&#10;Conversion des propriétés wx :&#10;&#10;GetPointSize() vers l’attribut Tk size.&#10;GetFamily() vers family.&#10;GetWeight() vers weight.&#10;GetStyle() vers slant.&#10;GetUnderlined() vers underline.&#10;&#10;&#10;Conservation de l’API utilisée par categorizable.py :&#10;font.FontMixer.mix(*fonts)&#10;&#10;Prise en charge des polices Tkinter et des descriptions de police sous forme de dictionnaire, tuple ou liste.&#10;Conservation du comportement de mélange :&#10;&#10;taille moyenne ;&#10;famille la plus représentée ;&#10;poids dominant entre bold, light et normal ;&#10;style italique si au moins une police est italique ;&#10;soulignement si au moins une police est soulignée.&#10;&#10;La syntaxe Python a été vérifiée, et categorizable.py référence toujours correctement font.FontMixer.mix. Le fichier corrigé est joint : mixer.py.">
       <option name="closed" value="true" />
-      <created>1788680432798</created>
-      <option name="number" value="00806" />
-      <option name="presentableId" value="LOCAL-00806" />
+      <created>1795712557674</created>
+      <option name="number" value="00971" />
+      <option name="presentableId" value="LOCAL-00971" />
       <option name="project" value="LOCAL" />
-      <updated>1788680432799</updated>
+      <updated>1795712557674</updated>
     </task>
-    <task id="LOCAL-00807" summary="Amélioration de la gestion des imports et des menus contextuels, ajout de la gestion des exceptions pour les imports manquants et mise à jour des références aux méthodes de l'arbre.">
+    <task id="LOCAL-00972" summary="Panneaux flottants : le gestionnaire exige des méthodes absentes des visualiseurs&#10;ERREUR DE COHÉRENCE CONFIRMÉE — PRIORITÉ HAUTE&#10;&#10;Fichier : aui_ttk/ttkframemanager_auimanager.py.&#10;&#10;La nouvelle méthode _rebuild_pane_window() exige que le widget possède l'une des méthodes suivantes :&#10;rebuild_view(parent)create_view(parent)clone_for_parent(parent)&#10;&#10;&#10;&#10;J'ai vérifié les classes des principaux visualiseurs (basetk.py, tasktk.py, categorytk.py, efforttk.py, notetk.py, attachmenttk.py) : aucune ne définit actuellement cette interface.&#10;&#10;Le détachement d'un visualiseur standard peut donc échouer avec :&#10;TypeError: Le panneau flottant doit exposer rebuild_view(parent),&#10;create_view(parent) ou clone_for_parent(parent)&#10;&#10;&#10;Autre problème : AuiManager.Update() appelle _float_pane() pour chaque panneau flottant, qui reconstruit alors le widget à chaque actualisation, y compris lors des opérations de redimensionnement. Cela risque de détruire et de recréer inutilement les visualiseurs.&#10;&#10;Je recommande d'introduire une interface de reconstruction explicite et commune aux visualiseurs, puis de ne reconstruire un panneau que lorsque son conteneur cible change réellement.&#10;&#10;Le correctif est prêt. Il permet de détacher et de réamarrer un visualiseur en conservant la même instance. Un redimensionnement ou un appel à Update() conserve aussi le Treeview, sa sélection et ses commandes.&#10;&#10;J’ai choisi de préserver l’identité du visualiseur. ViewerContainer conserve l’instance dans viewers, _active_viewer et _pane_by_viewer. De plus, viewerStatusEventType() utilise id(self). Recréer le visualiseur à chaque détachement aurait donc obligé à remplacer ces références et à rétablir les abonnements.&#10;&#10;Le patch modifie quatre fichiers.&#10;Fichier&#9;Changement&#10;basetk.py&#9;Le cadre extérieur de Viewer devient un tk.Frame, que Tk peut détacher avec wm manage et réamarrer avec wm forget. Les visualiseurs de tâches, catégories, efforts, notes et pièces jointes héritent de ce changement.&#10;ttkframemanager_auimanager.py&#9;Update() réutilise la fenêtre flottante. Pour un panneau doté d’une fabrique explicite, le gestionnaire reconstruit la vue une fois au détachement et une fois au réamarrage, puis restaure son état.&#10;ttkframemanager_floating.py&#9;La fermeture par la croix réamarre le panneau. Les panneaux à fabrique utilisent désormais la même logique de reconstruction que le gestionnaire.&#10;test_ttkaui.py&#9;Quatre tests couvrent les cycles répétés avec sélection, le nombre de reconstructions, l’échec de restauration et le retrait d’un panneau flottant sans destruction.&#10;&#10;&#10;Vérification sous Linux, Python 3.13 et Tk 8.6. Les quatre nouveaux tests passent avec de vrais widgets Tk. Le test existant test_cadre_flottant, qui échouait sur le commit de départ, passe également. Sur le module test_ttkaui complet, il reste 14 échecs ou erreurs, tous déjà présents avant le patch. La vérification a porté sur le gestionnaire et ses widgets. Le démarrage complet de Task Coach avec les cinq visualiseurs reste à valider.">
       <option name="closed" value="true" />
-      <created>1788771295961</created>
-      <option name="number" value="00807" />
-      <option name="presentableId" value="LOCAL-00807" />
+      <created>1795714045306</created>
+      <option name="number" value="00972" />
+      <option name="presentableId" value="LOCAL-00972" />
       <option name="project" value="LOCAL" />
-      <updated>1788771295961</updated>
+      <updated>1795714045306</updated>
     </task>
-    <task id="LOCAL-00808" summary="fix: update task viewer widget creation and refresh logic&#10;Amélioration de la gestion des conteneurs de visualisateurs, mise à jour des références et ajout de la gestion des détails des tâches pour une meilleure traçabilité.">
+    <task id="LOCAL-00973" summary="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.">
       <option name="closed" value="true" />
-      <created>1790933286609</created>
-      <option name="number" value="00808" />
-      <option name="presentableId" value="LOCAL-00808" />
+      <created>1795714150108</created>
+      <option name="number" value="00973" />
+      <option name="presentableId" value="LOCAL-00973" />
       <option name="project" value="LOCAL" />
-      <updated>1790933286609</updated>
+      <updated>1795714150108</updated>
     </task>
-    <task id="LOCAL-00809" summary="fix: improve task insertion and rendering logic in Treeview">
+    <task id="LOCAL-00974" summary="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.">
       <option name="closed" value="true" />
-      <created>1790941862437</created>
-      <option name="number" value="00809" />
-      <option name="presentableId" value="LOCAL-00809" />
+      <created>1795714179850</created>
+      <option name="number" value="00974" />
+      <option name="presentableId" value="LOCAL-00974" />
       <option name="project" value="LOCAL" />
-      <updated>1790941862437</updated>
+      <updated>1795714179850</updated>
     </task>
-    <task id="LOCAL-00810" summary="fix: improve variable naming for clarity in ToggleCategoryMenu.&#10;Résumé des corrections&#10;Problème initial : La variable category était utilisée dans deux boucles imbriquées, ce qui créait un masquage (shadowing) de variable.&#10;&#10;Corrections appliquées :&#10;&#10;Ligne 2024-2025 : Renommé les variables dans la première boucle :&#10;lambda category → lambda one_category&#10;for category in categories → for the_category in categories&#10;Ligne 2034 : Renommé dans la compréhension de liste :&#10;category for category in categories → category for a_category in categories&#10;Lignes 2046, 2052, 2057, 2062 : Renommé dans la deuxième boucle :&#10;for category in categoriesWithChildren → for the_category in categoriesWithChildren&#10;Mis à jour toutes les références à category pour utiliser the_category&#10;Le problème de shadowing est maintenant résolu. Chaque variable a un nom distinct, ce qui rend le code plus clair et évite les confusions entre les différentes boucles.">
+    <task id="LOCAL-00975" summary="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.&#10;&#10;Le correctif résout aussi la perte de la notification de reprise. Au franchissement du seuil d’inactivité, le notificateur mémorise l’heure de la dernière activité système et continue ses vérifications. Lorsque l’utilisateur revient, il transmet cet horodatage au contrôleur pour afficher la notification de l’effort. Les événements powermgt.off et powermgt.on restent réservés à la mise en veille et à la reprise du système.&#10;&#10;Vérifications effectuées. Les quatre fichiers compilent et git apply --check réussit sur les sources de master. Un test avec la boucle Tcl réelle, une sonde d’inactivité simulée et une fenêtre de notification simulée a vérifié le minuteur unique, l’horodatage, la reprise sur le thread principal et l’arrêt depuis le rappel lui-même. Le lancement complet de Task Coach avec affichage graphique reste à valider.">
       <option name="closed" value="true" />
-      <created>1790943664748</created>
-      <option name="number" value="00810" />
-      <option name="presentableId" value="LOCAL-00810" />
+      <created>1795717150082</created>
+      <option name="number" value="00975" />
+      <option name="presentableId" value="LOCAL-00975" />
       <option name="project" value="LOCAL" />
-      <updated>1790943664748</updated>
+      <updated>1795717150082</updated>
     </task>
-    <task id="LOCAL-00811" summary="docs: add initial README with project overview and installation instructions">
+    <task id="LOCAL-00976" summary="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.&#10;&#10;Le correctif résout aussi la perte de la notification de reprise. Au franchissement du seuil d’inactivité, le notificateur mémorise l’heure de la dernière activité système et continue ses vérifications. Lorsque l’utilisateur revient, il transmet cet horodatage au contrôleur pour afficher la notification de l’effort. Les événements powermgt.off et powermgt.on restent réservés à la mise en veille et à la reprise du système.&#10;&#10;Vérifications effectuées. Les quatre fichiers compilent et git apply --check réussit sur les sources de master. Un test avec la boucle Tcl réelle, une sonde d’inactivité simulée et une fenêtre de notification simulée a vérifié le minuteur unique, l’horodatage, la reprise sur le thread principal et l’arrêt depuis le rappel lui-même. Le lancement complet de Task Coach avec affichage graphique reste à valider.">
       <option name="closed" value="true" />
-      <created>1791277715585</created>
-      <option name="number" value="00811" />
-      <option name="presentableId" value="LOCAL-00811" />
+      <created>1795719446822</created>
+      <option name="number" value="00976" />
+      <option name="presentableId" value="LOCAL-00976" />
       <option name="project" value="LOCAL" />
-      <updated>1791277715585</updated>
+      <updated>1795719446822</updated>
     </task>
-    <option name="localTasksCounter" value="812" />
+    <option name="localTasksCounter" value="977" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -1015,32 +1309,32 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
-    <MESSAGE value="Refactor print statements to use logging for improved consistency and debugging" />
-    <MESSAGE value="Refactor ToolTip class for improved readability and maintainability" />
-    <MESSAGE value="Fix conditional statement for GUI name check in __init__.py" />
-    <MESSAGE value="Refactor import statements for improved organization and clarity" />
-    <MESSAGE value="Add documentation for serialization invariants in __init__.py" />
-    <MESSAGE value="Add all exports to __init__.py for improved module accessibility" />
-    <MESSAGE value="Uncomment __all__ exports in __init__.py for improved module accessibility" />
-    <MESSAGE value="Refactor import statements for consistency and clarity in __init__.py" />
-    <MESSAGE value="Uncomment and update viewer ID initialization for clarity in menu.py" />
-    <MESSAGE value="Update ID generation logic for consistency in newid.py" />
-    <MESSAGE value="Refactor Viewer initialization and layout logic for clarity in basetk.py, container.py, and containertk.py" />
-    <MESSAGE value="Les domaines et le guitk semblent stables. Il reste encore à afficher les tâches et revoir les menus avant toutes autres choses." />
-    <MESSAGE value="Correction de l’interface Tkinter et des commandes UI&#10;&#10;Correction de la transmission du viewer dans FileSaveSelectedTaskAsTemplate.&#10;Adaptation de la gestion des menus et des fenêtres principales Tkinter.&#10;Correction de la mémorisation des menus et des index d’entrées associés aux commandes.&#10;Mise à jour des entrées de menu avec entryconfigure().&#10;Amélioration de la gestion des commandes et des conteneurs UI.&#10;Correction de la création et de l’association des widgets de la barre d’outils.&#10;Correction de la gestion du widget de recherche et de ses bindings clavier.&#10;Amélioration de la gestion des viewers, des treeviews et des rafraîchisseurs.&#10;Ajout de protections contre les widgets indisponibles pendant l’initialisation.&#10;Amélioration des logs de diagnostic et suppression des traitements incompatibles avec Tkinter." />
-    <MESSAGE value="Amélioration de la classe ToggleCategoryMenu dans menutk.py pour une meilleure gestion des catégories et ajout de détails dans les exceptions dans observer.py." />
-    <MESSAGE value="Diminution des messages de log en passant de DEBUG à INFO." />
-    <MESSAGE value="Amélioration de la gestion des sous-menus dans ToggleCategoryMenu et mise à jour des messages de log pour plus de clarté." />
-    <MESSAGE value="Amélioration de la gestion des mises à jour du menu dynamique avec ajout de gestion des erreurs et de messages de log détaillés.&#10;Correction dans DynamicMenuThatGetsUICommandsFromViewer.registerForMenuUpdate() avec postcommand pour la mise à jour avant l'ouverture de menu." />
-    <MESSAGE value="Amélioration de la gestion des erreurs dans Observer.__init__ avec ajout de logs d'avertissement et d'information, et gestion des exceptions lors de l'appel à super()." />
-    <MESSAGE value="Amélioration de la gestion des logs dans les méthodes appendToToolBar et appendUICommands, ajout de messages de débogage et de mise en garde pour une meilleure traçabilité. Améliorations des appendToToolbar de différentes commandes avec retour des widgets." />
-    <MESSAGE value="Amélioration de la gestion des imports et des menus contextuels, ajout de la gestion des exceptions pour les imports manquants et mise à jour des références aux méthodes de l'arbre." />
-    <MESSAGE value="{&quot;error&quot;:{&quot;message&quot;:&quot;The model `llama-3.3-70b-versatile` does not exist or you do not have access to it.&quot;,&quot;type&quot;:&quot;invalid_request_error&quot;,&quot;code&quot;:&quot;model_not_found&quot;}}" />
-    <MESSAGE value="fix: update task viewer widget creation and refresh logic&#10;Amélioration de la gestion des conteneurs de visualisateurs, mise à jour des références et ajout de la gestion des détails des tâches pour une meilleure traçabilité." />
-    <MESSAGE value="fix: improve task insertion and rendering logic in Treeview" />
-    <MESSAGE value="fix: improve variable naming for clarity in ToggleCategoryMenu.&#10;Résumé des corrections&#10;Problème initial : La variable category était utilisée dans deux boucles imbriquées, ce qui créait un masquage (shadowing) de variable.&#10;&#10;Corrections appliquées :&#10;&#10;Ligne 2024-2025 : Renommé les variables dans la première boucle :&#10;lambda category → lambda one_category&#10;for category in categories → for the_category in categories&#10;Ligne 2034 : Renommé dans la compréhension de liste :&#10;category for category in categories → category for a_category in categories&#10;Lignes 2046, 2052, 2057, 2062 : Renommé dans la deuxième boucle :&#10;for category in categoriesWithChildren → for the_category in categoriesWithChildren&#10;Mis à jour toutes les références à category pour utiliser the_category&#10;Le problème de shadowing est maintenant résolu. Chaque variable a un nom distinct, ce qui rend le code plus clair et évite les confusions entre les différentes boucles." />
-    <MESSAGE value="docs: add initial README with project overview and installation instructions" />
-    <option name="LAST_COMMIT_MESSAGE" value="docs: add initial README with project overview and installation instructions" />
+    <MESSAGE value="fix: enhance debug logging across multiple modules for improved traceability" />
+    <MESSAGE value="J'ai repéré plusieurs incompatibilités importantes entre treectrltk.py et la dernière version de draganddroptk.py.&#10;&#10;La plus sérieuse concerne l'initialisation multiple du Treeview : TreeListCtrl appelle directement ttk.Treeview.__init__(), puis les constructeurs de plusieurs mixins, dont TreeCtrlDragAndDropMixin.__init__(). Or ce dernier utilise super().__init__(), qui peut remonter jusqu'au constructeur du widget. Cela risque de recréer ou de réinitialiser le contrôle.&#10;&#10;J'ai également constaté que les événements de glisser-déposer sont associés deux fois, que TreeListCtrl.OnDrop() documente part comme une chaîne alors que le mixin transmet -1, 0 ou 1, et que les deux fichiers n'emploient pas toujours la même convention pour la racine de l'arborescence.&#10;&#10;Je vais conserver les fonctionnalités métier existantes, notamment le callback dragAndDropCommand, et corriger les points d'intégration sans transformer arbitrairement la logique de Task Coach.&#10;&#10;J'ai préparé deux fichiers révisés, car la correction de treectrltk.py nécessite aussi une petite adaptation de draganddroptk.py.&#10;Télécharger treectrltk_revu.py&#10;&#10;3 282 lignes — corrections d'intégration et compléments de documentation.&#10;&#10;&#10;&#10;Télécharger draganddroptk_integration.py&#10;&#10;632 lignes — initialisation du glisser-déposer adaptée à un widget déjà créé.&#10;&#10;&#10;&#10;Modifications principales&#10;- Initialisation : ajout de initialize_drag_support() pour installer le glisser-déposer sans rappeler ttk.Treeview.__init__().&#10;- Événements : suppression des liaisons DnD redondantes et correction des interactions avec les clics de CheckTreeCtrl.&#10;- OnDrop() : documentation et annotation corrigées pour les positions -1, 0 et 1.&#10;- Sélection : correction de select_all(), qui ne conservait auparavant que le dernier élément sélectionné.&#10;- Arborescence : amélioration de GetItemChildren() et clarification de GetRootItem().&#10;- Docstrings : ajout des descriptions manquantes et clarification de plusieurs comportements, sans supprimer les fonctionnalités métier existantes." />
+    <MESSAGE value="fix: refactor presentation method in Noteviewer to return base viewer presentation" />
+    <MESSAGE value="Je propose trois corrections ciblées :&#10;1.&#10;tasktk.py — dans isTreeViewer(), utiliser presentation().treeMode() seulement si la présentation expose treeMode; sinon, lire le réglage treemode. Ça couvre le démarrage avant création de la présentation, sans comparer à [] ni retourner None.&#10;2.&#10;mixintk.py — faire retourner à hasFilter() la combinaison des filtres de catégories et de tâches (super().hasFilter() or ...), en vérifiant que la présentation expose hasFilter() pendant l’initialisation.&#10;3.&#10;efforttk.py — retirer la garde hasattr(self, &quot;presentation&quot;), qui est toujours vraie pour une méthode de classe et ne protège pas contre une présentation vide. La méthode doit toujours retourner un tuple de commandes, comme attendu par l’assemblage de la barre d’outils.&#10;Je laisserais basetk.py inchangé pour l’instant : son fallback à [] permet à isTreeViewer() de gérer l’initialisation, même si on pourrait ensuite remplacer ce fallback par un mécanisme d’état plus explicite." />
+    <MESSAGE value="## **Résultat de la vérification des trois fichiers**&#10;&#10;Les trois modules sont syntaxiquement analysables, mais **je déconseille de les utiliser ensemble en l'état**. Le problème principal est architectural : `itemctrltk.py` combine des mixins coopératifs (qui appellent `super()`) avec d'autres constructeurs qui arrêtent volontairement la chaîne d'initialisation. `treectrltk.py` essaie de contourner cela en appelant plusieurs constructeurs manuellement.&#10;&#10;J'ai identifié les changements prioritaires suivants :&#10;&#10;| Priorité | Fichier            | Changement nécessaire                                                                             |&#10;| -------- | ------------------ | ------------------------------------------------------------------------------------------------- |&#10;| Critique | `itemctrltk.py`    | Supprimer l'utilisation de `FileTextDropTarget`, absent de `draganddroptk.py`                     |&#10;| Critique | `treectrltk.py`    | Éviter les réinitialisations du widget lors de l'appel des mixins                                 |&#10;| Critique | Les trois          | Préserver un seul dictionnaire partagé `_item_to_object`                                          |&#10;| Haute    | `treectrltk.py`    | Ne plus lier deux fois les événements de glisser-déposer                                          |&#10;| Haute    | `itemctrltk.py`    | Faire recevoir à la gestion des colonnes des objets `Column`, et non parfois des noms de colonnes |&#10;| Haute    | `treectrltk.py`    | Préserver le modèle métier lors du déplacement des tâches                                         |&#10;| Moyenne  | `draganddroptk.py` | Fiabiliser le traitement des dépôts externes et des callbacks                                     |&#10;| Moyenne  | Les trois          | Nettoyer les anciens blocs commentés et compléter les docstrings utiles                           |&#10;&#10;Le point le plus important est de **ne pas résoudre le problème en supprimant tous les appels à&amp;#x20;**`super()`**&amp;#x20;sans distinction**. Cela pourrait réparer `TreeListCtrl` tout en cassant `TaskTree` ou d'autres contrôles.&#10;&#10;## **1.&amp;#x20;**`itemctrltk.py`**&amp;#x20;: les corrections à effectuer**&#10;&#10;### **A. Corriger&amp;#x20;**`_CtrlWithDropTargetMixin`&#10;&#10;Vers la ligne 636, tu utilises :&#10;&#10;```&#10;self.drop_target = draganddroptk.FileTextDropTarget(    self, self._handle_drop_callback)&#10;```&#10;&#10;Or `FileTextDropTarget` n'existe pas dans le `draganddroptk.py` fourni. Remplace ce bloc par :&#10;&#10;```&#10;self.drop_target = Noneif self.__onDropFilesCallback or self.__onDropURLCallback:    self.drop_target = draganddroptk.DropTarget(        onDropFileCallback=(            lambda x, y, files: self._handle_drop_callback(files)            if self.__onDropFilesCallback else None        ),        onDropUrlCallback=(            lambda x, y, text: self._handle_drop_callback(text)            if self.__onDropURLCallback else None        ),    )    self.drop_target.attach(self)&#10;```&#10;&#10;Cette correction suppose que la racine Tk utilise `tkinterdnd2`. Le dépôt de courriels propriétaires reste à traiter séparément : le callback `onDropMail` ne suffit pas à reproduire le comportement de wxPython.&#10;&#10;### **B. Protéger&amp;#x20;**`_item_to_object`&#10;&#10;Dans `_CtrlWithItemsMixin.__init__()`, remplacer :&#10;&#10;```&#10;self._item_to_object: Dict[str, Any] = {}&#10;```&#10;&#10;par :&#10;&#10;```&#10;if not hasattr(self, &quot;_item_to_object&quot;):    self._item_to_object: Dict[str, Any] = {}&#10;```&#10;&#10;Il faut appliquer le même principe dans `TreeHelperMixin.__init__()` de `draganddroptk.py`.&#10;&#10;Sinon, lorsqu'un deuxième constructeur initialise son mixin, il peut effacer les associations entre les identifiants des lignes et les objets métier.&#10;&#10;### **C. Corriger&amp;#x20;**`TaskTree`&#10;&#10;Dans `TaskTree.__init__()`, tu transmets actuellement :&#10;&#10;```&#10;columns=[c.name() for c in columns]&#10;```&#10;&#10;à `CtrlWithColumnsMixin`.&#10;&#10;Or celui-ci et ses parents manipulent notamment `col.name()` et `col.is_shown()`. Il faut donc conserver les objets :&#10;&#10;```&#10;columns=columns&#10;```&#10;&#10;Attention : cela ne résout pas à lui seul la chaîne de constructeurs de `TaskTree`, qui doit encore être harmonisée.&#10;&#10;## **2.&amp;#x20;**`treectrltk.py`**&amp;#x20;: les corrections à effectuer**&#10;&#10;### **A. Corriger définitivement l'initialisation des mixins**&#10;&#10;La partie problématique de `TreeListCtrl.__init__()` est :&#10;&#10;```&#10;ttk.Treeview.__init__(...)CtrlWithItemsMixin.__init__(...)CtrlWithColumnsMixin.__init__(...)TreeCtrlDragAndDropMixin.__init__(...)&#10;```&#10;&#10;Les constructeurs de `CtrlWithItemsMixin` et de `CtrlWithColumnsMixin` utilisent `super().__init__()`. Dans le contexte de l'héritage multiple, cela peut traverser plusieurs autres mixins et atteindre le `Treeview` déjà initialisé.&#10;&#10;La solution à retenir est la suivante : **initialiser une fois le widget Tk, puis appeler des méthodes d'initialisation fonctionnelle distinctes pour chacun des mixins**. Il faut créer ou terminer ces méthodes dans `itemctrltk.py` avant de remplacer les appels ci-dessus. Il ne suffit pas d'appeler directement les constructeurs des classes parentes.&#10;&#10;Pour le glisser-déposer, la méthode existe déjà dans le fichier fourni. Remplace :&#10;&#10;```&#10;TreeCtrlDragAndDropMixin.__init__(    self, parent, dragAndDropCommand=dragAndDropCommand)&#10;```&#10;&#10;par :&#10;&#10;```&#10;self.initialize_drag_support(    validateDrag=self.validateDragCallback,    dragAndDropCommand=dragAndDropCommand,)&#10;```&#10;&#10;Cette modification est compatible avec le mécanisme prévu par ton `draganddroptk.py`, qui initialise le DnD d'un widget déjà créé.&#10;&#10;### **B. Supprimer les liaisons redondantes**&#10;&#10;Dans `TreeListCtrl._bind_events()`, supprime les trois bindings suivants :&#10;&#10;```&#10;self.bind(&quot;&lt;ButtonPress-1&gt;&quot;, self.on_start_drag, add=&quot;+&quot;)self.bind(&quot;&lt;B1-Motion&gt;&quot;, self.on_dragging, add=&quot;+&quot;)self.bind(&quot;&lt;ButtonRelease-1&gt;&quot;, self.on_end_drag, add=&quot;+&quot;)&#10;```&#10;&#10;`initialize_drag_support()` installe déjà `_on_press`, `_on_motion` et `_on_release`. Conserver les deux jeux de bindings risque d'exécuter deux fois la même action.&#10;&#10;### **C. Conserver&amp;#x20;**`TreeListCtrl.OnDrop()`&#10;&#10;Dans ta version actuelle, `TreeListCtrl.OnDrop()` transmet les objets métier à :&#10;&#10;```&#10;self.dragAndDropCommand(    drop_object, dragged_objects, part, column)&#10;```&#10;&#10;C'est la bonne séparation des responsabilités pour Task Coach : le contrôle gère l'interaction, tandis que la commande métier modifie les tâches. **Je recommande de conserver cette approche plutôt que de déplacer directement les lignes avec&amp;#x20;**`Treeview.move()`**.**&#10;&#10;Il faut toutefois vérifier la signature réelle de `dragAndDropCommand` dans les viewers, car le contrôle transmet quatre arguments.&#10;&#10;### **D. Sélection et colonnes**&#10;&#10;Ton `select_all()` utilise maintenant correctement :&#10;&#10;```&#10;items = self.GetItemChildren(&quot;&quot;, recursively=True)if items:    self.selection_set(*items)&#10;```&#10;&#10;Cette correction est à conserver.&#10;&#10;En revanche, `sort_by()` réordonne les lignes du `Treeview` sans nécessairement réordonner les données métier. Il faut déterminer si le tri est purement visuel ou s'il doit être délégué au viewer.&#10;&#10;## **3.&amp;#x20;**`draganddroptk.py`**&amp;#x20;: les corrections restantes**&#10;&#10;`initialize_drag_support()` est la partie importante à conserver. Son caractère idempotent évite de réinstaller les bindings lors d'une deuxième initialisation.&#10;&#10;Je recommande également de conserver `IsValidDropTarget()`, notamment l'interdiction des déplacements créant un cycle dans l'arborescence.&#10;&#10;Le traitement des dépôts provenant d'applications externes reste à tester avec `tkinterdnd2`, particulièrement lorsqu'un même widget accepte à la fois des fichiers et du texte. Il ne faut pas déduire systématiquement le format déposé de la seule forme de `event.data`.&#10;&#10;## **4. Vérifications à réaliser après modification**&#10;&#10;Les trois fichiers passent le contrôle syntaxique Python, mais ce résultat ne garantit pas qu'ils s'initialisent correctement ensemble.&#10;&#10;Le test prioritaire est une création réelle de `TreeListCtrl`, suivie d'un contrôle des bindings et de la conservation des objets métier. Il faudra ensuite tester le déplacement d'une tâche, le refus du dépôt d'un parent sur un enfant, l'ouverture des branches, puis les colonnes masquées et les menus contextuels.&#10;&#10;Il reste une dépendance importante à analyser : `autowidthtk.AutoColumnWidthMixin`, qui participe à la chaîne d'héritage de `CtrlWithColumnsMixin`. Sans connaître son constructeur, je ne peux pas garantir une refonte complète et sûre de la MRO.&#10;&#10;**Conclusion :** les corrections de DnD et de stockage des objets sont assez ciblées. En revanche, pour l'initialisation de `itemctrltk.py`, il faut privilégier une correction structurée de l'ensemble des mixins plutôt qu'une série de contournements. C'est le principal obstacle restant à la cohérence des trois modules." />
+    <MESSAGE value="fix: update import statements and layout configurations for consistency" />
+    <MESSAGE value="fix: modify quitApplication call to prevent unsaved file closure" />
+    <MESSAGE value="fix: adjust comment formatting for clarity in task_report_generator.py" />
+    <MESSAGE value="fix: update import statements to use keyring library for password retrieval" />
+    <MESSAGE value="Fermeture forcée pouvant perdre les tâches non enregistrées&#10;Dans guitk/mainwindowtk.py, ligne 995 :&#10;should_quit = app_instance.quitApplication(force=True)&#10;&#10;Cet appel aboutit à IOController.close(force=True). D'après iocontrollertk.py, lignes 705–717, lorsqu'un fichier n'a pas encore de nom, l'enregistrement est abandonné sans demander de confirmation.&#10;&#10;Conséquence : fermer l'application avec un nouveau fichier de tâches non enregistré peut entraîner une perte de données.&#10;&#10;Correction à privilégier :&#10;should_quit = app_instance.quitApplication(force=False)&#10;&#10;Le cas d'une fermeture réellement forcée doit être traité séparément, notamment à l'arrêt du système.&#10;&#10;Masquer la fenêtre provoque quand même la fermeture de l'application&#10;PRIORITÉ HAUTE — CYCLE DE VIE&#10;&#10;Dans guitk/mainwindowtk.py, lignes 995–1023, quitApplication() est appelé avant de vérifier hidewhenclosed.&#10;&#10;La procédure de fermeture arrête des services et ferme le fichier de tâches. Ce n'est qu'ensuite que la fenêtre peut être masquée avec withdraw().&#10;&#10;Conséquence : la fenêtre peut rester cachée alors que son application a déjà été arrêtée. Sa réouverture risque de ne plus fonctionner correctement.&#10;&#10;Correction : vérifier d'abord si la fenêtre doit simplement être masquée. N'appeler quitApplication() que si l'utilisateur quitte réellement Task Coach." />
+    <MESSAGE value="Création en double des champs dans l'éditeur&#10;Dans guitk/dialog/editor.py, lignes 395–422, SubjectPage.__init__() exécute deux fois :&#10;self.addEntries()&#10;&#10;Entre les deux appels, certains attributs sont remis à None.&#10;&#10;Conséquence : création répétée des widgets et des mécanismes de synchronisation, avec un risque de callbacks multiples ou de références perdues.&#10;&#10;Correction : initialiser tous les attributs avant la création des champs, puis appeler addEntries() une seule fois." />
+    <MESSAGE value="Le repli prévu sans tkinterdnd2 ne fonctionne pas&#10;Dans application/tkapplication.py, lignes 62–65 et 184 :&#10;try:    import tkinterdnd2except ImportError:    import tkinter as tk&#10;&#10;Puis :&#10;self.root = tkinterdnd2.TkinterDnD.Tk()&#10;&#10;Si tkinterdnd2 est absent, le repli importe Tkinter mais le constructeur utilise quand même tkinterdnd2.&#10;&#10;Correction :&#10;try:    from tkinterdnd2 import TkinterDnD    RootWindow = TkinterDnD.Tkexcept ImportError:    import tkinter as tk    RootWindow = tk.Tk# Dans __init__self.root = RootWindow()&#10;&#10;Cela permettrait de démarrer sans le glisser-déposer externe, plutôt que de planter.&#10;&#10;&#10;Le fichier de tâches est fermé deux fois&#10;La séquence suivante est confirmée :&#10;TkinterApplication.quitApplication()&#10;&#10;IOController.close() → TaskFile.close()&#10;&#10;TaskFile.close() une deuxième fois&#10;&#10;Dans tkapplication.py, ligne 715, le second appel est inutile puisque IOController.close() a déjà fermé le fichier.&#10;&#10;Il peut provoquer un nettoyage répété du moniteur de changements et des collections. Je recommande de supprimer le deuxième appel, sous réserve que toutes les branches de fermeture passent bien par IOController.close()." />
+    <MESSAGE value="refactor: rename and update viewer imports in taskcoach application" />
+    <MESSAGE value="Column ignore l'alignement demandé&#10;widgetstk/itemctrltk.py, lignes 1049–1100&#10;&#10;Le constructeur accepte bien un paramètre alignment, mais le stocke incorrectement :&#10;alignment: str = &quot;w&quot;,&#10;Puis :&#10;self.__alignment = kwargs.pop(&quot;alignment&quot;, &quot;w&quot;)&#10;&#10;Comme Python a déjà consommé le paramètre nommé alignment, celui-ci n'est normalement plus dans kwargs. Toutes les colonnes sont donc initialisées avec l'alignement &quot;w&quot;, même lorsqu'un alignement à droite ou centré est demandé.&#10;&#10;Correction :&#10;self.__alignment = alignment&#10;&#10;C'est important pour les listes, l'affichage des valeurs numériques et l'export HTML." />
+    <MESSAGE value="Double initialisation restante dans EffortPage&#10;guitk/dialog/editor.py, lignes 1507–1520&#10;&#10;La double initialisation de SubjectPage est corrigée, mais une situation comparable subsistait dans EffortPage.&#10;&#10;Le constructeur de PageWithViewer appelle déjà self.addEntries(), puis EffortPage.__init__() le rappelle :&#10;super().__init__(    items, parent, taskFile, settings, settingsSection,    *args, **kwargs)self.addEntries()&#10;&#10;Correction : supprimer le second appel dans EffortPage.__init__().&#10;&#10;J'ai aussi relevé une duplication dans PrerequisitesPage : son initialisation peut créer le visualiseur, puis selected() le crée de nouveau. Il faudrait adopter le mécanisme différé déjà utilisé dans CategoriesPage." />
+    <MESSAGE value="L'export HTML n'est pas totalement compatible avec Column&#10;PRIORITÉ MOYENNE — persistence/html/generator.py&#10;&#10;Dans Viewer2HTMLConverter.render(), le code appelle :&#10;column.render(item, humanReadable=False)&#10;&#10;&#10;&#10;Or la classe widgetstk.itemctrltk.Column définit :&#10;def render(self, obj: Any) -&gt; str:&#10;&#10;&#10;&#10;Si le générateur reçoit ces colonnes Tkinter, cela produira un TypeError pour l'argument humanReadable.&#10;&#10;Il faut harmoniser les signatures et vérifier que les valeurs de couleur retournées par cssColorSyntax() sont bien des chaînes CSS. Actuellement, la branche Tkinter peut retourner directement un tuple RGB." />
+    <MESSAGE value="Nouveau blocage trouvé : persistence.autosaver importe toujours wxPython&#10;J'ai trouvé un problème important dans taskcoachlib/persistence/autosaver.py.&#10;Ce fichier contient toujours :&#10;import wx&#10;&#10;&#10;Et persistence/__init__.py, ligne 39 l'importe automatiquement :&#10;from .autosaver import AutoSaver&#10;&#10;&#10;Sans wxPython installé, le démarrage Tkinter risque toujours un ModuleNotFoundError.&#10;&#10;L'implémentation actuelle d'AutoSaver appelle wx.GetApp() et utilise wx.EVT_IDLE pour déclencher l'enregistrement automatique. Il faut remplacer ce fonctionnement par une planification Tkinter, par exemple root.after() ou root.after_idle(), sans perdre la gestion des fichiers modifiés.&#10;&#10;Je considère ce point comme prioritaire avant les autres améliorations graphiques.&#10;&#10;Corrections appliquées :&#10;&#10;Suppression complète des références à wxPython.&#10;Remplacement de wx.EVT_IDLE par root.after_idle().&#10;Ajout de l’injection explicite du root Tkinter dans le constructeur :&#10;AutoSaver(settings, root)&#10;&#10;Conservation de la liste des fichiers modifiés.&#10;Évitement de la planification multiple grâce à l’identifiant retourné par after_idle().&#10;Compatibilité avec l’appel Tkinter on_idle() sans argument.&#10;Vérification syntaxique réussie.&#10;Aucun import wx ni appel wx.* restant dans le fichier corrigé.&#10;&#10;Le nouveau fichier est placé dans persistencetk :&#10;Le fichier d’origine contenait encore la logique wxPython et un appel Tkinter incomplet, notamment self.root qui n’était jamais initialisé.&#10;&#10;Le root doit bien être transmis au constructeur (AutoSaver(settings, root)) ou être accessible comme settings.root. Sinon, le code lève volontairement un RuntimeError lorsqu’un fichier devient modifié." />
+    <MESSAGE value="Plusieurs autres packages réintroduisent wxPython pendant l'initialisation&#10;PRIORITÉ HAUTE — ISOLATION DES INTERFACES&#10;&#10;Le contrôle des dépendances a révélé d'autres chemins problématiques :&#10;Package&#9;Fichier&#9;Problème&#10;workarounds&#9;display.py, font.py&#9;Imports wxPython non conditionnels&#10;changes&#9;sync.py&#9;Import wxPython alors que changes/__init__.py charge ce module&#10;mailer&#9;__init__.py, macmail.py&#9;Imports wxPython, y compris sur Linux&#10;speak&#9;speaker.py&#9;Import wxPython et utilisation de wx.CallLater&#10;&#10;Ces modules sont accessibles à partir des modules Tkinter : iocontrollertk, uicommandtk, preferencestk ou du lecteur XML.&#10;&#10;Par exemple, cette chaîne est présente :&#10;guitk/uicommand/uicommandtk.py&#10;    └── taskcoachlib.mailer&#10;          ├── import wx&#10;          └── macmail.py&#10;                └── import wx&#10;&#10;&#10;Et une autre :&#10;guitk/iocontrollertk.py&#10;    └── taskcoachlib.workarounds&#10;          ├── display.py → import wx&#10;          └── font.py    → import wx&#10;&#10;&#10;Il faut traiter ces imports à la source, en séparant les adaptations propres à wxPython des fonctions partagées. Installer wxPython permet de contourner les erreurs de module absent, mais ne garantit pas que les appels wx fonctionneront dans une application Tkinter.&#10;&#10;Oui, il faut traiter ces chemins à la source. Les fichiers fournis montrent toutefois que tous les modules signalés ne posent pas le même problème :&#10;&#10;workarounds/display.py et workarounds/font.py importent wxPython dès le chargement du module. Ces adaptations wx doivent être isolées afin qu’un démarrage Tk ne les exécute pas.12&#10;changes/sync.py n’importe pas wx au chargement. Son import de wx est local à notify() et limité à la branche où get_gui() vaut &quot;wx&quot;. Pour Tk, la méthode utilise le chemin Tk séparé.3&#10;mailer/macmail.py importe wx au niveau du module et définit une classe héritant de wx.ProgressDialog. Rendre seulement l’import conditionnel ne suffirait donc pas : la classe doit aussi être définie ou chargée uniquement pour le chemin wx/macOS.4&#10;mailer/thunderbird.py importe wx au niveau du module, puis s’en sert pour demander un domaine dans le cas d’une authentification NTLM. Ce dialogue devra dépendre de l’interface active, pas de wx pour le seul fait que le module est importé.5&#10;speak/speaker.py importe wx au chargement et utilise wx.CallLater pour réessayer pendant la lecture. Cette planification doit être adaptée à l’interface, ou remplacée par une solution indépendante de wx.6&#10;mailer/outlook.py n’importe pas wx dans le fichier fourni ; ses fonctions Outlook sont définies sous la condition Windows.7&#10;&#10;Je ne peux pas encore corriger de façon fiable l’import automatique de mailer/__init__.py ni celui de workarounds/__init__.py, car ces fichiers ne sont pas dans les pièces jointes. Ils sont déterminants pour savoir quels sous-modules sont chargés au démarrage. Pour faire un correctif complet sans deviner la structure, il me faut aussi ces deux fichiers et, idéalement, taskcoachlib/config/gui.py ainsi que le code Tk qui initialise le lecteur de mail et le haut-parleur.&#10;&#10;Cinq fichiers modifiés : l’initialisation de workarounds, l’initialisation de mailer, macmail.py, thunderbird.py et speaker.py. Les imports wx ont été retirés des chemins Tk concernés, et sync.py est resté inchangé, car son import de wx est déjà limité à la branche wx de notify().123456&#10;J’ai vérifié la syntaxe Python des fichiers de l’archive. Je n’ai pas exécuté de tests d’intégration dans TaskCoach. Cette archive ne remplace pas draganddrop.py, qui contient encore des classes et fonctionnalités wx spécifiques, ni ne fournit un remplacement Tk de ces fonctionnalités. À intégrer, il faudra donc tester notamment l’ouverture des mails macOS, la demande de domaine Thunderbird sous Tk et le comportement de la synthèse vocale. Le bac de travail a été réinitialisé pendant l’opération ; j’ai repris les fichiers joints avant de préparer et vérifier l’archive." />
+    <MESSAGE value="Correction de la gestion des widgets flottants dans Tkinter pour éviter les erreurs de conteneur" />
+    <MESSAGE value="Amélioration de la gestion des fenêtres flottantes dans Tkinter en reconstruisant la vue des panneaux et en capturant l'état graphique." />
+    <MESSAGE value="Correction de la gestion du mot de passe dans password.py pour assurer la compatibilité avec les versions récentes de keyring." />
+    <MESSAGE value="Le fichier mixer.py a été converti pour utiliser Tkinter au lieu de wxPython.&#10;Modifications réalisées :&#10;&#10;Suppression de import wx.&#10;Utilisation de tkinter.font via tkfont.&#10;Remplacement de wx.Font par tkfont.Font.&#10;Conversion des propriétés wx :&#10;&#10;GetPointSize() vers l’attribut Tk size.&#10;GetFamily() vers family.&#10;GetWeight() vers weight.&#10;GetStyle() vers slant.&#10;GetUnderlined() vers underline.&#10;&#10;&#10;Conservation de l’API utilisée par categorizable.py :&#10;font.FontMixer.mix(*fonts)&#10;&#10;Prise en charge des polices Tkinter et des descriptions de police sous forme de dictionnaire, tuple ou liste.&#10;Conservation du comportement de mélange :&#10;&#10;taille moyenne ;&#10;famille la plus représentée ;&#10;poids dominant entre bold, light et normal ;&#10;style italique si au moins une police est italique ;&#10;soulignement si au moins une police est soulignée.&#10;&#10;La syntaxe Python a été vérifiée, et categorizable.py référence toujours correctement font.FontMixer.mix. Le fichier corrigé est joint : mixer.py." />
+    <MESSAGE value="Panneaux flottants : le gestionnaire exige des méthodes absentes des visualiseurs&#10;ERREUR DE COHÉRENCE CONFIRMÉE — PRIORITÉ HAUTE&#10;&#10;Fichier : aui_ttk/ttkframemanager_auimanager.py.&#10;&#10;La nouvelle méthode _rebuild_pane_window() exige que le widget possède l'une des méthodes suivantes :&#10;rebuild_view(parent)create_view(parent)clone_for_parent(parent)&#10;&#10;&#10;&#10;J'ai vérifié les classes des principaux visualiseurs (basetk.py, tasktk.py, categorytk.py, efforttk.py, notetk.py, attachmenttk.py) : aucune ne définit actuellement cette interface.&#10;&#10;Le détachement d'un visualiseur standard peut donc échouer avec :&#10;TypeError: Le panneau flottant doit exposer rebuild_view(parent),&#10;create_view(parent) ou clone_for_parent(parent)&#10;&#10;&#10;Autre problème : AuiManager.Update() appelle _float_pane() pour chaque panneau flottant, qui reconstruit alors le widget à chaque actualisation, y compris lors des opérations de redimensionnement. Cela risque de détruire et de recréer inutilement les visualiseurs.&#10;&#10;Je recommande d'introduire une interface de reconstruction explicite et commune aux visualiseurs, puis de ne reconstruire un panneau que lorsque son conteneur cible change réellement.&#10;&#10;Le correctif est prêt. Il permet de détacher et de réamarrer un visualiseur en conservant la même instance. Un redimensionnement ou un appel à Update() conserve aussi le Treeview, sa sélection et ses commandes.&#10;&#10;J’ai choisi de préserver l’identité du visualiseur. ViewerContainer conserve l’instance dans viewers, _active_viewer et _pane_by_viewer. De plus, viewerStatusEventType() utilise id(self). Recréer le visualiseur à chaque détachement aurait donc obligé à remplacer ces références et à rétablir les abonnements.&#10;&#10;Le patch modifie quatre fichiers.&#10;Fichier&#9;Changement&#10;basetk.py&#9;Le cadre extérieur de Viewer devient un tk.Frame, que Tk peut détacher avec wm manage et réamarrer avec wm forget. Les visualiseurs de tâches, catégories, efforts, notes et pièces jointes héritent de ce changement.&#10;ttkframemanager_auimanager.py&#9;Update() réutilise la fenêtre flottante. Pour un panneau doté d’une fabrique explicite, le gestionnaire reconstruit la vue une fois au détachement et une fois au réamarrage, puis restaure son état.&#10;ttkframemanager_floating.py&#9;La fermeture par la croix réamarre le panneau. Les panneaux à fabrique utilisent désormais la même logique de reconstruction que le gestionnaire.&#10;test_ttkaui.py&#9;Quatre tests couvrent les cycles répétés avec sélection, le nombre de reconstructions, l’échec de restauration et le retrait d’un panneau flottant sans destruction.&#10;&#10;&#10;Vérification sous Linux, Python 3.13 et Tk 8.6. Les quatre nouveaux tests passent avec de vrais widgets Tk. Le test existant test_cadre_flottant, qui échouait sur le commit de départ, passe également. Sur le module test_ttkaui complet, il reste 14 échecs ou erreurs, tous déjà présents avant le patch. La vérification a porté sur le gestionnaire et ses widgets. Le démarrage complet de Task Coach avec les cinq visualiseurs reste à valider." />
+    <MESSAGE value="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter." />
+    <MESSAGE value="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.&#10;&#10;Le correctif résout aussi la perte de la notification de reprise. Au franchissement du seuil d’inactivité, le notificateur mémorise l’heure de la dernière activité système et continue ses vérifications. Lorsque l’utilisateur revient, il transmet cet horodatage au contrôleur pour afficher la notification de l’effort. Les événements powermgt.off et powermgt.on restent réservés à la mise en veille et à la reprise du système.&#10;&#10;Vérifications effectuées. Les quatre fichiers compilent et git apply --check réussit sur les sources de master. Un test avec la boucle Tcl réelle, une sonde d’inactivité simulée et une fenêtre de notification simulée a vérifié le minuteur unique, l’horodatage, la reprise sur le thread principal et l’arrêt depuis le rappel lui-même. Le lancement complet de Task Coach avec affichage graphique reste à valider." />
+    <option name="LAST_COMMIT_MESSAGE" value="Suivi d'inactivité : plusieurs contrôleurs et un risque de blocage des threads&#10;PRIORITÉ HAUTE&#10;&#10;Fichiers concernés :&#10;- guitk/mainwindowtk.py, lignes 319–321 ;&#10;- application/tkapplication.py, lignes 491–503 ;&#10;- guitk/idlecontrollertk.py ;&#10;- powermgt/idletk.py.&#10;L'application instancie actuellement un IdleController dans MainWindow, un second dans TkinterApplication, ainsi qu'un IdleNotifier supplémentaire. Cela peut créer trois instances de surveillance de l'inactivité.&#10;&#10;Plus préoccupant, IdleNotifier publie ses événements depuis un thread secondaire :&#10;pub.sendMessage(&quot;powermgt.off&quot;)&#10;&#10;Or les contrôleurs abonnés peuvent appeler :&#10;self._idle_notifier.stop()&#10;&#10;Et stop() contient :&#10;self._thread.join()&#10;&#10;Si l'événement provient du thread de ce même notificateur, il tente de s'attendre lui-même et Python lève RuntimeError: cannot join current thread.&#10;&#10;Il faut centraliser la surveillance de l'inactivité et sécuriser les transitions entre le thread de détection et la boucle principale Tkinter.&#10;&#10;Le correctif résout aussi la perte de la notification de reprise. Au franchissement du seuil d’inactivité, le notificateur mémorise l’heure de la dernière activité système et continue ses vérifications. Lorsque l’utilisateur revient, il transmet cet horodatage au contrôleur pour afficher la notification de l’effort. Les événements powermgt.off et powermgt.on restent réservés à la mise en veille et à la reprise du système.&#10;&#10;Vérifications effectuées. Les quatre fichiers compilent et git apply --check réussit sur les sources de master. Un test avec la boucle Tcl réelle, une sonde d’inactivité simulée et une fenêtre de notification simulée a vérifié le minuteur unique, l’horodatage, la reprise sur le thread principal et l’arrêt depuis le rappel lui-même. Le lancement complet de Task Coach avec affichage graphique reste à valider." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1048,28 +1342,28 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py</url>
-          <line>624</line>
+          <line>1015</line>
           <log-expression expression="print(f&quot;object.SynchronizedObject.setStatusNew : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
           <option name="timeStamp" value="9" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+        <line-breakpoint suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>1569</line>
-          <log-expression expression="print(f&quot;Task.setCompletionDateTime : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
+          <line>1627</line>
+          <log-expression expression="print(f&quot;Task.setCompletionDateTime : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="NONE" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>1874</line>
+          <line>1932</line>
           <log-expression expression="print(f&quot;Task.status : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;)" language="Python" />
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="self.__status == 1" language="Python" />
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/task.py</url>
-          <line>2816</line>
+          <line>2874</line>
           <log-expression expression="print(f&quot;Task.iconForStatus : 🛑 DEBUG - Modification de self.__status pour {self} : {self.__status}&quot;) " language="Python" />
           <option name="timeStamp" value="15" />
         </line-breakpoint>
@@ -1165,7 +1459,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/effort/effortlist.py</url>
-          <line>87</line>
+          <line>112</line>
           <option name="timeStamp" value="68" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1180,7 +1474,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/basetk.py</url>
-          <line>1902</line>
+          <line>1961</line>
           <option name="timeStamp" value="94" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1195,7 +1489,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/idlecontrollertk.py</url>
-          <line>45</line>
+          <line>50</line>
           <option name="timeStamp" value="103" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1205,7 +1499,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/mixintk.py</url>
-          <line>86</line>
+          <line>173</line>
           <option name="timeStamp" value="106" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1215,7 +1509,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/basetk.py</url>
-          <line>212</line>
+          <line>215</line>
           <option name="timeStamp" value="111" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1225,67 +1519,67 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2133</line>
+          <line>2180</line>
           <option name="timeStamp" value="114" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2175</line>
+          <line>2222</line>
           <option name="timeStamp" value="115" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2146</line>
+          <line>2193</line>
           <option name="timeStamp" value="116" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2139</line>
+          <line>2186</line>
           <option name="timeStamp" value="117" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/menu.py</url>
-          <line>1936</line>
+          <line>1938</line>
           <option name="timeStamp" value="120" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2135</line>
+          <line>2182</line>
           <option name="timeStamp" value="121" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2284</line>
+          <line>2331</line>
           <option name="timeStamp" value="123" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2297</line>
+          <line>2344</line>
           <option name="timeStamp" value="124" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2340</line>
+          <line>2387</line>
           <option name="timeStamp" value="125" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2398</line>
+          <line>2445</line>
           <option name="timeStamp" value="126" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2411</line>
+          <line>2458</line>
           <option name="timeStamp" value="127" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2423</line>
+          <line>2470</line>
           <option name="timeStamp" value="128" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/task.py</url>
-          <line>2438</line>
+          <line>2485</line>
           <option name="timeStamp" value="129" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1295,7 +1589,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/task/tasklist.py</url>
-          <line>24</line>
+          <line>26</line>
           <option name="timeStamp" value="133" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1305,7 +1599,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py</url>
-          <line>863</line>
+          <line>885</line>
           <option name="timeStamp" value="135" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1325,7 +1619,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/gui/viewer/base.py</url>
-          <line>1583</line>
+          <line>1626</line>
           <option name="timeStamp" value="139" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
@@ -1345,12 +1639,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/smartdatetimectrl.py</url>
-          <line>2782</line>
+          <line>2922</line>
           <option name="timeStamp" value="143" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/attribute.py</url>
-          <line>39</line>
+          <line>43</line>
           <option name="timeStamp" value="150" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1365,7 +1659,7 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py</url>
-          <line>216</line>
+          <line>280</line>
           <option name="timeStamp" value="153" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1375,28 +1669,53 @@
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/tests/unittests/domainTests/test_owner.py</url>
-          <line>55</line>
+          <line>59</line>
           <option name="timeStamp" value="155" />
         </line-breakpoint>
         <line-breakpoint suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/object.py</url>
-          <line>982</line>
+          <line>1851</line>
           <option name="timeStamp" value="156" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/taskcoach/tests/unittests/persistenceTests/TaskFileTest.py</url>
-          <line>1354</line>
+          <line>1794</line>
           <option name="timeStamp" value="157" />
         </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/mainwindowtk.py</url>
-          <line>689</line>
-          <option name="timeStamp" value="160" />
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/tk3rdparty/aui_tk/aui_tk_switcherdialog.py</url>
+          <line>3</line>
+          <option name="timeStamp" value="164" />
         </line-breakpoint>
-        <line-breakpoint suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/mainwindowtk.py</url>
-          <line>504</line>
-          <option name="timeStamp" value="161" />
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/thirdparty/tk3rdparty/aui_ttk/ttkframemanager_floating.py</url>
+          <line>9</line>
+          <option name="timeStamp" value="171" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/hcalendartk.py</url>
+          <line>292</line>
+          <option name="timeStamp" value="174" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/widgetstk/searchctrltk.py</url>
+          <line>133</line>
+          <option name="timeStamp" value="176" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/domain/base/sorter.py</url>
+          <line>18</line>
+          <option name="timeStamp" value="178" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/config/settings.py</url>
+          <line>18</line>
+          <option name="timeStamp" value="179" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/taskcoach/taskcoachlib/guitk/viewer/effort.bak1.py</url>
+          <line>33</line>
+          <option name="timeStamp" value="180" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

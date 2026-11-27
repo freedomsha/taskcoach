@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # from builtins import filter
 # from builtins import range
 # from builtins import object
+from taskcoachlib.config.gui import get_gui
 from taskcoachlib.domain.date import (
     Date,
     parseDate,
@@ -43,7 +44,11 @@ from taskcoachlib.i18n import _
 from twisted.internet.protocol import Protocol, ServerFactory
 from twisted.internet.error import CannotListenError
 
-import wx
+if get_gui() == "wx":
+    import wx
+elif get_gui() == "tk":
+    import tkinter as tk
+
 import struct
 import random
 import time
@@ -579,15 +584,24 @@ class IPhoneAcceptor(ServerFactory):
             protocol.iocontroller = self.iocontroller
             return protocol
 
-        wx.MessageBox(
-            _(
+        # wx.MessageBox(
+        #     _(
+        #         """An iPhone or iPod Touch tried to connect to Task Coach,\n"""
+        #         """but no password is set. Please set a password in the\n"""
+        #         """iPhone section of the configuration and try again."""
+        #     ),
+        #     _("Error"),
+        #     wx.OK,
+        # )
+        the_message = _(
                 """An iPhone or iPod Touch tried to connect to Task Coach,\n"""
                 """but no password is set. Please set a password in the\n"""
                 """iPhone section of the configuration and try again."""
-            ),
-            _("Error"),
-            wx.OK,
         )
+        if get_gui() == "wx":
+            wx.MessageBox(the_message, _("Error"), wx.OK)
+        elif get_gui() == "tk":
+            tk.Message(the_message, _("Error"))
 
         return None
 
@@ -1367,7 +1381,10 @@ class TwoWayNewTasksState5(BaseState):
         )
 
         # Don't start a timer from this thread...
-        wx.CallAfter(task.setReminder, reminderDateTime)
+        if get_gui() == "wx":
+            wx.CallAfter(task.setReminder, reminderDateTime)
+        elif get_gui() == "tk":
+            self.winfo_toplevel().after_idle(task.setReminder, reminderDateTime)
 
         self.disp().window.addIPhoneTask(
             task,

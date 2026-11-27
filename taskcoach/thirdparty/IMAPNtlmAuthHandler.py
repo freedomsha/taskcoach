@@ -15,7 +15,8 @@ import ntlm
 
 
 class IMAPNtlmAuthHandler(object):
-    """Example use:
+    r"""
+    Example use:
     
     import imaplib
     imap = imaplib.IMAP_4("my.imap.server")

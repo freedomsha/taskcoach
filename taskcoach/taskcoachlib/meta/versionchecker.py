@@ -21,6 +21,7 @@ import threading
 import urllib.request
 import sys
 import traceback
+from taskcoachlib.config.gui import get_gui
 
 
 class VersionChecker(threading.Thread):
@@ -61,16 +62,28 @@ class VersionChecker(threading.Thread):
     def notifyUser(self, dialog, latestVersion="", message=""):
         # Must use CallAfter because this is a non-GUI thread
         # Import wx here so it isn't a build dependency
-        import wx
-        wx.CallAfter(self.showDialog, dialog, latestVersion, message)
+        if get_gui() == "wx":
+            import wx
+            wx.CallAfter(self.showDialog, dialog, latestVersion, message)
+        elif get_gui() == "tk":
+            import tkinter as tk
+            tk.after_idle(self.showDialog, dialog, latestVersion, message)
 
     def showDialog(self, VersionDialog, latestVersion, message=""):
-        import wx
-        dialog = VersionDialog(wx.GetApp().GetTopWindow(),
-                               version=latestVersion, message=message,
-                               settings=self.settings)
-        dialog.Show()
-        return dialog
+        if get_gui() == "wx":
+            import wx
+            dialog = VersionDialog(wx.GetApp().GetTopWindow(),
+                                   version=latestVersion, message=message,
+                                   settings=self.settings)
+            dialog.Show()
+            return dialog
+        elif get_gui() == "tk":
+            import tkinter as tk
+            dialog = VersionDialog(self.root.winfo_toplevel(),
+                                   version=latestVersion, message=message,
+                                   settings=self.settings)
+            # tk.Toplevel.withdraw(dialog)
+            return dialog
 
     def getLastVersionNotified(self):
         return self.settings.get("version", "notified")

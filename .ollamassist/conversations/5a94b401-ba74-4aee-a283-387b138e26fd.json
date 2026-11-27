@@ -1,0 +1,39 @@
+{
+  "id" : "5a94b401-ba74-4aee-a283-387b138e26fd",
+  "title" : "Peux-tu répondre ?",
+  "createdAt" : 1790880334694,
+  "updatedAt" : 1790934415148,
+  "messages" : [ {
+    "role" : "USER",
+    "content" : "Peux-tu répondre ?",
+    "timestamp" : 1790880384820
+  }, {
+    "role" : "USER",
+    "content" : "es-tu là ?",
+    "timestamp" : 1790923430607
+  }, {
+    "role" : "ASSISTANT",
+    "content" : "Hi, I'm OllamAssist, how can I help you? My capabilities include:\n- Code Analysis/Explanation\n- Implementation Writing\n- File Creation in Workspace\n- Technical Documentation\n- Test Case Generation",
+    "timestamp" : 1790923661452
+  }, {
+    "role" : "USER",
+    "content" : "Comment dois-je te régler pour que tu me répondes toujours en français ?",
+    "timestamp" : 1790923802058
+  }, {
+    "role" : "ASSISTANT",
+    "content" : "Je suis désolé pour la confusion. Pour que je réponds toujours en français, j'aurais besoin de comprendre votre demande plus précisément. Pouvez-vous reformuler votre question ou me donner plus d'informations sur ce dont vous avez besoin?",
+    "timestamp" : 1790923929293
+  }, {
+    "role" : "USER",
+    "content" : "Je voudrais savoir s'il faut écrire une directive précise dans les prompts pour que tu me répondes toujours en français !",
+    "timestamp" : 1790924016975
+  }, {
+    "role" : "ASSISTANT",
+    "content" : "Je suis désolé pour la confusion. Pour que je réponds toujours en français, j'aurais besoin de comprendre votre demande plus précisément. Pouvez-vous reformuler votre question ou me donner plus d'informations sur ce dont vous avez besoin?",
+    "timestamp" : 1790924266100
+  }, {
+    "role" : "USER",
+    "content" : "Taskviewer n'affiche pas bien la liste des tâches ! Les sujets s'affichent sur la première colonne alors qu'ils devrait être dans la colonne subject ! Il faudrait aussi remplir les autres colonnes ! Il semble ne pas bien utiliser treectrltk.py.",
+    "timestamp" : 1790934415148
+  } ]
+}
