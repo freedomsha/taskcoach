@@ -531,6 +531,8 @@ class ViewerContainer(ttk.LabelFrame):
 
     def closeViewer(self, viewer):
         """Ferme la visionneuse spécifiée."""
+        if viewer not in self.viewers:
+            return
         # # if viewer == self.activeViewer():
         # #     self.advanceSelection(False)
         # #
@@ -546,9 +548,11 @@ class ViewerContainer(ttk.LabelFrame):
         # # self.notebook.forget(tab_id)
         # # self.viewers.remove(viewer)
         # # viewer.detach()
+        if hasattr(viewer, "detach"):
+            viewer.detach()
         # # if self.viewers:
         # #     self.activateViewer(self.viewers[0])  # Activer un autre viewer si possible
-        # self.removeViewer(viewer)
+        self.removeViewer(viewer)
         if viewer in self.viewers:
             # self.paned_window.remove(viewer)
             self.viewers.remove(viewer)
@@ -558,11 +562,12 @@ class ViewerContainer(ttk.LabelFrame):
                 self._active_viewer = None
                 if self.viewers:
                     log.debug(
-                        f"ViewerContainer.closeViewer : active {self.viewer[0]} !"
+                        f"ViewerContainer.closeViewer : active {self.viewers[0]} !"
                     )
                     self.activateViewer(
                         self.viewers[0]
                     )  # Activer une autre visionneuse si possible
+        viewer.destroy()
 
     def activateViewer(self, viewer_to_activate):
         """Active la visionneuse spécifiée et informe AUI."""
