@@ -502,18 +502,19 @@ class ViewerContainer(ttk.LabelFrame):
                 break
 
     def get_active_viewer(self):
-        """Retourne le visualiseur actif."""
-        # # try:
-        # #     # tab_id = self.notebook.select()
-        # #     if tab_id:
-        # #         frame = self.notebook.nametowidget(tab_id)
-        # #         viewer = frame.winfo_children()[0]
-        # #         return viewer
-        # # except tk.TclError:
-        # #     return None
-        # return None
-        self._active_viewer = self.focus_get()
-        return self._active_viewer
+        """Retourne le visualiseur actif sans modifier la sélection."""
+        # # # try:
+        # # #     # tab_id = self.notebook.select()
+        # # #     if tab_id:
+        # # #         frame = self.notebook.nametowidget(tab_id)
+        # # #         viewer = frame.winfo_children()[0]
+        # # #         return viewer
+        # # # except tk.TclError:
+        # # #     return None
+        # # return None
+        # self._active_viewer = self.focus_get()
+        # return self._active_viewer
+        return self.activeViewer()
 
     def onPageChanged(self, event):
         """Gestionnaire de l'événement de changement de page.
@@ -687,12 +688,16 @@ class ViewerContainer(ttk.LabelFrame):
         pass
 
     def __ensure_active_viewer_has_focus(self):
+        log.debug("__ensure_active_viewer_has_focus : exécuté.")
         if not self.activeViewer():
             return
 
         window_focused = (
             tk.Tk().focus_displayof()
         )  # équivalent de wx.Window.FindFocus()
+        # TODO : tk.Tk() créerait une nouvelle fenêtre racine s'il était exécuté.
+        # Cette méthode ne semble pas actuellement appelée ;
+        # c'est donc un problème latent, de priorité inférieure.
         if operating_system.isMacOsXTiger_OrOlder() and window_focused is None:
             # Si SearchCtrl a le focus sur Mac OS X Tiger,
             # tk.Tk().focus_displayof() renvoie None.
