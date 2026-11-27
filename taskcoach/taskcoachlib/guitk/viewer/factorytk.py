@@ -372,9 +372,11 @@ class addViewers:
         """
         self.__add_all_viewers()
 
-    def _viewer_classes(self) -> List[Type[ttk.Frame]]:
+    # def _viewer_classes(self) -> List[Type[ttk.Frame]]:
+    def _viewer_classes(self) -> List[Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame]]:
         """Retourne la liste des classes de visualiseurs à ajouter."""
-        viewer_classes: List[Type[ttk.Frame]] = []
+        # viewer_classes: List[Type[ttk.Frame]] = []
+        viewer_classes: List[Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame]] = []
         for viewer_type in viewerTypes():
             number_of_viewers = self._number_of_viewers_to_add(
                 globals()[viewer_type.replace("viewer", "")].__dict__[
@@ -392,14 +394,15 @@ class addViewers:
                  viewer_classes)
         return viewer_classes
 
-    def _number_of_viewers_to_add(self, viewer_class: Type[ttk.Frame]) -> int:
+    # def _number_of_viewers_to_add(self, viewer_class: Type[ttk.Frame]) -> int:
+    def _number_of_viewers_to_add(self, viewer_class: Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame]) -> int:
         """Détermine le nombre de visualiseurs à ajouter pour une classe donnée."""
         return self.__settings.getint(
             "view", viewer_class.__name__.lower() + "count"
         )
 
     # def _viewer_kwargs(self, viewer_class: Type[ttk.Frame]) -> Dict[str, Any]:
-    def _viewer_kwargs(self, viewer_class: Type[ttk.Frame]) -> Dict[str, Any]:
+    def _viewer_kwargs(self, viewer_class: Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame]) -> Dict[str, Any]:
         """Retourne les arguments de mots-clés pour initialiser le visualiseur."""
         # return dict()
         # # return dict(viewerContainer=self.__viewer_container) if issubclass(viewer_class, effort.EffortViewerForSelectedTasks) else dict()
@@ -431,7 +434,8 @@ class addOneViewer(addViewers):
         viewer_container: Any,
         task_file: Any,
         settings,
-        viewer_class: Type[ttk.Frame],
+        # viewer_class: Type[ttk.Frame],
+        viewer_class: Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame],
         **kwargs: Any,
     ):
         log.debug(
@@ -444,10 +448,12 @@ class addOneViewer(addViewers):
             f"addOneViewer.__init__ : Le visualiseur {viewer_class.__name__} a été ajouté !"
         )
 
-    def _number_of_viewers_to_add(self, viewer_class: Type[ttk.Frame]) -> int:
+    # def _number_of_viewers_to_add(self, viewer_class: Type[ttk.Frame]) -> int:
+    def _number_of_viewers_to_add(self, viewer_class: Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame]) -> int:
         return 1 if viewer_class == self.__viewer_class else 0
 
-    def _viewer_kwargs(self, viewer_class: Type[ttk.Frame]) -> Dict[str, Any]:
+    # def _viewer_kwargs(self, viewer_class: Type[ttk.Frame]) -> Dict[str, Any]:
+    def _viewer_kwargs(self, viewer_class: Type[tk.Frame|ttk.Frame|tk.LabelFrame|ttk.LabelFrame]) -> Dict[str, Any]:
         kwargs = super()._viewer_kwargs(viewer_class)
         # kwargs = {}
         kwargs.update(self.__kwargs)
