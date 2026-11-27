@@ -85,13 +85,14 @@ class FontMixer(object):
 
     @classmethod
     def mixFontWeights(cls, *fonts):
+        # Or tkinter.font.Font(weight=...) accepte notamment "normal" et "bold", mais pas "light".
         weights = [str(cls._actual(font).get("weight", "normal")).lower() for font in fonts]
         bold = weights.count("bold")
-        light = weights.count("light")
-        if bold > light:
+        normal = weights.count("normal")
+        if bold > normal:
             return "bold"
-        if light > bold:
-            return "light"
+        if normal > bold:
+            return "normal"
         return "normal"
 
     @classmethod
