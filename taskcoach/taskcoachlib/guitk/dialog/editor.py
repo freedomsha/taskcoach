@@ -1312,25 +1312,28 @@ class PageWithViewer(Page):
         """
         Crée et ajoute le Viewer à la page.
         Doit être appelé une seule fois.
+
+        Diffère la création du visualiseur jusqu'à sa sélection.
         """
         # Note: L'attribut 'items' est garanti d'exister grâce à l'appel
         # à super().__init__(...)
 
-        # 1. Création du Viewer (implémentée par la classe enfant)
-        self.viewer = self.createViewer(
-            self.__taskFile, self.__settings, self.__settingsSection
-        )
+        # # 1. Création du Viewer (implémentée par la classe enfant)
+        # self.viewer = self.createViewer(
+        #     self.__taskFile, self.__settings, self.__settingsSection
+        # )
 
-        # 2. Ajout du Viewer à la page
-        # # Nous utilisons la méthode addEntry de la classe Page de base.
-        # # growable=True est l'équivalent de flags=[wx.EXPAND]
-        # # et permet au Treeview de prendre tout l'espace restant.
-        # self.addEntry(self.viewer, growable=True)
-        # # Dans Page, addEntry est définie ainsi :
-        # # def addEntry(self, label, widget, row=None, flags=None, growable=False):
-        # # Il manque l'argument obligatoire widget. Dès qu'une page crée son visualiseur, cet appel déclenche donc
-        # # TypeError: Page.addEntry() missing 1 required positional argument: 'widget'
-        self.addEntry(None, self.viewer, growable=True)
+        # # 2. Ajout du Viewer à la page
+        # # # Nous utilisons la méthode addEntry de la classe Page de base.
+        # # # growable=True est l'équivalent de flags=[wx.EXPAND]
+        # # # et permet au Treeview de prendre tout l'espace restant.
+        # # self.addEntry(self.viewer, growable=True)
+        # # # Dans Page, addEntry est définie ainsi :
+        # # # def addEntry(self, label, widget, row=None, flags=None, growable=False):
+        # # # Il manque l'argument obligatoire widget. Dès qu'une page crée son visualiseur, cet appel déclenche donc
+        # # # TypeError: Page.addEntry() missing 1 required positional argument: 'widget'
+        # self.addEntry(None, self.viewer, growable=True)
+        pass
 
     def entries(self):
         """Retourne le Viewer comme première entrée pour le focus."""
