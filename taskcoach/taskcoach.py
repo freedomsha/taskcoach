@@ -383,7 +383,7 @@ def start():
     set_gui(gui_name)
 
     # log.info(f"taskcoach.start : GUI sélectionné : {options.gui_name}")
-    log.info(f"taskcoach.start : GUI sélectionné : %s", gui_name)
+    log.info("taskcoach.start : GUI sélectionné : %s", gui_name)
 
     app = None
 
