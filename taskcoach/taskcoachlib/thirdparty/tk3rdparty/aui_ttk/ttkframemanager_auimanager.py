@@ -1820,7 +1820,9 @@ class AuiManager:
         # self._undock_pane(pane)
         if floating is None:
             window = pane.window
-            if isinstance(window, tk.Frame) and not any(
+            # if isinstance(window, tk.Frame) and not any(  # Sauf qu'il faut pouvoir aussi l'utiliser avec LabelFrame !
+            # Les panneaux ttk.Frame nécessiteront toujours une reconstruction ou un conteneur natif adapté.
+            if isinstance(window, (tk.Frame, tk.LabelFrame)) and not any(
                 callable(getattr(window, name, None)) for name in self._view_factories
             ):
                 floating = ManagedFrame(window, self, pane)
