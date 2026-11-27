@@ -424,7 +424,7 @@ class TkinterApplication(
             len(self.taskFile.categories()),
         )
         # self.__auto_saver = persistence.AutoSaver(self.settings)
-        # self.__auto_saver = autosaver.AutoSaver(self.settings, self.root)  # TODO : A vérifier !
+        self.__auto_saver = autosaver.AutoSaver(self.settings, self.root)  # TODO : A vérifier !
         # self.__auto_exporter = persistence.AutoImporterExporter(self.settings)
         # self.__auto_backup = persistence.AutoBackup(self.settings)
 
