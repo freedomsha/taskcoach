@@ -1129,9 +1129,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         self.parent.after(10, lambda: setattr(self, "_handling_resize", False))
         log.debug(f"MainWindow.onResize: Fenêtre redimensionnée à {new_width}x{new_height}")
 
-        # Mise à jour du lastSize pour éviter les redimensionnements répétés
-        if not hasattr(self, "_lastSize"):
-            self._last_size = (new_width, new_height)
+        # # Mise à jour du lastSize pour éviter les redimensionnements répétés
+        # if not hasattr(self, "_lastSize"):
+        #     self._last_size = (new_width, new_height)
 
         if (new_width, new_height) != self._last_size:
             self._last_size = (new_width, new_height)
