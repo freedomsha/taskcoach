@@ -32,9 +32,18 @@ class DeveloperMessageChecker(threading.Thread):
         self.__settings = settings
         self.__urlopen = urlopen
         if get_gui() == "wx":
-            self.__call_after == self.__wx_call_after
+            self.root = None
+            self.__call_after = self.__wx_call_after
         elif get_gui() == "tk":
-            self.__call_after == self._after_idle
+            try:
+                import tkinterdnd2
+                from tkinterdnd2 import TkinterDnD
+                RootWindow = TkinterDnD.Tk
+            except ImportError:
+                import tkinter as tk
+                RootWindow = tk.Tk
+            self.root = RootWindow()
+            self.__call_after = self._after_idle
         super().__init__()
 
     @staticmethod  # TODO : vérifie s'il faut le commenter ou non
@@ -84,7 +93,13 @@ class DeveloperMessageChecker(threading.Thread):
     def __show_dialog(self, message, url, show=True):
         """ Show the message dialog. """
         dialog = self.__create_dialog(message, url)
-        dialog.Show(show)
+        if get_gui() == "wx":
+            dialog.Show(show)
+        elif get_gui()  == "tk":
+            if show:
+                dialog.deiconify()
+            else:
+                dialog.withdraw()
         return dialog
 
     def __create_dialog(self, message, url):
@@ -95,7 +110,8 @@ class DeveloperMessageChecker(threading.Thread):
             return developer_message.MessageDialog(wx.GetApp().GetTopWindow(),
                                                    message=message, url=url,
                                                    settings=self.__settings)
-        elif get_gui() == "tk":
+        # elif get_gui() == "tk":
+        else:
             from taskcoachlib.guitk.dialog import developer_messagetk
             return developer_messagetk.MessageDialog(self.root.winfo_toplevel(),
                                                      message=message, url=url,
