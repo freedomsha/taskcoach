@@ -1317,23 +1317,24 @@ class PageWithViewer(Page):
         """
         # Note: L'attribut 'items' est garanti d'exister grâce à l'appel
         # à super().__init__(...)
+        if self.viewer is not None:
+            return
+        # 1. Création du Viewer (implémentée par la classe enfant)
+        self.viewer = self.createViewer(
+            self.__taskFile, self.__settings, self.__settingsSection
+        )
 
-        # # 1. Création du Viewer (implémentée par la classe enfant)
-        # self.viewer = self.createViewer(
-        #     self.__taskFile, self.__settings, self.__settingsSection
-        # )
-
-        # # 2. Ajout du Viewer à la page
-        # # # Nous utilisons la méthode addEntry de la classe Page de base.
-        # # # growable=True est l'équivalent de flags=[wx.EXPAND]
-        # # # et permet au Treeview de prendre tout l'espace restant.
-        # # self.addEntry(self.viewer, growable=True)
-        # # # Dans Page, addEntry est définie ainsi :
-        # # # def addEntry(self, label, widget, row=None, flags=None, growable=False):
-        # # # Il manque l'argument obligatoire widget. Dès qu'une page crée son visualiseur, cet appel déclenche donc
-        # # # TypeError: Page.addEntry() missing 1 required positional argument: 'widget'
-        # self.addEntry(None, self.viewer, growable=True)
-        pass
+        # 2. Ajout du Viewer à la page
+        # # Nous utilisons la méthode addEntry de la classe Page de base.
+        # # growable=True est l'équivalent de flags=[wx.EXPAND]
+        # # et permet au Treeview de prendre tout l'espace restant.
+        # self.addEntry(self.viewer, growable=True)
+        # # Dans Page, addEntry est définie ainsi :
+        # # def addEntry(self, label, widget, row=None, flags=None, growable=False):
+        # # Il manque l'argument obligatoire widget. Dès qu'une page crée son visualiseur, cet appel déclenche donc
+        # # TypeError: Page.addEntry() missing 1 required positional argument: 'widget'
+        self.addEntry(None, self.viewer, growable=True)
+        # pass
 
     def entries(self):
         """Retourne le Viewer comme première entrée pour le focus."""
@@ -2005,12 +2006,15 @@ class PrerequisitesPage(PageWithViewer):
         # Note : addEntries est neutralisé par défaut dans cette implémentation
         # et est appelé dans selected()
 
-    # def addEntries(self):
-    #     """
-    #     Appel explicite de la méthode de base PageWithViewer.addEntries.
-    #     """
-    #     # Appel du parent pour créer et ajouter self.viewer
-    #     PageWithViewer.addEntries(self)
+    def addEntries(self):
+        """
+        Attend la sélection de l'onglet avant de créer sa vue.
+
+        Appel explicite de la méthode de base PageWithViewer.addEntries.
+        """
+        # # Appel du parent pour créer et ajouter self.viewer
+        # PageWithViewer.addEntries(self)
+        pass
 
     def selected(self):
         """Gère la sélection de la page et ajoute les champs d'édition
