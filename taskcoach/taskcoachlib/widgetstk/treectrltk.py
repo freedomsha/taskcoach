@@ -1146,7 +1146,8 @@ class TreeListCtrl(
         # Redimensionnement
         # self.bind('<Configure>', self.on_resize)
         # self.bind("<Configure>", self._on_autowidth_resize)
-        self.bind("<Configure>", self._on_autowidth_resize, add="+")
+        # self.bind("<Configure>", self._on_autowidth_resize, add="+")
+        # Je conserve la liaison dans autowidthtk.AutoColumnWidthMixin
         log.warning(
             "TreeListCtrl : liaisons TreeviewOpen et TreeviewClose installées sur %r",
             self,

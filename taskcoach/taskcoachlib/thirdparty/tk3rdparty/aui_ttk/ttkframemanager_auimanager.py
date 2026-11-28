@@ -56,6 +56,7 @@ class TtkPanePlacement:
             raise ValueError(f"position inconnue : {position}")
         if rank != "last" and not isinstance(rank, int):
             raise TypeError("rank doit être 'last' ou un entier")
+        log.debug("TtkPanePlacement.__init__ : %s se de cette manière relation:%s, position:%s et rank:%s", self.__class__.__name__, relation, position, rank)
         self.relation, self.position, self.rank = relation, position, rank
 
 
@@ -71,24 +72,25 @@ class TtkGridLayout:
     def __init__(self, parent, scrollable=True):
         """Construit le conteneur de panneaux et, si demandé, son dispositif de défilement.
 
-            En mode défilant, les panneaux sont placés dans une frame intégrée à un
-            Canvas. La barre verticale n'est affichée que lorsque le contenu dépasse
-            la hauteur visible.
+        En mode défilant, les panneaux sont placés dans une frame intégrée à un
+        Canvas. La barre verticale n'est affichée que lorsque le contenu dépasse
+        la hauteur visible.
 
-            Args:
-                parent (tk.Misc): Widget Tkinter qui accueillera le gestionnaire.
-                scrollable (bool): Active l'enveloppe Canvas et la barre de défilement.
+        Args:
+            parent (tk.Misc) : Widget Tkinter qui accueillera le gestionnaire.
+            scrollable (bool) : Active l'enveloppe Canvas et la barre de défilement.
         """
-        self.root = None
-        self.canvas = None
-        self.scrollbar = None
-        self._canvas_window = None
-        self._scrollbar_update_pending = False
-        self._scrollbar_update_id = None
-        self._scrollbar_visible = False
-        self._entries = []
-        self._split = None
-        self._slots = {}
+        self.root = None  # Fenêtre principale
+        self.canvas = None  # Outil de dessin
+        self.scrollbar = None  # Barre de défilement
+        self._canvas_window = None  # Fenêtre de dessin
+        self._scrollbar_update_pending = False  #
+        self._scrollbar_update_id = None  # Nom de la barre de défilement
+        self._scrollbar_visible = False  # Choix de l'affichage de la barre de défilement
+        self._entries = []  # Liste
+        self._split = None  # Séparateur
+        self._slots = {}  #
+        # Si l'enveloppe Canvas et la barre de défilement sont activées
         if scrollable:
             self.root = ttk.Frame(parent)
             self.root.grid(row=0, column=0, sticky="nsew")
@@ -114,24 +116,40 @@ class TtkGridLayout:
             self.parent.bind("<Configure>", self._on_content_configure, add="+")
         else:
             self.parent = parent
+        self._balance_pending = False
+        self._layout_signature = None
         self.rebuild()
 
     @property
     def pane_parent(self):
         """Retourne le widget parent à utiliser pour créer les panneaux.
 
-            Les widgets gérés doivent être enfants de ce conteneur afin de pouvoir
-            être repositionnés dans la grille sans changer leur hiérarchie Tk.
+        Les widgets gérés doivent être enfants de ce conteneur afin de pouvoir
+        être repositionnés dans la grille sans changer leur hiérarchie Tk.
         """
+        log.debug("TtkGridLayout.pane_parent : %s est le parent à utiliser pour créer les panneaux repositionnable !", self.parent)
         return self.parent
 
     def _on_canvas_configure(self, event):
-        """Adapte la largeur de la fenêtre Canvas à celle de la zone visible.
+        # """Adapte la largeur de la fenêtre Canvas à celle de la zone visible.
+        """Adapte le conteneur AUI à la zone visible du Canvas.
 
-            Args:
-                event: Événement Configure contenant les nouvelles dimensions du Canvas.
+        Args:
+            event: Événement Configure contenant les nouvelles dimensions du Canvas.
         """
-        self.canvas.itemconfigure(self._canvas_window, width=event.width)
+        if event.widget is not self.canvas:
+            return
+
+        if event.width <= 1 or event.height <= 1:
+            return
+
+        # self.canvas.itemconfigure(self._canvas_window, width=event.width)
+        self.canvas.itemconfigure(
+            self._canvas_window,
+            width=event.width,
+            height=event.height,
+        )
+
         self._schedule_scrollbar_update()
 
     def _on_content_configure(self, _event=None):
@@ -299,25 +317,205 @@ class TtkGridLayout:
 
     @staticmethod
     def _splitter(parent, orient):
+        """ Crée un séparateur PanedWindow."""
         return tk.PanedWindow(parent, orient=orient, showhandle=True,
                               sashwidth=8, handlesize=8, borderwidth=0)
 
     @staticmethod
     def _arrange(split, children):
-        """Ne touche aux séparateurs que si leurs enfants changent."""
+        """Synchronise les enfants d'un PanedWindow.
+
+        Ne touche aux séparateurs que si leurs enfants changent.
+        Préserve les séparateurs lorsque la disposition est inchangée.
+        Retourne True si la structure a été modifiée.
+        """
+        children = list(children)
         current = list(map(str, split.panes()))
         wanted = list(map(str, children))
         if current == wanted:
-            return
+            # return
+            return False
         for child in current:
             if child not in wanted:
                 split.forget(child)
+
+        horizontal = str(split.cget("orient")) == "horizontal"
+        min_size = 100 if horizontal else 50
+        # Attention : les valeurs de 100 et 50 pixels constituent
+        # des tailles minimales initiales que je propose,
+        # et non des valeurs imposées par Task Coach.
+        # TODO : Les barres d'outils et d'état devront faire l'objet
+        #  d'un traitement particulier pour ne pas occuper une place excessive.
+
         for index, child in enumerate(children):
             current = list(map(str, split.panes()))
             if index < len(current) and current[index] == str(child):
                 continue
-            options = dict(before=current[index]) if index < len(current) else {}
-            split.add(child, stretch="always", **options)
+            if str(child) in current:
+                split.forget(child)
+                current = list(map(str, split.panes()))
+            # options = dict(before=current[index]) if index < len(current) else {}
+            options = {
+                "stretch": "always",
+                "minsize": min_size,
+            }
+            if index < len(current):
+                options["before"] = current[index]
+            # split.add(child, stretch="always", **options)
+            # # stretch="always" ne garantit ni une taille minimale convenable,
+            # # ni une répartition équilibrée des panneaux déjà présents.
+            split.add(child, **options)
+
+        return True
+
+    @staticmethod
+    def _balance_split(split, fixed_sizes=None):
+        """Répartit l'espace disponible entre les panneaux.
+
+        Cette méthode permet de répartir les panneaux flexibles équitablement
+        et de réserver une hauteur spécifique à la barre d'état.
+
+        Elle doit être appelée uniquement lorsque la structure change :
+        ajout, suppression, déplacement ou réamarrage d'un panneau.
+        Il ne faut surtout pas l'appeler à chaque événement <Configure>,
+        sinon les déplacements manuels des séparateurs seront continuellement
+        annulés.
+
+        Args:
+            split : PanedWindow à équilibrer.
+            fixed_sizes : Dictionnaire associant le chemin Tk d'un panneau
+             à une taille fixe en pixels.
+
+        Returns:
+            None
+        """
+        children = list(split.panes())
+
+        if len(children) < 2:
+            return
+
+        fixed_sizes = fixed_sizes or {}
+
+        horizontal = str(split.cget("orient")) == "horizontal"
+
+        total = (
+            split.winfo_width()
+            if horizontal
+            else split.winfo_height()
+        )
+
+        sash_size = int(split.cget("sashwidth"))
+
+        available = total - sash_size * (len(children) - 1)
+
+        if available <= 0:
+            return
+
+        fixed_total = sum(
+            fixed_sizes.get(str(child), 0)
+            for child in children
+        )
+
+        flexible_count = sum(
+            str(child) not in fixed_sizes
+            for child in children
+        )
+
+        if flexible_count == 0:
+            return
+
+        flexible_size = (
+                                available - fixed_total
+                        ) // flexible_count
+
+        if flexible_size <= 0:
+            return
+
+        position = 0
+
+        for index, child in enumerate(children[:-1]):
+            size = fixed_sizes.get(
+                str(child), flexible_size
+            )
+
+            position += size
+
+            if horizontal:
+                split.sash_place(index, position, 0)
+            else:
+                split.sash_place(index, 0, position)
+
+            position += sash_size
+
+    def _schedule_balance(self):
+        """Regroupe les demandes de rééquilibrage."""
+        if self._balance_pending:
+            return
+
+        self._balance_pending = True
+        self.parent.after_idle(self._balance_layout)
+
+
+    def _balance_layout(self):
+        """Dimensionne les séparateurs du plus général au plus local."""
+        self._balance_pending = False
+
+        if self._split is None:
+            return
+
+        if not self._split.winfo_exists():
+            return
+
+        # Laisse Tkinter terminer les calculs de géométrie.
+        self.parent.update_idletasks()
+
+        if not self._split.winfo_ismapped():
+            # Le premier affichage déclenchera le calcul.
+            return
+
+        fixed_sizes = {}
+
+        # Ne pas étirer verticalement les barres
+        # d'outils et d'état comme des visualiseurs.
+        for side in ("top", "bottom"):
+            entries = [
+                entry for entry in self._entries
+                if self._direction(entry["pane"]) == side
+            ]
+
+            if entries and all(
+                    entry["pane"].name in ("toolbar", "status_bar")
+                    for entry in entries
+            ):
+                group = self._groups[side]
+
+                height = max(
+                    entry["widget"].winfo_reqheight()
+                    for entry in entries
+                )
+
+                height = max(24, height)
+
+                fixed_sizes[str(group)] = height
+
+                self._split.paneconfigure(
+                    group,
+                    minsize=height,
+                    stretch="never",
+                    height=height,
+                )
+
+        # 1. Répartir verticalement les grandes zones.
+        self._balance_split(self._split, fixed_sizes)
+        self.parent.update_idletasks()
+
+        # 2. Répartir horizontalement gauche/centre/droite.
+        self._balance_split(self._middle)
+        self.parent.update_idletasks()
+
+        # 3. Répartir les visualiseurs de chaque groupe.
+        for group in self._groups.values():
+            self._balance_split(group)
 
     # # version pour grid
     # def rebuild(self):
@@ -419,6 +617,11 @@ class TtkGridLayout:
                 self._groups[side] = self._splitter(
                     self._split if horizontal else self._middle,
                     tk.HORIZONTAL if horizontal else tk.VERTICAL)
+            self._split.bind(
+                "<Map>",
+                lambda event: self._schedule_balance(),
+                add="+",
+            )
 
         groups = {side: [] for side in self._groups}
         used = set()
@@ -450,6 +653,21 @@ class TtkGridLayout:
         if groups["bottom"]:
             rows.append(self._groups["bottom"])
         self._arrange(self._split, rows)
+        signature = tuple(
+            (
+                str(entry["widget"]),
+                self._direction(entry["pane"]),
+                self._sort_key(entry),
+            )
+            for entry in sorted(
+                self._entries,
+                key=self._sort_key
+            )
+        )
+
+        if signature != self._layout_signature:
+            self._layout_signature = signature
+            self._schedule_balance()
 
     def clear(self):
         """
@@ -620,17 +838,17 @@ class AuiManager:
     def _prepare_pane_parent(self, window):
         """Vérifie et prépare le parent Tkinter utilisé par un panneau.
 
-            Tous les panneaux doivent partager le parent fourni par pane_parent.
-            Si aucun panneau n'a encore été ajouté, le gestionnaire peut remplacer
-            son conteneur défilant par un conteneur direct lorsque le widget fourni
-            est enfant immédiat de la fenêtre gérée.
+        Tous les panneaux doivent partager le parent fourni par pane_parent.
+        Si aucun panneau n'a encore été ajouté, le gestionnaire peut remplacer
+        son conteneur défilant par un conteneur direct lorsque le widget fourni
+        est enfant immédiat de la fenêtre gérée.
 
-            Args:
-                window (tk.Misc): Widget destiné à devenir un panneau.
+        Args:
+            window (tk.Misc): Widget destiné à devenir un panneau.
 
-            Raises:
-                ValueError: Si le widget n'a pas le parent requis ou si le
-                    conteneur ne peut plus être remplacé après l'ajout de panneaux.
+        Raises:
+            ValueError: Si le widget n'a pas le parent requis ou si le
+                conteneur ne peut plus être remplacé après l'ajout de panneaux.
         """
         if not isinstance(window, tk.Misc) or self._frame is None:
             return
@@ -1760,14 +1978,14 @@ class AuiManager:
     def _placement_for(self, pane):
         """Construit la description de placement Tk correspondant à un panneau AUI.
 
-            La relation est actuellement globale ; la direction AUI est traduite
-            en côté de la grille et dock_pos est conservé comme rang.
+        La relation est actuellement globale ; la direction AUI est traduite
+        en côté de la grille et dock_pos est conservé comme rang.
 
-            Args:
-                pane (AuiPaneInfo): Panneau à convertir.
+        Args:
+            pane (AuiPaneInfo): Panneau à convertir.
 
-            Returns:
-                TtkPanePlacement: Paramètres de placement calculés.
+        Returns:
+            TtkPanePlacement: Paramètres de placement calculés.
         """
         position = self._direction(pane)
         position = {
@@ -1990,10 +2208,13 @@ class AuiManager:
         #     self._pane_parent = self._layout.pane_parent
         self._host_for(pane)
         if not any(e["widget"] is window for e in self._layout._entries):
+            # Ajoute un nouveau panneau
             self._layout.add(window, pane)
 
     def Update(self):
-        """Applique l'état courant de chaque panneau à la disposition Tkinter.
+        """Synchronise les états AUI et la disposition Tkinter.
+
+        Applique l'état courant de chaque panneau à la disposition Tkinter.
 
         Les panneaux flottants sont transférés dans un Toplevel, les panneaux
         visibles sont placés dans la grille et les panneaux masqués sont
@@ -2005,11 +2226,13 @@ class AuiManager:
         """
         if self._updating:
             return
+
         self._updating = True
         try:
             for pane in self._panes:
                 if pane.window is None:
                     continue
+
                 if not pane.IsShown():
                     if pane.IsFloating() and pane.frame is not None:
                         if pane.frame.wm_state() != "withdrawn":
@@ -2021,6 +2244,11 @@ class AuiManager:
                     self._float_pane(pane)
                 else:
                     self._dock_pane(pane)
+            # Appliquer aussi les changements de direction,
+            # de position, de ligne et de couche.
+            if self._layout is not None:
+                self._layout.rebuild()
+
         finally:
             self._updating = False
 
@@ -2032,10 +2260,16 @@ class AuiManager:
     def OnSize(self, event=None):
         """Rafraîchit la disposition lorsque la fenêtre gérée est redimensionnée.
 
-            Args:
-                event: Événement Configure Tkinter (facultatif).
+        Laisse Tkinter gérer le redimensionnement natif.
+
+        Args:
+            event: Événement Configure Tkinter (facultatif).
         """
-        self.Update()
+        # self.Update()
+        if event is not None and event.widget is not self._frame:
+            return
+        # Les gestionnaires de géométrie Tkinter
+        # assurent automatiquement le redimensionnement.
 
     def RecalculatePaneSizes(self):
         """Point de compatibilité AUI ; aucun recalcul distinct n'est requis ici.

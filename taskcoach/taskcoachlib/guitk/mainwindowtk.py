@@ -703,8 +703,18 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # Tkinter n'a pas de "perspective" AUI. Cette logique a été réimplémentée.
         log.info("MainWindow.__restore_perspective : Restauration de la perspective:")
 
-        perspective = self.settings.get("view", "perspective")
+        # perspective = self.settings.get("view", "perspective")
+        perspective = self.settings.get("view", "perspective").strip()
 
+        # ne vérifie la cohérence du nombre de visualiseurs que si une perspective existe réellement.
+        if not perspective:
+            log.info(
+                "Aucune perspective enregistrée : "
+                "conservation de la disposition initiale."
+            )
+
+            self.manager.Update()
+            return
         # Vérification des différences de nombre de viewers
         try:
             for viewer_type in factorytk.viewerTypes():
@@ -785,7 +795,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         # obtenir le nombre de viewers du type viewer_type dans les paramètres
         settings_viewer_count = self.settings.getint("view", f"{viewer_type}count")
         log.debug(
-            f"MainWindow.__perspective_and_settings_viewer_count_differ: perspective_viewer_count={perspective_viewer_count}, settings_viewer_count={settings_viewer_count} !"
+            "MainWindow.__perspective_and_settings_viewer_count_differ:"
+            " perspective_viewer_count=%s, settings_viewer_count=%s, perspective=%s !",
+            perspective_viewer_count, settings_viewer_count, perspective,
         )
         return perspective_viewer_count != settings_viewer_count
 
@@ -1101,6 +1113,9 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
         Gère la minimisation de la fenêtre.
         """
         log.info("MainWindow.onIconify : minimisation de la fenêtre principale :")
+        if event is not None and event.widget is not self.parent:
+            # La disparition d'un visualiseur ne signifie pas que la fenêtre principale a été minimisée.
+            return
         try:
             if self.parent.state() == "iconic":
                 if self.settings.getboolean("window", "hidewheniconized"):
@@ -1118,16 +1133,32 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
     def onResize(self, event=None):
         """
         Gère le redimensionnement de la fenêtre.
+
+        Enregistre les véritables changements de taille
+        de la fenêtre principale.
         """
+        if event is not None and event.widget is not self.parent:
+            return
         if self._handling_resize:
             return
 
         self._handling_resize = True
         new_width = self.parent.winfo_width()
         new_height = self.parent.winfo_height()
+        new_size = (new_width, new_height)
+
+        if min(new_size) <= 1:
+            setattr(self, "_handling_resize", False)
+            return
+
+        if new_size == self._last_size:
+            setattr(self, "_handling_resize", False)
+            return
 
         self.parent.after(10, lambda: setattr(self, "_handling_resize", False))
-        log.debug(f"MainWindow.onResize: Fenêtre redimensionnée à {new_width}x{new_height}")
+
+        # self._last_size = new_size
+        log.debug("MainWindow.onResize: Fenêtre redimensionnée à {new_width:%s}x{new_height:%s}", new_width, new_height)
 
         # # Mise à jour du lastSize pour éviter les redimensionnements répétés
         # if not hasattr(self, "_lastSize"):
@@ -1137,8 +1168,11 @@ class MainWindow(framettk.AuiManagedFrameWithDynamicCenterPane):
             self._last_size = (new_width, new_height)
             log.info(f"MainWindow.onResize: Nouvelle taille enregistrée: {new_width}x{new_height}")
 
-        # Mise à jour du manager AUI
-        self.manager.Update()
+        # # Mise à jour du manager AUI
+        # self.manager.Update()  # Inutile
+        # Les PanedWindow, grid() et le Canvas gèrent déjà leur redimensionnement.
+        # AuiManager.Update() doit principalement appliquer les changements
+        # d'état et de disposition des panneaux.
 
     def showStatusBar(self, value: bool = True) -> None:
         """

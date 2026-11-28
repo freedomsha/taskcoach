@@ -365,8 +365,12 @@ class AutoColumnWidthMixin:  # mixin !
         # super().__init__(master, *args, **kwargs)
         # Extraction des paramètres spécifiques avant de passer le reste au parent
         # resize_column = ID de colonne Tkinter (string)
-        # self.resize_column = kwargs.pop("resizeableColumn", len(kwargs.get('columns', [])))  # Par défaut, la dernière colonne
-        self._resize_column_id = kwargs.pop("resizeableColumn", str(len(kwargs.get('columns', []))-1))  # Par défaut, la dernière colonne !!! Attention à ne pas oublier le -1 car commence à 0.
+        # # self.resize_column = kwargs.pop("resizeableColumn", len(kwargs.get('columns', [])))  # Par défaut, la dernière colonne
+        # self._resize_column_id = kwargs.pop("resizeableColumn", str(len(kwargs.get('columns', []))-1))  # Par défaut, la dernière colonne !!! Attention à ne pas oublier le -1 car commence à 0.
+        self._resize_column_id = kwargs.pop(
+            "resizeableColumn",
+            None  # La colonne sera alors sélectionnée lorsqu'il sera possible de connaître la configuration réelle du widget.
+        )
         #
         self.ResizeColumnMinWidth = kwargs.pop("resizeableColumnMinWidth", 50)
         # self._min_column_width = kwargs.pop("resizeableColumnMinWidth", 50)
@@ -411,9 +415,10 @@ class AutoColumnWidthMixin:  # mixin !
         self._cached_font = None
 
         # Liaison de l'événement de redimensionnement de la fenêtre/widget
-        # self.bind('<Configure>', self.on_resize)  # pour détecter les redimensionnements
-        self.bind('<Configure>', self._on_autowidth_resize)  # pour détecter les redimensionnements
-        # TODO : peut-être trop tôt puisque c'est appelé dans itemctrltk._CtrlWithAutoResizedColumnsMixin
+        # # self.bind('<Configure>', self.on_resize)  # pour détecter les redimensionnements
+        # self.bind('<Configure>', self._on_autowidth_resize)  # pour détecter les redimensionnements
+        self.bind('<Configure>', self._on_autowidth_resize, add="+")  # pour détecter les redimensionnements
+        # TODO : peut-être trop tôt puisque c'est appelé dans itemctrltk._CtrlWithAutoResizedColumnsMixin et TreeListCtrl._bind_events()
         # Au lieu de cela, envisager d'appeler resizeColumns() explicitement après la configuration des colonnes
         #
 
@@ -513,6 +518,35 @@ class AutoColumnWidthMixin:  # mixin !
             log.debug(f"AutoColumnWidthMixin.resizeColumns : Application largeur : {col_id} -> {final_width}px")
             self.column(col_id, width=final_width)
 
+    def _resolve_resize_column(self, visible_columns):
+        """Retourne une colonne redimensionnable valide et visible."""
+        target = self._resize_column_id
+
+        columns = tuple(self["columns"])
+
+        if target is not None:
+            target = str(target)
+
+            # Convertit un ancien indice numérique
+            # en identifiant symbolique Tkinter.
+            if target not in columns and target.isdigit():
+                index = int(target)
+
+                if 0 <= index < len(columns):
+                    target = columns[index]
+
+            if target in visible_columns:
+                return target
+
+        # Le sujet doit généralement être prioritaire.
+        if "subject" in visible_columns:
+            return "subject"
+
+        if "#0" in visible_columns:
+            return "#0"
+
+        return visible_columns[0] if visible_columns else None
+
     # # # Ancienne méthode on_resize (commentée) remplacée par _on_autowidth_resize
     # def on_resize(self, event=None):
     #     """Ajuste la largeur de la colonne spécifiée en fonction de l'espace disponible."""
@@ -575,97 +609,111 @@ class AutoColumnWidthMixin:  # mixin !
     #         #     pass
 
     def _on_autowidth_resize(self, event=None):
-        """
+        """Ajuste la largeur de la colonne principale visible.
+
         Appelé lorsque la taille du widget change.
         Calcule l'espace restant et l'attribue à la colonne redimensionnable.
         """
+        # TODO : Attention toutefois à la correspondance des anciens indices
+        #  wxPython : certains appels historiques à SetResizeColumn(0)
+        #  ou SetResizeColumn(1) pourront nécessiter une conversion explicite
+        #  vers "subject" ou "#0" selon la sémantique voulue.
         # Ignorer les événements pendant l'initialisation
         if not getattr(self, "_columns_initialized", False):
             return
+
         # Si aucun événement n'est passé, on utilise self (appel manuel)
-        if event is None:
-            widget_width = self.winfo_width()
-        else:
-            # Vérifier que l'événement vient bien du Treeview lui-même
-            if event.widget != self:
-                return
-            widget_width = event.width
+        # Vérifier que l'événement vient bien du Treeview lui-même
+        if event is not None and event.widget is not self:
+            return
+
+        widget_width = self.winfo_width()
 
         # Sécurité : si le widget n'est pas encore visible ou trop petit
         if widget_width <= 1:
             return
 
-        # Si aucune colonne spécifique n'est définie, on ne fait rien
-        # (Ou on pourrait par défaut prendre la dernière, mais c'est risqué)
-        if not self._resize_column_id:
-            return
+        columns = tuple(self["columns"])
 
+        display_columns = self.tk.splitlist(
+            self["displaycolumns"]
+        )
+        log.debug("AutoColumnWidthMixin._on_autowidth_resize : Les colonnes visibles à redimensionner sont %s.", display_columns)
         # Liste de toutes les colonnes visibles
         # Note: '#0' est la colonne de l'arbre. 'displaycolumns' contient les autres.
         # Si displaycolumns est '#all', il faut récupérer 'columns'.
+        # On ne peut pas redimensionner une colonne invisible
+        if display_columns == ("#all",):
+            visible_columns = list(columns)
+        else:
+            visible_columns = []
 
-        display_cols = self["displaycolumns"]
-        log.debug(f"AutoColumnWidthMixin._on_autowidth_resize : Les colonnes visibles à redimensionner sont {display_cols}.")
-        if display_cols == "#all":
-            display_cols = self["columns"]
+            # Itérer sur les autres colonnes
+            for column in display_columns:
+                column = str(column)
 
-        # Calculer la largeur occupée par toutes les AUTRES colonnes
-        used_width = 0
+                if column in columns:
+                    visible_columns.append(column)
+
+                elif column.isdigit():
+                    index = int(column)
+
+                    if 0 <= index < len(columns):
+                        visible_columns.append(columns[index])
 
         # Vérifier si la colonne #0 (l'arbre) est visible
         # show peut être 'tree', 'headings', 'tree headings' ou ''
-        show_option = self["show"]
-        tree_col_visible = "tree" in str(show_option)
+        show = self.tk.splitlist(self["show"])
 
+        if "tree" in show:
+            visible_columns.insert(0, "#0")
+
+        target = self._resolve_resize_column(visible_columns)
+
+        # Si aucune colonne spécifique n'est définie, on ne fait rien
+        # (Ou on pourrait par défaut prendre la dernière, mais c'est risqué)
+        if target is None:
+            return
         # Si la colonne à redimensionner est l'arbre lui-même (#0)
-        if self._resize_column_id == "#0":
-            if not tree_col_visible:
-                return  # On ne peut pas redimensionner une colonne invisible
 
-        # Inutile puisqu'intégré dans display_cols ?
-        # # Itérer sur la colonne #0 si visible
-        # if tree_col_visible and self._resize_column_id != "#0":
-        #     try:
-        #         # used_width += self.column("#0", "width")  # TypeError: TreeListCtrl.column() takes 2 positional arguments but 3 were given
-        #         used_width += self.column("#0", option="width")
-        #         # used_width += self.column("#0")["width"]  # fonctionne aussi
-        #     except tk.TclError:
-        #         pass
-
-        # Itérer sur les autres colonnes
-        log.debug(f"AutoColumnWidthMixin._on_autowidth_resize : Calcul de la largeur utilisée par les autres colonnes de {display_cols}.")
-        for col_id in display_cols:
-            log.debug(f"AutoColumnWidthMixin._on_autowidth_resize : Traitement de la colonne {col_id}.")
-            if col_id != self._resize_column_id:
-                try:
-                    used_width += self.column(col_id, option="width")
-                    # used_width += self.column(col_id)["width"]  # fonctionne aussi
-                    log.debug(f"AutoColumnWidthMixin._on_autowidth_resize : Largeur de la colonne {col_id} = {self.column(col_id, option='width')}px.")
-                except tk.TclError:
-                    log.error(f"AutoColumnWidthMixin._on_autowidth_resize : Impossible de récupérer la largeur de la colonne {col_id}.", stack_info=True)
-                    pass
-
-        # Calculer l'espace restant
-        # Note : On retire quelques pixels pour la bordure/scroller (ajustement heuristique)
-        # 4 pixels est souvent une marge de sécurité pour éviter la barre de scroll horizontale
-        available_width = widget_width - used_width - 4
-
-        # Appliquer la nouvelle largeur avec un minimum de sécurité
-        if available_width < self.ResizeColumnMinWidth:
-            available_width = self.ResizeColumnMinWidth
-
+        # Calculer la largeur occupée par toutes les AUTRES colonnes
         try:
-            # On met à jour la largeur de la colonne cible
-            # -1 car '#0' n'est pas visible !
-            # self.column(self._resize_column_id - 1, width=int(available_width))  # Le code soustrait 1 à un identifiant de colonne chaîne, ce qui déclenche un TypeError pendant le redimensionnement automatique.
-            self.column(self._resize_column_id, width=int(available_width))
-            log.debug(
-                "AutoColumnWidthMixin._on_autowidth_resize : redimensionne la colonne %s avec la largeur %s",
-                self._resize_column_id,
-                available_width
+            used_width = sum(
+                int(self.column(column, option="width"))
+                for column in visible_columns
+                if column != target
             )
-        except tk.TclError as e:
-            log.warning(f"AutoColumnWidthMixin._on_autowidth_resize : Impossible de redimensionner la colonne {self._resize_column_id}", stack_info=True)
+
+            min_width = max(
+                self.ResizeColumnMinWidth,
+                int(self.column(target, option="minwidth")),
+            )
+
+            available_width = max(
+                min_width,
+                widget_width - used_width - 4,
+                )
+
+            current_width = int(
+                self.column(target, option="width")
+            )
+
+            if current_width != available_width:
+                self.column(
+                    target,
+                    width=available_width,
+                )
+            log.debug("AutoColumnWidthMixin._on_autowidth_resize : La colonne %r a été redimensionnée à %d pixels.", target, available_width)
+        except tk.TclError:
+            log.warning(
+                "Redimensionnement impossible : widget=%s, "
+                "target=%r, columns=%r, visible=%r",
+                self,
+                target,
+                columns,
+                visible_columns,
+                exc_info=True,
+            )
 
     @property
     def _font(self):
