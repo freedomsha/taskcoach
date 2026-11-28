@@ -30,9 +30,9 @@ else:
         PowerStateMixinBase as PowerStateMixin,
     )
 
-from taskcoachlib.config.arguments import get_gui, CURRENT_GUI
+from taskcoachlib.config.arguments import get_gui
 
-GUI_NAME = get_gui() or CURRENT_GUI
+GUI_NAME = get_gui()
 
 
 if GUI_NAME == "wx":

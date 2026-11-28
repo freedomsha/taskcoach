@@ -827,7 +827,7 @@ class PrintPreview(ViewerCommand, settings_uicommandtk.SettingsCommand):
             *args,
             **kwargs,
         )
-        # print("tclib.gui.uicommand.uicommand.PrintPreview command initialized")  # Débogage
+        # print("tclib.guitk.uicommand.uicommand.PrintPreview command initialized")  # Débogage
 
     def doCommand(self, event=None):
         """
@@ -872,7 +872,7 @@ class Print(ViewerCommand, settings_uicommandtk.SettingsCommand):
             *args,
             **kwargs,
         )
-        # print("tclib.gui.uicommand.uicommand.Print command initialized")  # Débogage
+        # print("tclib.guitk.uicommand.uicommand.Print command initialized")  # Débogage
 
     def doCommand(self, event=None):
         """
@@ -952,7 +952,7 @@ class FileManageBackups(IOCommand, settings_uicommandtk.SettingsCommand):
             *args,
             **kwargs,
         )
-        # print("tclib.gui.uicommand.uicommand.FileManageBackups command initialized")  # Débogage
+        # print("tclib.guitk.uicommand.uicommand.FileManageBackups command initialized")  # Débogage
 
     def doCommand(self, event=None):
         # TODO
@@ -1023,7 +1023,7 @@ class FileExportAsHTML(FileExportCommand):
             *args,
             **kwargs,
         )
-        # print("tclib.gui.uicommand.uicommand.FileExportAsHTML command initialized")  # Débogage
+        # print("tclib.guitk.uicommand.uicommand.FileExportAsHTML command initialized")  # Débogage
 
     @staticmethod
     def getExportDialogClass():
@@ -1049,7 +1049,7 @@ class FileExportAsCSV(FileExportCommand):
             *args,
             **kwargs,
         )
-        # print("tclib.gui.uicommand.uicommand.FileExportAsCSV command initialized")  # Débogage
+        # print("tclib.guitk.uicommand.uicommand.FileExportAsCSV command initialized")  # Débogage
 
     @staticmethod
     def getExportDialogClass():
@@ -1072,7 +1072,7 @@ class FileExportAsICalendar(FileExportCommand):
             *args,
             **kwargs,
         )
-        # print("tclib.gui.uicommand.uicommand.FileExportAsICalendar command initialized")  # Débogage
+        # print("tclib.guitk.uicommand.uicommand.FileExportAsICalendar command initialized")  # Débogage
 
     def exportFunction(self):
         return self.iocontroller.exportAsICalendar
@@ -2374,9 +2374,9 @@ class ViewViewer(settings_uicommandtk.SettingsCommand, ViewerCommand):
         """
         Ouvre une nouvelle instance de la visionneuse spécifiée.
         """
-        from taskcoachlib.gui import viewer
+        from taskcoachlib.guitk.viewer import factorytk
 
-        viewer.addOneViewer(
+        factorytk.addOneViewer(
             self.viewer, self.taskFile, self.settings, self.viewerClass
         )
         self.increaseViewerCount()
@@ -2417,9 +2417,9 @@ class ViewEffortViewerForSelectedTask(
         """
         Ouvre une visionneuse d'efforts pour les tâches sélectionnées.
         """
-        from taskcoachlib.gui import viewer
+        from taskcoachlib.guitk.viewer import factorytk
 
-        viewer.addOneViewer(
+        factorytk.addOneViewer(
             self.viewer, self.taskFile, self.settings, self.viewerClass
         )
 
@@ -3772,7 +3772,7 @@ class TaskNewFromTemplateButton(
 
         return menutk.TaskTemplateMenu(
             self, self.mainWindow(), self.taskList, self.settings
-        )  # manque le parent
+        )
 
     def getMenuText(self):
         """
@@ -4739,7 +4739,7 @@ class EffortStartForTask(TaskListCommand):
 
 
     Cette commande peut être utilisée pour créer un menu avec des éléments de menu séparés pour toutes les tâches.
-    Voir gui.menu.StartEffortForTaskMenu.
+    Voir guitk.menutk.StartEffortForTaskMenu.
 
     Cette classe permet de lancer le suivi des efforts pour une tâche spécifique. Elle peut être utilisée
     pour créer un menu contextuel avec des options de démarrage de suivi pour chaque tâche.
@@ -4792,9 +4792,9 @@ class EffortStartButton(mixin_uicommandtk.PopupButtonMixin, TaskListCommand):
         )
 
     def createPopupMenu(self):
-        from taskcoachlib.gui import menu
+        from taskcoachlib.guitk import menutk
 
-        return menu.StartEffortForTaskMenu(self.mainWindow(), self.taskList)
+        return menutk.StartEffortForTaskMenu(self.mainWindow(), self.taskList)
 
     def enabled(self, event=None):
         return any(not task.completed() for task in self.taskList)

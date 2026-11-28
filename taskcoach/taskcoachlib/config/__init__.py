@@ -27,4 +27,4 @@ from taskcoachlib.config.settings import Settings as Settings  # noqa: E402
 from taskcoachlib.config.arguments import (
     ApplicationArgumentParser as ApplicationArgumentParser,
 )  # noqa: E402
-from taskcoachlib.config.gui import GUI_NAME
+# from taskcoachlib.config.gui import get_gui, GUI_NAME
