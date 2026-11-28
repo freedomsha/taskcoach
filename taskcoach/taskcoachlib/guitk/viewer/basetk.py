@@ -1053,6 +1053,15 @@ class Viewer(tk.Frame, patterns.Observer):
         raise NotImplementedError
         # return False
 
+    def isRefreshSuspended(self) -> bool:
+        """Indique si les rafraîchissements sont suspendus.
+
+        Les opérations de lecture et d'écriture peuvent être
+        imbriquées. Le compteur doit revenir à zéro avant
+        d'autoriser un nouveau rafraîchissement.
+        """
+        return self.__freezeCount > 0
+
     # @abstractmethod
     def visibleColumns(self):
         """

@@ -2258,9 +2258,11 @@ class Taskviewer(
         self.__tree_items = (
             {}
         )  # Mappe les IDs de tâches aux IDs d'éléments Treeview
+        # peut contenir uniquement le dernier identifiant Tkinter associé à une tâche.
         self.__items_to_tasks = (
             {}
         )  # Ajout du mapping inverse item_id -> task.id()
+        # contient plusieurs éléments graphiques associés à cette même tâche.
         self.widget = None
 
         # Section de configuration
@@ -2438,69 +2440,98 @@ class Taskviewer(
     # lors de l'initialisation.
     def isTreeViewer(self):
         """
-        Détermine si le visualiseur est en mode arborescence en lisant les paramètres.
+        Indique si le visualiseur est en mode arborescence en lisant les paramètres.
 
-        Utilise la présentation si elle existe, sinon (pendant l'init) utilise les settings.
+        Utilise le mode de la présentation active si elle existe lorsqu'elle est
+        disponible. Pendant l'initialisation du visualiseur (init),
+        utilise le mode enregistré dans les paramètres (settings).
+
+        Returns:
+            bool: True en mode arborescent, False en mode liste.
         """
-        # return self.isTreeMode()
-        # A la base, renvoie à :
-        # return self.presentation().isTreeMode()
-        # sauf que self n'a pas forcément presentation dans ses attributs !
-        # if hasattr(self, __presentation):
-        try:
-            # On tente de récupérer le mode depuis la présentation active
-            log.debug(
-                "Taskviewer.isTreeViewer : essaie de renvoyer self.presentation().treeMode()."
-            )
-            log.debug("Taskviewer.isTreeViewer : avec self.presentation=%s", self.presentation())
-            if self.presentation() != [] and self.presentation().treeMode() is not None:
-                return self.presentation().treeMode()
-            else:
-                self_settings = self.settings.getboolean(
-                    self.settingsSection(), "treemode"
-                )
-                log.debug(
-                    f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !"
-                )
-                return self_settings
-            # return self.presentation.treeMode()  # ?
-        except AttributeError:
-            # Si self.presentation() échoue (car self.__presentation n'existe pas encore
-            # lors de l'initialisation dans Viewer.__init__), on se replie sur les paramètres.
-            # Note : On évite absolument de logger self.presentation() ici pour ne pas recréer l'erreur.
+        # # return self.isTreeMode()
+        # # A la base, renvoie à :
+        # # return self.presentation().isTreeMode()
+        # # sauf que self n'a pas forcément presentation dans ses attributs !
+        # # if hasattr(self, __presentation):
+        # try:
+        #     # On tente de récupérer le mode depuis la présentation active
+        #     log.debug(
+        #         "Taskviewer.isTreeViewer : essaie de renvoyer self.presentation().treeMode()."
+        #     )
+        #     log.debug("Taskviewer.isTreeViewer : avec self.presentation=%s", self.presentation())
+        #     if self.presentation() != [] and self.presentation().treeMode() is not None:
+        #         return self.presentation().treeMode()
+        #     else:
+        #         self_settings = self.settings.getboolean(
+        #             self.settingsSection(), "treemode"
+        #         )
+        #         log.debug(
+        #             f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !"
+        #         )
+        #         return self_settings
+        #     # return self.presentation.treeMode()  # ?
+        # except AttributeError:
+        #     # Si self.presentation() échoue (car self.__presentation n'existe pas encore
+        #     # lors de l'initialisation dans Viewer.__init__), on se replie sur les paramètres.
+        #     # Note : On évite absolument de logger self.presentation() ici pour ne pas recréer l'erreur.
+        #
+        #     log.exception(
+        #         f"Taskviewer.isTreeViewer : N'a pas trouvé de treeMode dans {self}.presentation.", exc_info=True
+        #     )
+        #     log.debug(
+        #         "Taskviewer.isTreeViewer : Présentation non prête, lecture depuis les settings."
+        #     )
+        #     # return self.settings.getboolean(self.settingsSection(), "treemode")
+        #     self_settings = self.settings.getboolean(
+        #         self.settingsSection(), "treemode"
+        #     )
+        #     log.debug(
+        #         f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !"
+        #     )
+        #     # log.debug(f"Taskviewer.isTreeViewer : renvoie self_settings {self_settings}.")
+        #     return self_settings
+        #     # treeMode_found = self.settings.getboolean(self.settingsSection(), "treemode")
+        #     # log.debug(f"Taskviewer.isTreeViewer : renvoie treeMode_found {treeMode_found}.")
+        #     # return treeMode_found
+        # # Pourquoi cela corrige le problème ?
+        # #
+        # #     Suppression du f-string fatal : J'ai retiré la ligne
+        # #     log.debug(f"... {self.presentation().treeMode()}.") qui se trouvait avant le try.
+        # #     C'est elle qui provoquait le crash immédiat en forçant
+        # #     l'accès à une variable non initialisée.
+        # #
+        # #     Gestion de l'initialisation : Lors du démarrage (__init__),
+        # #     le bloc try va échouer (AttributeError).
+        # #     Le code passera alors dans le bloc except,
+        # #     qui ira chercher la valeur treemode directement
+        # #     dans les fichiers de configuration (self.settings),
+        # #     ce qui est la procédure correcte
+        # #     tant que l'interface n'est pas totalement chargée.
+        # Correction :
+        # Cette version conserve la compatibilité avec le mécanisme
+        # d'initialisation de basetk.py, dans lequel presentation()
+        # retourne provisoirement une liste vide.
+        #
+        # Elle fonctionne également avec un Sorter initialisé
+        # mais ne contenant aucune tâche.
+        presentation = self.presentation()
+        tree_mode = getattr(presentation, "treeMode", None)
 
-            log.exception(
-                f"Taskviewer.isTreeViewer : N'a pas trouvé de treeMode dans {self}.presentation.", exc_info=True
-            )
-            log.debug(
-                "Taskviewer.isTreeViewer : Présentation non prête, lecture depuis les settings."
-            )
-            # return self.settings.getboolean(self.settingsSection(), "treemode")
-            self_settings = self.settings.getboolean(
-                self.settingsSection(), "treemode"
-            )
-            log.debug(
-                f"Taskviewer.isTreeViewer : retourne self_settings = {self_settings} pour self={self.__class__.__name__}, self.settings={self.settings} et self.settingsSection={self.settingsSection()} contient bien treemode !"
-            )
-            # log.debug(f"Taskviewer.isTreeViewer : renvoie self_settings {self_settings}.")
-            return self_settings
-            # treeMode_found = self.settings.getboolean(self.settingsSection(), "treemode")
-            # log.debug(f"Taskviewer.isTreeViewer : renvoie treeMode_found {treeMode_found}.")
-            # return treeMode_found
-        # Pourquoi cela corrige le problème ?
-        #
-        #     Suppression du f-string fatal : J'ai retiré la ligne
-        #     log.debug(f"... {self.presentation().treeMode()}.") qui se trouvait avant le try.
-        #     C'est elle qui provoquait le crash immédiat en forçant
-        #     l'accès à une variable non initialisée.
-        #
-        #     Gestion de l'initialisation : Lors du démarrage (__init__),
-        #     le bloc try va échouer (AttributeError).
-        #     Le code passera alors dans le bloc except,
-        #     qui ira chercher la valeur treemode directement
-        #     dans les fichiers de configuration (self.settings),
-        #     ce qui est la procédure correcte
-        #     tant que l'interface n'est pas totalement chargée.
+        if callable(tree_mode):
+            mode = tree_mode()
+            if mode is not None:
+                log.debug(
+                    "Taskviewer.isTreeViewer : Renvoie bool(self.presentation().treeMode()):%s.",
+                    bool(mode),
+                )
+                return bool(mode)
+
+        log.debug(f"Taskviewer.isTreeViewer : renvoie le treemode enregistré dans les réglages.")
+        return self.settings.getboolean(
+            self.settingsSection(),
+            "treemode",
+        )
 
     def showColumn(self, column, show=True, *args, **kwargs):
         """Affiche ou masque une colonne et gère le rafraîchissement."""
@@ -2822,8 +2853,14 @@ class Taskviewer(
         return list_of_columns
 
     def _refresh_tasks(self):
-        """Rafraîchit l'affichage des tâches."""
-        log.debug("Taskviewer._refresh_tasks : Rafraîchissement des tâches.")
+        """Rafraîchit l'affichage des tâches.
+
+        Reconstruit l'affichage à partir de la présentation.
+
+        Respecte le tri, les filtres et le mode arbre/liste.
+        Chaque tâche est insérée au maximum une fois.
+        """
+        log.info("Taskviewer._refresh_tasks : Rafraîchissement des tâches.")
 
         if not self._widget_is_alive():
             log.debug(
@@ -2835,32 +2872,78 @@ class Taskviewer(
             log.warning("Taskviewer._refresh_tasks : Treeview non initialisé.")
             return
 
+        presentation = self.presentation()
+        tasks = list(presentation)
+        tree_mode = self.isTreeViewer()
+
+        log.debug(
+            "Taskviewer._refresh_tasks : %d tâches, treeMode=%s",
+            len(tasks),
+            tree_mode,
+        )
+
         try:
-            # Effacer les éléments existants
-            for item in self.widget.get_children():
-                self.widget.delete(item)
+            # Effacer les éléments des anciennes lignes existants
+            items = self.widget.get_children()
+            # for item in items:
+            #     self.widget.delete(item)
+            if items:
+                self.widget.delete(*items)
 
             # Efface le dictionnaire des éléments de l'arbre
             self.__tree_items.clear()
             # Bien penser à vider l'autre dictionnaire
             self.__items_to_tasks.clear()
 
-            # Obtenir les tâches du fichier de tâches
-            # try:
-            tasks = self.__task_file.tasks()
-            log.debug(
-                f"Taskviewer._refresh_tasks : {len(tasks)} tâches trouvées."
-            )
+            # # Obtenir les tâches du fichier de tâches
+            # # try:
+            # tasks = self.__task_file.tasks()  # Utiliser self.presentation() plutôt !
+            # # La présentation est justement chargée de gérer les tris
+            # # et les filtres de Task Coach, que ton implémentation actuelle contourne.
+            # log.debug(
+            #     f"Taskviewer._refresh_tasks : {len(tasks)} tâches trouvées."
+            # )
+
+            # En mode liste, toutes les tâches sont au premier niveau.
+            if not tree_mode:
+                for task in tasks:
+                    self._add_task_to_tree(
+                        task,
+                        children_by_parent={},
+                    )
+                return
 
             # Afficher les tâches
+            # Construire la hiérarchie en un seul parcours.
+            task_ids = {task.id() for task in tasks}
+            children_by_parent = {}
+            roots = []
             for task in tasks:
-                self._add_task_to_tree(task)
+                # self._add_task_to_tree(task)
+                parent = task.parent()
+                if parent is None or parent.id() not in task_ids:
+                    roots.append(task)
+                else:
+                    children_by_parent.setdefault(
+                        parent.id(), []
+                    ).append(task)
             # except Exception as e:
             #     log.error(
             #         f"Taskviewer._refresh_tasks : Erreur lors de la récupération des tâches: {e}"
             #     )
+            # Insérer uniquement les racines.
+            for task in roots:
+                self._add_task_to_tree(
+                    task,
+                    children_by_parent=children_by_parent,
+                )
+
+            log.debug(
+                "Taskviewer._refresh_tasks : %d tâches affichées.",
+                len(self.__tree_items),
+            )
         except tk.TclError as error:
-            log.warning(
+            log.exception(
                 "Taskviewer._refresh_tasks : widget détruit pendant "
                 "le rafraîchissement : %s",
                 error,
@@ -2884,20 +2967,33 @@ class Taskviewer(
         # Implement the logic to update the GUI based on the new task data
         pass  # Placeholder for actual implementation
 
-    def _add_task_to_tree(self, task, parent=""):
+    # def _add_task_to_tree(self, task, parent=""):
+    def _add_task_to_tree(self, task, parent="", children_by_parent=None):
         """
         Ajoute une tâche au Treeview.
+
+        Insère une tâche et ses enfants dans le Treeview.
 
         Args:
             task: L'objet Task à ajouter
             parent: L'ID du parent (pour les sous-tâches)
+            children_by_parent: Un dictionnaire des enfants visibles par parent
+
+        Returns:
+            str: Identifiant Tkinter de la tâche insérée.
         """
         # TODO : n'y a-t-il pas doublon avec _insert_tasks() ?
         try:
-            # Obtenir le texte et les valeurs de la tâche
-            task_text = (
-                task.subject() if hasattr(task, "subject") else str(task)
-            )
+            task_id = task.id()
+
+            # Protection contre les doublons et les cycles accessibles.
+            if task_id in self.__tree_items:
+                return self.__tree_items[task_id]
+
+            # # Obtenir le texte et les valeurs de la tâche
+            # task_text = (
+            #     task.subject() if hasattr(task, "subject") else str(task)
+            # )
 
             # Préparer les valeurs des colonnes
             # values = [
@@ -2918,8 +3014,17 @@ class Taskviewer(
             # item_id = self.widget.tree.insert(
             #     parent, "end", text=task_text, values=values
             # )
-            item_id = self.widget.insert(parent, "end", text="", values=values)
+            item_id = self.widget.insert(
+                parent,
+                "end",
+                text="",
+                values=values,
+                open=task.isExpanded(
+                    context=self.settingsSection()
+                ),
+            )
 
+            # Enregistrer les deux correspondances.
             # Stocker le mappage task -> item_id
             if hasattr(task, "id"):
                 self.__tree_items[task.id()] = item_id
@@ -2927,25 +3032,33 @@ class Taskviewer(
                 self.__items_to_tasks[item_id] = task
 
             # Ajouter les sous-tâches récursivement
-            if hasattr(task, "children"):
-                # # # if hasattr(task, 'the_children'):
-                # # # for subtask in task.children():
-                # # for subtask in task.get_tree_children():
-                # #     self._add_task_to_tree(subtask, parent=item_id)
-                # # Modification ici avec appel a get_tree_children
-                # for subtask in self.__task_file.tasks().get_tree_children(
-                #     task
-                # ):
-                for subtask in task.children():
+            # Insérer uniquement les enfants de la présentation.
+            # if hasattr(task, "children"):
+            if children_by_parent is not None:
+                # # # # if hasattr(task, 'the_children'):
+                # # # # for subtask in task.children():
+                # # # for subtask in task.get_tree_children():
+                # # #     self._add_task_to_tree(subtask, parent=item_id)
+                # # # Modification ici avec appel a get_tree_children
+                # # for subtask in self.__task_file.tasks().get_tree_children(
+                # #     task
+                # # ):
+                # for subtask in task.children():
+                for subtask in children_by_parent.get(task_id, ()):
                     log.debug(
                         f"Taskviewer._add_task_to_tree : Ajout de la sous-tâche "
-                        f"'{subtask.subject()}' à la tâche '{task_text}'."
+                        f"'{subtask.subject()}' à la tâche '{children_by_parent[task_id]}'."
                     )
-                    self._add_task_to_tree(subtask, parent=item_id)
+                    self._add_task_to_tree(
+                        subtask,
+                        parent=item_id,
+                        children_by_parent=children_by_parent,
+                    )
 
             log.debug(
-                f"Taskviewer._add_task_to_tree : Tâche '{task_text}' ajoutée."
+                f"Taskviewer._add_task_to_tree : Tâche '{task_id}' ajoutée."
             )
+            return item_id
         except Exception as e:
             log.error(
                 f"Taskviewer._add_task_to_tree : Erreur lors de l'ajout de la tâche: {e}"
@@ -3152,18 +3265,21 @@ class Taskviewer(
 
         # self.drag_item = None
 
-    def isTreeMode(self):
+    def isTreeMode(self) -> bool:
         """
         Détermine si le visualiseur est en mode arborescence en lisant les paramètres.
         Remplace la méthode wxpython `isTreeViewer`.
+
+        Alias de compatibilité pour le mode arborescent.
         """
-        # # return self.settings.getboolean(self.settingsSection(), "treemode")
-        # try:
-        #     return self.presentation().treeMode()
-        #     # return self.__viewMode == "tree"
-        # except AttributeError:
-        #     return self.settings.getboolean(self.settingsSection(), "treemode")
-        return self.__viewMode == "tree"
+        # # # return self.settings.getboolean(self.settingsSection(), "treemode")
+        # # try:
+        # #     return self.presentation().treeMode()
+        # #     # return self.__viewMode == "tree"
+        # # except AttributeError:
+        # #     return self.settings.getboolean(self.settingsSection(), "treemode")
+        # return self.__viewMode == "tree"
+        return self.isTreeViewer()
 
     def _on_column_click(self, column_name: str):
         """Gère le clic sur l'en-tête d'une colonne."""
@@ -4239,23 +4355,53 @@ class Taskviewer(
 
     # def refresh(self):
     def refresh(self, *args, **kwargs):
-        """Rafraîchit la vue, à implémenter correctement.
-        Override de refresh pour Tkinter - appelle _refresh_tasks."""
+        """Rafraîchit la vue des tâches si le visualiseur est disponible.
+
+        Override de refresh pour Tkinter - appelle _refresh_tasks.
+
+        Ignore les demandes reçues pendant les opérations
+        de lecture et d'écriture du fichier de tâches.
+        """
         # TODO : à implémenter correctement !
+        # Surcharge la méthode de Viewer ! Qui perd donc la vérification __freezeCount !
         log.debug(
             "Taskviewer.refresh :  Rafraîchissement de la vue des tâches."
         )
+        if self.isRefreshSuspended():
+            return
+
+        if not self._widget_is_alive():
+            return
         # self._populate_tree()  # Ne plus l'appeler dans la version tk !
         # self._refresh_tasks()
         try:
             self._refresh_tasks()
-        except Exception as e:
-            log.error(f"Taskviewer.refresh : Erreur:  {e}")
+        except Exception:
+            log.exception(f"Taskviewer.refresh : échec du rafraîchissement !")
 
     def refreshItems(self, *items):
         """Rafraîchit les éléments spécifiés."""
         # Pour Tkinter Treeview, c'est plus simple de tout rafraîchir
         self.refresh()
+        # Cette méthode est notamment susceptible d'être appelée
+        # par Viewer.onAttributeChanged() lorsqu'une tâche change d'attribut.
+        #
+        # Cela signifie que modifier la priorité, la date d'échéance
+        # ou le sujet d'une seule tâche peut entraîner la destruction
+        # et la reconstruction de toutes les lignes du Treeview.
+        #
+        # Il faudra, à terme, distinguer deux opérations :
+        # Méthode	            Responsabilité
+        # refresh()	            Reconstruction de la structure complète
+        # refreshItems(*items)	Mise à jour des lignes concernées
+        # _add_task_to_tree()	Insertion d'une tâche
+        # _refresh_tasks()	    Construction de la hiérarchie
+        #
+        # Pour le moment, je conserverais refreshItems() tel quel
+        # après avoir corrigé le mécanisme de suspension.
+        # Le rafraîchissement partiel mérite un traitement séparé,
+        # car certaines modifications peuvent également affecter le tri,
+        # les filtres et les valeurs cumulées des parents.
 
     def is_visible(self) -> bool:
         """Détermine si le visualiseur est visible."""
