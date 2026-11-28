@@ -316,24 +316,40 @@ class Viewer2HTMLConverter(object):
         return "  " * level + htmlText
 
     @classmethod
-    def cssColorSyntax(class_, wxColor):
-        # def cssColorSyntax(class_, wxColor):
+    # def cssColorSyntax(class_, wxColor):
+    def cssColorSyntax(cls, color):
         """ Translate the wx-color, either a wx.Colour instance or a tuple,
             into CSS syntax. """
+        # if GUI_NAME == "wx":
+        #     import wx
+        #     try:
+        #         return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)
+        #     except AttributeError:  # color is a tuple
+        #         return class_.cssColorSyntax(wx.Colour(*wxColor))
+        # elif GUI_NAME == "tk":
+        #     try:
+        #         # return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)  # A Convertir
+        #         return wxColor
+        #     except AttributeError:  # color is a tuple
+        #         # return class_.cssColorSyntax(wx.Colour(*wxColor))  # TODO : A Convertir
+        #         log.debug("Viewer2HTMLConverter.cssColorSyntax : couleur %s à convertir !", *wxColor)
+        if color is None:
+            return ""
+
+        if isinstance(color, str):
+            return color
+
+        if isinstance(color, (tuple, list)) and len(color) >= 3:
+            r, g, b = map(int, color[:3])
+            return f"#{r:02x}{g:02x}{b:02x}"
+
         if GUI_NAME == "wx":
             import wx
-            try:
-                return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)
-            except AttributeError:  # color is a tuple
-                return class_.cssColorSyntax(wx.Colour(*wxColor))
-        elif GUI_NAME == "tk":
-            try:
-                # return wxColor.GetAsString(wx.C2S_HTML_SYNTAX)  # A Convertir
-                return wxColor
-            except AttributeError:  # color is a tuple
-                # return class_.cssColorSyntax(wx.Colour(*wxColor))  # TODO : A Convertir
-                log.debug("Viewer2HTMLConverter.cssColorSyntax : couleur %s à convertir !", *wxColor)
-        return class_.cssColorSyntax(*wxColor)
+            if isinstance(color, wx.Colour):
+                return color.GetAsString(wx.C2S_HTML_SYNTAX)
+
+        raise TypeError(f"Couleur non prise en charge : {color!r}")
+        # return class_.cssColorSyntax(*wxColor)
 
     @staticmethod
     def render(item, column, indent=False):
