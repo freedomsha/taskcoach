@@ -35,7 +35,11 @@ class VersionChecker(threading.Thread):
         return True  # Don't block application exit
 
     def run(self):
-        from taskcoachlib.gui.dialog import version
+        if get_gui() == "wx":
+            from taskcoachlib.gui.dialog import version
+            # pass
+        else:
+            from taskcoachlib.guitk.dialog import versiontk as version
         try:
             latestVersionString = self.getLatestVersion()
             latestVersion = self.tupleVersion(latestVersionString)
