@@ -19,6 +19,7 @@ from .tkframemanager_elements import (
     AuiPaneInfo,
 )
 from .ttkframemanager_floating import ManagedFrame, TtkFloatingFrame
+from .ttkframemanager_guides import DockingGuides
 from .ttkauibook import AuiNotebook
 from .aui_tk_constants import *
 
@@ -743,6 +744,7 @@ class AuiManager:
         self._dock_hosts = {}
         self._layout = None
         self._pane_parent = None
+        self._docking_guides = None
         if managed_window is not None:
             self.SetManagedWindow(managed_window)
 
@@ -2159,32 +2161,62 @@ class AuiManager:
             frame.destroy()
         pane.frame = None
 
+    def _get_docking_guides(self):
+        """Instancie le contrôleur des guides à la demande."""
+        if self._docking_guides is None:
+            self._docking_guides = DockingGuides(self)
+
+        return self._docking_guides
+
+    def show_docking_guides(self, pane, x, y):
+        """Actualise les guides et l'aperçu d'ancrage."""
+        return self._get_docking_guides().update(
+            pane, x, y
+        )
+
+    def hide_docking_guides(self):
+        """Masque les guides et l'aperçu d'ancrage."""
+        if self._docking_guides is not None:
+            self._docking_guides.hide()
+
+    # def drop_viewer(self, pane, x, y):
+    #     """Interprète le dépôt du bandeau en coordonnées écran."""
+    #     if not pane.IsMovable():
+    #         return
+    #     host = self._layout.canvas or self._layout.parent
+    #     dx = (x - host.winfo_rootx()) / max(1, host.winfo_width())
+    #     dy = (y - host.winfo_rooty()) / max(1, host.winfo_height())
+    #     if not (0 <= dx <= 1 and 0 <= dy <= 1):
+    #         if pane.IsFloatable():
+    #             pane.FloatingPosition(x, y)
+    #             self.FloatPane(pane)
+    #         return
+    #     edges = [(dx, AUI_DOCK_LEFT, pane.IsLeftDockable()),
+    #              (1-dx, AUI_DOCK_RIGHT, pane.IsRightDockable()),
+    #              (dy, AUI_DOCK_TOP, pane.IsTopDockable()),
+    #              (1-dy, AUI_DOCK_BOTTOM, pane.IsBottomDockable())]
+    #     distance, direction, allowed = min(edges, key=lambda edge: edge[0])
+    #     if distance > 0.25:
+    #         direction, allowed = AUI_DOCK_CENTER, pane.IsDockable()
+    #     if not allowed:
+    #         return
+    #     peers = [p.dock_pos for p in self._panes
+    #              if p is not pane and p.dock_direction == direction]
+    #     pane.Direction(direction).Position(max(peers, default=-1) + 1)
+    #     self.DockPane(pane)
+    #     self._layout.rebuild()
+
     def drop_viewer(self, pane, x, y):
-        """Interprète le dépôt du bandeau en coordonnées écran."""
-        if not pane.IsMovable():
-            return
-        host = self._layout.canvas or self._layout.parent
-        dx = (x - host.winfo_rootx()) / max(1, host.winfo_width())
-        dy = (y - host.winfo_rooty()) / max(1, host.winfo_height())
-        if not (0 <= dx <= 1 and 0 <= dy <= 1):
-            if pane.IsFloatable():
-                pane.FloatingPosition(x, y)
-                self.FloatPane(pane)
-            return
-        edges = [(dx, AUI_DOCK_LEFT, pane.IsLeftDockable()),
-                 (1-dx, AUI_DOCK_RIGHT, pane.IsRightDockable()),
-                 (dy, AUI_DOCK_TOP, pane.IsTopDockable()),
-                 (1-dy, AUI_DOCK_BOTTOM, pane.IsBottomDockable())]
-        distance, direction, allowed = min(edges, key=lambda edge: edge[0])
-        if distance > 0.25:
-            direction, allowed = AUI_DOCK_CENTER, pane.IsDockable()
-        if not allowed:
-            return
-        peers = [p.dock_pos for p in self._panes
-                 if p is not pane and p.dock_direction == direction]
-        pane.Direction(direction).Position(max(peers, default=-1) + 1)
-        self.DockPane(pane)
-        self._layout.rebuild()
+        """Dépose le panneau sur la destination sélectionnée.
+
+        En dehors de la zone AUI, le panneau devient flottant
+        si ses propriétés l'autorisent.
+
+        Sans destination valide, le déplacement est annulé.
+        """
+        return self._get_docking_guides().drop(
+            pane, x, y
+        )
 
     def _dock_pane(self, pane):
         """Réintègre le panneau dans son conteneur d'amarrage.
@@ -2330,9 +2362,12 @@ class AuiManager:
     def UnInit(self):
         """Libère les fenêtres flottantes et les ressources de disposition.
 
-            Les widgets de contenu ne sont pas détruits par cette méthode ; seules
-            les fenêtres flottantes et l'enveloppe créée par le gestionnaire le sont.
+        Les widgets de contenu ne sont pas détruits par cette méthode ; seules
+        les fenêtres flottantes et l'enveloppe créée par le gestionnaire le sont.
         """
+        if self._docking_guides is not None:
+            self._docking_guides.destroy()
+            self._docking_guides = None
         for pane in getattr(self, "_panes", []):
             if pane.frame is not None and pane.frame.winfo_exists():
                 self._release_floating_frame(pane)

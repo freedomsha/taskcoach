@@ -491,37 +491,126 @@ class Viewer(tk.Frame, patterns.Observer):
             self.currentTitle = the_title
 
     def installPaneHandle(self, manager, pane):
-        """Réserve le bandeau aux gestes AUI et laisse l'arbre gérer ses objets."""
+        """Réserve le bandeau aux gestes AUI et laisse l'arbre gérer ses objets.
+
+        Installe le bandeau de déplacement du visualiseur.
+
+        Le bandeau gère les opérations d'ancrage et de
+        détachement indépendamment des événements du Treeview.
+        """
+        old_handle = getattr(self, "_pane_handle", None)
+
+        if old_handle is not None and old_handle.winfo_exists():
+            old_handle.destroy()
+
         self._sizer.grid_configure(row=1)
         self.rowconfigure(0, weight=0)
         self.rowconfigure(1, weight=1)
-        handle = ttk.Label(self, text=pane.caption, padding=(6, 3),
-                           relief="raised", cursor="fleur")
+        self.columnconfigure(0, weight=1)
+
+        handle = ttk.Label(
+            self,
+            text=pane.caption,
+            padding=(6, 3),
+            relief="raised",
+            cursor="fleur",
+        )
         handle.grid(row=0, column=0, sticky="ew")
+        self._pane_handle = handle
         start = None
+        dragging = False
+        drag_threshold = 5
+
+        def cancel():
+            """Annule le déplacement en cours."""
+            nonlocal start, dragging
+
+            start = None
+            dragging = False
+
+            manager.hide_docking_guides()
 
         def press(event):
+            """ Gère et mémorise le début du glisser-déposer
+            pour déplacer la visionneuse."""
             nonlocal start
-            start = (event.x_root, event.y_root)
+            cancel()
+            if pane.IsMovable():
+                start = (event.x_root, event.y_root)
+
+        def motion(event):
+            """Actualise les guides pendant le déplacement."""
+            nonlocal dragging
+
+            if start is None:
+                return
+
+            if not pane.IsMovable():
+                cancel()
+                return
+
+            distance = max(
+                abs(event.x_root - start[0]),
+                abs(event.y_root - start[1]),
+            )
+
+            if not dragging:
+                if distance < drag_threshold:
+                    return
+
+                dragging = True
+
+            manager.show_docking_guides(
+                pane,
+                event.x_root,
+                event.y_root,
+            )
 
         def release(event):
-            nonlocal start
-            origin, start = start, None
-            if origin and max(abs(event.x_root-origin[0]), abs(event.y_root-origin[1])) >= 5:
-                manager.drop_viewer(pane, event.x_root, event.y_root)
+            """ Gère la fin du glisser-déposer pour déplacer la visionneuse.
+
+            Applique la destination d'ancrage sélectionnée."""
+            nonlocal start, dragging
+            was_dragging = dragging
+            # origin = start
+            start = None
+            dragging = False
+            # if origin and max(abs(event.x_root-origin[0]), abs(event.y_root-origin[1])) >= 5:
+            #     manager.drop_viewer(pane, event.x_root, event.y_root)
+            try:
+                if was_dragging:
+                    manager.drop_viewer(
+                        pane,
+                        event.x_root,
+                        event.y_root,
+                    )
+            finally:
+                manager.hide_docking_guides()
 
         def toggle(event):
-            nonlocal start
-            start = None
+            """Alterne entre panneau flottant et ancré.
+
+            Gère le double-clic pour basculer entre l'état flottant
+            et ancré de la visionneuse."""
+            # nonlocal start
+            # start = None
+            cancel()
             if pane.IsFloating():
                 manager.DockPane(pane)
             elif pane.IsFloatable():
                 manager.FloatPane(pane)
             return "break"
 
+        def destroy(event):
+            """Nettoie les guides si le bandeau disparaît."""
+            if event.widget is handle:
+                cancel()
+
         handle.bind("<ButtonPress-1>", press)
+        handle.bind("<B1-Motion>", motion)
         handle.bind("<ButtonRelease-1>", release)
         handle.bind("<Double-Button-1>", toggle)
+        handle.bind("<Destroy>", destroy)
 
     def initLayout(self):
         """
