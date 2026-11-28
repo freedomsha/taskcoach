@@ -67,7 +67,7 @@ L'attribut _window est essentiel car il représente la fenêtre Tkinter
 # Dans menutk.py et toolbartk.py, vous devrez implémenter les méthodes appendUICommand et add_h_separator pour qu'elles fonctionnent avec les menus et barres d'outils Tkinter.
 # Assurez-vous que les classes de commandes UI (UICommand) sont compatibles avec Tkinter (c'est-à-dire qu'elles peuvent être appelées comme des fonctions Tkinter).
 import logging
-# import tkinter as tk
+import tkinter as tk
 # import tkinterdnd2
 # from tkinterdnd2 import *
 # from tkinterdnd2 import *
@@ -76,7 +76,6 @@ try:
     from tkinterdnd2 import TkinterDnD
     RootWindow = TkinterDnD.Tk
 except ImportError:
-    import tkinter as tk
     RootWindow = tk.Tk
 from tkinter import ttk
 

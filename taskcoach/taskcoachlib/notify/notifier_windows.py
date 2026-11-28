@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import tempfile
-import wx
+# import wx
 from .notifier import AbstractNotifier
 from taskcoachlib.thirdparty import snarl
 
@@ -37,7 +37,7 @@ class SnarlNotifier(AbstractNotifier):
         # Hum. Snarl needs a file.
         fd, filename = tempfile.mkstemp(".png")
         os.close(fd)
-        bitmap.SaveFile(filename, wx.BITMAP_TYPE_PNG)
+        # bitmap.SaveFile(filename, wx.BITMAP_TYPE_PNG)
         try:
             # snarl.snShowMessage(
             #     title.encode("UTF-8"),

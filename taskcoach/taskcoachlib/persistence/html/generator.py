@@ -29,7 +29,7 @@ import tkinter as tk
 import html
 import io
 
-from taskcoachlib.config import GUI_NAME
+from taskcoachlib.config.gui import GUI_NAME
 from taskcoachlib.domain import task
 
 # pylint: disable=W0142
