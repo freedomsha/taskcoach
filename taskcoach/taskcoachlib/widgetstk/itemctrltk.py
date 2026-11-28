@@ -875,7 +875,7 @@ class CtrlWithToolTipMixin(
             # self.item_tooltip.show_tooltip_now()
             # self._tooltip.show_tooltip_now()
             self._tooltip.Show()
-        else:
+        elif self._tooltip:
             # self.item_tooltip.hide_tooltip()
             # self._tooltip.hide_tooltip()
             self._tooltip.Hide()

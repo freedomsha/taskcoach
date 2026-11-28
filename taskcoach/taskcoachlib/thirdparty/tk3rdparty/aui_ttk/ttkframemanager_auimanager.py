@@ -87,6 +87,8 @@ class TtkGridLayout:
         self._scrollbar_update_id = None
         self._scrollbar_visible = False
         self._entries = []
+        self._split = None
+        self._slots = {}
         if scrollable:
             self.root = ttk.Frame(parent)
             self.root.grid(row=0, column=0, sticky="nsew")
@@ -295,87 +297,159 @@ class TtkGridLayout:
         # return 1, 1, 1, 1
         return top_offset + central_height // 2, left_offset + central_width // 2, 1, 1
 
+    @staticmethod
+    def _splitter(parent, orient):
+        return tk.PanedWindow(parent, orient=orient, showhandle=True,
+                              sashwidth=8, handlesize=8, borderwidth=0)
+
+    @staticmethod
+    def _arrange(split, children):
+        """Ne touche aux séparateurs que si leurs enfants changent."""
+        current = list(map(str, split.panes()))
+        wanted = list(map(str, children))
+        if current == wanted:
+            return
+        for child in current:
+            if child not in wanted:
+                split.forget(child)
+        for index, child in enumerate(children):
+            current = list(map(str, split.panes()))
+            if index < len(current) and current[index] == str(child):
+                continue
+            options = dict(before=current[index]) if index < len(current) else {}
+            split.add(child, stretch="always", **options)
+
+    # # version pour grid
+    # def rebuild(self):
+    #     """
+    #     Reconstruit la grille Tkinter correspondant aux panes AUI.
+    #
+    #     Contient le principe de construction des panneaux.
+    #     """
+    #     # Retirer tous les widgets actuellement placés
+    #     for entry in self._entries:
+    #         try:
+    #             entry["widget"].grid_forget()
+    #         except tk.TclError:
+    #             pass
+    #
+    #     groups = {
+    #         "left": [],
+    #         "right": [],
+    #         "top": [],
+    #         "bottom": [],
+    #         "center": [],
+    #     }
+    #
+    #     # Regrouper les widgets par direction, classer réellement chaque pane dans son groupe
+    #     for entry in self._entries:
+    #         # groups[self._direction(entry["pane"])].append(entry)
+    #         direction = self._direction(entry["pane"])
+    #         groups[direction].append(entry)
+    #     # Tri des widgets par ordre d'ajout, conserver l'ordre AUI
+    #     for entries in groups.values():
+    #         entries.sort(key=self._sort_key)
+    #
+    #     nb_left = len(groups["left"])
+    #     nb_right = len(groups["right"])
+    #     nb_top = len(groups["top"])
+    #     nb_bottom = len(groups["bottom"])
+    #     has_center = len(groups["center"]) > 0
+    #
+    #     top_offset = 1 if nb_top > 0 else 0
+    #     left_offset = 1 if nb_left > 0 else 0
+    #
+    #     # Les panneaux gauche/droit déterminent la hauteur de la zone centrale ;
+    #     # les panneaux haut/bas en déterminent la largeur. Une cellule centrale
+    #     # est réservée lorsqu’au moins un panneau central est présent.
+    #     central_height = max(nb_left, nb_right, 1 if has_center else 0)
+    #     central_width = max(nb_top, nb_bottom, 1 if has_center else 0)
+    #
+    #     nb_rows = top_offset + central_height + (1 if nb_bottom > 0 else 0)
+    #     nb_cols = left_offset + central_width + (1 if nb_right > 0 else 0)
+    #
+    #     # Placer les widgets dans la grille
+    #     # _slot() traduit l’index de chaque groupe en coordonnées de grille.
+    #     # Les cellules sont ensuite étirées pour occuper tout l’espace disponible.
+    #     for direction, entries in groups.items():
+    #         for index, entry in enumerate(entries):
+    #             # Calculer la position du widget
+    #             # row, column, rowspan, columnspan = self._slot(entry["pane"], index)
+    #             row, column, rowspan, columnspan = self._slot(
+    #                 entry["pane"], index, nb_left, nb_right, nb_top, nb_bottom,
+    #                 has_center, top_offset, left_offset, central_height, central_width, nb_rows, nb_cols
+    #             )
+    #             # Stocker la position du widget
+    #             entry["grid"] = (row, column, rowspan, columnspan)
+    #             # Placer le widget dans la grille
+    #             entry["widget"].grid(
+    #                 row=row,
+    #                 column=column,
+    #                 rowspan=rowspan,
+    #                 columnspan=columnspan,
+    #                 sticky="nsew",
+    #                 padx=1,
+    #                 pady=1,
+    #             )
+    #     # Configurer l'expansion des lignes et des colonnes
+    #     # for i in range(3):
+    #     #     self.parent.rowconfigure(i, weight=1 if i == 1 else 0)
+    #     #     self.parent.columnconfigure(i, weight=1 if i == 1 else 0)
+    #     for row in range(nb_rows):
+    #         weight = 1 if top_offset <= row < top_offset + central_height else 0
+    #         self.parent.rowconfigure(row, weight=weight)
+    #     for column in range(nb_cols):
+    #         weight = 1 if left_offset <= column < left_offset + central_width else 0
+    #         self.parent.columnconfigure(column, weight=weight)
+
+    # Version pour PanedWindows
     def rebuild(self):
-        """
-        Reconstruit la grille Tkinter correspondant aux panes AUI.
+        """Projette les directions AUI dans des séparateurs imbriqués."""
+        if self._split is None:
+            if not self._entries:
+                return
+            self._split = self._splitter(self.parent, tk.VERTICAL)
+            self._split.grid(sticky="nsew", row=0, column=0)
+            self.parent.rowconfigure(0, weight=1)
+            self.parent.columnconfigure(0, weight=1)
+            self._middle = self._splitter(self._split, tk.HORIZONTAL)
+            self._groups = {}
+            for side in ("top", "bottom", "left", "center", "right"):
+                horizontal = side in ("top", "bottom")
+                self._groups[side] = self._splitter(
+                    self._split if horizontal else self._middle,
+                    tk.HORIZONTAL if horizontal else tk.VERTICAL)
 
-        Contient le principe de construction des panneaux.
-        """
-        # Retirer tous les widgets actuellement placés
-        for entry in self._entries:
-            try:
-                entry["widget"].grid_forget()
-            except tk.TclError:
-                pass
-
-        groups = {
-            "left": [],
-            "right": [],
-            "top": [],
-            "bottom": [],
-            "center": [],
-        }
-
-        # Regrouper les widgets par direction, classer réellement chaque pane dans son groupe
-        for entry in self._entries:
-            # groups[self._direction(entry["pane"])].append(entry)
-            direction = self._direction(entry["pane"])
-            groups[direction].append(entry)
-        # Tri des widgets par ordre d'ajout, conserver l'ordre AUI
-        for entries in groups.values():
-            entries.sort(key=self._sort_key)
-
-        nb_left = len(groups["left"])
-        nb_right = len(groups["right"])
-        nb_top = len(groups["top"])
-        nb_bottom = len(groups["bottom"])
-        has_center = len(groups["center"]) > 0
-
-        top_offset = 1 if nb_top > 0 else 0
-        left_offset = 1 if nb_left > 0 else 0
-
-        # Les panneaux gauche/droit déterminent la hauteur de la zone centrale ;
-        # les panneaux haut/bas en déterminent la largeur. Une cellule centrale
-        # est réservée lorsqu’au moins un panneau central est présent.
-        central_height = max(nb_left, nb_right, 1 if has_center else 0)
-        central_width = max(nb_top, nb_bottom, 1 if has_center else 0)
-
-        nb_rows = top_offset + central_height + (1 if nb_bottom > 0 else 0)
-        nb_cols = left_offset + central_width + (1 if nb_right > 0 else 0)
-
-        # Placer les widgets dans la grille
-        # _slot() traduit l’index de chaque groupe en coordonnées de grille.
-        # Les cellules sont ensuite étirées pour occuper tout l’espace disponible.
-        for direction, entries in groups.items():
-            for index, entry in enumerate(entries):
-                # Calculer la position du widget
-                # row, column, rowspan, columnspan = self._slot(entry["pane"], index)
-                row, column, rowspan, columnspan = self._slot(
-                    entry["pane"], index, nb_left, nb_right, nb_top, nb_bottom,
-                    has_center, top_offset, left_offset, central_height, central_width, nb_rows, nb_cols
-                )
-                # Stocker la position du widget
-                entry["grid"] = (row, column, rowspan, columnspan)
-                # Placer le widget dans la grille
-                entry["widget"].grid(
-                    row=row,
-                    column=column,
-                    rowspan=rowspan,
-                    columnspan=columnspan,
-                    sticky="nsew",
-                    padx=1,
-                    pady=1,
-                )
-        # Configurer l'expansion des lignes et des colonnes
-        # for i in range(3):
-        #     self.parent.rowconfigure(i, weight=1 if i == 1 else 0)
-        #     self.parent.columnconfigure(i, weight=1 if i == 1 else 0)
-        for row in range(nb_rows):
-            weight = 1 if top_offset <= row < top_offset + central_height else 0
-            self.parent.rowconfigure(row, weight=weight)
-        for column in range(nb_cols):
-            weight = 1 if left_offset <= column < left_offset + central_width else 0
-            self.parent.columnconfigure(column, weight=weight)
+        groups = {side: [] for side in self._groups}
+        used = set()
+        for entry in sorted(self._entries, key=self._sort_key):
+            widget = entry["widget"]
+            side = self._direction(entry["pane"])
+            group = self._groups[side]
+            slot = self._slots.get(widget)
+            if slot is None or slot.master is not group:
+                if slot is not None:
+                    widget.grid_forget()
+                    slot.destroy()
+                slot = self._slots[widget] = ttk.Frame(group)
+                slot.rowconfigure(0, weight=1)
+                slot.columnconfigure(0, weight=1)
+                widget.grid(in_=slot, row=0, column=0, sticky="nsew")
+                widget.lift()
+            groups[side].append(slot)
+            used.add(widget)
+        for widget in self._slots.keys() - used:
+            self._slots.pop(widget).destroy()
+        for side, slots in groups.items():
+            self._arrange(self._groups[side], slots)
+        middle = [self._groups[s] for s in ("left", "center", "right") if groups[s]]
+        self._arrange(self._middle, middle)
+        rows = [self._groups["top"]] if groups["top"] else []
+        if middle:
+            rows.append(self._middle)
+        if groups["bottom"]:
+            rows.append(self._groups["bottom"])
+        self._arrange(self._split, rows)
 
     def clear(self):
         """
@@ -387,7 +461,11 @@ class TtkGridLayout:
             except tk.TclError:
                 pass
         self._entries.clear()
-        if self.canvas is not None:
+        if self._split is not None:
+            self._split.destroy()
+            self._split = None
+            self._slots.clear()
+        if self.canvas is not None and self.canvas.winfo_exists():
             self.canvas.configure(
                 scrollregion=self.canvas.bbox("all") or (0, 0, 0, 0)
             )
@@ -1862,6 +1940,33 @@ class AuiManager:
                 self._rebuild_pane_window(pane, self._host_for(pane))
             frame.destroy()
         pane.frame = None
+
+    def drop_viewer(self, pane, x, y):
+        """Interprète le dépôt du bandeau en coordonnées écran."""
+        if not pane.IsMovable():
+            return
+        host = self._layout.canvas or self._layout.parent
+        dx = (x - host.winfo_rootx()) / max(1, host.winfo_width())
+        dy = (y - host.winfo_rooty()) / max(1, host.winfo_height())
+        if not (0 <= dx <= 1 and 0 <= dy <= 1):
+            if pane.IsFloatable():
+                pane.FloatingPosition(x, y)
+                self.FloatPane(pane)
+            return
+        edges = [(dx, AUI_DOCK_LEFT, pane.IsLeftDockable()),
+                 (1-dx, AUI_DOCK_RIGHT, pane.IsRightDockable()),
+                 (dy, AUI_DOCK_TOP, pane.IsTopDockable()),
+                 (1-dy, AUI_DOCK_BOTTOM, pane.IsBottomDockable())]
+        distance, direction, allowed = min(edges, key=lambda edge: edge[0])
+        if distance > 0.25:
+            direction, allowed = AUI_DOCK_CENTER, pane.IsDockable()
+        if not allowed:
+            return
+        peers = [p.dock_pos for p in self._panes
+                 if p is not pane and p.dock_direction == direction]
+        pane.Direction(direction).Position(max(peers, default=-1) + 1)
+        self.DockPane(pane)
+        self._layout.rebuild()
 
     def _dock_pane(self, pane):
         """Réintègre le panneau dans son conteneur d'amarrage.

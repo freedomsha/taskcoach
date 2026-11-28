@@ -400,7 +400,8 @@ class ViewerContainer(ttk.LabelFrame):
 
         # Le premier viewer occupe le centre ; les suivants sont dockés à droite.
         if not self.viewers:
-            pane_info.CenterPane()
+            # pane_info.CenterPane()
+            pane_info.Center().Resizable()
         else:
             pane_info.Right().Position(len(self.viewers) - 1)
 
@@ -408,6 +409,7 @@ class ViewerContainer(ttk.LabelFrame):
             pane_info.Float()
 
         pane = self.manager.AddPane(viewer, pane_info)
+        viewer.installPaneHandle(self.manager, pane)
         self._pane_by_viewer[viewer] = pane
 
         # Créez le visualiseur avec le nouveau cadre comme parent

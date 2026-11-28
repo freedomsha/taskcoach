@@ -490,6 +490,39 @@ class Viewer(tk.Frame, patterns.Observer):
             # On garde le titre en mémoire, au moins
             self.currentTitle = the_title
 
+    def installPaneHandle(self, manager, pane):
+        """Réserve le bandeau aux gestes AUI et laisse l'arbre gérer ses objets."""
+        self._sizer.grid_configure(row=1)
+        self.rowconfigure(0, weight=0)
+        self.rowconfigure(1, weight=1)
+        handle = ttk.Label(self, text=pane.caption, padding=(6, 3),
+                           relief="raised", cursor="fleur")
+        handle.grid(row=0, column=0, sticky="ew")
+        start = None
+
+        def press(event):
+            nonlocal start
+            start = (event.x_root, event.y_root)
+
+        def release(event):
+            nonlocal start
+            origin, start = start, None
+            if origin and max(abs(event.x_root-origin[0]), abs(event.y_root-origin[1])) >= 5:
+                manager.drop_viewer(pane, event.x_root, event.y_root)
+
+        def toggle(event):
+            nonlocal start
+            start = None
+            if pane.IsFloating():
+                manager.DockPane(pane)
+            elif pane.IsFloatable():
+                manager.FloatPane(pane)
+            return "break"
+
+        handle.bind("<ButtonPress-1>", press)
+        handle.bind("<ButtonRelease-1>", release)
+        handle.bind("<Double-Button-1>", toggle)
+
     def initLayout(self):
         """
         Initialise la mise en page de la visionneuse.
