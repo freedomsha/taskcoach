@@ -101,7 +101,7 @@ Basé sur le fichier task.py original de Task Coach.
 #
 import logging
 import math
-# import tkinter as tk
+import tkinter as tk
 # import tkinterdnd2
 # from tkinterdnd2 import *
 # from tkinterdnd2 import *
@@ -110,7 +110,6 @@ try:
     from tkinterdnd2 import TkinterDnD
     RootWindow = TkinterDnD.Tk
 except ImportError:
-    import tkinter as tk
     RootWindow = tk.Tk
 from tkinter import ttk, messagebox
 import struct
